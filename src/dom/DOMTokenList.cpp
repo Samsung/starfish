@@ -114,8 +114,9 @@ String* DOMTokenList::item(unsigned long index)
     std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
-    if (index < tokens.size())
-        return tokens.at(index);
+    if (index < tokens.size()) {
+        return tokens[index];
+    }
     return String::emptyString;
 }
 
@@ -127,8 +128,9 @@ bool DOMTokenList::contains(String* token)
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     for (unsigned i = 0; i < tokens.size(); i++) {
-        if (tokens.at(i)->equals(token))
+        if (tokens[i]->equals(token)) {
             return true;
+        }
     }
     return false;
 }
@@ -137,7 +139,7 @@ String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_alloca
 {
     bool matched = false;
     for (unsigned j = 0; j < tokens->size(); j++) {
-        if (token->equals(tokens->at(j))) {
+        if (token->equals((*tokens)[j])) {
             matched = true;
             break;
         }
@@ -160,8 +162,8 @@ void DOMTokenList::add(std::vector<String*, gc_allocator_ignore_off_page<String*
     std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
     tokenize(&tokens, str);
     for (unsigned i = 0; i < tokensToAdd->size(); i++) {
-        validateToken(tokensToAdd->at(i));
-        str = addSingleToken(str, &tokens, tokensToAdd->at(i));
+        validateToken((*tokensToAdd)[i]);
+        str = addSingleToken(str, &tokens, (*tokensToAdd)[i]);
     }
     m_element->setAttribute(m_localName, str);
 }
@@ -170,7 +172,7 @@ int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_a
 {
     int count = 0;
     for (unsigned i = 0; i < tokens->size(); i++) {
-        if (tokens->at(i)->equals(token)) {
+        if ((*tokens)[i]->equals(token)) {
             matchFlags[i] = true;
             count++;
         } else {
@@ -195,10 +197,10 @@ void DOMTokenList::remove(String* token)
         for (unsigned i = 0; i < tokens.size(); i++) {
             if (!matchFlags[i]) {
                 if (isEmpty) {
-                    dst = tokens.at(i);
+                    dst = tokens[i];
                     isEmpty = false;
                 } else {
-                    dst = dst->concat(String::spaceString)->concat(tokens.at(i));
+                    dst = dst->concat(String::spaceString)->concat(tokens[i]);
                 }
             }
         }
@@ -216,18 +218,18 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator_ignore_off_page<Stri
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
     for (unsigned i = 0; i < tokensToRemove->size(); i++) {
-        validateToken(tokensToRemove->at(i));
-        matchCount += checkMatchedTokens(matchFlags, &tokens, tokensToRemove->at(i));
+        validateToken((*tokensToRemove)[i]);
+        matchCount += checkMatchedTokens(matchFlags, &tokens, (*tokensToRemove)[i]);
     }
     if (matchCount > 0) {
         bool isEmpty = true;
         for (unsigned i = 0; i < tokens.size(); i++) {
             if (!matchFlags[i]) {
                 if (isEmpty) {
-                    dst = tokens.at(i);
+                    dst = tokens[i];
                     isEmpty = false;
                 } else {
-                    dst = dst->concat(String::spaceString)->concat(tokens.at(i));
+                    dst = dst->concat(String::spaceString)->concat(tokens[i]);
                 }
             }
         }

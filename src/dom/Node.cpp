@@ -34,8 +34,8 @@ namespace StarFish {
 HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query)
 {
     for (size_t i = 0; i < list->size(); i ++) {
-        if (list->at(i).first->equals(query)) {
-            return list->at(i).second;
+        if ((*list)[i].first->equals(query)) {
+            return (*list)[i].second;
         }
     }
     return nullptr;
@@ -57,13 +57,13 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
 
     if (m_activeHtmlCollectionListsForTagName) {
         for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size(); i ++) {
-            m_activeHtmlCollectionListsForTagName->at(i).second->getNodeListImpl().invalidateCache();
+            (*m_activeHtmlCollectionListsForTagName)[i].second->getNodeListImpl().invalidateCache();
         }
     }
 
     if (m_activeHtmlCollectionListsForClassName) {
         for (size_t i = 0; i < m_activeHtmlCollectionListsForClassName->size(); i ++) {
-            m_activeHtmlCollectionListsForClassName->at(i).second->getNodeListImpl().invalidateCache();
+            (*m_activeHtmlCollectionListsForClassName)[i].second->getNodeListImpl().invalidateCache();
         }
     }
 
@@ -1018,7 +1018,7 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
     if (hasRareMembers()) {
         if (m_rareNodeMembers->m_activeHtmlCollectionListsForClassName) {
             for (size_t i = 0; i < m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->size(); i ++) {
-                m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->at(i).second->getNodeListImpl().invalidateCache();
+                (*m_rareNodeMembers->m_activeHtmlCollectionListsForClassName)[i].second->getNodeListImpl().invalidateCache();
             }
         }
     }

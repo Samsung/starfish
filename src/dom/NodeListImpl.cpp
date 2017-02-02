@@ -58,7 +58,7 @@ Node* NodeListImpl::item(unsigned long index)
         return m_filter(child, this->m_data);
     });
     if (index < collection.size()) {
-        return collection.at(index);
+        return collection[index];
     }
     return nullptr;
 }

@@ -124,7 +124,7 @@ void Element::removeAttribute(QualifiedName name)
             STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
             AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
             for (unsigned i = 0, size = attrList->size(); i < size; i++) {
-                if (attrList->at(i) == attrNode) {
+                if ((*attrList)[i] == attrNode) {
                     attrList->erase(attrList->begin() + i);
                     break;
                 }

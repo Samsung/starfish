@@ -54,7 +54,7 @@ public:
     TimeRange& at(unsigned long idx)
     {
         STARFISH_ASSERT(idx < m_list.size());
-        return m_list.at(idx);
+        return m_list[idx];
     }
 
 private:

@@ -1075,7 +1075,7 @@ TimeRanges* SourceBuffer::buffered()
     tracks.resize(tracksForSort.size());
     unsigned j = 0;
     for (auto i = tracksForSort.begin(); i != tracksForSort.end(); i++, j++) {
-        std::vector<std::pair<uint64_t, uint64_t>>& newTrack = tracks.at(j);
+        std::vector<std::pair<uint64_t, uint64_t>>& newTrack = tracks[j];
         std::map<uint64_t, MediaPacketGroup*>& oldTrack = i->second;
         STARFISH_ASSERT(oldTrack.size() != 0);
 
@@ -1100,7 +1100,7 @@ TimeRanges* SourceBuffer::buffered()
     // 4. For each track buffer managed by this SourceBuffer, run the following steps:
     for (unsigned i = 0; i < tracks.size(); i++) {
         // 4-1. Let track ranges equal the track buffer ranges for the current track buffer.
-        std::vector<std::pair<uint64_t, uint64_t>>& track = tracks.at(i);
+        std::vector<std::pair<uint64_t, uint64_t>>& track = tracks[i];
         STARFISH_ASSERT(track.size() != 0);
 
         // 4-2. If readyState is "ended", then set the end time on the last range in track ranges to highest end time.

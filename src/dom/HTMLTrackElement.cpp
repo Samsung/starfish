@@ -59,7 +59,7 @@ public:
             return 1;
         }
 
-        *c = m_resource->networkRequest()->responseData().at(pointer);
+        *c = m_resource->networkRequest()->responseData()[pointer];
         return 0;
     }
 
@@ -108,8 +108,8 @@ public:
         //         continue;
         //     fprintf(stderr, "[TIME %f]\n", (double)i);
         //     for (unsigned int j = 0; j < list->length(); j++) {
-        //         STARFISH_ASSERT(list->at(j)->isVTTCue());
-        //         VTTCue* cue = (VTTCue*) list->at(j);
+        //         STARFISH_ASSERT((*list)[j]->isVTTCue());
+        //         VTTCue* cue = (VTTCue*) (*list)[j];
         //         fprintf(stderr, "activeCue[%u] : %s\n", j, cue->text()->utf8Data());
         //     }
         // }
