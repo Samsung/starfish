@@ -2260,6 +2260,20 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::TableLayout:
+            // auto | fixed | initial | inherit
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->m_tableLayout = parentStyle->m_tableLayout;
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setTableLayout(TableLayoutValue::AutoTableLayoutValue);
+                break;
+            default:
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::TableLayoutValueKind == cssValues[k].valueKind());
+                style->setTableLayout(cssValues[k].tableLayoutValue());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::TextAlign:
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                 // NOTICE: Do not use getter of parent's textAlign here.
@@ -4448,6 +4462,24 @@ bool CSSStyleValuePair::updateValueCaptionSide(GCVector<String*>* tokens)
         m_value.m_captionSide = CaptionSideValue::TopCaptionSideValue;
     } else if (STRING_VALUE_IS_STRING("bottom")) {
         m_value.m_captionSide = CaptionSideValue::BottomCaptionSideValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTableLayout(GCVector<String*>* tokens)
+{
+    if (tokens->size() != 1) {
+        return false;
+    }
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::TableLayoutValueKind;
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
+    } else if (STRING_VALUE_IS_STRING("fixed")) {
+        m_value.m_tableLayout = TableLayoutValue::FixedTableLayoutValue;
     } else {
         return false;
     }

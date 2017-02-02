@@ -830,6 +830,15 @@ public:
         return m_inheritedStyles.m_captionSide;
     }
 
+    void setTableLayout(TableLayoutValue value) {
+        m_tableLayout = value;
+    }
+
+    TableLayoutValue tableLayout()
+    {
+        return m_tableLayout;
+    }
+
 protected:
     void initNonInheritedStyles()
     {
@@ -876,6 +885,8 @@ protected:
     TextDecorationValue m_textDecoration : 3;
     UnicodeBidiValue m_unicodeBidi : 2;
     bool m_zIndexSpecifiedByUser : 1;
+
+    TableLayoutValue m_tableLayout: 1; // table
 
     Length m_width;
     Length m_minWidth;

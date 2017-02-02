@@ -312,6 +312,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_overflow != oldStyle->m_overflow)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
+    if (newStyle->m_tableLayout != oldStyle->m_tableLayout) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     // NOTE.
     // text-decoration is not inherited.
     // but it influence its child boxes, within it's inline formatting context

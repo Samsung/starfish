@@ -307,6 +307,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::MarginRight;
             }
             break;
+        case 't':
+            if (memcmp(data, "table-layout", 12) == 0) {
+                return CSSStyleKind::TableLayout;
+            }
+            break;
         case 'u':
             if (memcmp(data, "unicode-bidi", 12) == 0) {
                 return CSSStyleKind::UnicodeBidi;
@@ -726,6 +731,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "marginRight", 11) == 0) {
                 return CSSStyleKind::MarginRight;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "tableLayout", 11) == 0) {
+                return CSSStyleKind::TableLayout;
             }
             break;
         case 'u':
