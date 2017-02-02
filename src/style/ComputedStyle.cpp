@@ -267,6 +267,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_inheritedStyles.m_visibility != oldStyle->m_inheritedStyles.m_visibility)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
 
+    if (newStyle->m_inheritedStyles.m_borderCollapse != oldStyle->m_inheritedStyles.m_borderCollapse) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->m_inheritedStyles.m_borderSpacing != oldStyle->m_inheritedStyles.m_borderSpacing) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->m_inheritedStyles.m_captionSide != oldStyle->m_inheritedStyles.m_captionSide) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->m_display != oldStyle->m_display)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
