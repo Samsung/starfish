@@ -2145,7 +2145,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         return 0;
     }
 
-    LayoutRect visibleRect(0, 0, 0, 0);
     LayoutUnit inlineContentWidth = contentWidth();
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
@@ -2236,11 +2235,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             }
         }
 
-        for (size_t k = 0; k < b.m_boxes.size(); k++) {
-            FrameBox* childBox = b.m_boxes[k];
-            LayoutRect vr = childBox->absoluteRect(this);
-            visibleRect.unite(vr);
-        }
         contentHeight += b.m_frameRect.height();
     }
 
