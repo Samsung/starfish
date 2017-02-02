@@ -24,13 +24,13 @@ class PColors:
     def red(text):
         return PColors.RED + text + PColors.ENDC
 
-def isInt(val):
+def is_int(val):
     return type(val) is types.IntType
 
-def isBool(val):
+def is_bool(val):
     return type(val) is types.BooleanType
 
-def isFunction(val):
+def is_function(val):
     return type(val) is types.FunctionType
 
 class Strings:

@@ -29,23 +29,23 @@ class __BasicTestOpts():
         self.tc_handler = default_tc_handler
 
     def set_width(self, v):
-        if utils.isInt(v):
+        if utils.is_int(v):
             self.width = WIDTH_OPT_PREFIX + str(v)
 
     def set_height(self, v):
-        if utils.isInt(v):
+        if utils.is_int(v):
             self.height = HEIGHT_OPT_PREFIX + str(v)
 
     def set_regression(self, v):      
-        if utils.isBool(v):
+        if utils.is_bool(v):
             self.regression = REGRESSION_OPT if v else NON_REGRESSION_OPT
 
     def set_show_progress(self, v):
-        if utils.isBool(v):
+        if utils.is_bool(v):
             self.show_progress = v
 
     def set_tc_handler(self, v):
-        if utils.isFunction(v):
+        if utils.is_function(v):
             self.tc_handler = v
 
 

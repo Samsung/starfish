@@ -30,27 +30,27 @@ class __PixelTestOpts():
         self.tc_handler = default_tc_handler
 
     def set_width(self, v):
-        if utils.isInt(v):
+        if utils.is_int(v):
             self.width = WIDTH_OPT_PREFIX + str(v)
 
     def set_height(self, v):
-        if utils.isInt(v):
+        if utils.is_int(v):
             self.height = HEIGHT_OPT_PREFIX + str(v)
 
     def set_ahem_font(self, v):      
-        if utils.isBool(v):
+        if utils.is_bool(v):
             self.font_opt = AHEM_OPT if v else NON_AHEM_OPT
 
     def set_show_progress(self, v):
-        if utils.isBool(v):
+        if utils.is_bool(v):
             self.show_progress = v
 
     def set_expected_namer(self, v):
-        if utils.isFunction(v):
+        if utils.is_function(v):
             self.expected_namer = v
 
     def set_tc_handler(self, v):
-        if utils.isFunction(v):
+        if utils.is_function(v):
             self.tc_handler = v
 
 def case_runner(tc):
@@ -72,16 +72,20 @@ def case_runner(tc):
     starfish_command = ["./StarFish", tc_file, HIDE_WINDOW_OPT,
                         __opts.font_opt, __opts.width, __opts.height,
                         SCREENSHOT_OPT_PREFIX + tc_result_png]
-    subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
-    if not os.path.isfile(tc_result_png):
-        print "ERROR : Srarfish error - " + tc_file
-        return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+    try:
+        subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
+        if not os.path.isfile(tc_result_png):
+            print "ERROR : Srarfish error - " + tc_file
+            return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
 
-    # Diff
-    diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
-    diff_result = subprocess.check_output(diff_command).decode("UTF-8").strip()
-    os.remove(tc_result_png)
-    return __opts.tc_handler(tc_file, diff_result, __opts.show_progress)
+        # Diff
+        diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
+        diff_result = subprocess.check_output(diff_command).decode("UTF-8").strip()
+        os.remove(tc_result_png)
+        return __opts.tc_handler(tc_file, diff_result, __opts.show_progress)
+
+    except subprocess.CalledProcessError:
+        return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
 
 
 def run_parallel(list_file, width=None, height=None,
