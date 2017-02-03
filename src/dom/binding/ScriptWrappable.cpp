@@ -1094,9 +1094,9 @@ void ScriptWrappable::initScriptWrappable(SourceBufferList* ptr)
         STARFISH_ASSERT(self->type() == ScriptWrappable::Type::SourceBufferListObject);
         uint32_t idx = key.toIndex();
         if (idx != escargot::ESValue::ESInvalidIndexValue && idx < self->length()) {
-            SourceBuffer* e = self->at(idx);
-            if (e != nullptr)
-                return e->scriptValue();
+            SourceBuffer* e = (*self)[idx];
+            STARFISH_ASSERT(e);
+            return e->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
     }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {

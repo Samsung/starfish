@@ -267,8 +267,9 @@ void MediaSource::detach()
     // Remove all the SourceBuffer objects from sourceBuffers.
     // Queue a task to fire a simple event named removesourcebuffer at sourceBuffers.
     if (m_sourceBuffers) {
-        for (unsigned i = 0; i < m_sourceBuffers->length(); i++)
-            m_sourceBuffers->at(i)->detachFromParent();
+        for (unsigned i = 0; i < m_sourceBuffers->length(); i++) {
+            (*m_sourceBuffers)[i]->detachFromParent();
+        }
         m_sourceBuffers->clear();
         m_sourceBuffers->detachFromParent();
     }
@@ -311,7 +312,7 @@ SourceBufferList* MediaSource::activeSourceBuffers()
 bool MediaSource::anySourceBufferInUpdatingState()
 {
     for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
-        if (m_sourceBuffers->at(i)->updating()) {
+        if ((*m_sourceBuffers)[i]->updating()) {
             return true;
         }
     }
@@ -328,7 +329,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                 // check every source buffer has stream info
                 bool allHaveInfo = true;
                 for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
-                    if (m_sourceBuffers->at(i)->m_indexPerInitSegment == 0) {
+                    if ((*m_sourceBuffers)[i]->m_indexPerInitSegment == 0) {
                         allHaveInfo = false;
                         break;
                     }
@@ -342,13 +343,13 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                     SourceBufferList* activeSourceBuffers = this->activeSourceBuffers();
                     uint64_t newDurationMS = 0;
                     for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
-                        STARFISH_ASSERT(m_sourceBuffers->at(i)->m_streamInfo.size() != 0);
-                        const StreamInfoVector& streamInfo = m_sourceBuffers->at(i)->m_streamInfo[0];
+                        STARFISH_ASSERT((*m_sourceBuffers)[i]->m_streamInfo.size() != 0);
+                        const StreamInfoVector& streamInfo = (*m_sourceBuffers)[i]->m_streamInfo[0];
                         bool thisBufferAdded = false;
                         for (size_t j = 0; j < streamInfo.size(); j ++) {
                             if (streamInfo[j]->m_type == StreamInfo::Video) {
                                 if (m_activeVideoSourceBuffer == nullptr) {
-                                    m_activeVideoSourceBuffer = m_sourceBuffers->at(i);
+                                    m_activeVideoSourceBuffer = (*m_sourceBuffers)[i];
                                     m_activeVideoStreamIndex = streamInfo[j]->m_streamIndex;
                                     if (newDurationMS < streamInfo[j]->m_duration) {
                                         newDurationMS = streamInfo[j]->m_duration;
@@ -360,7 +361,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                 }
                             } else if (streamInfo[j]->m_type == StreamInfo::Audio) {
                                 if (m_activeAudioSourceBuffer == nullptr) {
-                                    m_activeAudioSourceBuffer = m_sourceBuffers->at(i);
+                                    m_activeAudioSourceBuffer = (*m_sourceBuffers)[i];
                                     m_activeAudioStreamIndex = streamInfo[j]->m_streamIndex;
                                     if (newDurationMS < streamInfo[j]->m_duration) {
                                         newDurationMS = streamInfo[j]->m_duration;

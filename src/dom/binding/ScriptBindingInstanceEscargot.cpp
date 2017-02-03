@@ -2348,11 +2348,13 @@ escargot::ESFunctionObject* bindingSourceBufferList(ScriptBindingInstance* scrip
         SourceBufferListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("SourceBuffer"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject, SourceBufferList);
-        SourceBuffer* buffer = originalObj->at(v.toInt32());
-        if (buffer) {
+        if (v.toIndex() >= originalObj->length()) {
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        } else {
+            SourceBuffer* buffer = (*originalObj)[v.toIndex()];
             return buffer->scriptValue();
         }
-        return escargot::ESValue(escargot::ESValue::ESUndefined);
+
     }, nullptr);
 
     return SourceBufferListFunction;
