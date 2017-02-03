@@ -145,7 +145,7 @@ test_regression_test_css:
     - git submodule update
     - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make pixel_test_css_all | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make pixel_test_css_all | tee prepush_test_result; if cat prepush_test_result |grep 'Error 1' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
