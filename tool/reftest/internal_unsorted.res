@@ -168,3 +168,4 @@
 51793:test/internal-test/css/short-hand/border_top_shorthand.html
 58255:test/internal-test/css/zindex_img/zindex-img-internal-test-7.html
 58957:test/internal-test/css/zindex/zindex-internal-test-7.html
+377:test/internal-test/css/border/starting_unprocessed_mbp.html

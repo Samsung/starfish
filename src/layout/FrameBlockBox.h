@@ -32,10 +32,9 @@ class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
 public:
-    InlineBox(Node* node, ComputedStyle* style, Frame* parent)
+    InlineBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
     {
-        setParent(parent);
     }
 
     Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
@@ -78,8 +77,8 @@ struct TextRun {
 
 class InlineTextBox : public InlineBox {
 public:
-    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, const TextRun& run)
-        : InlineBox(node, style, parent)
+    InlineTextBox(FrameText* frame, const TextRun& run)
+        : InlineBox(frame->node(), frame->style())
         , m_textRun(run)
     {
     }
@@ -129,27 +128,24 @@ protected:
     TextRun m_textRun;
 };
 
-class InlineNonReplacedBox : public InlineBox {
-    friend class FrameBlockBox;
-    friend void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
-    friend void reassignLeftRightMBPOfInlineNonReplacedBox(LineFormattingContext& ctx, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
-public:
-    InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
-        : InlineBox(node, style, parent)
-        , m_isCollapsed(false)
-    {
-        if (origin->isLeftMBPCleared())
-            setLeftMBPCleared();
-        if (origin->isRightMBPCleared())
-            setRightMBPCleared();
-        m_origin = origin;
-        m_descender = m_ascender = 0;
+struct InlineNonReplacedBoxMBPStore;
+struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
 
-        // recompute style flags
-        // we should re compute flgas here
-        // because, when ctor of Frame is Executed, vtable is not setted correctly
-        // so we could not consider that what kind of frame is this
-        computeStyleFlags();
+class InlineNonReplacedBox : public InlineBox {
+    friend struct InlineNonReplacedBoxMBPStore;
+    friend struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
+    friend class FrameBlockBox;
+    friend class LineFormattingContext;
+public:
+    InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)
+        : InlineNonReplacedBox(inlineBox, inlineBox->origin())
+    {
+        m_isProcessedStartingMBP = inlineBox->m_isProcessedStartingMBP;
+    }
+
+    InlineNonReplacedBox(FrameInline* frame)
+        : InlineNonReplacedBox(frame, frame)
+    {
     }
 
     virtual bool isInlineNonReplacedBox() const { return true; }
@@ -157,8 +153,8 @@ public:
     {
         return "InlineNonReplacedBox";
     }
-    static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
-        LineFormattingContext* lineFormattingContext, InlineNonReplacedBox* layoutParentBox, bool freshStart);
+    static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self,
+        LineFormattingContext& lineFormattingContext, InlineNonReplacedBox* layoutParentBox);
     virtual void paint(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx)
     {
@@ -232,13 +228,98 @@ public:
         m_isCollapsed = true;
     }
 
+    bool isProcessedStartingMBP()
+    {
+        return m_isProcessedStartingMBP;
+    }
+
+    void markProcessedStartingMBP()
+    {
+        m_isProcessedStartingMBP = true;
+    }
+
+    void unsetTopBottomMBP();
+    void unsetLeftMBP();
+    void unsetRightMBP();
+    void unsetEndingMBP(DirectionValue direction);
+    void unsetStartingMBP(DirectionValue direction);
+    void resetOrgMBP(InlineNonReplacedBoxMBPStore* origin = nullptr);
+    void resetLeftRightMBP(InlineNonReplacedBoxMBPStore* origin);
+
 protected:
     bool m_isCollapsed;
+    bool m_isProcessedStartingMBP;
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     FrameInline* m_origin;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
     std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
+
+    InlineNonReplacedBox(Frame* frame, FrameInline* origin)
+        : InlineBox(frame->node(), frame->style())
+        , m_isCollapsed(false)
+        , m_isProcessedStartingMBP(false)
+        , m_ascender(0)
+        , m_descender(0)
+        , m_origin(origin)
+    {
+        if (origin->isLeftMBPCleared()) {
+            setLeftMBPCleared();
+        }
+        if (origin->isRightMBPCleared()) {
+            setRightMBPCleared();
+        }
+
+        // recompute style flags
+        // we should re compute flags here
+        // because, when ctor of Frame is executed, vtable is not set correctly
+        // so we could not consider that what kind of frame is this
+        computeStyleFlags();
+    }
+};
+
+struct InlineNonReplacedBoxMBPStore {
+    LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+
+    InlineNonReplacedBoxMBPStore(InlineNonReplacedBox* origin)
+    {
+        m_orgMargin = origin->m_orgMargin;
+        m_orgBorder = origin->m_orgBorder;
+        m_orgPadding = origin->m_orgPadding;
+    }
+
+    void unsetStartingMBP(DirectionValue direction)
+    {
+        if (direction == LtrDirectionValue) {
+            unsetLeftMBP();
+        } else {
+            unsetRightMBP();
+        }
+    }
+
+    void unsetEndingMBP(DirectionValue direction)
+    {
+        if (direction == LtrDirectionValue) {
+            unsetRightMBP();
+        } else {
+            unsetLeftMBP();
+        }
+    }
+
+private:
+    void unsetLeftMBP()
+    {
+        m_orgMargin.setLeft(0);
+        m_orgBorder.setLeft(0);
+        m_orgPadding.setLeft(0);
+    }
+
+    void unsetRightMBP()
+    {
+        m_orgMargin.setRight(0);
+        m_orgBorder.setRight(0);
+        m_orgPadding.setRight(0);
+    }
 };
 
 class LineBox : public FrameBox {
@@ -571,10 +652,17 @@ protected:
 };
 
 struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
-    DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine()
+    DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine(InlineNonReplacedBox* inrb)
+        : m_isFirstEdgeProcessed(false)
     {
-        m_isFirstEdgeProcessed = false;
+        m_margin = inrb->m_margin;
+        m_border = inrb->m_border;
+        m_padding = inrb->m_padding;
+        m_orgMargin = inrb->m_orgMargin;
+        m_orgBorder = inrb->m_orgBorder;
+        m_orgPadding = inrb->m_orgPadding;
     }
+
     LayoutBoxSurroundData m_margin;
     LayoutBoxSurroundData m_border;
     LayoutBoxSurroundData m_padding;
@@ -624,20 +712,33 @@ private:
     void insertPendingInlineBoxes();
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
+    template <typename Iter>
+    void sortInlineBoxes(Iter& iter);
+
     void removeDanglingSpaceFromLine();
     void removeAllInlineBoxes();
 
     bool isAnyOfInlineBoxesCollidedWithFloatingBoxes();
     void reCacheFloatingBoxes(LayoutUnit xDiff);
     void makeFloatingBoxLayoutContext(LayoutUnit yDiff);
+
+    CharDirection contentDir(FrameBox* box);
+    void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
+    void reassignLeftRightMBPOfInlineNonReplacedBox(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
+    void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
+    void splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
     FontHeights computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, bool dueToBr);
 
     void markInlineBoxIndex(FrameBox* box);
+    void setStartingMBP(InlineNonReplacedBox* self);
+    void setEndingMBP(InlineNonReplacedBox* self);
     void finishLine(FrameLineBreak* br, bool isLastLine);
+    void finishLine(FrameLineBreak* br, InlineNonReplacedBox* self, bool isLastNode);
     void breakLine(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
+    InlineNonReplacedBox* breakLine(FrameLineBreak* br, InlineNonReplacedBox* self);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
     template <typename Box>
     LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
@@ -649,6 +750,7 @@ public:
     }
     */
 
+    void insertNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent);
     void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
     LineBox* currentLine()
     {
@@ -678,6 +780,7 @@ public:
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_lineBoxWidth;
+    LayoutUnit m_unprocessedStartingMBPWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
