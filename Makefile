@@ -722,59 +722,51 @@ install_inspector_nwjs:
 run_inspector:
 	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
-pixel_test:
-	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
-pixel_test_css:
-	java StarFishTester $(tc) $(engine)
 pixel_test_css_rtl:
-	make pixel_test_css tc=css_rtl engine=nw 2> out/pixel_test_css_rtl.log
-	@cat out/pixel_test_css_rtl.log | grep "% passed" | cut -d' ' -f1 | sort -d > out/wpt_cssrtl_passed.res
-	mv tool/reftest/wpt_cssrtl_passed.res out/wpt_cssrtl_passed.orig
-	cp out/wpt_cssrtl_passed.res tool/reftest/
-	@diff out/wpt_cssrtl_passed.res out/wpt_cssrtl_passed.orig
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_rtl_css.res 2> out/pixel_test_css_rtl.log
+	@cat out/pixel_test_css_rtl.log | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | cut -d' ' -f2 | sort -d > out/wpt_cssrtl_failed.res
+	@diff out/wpt_cssrtl_failed.res tool/reftest/wpt_cssrtl_passed.res
 pixel_test_css1:
-	make pixel_test_css tc=css1 engine=nw
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css1.res
 pixel_test_css21:
-	make pixel_test_css tc=css21 engine=nw
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css21.res
 pixel_test_css3_color:
-	make pixel_test_css tc=css3_color engine=nw
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_color.res
 pixel_test_css3_backgrounds:
-	make pixel_test_css tc=css3_backgrounds engine=nw
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_backgrounds.res
 pixel_test_css3_transforms:
-	make pixel_test_css tc=css3_transforms engine=nw
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_transforms.res
 pixel_test_css_all:
 	make pixel_test_css1 2> out/pixel_test_css_all.log
 	make pixel_test_css21 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_color 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_transforms 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_backgrounds 2>> out/pixel_test_css_all.log
-	@echo '========== Show out/pixel_test_css_all.log =========='
-	@cat out/pixel_test_css_all.log | grep "% passed" | cut -d' ' -f1 | sort -d > out/wpt_css_passed.res
-	@cat out/pixel_test_css_all.log | grep "====total" | awk 'BEGIN {s=0}{ s += $$6 } END {print "Total "s" Passed (CSS1/21/3-color/3-backgrounds/3-transforms)"}'
-	mv tool/reftest/wpt_css_passed.res out/wpt_css_passed.orig
-	cp out/wpt_css_passed.res tool/reftest/
-	@diff out/wpt_css_passed.res out/wpt_css_passed.orig
+	@cat out/pixel_test_css_all.log | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | cut -d' ' -f2 | sort -d > out/wpt_css_failed.res
+	@diff out/wpt_css_failed.res tool/reftest/wpt_css_failed.res
 
 internal_test:
 	cat tool/reftest/internal_fast.res tool/reftest/internal_slow.res > tool/reftest/internal.res
-	./tool/reftest/reftest.sh internal_test
+	./tool/drivers/run_test.py internal tool/reftest/internal.res
+	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
 	rm tool/reftest/internal.res
 
 internal_test_gitlab_prerequisite:
 	./tool/reftest/internal.sh $(div)
 internal_test_part1:
-	./tool/reftest/reftest.sh internal_part1
+	./tool/drivers/run_test.py internal tool/reftest/internal_part1.res
 internal_test_part2:
-	./tool/reftest/reftest.sh internal_part2
+	./tool/drivers/run_test.py internal tool/reftest/internal_part2.res
 internal_test_part3:
-	./tool/reftest/reftest.sh internal_part3
+	./tool/drivers/run_test.py internal tool/reftest/internal_part3.res
 internal_test_part4:
-	./tool/reftest/reftest.sh internal_part4
+	./tool/drivers/run_test.py internal tool/reftest/internal_part4.res
 internal_test_fast:
-	./tool/reftest/reftest.sh internal_fast
+	./tool/drivers/run_test.py internal tool/reftest/internal_fast.res
+	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
 
-reftest:
-	./tool/reftest/reftest.sh $(tc) $(regression)
+# reftest:
+# 	./tool/reftest/reftest.sh $(tc) $(regression)
 
 tct:
 	./StarFish test/tct/index.html
@@ -793,45 +785,47 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
 regression_test_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test.res true
+	./tool/drivers/run_test.py dom_conformance tool/reftest/dom_conformance_test.res
 
 regression_test_wpt_dom:
-	./tool/reftest/reftest.sh tool/reftest/wpt_dom.res true
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom.res
 regression_test_wpt_dom_events:
-	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events.res true
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom_events.res
 regression_test_wpt_html:
-	./tool/reftest/reftest.sh tool/reftest/wpt_html.res true
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_html.res
 regression_test_wpt_page_visibility:
-	./tool/reftest/reftest.sh tool/reftest/wpt_page_visibility.res true
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_page_visibility.res
 regression_test_wpt_progress_events:
-	./tool/reftest/reftest.sh tool/reftest/wpt_progress_events.res true
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_progress_events.res
 regression_test_wpt_xhr:
-	#./run_wpt_serve.sh
-	./tool/reftest/reftest.sh tool/reftest/wpt_xhr.res true
-	#-./kill_wpt_serve.sh
+	./tool/drivers/run_test.py web_platform tool/reftest/wpt_xhr.res
 
 regression_test_blink_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test.res true
+	./tool/drivers/run_test.py dom_conformance tool/reftest/blink_dom_conformance_test.res
 regression_test_blink_fast_dom:
-	./tool/reftest/reftest.sh tool/reftest/blink_fast_dom.res true
+	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_dom.res
 regression_test_blink_fast_html:
-	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res true
+	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_html.res
 regression_test_blink_fast_css:
-	./tool/reftest/reftest.sh blink_fast_css true
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css.res
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css_manual.res --font-dep
 regression_test_blink_fast_etc:
-	./tool/reftest/reftest.sh blink_fast_etc true
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc.res
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc_manual.res --font-dep
 regression_test_gecko_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test.res true
+	./tool/drivers/run_test.py dom_conformance tool/reftest/gecko_dom_conformance_test.res
 regression_test_webkit_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/webkit_dom_conformance_test.res true
+	./tool/drivers/run_test.py dom_conformance tool/reftest/webkit_dom_conformance_test.res
 regression_test_webkit_fast_dom:
-	./tool/reftest/reftest.sh tool/reftest/webkit_fast_dom.res true
+	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_dom.res
 regression_test_webkit_fast_html:
-	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
+	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_html.res
 regression_test_webkit_fast_css:
-	./tool/reftest/reftest.sh webkit_fast_css true
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css.res
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css_manual.res --font-dep
 regression_test_webkit_fast_etc:
-	./tool/reftest/reftest.sh webkit_fast_etc true
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc.res
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc_manual.res --font-dep
 
 regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
@@ -859,7 +853,7 @@ regression_test_css:
 	make regression_test_css3_transforms
 
 font_dependent_test_css:
-	./tool/reftest/reftest.sh tool/reftest/tclist/csswg_manual.res update
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_manual.res --font-dep
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp

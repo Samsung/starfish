@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 import os
+from basics.utils import Strings
+import logging
+logging.basicConfig(format="%(message)s")
 
 # TODO Make it one simple rule to generate expected image name
 def font_dep_exp_img_namer(tc_file):
@@ -15,16 +18,13 @@ def get_exp_img_namer(font_dep):
         return font_dep_exp_img_namer
     return font_indep_exp_img_namer
 
-def result_handler(tc_itr, result_itr):
-    import logging
-    logging.basicConfig(format="%(message)s")
-    print "\nCheck Regression!!\n"
-    ntc = 0
-    npass = 0
-    for result in result_itr:
-        if result:
-            npass += 1
-        else:
-            logging.error("[FAIL] " + tc_itr[ntc][1])
-        ntc += 1
-    return (npass, ntc - npass)
+def tc_handler(tc_file, diff_result, show_progress=True):
+    is_passed = False
+    if "passed" in diff_result:
+        is_passed = True
+        if show_progress:
+            print Strings.PASS_SIGN + tc_file + " " + diff_result
+    else:
+        if show_progress:
+            logging.error(Strings.FAIL_SIGN + tc_file + " " + diff_result)
+    return is_passed
