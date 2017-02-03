@@ -30,7 +30,7 @@ public:
     static FrameTableCellBox* buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
-    void calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calCellWidth(LayoutContext& ctx, unsigned pos, Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
