@@ -256,7 +256,7 @@ public:
         return ScriptWrappable::Type::SourceBufferListObject;
     }
 
-    unsigned long length() const
+    size_t length() const
     {
         return m_list.size();
     }
@@ -306,10 +306,8 @@ public:
         m_parentMediaSource = nullptr;
     }
 
-    SourceBuffer* at(unsigned long index)
+    SourceBuffer* operator[](size_t index)
     {
-        if (index >= m_list.size())
-            return nullptr;
         return m_list[index];
     }
 

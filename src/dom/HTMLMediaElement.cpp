@@ -446,17 +446,20 @@ TimeRanges* HTMLMediaElement::seekable()
     }
     if (m_mediaPlayer->activeMediaSource()) {
         SourceBufferList* bufferList = m_mediaPlayer->activeMediaSource()->activeSourceBuffers();
+        STARFISH_ASSERT(bufferList);
         unsigned nbuffer = bufferList->length();
 
-        if (nbuffer == 0)
+        if (nbuffer == 0) {
             return new TimeRanges();
+        }
 
-        if (nbuffer == 1)
-            return bufferList->at(0)->buffered();
+        if (nbuffer == 1) {
+            return (*bufferList)[0]->buffered();
+        }
 
-        TimeRanges* result = bufferList->at(0)->buffered();
+        TimeRanges* result = (*bufferList)[0]->buffered();
         for (unsigned i = 1; i < nbuffer; i++) {
-            TimeRanges* buffered = bufferList->at(i)->buffered();
+            TimeRanges* buffered = (*bufferList)[i]->buffered();
             unsigned bufferedSize = buffered->length();
             unsigned resultSize = result->length();
             TimeRanges* newResult = new TimeRanges();
