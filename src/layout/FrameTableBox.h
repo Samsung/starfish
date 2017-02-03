@@ -24,6 +24,7 @@ namespace StarFish {
 class FrameTableCaptionBox;
 class FrameTreeBuilderContext;
 class TableFormattingContextBlock;
+class FrameTableCellBox;
 
 // Table has the following table structure
 //
@@ -62,9 +63,6 @@ public:
     static FrameTableBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-    void calCellWidth(LayoutContext& ctx);
-    void layoutWidth(LayoutContext& ctx);
-    void layoutHeight(LayoutContext& ctx);
 
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -81,14 +79,6 @@ public:
     virtual bool hasBlockFlow()
     {
         // FrameTable always contains blockflow
-        Frame* child = firstChild();
-        if (child) {
-            STARFISH_ASSERT(child->isNormalFlow());
-            // Only FrameTableCaption or FrameTableSection can exist as children
-            // of FrameTable
-            STARFISH_ASSERT(child->isFrameTableCaptionBox() || child->isFrameTableSectionBox());
-        }
-
         return true;
     }
 
@@ -97,13 +87,28 @@ public:
         return m_columnWidths;
     }
 
+    std::vector<FrameTableCellBox*>& cellsInTheFirstRow()
+    {
+        return m_cellsInTheFirstRow;
+    }
+
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
 private:
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
+    void calCellWidth(LayoutContext& ctx);
+
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
+    void calCellWidthForAutoTableLayout(LayoutContext& ctx);
+    void calCellWidthForFixedTableLayout(LayoutContext& ctx);
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<ColSizeStruct> m_columnWidths;
+
+    // We use vector here because "FrameTableCellBox"es are already stored
+    // in GCVector, and it is used only to the duration of layoutWidth().
+    std::vector<FrameTableCellBox*> m_cellsInTheFirstRow;
 
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background

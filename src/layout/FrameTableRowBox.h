@@ -53,7 +53,7 @@ public:
 
     FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
-    FrameTableSectionBox* tableSectionBox()
+    FrameTableSectionBox* sectionBox()
     {
         return parent()->asFrameTableSectionBox();
     }

@@ -125,9 +125,11 @@ FrameTableCellBox* FrameTableRowBox::addChild(Node* child, FrameTreeBuilderConte
 void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
+    unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
-            c->asFrameTableCellBox()->calCellWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+            c->asFrameTableCellBox()->calCellWidth(ctx, i, Frame::LayoutWantToResolve::ResolveWidth);
+            i++;
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -139,18 +141,19 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(tableSectionBox()->tableBox()->style()->borderSpacing().fixed());
+        LayoutUnit::fromPixel(sectionBox()->tableBox()->style()->borderSpacing().fixed());
 
     if (firstChild()) {
         xSoFar += borderSpacing;
     }
 
-    int i = 0;
+    unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameBox* cell = c->asFrameTableCellBox();
             cell->setX(xSoFar);
-            LayoutUnit cellWidth = tableSectionBox()->tableBox()-> columnWidths()[i].cellWidth;
+            STARFISH_ASSERT(i < sectionBox()->tableBox()-> columnWidths().size());
+            LayoutUnit cellWidth = sectionBox()->tableBox()-> columnWidths()[i].cellWidth;
             cell->setWidth(cellWidth);
             cell->asFrameTableCellBox()->layoutWidth(ctx);
             xSoFar += cellWidth;

@@ -16,8 +16,10 @@
 
 #include "StarFishConfig.h"
 #include "FrameTableCellBox.h"
-#include "FrameTableRowBox.h"
 
+#include "FrameTableBox.h"
+#include "FrameTableRowBox.h"
+#include "FrameTableSectionBox.h"
 #include "FrameTreeBuilder.h"
 #include "FrameText.h"
 
@@ -65,21 +67,46 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
     return tableCell->parent() ? nullptr : tableCell;
 }
 
-void FrameTableCellBox::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
-    if (style()->width().isAuto()) {
+    // If "table-layout: auto", calculate min/max cell widths.
+    // If "table-layout: fixed", and the top cell in the first row has
+    // values other than "width: auto", we use the fixed value from the cell.
+    FrameTableBox* table = rowBox()->sectionBox()->tableBox();
+    if (table->style()->tableLayout() == TableLayoutValue::AutoTableLayoutValue) {
         m_minCellWidth = calMinCellWidth(ctx);
         m_maxCellWidth = calMaxCellWidth(ctx);
-    } else if (style()->width().isFixed()) {
-        LayoutUnit width = LayoutUnit::fromPixel(style()->width().fixed());
-        m_minCellWidth = std::max(width, calMinCellWidth(ctx));
-        m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
-    } else if (style()->width().isPercent()) {
-        // TODO
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else if (table->style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue) {
+        std::vector<FrameTableCellBox*> cellsInTheFirstRow =
+            rowBox()->sectionBox()->tableBox()->cellsInTheFirstRow();
+
+        // This row may contain more columns than the first row in the table.
+        // In this case, the spec,
+        // https://www.w3.org/TR/CSS21/tables.html#fixed-table-layout,
+        // says we can stop rendering additional cells. But, we continue to
+        // layout these additional cells, following blink's behaviour.
+        FrameTableCellBox* matchingCellInTheFirstRow = nullptr;
+        if (pos < cellsInTheFirstRow.size()) {
+            matchingCellInTheFirstRow = cellsInTheFirstRow[pos];
+        }
+
+        if (!matchingCellInTheFirstRow || matchingCellInTheFirstRow->style()->width().isAuto()) {
+            m_minCellWidth = calMinCellWidth(ctx);
+            m_maxCellWidth = calMaxCellWidth(ctx);
+        } else {
+            if (matchingCellInTheFirstRow->style()->width().isFixed()) {
+                LayoutUnit width =
+                    LayoutUnit::fromPixel(matchingCellInTheFirstRow->style()->width().fixed());
+                m_minCellWidth = calMinCellWidth(ctx);
+                m_maxCellWidth = std::min(width, calMaxCellWidth(ctx));
+            } else if (matchingCellInTheFirstRow->style()->width().isPercent()) {
+                // TODO
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
     }
 }
 
