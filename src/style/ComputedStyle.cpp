@@ -268,15 +268,15 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
 
     if (newStyle->m_inheritedStyles.m_borderCollapse != oldStyle->m_inheritedStyles.m_borderCollapse) {
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_borderSpacing != oldStyle->m_inheritedStyles.m_borderSpacing) {
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_captionSide != oldStyle->m_inheritedStyles.m_captionSide) {
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_display != oldStyle->m_display)
@@ -325,7 +325,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
     if (newStyle->m_tableLayout != oldStyle->m_tableLayout) {
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     // NOTE.
