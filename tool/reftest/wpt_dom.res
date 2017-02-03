@@ -66,7 +66,6 @@ test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-18.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-19.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-20.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-21.htm
-test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-22.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-23.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-24.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-25.htm
@@ -74,7 +73,6 @@ test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-26.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-27.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-28.htm
 test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-29.htm
-test/reftest/web-platform-tests/dom/nodes/getElementsByClassName-30.htm
 test/reftest/web-platform-tests/dom/nodes/Node-appendChild.html
 test/reftest/web-platform-tests/dom/nodes/Node-childNodes.html
 test/reftest/web-platform-tests/dom/nodes/Node-cloneNode.html
