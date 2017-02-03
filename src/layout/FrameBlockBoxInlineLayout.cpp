@@ -1889,16 +1889,20 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
     }
 }
 
-static void registerRelativePositionInlineBoxes(LayoutContext& ctx, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes)
+template <typename Box>
+static void registerRelativePositionInlineBoxes(LayoutContext& ctx, Box* parent)
 {
-    for (size_t k = 0; k < boxes.size(); k++) {
-        FrameBox* childBox = boxes[k];
+    for (size_t k = 0; k < parent->boxes().size(); k++) {
+        FrameBox* childBox = parent->boxes()[k];
+        STARFISH_ASSERT(childBox != nullptr);
+
         if (!childBox->isFrameBlockBox()) {
             if (childBox->style()->position() == PositionValue::RelativePositionValue) {
                 ctx.registerRelativePositionedFrames(childBox, true);
             }
+
             if (childBox->isInlineBox() && childBox->asInlineBox()->isInlineNonReplacedBox()) {
-                registerRelativePositionInlineBoxes(ctx, childBox->asInlineBox()->asInlineNonReplacedBox()->boxes());
+                registerRelativePositionInlineBoxes(ctx, childBox->asInlineBox()->asInlineNonReplacedBox());
             }
         }
     }
@@ -2190,24 +2194,11 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         }
     }
 
+
     for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-        STARFISH_ASSERT(m_lineBoxes[i] != nullptr);
-        LineBox& b = *m_lineBoxes[i];
-        STARFISH_ASSERT(b.isLineBox());
-
-        // register position: relative boxes
-        for (size_t k = 0; k < b.m_boxes.size(); k++) {
-            FrameBox* childBox = b.m_boxes[k];
-            if (!childBox->isFrameBlockBox()) {
-                if (childBox->style()->position() == PositionValue::RelativePositionValue) {
-                    ctx.registerRelativePositionedFrames(childBox, true);
-                }
-
-                if (childBox->isInlineBox() && childBox->asInlineBox()->isInlineNonReplacedBox()) {
-                    registerRelativePositionInlineBoxes(ctx, childBox->asInlineBox()->asInlineNonReplacedBox()->boxes());
-                }
-            }
-        }
+        LineBox* b = m_lineBoxes[i];
+        STARFISH_ASSERT(b != nullptr && b->isLineBox());
+        registerRelativePositionInlineBoxes(ctx, b);
     }
 
     p = m_lineBoxes.size();
