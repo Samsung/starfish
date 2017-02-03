@@ -40,8 +40,8 @@ def run_web_platform_test(list, font_dep):
 # CSSWG Tests
 def run_csswg_test(list, font_dep):
     import basics.starfish_pixel_test as pixeltest
-    from tests.csswg_test import get_exp_img_namer, result_handler
-    result = pixeltest.run_parallel(list, ahem_font=(not font_dep), expected_namer=get_exp_img_namer(font_dep), result_handler=result_handler)
+    from tests.csswg_test import get_exp_img_namer, tc_handler
+    result = pixeltest.run_parallel(list, tc_handler=tc_handler, ahem_font=(not font_dep), expected_namer=get_exp_img_namer(font_dep))
     print_result(result)
 
 # Internal Tests
