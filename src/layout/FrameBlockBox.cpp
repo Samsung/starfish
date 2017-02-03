@@ -757,7 +757,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             }
             ctx.m_paintingStage = PaintingPositionedElements;
         }
-    } else if (style()->display() == InlineBlockDisplayValue) {
+    } else if ((style()->display() == InlineBlockDisplayValue) || (style()->display() == InlineTableDisplayValue)) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {

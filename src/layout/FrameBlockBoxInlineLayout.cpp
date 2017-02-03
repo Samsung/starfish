@@ -161,7 +161,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-        } else if (box->isFrameBlockBox() && (box->style()->display() == InlineBlockDisplayValue || box->style()->display() == InlineTableDisplayValue)) {
+        } else if (box->isFrameBlockBox() && ((box->style()->display() == InlineBlockDisplayValue) || (box->style()->display() == InlineTableDisplayValue))) {
             hasBoxOtherThanText = true;
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
             LayoutUnit boxHeight = box->boxHeight();
@@ -321,7 +321,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                            */
                         f->setY(maxAscender - f->height() - marginBottom);
                     } else {
-                        STARFISH_ASSERT(f->isFrameBlockBox() && (f->style()->display() == InlineBlockDisplayValue || f->style()->display() == InlineTableDisplayValue));
+                        STARFISH_ASSERT(f->isFrameBlockBox() && ((f->style()->display() == InlineBlockDisplayValue) || (f->style()->display() == InlineTableDisplayValue)));
                         LayoutUnit ascender = inlineBlockAscender(f->asFrameBlockBox());
                         if (ascender == f->height()) {
                             f->setY(maxAscender - ascender - marginBottom);
@@ -1829,9 +1829,9 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 unprocessedWidth = unprocessedStartingWidth;
             }
 
-            if (f->style()->display() == DisplayValue::InlineBlockDisplayValue || f->style()->display() == DisplayValue::InlineTableDisplayValue) {
+            if ((f->style()->display() == DisplayValue::InlineBlockDisplayValue) || (f->style()->display() == DisplayValue::InlineTableDisplayValue)) {
                 lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox = true;
-                // inline-block
+                // inline-block, inline-table
                 ctx.pushInlineBlockBox(r);
                 f->setLayoutParent(layoutParent);
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
