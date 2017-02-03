@@ -271,21 +271,19 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     // 0. Get the cells in the first row. These are used to
     // determine the width of each cell in the table later.
     m_cellsInTheFirstRow.clear();
-    bool done = false;
     for (Frame* s = firstChild(); s; s = s->next()) {
         if (s->isFrameTableSectionBox()) {
             FrameTableSectionBox* section = s->asFrameTableSectionBox();
-            for (Frame* r = section->firstChild(); r; r = r->next()) {
-                FrameTableRowBox* row = r->asFrameTableRowBox();
-                for (Frame* c = row->firstChild(); c; c = c->next()) {
-                    FrameTableCellBox* cell = c->asFrameTableCellBox();
-                    m_cellsInTheFirstRow.push_back(cell);
+            if (section && section->firstChild()) {
+                FrameTableRowBox* row = section->firstChild()->asFrameTableRowBox();
+                if (row) {
+                    for (Frame* c = row->firstChild(); c; c = c->next()) {
+                        FrameTableCellBox* cell = c->asFrameTableCellBox();
+                        m_cellsInTheFirstRow.push_back(cell);
+                    }
                 }
-                done = true;
-                break;
             }
-        }
-        if (done) {
+
             break;
         }
     }
