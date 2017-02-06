@@ -453,10 +453,6 @@ TimeRanges* HTMLMediaElement::seekable()
             return new TimeRanges();
         }
 
-        if (nbuffer == 1) {
-            return (*bufferList)[0]->buffered();
-        }
-
         TimeRanges* result = (*bufferList)[0]->buffered();
         for (unsigned i = 1; i < nbuffer; i++) {
             TimeRanges* buffered = (*bufferList)[i]->buffered();
