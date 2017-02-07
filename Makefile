@@ -440,7 +440,7 @@ ifeq ($(MEDIA_SUPPORT), true)
         LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
       endif
     else
-      LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/$(MODE)
+      LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/release
       CXXFLAGS += -I$(LIBAV_CURPATH)
       LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
       LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/

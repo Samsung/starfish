@@ -9,12 +9,14 @@ build:
     - git submodule update
     - ./build_third_party.sh
   script:
-    - make x64.exe.release -j
+    - make x64.exe.debug -j
+    - strip StarFish
+    - strip out/x64/exe/debug/StarFish
     - make tidy; if cat error_report | grep 'ERROR' > /dev/null; then exit 1; fi
   artifacts:
     paths:
       - StarFish
-      - out/x64/exe/release/StarFish
+      - out/x64/exe/debug/StarFish
       - third_party/libav/out/linux/x64/release/libavformat/libavformat.so.56
       - third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56
       - third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54
