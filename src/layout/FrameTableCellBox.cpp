@@ -76,10 +76,22 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
     // values other than "width: auto", we use the fixed value from the cell.
     FrameTableBox* table = rowBox()->sectionBox()->tableBox();
     if (table->style()->tableLayout() == TableLayoutValue::AutoTableLayoutValue) {
-        m_minCellWidth = calMinCellWidth(ctx);
-        m_maxCellWidth = calMaxCellWidth(ctx);
+        if (style()->width().isAuto()) {
+            m_minCellWidth = calMinCellWidth(ctx);
+            m_maxCellWidth = calMaxCellWidth(ctx);
+        } else if (style()->width().isFixed()) {
+            LayoutUnit width =
+                LayoutUnit::fromPixel(style()->width().fixed());
+            m_minCellWidth = std::max(width, calMinCellWidth(ctx));
+            m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
+        } else if (style()->width().isPercent()) {
+            // TODO
+        } else {
+            // Should not be here
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     } else if (table->style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue) {
-        std::vector<FrameTableCellBox*> cellsInTheFirstRow =
+        std::vector<FrameTableCellBox*>& cellsInTheFirstRow =
             rowBox()->sectionBox()->tableBox()->cellsInTheFirstRow();
 
         // This row may contain more columns than the first row in the table.
@@ -99,11 +111,12 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
             if (matchingCellInTheFirstRow->style()->width().isFixed()) {
                 LayoutUnit width =
                     LayoutUnit::fromPixel(matchingCellInTheFirstRow->style()->width().fixed());
-                m_minCellWidth = calMinCellWidth(ctx);
-                m_maxCellWidth = std::min(width, calMaxCellWidth(ctx));
+                m_minCellWidth = std::max(width, calMinCellWidth(ctx));
+                m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
             } else if (matchingCellInTheFirstRow->style()->width().isPercent()) {
                 // TODO
             } else {
+                // Should not be here
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
