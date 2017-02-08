@@ -813,6 +813,8 @@ regression_test_blink_fast_etc:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc_manual.res --font-dep
 regression_test_gecko_dom_conformance_test:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/gecko_dom_conformance_test.res
+regression_test_gecko_layout:
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/gecko_layout.res
 regression_test_webkit_dom_conformance_test:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/webkit_dom_conformance_test.res
 regression_test_webkit_fast_dom:

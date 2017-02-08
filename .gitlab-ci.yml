@@ -77,7 +77,7 @@ test_internal_test4:
   dependencies:
   - build
 
-test_regression_test_blink:
+test_regression_test_vendor1:
   stage: test
   before_script:
     - git submodule deinit -f .
@@ -88,10 +88,11 @@ test_regression_test_blink:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_gecko_layout | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
-test_regression_test_webkit:
+test_regression_test_vendor2:
   tags:
     - shell_executor
   stage: test
