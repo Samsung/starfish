@@ -24,7 +24,7 @@ build:
 
 # run tests using the binary built before
 
-test_internal_test_fast1:
+test_internal_test1:
   stage: test
   before_script:
     - git submodule deinit -f .
@@ -33,7 +33,7 @@ test_internal_test_fast1:
     - make install_pixel_test_dep
     - make internal_test_gitlab_prerequisite div=4
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_fast | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_manual | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part1 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build

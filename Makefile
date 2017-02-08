@@ -746,7 +746,7 @@ pixel_test_css_all:
 	@diff out/wpt_css_failed.res tool/reftest/wpt_css_failed.res
 
 internal_test:
-	cat tool/reftest/internal_fast.res tool/reftest/internal_slow.res > tool/reftest/internal.res
+	cat tool/reftest/internal_unsorted.res | cut -d":" -f2 > tool/reftest/internal.res
 	./tool/drivers/run_test.py internal tool/reftest/internal.res
 	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
 	rm tool/reftest/internal.res
@@ -761,8 +761,7 @@ internal_test_part3:
 	./tool/drivers/run_test.py internal tool/reftest/internal_part3.res
 internal_test_part4:
 	./tool/drivers/run_test.py internal tool/reftest/internal_part4.res
-internal_test_fast:
-	./tool/drivers/run_test.py internal tool/reftest/internal_fast.res
+internal_test_manual:
 	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
 
 # reftest:
