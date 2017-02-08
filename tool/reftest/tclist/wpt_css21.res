@@ -1236,7 +1236,6 @@ test/reftest/csswg-test/css21_original/normal-flow/min-height-060.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-061.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-062.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-067.htm
-test/reftest/csswg-test/css21_original/normal-flow/min-height-067-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-068.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-069.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-070.htm
@@ -1265,7 +1264,6 @@ test/reftest/csswg-test/css21_original/normal-flow/min-height-103.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-105.htm
 #test/reftest/csswg-test/css21_original/normal-flow/min-height-106.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-111.htm
-test/reftest/csswg-test/css21_original/normal-flow/min-height-111-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-112.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-113.htm
 #test/reftest/csswg-test/css21_original/normal-flow/min-height-applies-to-001.htm
@@ -1285,7 +1283,6 @@ test/reftest/csswg-test/css21_original/normal-flow/min-height-applies-to-012.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-percentage-001.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-percentage-002.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-height-percentage-003.htm
-test/reftest/csswg-test/css21_original/normal-flow/min-height-percentage-003-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-width-001.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-width-002.htm
 test/reftest/csswg-test/css21_original/normal-flow/min-width-003.htm
@@ -1388,7 +1385,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-018.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-023.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-024.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-025.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-025-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-026.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-027.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-028.htm
@@ -1396,7 +1392,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-029.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-034.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-035.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-036.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-036-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-037.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-038.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-039.htm
@@ -1404,7 +1399,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-040.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-045.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-046.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-047.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-047-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-048.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-049.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-050.htm
@@ -1412,7 +1406,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-051.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-056.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-057.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-058.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-058-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-059.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-060.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-061.htm
@@ -1420,7 +1413,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-062.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-067.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-068.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-069.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-069-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-070.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-071.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-072.htm
@@ -1447,11 +1439,9 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-104.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-105.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-106.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-height-107.htm
-#test/reftest/csswg-test/css21_original/normal-flow/max-height-107-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-108.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-height-109.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-110.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-110-ref.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-height-111.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-height-applies-to-001.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-height-applies-to-002.htm
@@ -1470,18 +1460,14 @@ test/reftest/csswg-test/css21_original/normal-flow/max-height-applies-to-012.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-applies-to-016.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-max-width-001.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-percentage-001.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-percentage-001-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-percentage-002.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-height-percentage-002-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-height-percentage-003.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-001.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-002.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-003.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-003-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-004.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-005.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-006.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-006-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-007.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-012.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-013.htm
@@ -1493,7 +1479,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-018.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-023.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-024.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-025.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-025-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-026.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-027.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-028.htm
@@ -1501,7 +1486,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-029.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-034.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-035.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-036.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-036-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-037.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-038.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-039.htm
@@ -1509,7 +1493,6 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-040.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-045.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-046.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-047.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-047-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-048.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-049.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-050.htm
@@ -1520,16 +1503,13 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-058.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-059.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-060.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-061.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-061-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-062.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-067.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-068.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-069.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-069-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-070.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-071.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-072.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-072-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-073.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-078.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-079.htm
@@ -1551,10 +1531,8 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-102.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-103.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-104.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-105.htm
-#test/reftest/csswg-test/css21_original/normal-flow/max-width-105-ref.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-106.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-107.htm
-#test/reftest/csswg-test/css21_original/normal-flow/max-width-107-ref.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-108.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-110.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-applies-to-001.htm
@@ -1573,6 +1551,5 @@ test/reftest/csswg-test/css21_original/normal-flow/max-width-applies-to-012.htm
 #test/reftest/csswg-test/css21_original/normal-flow/max-width-applies-to-015.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-applies-to-016.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-percentage-001.htm
-test/reftest/csswg-test/css21_original/normal-flow/max-width-percentage-001-ref.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-percentage-002.htm
 test/reftest/csswg-test/css21_original/normal-flow/max-width-percentage-003.htm
