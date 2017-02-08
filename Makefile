@@ -736,12 +736,15 @@ pixel_test_css3_backgrounds:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_backgrounds.res
 pixel_test_css3_transforms:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_transforms.res
+pixel_test_css3_selectors:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_selectors.res
 pixel_test_css_all:
 	make pixel_test_css1 2> out/pixel_test_css_all.log
 	make pixel_test_css21 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_color 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_transforms 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_backgrounds 2>> out/pixel_test_css_all.log
+	make pixel_test_css3_selectors 2>> out/pixel_test_css_all.log
 	@cat out/pixel_test_css_all.log | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | cut -d' ' -f2 | sort -d > out/wpt_css_failed.res
 	@diff out/wpt_css_failed.res tool/reftest/wpt_css_failed.res
 
