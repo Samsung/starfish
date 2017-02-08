@@ -113,6 +113,9 @@ private:
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background
     LayoutRect m_tableRect;
+
+    FrameTableSectionBox* m_thead;
+    FrameTableSectionBox* m_tfoot;
 };
 
 }
