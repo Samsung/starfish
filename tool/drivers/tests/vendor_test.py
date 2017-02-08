@@ -39,9 +39,12 @@ def exp_img_namer(tc_file):
         return pre + post
     else:
         file = os.path.splitext(tc_file)[0] + "_expected.png"
-        pre, post = file.split("fast/", 1)
-        mid, post = post.split("/", 1)
-        return pre + "fast/" + mid + "_result/" + post
+        if not "_original/" in file:
+            # Support legacy TCs
+            pre, post = file.split("fast/", 1)
+            mid, post = post.split("/", 1)
+            return pre + "fast/" + mid + "_result/" + post
+        return file
 
 
 if __name__ == "__main__":
@@ -64,6 +67,3 @@ if __name__ == "__main__":
 
     from basics.utils import PColors
     print PColors.yellow("PASS: " + str(cpass) + ", FAIL: " + str(cfail))
-
-
-
