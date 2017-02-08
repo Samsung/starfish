@@ -250,6 +250,7 @@ test/reftest/vendor/webkit_original/fast/block/float/dynamic-unfloat-pref-width.
 test/reftest/vendor/webkit_original/fast/block/float/fit_line_below_floats.html
 test/reftest/vendor/webkit_original/fast/block/float/float-not-removed-from-next-sibling3.html
 #test/reftest/vendor/webkit_original/fast/block/float/float-not-removed-from-next-sibling4.html
+test/reftest/vendor/webkit_original/fast/block/float/float-on-line-obeys-container-padding.html
 test/reftest/vendor/webkit_original/fast/block/float/floats-offset-image-strict.html
 #test/reftest/vendor/webkit_original/fast/block/float/floats-offset-image-strict-lineheight.html
 #test/reftest/vendor/webkit_original/fast/block/float/floats-offset-inline-block-strict-lineheight.html
@@ -262,6 +263,7 @@ test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-0
 test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-006.html
 #test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-007.html
 test/reftest/vendor/webkit_original/fast/block/float/float-with-anonymous-previous-sibling.html
+test/reftest/vendor/webkit_original/fast/block/float/independent-align-positioning.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position2.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-block-on-absolute-position2.html
