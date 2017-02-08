@@ -51,6 +51,8 @@ public:
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
     , m_tableRect(0, 0, 0, 0)
+    , m_thead(nullptr)
+    , m_tfoot(nullptr)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr)
         || (node != nullptr && style == nullptr));
@@ -142,6 +144,12 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
     if (!wrapInAnnoymousSection) {
         FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
+        if (!m_thead && (child->style()->display() == DisplayValue::TableHeaderGroupDisplayValue)) {
+            m_thead = childFrame->asFrameTableSectionBox();
+        }
+        if (!m_tfoot && (child->style()->display() == DisplayValue::TableFooterGroupDisplayValue)) {
+            m_tfoot = childFrame->asFrameTableSectionBox();
+        }
         return;
     }
 
@@ -440,18 +448,44 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     }
 
     // 2. place table sections
+    // The table can have multiple section elements with
+    // 'display:table-header-group. In this case, only the first
+    // table-header-group is rendered as the table-header-group
+    // Other table-header-groups are treated as 'display:table-row-group'
+
     m_tableRect.setX(0);
     m_tableRect.setY(ySoFar);
     ySoFar += borderTop();
     ySoFar += paddingTop();
+
+    // 2-1. place the first table header section
+    if (m_thead) {
+        m_thead->asFrameBox()->setX(paddingLeft());
+        m_thead->asFrameTableSectionBox()->layoutHeight(ctx);
+        m_thead->asFrameBox()->setY(ySoFar);
+        ySoFar += m_thead->asFrameBox()->height();
+    }
+
+    // 2-2. place table-row-group and the rest
+    // "table-header/footer-group" sections
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
+        if (c->isFrameTableSectionBox() && (c != m_thead) && (c != m_tfoot)) {
             c->asFrameBox()->setX(paddingLeft());
             c->asFrameTableSectionBox()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
             ySoFar += c->asFrameBox()->height();
         }
     }
+
+    // 2-3. place the first table footer section
+    // Similar logic as table-header-group applies to table-footer-group.
+    if (m_tfoot) {
+        m_tfoot->asFrameBox()->setX(paddingLeft());
+        m_tfoot->asFrameTableSectionBox()->layoutHeight(ctx);
+        m_tfoot->asFrameBox()->setY(ySoFar);
+        ySoFar += m_tfoot->asFrameBox()->height();
+    }
+
     ySoFar += paddingBottom();
     ySoFar += borderBottom();
     m_tableRect.setWidth(paddingLeft() + width() + paddingRight());
