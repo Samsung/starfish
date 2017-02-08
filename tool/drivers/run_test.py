@@ -69,10 +69,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not os.path.isfile(args.list_file):
+        import sys
         print "Cannot open " + args.list_file
         sys.exit()
 
+    from datetime import datetime
+    start_time = datetime.now()
     try:
         tests[args.test_kind](args.list_file, font_dep=args.font_dep)
+        elapsed_time = int((datetime.now() - start_time).total_seconds() * 1000)
+        print "Elapsed time " + str(elapsed_time) + " ms"
     except KeyError:
         print "No such test named '" + args.test_title + "'"
