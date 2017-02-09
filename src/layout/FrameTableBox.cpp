@@ -54,8 +54,7 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     , m_thead(nullptr)
     , m_tfoot(nullptr)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr)
-        || (node != nullptr && style == nullptr));
+
 }
 
 FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)

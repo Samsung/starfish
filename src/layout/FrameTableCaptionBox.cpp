@@ -24,7 +24,7 @@ namespace StarFish {
 FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+
 }
 
 FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
