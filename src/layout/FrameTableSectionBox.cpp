@@ -187,7 +187,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit xSoFar = tableBox()->borderLeft();
+    LayoutUnit xSoFar = 0;
     LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRowBox()) {
