@@ -250,11 +250,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
         } else if (display == DisplayValue::TableDisplayValue
-        || display == InlineTableDisplayValue
-        || display == TableRowGroupDisplayValue
-        || display == TableRowDisplayValue
-        || display == TableCellDisplayValue
-        || display == TableCaptionDisplayValue) {
+            || display == InlineTableDisplayValue
+            || display == TableRowGroupDisplayValue
+            || display == TableRowDisplayValue
+            || display == TableCellDisplayValue
+            || display == TableCaptionDisplayValue) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table wrapper
             FrameTableBox* table = FrameTableBox::buildFrameTable(current, ctx, force);

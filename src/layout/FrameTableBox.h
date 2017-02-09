@@ -103,6 +103,8 @@ private:
     void calCellWidthForAutoTableLayout(LayoutContext& ctx);
     void calCellWidthForFixedTableLayout(LayoutContext& ctx);
 
+    bool isCellWidthAuto(unsigned i);
+
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<ColSizeStruct> m_columnWidths;
 
