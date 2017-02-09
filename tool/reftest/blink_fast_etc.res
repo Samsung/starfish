@@ -263,11 +263,7 @@ test/reftest/vendor/blink/fast/transforms/transforms-with-opacity.html
 test/reftest/vendor/blink/fast/transforms/transform-update-frame-overflow.html
 test/reftest/vendor/blink/fast/transforms/transform-positioned-container.html
 # Float TCs
-test/reftest/vendor/blink_original/fast/block/float/add-inlines-in-block-children-block.html
 test/reftest/vendor/blink_original/fast/block/float/avoid-floats-with-negative-margins.html
-test/reftest/vendor/blink_original/fast/block/float/br-with-clear-3.html
-test/reftest/vendor/blink_original/fast/block/float/br-with-clear-4.html
-test/reftest/vendor/blink_original/fast/block/float/nested-floats-expand-formatting-context.html
 #test/reftest/vendor/blink_original/fast/block/float/overlapping-floats-paint-hittest-order-1.html
 #test/reftest/vendor/blink_original/fast/block/float/overlapping-floats-paint-hittest-order-2.html
 test/reftest/vendor/blink_original/fast/block/float/trailing-float.html

@@ -6,8 +6,12 @@ logging.basicConfig(format="%(message)s")
 
 # TODO Make it one simple rule to generate expected image name
 def font_dep_exp_img_namer(tc_file):
-    file = os.path.splitext(tc_file)[0] + "-expected.png"
-    return file.replace("_converted", "_result/font_dependent/x64", 1)
+    if "_converted/" in tc_file:
+        # Support legacy expected file names temporarily
+        file = os.path.splitext(tc_file)[0] + "-expected.png"
+        return file.replace("_converted", "_result/font_dependent/x64", 1)
+    else:
+        return os.path.splitext(tc_file)[0] + "_expected.png"
 
 def font_indep_exp_img_namer(tc_file):
     file = os.path.splitext(tc_file)[0] + "_expected.png"

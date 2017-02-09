@@ -22,3 +22,8 @@ test/reftest/vendor/webkit/fast/text/line-break-between-text-nodes-latin1.html
 test/reftest/vendor/webkit/fast/text/whitespace/inline-whitespace-wrapping-12.html
 test/reftest/vendor/webkit/fast/text/whitespace-only-text-in-rtl.html
 test/reftest/vendor/webkit/fast/text/whitespace/trailing-space-before-br-in-right-aligned-text.html
+test/reftest/vendor/webkit_original/fast/block/float/float-on-line-obeys-container-padding.html
+test/reftest/vendor/webkit_original/fast/block/float/float-with-fractional-height.html
+test/reftest/vendor/webkit_original/fast/block/float/independent-align-positioning.html
+test/reftest/vendor/webkit_original/fast/block/float/intruding-painted-twice.html
+test/reftest/vendor/webkit_original/fast/block/float/max-width-clear-float-with-overflow-hidden.html
