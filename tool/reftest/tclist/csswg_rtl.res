@@ -1009,7 +1009,7 @@ test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-replaced-height-001.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inlines-003.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inlines-004.htm
-test/internal-test/direction/csswg-test/css21_converted/normal-flow/inlines-017.htm
+#test/internal-test/direction/csswg-test/css21_converted/normal-flow/inlines-017.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/width-applies-to-012.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/width-undefined-001.htm
 test/internal-test/direction/csswg-test/css21_converted/page-box/page-container-002.htm
@@ -1463,7 +1463,7 @@ test/internal-test/direction/csswg-test/css-transforms-1_converted/css3-transfor
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-property-existence.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-scale-002.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-style-evaluation-validation.html
-test/internal-test/direction/csswg-test/css-transforms-1_converted/reftest/transform-3d-rotateY-stair-above-ref-001.htm
+#test/internal-test/direction/csswg-test/css-transforms-1_converted/reftest/transform-3d-rotateY-stair-above-ref-001.htm
 test/internal-test/direction/csswg-test/css-transforms-1_converted/scalex.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/scaley.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform3d-rotatex-perspective-notref.html

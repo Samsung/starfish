@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import os
 from basics.utils import Strings
-import logging
-logging.basicConfig(format="%(message)s")
 
 # TODO Make it one simple rule to generate expected image name
 def font_dep_exp_img_namer(tc_file):
@@ -30,5 +28,5 @@ def tc_handler(tc_file, diff_result, show_progress=True):
             print Strings.PASS_SIGN + tc_file + " " + diff_result
     else:
         if show_progress:
-            logging.error(Strings.FAIL_SIGN + tc_file + " " + diff_result)
+            print Strings.FAIL_SIGN + tc_file + " " + diff_result
     return is_passed

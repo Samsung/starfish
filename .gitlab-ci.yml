@@ -31,9 +31,8 @@ test_internal_test1:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
-    - make internal_test_gitlab_prerequisite div=4
+    - make internal_test_gitlab_prerequisite div=5
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_manual | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part1 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
@@ -45,7 +44,7 @@ test_internal_test2:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
-    - make internal_test_gitlab_prerequisite div=4
+    - make internal_test_gitlab_prerequisite div=5
   script:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part2 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
@@ -58,7 +57,7 @@ test_internal_test3:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
-    - make internal_test_gitlab_prerequisite div=4
+    - make internal_test_gitlab_prerequisite div=5
   script:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part3 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
@@ -71,9 +70,23 @@ test_internal_test4:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
-    - make internal_test_gitlab_prerequisite div=4
+    - make internal_test_gitlab_prerequisite div=5
   script:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part4 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+  dependencies:
+  - build
+
+test_internal_test5:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+    - make internal_test_gitlab_prerequisite div=5
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part5 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_manual | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -85,10 +98,10 @@ test_regression_test_vendor1:
     - git submodule update
     - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_gecko_layout | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_gecko_layout | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -102,10 +115,10 @@ test_regression_test_vendor2:
     - git submodule update
     - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_webkit_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_webkit_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_webkit_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_webkit_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -117,12 +130,12 @@ test_regression_test_wpt:
     - git submodule update
     - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_progress_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_page_visibility | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_xhr | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_dom_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_progress_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_page_visibility | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make web_platform_test_xhr | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -133,10 +146,10 @@ test_regression_test_dom:
     - git submodule init
     - git submodule update
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_gecko_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make dom_conformance_test_webkit | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make dom_conformance_test_blink | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make dom_conformance_test_gecko | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -148,18 +161,6 @@ test_regression_test_css:
     - git submodule update
     - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make pixel_test_css_all | tee prepush_test_result; if cat prepush_test_result |grep 'Error 1' > /dev/null; then  exit 1; fi
-  dependencies:
-  - build
-
-test_regression_test_font:
-  stage: test
-  before_script:
-    - git submodule deinit -f .
-    - git submodule init
-    - git submodule update
-    - make install_pixel_test_dep
-  script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make font_dependent_test_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make csswg_test_all | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build

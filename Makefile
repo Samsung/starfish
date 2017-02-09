@@ -722,34 +722,33 @@ install_inspector_nwjs:
 run_inspector:
 	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
-pixel_test_css_rtl:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_rtl_css.res 2> out/pixel_test_css_rtl.log
-	@cat out/pixel_test_css_rtl.log | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | cut -d' ' -f2 | sort -d > out/wpt_cssrtl_failed.res
-	@diff out/wpt_cssrtl_failed.res tool/reftest/wpt_cssrtl_passed.res
-pixel_test_css1:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css1.res
-pixel_test_css21:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css21.res
-pixel_test_css3_color:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_color.res
-pixel_test_css3_backgrounds:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_backgrounds.res
-pixel_test_css3_transforms:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_transforms.res
-pixel_test_css3_selectors:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/wpt_css3_selectors.res
-pixel_test_css_all:
-	make pixel_test_css1 2> out/pixel_test_css_all.log
-	make pixel_test_css21 2>> out/pixel_test_css_all.log
-	make pixel_test_css3_color 2>> out/pixel_test_css_all.log
-	make pixel_test_css3_transforms 2>> out/pixel_test_css_all.log
-	make pixel_test_css3_backgrounds 2>> out/pixel_test_css_all.log
-	make pixel_test_css3_selectors 2>> out/pixel_test_css_all.log
-	@cat out/pixel_test_css_all.log | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | cut -d' ' -f2 | sort -d > out/wpt_css_failed.res
-	@diff out/wpt_css_failed.res tool/reftest/wpt_css_failed.res
+csswg_test_css1:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css1.res
+csswg_test_css21:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css21.res
+csswg_test_css3_color:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_color.res
+csswg_test_css3_backgrounds:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_backgrounds.res
+csswg_test_css3_transforms:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_transforms.res
+csswg_test_css3_selectors:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_selectors.res
+csswg_test_manual:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_manual.res --font-dep
+csswg_test_rtl:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_rtl.res
+csswg_test_all:
+	make csswg_test_css1
+	make csswg_test_css21
+	make csswg_test_css3_color
+	make csswg_test_css3_transforms
+	make csswg_test_css3_backgrounds
+	make csswg_test_css3_selectors
+	make csswg_test_manual
 
 internal_test:
-	cat tool/reftest/internal_unsorted.res | cut -d":" -f2 > tool/reftest/internal.res
+	cat tool/reftest/internal_unsorted.res | sort -nr | cut -d":" -f2 > tool/reftest/internal.res
 	./tool/drivers/run_test.py internal tool/reftest/internal.res
 	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
 	rm tool/reftest/internal.res
@@ -764,11 +763,10 @@ internal_test_part3:
 	./tool/drivers/run_test.py internal tool/reftest/internal_part3.res
 internal_test_part4:
 	./tool/drivers/run_test.py internal tool/reftest/internal_part4.res
+internal_test_part5:
+	./tool/drivers/run_test.py internal tool/reftest/internal_part5.res
 internal_test_manual:
 	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep
-
-# reftest:
-# 	./tool/reftest/reftest.sh $(tc) $(regression)
 
 tct:
 	./StarFish test/tct/index.html
@@ -786,109 +784,80 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
-regression_test_dom_conformance_test:
+dom_conformance_test:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/dom_conformance_test.res
+dom_conformance_test_webkit:
+	./tool/drivers/run_test.py dom_conformance tool/reftest/webkit_dom_conformance_test.res
+dom_conformance_test_blink:
+	./tool/drivers/run_test.py dom_conformance tool/reftest/blink_dom_conformance_test.res
+dom_conformance_test_gecko:
+	./tool/drivers/run_test.py dom_conformance tool/reftest/gecko_dom_conformance_test.res
 
-regression_test_wpt_dom:
+web_platform_test_dom:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom.res
-regression_test_wpt_dom_events:
+web_platform_test_dom_events:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom_events.res
-regression_test_wpt_html:
+web_platform_test_html:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_html.res
-regression_test_wpt_page_visibility:
+web_platform_test_page_visibility:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_page_visibility.res
-regression_test_wpt_progress_events:
+web_platform_test_progress_events:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_progress_events.res
-regression_test_wpt_xhr:
+web_platform_test_xhr:
 	./tool/drivers/run_test.py web_platform tool/reftest/wpt_xhr.res
 
-regression_test_blink_dom_conformance_test:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/blink_dom_conformance_test.res
-regression_test_blink_fast_dom:
+vendor_test_blink_fast_dom:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_dom.res
-regression_test_blink_fast_html:
+vendor_test_blink_fast_html:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_html.res
-regression_test_blink_fast_css:
+vendor_test_blink_fast_css:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css_manual.res --font-dep
-regression_test_blink_fast_etc:
+vendor_test_blink_fast_etc:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc_manual.res --font-dep
-regression_test_gecko_dom_conformance_test:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/gecko_dom_conformance_test.res
-regression_test_gecko_layout:
+vendor_test_gecko_layout:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/gecko_layout.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/gecko_layout_manual.res --font-dep
-regression_test_webkit_dom_conformance_test:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/webkit_dom_conformance_test.res
-regression_test_webkit_fast_dom:
+vendor_test_webkit_fast_dom:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_dom.res
-regression_test_webkit_fast_html:
+vendor_test_webkit_fast_html:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_html.res
-regression_test_webkit_fast_css:
+vendor_test_webkit_fast_css:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css_manual.res --font-dep
-regression_test_webkit_fast_etc:
+vendor_test_webkit_fast_etc:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc_manual.res --font-dep
 
 regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
 
-regression_test_css1:
-	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css1 | sort -d > out/csswg_css1.res
-	./tool/reftest/reftest.sh out/csswg_css1.res true
-regression_test_css21:
-	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css21 | sort -d > out/csswg_css21.res
-	./tool/reftest/reftest.sh out/csswg_css21.res true
-regression_test_css3_color:
-	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-color-3 | sort -d > out/csswg_css3_color.res
-	./tool/reftest/reftest.sh out/csswg_css3_color.res true
-regression_test_css3_backgrounds:
-	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-backgrounds | sort -d > out/csswg_css3_backgrounds.res
-	./tool/reftest/reftest.sh out/csswg_css3_backgrounds.res true
-regression_test_css3_transforms:
-	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-transforms | sort -d > out/csswg_css3_transforms.res
-	./tool/reftest/reftest.sh out/csswg_css3_transforms.res true
-regression_test_css:
-	make regression_test_css1
-	make regression_test_css21
-	make regression_test_css3_color
-	make regression_test_css3_backgrounds
-	make regression_test_css3_transforms
-
-font_dependent_test_css:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_manual.res --font-dep
-
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
 	./tool/reftest/setup_bidi_test.sh true
 
 regression_test:
-	make regression_test_dom_conformance_test
-	make regression_test_wpt_dom
-	make regression_test_wpt_dom_events
-	make regression_test_wpt_html
-	make regression_test_wpt_page_visibility
-	make regression_test_wpt_progress_events
-	make regression_test_wpt_xhr
-	make regression_test_blink_dom_conformance_test
-	make regression_test_blink_fast_dom
-	make regression_test_blink_fast_html
-	make regression_test_blink_fast_etc
-	make regression_test_gecko_dom_conformance_test
-	make regression_test_webkit_dom_conformance_test
-	make regression_test_webkit_fast_dom
-	make regression_test_webkit_fast_html
-	make regression_test_webkit_fast_css
-	make regression_test_webkit_fast_etc
-	make regression_test_bidi
-	make regression_test_demo
-	make regression_test_css1
-	make regression_test_css21
-	make regression_test_css3_color
-	make regression_test_css3_backgrounds
-	make regression_test_css3_transforms
+	make dom_conformance_test
+	make dom_conformance_test_webkit
+	make dom_conformance_test_blink
+	make dom_conformance_test_gecko
+	make web_platform_test_dom
+	make web_platform_test_dom_events
+	make web_platform_test_html
+	make web_platform_test_page_visibility
+	make web_platform_test_progress_events
+	make web_platform_test_xhr
+	make vendor_test_blink_fast_dom
+	make vendor_test_blink_fast_html
+	make vendor_test_blink_fast_css
+	make vendor_test_blink_fast_etc
+	make vendor_test_gecko_layout
+	make vendor_test_webkit_fast_dom
+	make vendor_test_webkit_fast_html
+	make vendor_test_webkit_fast_css
+	make vendor_test_webkit_fast_etc
+	make csswg_test_all
 	make internal_test
 
 reftest_emulator_2.3:

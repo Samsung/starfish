@@ -40,8 +40,6 @@ test/reftest/csswg-test/css-transforms-1_converted/transform-origin-003.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-004.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-005.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-006.html
-test/reftest/csswg-test/css-transforms-1_converted/transform-origin-ref-1.html
-test/reftest/csswg-test/css-transforms-1_converted/transform-origin-ref-2.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-002.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-003.html
