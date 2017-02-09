@@ -112,7 +112,7 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
                 LayoutUnit width =
                     LayoutUnit::fromPixel(matchingCellInTheFirstRow->style()->width().fixed());
                 m_minCellWidth = std::max(width, calMinCellWidth(ctx));
-                m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
+                m_maxCellWidth = width;
             } else if (matchingCellInTheFirstRow->style()->width().isPercent()) {
                 // TODO
             } else {
