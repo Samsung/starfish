@@ -19,3 +19,13 @@ test/reftest/vendor/blink/fast/text/international/inline-block-with-mixed-direct
 test/reftest/vendor/blink/fast/text/line-break-between-text-nodes-latin1.html
 test/reftest/vendor/blink/fast/transforms/skew-with-unitless-zero.html
 test/reftest/vendor/blink/fast/transforms/transform-on-inline.html
+test/reftest/vendor/blink_original/fast/block/float/add-abspos-before-float-in-block-children-block.html
+test/reftest/vendor/blink_original/fast/block/float/add-inline-before-float-and-after-anonymous-block.html
+test/reftest/vendor/blink_original/fast/block/float/add-inline-before-float-in-block-children-block.html
+test/reftest/vendor/blink_original/fast/block/float/add-inline-between-floats-with-preceding-anonymous-box.html
+test/reftest/vendor/blink_original/fast/block/float/add-inlines-in-block-children-block.html
+test/reftest/vendor/blink_original/fast/block/float/add-inline-to-block-flow-and-ensure-layout-on-containers-of-removed-floats.html
+test/reftest/vendor/blink_original/fast/block/float/add-inline-to-block-flow-with-block-children-that-do-not-need-anonymous-boxes.html
+test/reftest/vendor/blink_original/fast/block/float/br-with-clear-3.html
+test/reftest/vendor/blink_original/fast/block/float/br-with-clear-4.html
+test/reftest/vendor/blink_original/fast/block/float/nested-floats-expand-formatting-context.html
