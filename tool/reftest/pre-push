@@ -8,166 +8,45 @@ if cat error_report | grep 'ERROR'; then
  exit 1
 fi
 
-echo "checking... make internal_test"
-make internal_test_gitlab_prerequisite div=4
-make internal_test_manual > prepush_test_result
-make internal_test_part1 >> prepush_test_result
-make internal_test_part2 >> prepush_test_result
-make internal_test_part3 >> prepush_test_result
-make internal_test_part4 >> prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make internal_test$RESET"
- exit 1
-fi
+run_test() {
+    echo "checking... make" $1
+    stdbuf -oL make $1 | tee prepush_test_result
+    if cat prepush_test_result |grep 'FAIL'; then
+        echo "$RED[FAIL] make" $1"$RESET"
+        exit 1
+    fi
+}
 
-echo "checking... make regression_test_blink_fast_dom"
-make regression_test_blink_fast_dom > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_blink_fast_dom$RESET"
- exit 1
-fi
+# Internal test
+run_test internal_test
 
-echo "checking... make regression_test_blink_fast_html"
-make regression_test_blink_fast_html > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_blink_fast_html$RESET"
- exit 1
-fi
+# Vendor Tests
+run_test vendor_test_blink_fast_dom
+run_test vendor_test_blink_fast_html
+run_test vendor_test_blink_fast_css
+run_test vendor_test_blink_fast_etc
+run_test vendor_test_webkit_fast_dom
+run_test vendor_test_webkit_fast_html
+run_test vendor_test_webkit_fast_css
+run_test vendor_test_webkit_fast_etc
 
-echo "checking... make regression_test_blink_fast_css"
-make regression_test_blink_fast_css > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_blink_fast_css$RESET"
- exit 1
-fi
+# Web Platform Tests
+run_test web_platform_test_dom
+run_test web_platform_test_html
+run_test web_platform_test_dom_events
+run_test web_platform_test_progress_events
+run_test web_platform_test_page_visibility
+run_test web_platform_test_xhr
+run_test web_platform_test_page_visibility
 
-echo "checking... make regression_test_blink_fast_etc"
-make regression_test_blink_fast_etc > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_blink_fast_etc$RESET"
- exit 1
-fi
+# Dom Conformance Tests
+run_test dom_conformance_test
+run_test dom_conformance_test_webkit
+run_test dom_conformance_test_blink
+run_test dom_conformance_test_gecko
 
-
-
-echo "checking... make regression_test_webkit_fast_html"
-make regression_test_webkit_fast_html > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_webkit_fast_html$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_webkit_fast_css"
-make regression_test_webkit_fast_css > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_webkit_fast_css$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_webkit_fast_etc"
-make regression_test_webkit_fast_etc > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_webkit_fast_etc$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_webkit_fast_dom"
-make regression_test_webkit_fast_dom > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_webkit_fast_dom$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_dom"
-make regression_test_wpt_dom > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_dom$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_html"
-make regression_test_wpt_html > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_html$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_dom_events"
-make regression_test_wpt_dom_events > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_dom_events$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_progress_events"
-make regression_test_wpt_progress_events > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_progress_events$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_page_visibility"
-make regression_test_wpt_page_visibility > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_page_visibility$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_wpt_xhr"
-make regression_test_wpt_xhr > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_xhr$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_dom_conformance_test"
-make regression_test_dom_conformance_test > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_dom_conformance_test$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_webkit_dom_conformance_test"
-make regression_test_webkit_dom_conformance_test > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_webkit_dom_conformance_test$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_blink_dom_conformance_test"
-make regression_test_blink_dom_conformance_test > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_blink_dom_conformance_test$RESET"
- exit 1
-fi
-
-echo "checking... make regression_test_gecko_dom_conformance_test"
-make regression_test_gecko_dom_conformance_test > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_gecko_dom_conformance_test$RESET"
- exit 1
-fi
-
-#echo "checking... make regression_test_bidi"
-#make regression_test_bidi > prepush_test_result
-#if cat prepush_test_result |grep 'FAIL'; then
-# echo "$RED[FAIL] make regression_test_wpt_bidi$RESET"
-# exit 1
-#fi
-
-echo "checking... make pixel_test_css_all"
-make pixel_test_css_all > prepush_test_result 2>&1
-if cat prepush_test_result |grep 'Error 1'; then
- echo "$RED[FAIL] make pixel_test_css_all$RESET"
- exit 1
-fi
-
-echo "checking... make font_dependent_test_css"
-make font_dependent_test_css > prepush_test_result 2>&1
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make font_dependent_test_css$RESET"
- exit 1
-fi
+# CSSWG Tests
+run_test csswg_test_all
 
 #disable tct while to fix tct error
 #echo "checking... make tct"
