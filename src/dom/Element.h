@@ -33,6 +33,7 @@ public:
         : RareNodeMembers()
         , m_namedNodeMap(nullptr)
         , m_attrList(nullptr)
+        , m_pseudoElementData(nullptr)
     {
     }
     bool isRareElementMembers()
@@ -41,6 +42,7 @@ public:
     }
     NamedNodeMap* m_namedNodeMap;
     AttrList* m_attrList;
+    PseudoElementData* m_pseudoElementData;
 };
 
 class Element : public Node {
@@ -206,6 +208,10 @@ public:
     void addAttr(Attr* attr);
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
+
+    bool hasPseudoElements();
+    bool hasPseudoElement(StyleResolver::PseudoElementType type);
+    void setPseudoElement(StyleResolver::PseudoElementType type);
 
     String* id()
     {

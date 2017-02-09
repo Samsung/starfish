@@ -1638,7 +1638,7 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
     return false;
 }
 
-bool StyleResolver::anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector)
+bool StyleResolver::anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector, MatchResult& result)
 {
     QualifiedName& selectorAttr = selector->attribute();
     STARFISH_ASSERT(!(selectorAttr.localName()->equals(String::fromUTF8("*"))));
@@ -2940,7 +2940,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
     CSSStyleSheet* sheet = m_sheets[0];
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
         CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
-        if (matchSelector(element, selectorList) == Match::SelectorMatches) {
+        MatchResult result;
+        if (matchSelector(element, selectorList, 0, result) == Match::SelectorMatches) {
             userAgentDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
         }
     }
@@ -2948,7 +2949,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
     sheet = allRules();
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
         CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
-        if (matchSelector(element, selectorList) == Match::SelectorMatches) {
+        MatchResult result;
+        if (matchSelector(element, selectorList, 0, result) == Match::SelectorMatches) {
+            if (result.pseudoType != PseudoElementNone) {
+                element->setPseudoElement(result.pseudoType);
+            }
             authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
         }
     }
@@ -2977,27 +2982,29 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
         apply(url, element->inlineStyleWithoutCreation()->m_cssValues, ret, parent, true);
 }
 
-StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx)
+StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList->size());
 
     CSSSelector* selector = selectorList->at(idx);
-    if (!checkOne(element, selector))
+    if (!checkOne(element, selector, result)) {
         return Match::SelectorFailsLocally;
+    }
 
-    if (selector->isLastInTagHistory())
+    if (selector->isLastInTagHistory()) {
         return Match::SelectorMatches;
+    }
 
     Match match;
     if (selector->relation() == CSSSelector::RelationType::SubSelector) {
-        match = matchSelector(element, selectorList, ++idx);
+        match = matchSelector(element, selectorList, ++idx, result);
     } else {
-        match = matchForRelation(element, selectorList, selector->relation(), ++idx);
+        match = matchForRelation(element, selectorList, selector->relation(), ++idx, result);
     }
     return match;
 }
 
-StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx)
+StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList->size());
 
@@ -3007,8 +3014,9 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
         {
         Element* parent = element->parentElement();
         while (parent) {
-            if (matchSelector(parent, selectorList, idx) == Match::SelectorMatches)
+            if (matchSelector(parent, selectorList, idx, result) == Match::SelectorMatches) {
                 return Match::SelectorMatches;
+            }
             parent = parent->parentElement();
         }
         return Match::SelectorFailsCompletely;
@@ -3016,25 +3024,28 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
     case CSSSelector::RelationType::Child:
         {
         Element* parent = element->parentElement();
-        if (parent && matchSelector(parent, selectorList, idx) == Match::SelectorMatches)
+        if (parent && matchSelector(parent, selectorList, idx, result) == Match::SelectorMatches) {
             return Match::SelectorMatches;
-        else
+        } else {
             return Match::SelectorFailsCompletely;
+        }
         }
     case CSSSelector::RelationType::AdjacentSibling:
         {
         Element* previousSibling = element->previousElementSibling();
-        if (previousSibling && matchSelector(previousSibling, selectorList, idx) == Match::SelectorMatches)
+        if (previousSibling && matchSelector(previousSibling, selectorList, idx, result) == Match::SelectorMatches) {
             return Match::SelectorMatches;
-        else
+        } else {
             return Match::SelectorFailsCompletely;
+        }
         }
     case CSSSelector::RelationType::GeneralSibling:
         {
         Element* previousSibling = element->previousElementSibling();
         while (previousSibling) {
-            if (matchSelector(previousSibling, selectorList, idx) == Match::SelectorMatches)
+            if (matchSelector(previousSibling, selectorList, idx, result) == Match::SelectorMatches) {
                 return Match::SelectorMatches;
+            }
             previousSibling = previousSibling->previousElementSibling();
         }
         return Match::SelectorFailsCompletely;
@@ -3044,7 +3055,7 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
     }
 }
 
-bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
+bool StyleResolver::checkOne(Element* element, CSSSelector* selector, MatchResult& result)
 {
     switch (selector->type()) {
     case CSSSelector::Type::Universal:
@@ -3062,11 +3073,11 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
     case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
     case CSSSelector::AttributeBegin: // css3: E[foo^="bar"]
     case CSSSelector::AttributeEnd: // css3: E[foo$="bar"]
-        return anyAttributeMatches(element, selector->type(), selector);
+        return anyAttributeMatches(element, selector->type(), selector, result);
     case CSSSelector::Type::PseudoClass:
-        return checkPseudoClass(element, selector);
+        return checkPseudoClass(element, selector, result);
     case CSSSelector::Type::PseudoElement:
-        return checkPseudoElement(element, selector);
+        return checkPseudoElement(element, selector, result);
     default:
         // TODO: check attribute selectors.
         return false;
@@ -3185,7 +3196,7 @@ static unsigned nthLastOfTypeIndex(Element* element)
     return index;
 }
 
-bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
+bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector, MatchResult& result)
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
@@ -3251,7 +3262,7 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         }
     case CSSSelector::PseudoType::PseudoNot:
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
-        return !checkOne(element, selector->pseudoSelectorList()[0]);
+        return !checkOne(element, selector->pseudoSelectorList()[0], result);
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
@@ -3259,10 +3270,25 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     return false;
 }
 
-bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector)
+bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector, MatchResult& result)
 {
     // TODO
-    return false;
+    switch (selector->pseudoType()) {
+    case CSSSelector::PseudoType::PseudoFirstLine:
+        result.pseudoType = PseudoElementType::PseudoElementFirstLine;
+        return false;
+    case CSSSelector::PseudoType::PseudoFirstLetter:
+        result.pseudoType = PseudoElementType::PseudoElementFirstLetter;
+        return false;
+    case CSSSelector::PseudoType::PseudoBefore:
+        result.pseudoType = PseudoElementType::PseudoElementBefore;
+        return false;
+    case CSSSelector::PseudoType::PseudoAfter:
+        result.pseudoType = PseudoElementType::PseudoElementAfter;
+        return false;
+    default:
+        return false;
+    }
 }
 
 void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool inheritedStyleChanged = false)

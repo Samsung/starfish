@@ -395,6 +395,27 @@ Attr* Element::ensureAttr(QualifiedName name)
     return returnAttr;
 }
 
+bool Element::hasPseudoElements()
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    return (rareMembers->m_pseudoElementData && rareMembers->m_pseudoElementData->hasPseudoElements());
+}
+
+bool Element::hasPseudoElement(StyleResolver::PseudoElementType type)
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    return (rareMembers->m_pseudoElementData && rareMembers->m_pseudoElementData->hasPseudoElement(type));
+}
+
+void Element::setPseudoElement(StyleResolver::PseudoElementType type)
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    if (!rareMembers->m_pseudoElementData) {
+        rareMembers->m_pseudoElementData = new PseudoElementData();
+    }
+    rareMembers->m_pseudoElementData->setPseudoElement(type);
+}
+
 String* Element::getLaunguage()
 {
     Node* n = this;

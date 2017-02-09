@@ -1791,14 +1791,30 @@ protected:
     std::vector<CSSStyleDeclaration*, gc_allocator_ignore_off_page<CSSStyleDeclaration*> > m_declarations;
 };
 
-
 class StyleResolver {
 public:
+    enum PseudoElementType {
+        PseudoElementNone,
+        PseudoElementFirstLine,
+        PseudoElementFirstLetter,
+        PseudoElementBefore,
+        PseudoElementAfter
+    };
+
     enum Match {
         SelectorMatches, // The selector matches the element
         SelectorFailsLocally, // The selector fails for the element.
         SelectorFailsAllSiblings, // The selector fails for the element and any sibling of the element
         SelectorFailsCompletely // The selector fails for the element or ancestor of the element
+    };
+
+    struct MatchResult {
+        MatchResult()
+            : pseudoType(PseudoElementType::PseudoElementNone)
+        {
+        }
+
+        PseudoElementType pseudoType;
     };
 
     StyleResolver(Document& document);
@@ -1833,13 +1849,13 @@ protected:
     void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
     void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent);
 
-    Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx = 0);
-    Match matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx);
+    Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx, MatchResult& result);
+    Match matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result);
 
-    bool checkOne(Element* element, CSSSelector* selector);
-    bool checkPseudoClass(Element* element, CSSSelector* selector);
-    bool checkPseudoElement(Element* element, CSSSelector* selector);
-    bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector);
+    bool checkOne(Element* element, CSSSelector* selector, MatchResult& result);
+    bool checkPseudoClass(Element* element, CSSSelector* selector, MatchResult& result);
+    bool checkPseudoElement(Element* element, CSSSelector* selector, MatchResult& result);
+    bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector, MatchResult& result);
 
     Document& m_document;
     float m_mediumFontSize;
