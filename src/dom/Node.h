@@ -29,6 +29,7 @@
 #include "dom/DOMTokenList.h"
 #include "dom/NamedNodeMap.h"
 #include "dom/DOMException.h"
+#include "dom/PseudoElement.h"
 
 namespace StarFish {
 
