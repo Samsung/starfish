@@ -428,10 +428,10 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
 void FrameTableBox::layoutHeight(LayoutContext& ctx)
 {
     // Table is placed in the following order:
-    // 1. Captions that has property "caption-side: top"
+    // 1. Captions that have property "caption-side: top"
     //    If there are multiple captions, place them in document order
     // 2. Table sections in document order
-    // 3. Captions that has property "caption-side: bottom"
+    // 3. Captions that have property "caption-side: bottom"
     //    If there are multiple captions, place them in document order
 
     LayoutUnit ySoFar = marginTop();
@@ -451,15 +451,15 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     // 'display:table-header-group. In this case, only the first
     // table-header-group is rendered as the table-header-group
     // Other table-header-groups are treated as 'display:table-row-group'
-
     m_tableRect.setX(0);
     m_tableRect.setY(ySoFar);
     ySoFar += borderTop();
     ySoFar += paddingTop();
+    LayoutUnit xPosOfSection = borderLeft() + paddingLeft();
 
     // 2-1. place the first table header section
     if (m_thead) {
-        m_thead->asFrameBox()->setX(paddingLeft());
+        m_thead->asFrameBox()->setX(xPosOfSection);
         m_thead->asFrameTableSectionBox()->layoutHeight(ctx);
         m_thead->asFrameBox()->setY(ySoFar);
         ySoFar += m_thead->asFrameBox()->height();
@@ -469,7 +469,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     // "table-header/footer-group" sections
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox() && (c != m_thead) && (c != m_tfoot)) {
-            c->asFrameBox()->setX(paddingLeft());
+            c->asFrameBox()->setX(xPosOfSection);
             c->asFrameTableSectionBox()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
             ySoFar += c->asFrameBox()->height();
@@ -477,9 +477,9 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     }
 
     // 2-3. place the first table footer section
-    // Similar logic as table-header-group applies to table-footer-group.
+    // Similar logic as the table-header-group applies to table-footer-group.
     if (m_tfoot) {
-        m_tfoot->asFrameBox()->setX(paddingLeft());
+        m_tfoot->asFrameBox()->setX(xPosOfSection);
         m_tfoot->asFrameTableSectionBox()->layoutHeight(ctx);
         m_tfoot->asFrameBox()->setY(ySoFar);
         ySoFar += m_tfoot->asFrameBox()->height();
