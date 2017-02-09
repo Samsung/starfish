@@ -153,8 +153,7 @@ public:
     {
         return "InlineNonReplacedBox";
     }
-    static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self,
-        LineFormattingContext& lineFormattingContext, InlineNonReplacedBox* layoutParentBox);
+    void layoutInline(LineFormattingContext* lineFormattingContext);
     virtual void paint(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx)
     {
@@ -707,11 +706,21 @@ private:
     void computeHorizontalProperties();
     LayoutUnit distanceToNextLineBox(FrameLineBreak* br, bool hasMoreInlineBoxes);
 
+    void insertInlineNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent);
     void insertPendingFloatingBoxes();
-    void insertPendingAbsolutePositionedBoxes();
     void insertPendingInlineBoxes();
+    void unregisterAbsolutePositionedBoxes();
+    void markInlineBoxIndex(FrameBox* box);
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
+    void generateInlineBox(FrameBox* box);
+    void generateInlineTextBox(FrameText* f, LayoutUnit textWidth, String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace);
+    void generateInlineNonReplacedBox(FrameInline* f);
+    void generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
+    void registerAbsolutePositionedBox(FrameBox* box);
+
+    template <typename Box>
+    LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
     template <typename Iter>
     void sortInlineBoxes(Iter& iter);
 
@@ -721,6 +730,12 @@ private:
     bool isAnyOfInlineBoxesCollidedWithFloatingBoxes();
     void reCacheFloatingBoxes(LayoutUnit xDiff);
     void makeFloatingBoxLayoutContext(LayoutUnit yDiff);
+
+    void breakLineForLineBox(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
+    void breakLineForInlineNonReplacedBox(FrameLineBreak* br);
+
+    void setStartingMBP(InlineNonReplacedBox* self);
+    void setEndingMBP(InlineNonReplacedBox* self);
 
     CharDirection contentDir(FrameBox* box);
     void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
@@ -732,16 +747,12 @@ public:
 
     FontHeights computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, bool dueToBr);
 
-    void markInlineBoxIndex(FrameBox* box);
-    void setStartingMBP(InlineNonReplacedBox* self);
-    void setEndingMBP(InlineNonReplacedBox* self);
-    void finishLine(FrameLineBreak* br, bool isLastLine);
-    void finishLine(FrameLineBreak* br, InlineNonReplacedBox* self, bool isLastNode);
-    void breakLine(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
-    InlineNonReplacedBox* breakLine(FrameLineBreak* br, InlineNonReplacedBox* self);
+    void generateInlineBoxes(Frame* origin);
+
+    void finishLineForLineBox(FrameLineBreak* br, bool isLastLine);
+    void finishLineForInlineNonReplacedBox(FrameLineBreak* br, bool isLastNode);
+    void breakLine(FrameLineBreak* br);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
-    template <typename Box>
-    LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
 
     /*
     bool isBreakedLineWithoutBR(size_t idx)
@@ -750,8 +761,6 @@ public:
     }
     */
 
-    void insertNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent);
-    void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();
@@ -784,6 +793,7 @@ public:
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
+    FrameBox* m_currentLayoutParent;
     bool m_shouldLineBreakForAbsolutePositionedBox;
     bool m_shouldLineBreakForBr;
     enum HasFloat {

@@ -360,45 +360,22 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
     return FontHeights {maxAscender, maxDescender};
 }
 
-static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+template <typename Box>
+static FrameBox* findLastInlineBox(Box* parent)
 {
-    auto iter = b->boxes().rbegin();
-    while (iter != b->boxes().rend()) {
-        FrameBox* f = *iter;
-        if (f->asFrameBox()->isInlineBox()) {
-            InlineBox* ib = f->asFrameBox()->asInlineBox();
-            if (ib->isInlineNonReplacedBox()) {
-                auto r = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
-                if (r) {
-                    return r;
-                }
-            } else {
-                return ib;
-            }
-        } else if (f->isNormalFlow()) {
-            return *iter;
-        }
-        iter++;
-    }
-
-    return nullptr;
-}
-
-static FrameBox* findLastInlineBox(LineBox* lb)
-{
-    for (size_t i = lb->boxes().size() - 1; i != SIZE_MAX; i--) {
-        if (lb->boxes()[i]->isInlineBox()) {
-            InlineBox* b = lb->boxes()[i]->asInlineBox();
+    for (size_t i = parent->boxes().size() - 1; i != SIZE_MAX; i--) {
+        if (parent->boxes()[i]->isInlineBox()) {
+            InlineBox* b = parent->boxes()[i]->asInlineBox();
             if (b->isInlineNonReplacedBox()) {
-                auto r = findLastInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
+                auto r = findLastInlineBox(b->asInlineNonReplacedBox());
                 if (r) {
                     return r;
                 }
             } else {
                 return b;
             }
-        } else if (lb->boxes()[i]->isNormalFlow()) {
-            return lb->boxes()[i];
+        } else if (parent->boxes()[i]->isNormalFlow()) {
+            return parent->boxes()[i];
         }
     }
 
@@ -966,16 +943,17 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, std::vector<Fr
 static void removeBoxFromLine(FrameBox* box)
 {
     if (box->layoutParent()->asFrameBox()->isLineBox()) {
-        std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = box->layoutParent()->asFrameBox()->asLineBox()->boxes();
+        auto& boxes = box->layoutParent()->asFrameBox()->asLineBox()->boxes();
         boxes.erase(std::find(boxes.begin(), boxes.end(), box));
     } else {
-        std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
+        auto& boxes = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
         auto self = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
         LayoutUnit w = box->asInlineBox()->asInlineTextBox()->width();
         while (true) {
             self->setWidth(self->width() - w);
-            if (self->layoutParent()->asFrameBox()->isLineBox())
+            if (self->layoutParent()->asFrameBox()->isLineBox()) {
                 break;
+            }
             self = self->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
         }
         boxes.erase(std::find(boxes.begin(), boxes.end(), box));
@@ -1011,6 +989,13 @@ void LineFormattingContext::registerInlineContent()
         if (hasNormalFlowContent)
             m_layoutContext.registerYPositionForVerticalAlignInlineBlock(lb);
     }
+}
+
+template <typename Box>
+static void insertInlineBoxToLayoutParent(FrameBox* box, Box* parent)
+{
+    parent->boxes().push_back(box);
+    box->setLayoutParent(parent);
 }
 
 void LineFormattingContext::markInlineBoxIndex(FrameBox* box)
@@ -1072,9 +1057,7 @@ void LineFormattingContext::insertPendingFloatingBoxes()
         if ((m_pendingFloatingBoxNumsBeforeCurrentLine > 0 || !onlyAllowBeforeCurrentLine)
             && canInsertFloatingBox(this, box)
             && dontBreakLine(this, box, box->boxWidth())) {
-            insertFloatingBoxAndReLayoutLineBoxIfNeeds(box);
-
-            currentLine()->boxes().push_back(box);
+            generateFloatingBoxAndReLayoutLineBoxIfNeeds(box);
 
             iter = m_pendingFloatingBoxes.erase(iter);
 
@@ -1090,39 +1073,39 @@ void LineFormattingContext::insertPendingFloatingBoxes()
     }
 }
 
-void LineFormattingContext::insertPendingAbsolutePositionedBoxes()
+void LineFormattingContext::unregisterAbsolutePositionedBoxes()
 {
     LineBox* lineBox = currentLine();
     DirectionValue dir = m_block.style()->direction();
     for (size_t i = 0; i < m_absolutePositionedBoxes.size(); i ++) {
         FrameBox* box = m_absolutePositionedBoxes[i].first;
         if (box->style()->originalDisplay() == BlockDisplayValue) {
-            lineBox->boxes().push_back(box);
-            box->setLayoutParent(lineBox);
-            if (dir == DirectionValue::LtrDirectionValue)
+            if (dir == DirectionValue::LtrDirectionValue) {
                 box->setX(m_leftBoundary - m_absPosition.x() - m_lineBoxX);
-            else
+            } else {
                 box->setX(m_rightBoundary - m_absPosition.x() - m_lineBoxX);
-            if (m_absolutePositionedBoxes[i].second)
+            }
+
+            if (m_absolutePositionedBoxes[i].second) {
                 box->setY(lineBox->height());
-            else
+            } else {
                 box->setY(0);
+            }
         } else {
             box->setY(0);
             FrameBox* parent = box->layoutParent()->asFrameBox();
             if (parent->isLineBox()) {
                 STARFISH_ASSERT(parent == lineBox);
-                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asLineBox()->boxes();
+                auto& boxes = parent->asLineBox()->boxes();
                 boxes.erase(std::find(boxes.begin(), boxes.end(), box));
             } else {
-                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asInlineBox()->asInlineNonReplacedBox()->boxes();
+                auto& boxes = parent->asInlineBox()->asInlineNonReplacedBox()->boxes();
                 auto pos = box->absolutePoint(lineBox);
                 boxes.erase(std::find(boxes.begin(), boxes.end(), box));
                 box->setX(pos.x());
             }
-            lineBox->boxes().push_back(box);
-            box->setLayoutParent(lineBox);
         }
+        insertInlineBoxToLayoutParent(box, lineBox);
     }
 
     m_absolutePositionedBoxes.clear();
@@ -1164,19 +1147,17 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
     }
 }
 
-void LineFormattingContext::insertNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent)
+void LineFormattingContext::insertInlineNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent)
 {
     if (layoutParent) {
-        layoutParent->boxes().push_back(self);
-        self->setLayoutParent(layoutParent);
+        insertInlineBoxToLayoutParent(self, layoutParent);
     } else {
-        currentLine()->boxes().push_back(self);
-        self->setLayoutParent(currentLine());
+        insertInlineBoxToLayoutParent(self, currentLine());
         markInlineBoxIndex(self);
     }
 }
 
-void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box)
+void LineFormattingContext::generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box)
 {
     box->setLayoutParent(currentLine());
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.rbegin();
@@ -1195,8 +1176,9 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox*
 
             box->setX(fbCtx.m_originalLineBoxX + lastAccumulatedLeftFloatBoxWidth + box->marginLeft() - m_lineBoxX);
 
-            if (oldLineBoxX != m_lineBoxX)
+            if (oldLineBoxX != m_lineBoxX) {
                 reCacheFloatingBoxes(oldLineBoxX - m_lineBoxX);
+            }
         }
     } else {
         fbCtx.m_hasFloat |= HasRight;
@@ -1209,12 +1191,11 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox*
             }
 
             LayoutUnit rightFloatX = fbCtx.m_originalLineBoxX + fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
-            LayoutUnit marginLeft = box->marginLeft();
-            if (marginLeft < 0)
-                marginLeft = 0;
+            LayoutUnit marginLeft = std::max(LayoutUnit(0), box->marginLeft());
             LayoutUnit marginRight = box->marginRight();
-            if (marginRight < 0)
+            if (marginRight < 0) {
                 marginLeft = std::max(marginLeft, -marginRight - box->width());
+            }
 
             box->setX(rightFloatX + marginLeft - m_lineBoxX);
         }
@@ -1222,6 +1203,7 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox*
 
     box->setY(fbCtx.m_y + box->marginTop());
     m_layoutContext.registerFloatingBox(box);
+    currentLine()->boxes().push_back(box);
 }
 
 template <typename Box>
@@ -1241,19 +1223,35 @@ LayoutUnit LineFormattingContext::layoutInlineBoxes(Box* parent, LayoutUnit star
     return x;
 }
 
+static bool containOnlyWhiteSpace(FrameBox* box)
+{
+    if (!box) {
+        return true;
+    }
+
+    if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+        const StringView& sv = box->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
+        if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void LineFormattingContext::removeDanglingSpaceFromLine()
 {
     LineBox* lineBox = currentLine();
 
-    FrameBox* last = nullptr;
-    while ((last = findLastInlineBox(lineBox)) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
-        const StringView& sv = last->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
-        if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
+    FrameBox* last = findLastInlineBox(lineBox);
+    while (last) {
+        if (containOnlyWhiteSpace(last)) {
             removeBoxFromLine(last);
             m_currentLineWidth -= last->boxWidth();
         } else {
             break;
         }
+        last = findLastInlineBox(lineBox);
     }
 }
 
@@ -1273,8 +1271,9 @@ void LineFormattingContext::computeHorizontalProperties()
         LayoutUnit diff = (m_lineBoxWidth - inlineBoxesWidth);
         for (size_t k = 0; k < back->m_boxes.size(); k++) {
             FrameBox* childBox = back->m_boxes[k];
-            if (childBox->style()->floating() == NoneFloatValue)
+            if (childBox->style()->floating() == NoneFloatValue) {
                 childBox->moveX(diff);
+            }
         }
     /*
      * justify: No supported value
@@ -1322,8 +1321,9 @@ void LineFormattingContext::computeHorizontalProperties()
         if (diff > 0) {
             for (size_t k = 0; k < back->m_boxes.size(); k++) {
                 FrameBox* childBox = back->m_boxes[k];
-                if (childBox->style()->floating() == NoneFloatValue)
+                if (childBox->style()->floating() == NoneFloatValue) {
                     childBox->moveX(diff);
+                }
             }
         }
     }
@@ -1436,9 +1436,8 @@ void LineFormattingContext::insertPendingInlineBoxes()
         FrameBox* box = *iter;
         STARFISH_ASSERT(box->isNormalFlow() || box->style()->position() == AbsolutePositionValue);
 
-        if (firstWhite && box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
-            const StringView& sv = box->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
-            if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
+        if (firstWhite) {
+            if (containOnlyWhiteSpace(box)) {
                 iter = m_pendingInlineBoxes.erase(iter);
                 continue;
             }
@@ -1465,8 +1464,9 @@ void LineFormattingContext::resetLineBox()
     m_floatingBoxLayoutContexts.clear();
     layoutLineBox(0, 0);
     m_currentLineWidth = 0;
-    if (m_pendingInlineBoxes.size() == 0)
+    if (m_pendingInlineBoxes.size() == 0) {
         m_pendingFloatingBoxNumsBeforeCurrentLine = m_pendingFloatingBoxes.size();
+    }
     m_shouldLineBreakForAbsolutePositionedBox = false;
     m_shouldLineBreakForBr = true;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
@@ -1519,7 +1519,7 @@ bool LineFormattingContext::isAnyOfInlineBoxesCollidedWithFloatingBoxes()
     return false;
 }
 
-void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
+void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br, bool isLastLine)
 {
     LineBox* back = currentLine();
 
@@ -1569,23 +1569,23 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
 
     LayoutUnit yDiff = distanceToNextLineBox(br, !isLastLine || m_pendingInlineBoxes.size() > 0);
 
-    insertPendingAbsolutePositionedBoxes();
+    unregisterAbsolutePositionedBoxes();
     m_lineBoxY += yDiff;
 
     if (isLastLine) {
         if (m_pendingInlineBoxes.size() > 0 || m_pendingFloatingBoxes.size() > 0) {
-            breakLine(nullptr, isLastLine, true);
+            breakLineForLineBox(nullptr, isLastLine, true);
         }
     }
 }
 
-void LineFormattingContext::breakLine(FrameLineBreak* br, bool isLastLine, bool skipFinishLine)
+void LineFormattingContext::breakLineForLineBox(FrameLineBreak* br, bool isLastLine, bool skipFinishLine)
 {
     /* if (dueToBr == false)
         m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1); */
 
     if (!skipFinishLine) {
-        finishLine(br, isLastLine);
+        finishLineForLineBox(br, isLastLine);
     }
 
     resetLineBox();
@@ -1594,9 +1594,9 @@ void LineFormattingContext::breakLine(FrameLineBreak* br, bool isLastLine, bool 
     insertPendingInlineBoxes();
 
     if (m_pendingInlineBoxes.size() > 0) {
-        breakLine(nullptr, isLastLine, false);
+        breakLineForLineBox(nullptr, isLastLine, false);
     } else if (isLastLine) {
-        finishLine(nullptr, isLastLine);
+        finishLineForLineBox(nullptr, isLastLine);
     }
 }
 
@@ -1611,11 +1611,11 @@ static bool canInsertInlineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit 
         return width <= (ctx->m_lineBoxWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth);
     } else {
         FloatingBoxLayoutContext& fbCtx = *ctx->m_floatingBoxLayoutContexts.rbegin();
-
+        LayoutUnit remainedWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
         if (fbCtx.m_y == 0) {
-            return width <= (fbCtx.m_originalLineBoxWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth);
+            return width <= (remainedWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth);
         } else {
-            return width <= (fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth);
+            return width <= remainedWidth;
         }
     }
 }
@@ -1627,49 +1627,195 @@ static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width
         || !hasBreakableWhiteSpaceProperty(f);
 }
 
-void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LineFormattingContext& lineFormattingContext,
-    std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(FrameLineBreak*)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback, std::function<void(FrameBox*)> absBoxCallback)
+void LineFormattingContext::generateInlineBox(FrameBox* box)
+{
+    if (m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox()) {
+        InlineNonReplacedBox* self = m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox();
+        insertInlineBoxToLayoutParent(box, self);
+        self->setWidth(self->width() + box->boxWidth());
+        setStartingMBP(self);
+    } else {
+        insertInlineBoxToLayoutParent(box, currentLine());
+        markInlineBoxIndex(box);
+    }
+    m_shouldLineBreakForAbsolutePositionedBox = true;
+}
+
+void LineFormattingContext::registerAbsolutePositionedBox(FrameBox* box)
+{
+    m_layoutContext.registerAbsolutePositionedFrames(box);
+    m_absolutePositionedBoxes.push_back(std::make_pair(box, m_shouldLineBreakForAbsolutePositionedBox));
+    markInlineBoxIndex(box);
+
+    if (box->style()->originalDisplay() != BlockDisplayValue) {
+        if (m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox()) {
+            insertInlineBoxToLayoutParent(box, m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox());
+        } else {
+            insertInlineBoxToLayoutParent(box, currentLine());
+        }
+    }
+}
+
+void LineFormattingContext::breakLine(FrameLineBreak* br)
+{
+    if (m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox()) {
+        breakLineForInlineNonReplacedBox(br);
+    } else {
+        breakLineForLineBox(br, false, false);
+    }
+}
+
+void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textWidth, String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace)
+{
+    const std::vector<TextRun>& runs = m_textRunsPerFrameText[f->asFrameText()];
+    if (isWhiteSpace) {
+        CharDirection dir = CharDirection::Ltr;
+        for (size_t i = 0; i < runs.size(); i ++) {
+            if (offset <= runs[i].m_stringView.start() && runs[i].m_stringView.end() <= nextOffset) {
+                dir = runs[i].m_direction;
+                break;
+            }
+        }
+        InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), String::spaceString, 0, 1, dir));
+        ib->setWidth(textWidth);
+        ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+        generateInlineBox(ib);
+    } else {
+        size_t startPos = offset;
+        size_t endPos = nextOffset;
+
+        std::set<size_t> splitPosition;
+
+        for (size_t i = 0; i < runs.size(); i ++) {
+            TextRun r = runs[i];
+            if (offset < r.m_stringView.start() && r.m_stringView.start() < nextOffset) {
+                splitPosition.insert(r.m_stringView.start());
+            }
+            if (offset < r.m_stringView.end() && r.m_stringView.end() < nextOffset) {
+                splitPosition.insert(r.m_stringView.end());
+            }
+        }
+
+        if (splitPosition.size()) {
+            size_t start = offset;
+            size_t end = SIZE_MAX;
+            auto iter = splitPosition.begin();
+            while (iter != splitPosition.end()) {
+                end = *iter;
+
+                CharDirection dir = CharDirection::Ltr;
+                for (size_t i = 0; i < runs.size(); i ++) {
+                    if (runs[i].m_stringView.start() <= start && end <= runs[i].m_stringView.end()) {
+                        dir = runs[i].m_direction;
+                        break;
+                    }
+                }
+
+                InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, start, end, dir));
+                ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
+                ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                generateInlineBox(ib);
+                start = end;
+                iter++;
+            }
+            STARFISH_ASSERT(end != SIZE_MAX);
+            if (end != nextOffset) {
+                CharDirection dir = CharDirection::Ltr;
+                for (size_t i = 0; i < runs.size(); i ++) {
+                    if (runs[i].m_stringView.start() <= end && nextOffset <= runs[i].m_stringView.end()) {
+                        dir = runs[i].m_direction;
+                        break;
+                    }
+                }
+                InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, end, nextOffset, dir));
+                ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
+                ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                generateInlineBox(ib);
+            }
+        } else {
+            CharDirection dir = CharDirection::Ltr;
+            for (size_t i = 0; i < runs.size(); i ++) {
+                if (runs[i].m_stringView.start() <= offset && nextOffset <= runs[i].m_stringView.end()) {
+                    dir = runs[i].m_direction;
+                    break;
+                }
+            }
+            InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, offset, nextOffset, dir));
+            ib->setWidth(textWidth);
+            ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+            generateInlineBox(ib);
+        }
+    }
+    m_currentLineWidth += textWidth;
+}
+
+void LineFormattingContext::generateInlineNonReplacedBox(FrameInline* f)
+{
+    if (m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox()) {
+        InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
+        insertInlineNonReplacedBox(inlineBox, m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox());
+        inlineBox->layoutInline(this);
+        FrameBox* result = m_currentLayoutParent;
+        FrameBox* newLayoutParent = m_currentLayoutParent->layoutParent()->asFrameBox();
+        newLayoutParent->setWidth(newLayoutParent->width() + result->boxWidth());
+        m_currentLayoutParent = newLayoutParent;
+    } else {
+        FrameBox* oldLayoutParent = m_currentLayoutParent;
+        InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
+        insertInlineNonReplacedBox(inlineBox, nullptr);
+        inlineBox->layoutInline(this);
+        STARFISH_ASSERT(m_unprocessedStartingMBPWidth == 0);
+
+        if (currentLine()->boxes().size() == 1) {
+            FrameBox* box = currentLine()->boxes().back();
+            if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+                // TODO: We should remove line box whose boxes' size is 0, and in below condition,
+                // add more condition which there was absolute position set its layout parent to this line box
+                // to be removed, or the lastInlineBox's line-height or vertical-align which set to
+                // different value.
+                InlineNonReplacedBox* lastInlineBox = box->asInlineBox()->asInlineNonReplacedBox();
+                if (lastInlineBox->boxes().size() == 1) {
+                    if (containOnlyWhiteSpace(lastInlineBox->boxes().back())) {
+                        m_currentLineWidth = 0;
+                        currentLine()->boxes().erase(currentLine()->boxes().end() - 1);
+                    }
+                }
+            }
+        }
+        m_currentLayoutParent = oldLayoutParent;
+    }
+}
+
+void LineFormattingContext::generateInlineBoxes(Frame *origin)
 {
     Frame* f = origin->firstChild();
     while (f) {
         // Don't put any inline box leaving pending inline boxes ahead.
-        STARFISH_ASSERT(lineFormattingContext.m_pendingInlineBoxes.size() == 0);
+        STARFISH_ASSERT(m_pendingInlineBoxes.size() == 0);
 
-        if (!f->isNormalFlow()) {
-            if (f->style() && f->style()->position() == PositionValue::AbsolutePositionValue) {
-                lineFormattingContext.m_layoutContext.registerAbsolutePositionedFrames(f->asFrameBox());
-
-                lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox));
-                lineFormattingContext.markInlineBoxIndex(f->asFrameBox());
-                absBoxCallback(f->asFrameBox());
-                f = f->next();
-                continue;
-            }
+        if (f->style() && f->style()->position() == PositionValue::AbsolutePositionValue) {
+            registerAbsolutePositionedBox(f->asFrameBox());
+            f = f->next();
+            continue;
         }
 
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
             // split the text into tokens using the ICU divider, and for each token, execute the following function
-            textDividerForLayout(lineFormattingContext.m_layoutContext.starFish(), txt, [&, f, origin](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
+            textDividerForLayout(m_layoutContext.starFish(), txt, [&, f, origin](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
                 textAppendRetry:
                 if (isWhiteSpace) {
                     if (offset == 0) {
-                        FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
-                        if (!last)
+                        FrameBox* last = findLastInlineBox(currentLine());
+
+                        if (containOnlyWhiteSpace(last)) {
                             return;
-                        if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
-                            const StringView& sv = last->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
-                            if (sv.originalString()->containsOnlyWhitespace(sv.start(), sv.end())) {
-                                return;
-                            }
                         }
                     } else if (nextOffset == srcTxt->length() && f == origin->lastChild()) {
-                        if (origin->isFrameInline()) {
-
-                        } else {
+                        if (!origin->isFrameInline()) {
                             return;
                         }
-                    } else if (lineFormattingContext.m_currentLineWidth == 0) {
+                    } else if (m_currentLineWidth == 0) {
                         return;
                     }
                 }
@@ -1681,121 +1827,40 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LineFormattingCon
                     textWidth = f->style()->font()->measureText(StringView(srcTxt, offset, nextOffset));
                 }
 
-                if (dontBreakLine(&lineFormattingContext, f, textWidth)) {
+                if (dontBreakLine(this, f, textWidth)) {
                 } else {
                     // try this at nextline
-                    lineBreakCallback(nullptr);
-                    lineFormattingContext.m_shouldLineBreakForBr = false;
+                    breakLine(nullptr);
+                    m_shouldLineBreakForBr = false;
                     goto textAppendRetry;
                 }
-                lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox |= !isWhiteSpace;
-                lineFormattingContext.m_shouldLineBreakForBr = true;
+                m_shouldLineBreakForBr = true;
 
-                const std::vector<TextRun>& runs = lineFormattingContext.m_textRunsPerFrameText[f->asFrameText()];
-                if (isWhiteSpace) {
-                    CharDirection dir = CharDirection::Ltr;
-                    for (size_t i = 0; i < runs.size(); i ++) {
-                        if (offset <= runs[i].m_stringView.start() && runs[i].m_stringView.end() <= nextOffset) {
-                            dir = runs[i].m_direction;
-                            break;
-                        }
-                    }
-                    InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), String::spaceString, 0, 1, dir));
-                    ib->setWidth(textWidth);
-                    ib->setHeight(f->style()->font()->metrics().m_fontHeight);
-                    gotInlineBoxCallback(ib);
-                } else {
-                    size_t startPos = offset;
-                    size_t endPos = nextOffset;
-
-                    std::set<size_t> splitPosition;
-
-                    for (size_t i = 0; i < runs.size(); i ++) {
-                        TextRun r = runs[i];
-                        if (offset < r.m_stringView.start() && r.m_stringView.start() < nextOffset) {
-                            splitPosition.insert(r.m_stringView.start());
-                        }
-                        if (offset < r.m_stringView.end() && r.m_stringView.end() < nextOffset) {
-                            splitPosition.insert(r.m_stringView.end());
-                        }
-                    }
-
-                    if (splitPosition.size()) {
-                        size_t start = offset;
-                        size_t end = SIZE_MAX;
-                        auto iter = splitPosition.begin();
-                        while (iter != splitPosition.end()) {
-                            end = *iter;
-
-                            CharDirection dir = CharDirection::Ltr;
-                            for (size_t i = 0; i < runs.size(); i ++) {
-                                if (runs[i].m_stringView.start() <= start && end <= runs[i].m_stringView.end()) {
-                                    dir = runs[i].m_direction;
-                                    break;
-                                }
-                            }
-
-                            InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, start, end, dir));
-                            ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
-                            ib->setHeight(f->style()->font()->metrics().m_fontHeight);
-                            gotInlineBoxCallback(ib);
-                            start = end;
-                            iter++;
-                        }
-                        STARFISH_ASSERT(end != SIZE_MAX);
-                        if (end != nextOffset) {
-                            CharDirection dir = CharDirection::Ltr;
-                            for (size_t i = 0; i < runs.size(); i ++) {
-                                if (runs[i].m_stringView.start() <= end && nextOffset <= runs[i].m_stringView.end()) {
-                                    dir = runs[i].m_direction;
-                                    break;
-                                }
-                            }
-                            InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, end, nextOffset, dir));
-                            ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
-                            ib->setHeight(f->style()->font()->metrics().m_fontHeight);
-                            gotInlineBoxCallback(ib);
-                        }
-                    } else {
-                        CharDirection dir = CharDirection::Ltr;
-                        for (size_t i = 0; i < runs.size(); i ++) {
-                            if (runs[i].m_stringView.start() <= offset && nextOffset <= runs[i].m_stringView.end()) {
-                                dir = runs[i].m_direction;
-                                break;
-                            }
-                        }
-                        InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, offset, nextOffset, dir));
-                        ib->setWidth(textWidth);
-                        ib->setHeight(f->style()->font()->metrics().m_fontHeight);
-                        gotInlineBoxCallback(ib);
-                    }
-                }
-
-                lineFormattingContext.m_currentLineWidth += textWidth;
+                generateInlineTextBox(f->asFrameText(), textWidth, srcTxt, offset, nextOffset, isWhiteSpace);
             });
 
         } else if (f->isFrameReplaced()) {
-            lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox = true;
+            m_shouldLineBreakForAbsolutePositionedBox = true;
             FrameReplaced* r = f->asFrameReplaced();
 
-            r->layout(lineFormattingContext.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
+            r->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
 
             if (r->style()->floating() != NoneFloatValue) {
-                if (lineFormattingContext.m_pendingFloatingBoxes.size() == 0
-                    && canInsertFloatingBox(&lineFormattingContext, r)
-                    && dontBreakLine(&lineFormattingContext, r, r->boxWidth())) {
-                    lineFormattingContext.insertFloatingBoxAndReLayoutLineBoxIfNeeds(r);
-                    gotInlineBoxCallback(r);
+                markInlineBoxIndex(r);
+                if (m_pendingFloatingBoxes.size() == 0
+                    && canInsertFloatingBox(this, r)
+                    && dontBreakLine(this, r, r->boxWidth())) {
+                    generateFloatingBoxAndReLayoutLineBoxIfNeeds(r);
                 } else {
-                    lineFormattingContext.m_pendingFloatingBoxes.push_back(r);
+                    m_pendingFloatingBoxes.push_back(r);
                 }
             } else {
                 insertReplacedBox:
-                if (dontBreakLine(&lineFormattingContext, r, r->boxWidth())) {
-                    lineFormattingContext.m_currentLineWidth += (r->boxWidth());
-                    gotInlineBoxCallback(r);
+                if (dontBreakLine(this, r, r->boxWidth())) {
+                    m_currentLineWidth += (r->boxWidth());
+                    generateInlineBox(r);
                 } else {
-                    lineBreakCallback(nullptr);
+                    breakLine(nullptr);
                     goto insertReplacedBox;
                 }
             }
@@ -1803,58 +1868,57 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LineFormattingCon
             FrameBlockBox* r = f->asFrameBlockBox();
 
             if ((f->style()->display() == DisplayValue::InlineBlockDisplayValue) || (f->style()->display() == DisplayValue::InlineTableDisplayValue)) {
-                lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox = true;
+                m_shouldLineBreakForAbsolutePositionedBox = true;
                 // inline-block, inline-table
-                lineFormattingContext.m_layoutContext.pushInlineBlockBox(r);
-                f->setLayoutParent(layoutParent);
-                f->layout(lineFormattingContext.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
+                m_layoutContext.pushInlineBlockBox(r);
+                f->setLayoutParent(m_currentLayoutParent);
+                f->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
                 LayoutUnit ascender;
 
-                std::pair<bool, LayoutUnit> p = lineFormattingContext.m_layoutContext.readRegisteredLastLineBoxYPos(r);
+                std::pair<bool, LayoutUnit> p = m_layoutContext.readRegisteredLastLineBoxYPos(r);
                 if (p.first && r->style()->overflow() == OverflowValue::VisibleOverflow) {
                     ascender = p.second;
                 } else {
                     ascender = f->asFrameBox()->height();
                 }
-                lineFormattingContext.m_layoutContext.popInlineBlockBox();
-                lineFormattingContext.registerInlineBlockAscender(ascender, r);
+                m_layoutContext.popInlineBlockBox();
+                registerInlineBlockAscender(ascender, r);
 
                 insertInlineBlockBox:
-                if (dontBreakLine(&lineFormattingContext, r, r->boxWidth())) {
-                    lineFormattingContext.m_currentLineWidth += (r->boxWidth());
-                    gotInlineBoxCallback(r);
+                if (dontBreakLine(this, r, r->boxWidth())) {
+                    m_currentLineWidth += (r->boxWidth());
+                    generateInlineBox(r);
                 } else {
-                    lineBreakCallback(nullptr);
+                    breakLine(nullptr);
                     goto insertInlineBlockBox;
                 }
             } else {
                 STARFISH_ASSERT(f->style()->floating() != FloatValue::NoneFloatValue);
 
-                f->setLayoutParent(layoutParent);
-                f->layout(lineFormattingContext.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
+                f->setLayoutParent(m_currentLayoutParent);
+                f->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
 
-                if (lineFormattingContext.m_pendingFloatingBoxes.size() == 0
-                    && canInsertFloatingBox(&lineFormattingContext, r)
-                    && dontBreakLine(&lineFormattingContext, r, r->boxWidth())) {
-                    lineFormattingContext.insertFloatingBoxAndReLayoutLineBoxIfNeeds(r);
-                    gotInlineBoxCallback(r);
+                markInlineBoxIndex(r);
+                if (m_pendingFloatingBoxes.size() == 0
+                    && canInsertFloatingBox(this, r)
+                    && dontBreakLine(this, r, r->boxWidth())) {
+                    generateFloatingBoxAndReLayoutLineBoxIfNeeds(r);
                 } else {
-                    lineFormattingContext.markInlineBoxIndex(r);
-                    lineFormattingContext.m_pendingFloatingBoxes.push_back(r);
+                    m_pendingFloatingBoxes.push_back(r);
                 }
             }
         } else if (f->isFrameLineBreak()) {
-            if (!lineFormattingContext.m_shouldLineBreakForBr) {
-                FloatingBoxLayoutContext& fbCtx = *lineFormattingContext.m_floatingBoxLayoutContexts.begin();
+            if (!m_shouldLineBreakForBr) {
+                FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.begin();
                 if (clearAffected(fbCtx.m_hasFloat, f)) {
-                    lineBreakCallback(f->asFrameLineBreak());
+                    breakLine(f->asFrameLineBreak());
                 }
-                lineFormattingContext.m_shouldLineBreakForBr = true;
+                m_shouldLineBreakForBr = true;
             } else {
-                lineBreakCallback(f->asFrameLineBreak());
+                breakLine(f->asFrameLineBreak());
             }
         } else if (f->isFrameInline()) {
-            frameInlineCallback(f->asFrameInline());
+            generateInlineNonReplacedBox(f->asFrameInline());
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2220,8 +2284,10 @@ void LineFormattingContext::setEndingMBP(InlineNonReplacedBox* self)
     m_currentLineWidth += unprocessedEndingMBP;
 }
 
-void LineFormattingContext::finishLine(FrameLineBreak* br, InlineNonReplacedBox* self, bool isLastNode)
+void LineFormattingContext::finishLineForInlineNonReplacedBox(FrameLineBreak* br, bool isLastNode)
 {
+    InlineNonReplacedBox* self = m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox();
+
     if (isLastNode) {
         setStartingMBP(self);
         setEndingMBP(self);
@@ -2259,9 +2325,19 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, InlineNonReplacedBox*
     }
 }
 
-InlineNonReplacedBox* LineFormattingContext::breakLine(FrameLineBreak* br, InlineNonReplacedBox* self)
+void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 {
-    finishLine(br, self, false);
+    InlineNonReplacedBox* self = m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox();
+
+    if (self->boxes().size() == 0 && self->layoutParent()->isLineBox()) {
+        auto& boxes = currentLine()->boxes();
+        boxes.erase(std::find(boxes.begin(), boxes.end(), self));
+        breakLineForLineBox(br, false, false);
+        insertInlineBoxToLayoutParent(self, currentLine());
+        return;
+    }
+
+    finishLineForInlineNonReplacedBox(br, false);
 
     std::vector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>, gc_allocator_ignore_off_page<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>>> stack;
 
@@ -2285,7 +2361,7 @@ InlineNonReplacedBox* LineFormattingContext::breakLine(FrameLineBreak* br, Inlin
         current = current->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
     }
 
-    breakLine(br, false, false);
+    breakLineForLineBox(br, false, false);
 
     auto riter = stack.rbegin();
     InlineNonReplacedBox* layoutParent = nullptr;
@@ -2294,16 +2370,14 @@ InlineNonReplacedBox* LineFormattingContext::breakLine(FrameLineBreak* br, Inlin
         InlineNonReplacedBoxMBPStore store = riter->second;
         InlineNonReplacedBox* newInrpBox = new InlineNonReplacedBox(origin);
 
-        insertNonReplacedBox(newInrpBox, layoutParent);
+        insertInlineNonReplacedBox(newInrpBox, layoutParent);
         layoutParent = newInrpBox;
 
         newInrpBox->resetOrgMBP(&store);
         newInrpBox->resetLeftRightMBP(&store);
-        self = newInrpBox;
+        m_currentLayoutParent = newInrpBox;
         riter++;
     }
-
-    return self;
 }
 
 LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
@@ -2323,44 +2397,10 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     // compute directions
     computeDirection(lineFormattingContext, this, style()->direction());
 
-    inlineBoxGenerator(this, this, lineFormattingContext, [&](FrameBox* ib) {
-        lineFormattingContext.currentLine()->boxes().push_back(ib);
-        lineFormattingContext.markInlineBoxIndex(ib);
-        ib->setLayoutParent(lineFormattingContext.currentLine());
-    }, [&](FrameLineBreak* br)
-    {
-        lineFormattingContext.breakLine(br, false, false);
-    }, [&](FrameInline* f)
-    {
-        InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
-        InlineNonReplacedBox::layoutInline(inlineBox, lineFormattingContext, nullptr);
-        STARFISH_ASSERT(lineFormattingContext.m_unprocessedStartingMBPWidth == 0);
+    lineFormattingContext.m_currentLayoutParent = this;
+    lineFormattingContext.generateInlineBoxes(this);
 
-        if (lineFormattingContext.currentLine()->boxes().size() == 1) {
-            FrameBox* box = lineFormattingContext.currentLine()->boxes().back();
-            if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
-                InlineNonReplacedBox* lastInlineBox = box->asInlineBox()->asInlineNonReplacedBox();
-                if (lastInlineBox->m_boxes.size() == 1) {
-                    FrameBox* box = lastInlineBox->m_boxes.back();
-                    if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
-                        const StringView& sv = box->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
-                        if (sv.originalString()->containsOnlyWhitespace(sv.start(), sv.end())) {
-                            lineFormattingContext.currentLine()->boxes().erase(lineFormattingContext.currentLine()->boxes().end() - 1);
-                            lineFormattingContext.m_currentLineWidth = 0;
-                        }
-                    }
-                }
-            }
-        }
-    }, [&](FrameBox* box)
-    {
-        if (box->style()->originalDisplay() != BlockDisplayValue) {
-            box->setLayoutParent(lineFormattingContext.currentLine());
-            lineFormattingContext.currentLine()->boxes().push_back(box);
-        }
-    });
-
-    lineFormattingContext.finishLine(nullptr, true);
+    lineFormattingContext.finishLineForLineBox(nullptr, true);
     STARFISH_ASSERT(lineFormattingContext.m_pendingFloatingBoxes.size() == 0 && lineFormattingContext.m_pendingInlineBoxes.size() == 0);
 
     auto iter = m_lineBoxes.begin();
@@ -2417,65 +2457,19 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 }
 
 
-InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* self,
-    LineFormattingContext& lineFormattingContext, InlineNonReplacedBox* layoutParent)
+void InlineNonReplacedBox::layoutInline(LineFormattingContext* lineFormattingContext)
 {
-    LayoutUnit inlineContentWidth = lineFormattingContext.m_block.contentWidth();
+    LayoutUnit inlineContentWidth = lineFormattingContext->m_block.contentWidth();
 
-    self->computeBorderMarginPadding(inlineContentWidth);
-    self->resetOrgMBP();
-    self->unsetTopBottomMBP();
-    lineFormattingContext.m_unprocessedStartingMBPWidth += startingMBPWidth(self);
+    computeBorderMarginPadding(inlineContentWidth);
+    resetOrgMBP();
+    unsetTopBottomMBP();
+    lineFormattingContext->m_unprocessedStartingMBPWidth += startingMBPWidth(this);
 
+    lineFormattingContext->m_currentLayoutParent = this;
+    lineFormattingContext->generateInlineBoxes(origin());
 
-    lineFormattingContext.insertNonReplacedBox(self, layoutParent);
-
-    inlineBoxGenerator(self, self->m_origin, lineFormattingContext, [&](FrameBox* ib)
-    {
-        if (ib->style()->floating() != NoneFloatValue) {
-            lineFormattingContext.currentLine()->boxes().push_back(ib);
-            lineFormattingContext.markInlineBoxIndex(ib);
-            // ib->setLayoutParent(lineFormattingContext.currentLine()); no needs
-        } else {
-            self->boxes().push_back(ib);
-            ib->setLayoutParent(self);
-            self->setWidth(self->width() + ib->boxWidth());
-            lineFormattingContext.setStartingMBP(self);
-        }
-    }, [&](FrameLineBreak* br)
-    {
-        if (self->boxes().size() == 0 && !layoutParent) {
-            auto& boxes = lineFormattingContext.currentLine()->boxes();
-            boxes.erase(std::find(boxes.begin(), boxes.end(), self));
-            lineFormattingContext.breakLine(br, false, false);
-            lineFormattingContext.currentLine()->boxes().push_back(self);
-            self->setLayoutParent(lineFormattingContext.currentLine());
-        } else {
-            self = lineFormattingContext.breakLine(br, self);
-        }
-    }, [&](FrameInline* f)
-    {
-        InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
-        InlineNonReplacedBox* result = InlineNonReplacedBox::layoutInline(inlineBox, lineFormattingContext, self);
-        Frame* newSelfCandi = result->layoutParent();
-        if (newSelfCandi->asFrameBox()->isInlineBox() && newSelfCandi->asFrameBox()->asInlineBox()->isInlineNonReplacedBox()) {
-            InlineNonReplacedBox* newSelf = newSelfCandi->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
-            if (self != newSelf) {
-                self = newSelf;
-            }
-        }
-        self->setWidth(self->width() + result->boxWidth());
-    }, [&](FrameBox* box)
-    {
-        if (box->style()->originalDisplay() != BlockDisplayValue) {
-            box->setLayoutParent(self);
-            self->boxes().push_back(box);
-        }
-    });
-
-    lineFormattingContext.finishLine(nullptr, self, true);
-
-    return self;
+    lineFormattingContext->finishLineForInlineNonReplacedBox(nullptr, true);
 }
 
 void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
