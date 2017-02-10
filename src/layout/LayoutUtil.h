@@ -1044,22 +1044,22 @@ public:
         m_left = left;
     }
 
-    LayoutUnit top()
+    LayoutUnit top() const
     {
         return m_top;
     }
 
-    LayoutUnit right()
+    LayoutUnit right() const
     {
         return m_right;
     }
 
-    LayoutUnit bottom()
+    LayoutUnit bottom() const
     {
         return m_bottom;
     }
 
-    LayoutUnit left()
+    LayoutUnit left() const
     {
         return m_left;
     }
