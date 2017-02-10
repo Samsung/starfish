@@ -56,6 +56,7 @@ public:
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
+        m_inheritedStyles.m_borderSpacing = Length(Length::Fixed, 2);
 
         initNonInheritedStyles();
     }
