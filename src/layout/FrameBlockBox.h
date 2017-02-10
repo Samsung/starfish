@@ -131,7 +131,59 @@ protected:
 struct InlineNonReplacedBoxMBPStore;
 struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
 
-class InlineNonReplacedBox : public InlineBox {
+template <typename Box>
+class InlineBoxLayoutParentBox {
+public:
+    LayoutUnit ascender() const
+    {
+        return m_ascender;
+    }
+
+    LayoutUnit decender() const
+    {
+        return m_descender;
+    }
+
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
+    {
+        return m_boxes;
+    }
+
+    void iterateInlineBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    {
+        if (!fn((Box*)this)) {
+            return;
+        }
+
+        if (beforeIterateChild) {
+            beforeIterateChild((Box*)this);
+        }
+
+        for (size_t i = 0; i < m_boxes.size(); i ++) {
+            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
+        }
+
+        if (afterIterateChild) {
+            afterIterateChild((Box*)this);
+        }
+    }
+
+    FrameBox* findLastInlineBox();
+
+    void insertInlineBox(FrameBox* box)
+    {
+        m_boxes.push_back(box);
+        box->setLayoutParent((Box*)this);
+    }
+    LayoutUnit layoutInlineBoxes(LayoutUnit start);
+    void registerRelativePositionInlineBoxes(LayoutContext& ctx);
+protected:
+    LayoutUnit m_ascender;
+    LayoutUnit m_descender;
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
+};
+
+class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
     friend struct InlineNonReplacedBoxMBPStore;
     friend struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     friend class FrameBlockBox;
@@ -153,6 +205,7 @@ public:
     {
         return "InlineNonReplacedBox";
     }
+
     void layoutInline(LineFormattingContext* lineFormattingContext);
     virtual void paint(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx)
@@ -173,51 +226,17 @@ public:
 #endif
     virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        if (!fn(this))
-            return;
-
-        if (beforeIterateChild)
-            beforeIterateChild(this);
-        for (size_t i = 0; i < m_boxes.size(); i ++) {
-            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
-        }
-        if (afterIterateChild)
-            afterIterateChild(this);
+        InlineBoxLayoutParentBox<InlineNonReplacedBox>::iterateInlineBoxes(fn, beforeIterateChild, afterIterateChild);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
-
-    LayoutUnit ascender()
-    {
-        return m_ascender;
-    }
-
-    LayoutUnit decender()
-    {
-        return m_descender;
-    }
-
-    void setAscender(const LayoutUnit& a)
-    {
-        m_ascender = a;
-    }
-
-    void setDecender(const LayoutUnit& a)
-    {
-        m_descender = a;
-    }
 
     FrameInline* origin()
     {
         return m_origin;
     }
 
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
-    {
-        return m_boxes;
-    }
-
-    bool isCollapsed()
+    bool isCollapsed() const
     {
         return m_isCollapsed;
     }
@@ -227,7 +246,7 @@ public:
         m_isCollapsed = true;
     }
 
-    bool isProcessedStartingMBP()
+    bool isProcessedStartingMBP() const
     {
         return m_isProcessedStartingMBP;
     }
@@ -236,6 +255,9 @@ public:
     {
         m_isProcessedStartingMBP = true;
     }
+
+    void setStartingMBP(LineFormattingContext* lineFormattingContext);
+    void setEndingMBP(LineFormattingContext* lineFormattingContext);
 
     void unsetTopBottomMBP();
     void unsetLeftMBP();
@@ -248,26 +270,25 @@ public:
 protected:
     bool m_isCollapsed;
     bool m_isProcessedStartingMBP;
-    LayoutUnit m_ascender;
-    LayoutUnit m_descender;
     FrameInline* m_origin;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin)
         : InlineBox(frame->node(), frame->style())
         , m_isCollapsed(false)
         , m_isProcessedStartingMBP(false)
-        , m_ascender(0)
-        , m_descender(0)
         , m_origin(origin)
     {
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
         }
+
         if (origin->isRightMBPCleared()) {
             setRightMBPCleared();
         }
+
+        m_ascender = 0;
+        m_descender = 0;
 
         // recompute style flags
         // we should re compute flags here
@@ -321,7 +342,7 @@ private:
     }
 };
 
-class LineBox : public FrameBox {
+class LineBox : public FrameBox, public InlineBoxLayoutParentBox<LineBox> {
     friend class LineFormattingContext;
     friend class FrameBlockBox;
     friend class InlineNonReplacedBox;
@@ -329,30 +350,15 @@ class LineBox : public FrameBox {
 public:
     LineBox(Frame* parent)
         : FrameBox(nullptr, nullptr)
-        , m_ascender(0)
-        , m_descender(0)
     {
         setParent(parent);
+        m_ascender = 0;
+        m_descender = 0;
     }
 
     virtual bool isLineBox()
     {
         return true;
-    }
-
-    LayoutUnit ascender()
-    {
-        return m_ascender;
-    }
-
-    LayoutUnit decender()
-    {
-        return m_descender;
-    }
-
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
-    {
-        return m_boxes;
     }
 
     virtual const char* name()
@@ -362,28 +368,8 @@ public:
 
     virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        if (!fn(this))
-            return;
-
-        if (beforeIterateChild)
-            beforeIterateChild(this);
-
-        for (size_t i = 0; i < m_boxes.size(); i ++) {
-            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
-        }
-
-        if (afterIterateChild)
-            afterIterateChild(this);
+        InlineBoxLayoutParentBox<LineBox>::iterateInlineBoxes(fn, beforeIterateChild, afterIterateChild);
     }
-
-protected:
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
-    // FIXME
-    // we use these value only for vertical-align of inline-block
-    // in layout, we use only 'ascender'
-    // should we delete m_decender?
-    LayoutUnit m_ascender;
-    LayoutUnit m_descender;
 };
 
 class MarginInfo {
@@ -401,7 +387,7 @@ public:
         m_maxPositiveMarginTop = m;
     }
 
-    LayoutUnit maxPositiveMarginTop()
+    LayoutUnit maxPositiveMarginTop() const
     {
         return m_maxPositiveMarginTop;
     }
@@ -411,7 +397,7 @@ public:
         m_maxNegativeMarginTop = m;
     }
 
-    LayoutUnit maxNegativeMarginTop()
+    LayoutUnit maxNegativeMarginTop() const
     {
         return m_maxNegativeMarginTop;
     }
@@ -421,7 +407,7 @@ public:
         m_positiveMargin = m;
     }
 
-    LayoutUnit positiveMargin()
+    LayoutUnit positiveMargin() const
     {
         return m_positiveMargin;
     }
@@ -431,7 +417,7 @@ public:
         m_negativeMargin = m;
     }
 
-    LayoutUnit negativeMargin()
+    LayoutUnit negativeMargin() const
     {
         return m_negativeMargin;
     }
@@ -452,26 +438,26 @@ public:
         }
     }
 
-    bool canCollapseTopWithChildren()
+    bool canCollapseTopWithChildren() const
     {
         return m_canCollapseTopWithChildren;
     }
 
     void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
 
-    bool atTopSideOfBlock() { return m_atTopSideOfBlock; }
+    bool atTopSideOfBlock() const { return m_atTopSideOfBlock; }
 
-    bool canCollapseWithMarginTop()
+    bool canCollapseWithMarginTop() const
     {
         return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
     }
 
-    bool canCollapseWithMarginBottom()
+    bool canCollapseWithMarginBottom() const
     {
         return m_canCollapseBottomWithChildren;
     }
 
-    bool canCollapseBottomWithChildren()
+    bool canCollapseBottomWithChildren() const
     {
         return m_canCollapseBottomWithChildren;
     }
@@ -552,7 +538,7 @@ public:
         m_heightComputed = b;
     }
 
-    bool heightComputed()
+    bool heightComputed() const
     {
         return m_heightComputed;
     }
@@ -733,9 +719,6 @@ private:
 
     void breakLineForLineBox(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
     void breakLineForInlineNonReplacedBox(FrameLineBreak* br);
-
-    void setStartingMBP(InlineNonReplacedBox* self);
-    void setEndingMBP(InlineNonReplacedBox* self);
 
     CharDirection contentDir(FrameBox* box);
     void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);

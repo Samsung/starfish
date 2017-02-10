@@ -118,72 +118,100 @@ public:
     void setPaddingBottom(LayoutUnit t) { m_padding.setBottom(t); }
     void setPaddingLeft(LayoutUnit t) { m_padding.setLeft(t); }
 
-    LayoutUnit paddingTop() { return m_padding.top(); }
-    LayoutUnit paddingRight() { return m_padding.right(); }
-    LayoutUnit paddingBottom() { return m_padding.bottom(); }
-    LayoutUnit paddingLeft() { return m_padding.left(); }
+    LayoutUnit paddingTop() const { return m_padding.top(); }
+    LayoutUnit paddingRight() const { return m_padding.right(); }
+    LayoutUnit paddingBottom() const { return m_padding.bottom(); }
+    LayoutUnit paddingLeft() const { return m_padding.left(); }
 
     void setBorderTop(LayoutUnit t) { m_border.setTop(t); }
     void setBorderRight(LayoutUnit t) { m_border.setRight(t); }
     void setBorderBottom(LayoutUnit t) { m_border.setBottom(t); }
     void setBorderLeft(LayoutUnit t) { m_border.setLeft(t); }
 
-    LayoutUnit borderTop() { return m_border.top(); }
-    LayoutUnit borderRight() { return m_border.right(); }
-    LayoutUnit borderBottom() { return m_border.bottom(); }
-    LayoutUnit borderLeft() { return m_border.left(); }
+    LayoutUnit borderTop() const { return m_border.top(); }
+    LayoutUnit borderRight() const { return m_border.right(); }
+    LayoutUnit borderBottom() const { return m_border.bottom(); }
+    LayoutUnit borderLeft() const { return m_border.left(); }
 
     void setMarginTop(LayoutUnit t) { m_margin.setTop(t); }
     void setMarginRight(LayoutUnit t) { m_margin.setRight(t); }
     void setMarginBottom(LayoutUnit t) { m_margin.setBottom(t); }
     void setMarginLeft(LayoutUnit t) { m_margin.setLeft(t); }
 
-    LayoutUnit marginTop() { return m_margin.top(); }
-    LayoutUnit marginRight() { return m_margin.right(); }
-    LayoutUnit marginBottom() { return m_margin.bottom(); }
-    LayoutUnit marginLeft() { return m_margin.left(); }
+    LayoutUnit marginTop() const { return m_margin.top(); }
+    LayoutUnit marginRight() const { return m_margin.right(); }
+    LayoutUnit marginBottom() const { return m_margin.bottom(); }
+    LayoutUnit marginLeft() const { return m_margin.left(); }
 
-    LayoutUnit paddingWidth()
+    LayoutUnit paddingWidth() const
     {
         return m_padding.left() + m_padding.right();
     }
 
-    LayoutUnit paddingHeight()
+    LayoutUnit paddingHeight() const
     {
         return m_padding.top() + m_padding.bottom();
     }
 
-    LayoutUnit borderWidth()
+    LayoutUnit borderWidth() const
     {
         return m_border.left() + m_border.right();
     }
 
-    LayoutUnit borderHeight()
+    LayoutUnit borderHeight() const
     {
         return m_border.top() + m_border.bottom();
     }
 
-    LayoutUnit marginWidth()
+    LayoutUnit marginWidth() const
     {
         return m_margin.left() + m_margin.right();
     }
 
-    LayoutUnit marginHeight()
+    LayoutUnit marginHeight() const
     {
         return m_margin.top() + m_margin.bottom();
     }
 
-    LayoutUnit contentWidth()
+    LayoutUnit leftMBPWidth() const
+    {
+        return m_margin.left() + m_border.left() + m_padding.left();
+    }
+
+    LayoutUnit rightMBPWidth() const
+    {
+        return m_margin.right() + m_border.right() + m_padding.right();
+    }
+
+    LayoutUnit startingMBPWidth()
+    {
+        if (style()->direction() == LtrDirectionValue) {
+            return leftMBPWidth();
+        } else {
+            return rightMBPWidth();
+        }
+    }
+
+    LayoutUnit endingMBPWidth()
+    {
+        if (style()->direction() == LtrDirectionValue) {
+            return rightMBPWidth();
+        } else {
+            return leftMBPWidth();
+        }
+    }
+
+    LayoutUnit contentWidth() const
     {
         return m_frameRect.width() - paddingWidth() - borderWidth();
     }
 
-    LayoutUnit contentHeight()
+    LayoutUnit contentHeight() const
     {
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
-    LayoutUnit boxWidth()
+    LayoutUnit boxWidth() const
     {
         LayoutUnit boxWidth = width() + marginWidth();
         if (boxWidth < 0)
@@ -191,7 +219,7 @@ public:
         return boxWidth;
     }
 
-    LayoutUnit boxHeight()
+    LayoutUnit boxHeight() const
     {
         LayoutUnit boxHeight = height() + marginHeight();
         if (boxHeight < 0) {
