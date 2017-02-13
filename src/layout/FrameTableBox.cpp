@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -312,31 +312,25 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
 
 void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
 {
-    // 0. Get the cells in the first row. These are used to
-    // determine the width of each cell in the table later.
+    // 0. Get the cells in the first row. These are used to determine:
+    // * the width of each cell, and
+    // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
-    for (Frame* s = firstChild(); s; s = s->next()) {
-        if (s->isFrameTableSectionBox()) {
-            FrameTableSectionBox* section = s->asFrameTableSectionBox();
-            if (section && section->firstChild()) {
-                FrameTableRowBox* row =
-                    section->firstChild()->asFrameTableRowBox();
-                if (row) {
-                    for (Frame* c = row->firstChild(); c; c = c->next()) {
-                        FrameTableCellBox* cell = c->asFrameTableCellBox();
-                        m_cellsInTheFirstRow.push_back(cell);
-                    }
-                }
-            }
-
-            break;
-        }
+    FrameTableSectionBox* firstSection = firstNonEmptySectionBoxInVisualOrder();
+    STARFISH_ASSERT(firstSection);
+    STARFISH_ASSERT(firstSection->firstChild());
+    FrameTableRowBox* row = firstSection->firstChild()->asFrameTableRowBox();
+    for (Frame* c = row->firstChild(); c; c = c->next()) {
+        m_cellsInTheFirstRow.push_back(c->asFrameTableCellBox());
     }
 
-    // 1. We traverse the table to calculate:
-    //  * min/max cell widths of the table if "width: auto", OR
-    //  * fixed cell widths if the cell width is not "width: auto".
-    // before performing the layout.
+    // 1. The spec says to look at the first row only to get the width for each
+    // cell. But, there are cases where the following rows contains more cells
+    // than the first row. In this case, the spec leaves what to do to
+    // implementors. We try to obtain the width of those cells similar to
+    // "table-layout: auto", i.e., we perform the following
+    // to get:
+    //  * min/max cell widths of the table if "width: auto"
     m_columnWidths.clear();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
@@ -346,38 +340,69 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         }
     }
 
-    // 2. Calculate the table width
-    // TODO: Need to consider the widths of captions too
+    // We iterate columns and calculate the following:
     //
+    // If the width of a cell is specified, use the specified width.
+    // But, if the min width of a cell for a column is greater than the
+    // specified width, use the min width as the column width
+    //
+    // * sum of all cells with specified widths.
+    // * calculate initial column width for cells with specified width
+    // * min/max table width
+    //   - TODO: Need to consider caption widths too
+    // * collect auto and specified width cells for later calculation
+
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+    LayoutUnit minTableWidth = 0;
+    LayoutUnit maxTableWidth = 0;
+    minTableWidth += marginWidth() + borderWidth() + paddingWidth();
+    minTableWidth += borderSpacing;
+    maxTableWidth = minTableWidth;
+
+    LayoutUnit sumOfSpecifiedCellWidths = 0;
+
+    std::vector<ColSizeStruct*> cellsWithAutoWidths;
+    std::vector<ColSizeStruct*> cellsWithSpecifiedWidths;
+    for (auto& col : m_columnWidths) {
+        STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
+        FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+
+        if (isCellWidthAuto(col.id)) {
+            cellsWithAutoWidths.push_back(&col);
+        } else {
+            if (cell->style()->width().isFixed()) {
+                LayoutUnit specifiedWidth = cell->style()->width().fixed();
+                specifiedWidth += cell->borderWidth() + cell->paddingWidth();
+
+                col.minCellWidth = std::max(col.minCellWidth, specifiedWidth);
+
+                sumOfSpecifiedCellWidths += specifiedWidth;
+            } else if (cell->style()->width().isPercent()) {
+                // Not yet implemented
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            cellsWithSpecifiedWidths.push_back(&col);
+        }
+
+        minTableWidth += col.minCellWidth + borderSpacing;
+        maxTableWidth += col.maxCellWidth + borderSpacing;
+    }
+
     // Followed the algorithm from
     // https://www.w3.org/TR/2016/WD-css-tables-3-20161025/#width-distribution
     // except when table width is given, we simple use the width (following how
     // blink works)
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
-    LayoutUnit maxTableWidth = 0;
-    LayoutUnit minTableWidth = 0;
-    maxTableWidth += marginWidth() + borderWidth() + paddingWidth();
-    maxTableWidth += borderSpacing;
-    minTableWidth = maxTableWidth;
-    for (auto& colSize : m_columnWidths) {
-        maxTableWidth += colSize.maxCellWidth + borderSpacing;
-        minTableWidth += colSize.minCellWidth + borderSpacing;
-    }
-
     LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
     LayoutUnit tableWidth;
     bool hasTableWidth = false;
     if (style()->width().isAuto()) {
-        LayoutUnit preferredWidth = std::min(maxTableWidth, parentContentWidth);
-        tableWidth = std::min(preferredWidth, minTableWidth);
+        tableWidth = std::max(minTableWidth, parentContentWidth);
+        tableWidth -= marginWidth();
     } else {
         // The width of table is explicitly given
         hasTableWidth = true;
         if (style()->width().isFixed()) {
-            // Following Blinks behaviour here
-            // tableWidth = std::max(minTableWidth,
-            // LayoutUnit::fromPixel(style()->width().fixed()));
             tableWidth = LayoutUnit::fromPixel(style()->width().fixed());
         } else if (style()->width().isPercent()) {
             // Not implemented yet
@@ -388,148 +413,185 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         }
     }
 
-    // 3. Increase or reduce the width of each cell.
-    if (tableWidth < maxTableWidth) {
-        // 3.1 Reduce the width of each cell if table width is smaller
-        // than the sum of max column widths. There are two types of table
-        // width reduction:
-        //
-        // * When tableWidth specified
-        // * When tableWidth is not specified
-        //
-        // When tableWidth is given, find the sum of cell widths that have fixed
-        // width. If the total sum is greater than the table width, 0 is given
-        // to all cells with "width: auto". Else, the remaining spaces are
-        // distributed to among these cells.
-        //
-        // When tableWidth is not given, reduce the cells that have "width:
-        // auto".
-        // Each width of these cells is reduced in proportion to the ratio of
-        // the width of the cell over the total table width.
-        // Cells with "width: auto" are not affected here, but adjusted later
-        // this function if further rooms are needed.
-        //
-        // Note: The spec does not say how to reduce the width of cells.
-        // Our table width reducing behaviour mimics how blink works.
-
-        if (hasTableWidth) {
-            // 1. Get the sum of all fixed cell widths.
-            LayoutUnit totalFixedCellWidths = 0;
-            std::vector<ColSizeStruct*> cellsWithAutoWidths;
-            for (unsigned i = 0; i < m_columnWidths.size(); i++) {
-                ColSizeStruct& col = m_columnWidths[i];
-
-                if (!isCellWidthAuto(i)) {
-                    STARFISH_ASSERT(i < m_cellsInTheFirstRow.size());
-                    totalFixedCellWidths +=
-                        m_cellsInTheFirstRow[i]->style()->width().fixed();
-                } else {
-                    cellsWithAutoWidths.push_back(&col);
-                }
-            }
-
-            if (totalFixedCellWidths >= tableWidth) {
-                // Set the widths of all "width: auto" cells to 0
-                for (auto& c : cellsWithAutoWidths) {
-                    ColSizeStruct& col = *c;
-                    col.cellWidth = 0;
-                }
-            } else {
-                // Distribute available spaces among cells width "width: auto"
-                LayoutUnit availableWidth = tableWidth - totalFixedCellWidths;
-                availableWidth -= borderWidth() + paddingWidth();
-                availableWidth -=
-                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
-                LayoutUnit newCellWidth(availableWidth.toDouble() /
-                                        cellsWithAutoWidths.size());
-
-                for (auto& c : cellsWithAutoWidths) {
-                    ColSizeStruct& col = *c;
-                    col.cellWidth = newCellWidth.round();
-                }
+    // 3. If a width of the table is given, we either increase or decrease the
+    // cell widths to fit them into the width of table.
+    if (hasTableWidth) {
+        if (sumOfSpecifiedCellWidths >= tableWidth) {
+            // Set the widths of all cells with "width: auto" to 0, if any
+            for (auto& c : cellsWithAutoWidths) {
+                ColSizeStruct& col = *c;
+                col.cellWidth = 0;
             }
         } else {
-            LayoutUnit availableWidth = tableWidth;
-            availableWidth -= marginWidth() + borderWidth() + paddingWidth();
+            LayoutUnit availableWidth = tableWidth - sumOfSpecifiedCellWidths;
+            availableWidth -= borderWidth() + paddingWidth();
             availableWidth -=
-                borderSpacing + (borderSpacing * m_columnWidths.size());
+                (borderSpacing * m_columnWidths.size()) - borderSpacing;
 
-            // 3.1.1 Calculate the ratio of which each column is to be reduced.
-            //     The cell width is:
-            //     minCellWidth <= cellWidth <= maxCellWidth
-            LayoutUnit totalCellWidths = 0;
-            for (auto& col : m_columnWidths) {
-                totalCellWidths += col.maxCellWidth;
-            }
+            // Specified table width is bigger than the sum of all specified
+            // cell widths, if
+            // * the sum of all actual specified cell widths is smaller than
+            //   the specified table width OR
+            // * there are cells with "width: auto" that have no widths
+            //   calculated yet
+            if (availableWidth > 0) {
+                // All cells have fixed width. In this case, distribute
+                // available spaces among cells. The extra space for each cell
+                // is proportional to the width of each cell.
+                if (cellsWithAutoWidths.empty()) {
+                    STARFISH_ASSERT(m_cellsInTheFirstRow.size() ==
+                                    m_columnWidths.size());
 
-            // 3.1.2 Check whether it is ok to reduce the width of each cell.
-            // The minimum width of a cell should be no less than
-            // the preferred min width of the cell.
-            std::vector<ColSizeStruct*> columnsWithUserDefinedWidths;
-            std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
-            std::vector<ColSizeStruct*> columnsToAdjustWidths;
-            for (unsigned i = 0; i < m_columnWidths.size(); i++) {
-                ColSizeStruct& col = m_columnWidths[i];
-                LayoutUnit newCellWidth(
-                    availableWidth.toDouble() *
-                    (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
+                    for (auto& col : m_columnWidths) {
+                        FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
 
-                if (!isCellWidthAuto(i)) {
-                    // Use the user-supplied width
-                    col.cellWidth = col.maxCellWidth;
-                    availableWidth -= col.cellWidth;
-                    totalCellWidths -= col.cellWidth;
-                    columnsWithUserDefinedWidths.push_back(&col);
+                        LayoutUnit cellWidth = cell->style()->width().fixed();
+                        cellWidth += cell->borderWidth() + cell->paddingWidth();
+
+                        LayoutUnit extraCellWidth =
+                            LayoutUnit(cellWidth.toDouble() /
+                                       sumOfSpecifiedCellWidths.toDouble() *
+                                       availableWidth.toDouble());
+                        col.cellWidth += extraCellWidth;
+                    }
                 } else {
-                    // This cell has "width: auto". If the scaled width is
-                    // less than the min preferred cell width, use the
-                    // min preferred width for the cell
-                    if (newCellWidth.round() <= col.minCellWidth) {
-                        col.cellWidth = col.minCellWidth;
-                        availableWidth -= col.minCellWidth;
-                        totalCellWidths -= col.maxCellWidth;
-                        columnsAdjustedToMinWidths.push_back(&col);
-                    } else {
-                        columnsToAdjustWidths.push_back(&col);
+                    // Distribute available spaces equally among cells with
+                    // "width: auto"
+                    LayoutUnit newCellWidth = LayoutUnit(
+                        availableWidth.toDouble() / cellsWithAutoWidths.size());
+                    for (auto& c : cellsWithAutoWidths) {
+                        ColSizeStruct& col = *c;
+                        col.cellWidth = newCellWidth;
                     }
                 }
             }
+        }
+    } else {
+        bool FOLLOW_SPEC = true;
+        // 1. A cell width cannot be smaller than the min width of the
+        // cell
+        LayoutUnit sumOfAutoCellPreferredWidths = 0;
+        LayoutUnit sumOfAdjustedSpecifiedCellWidths = 0;
+        std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
+        std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths;
+        LayoutUnit sumOfColWidths = 0;
+        for (auto& col : m_columnWidths) {
+            STARFISH_ASSERT(col.id < m_columnWidths.size());
+            FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
 
-            // 3.1.3 Now reduce the width of each cell
-            for (auto& c : columnsToAdjustWidths) {
-                ColSizeStruct& col = *c;
-                // To workaround the rounding error in LayoutUnit
-                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth
-                // / totalCellWidths);
+            if (isCellWidthAuto(col.id)) {
+                col.cellWidth = col.maxCellWidth;
+                sumOfAutoCellPreferredWidths += col.cellWidth;
+            } else {
+                LayoutUnit cellWidth = cell->style()->width().fixed();
+                cellWidth += cell->borderWidth() + cell->paddingWidth();
+
+                if (cellWidth.toDouble() <= col.minCellWidth.toDouble()) {
+                    col.cellWidth = col.minCellWidth;
+                    columnsAdjustedToMinWidths.push_back(&col);
+                } else {
+                    col.cellWidth = cellWidth;
+                    columnsMayNeedToAdjustWidths.push_back(&col);
+                }
+                sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
+            }
+
+            sumOfColWidths += col.cellWidth;
+        }
+
+        LayoutUnit tableWidthByAddingColWidths = sumOfColWidths;
+        tableWidthByAddingColWidths += borderWidth() + paddingWidth();
+        tableWidthByAddingColWidths +=
+            (borderSpacing * m_columnWidths.size()) - borderSpacing;
+
+        tableWidth = parentContentWidth - marginWidth();
+
+        // Distribute available spaces to cells with "width: auto" in
+        // proportion to the cell's preferred width.
+        // The cell width can either be increased or decreased depending
+        // on the width of table and min width of a cell.
+        if (cellsWithAutoWidths.size() > 0) {
+            LayoutUnit availableWidth = tableWidth;
+            availableWidth -= borderWidth() + paddingWidth();
+            availableWidth -=
+                (borderSpacing * m_columnWidths.size()) - borderSpacing;
+            availableWidth -= sumOfAdjustedSpecifiedCellWidths;
+
+            unsigned reducedToMinWidths = 0;
+            LayoutUnit sumOfAutoCellMinWidths = 0;
+            for (auto& c : cellsWithAutoWidths) {
+                STARFISH_ASSERT(c->id < m_columnWidths.size());
+                ColSizeStruct& col = m_columnWidths[c->id];
                 LayoutUnit newCellWidth(
-                    availableWidth.toDouble() *
-                    (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth =
-                    std::max(col.minCellWidth.toInt(), newCellWidth.round());
+                    col.maxCellWidth.toDouble() /
+                    sumOfAutoCellPreferredWidths.toDouble() *
+                    availableWidth.toDouble());
+                col.cellWidth = std::max(newCellWidth, col.minCellWidth);
+
+                if (FOLLOW_SPEC) {
+                    col.cellWidth = std::min(col.cellWidth, col.maxCellWidth);
+                }
 
                 if (col.cellWidth == col.minCellWidth) {
                     columnsAdjustedToMinWidths.push_back(&col);
+                    reducedToMinWidths++;
+                    sumOfAutoCellMinWidths += col.cellWidth;
                 }
             }
 
-            // 3.1.4 Blink further reduces column widths if all columns with
+            // We further reduce column widths if all columns with
             // "width: auto" are reduced to their min preferred widths and
             // the columns other than "width: auto" still have rooms to reduce.
-            // The spec does not say anything about this behaviour.
-            if (columnsWithUserDefinedWidths.size() +
-                    columnsAdjustedToMinWidths.size() ==
-                m_columnWidths.size()) {
-                for (auto& col : m_columnWidths) {
-                    availableWidth += col.cellWidth;
-                    totalCellWidths += col.cellWidth;
-                }
-                for (auto& c : columnsWithUserDefinedWidths) {
+            if (reducedToMinWidths == cellsWithAutoWidths.size()) {
+                availableWidth = tableWidth;
+                availableWidth -= borderWidth() + paddingWidth();
+                availableWidth -=
+                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                availableWidth -= sumOfAutoCellMinWidths;
+
+                for (auto& c : columnsMayNeedToAdjustWidths) {
                     ColSizeStruct& col = *c;
-                    LayoutUnit newCellWidth(availableWidth.toDouble() *
-                                            (col.cellWidth.toDouble() /
-                                             totalCellWidths.toDouble()));
-                    col.cellWidth = std::max(col.minCellWidth.toInt(),
-                                             newCellWidth.round());
+                    LayoutUnit newCellWidth(
+                        availableWidth.toDouble() *
+                        (col.cellWidth.toDouble() /
+                         sumOfAdjustedSpecifiedCellWidths.toDouble()));
+                    col.cellWidth = std::max(col.minCellWidth, newCellWidth);
+                }
+            }
+        } else {
+            // Decrease the width of each cell in proportion to their
+            // preferred widths if the parent width is smaller than
+            // the sum of specified width
+            //
+            // NOTE: We do not increase the width of a cell to its preferred
+            // width if the parent width is larger than the sum of specified
+            // width.
+            if (tableWidth < tableWidthByAddingColWidths) {
+                // Decrease the cell widths
+                LayoutUnit availableWidth = tableWidth;
+                availableWidth -= borderWidth() + paddingWidth();
+                availableWidth -=
+                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
+
+                for (auto& c : columnsAdjustedToMinWidths) {
+                    ColSizeStruct& col = *c;
+                    availableWidth -= col.cellWidth;
+                    sumOfColWidths -= col.cellWidth;
+                }
+
+                for (auto& c : columnsMayNeedToAdjustWidths) {
+                    ColSizeStruct& col = *c;
+                    STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
+                    FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+
+                    LayoutUnit cellWidth = cell->style()->width().fixed();
+                    cellWidth += cell->borderWidth() + cell->paddingWidth();
+
+                    LayoutUnit newCellWidth(cellWidth.toDouble() /
+                                            sumOfColWidths.toDouble() *
+                                            availableWidth.toDouble());
+
+                    col.cellWidth = std::max(col.minCellWidth, newCellWidth);
                 }
             }
         }
