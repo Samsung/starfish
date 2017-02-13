@@ -20,7 +20,6 @@
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "dom/DOM.h"
-#include "dom/PseudoElement.h"
 
 #include "vm/ESVMInstance.h"
 

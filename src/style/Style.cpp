@@ -3082,7 +3082,6 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector, MatchResul
     case CSSSelector::Type::PseudoElement:
         return checkPseudoElement(element, selector, result);
     default:
-        // TODO: check attribute selectors.
         return false;
     }
 }

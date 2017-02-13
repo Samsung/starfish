@@ -36,7 +36,7 @@ public:
         return m_hasFirstLine || m_hasFirstLetter || m_hasBefore || m_hasAfter;
     }
 
-    bool hasPseudoElement(StyleResolver::PseudoElementType type)
+    bool hasPseudoElement(StyleResolver::PseudoElementType type) const
     {
         switch (type) {
         case StyleResolver::PseudoElementType::PseudoElementFirstLine:
