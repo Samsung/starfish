@@ -73,6 +73,7 @@ class HTMLTrackElement;
 class HTMLSourceElement;
 #endif
 class HTMLUnknownElement;
+class PseudoElement;
 class Event;
 class UIEvent;
 class MouseEvent;
@@ -225,6 +226,7 @@ public:
     void initScriptWrappable(HTMLParagraphElement* ptr);
     void initScriptWrappable(HTMLSpanElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
+    void initScriptWrappable(PseudoElement* ptr);
 #ifdef STARFISH_ENABLE_MULTI_PAGE
     void initScriptWrappable(HTMLAnchorElement* ptr);
 #endif

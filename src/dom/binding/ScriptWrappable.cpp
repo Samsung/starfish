@@ -20,6 +20,7 @@
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "dom/DOM.h"
+#include "dom/PseudoElement.h"
 
 #include "vm/ESVMInstance.h"
 
@@ -1233,6 +1234,13 @@ void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
     scriptObject()->set__proto__(data->htmlUnknownElement()->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(PseudoElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->pseudoElement()->protoType());
 }
 
 void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
