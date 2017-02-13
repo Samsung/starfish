@@ -822,38 +822,6 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
     }
 }
 
-unsigned CSSSelectorList::specificity() const
-{
-    // Make sure the result doesn't overflow
-    static const unsigned idMask = 0xff0000; // count the number of ID selectors in the selector (= a)
-    static const unsigned classMask = 0x00ff00; // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= b)
-    static const unsigned elementMask = 0x0000ff; // count the number of type selectors and pseudo-elements in the selector (= c)
-
-    unsigned total = 0;
-    unsigned temp = 0;
-
-    for (unsigned i = 0; i < size(); i++) {
-        CSSSelector* selector = m_selectors[i];
-        temp = total + selector->specificityForOneSelector();
-
-        // The negation pseudo-class has another simple selector in own data structure.
-        if (selector->type() == CSSSelector::Type::PseudoClass && selector->pseudoType() == CSSSelector::PseudoType::PseudoNot)
-            temp += total + selector->pseudoSelectorList()[0]->specificityForOneSelector();
-
-        // Clamp each component to its max in the case of overflow.
-        if ((temp & idMask) < (total & idMask))
-            total |= idMask;
-        else if ((temp & classMask) < (total & classMask))
-            total |= classMask;
-        else if ((temp & elementMask) < (total & elementMask))
-            total |= elementMask;
-        else
-            total = temp;
-    }
-
-    return total;
-}
-
 URL* CSSStyleSheet::url()
 {
     if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() && m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -872,9 +840,44 @@ void CSSStyleSheet::parseSheetIfneeds()
     }
 }
 
+// http://www.w3.org/TR/css3-selectors/#specificity
+// We use 256 as the base of the specificity number system.
+static unsigned specificity(CSSSelectorList* selectorList)
+{
+    // Make sure the result doesn't overflow
+    static const unsigned idMask = 0xff0000; // count the number of ID selectors in the selector (= a)
+    static const unsigned classMask = 0x00ff00; // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= b)
+    static const unsigned elementMask = 0x0000ff; // count the number of type selectors and pseudo-elements in the selector (= c)
+
+    unsigned total = 0;
+    unsigned temp = 0;
+
+    for (unsigned i = 0; i < selectorList->size(); i++) {
+        CSSSelector* selector = (*selectorList)[i];
+        temp = total + selector->specificityForOneSelector();
+
+        // The negation pseudo-class has another simple selector in own data structure.
+        if (selector->type() == CSSSelector::Type::PseudoClass && selector->pseudoType() == CSSSelector::PseudoType::PseudoNot)
+            temp += total + selector->pseudoSelectorList()[0]->specificityForOneSelector();
+
+        // Clamp each component to its max in the case of overflow.
+        if ((temp & idMask) < (total & idMask)) {
+            total |= idMask;
+        } else if ((temp & classMask) < (total & classMask)) {
+            total |= classMask;
+        } else if ((temp & elementMask) < (total & elementMask)) {
+            total |= elementMask;
+        } else {
+            total = temp;
+        }
+    }
+
+    return total;
+}
+
 static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
 {
-    return r1->selectorList()->specificity() < r2->selectorList()->specificity();
+    return specificity(r1->selectorList()) < specificity(r2->selectorList());
 }
 
 void CSSStyleSheet::sortRulesBySpecificity()
@@ -2986,7 +2989,7 @@ StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorL
 {
     STARFISH_ASSERT(idx < selectorList->size());
 
-    CSSSelector* selector = selectorList->at(idx);
+    CSSSelector* selector = (*selectorList)[idx];
     if (!checkOne(element, selector, result)) {
         return Match::SelectorFailsLocally;
     }
@@ -3008,7 +3011,7 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
 {
     STARFISH_ASSERT(idx < selectorList->size());
 
-    CSSSelector* selector = selectorList->at(idx);
+    CSSSelector* selector = (*selectorList)[idx];
     switch (relation) {
     case CSSSelector::RelationType::Descendant:
         {

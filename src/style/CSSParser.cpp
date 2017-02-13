@@ -1009,15 +1009,17 @@ CSSSelector* CSSParser::getPseudoSelector()
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot:
         {
-            CSSSelectorList* selectorList = new CSSSelectorList();
-            parseCompoundSelector(selectorList);
+            CSSSelectorList selectorList;
+            parseCompoundSelector(&selectorList);
 
-            if (selectorList->size() != 1)
+            if (selectorList.size() != 1) {
                 return nullptr;
+            }
 
-            CSSSelector* innerSelector = selectorList->at(0);
-            if (innerSelector->pseudoSelectorList().size() || innerSelector->type() == CSSSelector::PseudoElement)
+            CSSSelector* innerSelector = selectorList[0];
+            if (innerSelector->pseudoSelectorList().size() || innerSelector->type() == CSSSelector::PseudoElement) {
                 return nullptr;
+            }
 
             selector->setPseudoSelectorList(innerSelector);
             getToken(false, true);
@@ -1347,27 +1349,32 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
     if (!parseName(&elementName)) {
         compoundSelector = getSimpleSelector();
 
-        if (!compoundSelector)
+        if (!compoundSelector) {
             return;
-        if (compoundSelector->type() == CSSSelector::PseudoElement)
+        }
+        if (compoundSelector->type() == CSSSelector::PseudoElement) {
             compoundPseudoElement = compoundSelector->pseudoType();
+        }
 
-        selectorList->pushBack(compoundSelector);
+        selectorList->push_back(compoundSelector);
     }
 
     while (CSSSelector* simpleSelector = getSimpleSelector()) {
-        if (simpleSelector->type() == CSSSelector::PseudoElement)
+        if (simpleSelector->type() == CSSSelector::PseudoElement) {
             compoundPseudoElement = simpleSelector->pseudoType();
+        }
 
-        selectorList->pushBack(simpleSelector);
+        selectorList->push_back(simpleSelector);
     }
 
-    if (selectorList->size() > 0)
-        selectorList->at(selectorList->size() - 1)->setRelation(CSSSelector::None);
+    if (selectorList->size() > 0) {
+        (*selectorList)[selectorList->size() - 1]->setRelation(CSSSelector::None);
+    }
 
     if (elementName) {
-        if (elementName->equals(String::fromUTF8("*")) && selectorList->size() > 0)
+        if (elementName->equals(String::fromUTF8("*")) && selectorList->size() > 0) {
             return;
+        }
 
         CSSSelector* selector = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, elementName->toLower());
         if (elementName->equals(String::fromUTF8("*"))) {
@@ -1377,7 +1384,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             selector->setRelation(CSSSelector::None);
         }
 
-        selectorList->pushFront(selector);
+        selectorList->push_front(selector);
     }
 }
 
@@ -1411,54 +1418,58 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
 
     unsigned previousCompoundFlags = 0;
     for (unsigned i = 0; i < selectorSize; i++) {
-        CSSSelector* simple = selectorList->at(i);
-        if (simple && !previousCompoundFlags)
+        CSSSelector* simple = (*selectorList)[i];
+        if (simple && !previousCompoundFlags) {
             break;
+        }
 
         previousCompoundFlags |= extractCompoundFlags(simple);
     }
 
-    if (m_failedParsing)
+    if (m_failedParsing) {
         return;
+    }
 
-    CSSSelectorList* secondSelectorList = new CSSSelectorList();
+    CSSSelectorList secondSelectorList;
 
     while (CSSSelector::RelationType combinator = parseCombinator()) {
-        secondSelectorList->clear();
-        parseCompoundSelector(secondSelectorList);
+        secondSelectorList.clear();
+        parseCompoundSelector(&secondSelectorList);
 
-        if (secondSelectorList->size() == 0)
+        if (secondSelectorList.size() == 0) {
             return;
-        if (previousCompoundFlags & HasPseudoElementForRightmostCompound)
+        }
+        if (previousCompoundFlags & HasPseudoElementForRightmostCompound) {
             return;
+        }
 
         unsigned i = 0;
-        CSSSelector* end = secondSelectorList->at(i);
+        CSSSelector* end = secondSelectorList[i];
         unsigned compoundFlags = extractCompoundFlags(end);
-        selectorSize = secondSelectorList->size();
+        selectorSize = secondSelectorList.size();
 
         while (++i < selectorSize) {
-            end = secondSelectorList->at(i);
+            end = secondSelectorList[i];
             compoundFlags |= extractCompoundFlags(end);
         }
         end->setRelation(combinator);
 
-        if (previousCompoundFlags & HasContentPseudoElement)
+        if (previousCompoundFlags & HasContentPseudoElement) {
             end->relationIsAffectedByPseudoContent();
+        }
         previousCompoundFlags = compoundFlags;
-        selectorList->selectors().insert(selectorList->selectors().begin(),
-            secondSelectorList->selectors().begin(),
-            secondSelectorList->selectors().end());
+        selectorList->insert(selectorList->begin(), secondSelectorList.begin(), secondSelectorList.end());
     }
 }
 
 bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& listOfSelectorList)
 {
-    CSSSelectorList* selectorList = new CSSSelectorList();
+    CSSSelectorList* selectorList = new (GC) CSSSelectorList();
     parseComplexSelector(selectorList);
 
-    if (selectorList->size() == 0)
+    if (selectorList->size() == 0) {
         return false;
+    }
 
     listOfSelectorList.push_back(selectorList);
 
@@ -1468,17 +1479,19 @@ bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_alloca
             token = getToken(false, true);
         } while (token->isSGMLComment() || token->isWhiteSpace());
 
-        CSSSelectorList* nextSelectorList = new CSSSelectorList();
+        CSSSelectorList* nextSelectorList = new (GC) CSSSelectorList();
         parseComplexSelector(nextSelectorList);
-        if (nextSelectorList->size() == 0)
+        if (nextSelectorList->size() == 0) {
             return false;
+        }
 
         listOfSelectorList.push_back(nextSelectorList);
         token = currentToken();
     }
 
-    if (m_failedParsing)
+    if (m_failedParsing) {
         return false;
+    }
 
     return true;
 }
