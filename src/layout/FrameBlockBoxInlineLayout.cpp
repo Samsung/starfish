@@ -21,6 +21,7 @@
 #include "FrameDocument.h"
 #include "FrameText.h"
 #include "FrameInline.h"
+#include "FrameTableBox.h"
 
 namespace StarFish {
 
@@ -1872,11 +1873,15 @@ void LineFormattingContext::generateInlineBoxes(Frame *origin)
                 f->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
                 LayoutUnit ascender;
 
-                std::pair<bool, LayoutUnit> p = m_layoutContext.readRegisteredLastLineBoxYPos(r);
-                if (p.first && r->style()->overflow() == OverflowValue::VisibleOverflow) {
-                    ascender = p.second;
+                if (f->style()->display() == DisplayValue::InlineTableDisplayValue) {
+                    ascender = f->asFrameTableBox()->calBaseline();
                 } else {
-                    ascender = f->asFrameBox()->height();
+                    std::pair<bool, LayoutUnit> p = m_layoutContext.readRegisteredLastLineBoxYPos(r);
+                    if (p.first && r->style()->overflow() == OverflowValue::VisibleOverflow) {
+                        ascender = p.second;
+                    } else {
+                        ascender = f->asFrameBox()->height();
+                    }
                 }
                 m_layoutContext.popInlineBlockBox();
                 registerInlineBlockAscender(ascender, r);

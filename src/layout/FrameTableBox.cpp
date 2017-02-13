@@ -625,4 +625,93 @@ void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
     paintBorders(canvas, m_tableRect);
 }
 
+// The layout result of the table may be different from the document order.
+// So we have to consider the visual order.
+// And if there is no row in the section, the section is an empty section.
+FrameTableSectionBox* FrameTableBox::firstNonEmptySectionBoxInVisualOrder()
+{
+    if (m_thead && m_thead->grid().size()) {
+        return m_thead;
+    }
+
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c != m_tfoot && c->isFrameTableSectionBox() && c->asFrameTableSectionBox()->grid().size()) {
+            return c->asFrameTableSectionBox();
+        }
+    }
+
+    if (m_tfoot && m_tfoot->grid().size()) {
+        return m_tfoot;
+    }
+    return nullptr;
+}
+
+// -----------------------------------------------------------------------------
+// The baseline of an inline-table is needed to calculate the vertical alignment
+// of inline elements. The spec
+// https://www.w3.org/TR/CSS21/visudet.html#propdef-vertical-align
+// says "The baseline of an 'inline-table' is the baseline of the first row of
+// the table." But the spec omits details, and there are many cases to consider
+// when calculating the baseline. For undefined behaviours, we try to mimic
+// Blink's behaviour.
+// -----------------------------------------------------------------------------
+// NOTE : The implementation is in progress.
+// The baseline is calculated as follows.
+// * Use the tables wrapperbox height if there are only empty sections
+// * Use the baseline of the first row if the first row has
+//   'vertical-align: baseline'
+// * Use the tallest linebox height if the first row has other
+//   "vertical-align" values.
+// * Use Y position of the center of the cell if the first row has only
+//   empty cells
+// * Use Y position of the first row if the first row is empty
+
+LayoutUnit FrameTableBox::calBaseline()
+{
+    STARFISH_ASSERT(style()->display() == DisplayValue::InlineTableDisplayValue);
+
+    FrameTableSectionBox* firstSection = firstNonEmptySectionBoxInVisualOrder();
+    if (!firstSection) {
+        return height();
+    }
+
+    RowStruct& firstRS = firstSection->grid()[0];
+    LineBox* tallestLineBox = nullptr;
+    LayoutUnit maxLineBoxHeight = 0;
+
+    for (size_t i = 0 ; i < firstRS.cells.size(); ++i) {
+        FrameTableCellBox* c = firstRS.cells[i].cell;
+        LineBox* firstLineBox = nullptr;
+
+        if (c->hasBlockFlow() && c->firstChild()) {
+            FrameBlockBox* firstBox = c->firstChild()->asFrameBlockBox();
+            if (!firstBox->lineBoxes().empty()) {
+                firstLineBox = firstBox->lineBoxes()[0];
+            }
+        } else if (!c->lineBoxes().empty()) {
+            firstLineBox = c->lineBoxes()[0];
+        }
+
+        if (firstLineBox && maxLineBoxHeight < firstLineBox->height()) {
+            tallestLineBox = firstLineBox;
+            maxLineBoxHeight = firstLineBox->height();
+        }
+    }
+
+    LayoutUnit ySoFar = firstSection->y();
+
+    if (tallestLineBox) {
+        ySoFar += firstRS.tableRow->y() + firstRS.cells[0].cell->y();
+        if (firstRS.tableRow->style()->verticalAlign() == VerticalAlignValue::BaselineVAlignValue) {
+            return ySoFar + firstRS.tableRow->baseline();
+        }
+        return ySoFar + tallestLineBox->y() + tallestLineBox->height();
+    } else if (firstRS.cells.size()) {
+        // Empty cell
+        return ySoFar + firstRS.tableRow->y() + firstRS.cells[0].cell->y() + (firstRS.cells[0].cell->height().toDouble() / 2);
+    }
+    // Empty first row
+    return ySoFar;
+}
+
 }
