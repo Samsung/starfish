@@ -993,16 +993,15 @@ CSSSelector* CSSParser::getPseudoSelector()
 
     if (token->isIdent()) {
         token = getToken(true, true);
-        if (selector->pseudoType() == CSSSelector::PseudoNone)
+        if (selector->pseudoType() == CSSSelector::PseudoNone) {
             return nullptr;
+        }
         return selector;
     }
 
-    // TODO: handle pseudo-* selectors of function type
-    // For examples, not(), lang(), nth-*() ans so on.
-
-    if (selector->pseudoType() == CSSSelector::PseudoNone)
+    if (selector->pseudoType() == CSSSelector::PseudoNone) {
         return nullptr;
+    }
 
     getToken(true, true);
 
