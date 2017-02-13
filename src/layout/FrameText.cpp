@@ -21,37 +21,46 @@
 
 namespace StarFish {
 
+struct PreferedMinWidthComputer {
+    PreferedMinWidthComputer()
+        : m_maxWidthSoFar(0) { }
+
+    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+    {
+        m_maxWidthSoFar = std::max(m_maxWidthSoFar, TextUtils::textWidth(isWhiteSpace, f, offset, nextOffset));
+    }
+
+    LayoutUnit m_maxWidthSoFar;
+};
+
 LayoutUnit FrameText::preferredMinWidth(LayoutContext& ctx)
 {
     // We measure the width of each word in the text, and get the maximum
     // length among these words
-    LayoutUnit maxWidthSoFar = 0;
-    textDividerForLayout(ctx.starFish(), text(),
-        [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak)
-        {
-            maxWidthSoFar =
-                std::max(maxWidthSoFar, style()->font()->measureText(StringView(srcTxt, offset, nextOffset)));
-        });
-
-    return maxWidthSoFar;
+    PreferedMinWidthComputer c;
+    tokenizeText(ctx.starFish(), this, &c);
+    return c.m_maxWidthSoFar;
 }
+
+struct PreferedWidthComputer {
+    PreferedWidthComputer()
+        : m_widthSoFar(0) { }
+
+    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+    {
+        m_widthSoFar += TextUtils::textWidth(isWhiteSpace, f, offset, nextOffset);
+    }
+
+    LayoutUnit m_widthSoFar;
+};
 
 LayoutUnit FrameText::preferredWidth(LayoutContext& ctx)
 {
     // We measure the width of the text, as if no line breaks, except where
     // explicit, occurred.
-    LayoutUnit widthSoFar = 0;
-    textDividerForLayout(ctx.starFish(), text()->trim(),
-        [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak)
-        {
-            if (isWhiteSpace) {
-                widthSoFar += style()->font()->spaceWidth();
-            } else {
-                widthSoFar += style()->font()->measureText(StringView(srcTxt, offset, nextOffset));
-            }
-        });
-
-    return widthSoFar;
+    PreferedWidthComputer c;
+    tokenizeText(ctx.starFish(), this, &c);
+    return c.m_widthSoFar;
 }
 
 }
