@@ -1177,16 +1177,6 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
     }
 }
 
-void LineFormattingContext::insertInlineNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent)
-{
-    if (layoutParent) {
-        layoutParent->insertInlineBox(self);
-    } else {
-        currentLine()->insertInlineBox(self);
-        markInlineBoxIndex(self);
-    }
-}
-
 void LineFormattingContext::generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box)
 {
     if (box->height() == 0 && box->marginHeight() == 0) {
@@ -1759,15 +1749,16 @@ void LineFormattingContext::generateInlineNonReplacedBox(FrameInline* f)
 {
     if (m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox()) {
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
-        insertInlineNonReplacedBox(inlineBox, m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox());
+        m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox()->insertInlineBox(inlineBox);
         inlineBox->layoutInline(this);
         FrameBox* newLayoutParent = m_currentLayoutParent->layoutParent()->asFrameBox();
         newLayoutParent->setWidth(newLayoutParent->width() + m_currentLayoutParent->boxWidth());
         m_currentLayoutParent = newLayoutParent;
+        STARFISH_ASSERT(m_currentLayoutParent->isInlineBox() && m_currentLayoutParent->asInlineBox()->isInlineNonReplacedBox());
     } else {
-        FrameBox* oldLayoutParent = m_currentLayoutParent;
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f);
-        insertInlineNonReplacedBox(inlineBox, nullptr);
+        currentLine()->insertInlineBox(inlineBox);
+        markInlineBoxIndex(inlineBox);
         inlineBox->layoutInline(this);
         STARFISH_ASSERT(m_unprocessedStartingMBPWidth == 0);
 
@@ -1787,7 +1778,8 @@ void LineFormattingContext::generateInlineNonReplacedBox(FrameInline* f)
                 }
             }
         }
-        m_currentLayoutParent = oldLayoutParent;
+        m_currentLayoutParent = m_currentLayoutParent->layoutParent()->asFrameBox();
+        STARFISH_ASSERT(m_currentLayoutParent->isLineBox());
     }
 }
 
@@ -2327,7 +2319,12 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
         InlineNonReplacedBoxMBPStore store = riter->second;
         InlineNonReplacedBox* newInrpBox = new InlineNonReplacedBox(origin);
 
-        insertInlineNonReplacedBox(newInrpBox, layoutParent);
+        if (layoutParent) {
+            layoutParent->insertInlineBox(newInrpBox);
+        } else {
+            currentLine()->insertInlineBox(newInrpBox);
+            markInlineBoxIndex(newInrpBox);
+        }
         layoutParent = newInrpBox;
 
         newInrpBox->resetOrgMBP(&store);
@@ -2354,7 +2351,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     // compute directions
     computeDirection(lineFormattingContext, this, style()->direction());
 
-    lineFormattingContext.m_currentLayoutParent = this;
+    lineFormattingContext.m_currentLayoutParent = lineFormattingContext.currentLine();
     lineFormattingContext.generateInlineBoxes(this);
 
     lineFormattingContext.finishLineForLineBox(nullptr, true);

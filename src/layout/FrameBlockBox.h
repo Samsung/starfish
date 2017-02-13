@@ -692,7 +692,6 @@ private:
     void computeHorizontalProperties();
     LayoutUnit distanceToNextLineBox(FrameLineBreak* br, bool hasMoreInlineBoxes);
 
-    void insertInlineNonReplacedBox(InlineNonReplacedBox* self, InlineNonReplacedBox* layoutParent);
     void insertPendingFloatingBoxes();
     void insertPendingInlineBoxes();
     void unregisterAbsolutePositionedBoxes();
@@ -776,6 +775,7 @@ public:
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
+    // This layout parent should be either LineBox or InlineNonReplacedBox
     FrameBox* m_currentLayoutParent;
     bool m_shouldLineBreakForAbsolutePositionedBox;
     bool m_shouldLineBreakForBr;
