@@ -94,6 +94,8 @@ public:
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
+    LayoutUnit calBaseline();
+
 private:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
@@ -102,6 +104,9 @@ private:
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
     void calCellWidthForAutoTableLayout(LayoutContext& ctx);
     void calCellWidthForFixedTableLayout(LayoutContext& ctx);
+
+    // This function returns nullptr if the table has no non-empty sections.
+    FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
 
     bool isCellWidthAuto(unsigned i);
 
