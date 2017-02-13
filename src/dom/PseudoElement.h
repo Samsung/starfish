@@ -17,71 +17,42 @@
 #ifndef __StarFishPseudoElement__
 #define __StarFishPseudoElement__
 
-#include "style/Style.h"
-
 namespace StarFish {
 
-class PseudoElementData : public gc {
+class Element;
+class PseudoElement : public Element {
 public:
-    PseudoElementData()
-        : m_hasFirstLine(false)
-        , m_hasFirstLetter(false)
-        , m_hasBefore(false)
-        , m_hasAfter(false)
+    PseudoElement(Document* document, const QualifiedName& name)
+        : Element(document)
+        , m_name(name)
     {
     }
 
-    bool hasPseudoElements() const
+    virtual QualifiedName name()
     {
-        return m_hasFirstLine || m_hasFirstLetter || m_hasBefore || m_hasAfter;
+        return m_name;
     }
 
-    bool hasPseudoElement(StyleResolver::PseudoElementType type)
+    virtual String* localName()
     {
-        switch (type) {
-        case StyleResolver::PseudoElementType::PseudoElementFirstLine:
-            return m_hasFirstLine;
-        case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
-            return m_hasFirstLetter;
-        case StyleResolver::PseudoElementType::PseudoElementBefore:
-            return m_hasBefore;
-        case StyleResolver::PseudoElementType::PseudoElementAfter:
-            return m_hasAfter;
-        default:
-            return false;
-        }
+        return m_name.localName();
     }
 
-    void setPseudoElement(StyleResolver::PseudoElementType type)
+    virtual String* nodeName()
     {
-        switch (type) {
-        case StyleResolver::PseudoElementType::PseudoElementFirstLine:
-            m_hasFirstLine = true;
-            break;
-        case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
-            m_hasFirstLetter = true;
-            break;
-        case StyleResolver::PseudoElementType::PseudoElementBefore:
-            m_hasBefore = true;
-            break;
-        case StyleResolver::PseudoElementType::PseudoElementAfter:
-            m_hasAfter = true;
-            break;
-        default:
-            break;
-        }
+        return m_name.localName();
     }
 
-private:
-    bool m_hasFirstLine;
-    bool m_hasFirstLetter;
-    bool m_hasBefore;
-    bool m_hasAfter;
+protected:
+    QualifiedName m_name;
 };
 
-// TODO
-class PseudoElement {
-
+class FirstLetterPseudoElement : public PseudoElement {
+public:
+    FirstLetterPseudoElement(Document* document, const QualifiedName& name)
+        : PseudoElement(document, name)
+    {
+    }
 };
 
 }

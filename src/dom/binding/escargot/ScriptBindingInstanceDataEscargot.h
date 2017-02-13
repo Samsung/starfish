@@ -46,6 +46,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(htmlParagraphElement, HTMLParagraphElement) \
     F(htmlSpanElement, HTMLSpanElement) \
     F(htmlUnknownElement, HTMLUnknownElement) \
+    F(pseudoElement, PseudoElement) \
     F(htmlCollection, HTMLCollection) \
     F(event, Event) \
     F(uiEvent, UIEvent) \
@@ -229,6 +230,7 @@ private:
     escargot::ESFunctionObject* m_htmlSpanElement;
     escargot::ESFunctionObject* m_htmlCollection;
     escargot::ESFunctionObject* m_htmlUnknownElement;
+    escargot::ESFunctionObject* m_pseudoElement;
     escargot::ESFunctionObject* m_event;
     escargot::ESFunctionObject* m_uiEvent;
     escargot::ESFunctionObject* m_mouseEvent;
