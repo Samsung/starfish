@@ -168,7 +168,9 @@ public:
         }
     }
 
-    FrameBox* findLastInlineBox();
+    FrameBox* lastInlineBox();
+    void removeDanglingSpace(LineFormattingContext* ctx);
+    bool containOnlyEmptyInlineNonReplacedBoxes();
 
     void insertInlineBox(FrameBox* box)
     {
@@ -177,10 +179,21 @@ public:
     }
     LayoutUnit layoutInlineBoxes(LayoutUnit start);
     void registerRelativePositionInlineBoxes(LayoutContext& ctx);
+
+    bool isAbsolutePositionedBoxLayoutParent() const
+    {
+        return m_isAbsolutePositionedLayoutParent;
+    }
+
+    void markAbsolutePositionedBoxLayoutParent()
+    {
+        m_isAbsolutePositionedLayoutParent = true;
+    }
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
+    bool m_isAbsolutePositionedLayoutParent;
 };
 
 class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
@@ -289,6 +302,7 @@ protected:
 
         m_ascender = 0;
         m_descender = 0;
+        m_isAbsolutePositionedLayoutParent = false;
 
         // recompute style flags
         // we should re compute flags here
@@ -354,6 +368,7 @@ public:
         setParent(parent);
         m_ascender = 0;
         m_descender = 0;
+        m_isAbsolutePositionedLayoutParent = false;
     }
 
     virtual bool isLineBox()
@@ -709,7 +724,6 @@ private:
     template <typename Iter>
     void sortInlineBoxes(Iter& iter);
 
-    void removeDanglingSpaceFromLine();
     void removeAllInlineBoxes();
 
     bool isAnyOfInlineBoxesCollidedWithFloatingBoxes();
@@ -748,6 +762,17 @@ public:
         return m_block.m_lineBoxes.back();
     }
 
+    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace);
+
+    void setLastFrameTextContainingWhiteSpaceAtLast(FrameBlockBox* f);
+    bool isWhiteSpaceAtLast();
+    bool isLastFrameTextContainingWhiteSpaceAtLast(FrameText* f);
+
+    LayoutUnit currentLineWidth()
+    {
+        return m_currentLineWidth;
+    }
+
     void registerInlineBlockAscender(LayoutUnit ascender, FrameBlockBox* box)
     {
         m_inlineBlockAscender[box] = ascender;
@@ -777,13 +802,10 @@ public:
     LayoutContext& m_layoutContext;
     // This layout parent should be either LineBox or InlineNonReplacedBox
     FrameBox* m_currentLayoutParent;
+    FrameText* m_lastFrameText;
     bool m_shouldLineBreakForAbsolutePositionedBox;
     bool m_shouldLineBreakForBr;
-    enum HasFloat {
-        HasNone,
-        HasLeft,
-        HasRight,
-    };
+    bool m_shouldIgnoreWhiteSpace;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;

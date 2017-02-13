@@ -173,32 +173,14 @@ public:
         return m_margin.top() + m_margin.bottom();
     }
 
-    LayoutUnit leftMBPWidth() const
+    virtual LayoutUnit leftMBPWidth()
     {
         return m_margin.left() + m_border.left() + m_padding.left();
     }
 
-    LayoutUnit rightMBPWidth() const
+    virtual LayoutUnit rightMBPWidth()
     {
         return m_margin.right() + m_border.right() + m_padding.right();
-    }
-
-    LayoutUnit startingMBPWidth()
-    {
-        if (style()->direction() == LtrDirectionValue) {
-            return leftMBPWidth();
-        } else {
-            return rightMBPWidth();
-        }
-    }
-
-    LayoutUnit endingMBPWidth()
-    {
-        if (style()->direction() == LtrDirectionValue) {
-            return rightMBPWidth();
-        } else {
-            return leftMBPWidth();
-        }
     }
 
     LayoutUnit contentWidth() const

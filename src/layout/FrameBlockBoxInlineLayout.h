@@ -17,17 +17,35 @@
 #ifndef __StarFishFrameBlockBoxInlineLayout__
 #define __StarFishFrameBlockBoxInlineLayout__
 
+#include "FrameText.h"
+
 namespace StarFish {
 
-// Tokenize a text using the ICU divider
-template <typename fn>
-void textDividerForLayout(StarFish* sf, String* txt, fn f)
+class TextUtils {
+public:
+    static LayoutUnit textWidth(bool isWhiteSpace, FrameText* f, size_t offset, size_t nextOffset)
+    {
+        LayoutUnit ret;
+        if (isWhiteSpace) {
+            ret = f->style()->font()->spaceWidth();
+        } else {
+            ret = f->style()->font()->measureText(StringView(f->text(), offset, nextOffset));
+        }
+
+        return ret;
+    }
+};
+
+template <typename Context>
+void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
 {
+    String* txt = f->text();
     // TODO consider white-space
     unsigned offset = 0;
     while (true) {
-        if (offset >= txt->length())
+        if (offset >= txt->length()) {
             break;
+        }
         bool isWhiteSpace = false;
         if (String::isSpaceOrNewline(txt->charAt(offset))) {
             isWhiteSpace = true;
@@ -39,7 +57,8 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
                 nextOffset++;
             }
-            f(txt, offset, nextOffset, isWhiteSpace, true);
+
+            ctx->handleTextToken(f, offset, nextOffset, isWhiteSpace);
         } else {
             size_t start = offset;
             while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
@@ -51,7 +70,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             int32_t c, prev = 0;
             size_t txtLen = txt->length();
             while (((c = breaker->next()) != icu::BreakIterator::DONE) && (c + start <= txtLen)) {
-                f(txt, prev + start, c + start, isWhiteSpace, (prev + start != start));
+                ctx->handleTextToken(f, prev + start, c + start, isWhiteSpace);
                 prev = c;
             }
         }

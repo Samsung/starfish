@@ -336,14 +336,27 @@ private:
     LayoutUnit m_horizontalBoundary;
 };
 
+enum HasFloat {
+    HasNone,
+    HasLeft,
+    HasRight,
+};
+
 class PreferredWidthContext {
+    friend bool canInsertToCurrentLine(PreferredWidthContext* ctx, LayoutUnit width);
 public:
     PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth, LayoutUnit minimumWidth)
         : m_layoutContext(lc)
+        , m_preferredWidthSoFar(0)
+        , m_preferredMinWidthSoFar(minimumWidth)
+        , m_currentLineWidth(0)
+        , m_unprocessedStartingMBPWidth(0)
+        , m_candidateLineWidth(0)
+        , m_remainedWidth(lastKnownWidth)
+        , m_hasFloat(HasNone)
+        , m_isWhiteSpaceAtLast(true)
+        , m_breakedLineStatus(Never)
     {
-        m_preferredWidthSoFar = 0;
-        m_lastKnownWidth = lastKnownWidth;
-        m_preferredMinWidthSoFar = minimumWidth;
     }
 
     LayoutContext& layoutContext()
@@ -366,31 +379,47 @@ public:
         m_preferredMinWidthSoFar = std::max(m_preferredMinWidthSoFar, w);
     }
 
+    LayoutUnit currentLineWidth() const
+    {
+        return m_currentLineWidth;
+    }
+
+    LayoutUnit candidateLineWidth() const
+    {
+        return m_candidateLineWidth;
+    }
+
+    LayoutUnit remainedWidth() const
+    {
+        return m_remainedWidth;
+    }
+
     LayoutUnit preferredMinWidth() const
     {
         return m_preferredMinWidthSoFar;
     }
 
-    LayoutUnit lastKnownWidth()
-    {
-        return m_lastKnownWidth;
-    }
-
     static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style)
     {
         LayoutUnit minWidth;
-        if (style->borderLeftWidth().isFixed())
+        if (style->borderLeftWidth().isFixed()) {
             minWidth += style->borderLeftWidth().fixed();
-        if (style->borderRightWidth().isFixed())
+        }
+        if (style->borderRightWidth().isFixed()) {
             minWidth += style->borderRightWidth().fixed();
-        if (style->paddingLeft().isFixed())
+        }
+        if (style->paddingLeft().isFixed()) {
             minWidth += style->paddingLeft().fixed();
-        if (style->paddingRight().isFixed())
+        }
+        if (style->paddingRight().isFixed()) {
             minWidth += style->paddingRight().fixed();
-        if (style->marginLeft().isFixed())
+        }
+        if (style->marginLeft().isFixed()) {
             minWidth += style->marginLeft().fixed();
-        if (style->marginRight().isFixed())
+        }
+        if (style->marginRight().isFixed()) {
             minWidth += style->marginRight().fixed();
+        }
         return minWidth;
     }
 
@@ -399,17 +428,38 @@ public:
         m_isWhiteSpaceAtLast = isWhiteSpaceAtLast;
     }
 
-    bool isWhiteSpaceAtLast()
+    bool isWhiteSpaceAtLast() const
     {
         return m_isWhiteSpaceAtLast;
     }
 
+    bool isNeverBreaked() const
+    {
+        return m_breakedLineStatus == Never;
+    }
+
+    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace);
+    void computePreferredWidth(Frame* origin);
+
+    void handleFloatingBox(Frame* f, LayoutUnit w);
+    void updateCurrentLineWidth(Frame* f, LayoutUnit w, bool whiteSpace);
+    void updateUnprocessedStartingMBPWidth(Frame* f);
 private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_preferredWidthSoFar;
-    LayoutUnit m_lastKnownWidth;
     LayoutUnit m_preferredMinWidthSoFar;
+    LayoutUnit m_currentLineWidth;
+    LayoutUnit m_unprocessedStartingMBPWidth;
+    LayoutUnit m_candidateLineWidth;
+    LayoutUnit m_remainedWidth;
+    int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
+    enum BreakedLineStatus {
+        Never,
+        MaybeBreaked,
+        AbsolutelyBreaked
+    };
+    BreakedLineStatus m_breakedLineStatus;
 };
 
 
@@ -418,6 +468,8 @@ class PaintingContext {
 public:
     PaintingContext(Canvas* canvas)
         : m_canvas(canvas)
+        , m_paintingStage(PaintingNormalFlowBlock)
+        , m_paintingInlineStage(PaintingInlineLevelElements)
     {
     }
 
@@ -712,6 +764,58 @@ public:
     Node* node()
     {
         return m_node;
+    }
+
+    virtual LayoutUnit leftMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->marginLeft().isFixed()) {
+            w += style()->marginLeft().fixed();
+        }
+        if (style()->borderLeftWidth().isFixed()) {
+            w += style()->borderLeftWidth().fixed();
+        }
+        if (style()->paddingLeft().isFixed()) {
+            w += style()->paddingLeft().fixed();
+        }
+        return w;
+    }
+
+    virtual LayoutUnit rightMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->marginRight().isFixed()) {
+            w += style()->marginRight().fixed();
+        }
+        if (style()->borderRightWidth().isFixed()) {
+            w += style()->borderRightWidth().fixed();
+        }
+        if (style()->paddingRight().isFixed()) {
+            w += style()->paddingRight().fixed();
+        }
+        return w;
+    }
+
+    LayoutUnit startingMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->direction() == LtrDirectionValue) {
+            w = leftMBPWidth();
+        } else {
+            w = rightMBPWidth();
+        }
+        return w;
+    }
+
+    LayoutUnit endingMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->direction() == LtrDirectionValue) {
+            w = rightMBPWidth();
+        } else {
+            w = leftMBPWidth();
+        }
+        return w;
     }
 
     void setParent(Frame* f)
