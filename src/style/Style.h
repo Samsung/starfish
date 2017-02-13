@@ -1392,7 +1392,9 @@ protected:
     StyleType m_styleType;
 };
 
-class CSSSelectorList;
+class CSSSelector;
+typedef std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > CSSSelectorList;
+
 class CSSSelector : public gc {
 public:
     enum Type {
@@ -1548,7 +1550,7 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& pseudoSelectorList()
+    CSSSelectorList& pseudoSelectorList()
     {
         return m_pseudoSelectorList;
     }
@@ -1621,7 +1623,7 @@ protected:
     String* m_selectorText;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorList;
+    CSSSelectorList m_pseudoSelectorList;
     String* m_argument;
     struct {
         int m_a; // Used for :nth-*
@@ -1629,55 +1631,6 @@ protected:
     } m_nth;
     String* m_value;
     QualifiedName m_attribute;
-};
-
-class CSSSelectorList : public gc {
-public:
-    CSSSelectorList()
-    {
-    }
-
-    CSSSelectorList(CSSSelector* selector)
-    {
-        m_selectors.push_back(selector);
-    }
-
-    void pushFront(CSSSelector* selector)
-    {
-        m_selectors.push_front(selector);
-    }
-
-    void pushBack(CSSSelector* selector)
-    {
-        m_selectors.push_back(selector);
-    }
-
-    void clear()
-    {
-        m_selectors.clear();
-    }
-
-    CSSSelector* at(int idx)
-    {
-        return m_selectors[idx];
-    }
-
-    unsigned long size() const
-    {
-        return m_selectors.size();
-    }
-
-    std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& selectors()
-    {
-        return m_selectors;
-    }
-
-    // http://www.w3.org/TR/css3-selectors/#specificity
-    // We use 256 as the base of the specificity number system.
-    unsigned specificity() const;
-
-protected:
-    std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_selectors;
 };
 
 class CSSStyleRule : public ScriptWrappable {
@@ -1689,7 +1642,8 @@ public:
         , m_document(document)
     {
         CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
-        CSSSelectorList* selectorList = new CSSSelectorList(selector);
+        CSSSelectorList* selectorList = new (GC) CSSSelectorList();
+        selectorList->push_back(selector);
         m_selectorList = selectorList;
         m_styleDeclaration = new CSSStyleDeclaration(document);
         m_document = document;
