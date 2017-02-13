@@ -178,6 +178,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
             }
         }
         ColSizeStruct col;
+        col.id = c;
         col.minCellWidth = minCellWidthSoFar;
         col.maxCellWidth = maxCellWidthSoFar;
         col.cellWidth = maxCellWidthSoFar;
