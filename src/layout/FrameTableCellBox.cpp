@@ -199,7 +199,7 @@ void FrameTableCellBox::applyVerticalAlign()
     // 1. Cal the content height of all child boxes
     //    Also calculate the ascender of the first line. It is used
     //    in "vertical-align: baseline"
-    LayoutUnit contentHeight = 0;
+    LayoutUnit childContentHeight = 0;
     LayoutUnit ascenderOfTheFirstLineBox = 0;
     if (hasBlockFlow() && firstChild()) {
         STARFISH_ASSERT(firstChild()->isFrameBlockBox());
@@ -208,7 +208,7 @@ void FrameTableCellBox::applyVerticalAlign()
         FrameBlockBox* lastBox = lastChild()->asFrameBlockBox();
         LayoutUnit yStart = firstBox->y() - firstBox->marginTop();
         LayoutUnit yEnd = lastBox->y() + lastBox->height() + lastBox->marginBottom();
-        contentHeight = yEnd - yStart;
+        childContentHeight = yEnd - yStart;
         if (!firstBox->lineBoxes().empty()) {
             ascenderOfTheFirstLineBox = firstBox->lineBoxes()[0]->ascender();
         }
@@ -218,7 +218,7 @@ void FrameTableCellBox::applyVerticalAlign()
             LineBox* lastBox = m_lineBoxes[m_lineBoxes.size()-1];
             LayoutUnit yStart = firstBox->y();
             LayoutUnit yEnd = lastBox->y() + lastBox->height();
-            contentHeight = yEnd - yStart;
+            childContentHeight = yEnd - yStart;
             ascenderOfTheFirstLineBox = firstBox->ascender();
         }
     }
@@ -230,11 +230,13 @@ void FrameTableCellBox::applyVerticalAlign()
         yPosOffset = 0;
         break;
     case VerticalAlignValue::BottomVAlignValue:
-        yPosOffset = height() - borderBottom() - paddingBottom() - contentHeight;
+        yPosOffset = contentHeight() - childContentHeight;
         break;
-    case VerticalAlignValue::MiddleVAlignValue:
-        yPosOffset = LayoutUnit((height() - borderHeight() - paddingHeight() - contentHeight).toDouble() / 2);
+    case VerticalAlignValue::MiddleVAlignValue: {
+        LayoutUnit halfCellContentHeight = LayoutUnit(contentHeight().toDouble() / 2);
+        yPosOffset = halfCellContentHeight.toDouble() - (childContentHeight.toDouble() / 2);
         break;
+    }
     case VerticalAlignValue::BaselineVAlignValue:
         yPosOffset = rowBox()->baseline() - ascenderOfTheFirstLineBox;
         yPosOffset -= borderTop() + paddingTop();
