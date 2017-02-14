@@ -780,7 +780,7 @@ public:
 
     bool hasFloatingBoxAlreadyInLineBox(Frame* f)
     {
-        if (f->style()->position() != AbsolutePositionValue && f->style()->floating() != NoneFloatValue) {
+        if (f->style()->position() != AbsolutePositionValue && f->isFloating()) {
             FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
             return fbCtx.m_hasFloat != HasNone;
         } else {

@@ -497,6 +497,14 @@ public:
         m_flags.m_isLeftMBPCleared = false;
         m_flags.m_isRightMBPCleared = false;
 
+        m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
+        m_flags.m_isPositioned = false;
+        m_flags.m_isEstablishesStackingContext = isRootElement;
+        m_flags.m_needsGraphicsBuffer = false;
+        m_flags.m_shouldComputePreferredWidth = false;
+        m_flags.m_isNormalFlow = true;
+        m_flags.m_isFloating = false;
+
         computeStyleFlags();
     }
 
@@ -524,59 +532,47 @@ public:
 
     virtual void computeStyleFlags()
     {
-        bool isRootElement = m_flags.m_isRootElement;
-
-        // TODO add condition
-        m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
         ComputedStyle* style = Frame::style();
-        if (style) {
-            // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
-            // Block formatting context is established when the element is either float, absolute positioned, or block boxes with 'overflow' other than 'visible'.
-            // Especially, the last condition should be met another requirement, which is, the overflow should not be propagated to viewport.
-            // There are 2 possible cases that overflow property can propagate to viewport, in other words, containing block is viewport.
-            // 1. By giving a position of absoulte value, which is already included as one of forming block formatting context conditions.
-            // 2. <html> and <body> element, so we should check first overflow values of <head> and <body> are equal.
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (shouldApplyOverflow());
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->position() == PositionValue::AbsolutePositionValue);
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->floating() != FloatValue::NoneFloatValue);
+        if (!style) {
+            return;
         }
-
-        m_flags.m_isPositionedElement = style && style->position() != PositionValue::StaticPositionValue;
 
         // TODO add condition
-        m_flags.m_isEstablishesStackingContext = isRootElement;
-        m_flags.m_needsGraphicsBuffer = false;
-        if (style) {
-            // NOTE
-            // https://www.w3.org/TR/CSS2/zindex.html
-            // Appendix E. Elaborate description of Stacking Contexts
-            // All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat the element as if it created a new stacking context,
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || m_flags.m_isPositionedElement;
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->hasTransforms(this));
+        // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
+        // Block formatting context is established when the element is either float, absolute positioned, or block boxes with 'overflow' other than 'visible'.
+        // Especially, the last condition should be met another requirement, which is, the overflow should not be propagated to viewport.
+        // There are 2 possible cases that overflow property can propagate to viewport, in other words, containing block is viewport.
+        // 1. By giving a position of absoulte value, which is already included as one of forming block formatting context conditions.
+        // 2. <html> and <body> element, so we should check first overflow values of <head> and <body> are equal.
+        m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
+        m_flags.m_isEstablishesBlockFormattingContext |= (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
+        m_flags.m_isEstablishesBlockFormattingContext |= (style->position() == PositionValue::AbsolutePositionValue);
+        m_flags.m_isEstablishesBlockFormattingContext |= (style->floating() != FloatValue::NoneFloatValue);
 
-            m_flags.m_needsGraphicsBuffer = style->opacity() != 1 || style->hasTransforms(this);
-        }
+        m_flags.m_isPositioned = (style->position() != PositionValue::StaticPositionValue);
 
-        if (style && style->width().isAuto()) {
-            if (style->display() == InlineBlockDisplayValue) {
-                m_flags.m_shouldComputePreferredWidth = true;
-            } else if (style->position() == AbsolutePositionValue) {
-                m_flags.m_shouldComputePreferredWidth = true;
-            } else {
-                m_flags.m_shouldComputePreferredWidth = false;
-            }
-        } else {
-            m_flags.m_shouldComputePreferredWidth = false;
-        }
+        // TODO add condition
+        // NOTE
+        // https://www.w3.org/TR/CSS2/zindex.html
+        // Appendix E. Elaborate description of Stacking Contexts
+        // All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat the element as if it created a new stacking context,
+        m_flags.m_isEstablishesStackingContext |= m_flags.m_isPositioned;
+        m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
+        m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
 
-        if (style && (style->position() == PositionValue::AbsolutePositionValue
-            || style->floating() != FloatValue::NoneFloatValue)) {
+        // TODO add condition
+        m_flags.m_needsGraphicsBuffer |= (style->opacity() != 1);
+        m_flags.m_needsGraphicsBuffer |= (style->hasTransforms(this));
+
+        m_flags.m_shouldComputePreferredWidth |= (style->display() == InlineBlockDisplayValue);
+        m_flags.m_shouldComputePreferredWidth |= (style->position() == AbsolutePositionValue);
+
+        if ((style->position() == PositionValue::AbsolutePositionValue)
+            || (style->floating() != FloatValue::NoneFloatValue)) {
             m_flags.m_isNormalFlow = false;
-        } else {
-            m_flags.m_isNormalFlow = true;
         }
+
+        m_flags.m_isFloating = (style->floating() != FloatValue::NoneFloatValue);
     }
 
     virtual ~Frame()
@@ -828,32 +824,32 @@ public:
         m_layoutParent = f;
     }
 
-    Frame* parent()
+    Frame* parent() const
     {
         return m_parent;
     }
 
-    Frame* layoutParent()
+    Frame* layoutParent() const
     {
         return m_layoutParent;
     }
 
-    Frame* next()
+    Frame* next() const
     {
         return m_next;
     }
 
-    Frame* previous()
+    Frame* previous() const
     {
         return m_previous;
     }
 
-    Frame* firstChild()
+    Frame* firstChild() const
     {
         return m_firstChild;
     }
 
-    Frame* lastChild()
+    Frame* lastChild() const
     {
         return m_lastChild;
     }
@@ -880,15 +876,19 @@ public:
         STARFISH_ASSERT(oldChild);
         STARFISH_ASSERT(oldChild->parent() == this);
 
-        if (oldChild->m_previous)
+        if (oldChild->m_previous) {
             oldChild->m_previous->m_next = oldChild->next();
-        if (oldChild->m_next)
+        }
+        if (oldChild->m_next) {
             oldChild->m_next->m_previous = oldChild->previous();
+        }
 
-        if (m_firstChild == oldChild)
+        if (m_firstChild == oldChild) {
             m_firstChild = oldChild->next();
-        if (m_lastChild == oldChild)
+        }
+        if (m_lastChild == oldChild) {
             m_lastChild = oldChild->previous();
+        }
 
         oldChild->m_previous = nullptr;
         oldChild->m_next = nullptr;
@@ -946,42 +946,42 @@ public:
         return false;
     }
 
-    bool isEstablishesBlockFormattingContext()
+    bool isEstablishesBlockFormattingContext() const
     {
         return m_flags.m_isEstablishesBlockFormattingContext;
     }
 
-    bool isEstablishesStackingContext()
+    bool isEstablishesStackingContext() const
     {
         return m_flags.m_isEstablishesStackingContext;
     }
 
-    bool isPositionedElement()
+    bool isPositioned() const
     {
-        return m_flags.m_isPositionedElement;
+        return m_flags.m_isPositioned;
     }
 
-    bool isNormalFlow()
+    bool isNormalFlow() const
     {
         return m_flags.m_isNormalFlow;
     }
 
-    bool isRootElement()
+    bool isRootElement() const
     {
         return m_flags.m_isRootElement;
     }
 
-    bool shouldComputePreferredWidth()
+    bool shouldComputePreferredWidth() const
     {
         return m_flags.m_shouldComputePreferredWidth;
     }
 
-    bool isLeftMBPCleared()
+    bool isLeftMBPCleared() const
     {
         return m_flags.m_isLeftMBPCleared;
     }
 
-    bool isRightMBPCleared()
+    bool isRightMBPCleared() const
     {
         return m_flags.m_isRightMBPCleared;
     }
@@ -1001,14 +1001,19 @@ public:
         m_flags.m_isInFrameInlineScope = true;
     }
 
-    bool InFrameInlineScope()
+    bool isInFrameInlineScope() const
     {
         return m_flags.m_isInFrameInlineScope;
     }
 
-    bool needsGraphicsBuffer()
+    bool needsGraphicsBuffer() const
     {
         return m_flags.m_needsGraphicsBuffer;
+    }
+
+    bool isFloating() const
+    {
+        return m_flags.m_isFloating;
     }
 
     bool isDocumentElement() const
@@ -1016,14 +1021,14 @@ public:
         return m_node->document() == m_node;
     }
 
-    bool isBody() const
+    bool isBodyElement() const
     {
         return m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement();
     }
 
     bool isAnonymous() const
     {
-        return m_node == nullptr ? true : false;
+        return m_node == nullptr;
     }
 
     Element* offsetParent();
@@ -1044,7 +1049,7 @@ protected:
         // https://www.w3.org/TR/CSS21/visuren.html#positioning-scheme
         // 9.3.2
         // An element is said to be positioned if its 'position' property has a value other than 'static'. Positioned elements generate positioned boxes, laid out according to four properties:
-        bool m_isPositionedElement : 1;
+        bool m_isPositioned : 1;
 
         bool m_shouldComputePreferredWidth : 1;
         bool m_isNormalFlow : 1;
@@ -1053,6 +1058,8 @@ protected:
 
         bool m_isLeftMBPCleared: 1;
         bool m_isRightMBPCleared: 1;
+
+        bool m_isFloating : 1;
     } m_flags;
 
 private:

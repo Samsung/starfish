@@ -1301,7 +1301,7 @@ void LineFormattingContext::computeHorizontalProperties()
         LayoutUnit diff = (m_lineBoxWidth - inlineBoxesWidth);
         for (size_t k = 0; k < back->m_boxes.size(); k++) {
             FrameBox* childBox = back->m_boxes[k];
-            if (childBox->style()->floating() == NoneFloatValue) {
+            if (!childBox->isFloating()) {
                 childBox->moveX(diff);
             }
         }
@@ -1351,7 +1351,7 @@ void LineFormattingContext::computeHorizontalProperties()
         if (diff > 0) {
             for (size_t k = 0; k < back->m_boxes.size(); k++) {
                 FrameBox* childBox = back->m_boxes[k];
-                if (childBox->style()->floating() == NoneFloatValue) {
+                if (!childBox->isFloating()) {
                     childBox->moveX(diff);
                 }
             }
@@ -1409,7 +1409,7 @@ void LineFormattingContext::removeAllInlineBoxes()
     size_t index = 0;
 
     while (iter != lineBox->boxes().end()) {
-        if ((*iter)->style()->floating() != NoneFloatValue && (*iter)->style()->position() != AbsolutePositionValue) {
+        if ((*iter)->isFloating() && (*iter)->style()->position() != AbsolutePositionValue) {
             iter++;
             continue;
         }
@@ -1436,7 +1436,7 @@ void LineFormattingContext::removeAllInlineBoxes()
     iter = lineBox->boxes().begin();
     // LineBox should only contain floating boxes.
     STARFISH_ASSERT(std::all_of(lineBox->boxes().cbegin(), lineBox->boxes().cend(), [](FrameBox* box) {
-        return box->style()->floating() != NoneFloatValue;
+        return box->isFloating();
     }));
 
 
@@ -1510,7 +1510,7 @@ void LineFormattingContext::reCacheFloatingBoxes(LayoutUnit xDiff)
         } else if (childBox->style()->position() == AbsolutePositionValue) {
             continue;
         } else {
-            STARFISH_ASSERT(childBox->style()->floating() != NoneFloatValue);
+            STARFISH_ASSERT(childBox->isFloating());
             childBox->moveX(xDiff);
         }
     }
@@ -1524,7 +1524,7 @@ bool LineFormattingContext::isAnyOfInlineBoxesCollidedWithFloatingBoxes()
     auto iter = lineBox->boxes().begin();
 
     while (iter != lineBox->boxes().end()) {
-        if ((*iter)->style()->floating() != NoneFloatValue && (*iter)->style()->position() != AbsolutePositionValue) {
+        if ((*iter)->isFloating() && (*iter)->style()->position() != AbsolutePositionValue) {
             iter++;
             continue;
         }
@@ -1646,9 +1646,7 @@ bool canInsertToCurrentLine(PreferredWidthContext* ctx, LayoutUnit width)
 
 static bool canInsertInlineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit width)
 {
-    if (f->style()->floating() == NoneFloatValue) {
-        return width <= (ctx->m_lineBoxWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth);
-    } else {
+    if (f->isFloating()) {
         FloatingBoxLayoutContext& fbCtx = *ctx->m_floatingBoxLayoutContexts.rbegin();
         LayoutUnit remainedWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
         if (fbCtx.m_y == 0) {
@@ -1656,6 +1654,8 @@ static bool canInsertInlineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit 
         } else {
             return width <= remainedWidth;
         }
+    } else {
+        return width <= (ctx->m_lineBoxWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth);
     }
 }
 
@@ -1940,7 +1940,7 @@ void LineFormattingContext::generateInlineBoxes(Frame *origin)
 
             r->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
 
-            if (r->style()->floating() != NoneFloatValue) {
+            if (r->isFloating()) {
                 markInlineBoxIndex(r);
                 if (canInsertFloatingBox(this, r, false)
                     && dontBreakLine(this, r, r->boxWidth())) {
@@ -1990,7 +1990,7 @@ void LineFormattingContext::generateInlineBoxes(Frame *origin)
                     goto insertInlineBlockBox;
                 }
             } else {
-                STARFISH_ASSERT(f->style()->floating() != FloatValue::NoneFloatValue);
+                STARFISH_ASSERT(f->isFloating());
 
                 f->setLayoutParent(m_currentLayoutParent);
                 f->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
@@ -2544,9 +2544,7 @@ void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
 
 void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool isWhiteSpace)
 {
-    bool isFloatingElement = f->style()->floating() != NoneFloatValue;
-
-    if (isFloatingElement) {
+    if (f->isFloating()) {
         if (f->style()->clear() == NoneClearValue
             || clearAffected(m_hasFloat, f)) {
             if (canInsertToCurrentLine(this, w)) {
@@ -2592,7 +2590,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool 
         }
     }
 
-    if (!isWhiteSpace && !isFloatingElement) {
+    if (!isWhiteSpace && !f->isFloating()) {
         m_unprocessedStartingMBPWidth = 0;
     }
 }
@@ -2629,11 +2627,11 @@ void PreferredWidthContext::computePreferredWidth(Frame* origin)
             f->computePreferredWidth(newCtx);
             LayoutUnit w = newCtx.preferredWidth() + mbp;
             updatePreferredWidth(w);
-            if (f->style()->floating() == NoneFloatValue) {
+            if (f->isFloating()) {
+                handleFloatingBox(f, w);
+            } else {
                 updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth, false);
                 setIsWhiteSpaceAtLast(false);
-            } else {
-                handleFloatingBox(f, w);
             }
         } else if (f->isFrameBlockBox() || f->isFrameTableBox()) {
             LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
@@ -2646,7 +2644,7 @@ void PreferredWidthContext::computePreferredWidth(Frame* origin)
                 updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth, false);
                 setIsWhiteSpaceAtLast(false);
             } else {
-                STARFISH_ASSERT(f->style()->floating() != NoneFloatValue);
+                STARFISH_ASSERT(f->isFloating());
                 handleFloatingBox(f, w);
             }
         } else if (f->isFrameLineBreak()) {
@@ -2794,7 +2792,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         return;
     }
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
-    if (isPositionedElement()) {
+    if (isPositioned()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
@@ -2805,7 +2803,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
             }
             ctx.m_paintingStage = PaintingPositionedElements;
         }
-    } else if (style()->floating() != NoneFloatValue) {
+    } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;

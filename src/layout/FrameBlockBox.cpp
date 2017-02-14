@@ -666,7 +666,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     }
 
     Frame* result = nullptr;
-    if (isPositionedElement()) {
+    if (isPositioned()) {
         if (stage == HitTestPositionedElements) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
@@ -688,7 +688,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             }
             return FrameBox::hitTest(x, y, stage);
         }
-    } else if (style()->floating() != NoneFloatValue) {
+    } else if (isFloating()) {
         if (stage == HitTestNonPositionedFloats) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
@@ -743,7 +743,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    if (isPositionedElement()) {
+    if (isPositioned()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
@@ -771,7 +771,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             }
             ctx.m_paintingStage = PaintingNormalFlowInline;
         }
-    } else if (style()->floating() != NoneFloatValue) {
+    } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats && ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
