@@ -115,12 +115,12 @@ public:
         if (isEstablishesStackingContext())
             return;
 
-        if (isPositionedElement()) {
+        if (isPositioned()) {
             if (ctx.m_paintingStage == PaintingPositionedElements) {
                 paintBackgroundAndBorders(ctx.m_canvas);
                 paintReplaced(ctx.m_canvas);
             }
-        } else if (style()->floating() != NoneFloatValue) {
+        } else if (isFloating()) {
             if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
                 paintBackgroundAndBorders(ctx.m_canvas);
                 paintReplaced(ctx.m_canvas);

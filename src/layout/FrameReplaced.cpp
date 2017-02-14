@@ -271,7 +271,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
 
-            if (style()->floating() == NoneFloatValue && style()->display() == BlockDisplayValue
+            if (!isFloating() && style()->display() == BlockDisplayValue
                 && style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
                 LayoutUnit remain = parentContentWidth;
                 remain -= contentWidth();
@@ -283,7 +283,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
 
-            if (style()->floating() == NoneFloatValue && style()->display() == BlockDisplayValue) {
+            if (!isFloating() && style()->display() == BlockDisplayValue) {
                 if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();

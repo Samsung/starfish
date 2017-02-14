@@ -91,7 +91,7 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
 FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     : m_box(box)
 {
-    STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
+    STARFISH_ASSERT(box->isFloating());
     m_isLeft = box->style()->floating() == LeftFloatValue;
     Frame* parent = box->layoutParent();
     while (parent) {
@@ -502,7 +502,7 @@ std::pair<bool, LayoutUnit> LayoutContext::readRegisteredLastLineBoxYPos(FrameBl
 
 Element* Frame::offsetParent()
 {
-    if (isDocumentElement() || isBody())
+    if (isDocumentElement() || isBodyElement())
         return nullptr;
 
     Node* node = nullptr;

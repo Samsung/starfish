@@ -573,7 +573,7 @@ public:
                             break;
                         if (p->needsGraphicsBuffer())
                             break;
-                        if (!p->isPositionedElement())
+                        if (!p->isPositioned())
                             break;
                         if (p->style()->IsSpecifiedZIndex())
                             break;
