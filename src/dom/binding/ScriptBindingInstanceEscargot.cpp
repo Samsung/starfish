@@ -1847,7 +1847,7 @@ escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingIn
         escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
         double startTime = firstArg.toNumber();
         double endTime = secondArg.toNumber();
-        if (std::isnan(startTime) || std::isnan(endTime) || !thirdArg.isESString()) {
+        if (std::isnan(startTime) || std::isnan(endTime)) {
             THROW_ILLEGAL_INVOCATION();
         }
         VTTCue* cue = new VTTCue(startTime, endTime, String::fromUTF8(thirdArg.toString()->utf8Data()));
