@@ -115,7 +115,7 @@ FrameTableCellBox* FrameTableRowBox::addChild(Node* child, FrameTreeBuilderConte
     if (child->isCharacterData() || child->isComment()) {
         return nullptr;
     } else {
-        // return nullptr, if buildFrameTableCell resuse before anonymous cell
+        // return nullptr, if buildFrameTableCell reuse before anonymous cell
         childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
         if (childFrame != nullptr) {
             ctx.currentBlockContainer()->appendChild(childFrame);

@@ -25,6 +25,7 @@ class FrameTableCaptionBox;
 class FrameTreeBuilderContext;
 class TableFormattingContextBlock;
 class FrameTableCellBox;
+class FrameTableColGroupBox;
 
 // Table has the following table structure
 //
@@ -111,6 +112,7 @@ private:
     bool isCellWidthAuto(unsigned i);
 
     GCVector<FrameTableCaptionBox*> m_captions;
+    GCVector<FrameTableColGroupBox*> m_colGroups;
     GCVector<ColSizeStruct> m_columnWidths;
 
     // We use vector here because "FrameTableCellBox"es are already stored
