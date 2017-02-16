@@ -249,16 +249,12 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
         } else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
-        } else if (display == DisplayValue::TableDisplayValue
-            || display == InlineTableDisplayValue
-            || display == TableRowGroupDisplayValue
-            || display == TableRowDisplayValue
-            || display == TableCellDisplayValue
-            || display == TableCaptionDisplayValue) {
+        } else if (ComputedStyle::isDisplayTableModel(display)) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table wrapper
             FrameTableBox* table = FrameTableBox::buildFrameTable(current, ctx, force);
-            if (table && current->isTable()) {
+            if (table && ((display == DisplayValue::TableDisplayValue)
+                || (display == DisplayValue::InlineTableDisplayValue))) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), table, current, ctx);
             } else if (table && table->isAnonymous()) {
                 ctx.currentBlockContainer()->appendChild(table);

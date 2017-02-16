@@ -383,55 +383,6 @@ public:
         return false;
     }
 
-    virtual bool isTable() const
-    {
-        switch (style()->display()) {
-        case DisplayValue::TableDisplayValue:
-        case DisplayValue::InlineTableDisplayValue:
-            return true;
-        default:
-            return false;
-        }
-    }
-
-    virtual bool isTableCaption() const
-    {
-        return style()->display() == DisplayValue::TableCaptionDisplayValue;
-    }
-
-    virtual bool isTableSection() const
-    {
-        switch (style()->display()) {
-        case DisplayValue::TableHeaderGroupDisplayValue:
-        case DisplayValue::TableFooterGroupDisplayValue:
-        case DisplayValue::TableRowGroupDisplayValue:
-            return true;
-        default:
-            return false;
-        }
-    }
-
-    virtual bool isTableCol() const
-    {
-        switch (style()->display()) {
-        case DisplayValue::TableColumnGroupDisplayValue:
-        case DisplayValue::TableColumnDisplayValue:
-            return true;
-        default:
-            return false;
-        }
-    }
-
-    virtual bool isTableRow() const
-    {
-        return style()->display() == DisplayValue::TableRowDisplayValue;
-    }
-
-    virtual bool isTableCell() const
-    {
-        return style()->display() == DisplayValue::TableCellDisplayValue;
-    }
-
     CharacterData* asCharacterData()
     {
         STARFISH_ASSERT(isCharacterData());

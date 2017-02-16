@@ -797,6 +797,19 @@ public:
     static BorderImageLengthBox initialBorderImageWidths() { return BorderImageLengthBox(1.0); }
     static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
     static bool initialBorderImageSliceFill() { return false; }
+    static bool isDisplayTableModel(DisplayValue display)
+    {
+        return display == DisplayValue::TableDisplayValue
+            || display == DisplayValue::InlineTableDisplayValue
+            || display == DisplayValue::TableRowGroupDisplayValue
+            || display == DisplayValue::TableHeaderGroupDisplayValue
+            || display == DisplayValue::TableFooterGroupDisplayValue
+            || display == DisplayValue::TableRowDisplayValue
+            || display == DisplayValue::TableColumnGroupDisplayValue
+            || display == DisplayValue::TableColumnDisplayValue
+            || display == DisplayValue::TableCellDisplayValue
+            || display == DisplayValue::TableCaptionDisplayValue;
+    }
 
     void loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources = nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle, Node* current = nullptr);

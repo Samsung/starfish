@@ -35,8 +35,9 @@ FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(Node* current,
 {
     FrameBlockBox* parent = ctx.currentBlockContainer();
     FrameTableRowBox* tableRow;
+    bool isTableRow = current->style()->display() == DisplayValue::TableRowDisplayValue;
 
-    if (current->isTableRow()) {
+    if (isTableRow) {
         tableRow = new FrameTableRowBox(current, nullptr);
         current->setFrame(tableRow);
     } else {
@@ -54,7 +55,7 @@ FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(Node* current,
     ctx.mergeTextDecorationData(tableRow->style());
 
     FrameTableCellBox* tableCell;
-    if (current->isTableRow()) {
+    if (isTableRow) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             tableCell = tableRow->addChild(c, ctx, force);
@@ -102,24 +103,25 @@ FrameTableRowBox* FrameTableRowBox::createAnonymousWithParent(FrameBlockBox* par
 FrameTableCellBox* FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableCellBox* childFrame;
-    if (!child->isTableCell()) {
-        // TODO
-        if (child->isCharacterData() || child->isComment()) {
-            return nullptr;
-        } else {
-            // return nullptr, if buildFrameTableCell resuse before anonymous cell
-            childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
-            if (childFrame != nullptr) {
-                ctx.currentBlockContainer()->appendChild(childFrame);
-            }
-            return childFrame;
-        }
+
+    if (child->style()->display() == DisplayValue::TableCellDisplayValue) {
+        childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
+        STARFISH_ASSERT(childFrame->parent());
+        return childFrame;
     }
 
-    childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
-    STARFISH_ASSERT(childFrame->parent());
-    return childFrame;
+    // TODO
+    if (child->isCharacterData() || child->isComment()) {
+        return nullptr;
+    } else {
+        // return nullptr, if buildFrameTableCell resuse before anonymous cell
+        childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
+        if (childFrame != nullptr) {
+            ctx.currentBlockContainer()->appendChild(childFrame);
+        }
+        return childFrame;
+    }
 }
 
 void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
