@@ -35,8 +35,9 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
 {
     FrameBlockBox* parent = ctx.currentBlockContainer();
     FrameTableCellBox* tableCell;
+    bool isTableCell = current->style()->display() == DisplayValue::TableCellDisplayValue;
 
-    if (current->isTableCell()) {
+    if (isTableCell) {
         tableCell = new FrameTableCellBox(current, nullptr);
         current->setFrame(tableCell);
     } else {
@@ -52,7 +53,7 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
     ctx.setCurrentBlockContainer(tableCell);
     ctx.mergeTextDecorationData(tableCell->style());
 
-    if (current->isTableCell()) {
+    if (isTableCell) {
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTreeBuilder::buildTree(c, ctx, force);
         }

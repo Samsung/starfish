@@ -44,8 +44,11 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
 {
     FrameTableSectionBox* tableSection;
     FrameBlockBox* parent = ctx.currentBlockContainer();
+    bool isTableSection = current->style()->display() == DisplayValue::TableRowGroupDisplayValue
+        || current->style()->display() == DisplayValue::TableHeaderGroupDisplayValue
+        || current->style()->display() == DisplayValue::TableFooterGroupDisplayValue;
 
-    if (current->isTableSection()) {
+    if (isTableSection) {
         tableSection = new FrameTableSectionBox(current, nullptr);
         current->setFrame(tableSection);
     } else {
@@ -63,7 +66,7 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
     ctx.setCurrentBlockContainer(tableSection);
     ctx.mergeTextDecorationData(tableSection->style());
 
-    if (current->isTableSection()) {
+    if (isTableSection) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTableRowBox* tableRow = tableSection->addChild(c, ctx, force);
@@ -116,29 +119,30 @@ FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(FrameBlock
 FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableRowBox* childFrame;
-    if (!child->isTableRow()) {
-        // TODO
-        if (child->isCharacterData() || child->isComment()) {
-            return nullptr;
-        } else {
-            // return nullptr, if buildFrameTableRow reuse before anonymous row
-            childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-            if (childFrame != nullptr) {
-                FrameTableSectionBox* tableSection = ctx.currentBlockContainer()->asFrameTableSectionBox();
-                tableSection->appendChild(childFrame);
-                childFrame->setRowIndex(tableSection->grid().size());
-                RowStruct row(childFrame);
-                tableSection->grid().push_back(row);
-                STARFISH_ASSERT(childFrame->parent());
-            }
-            return childFrame;
-        }
+
+    if (child->style()->display() == DisplayValue::TableRowDisplayValue) {
+        childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
+        STARFISH_ASSERT(childFrame->parent());
+        return childFrame;
     }
 
-    childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
-    STARFISH_ASSERT(childFrame->parent());
-    return childFrame;
+    // TODO
+    if (child->isCharacterData() || child->isComment()) {
+        return nullptr;
+    } else {
+        // return nullptr, if buildFrameTableRow reuse before anonymous row
+        childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
+        if (childFrame != nullptr) {
+            FrameTableSectionBox* tableSection = ctx.currentBlockContainer()->asFrameTableSectionBox();
+            tableSection->appendChild(childFrame);
+            childFrame->setRowIndex(tableSection->grid().size());
+            RowStruct row(childFrame);
+            tableSection->grid().push_back(row);
+            STARFISH_ASSERT(childFrame->parent());
+        }
+        return childFrame;
+    }
 }
 
 void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)

@@ -61,7 +61,10 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
 {
     FrameTableBox* tableWrapper;
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    if (current->isTable()) {
+    bool isTable = (current->style()->display() == DisplayValue::TableDisplayValue)
+        || (current->style()->display() == DisplayValue::InlineTableDisplayValue);
+
+    if (isTable) {
         // if current node is table then make wrapper and current node owns this wrapper
         tableWrapper = new FrameTableBox(current, nullptr);
         current->setFrame(tableWrapper);
@@ -89,7 +92,7 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
     ctx.setCurrentBlockContainer(tableWrapper);
     ctx.mergeTextDecorationData(tableWrapper->style());
 
-    if (current->isTable()) {
+    if (isTable) {
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             tableWrapper->addChild(c, ctx, force);
         }
@@ -117,35 +120,34 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
 {
     bool wrapInAnnoymousSection = false;
     Frame* childFrame;
+    DisplayValue display = child->style()->display();
 
-    if (child->isTableCaption()) {
+    switch (display) {
+    case DisplayValue::TableCaptionDisplayValue:
         childFrame = FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
         m_captions.push_back(childFrame->asFrameTableCaptionBox());
-    } else if (child->isTableCol()) {
+        break;
+    case DisplayValue::TableColumnGroupDisplayValue:
+    case DisplayValue::TableColumnDisplayValue:
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    } else if (child->isTableSection()) {
-        // Only [TableHeaderGroup | TableFooterGroup | TableRowGroup] should appear
-        switch (child->style()->display()) {
-        case DisplayValue::TableHeaderGroupDisplayValue:
-        case DisplayValue::TableFooterGroupDisplayValue:
-        case DisplayValue::TableRowGroupDisplayValue:
-            childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
-            break;
-        default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else {
+        break;
+    case DisplayValue::TableHeaderGroupDisplayValue:
+    case DisplayValue::TableFooterGroupDisplayValue:
+    case DisplayValue::TableRowGroupDisplayValue:
+        childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
+        break;
+    default:
         wrapInAnnoymousSection = true;
     }
 
     if (!wrapInAnnoymousSection) {
         FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
-        if (!m_thead && (child->style()->display() == DisplayValue::TableHeaderGroupDisplayValue)) {
+        if (!m_thead && (display == DisplayValue::TableHeaderGroupDisplayValue)) {
             m_thead = childFrame->asFrameTableSectionBox();
         }
-        if (!m_tfoot && (child->style()->display() == DisplayValue::TableFooterGroupDisplayValue)) {
+        if (!m_tfoot && (display == DisplayValue::TableFooterGroupDisplayValue)) {
             m_tfoot = childFrame->asFrameTableSectionBox();
         }
         return;
