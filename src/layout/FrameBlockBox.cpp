@@ -470,12 +470,12 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     }
 
     if (style()->position() == PositionValue::RelativePositionValue)
-        ctx.registerRelativePositionedFrames(this, true);
+        ctx.registerRelativePositionedBox(this, true);
 
     // layout absolute positioned blocks
-    ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
-        for (size_t i = 0; i < frames.size(); i ++) {
-            Frame* f = frames[i];
+    ctx.layoutRegisteredAbsolutePositionedBoxes(this, [&](const std::vector<FrameBox*>& boxes) {
+        for (size_t i = 0; i < boxes.size(); i ++) {
+            FrameBox* f = boxes[i];
             f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         }
     });
@@ -596,11 +596,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     };
 
     // layout relative positioned blocks
-    ctx.layoutRegisteredRelativePositionedFrames(this, [&](const std::vector<std::pair<Frame*, bool> >& frames) {
-        for (size_t i = 0; i < frames.size(); i ++) {
-            Frame* f = frames[i].first;
+    ctx.layoutRegisteredRelativePositionedBoxes(this, [&](const std::vector<std::pair<FrameBox*, bool> >& boxes) {
+        for (size_t i = 0; i < boxes.size(); i ++) {
+            FrameBox* f = boxes[i].first;
 
-            if (frames[i].second) {
+            if (boxes[i].second) {
                 Frame* cb = ctx.containingFrameBlockBox(f);
                 applyRelativePosition(f->asFrameBox(), f->style()->left(), f->style()->right(), f->style()->top(), f->style()->bottom(), cb->asFrameBox()->contentWidth(), cb->asFrameBox()->contentHeight());
             } else {
@@ -618,7 +618,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     if (node() && node()->parentElement()) {
         Node* nd = node()->parentElement();
         if (nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
-            ctx.registerRelativePositionedFrames(this, false);
+            ctx.registerRelativePositionedBox(this, false);
         }
     }
 }
