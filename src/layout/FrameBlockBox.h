@@ -168,6 +168,7 @@ public:
         }
     }
 
+    FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
     void removeDanglingSpace(LineFormattingContext* ctx);
     bool containOnlyEmptyInlineNonReplacedBoxes();
@@ -178,22 +179,30 @@ public:
         box->setLayoutParent((Box*)this);
     }
     LayoutUnit layoutInlineBoxes(LayoutUnit start);
-    void registerRelativePositionInlineBoxes(LayoutContext& ctx);
+    void registerRelativePositionedBoxes(LayoutContext& ctx);
 
-    bool isAbsolutePositionedBoxLayoutParent() const
+    size_t absolutePositionedBoxLayoutParentCnt() const
     {
-        return m_isAbsolutePositionedLayoutParent;
+        return m_absolutePositionedLayoutParentCnt;
     }
 
     void markAbsolutePositionedBoxLayoutParent()
     {
-        m_isAbsolutePositionedLayoutParent = true;
+        m_absolutePositionedLayoutParentCnt++;
     }
+
+    void unMarkAbsolutePositionedBoxLayoutParent()
+    {
+        STARFISH_ASSERT(m_absolutePositionedLayoutParentCnt != 0);
+        m_absolutePositionedLayoutParentCnt--;
+    }
+
+    void moveToNewLineBox(FrameBox* box, LineBox* lineBox);
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
-    bool m_isAbsolutePositionedLayoutParent;
+    size_t m_absolutePositionedLayoutParentCnt;
 };
 
 class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
@@ -302,7 +311,7 @@ protected:
 
         m_ascender = 0;
         m_descender = 0;
-        m_isAbsolutePositionedLayoutParent = false;
+        m_absolutePositionedLayoutParentCnt = 0;
 
         // recompute style flags
         // we should re compute flags here
@@ -368,7 +377,7 @@ public:
         setParent(parent);
         m_ascender = 0;
         m_descender = 0;
-        m_isAbsolutePositionedLayoutParent = false;
+        m_absolutePositionedLayoutParentCnt = 0;
     }
 
     virtual bool isLineBox()
@@ -803,7 +812,6 @@ public:
     // This layout parent should be either LineBox or InlineNonReplacedBox
     FrameBox* m_currentLayoutParent;
     FrameText* m_lastFrameText;
-    bool m_shouldLineBreakForAbsolutePositionedBox;
     bool m_shouldLineBreakForBr;
     bool m_shouldIgnoreWhiteSpace;
     size_t m_inlineBoxIndex;
@@ -817,7 +825,7 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
-    std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
+    std::vector<FrameBox*> m_absolutePositionedBoxes;
     std::vector<FrameBox*> m_pendingFloatingBoxes;
     std::vector<FrameBox*> m_pendingInlineBoxes;
 

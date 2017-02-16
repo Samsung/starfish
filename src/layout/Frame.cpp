@@ -41,7 +41,7 @@ Frame* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
 {
     Frame* block = blockContainer(currentFrame);
     if (currentFrame->style()->position() == AbsolutePositionValue) {
-        while (!block->isFrameDocument() && !block->isPositionedElement()) {
+        while (!block->isFrameDocument() && !block->isPositioned()) {
             block = blockContainer(block);
         }
         return block;
@@ -55,7 +55,7 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     if (currentFrame->style()->position() == AbsolutePositionValue) {
         Frame* block = currentFrame->parent();
-        while (!block->isFrameDocument() && !block->isPositionedElement()) {
+        while (!block->isFrameDocument() && !block->isPositioned()) {
             block = block->parent();
         }
 
@@ -479,45 +479,66 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     return result;
 }
 
-void LayoutContext::registerYPositionForVerticalAlignInlineBlock(LineBox* lb)
+void LayoutContext::registerYPositionPerVAInlineBlock(LineBox* lb)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
-        (*c.m_registeredYPositionForVerticalAlignInlineBlock)[(*c.m_inlineBlockBoxStack)[i]] = lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + lb->ascender();
+        (*c.m_registeredYPositionPerVAInlineBlock)[(*c.m_inlineBlockBoxStack)[i]] = lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + lb->ascender();
     }
 }
 
-std::pair<bool, LayoutUnit> LayoutContext::readRegisteredLastLineBoxYPos(FrameBlockBox* box)
+std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(FrameBlockBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == box);
-    auto iter = (*c.m_registeredYPositionForVerticalAlignInlineBlock).find(box);
-    if (iter == c.m_registeredYPositionForVerticalAlignInlineBlock->end()) {
+    auto iter = (*c.m_registeredYPositionPerVAInlineBlock).find(box);
+    if (iter == c.m_registeredYPositionPerVAInlineBlock->end()) {
         return std::pair<bool, LayoutUnit>(false, 0);
     }
     LayoutUnit r = iter->second;
-    c.m_registeredYPositionForVerticalAlignInlineBlock->erase(iter);
+    c.m_registeredYPositionPerVAInlineBlock->erase(iter);
     return std::pair<bool, LayoutUnit>(true, r);
+}
+
+void LayoutContext::registerAbsolutePositionedBox(Frame* frm)
+{
+    Frame* cb = containingFrameBlockBox(frm);
+    m_absolutePositionedBoxes.insert(std::make_pair(cb, std::vector<FrameBox*>()));
+    auto& vec = m_absolutePositionedBoxes[cb];
+    STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
+    vec.push_back(frm->asFrameBox());
+}
+
+void LayoutContext::registerRelativePositionedBox(Frame* frm, bool dueToSelf)
+{
+    Frame* cb = containingFrameBlockBox(frm);
+    m_relativePositionedBoxes.insert(std::make_pair(cb, std::vector<std::pair<FrameBox*, bool> >()));
+    auto& vec = m_relativePositionedBoxes[cb];
+    vec.push_back(std::make_pair(frm->asFrameBox(), dueToSelf));
 }
 
 Element* Frame::offsetParent()
 {
-    if (isDocumentElement() || isBodyElement())
+    if (isDocumentElement() || isBodyElement()) {
         return nullptr;
+    }
 
     Node* node = nullptr;
-    for (Frame* ancestor = layoutParent(); ancestor; ancestor = ancestor->layoutParent()) {
+    for (Frame* parent = layoutParent(); parent; parent = parent->layoutParent()) {
 
-        node = ancestor->node();
+        node = parent->node();
 
-        if (!node)
+        if (!node) {
             continue;
+        }
 
-        if (ancestor->isPositionedElement())
+        if (parent->isPositioned()) {
             break;
+        }
 
-        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLBodyElement())
+        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
             break;
+        }
     }
 
     return node && node->isElement() ? node->asElement() : nullptr;

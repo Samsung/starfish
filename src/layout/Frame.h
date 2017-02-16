@@ -83,8 +83,8 @@ public:
     {
         removeBlockFormattingContext();
         STARFISH_ASSERT(m_blockFormattingContextInfo.size() == 0);
-        STARFISH_ASSERT(m_absolutePositionedFrames.size() == 0);
-        STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
+        STARFISH_ASSERT(m_absolutePositionedBoxes.size() == 0);
+        STARFISH_ASSERT(m_relativePositionedBoxes.size() == 0);
     }
 
     StarFish* starFish()
@@ -107,7 +107,7 @@ public:
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s = new std::vector<FloatingBoxInfo>();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionForVerticalAlignInlineBlock));
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionPerVAInlineBlock));
         }
     }
 
@@ -115,7 +115,7 @@ public:
     {
         if (m_blockFormattingContextInfo.back().m_isRoot || !m_blockFormattingContextInfo.back().m_isNormalFlow) {
             delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
-            delete m_blockFormattingContextInfo.back().m_registeredYPositionForVerticalAlignInlineBlock;
+            delete m_blockFormattingContextInfo.back().m_registeredYPositionPerVAInlineBlock;
         }
         delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
@@ -149,80 +149,67 @@ public:
         m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->pop_back();
     }
 
-    void registerYPositionForVerticalAlignInlineBlock(LineBox* lb);
-    std::pair<bool, LayoutUnit> readRegisteredLastLineBoxYPos(FrameBlockBox* box);
-    void registerAbsolutePositionedFrames(Frame* frm)
-    {
-        Frame* cb = containingFrameBlockBox(frm);
-        m_absolutePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
-        std::vector<Frame*>& vec = m_absolutePositionedFrames[cb];
-        STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
-        vec.push_back(frm);
-    }
+    void registerYPositionPerVAInlineBlock(LineBox* lb);
+    std::pair<bool, LayoutUnit> registeredLastLineBoxYPosition(FrameBlockBox* box);
+    void registerAbsolutePositionedBox(Frame* frm);
 
     template <typename Fn>
-    void layoutRegisteredAbsolutePositionedFrames(Frame* containgBlock, Fn f)
+    void layoutRegisteredAbsolutePositionedBoxes(Frame* containgBlock, Fn f)
     {
-        auto iter = m_absolutePositionedFrames.find(containgBlock);
-        if (iter == m_absolutePositionedFrames.end()) {
+        auto iter = m_absolutePositionedBoxes.find(containgBlock);
+        if (iter == m_absolutePositionedBoxes.end()) {
             return;
         } else {
             f(iter->second);
-            m_absolutePositionedFrames.erase(iter);
+            m_absolutePositionedBoxes.erase(iter);
         }
     }
 
-    void registerRelativePositionedFrames(Frame* frm, bool dueToSelf)
-    {
-        Frame* cb = containingFrameBlockBox(frm);
-        m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<std::pair<Frame*, bool> >()));
-        std::vector<std::pair<Frame*, bool> >& vec = m_relativePositionedFrames[cb];
-        vec.push_back(std::make_pair(frm, dueToSelf));
-    }
+    void registerRelativePositionedBox(Frame* frm, bool dueToSelf);
 
     template <typename Fn>
-    void layoutRegisteredRelativePositionedFrames(Frame* containgBlock, Fn f)
+    void layoutRegisteredRelativePositionedBoxes(Frame* containingBox, Fn f)
     {
-        auto iter = m_relativePositionedFrames.find(containgBlock);
-        if (iter == m_relativePositionedFrames.end()) {
+        auto iter = m_relativePositionedBoxes.find(containingBox);
+        if (iter == m_relativePositionedBoxes.end()) {
             return;
         } else {
             f(iter->second);
-            m_relativePositionedFrames.erase(iter);
+            m_relativePositionedBoxes.erase(iter);
         }
     }
 
-    void propagatePositionedFrames(LayoutContext& to)
+    void propagatePositionedBoxes(LayoutContext& to)
     {
         {
-            auto iter = m_absolutePositionedFrames.begin();
+            auto iter = m_absolutePositionedBoxes.begin();
 
-            while (iter != m_absolutePositionedFrames.end()) {
-                auto iter2 = to.m_absolutePositionedFrames.find(iter->first);
-                if (iter2 == to.m_absolutePositionedFrames.end()) {
-                    to.m_absolutePositionedFrames.insert(std::make_pair(iter->first, iter->second));
+            while (iter != m_absolutePositionedBoxes.end()) {
+                auto iter2 = to.m_absolutePositionedBoxes.find(iter->first);
+                if (iter2 == to.m_absolutePositionedBoxes.end()) {
+                    to.m_absolutePositionedBoxes.insert(*iter);
                 } else {
                     iter2->second.insert(iter2->second.end(), iter->second.begin(), iter->second.end());
                 }
                 iter++;
             }
 
-            m_absolutePositionedFrames.clear();
+            m_absolutePositionedBoxes.clear();
         }
         {
-            auto iter = m_relativePositionedFrames.begin();
+            auto iter = m_relativePositionedBoxes.begin();
 
-            while (iter != m_relativePositionedFrames.end()) {
-                auto iter2 = to.m_relativePositionedFrames.find(iter->first);
-                if (iter2 == to.m_relativePositionedFrames.end()) {
-                    to.m_relativePositionedFrames.insert(std::make_pair(iter->first, iter->second));
+            while (iter != m_relativePositionedBoxes.end()) {
+                auto iter2 = to.m_relativePositionedBoxes.find(iter->first);
+                if (iter2 == to.m_relativePositionedBoxes.end()) {
+                    to.m_relativePositionedBoxes.insert(*iter);
                 } else {
                     iter2->second.insert(iter2->second.end(), iter->second.begin(), iter->second.end());
                 }
                 iter++;
             }
 
-            m_relativePositionedFrames.clear();
+            m_relativePositionedBoxes.clear();
         }
     }
 
@@ -285,13 +272,13 @@ public:
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow, bool isRoot, std::vector<FrameBlockBox*>* inlineBlockBoxStack,
-            std::vector<FloatingBoxInfo>* floatBoxes, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
+            std::vector<FloatingBoxInfo>* floatBoxes, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionPerVAInlineBlock)
         {
             m_isRoot = isRoot;
             m_isNormalFlow = isNormalFlow;
             m_inlineBlockBoxStack = inlineBlockBoxStack;
             m_floatBoxes = floatBoxes;
-            m_registeredYPositionForVerticalAlignInlineBlock = registeredYPositionForVerticalAlignInlineBlock;
+            m_registeredYPositionPerVAInlineBlock = registeredYPositionPerVAInlineBlock;
         }
         bool m_isRoot;
         bool m_isNormalFlow;
@@ -302,7 +289,7 @@ private:
         LayoutUnit m_topLocOfFloatBox;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
         std::vector<FloatingBoxInfo>* m_floatBoxes;
-        std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;
+        std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionPerVAInlineBlock;
     };
 
     StarFish* m_starFish;
@@ -310,8 +297,8 @@ private:
 
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
-    std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
-    std::map<Frame*, std::vector<std::pair<Frame*, bool> > > m_relativePositionedFrames;
+    std::map<Frame*, std::vector<FrameBox*> > m_absolutePositionedBoxes;
+    std::map<Frame*, std::vector<std::pair<FrameBox*, bool> > > m_relativePositionedBoxes;
 };
 
 class FloatingBoxInfo {

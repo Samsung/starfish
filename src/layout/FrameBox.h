@@ -39,7 +39,7 @@ public:
         , m_margin()
         , m_marginCollapseResult()
         , m_stackingContext(nullptr)
-        , m_inlineBoxIndex(0)
+        , m_inlineBoxIndex(SIZE_MAX)
     {
     }
 
