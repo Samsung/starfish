@@ -1,0 +1,51 @@
+/*
+ * Copyright (c) 2016 Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishFrameTableColBox__
+#define __StarFishFrameTableColBox__
+
+#include "layout/FrameTableObjectBox.h"
+
+namespace StarFish {
+
+class FrameTreeBuilderContext;
+
+class FrameTableColBox : public FrameTableObjectBox {
+public:
+    FrameTableColBox(Node* node, ComputedStyle* style);
+
+    static FrameTableColBox* buildFrameTableColBox(Node* colNode,
+        FrameTreeBuilderContext& ctx, bool force = false);
+
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
+    virtual const char* name()
+    {
+        return "FrameTableCol";
+    }
+
+    virtual bool isFrameTableColBox()
+    {
+        return true;
+    }
+
+private:
+
+};
+
+}
+
+#endif
