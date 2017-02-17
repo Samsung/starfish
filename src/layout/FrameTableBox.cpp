@@ -69,9 +69,10 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
         tableWrapper = new FrameTableBox(current, nullptr);
         current->setFrame(tableWrapper);
     } else {
-        // if current node is not table wrapper node then make anonymous wrapper or
-        // reuse before anonymous wrapper
-        FrameBlockBox* parent = ctx.currentBlockContainer();
+        // If the current node is not a table wrapper node, make either
+        // * an anonymous table wrapper box, or
+        // * use the last anonymous wrapper box if it has already been created
+        //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
 
         // NEED TO DISCUSSION : StarFish generate anonymous block box which has only wihtespace,
@@ -157,7 +158,15 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         // TODO
         return;
     } else if (wrapInAnnoymousSection) {
-        // return nullptr, if buildFrameTableSection reuse before anonymouse section
+        // If there are 2 continuous node which becomes internal table box without any proper parent,
+        // we have a problem, because parser doesn't form a group these with one parent.
+        // so we handle this at buileFrameTableXXX. The first node's frame box will be returned with a
+        // hierarchical anonymous table box, the point is the second one. If the second one does the same
+        // with the first one, then we might have duplication processing about reused anonymous box
+        // so that currentBlockContainer has 2 children which referencing the same thing.
+        // To prevent this situation, we separtate two cases with which returned pointer is nullptr.
+
+        // TODO: but this behavior seems a bit confusing. So I am thinking of a better design.
         childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
         if (childFrame != nullptr) {
             ctx.currentBlockContainer()->appendChild(childFrame);

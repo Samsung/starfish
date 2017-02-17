@@ -41,8 +41,10 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
         tableCell = new FrameTableCellBox(current, nullptr);
         current->setFrame(tableCell);
     } else {
-        // current node is not tableRow then make anonymous Row or
-        // reuse last anonymous Cell
+        // If the current node is not a table cell node, make either
+        // * an anonymous table cell box, or
+        // * use the last anonymous cell box if it has already been created
+        //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
         if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
             tableCell = before->asFrameTableCellBox();
@@ -58,7 +60,7 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
             FrameTreeBuilder::buildTree(c, ctx, force);
         }
     } else if (tableCell->isAnonymous()) {
-        Frame* childFrame = FrameTreeBuilder::buildTree(current, ctx, force);
+        FrameTreeBuilder::buildTree(current, ctx, force);
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
