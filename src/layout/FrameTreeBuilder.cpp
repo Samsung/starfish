@@ -249,7 +249,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
         } else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
-        } else if (ComputedStyle::isDisplayTableModel(display)) {
+        } else if (ComputedStyle::isDisplayTableValueType(display)) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table wrapper
             FrameTableBox* table = FrameTableBox::buildFrameTable(current, ctx, force);

@@ -52,8 +52,10 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
         tableSection = new FrameTableSectionBox(current, nullptr);
         current->setFrame(tableSection);
     } else {
-        // current node is not tablesection then make anonymous section or
-        // reuse before anonymous section
+        // If the current node is not a table row-group node, make either
+        // * an anonymous table row-group box, or
+        // * use the last anonymous row-group box if it has already been created
+        //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
 
         if (before && before->isAnonymous() && before->isFrameTableSectionBox()) {
@@ -131,7 +133,7 @@ FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderCo
     if (child->isCharacterData() || child->isComment()) {
         return nullptr;
     } else {
-        // return nullptr, if buildFrameTableRow reuse before anonymous row
+        // please read comment in FrameTableBox::addChild
         childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
         if (childFrame != nullptr) {
             FrameTableSectionBox* tableSection = ctx.currentBlockContainer()->asFrameTableSectionBox();

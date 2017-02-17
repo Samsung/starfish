@@ -41,8 +41,10 @@ FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(Node* current,
         tableRow = new FrameTableRowBox(current, nullptr);
         current->setFrame(tableRow);
     } else {
-        // current node is not tableRow then make anonymous Row or
-        // reuse last anonymous Row
+        // If the current node is not a table row node, make either
+        // * an anonymous table row box, or
+        // * use the last anonymous row box if it has already been created
+        //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
         if (before && before->isAnonymous() && before->isFrameTableRowBox()) {
             tableRow = before->asFrameTableRowBox();
@@ -115,7 +117,7 @@ FrameTableCellBox* FrameTableRowBox::addChild(Node* child, FrameTreeBuilderConte
     if (child->isCharacterData() || child->isComment()) {
         return nullptr;
     } else {
-        // return nullptr, if buildFrameTableCell reuse before anonymous cell
+        // please read comment in FrameTableBox::addChild
         childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
         if (childFrame != nullptr) {
             ctx.currentBlockContainer()->appendChild(childFrame);

@@ -797,7 +797,7 @@ public:
     static BorderImageLengthBox initialBorderImageWidths() { return BorderImageLengthBox(1.0); }
     static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
     static bool initialBorderImageSliceFill() { return false; }
-    static bool isDisplayTableModel(DisplayValue display)
+    static bool isDisplayTableValueType(DisplayValue display)
     {
         return display == DisplayValue::TableDisplayValue
             || display == DisplayValue::InlineTableDisplayValue
