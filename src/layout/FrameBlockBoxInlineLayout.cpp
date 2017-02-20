@@ -1282,12 +1282,10 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
     lineBox->setWidth(m_lineBoxWidth);
 
     if (m_floatingBoxLayoutContexts.size() == 0) {
-        FloatingBoxLayoutContext fbCtx = FloatingBoxLayoutContext(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
-        m_floatingBoxLayoutContexts.push_back(fbCtx);
+        m_floatingBoxLayoutContexts.emplace_back(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
     } else {
-        if ((*m_floatingBoxLayoutContexts.rbegin()).m_y < yDiff) {
-            FloatingBoxLayoutContext fbCtx = FloatingBoxLayoutContext(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
-            m_floatingBoxLayoutContexts.push_back(fbCtx);
+        if (m_floatingBoxLayoutContexts[m_floatingBoxLayoutContexts.size() - 1].m_y < yDiff) {
+            m_floatingBoxLayoutContexts.emplace_back(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
         }
     }
 }
@@ -2130,7 +2128,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
     STARFISH_ASSERT(U_SUCCESS(err));
     if (total == 1) {
         UBiDiDirection dir = getTextDir(StringView(frameText->text(), 0, frameText->text()->length()), 0, frameText->text()->length());
-        result.push_back(TextRun(frameText, frameText->text(), 0, frameText->text()->length(), charDirFromICUDir(dir)));
+        result.emplace_back(frameText, frameText->text(), 0, frameText->text()->length(), charDirFromICUDir(dir));
     } else {
         int32_t start = 0;
         int32_t end;
@@ -2146,7 +2144,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
                 utf32Len++;
             }
 
-            result.push_back(TextRun(frameText, frameText->text(), utf32Pos, utf32Pos + utf32Len, charDirFromICUDir(dir)));
+            result.emplace_back(frameText, frameText->text(), utf32Pos, utf32Pos + utf32Len, charDirFromICUDir(dir));
             utf32Pos += utf32Len;
 
             start = end;
@@ -2227,7 +2225,7 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
         CharDirection ch = (result == DirectionValue::LtrDirectionValue ? CharDirection::Ltr : CharDirection::Rtl);
         for (size_t i = 0; i < putOffTextRuns.size(); i ++) {
             TextRun run = putOffTextRuns[i];
-            ctx.m_textRunsPerFrameText[run.m_frameText].push_back(TextRun(run.m_frameText, run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end(), ch));
+            ctx.m_textRunsPerFrameText[run.m_frameText].emplace_back(run.m_frameText, run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end(), ch);
         }
 
         putOffNeutralFrames.clear();
@@ -2254,7 +2252,7 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
                 } else {
                     STARFISH_ASSERT(run.m_direction == CharDirection::Ltr || run.m_direction == CharDirection::Rtl);
                     everMeetNonNeutralThing = true;
-                    ctx.m_textRunsPerFrameText[f->asFrameText()].push_back(TextRun(f->asFrameText(), run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end(), run.m_direction));
+                    ctx.m_textRunsPerFrameText[f->asFrameText()].emplace_back(f->asFrameText(), run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end(), run.m_direction);
                     flushNeurtal(run.m_direction == CharDirection::Ltr ? DirectionValue::LtrDirectionValue : DirectionValue::RtlDirectionValue);
                 }
             }

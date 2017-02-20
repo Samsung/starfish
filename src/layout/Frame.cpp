@@ -461,7 +461,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
             reverse.push_back(container->style()->height());
             break;
         } else if (container->style()->position() == PositionValue::AbsolutePositionValue && container->style()->height().isPercent()) {
-            reverse.push_back(Length(Length::Fixed, container->style()->height().specifiedValue(containingBlock(container)->asFrameBox()->contentHeight())));
+            reverse.emplace_back(Length::Fixed, container->style()->height().specifiedValue(containingBlock(container)->asFrameBox()->contentHeight()));
             break;
         } else {
             STARFISH_ASSERT(container->style()->height().isPercent());
@@ -503,7 +503,7 @@ std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(FrameB
 void LayoutContext::registerAbsolutePositionedBox(Frame* frm)
 {
     Frame* cb = containingFrameBlockBox(frm);
-    m_absolutePositionedBoxes.insert(std::make_pair(cb, std::vector<FrameBox*>()));
+    m_absolutePositionedBoxes.emplace(cb, std::vector<FrameBox*>());
     auto& vec = m_absolutePositionedBoxes[cb];
     STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
     vec.push_back(frm->asFrameBox());
@@ -512,9 +512,9 @@ void LayoutContext::registerAbsolutePositionedBox(Frame* frm)
 void LayoutContext::registerRelativePositionedBox(Frame* frm, bool dueToSelf)
 {
     Frame* cb = containingFrameBlockBox(frm);
-    m_relativePositionedBoxes.insert(std::make_pair(cb, std::vector<std::pair<FrameBox*, bool> >()));
+    m_relativePositionedBoxes.emplace(cb, std::vector<std::pair<FrameBox*, bool> >());
     auto& vec = m_relativePositionedBoxes[cb];
-    vec.push_back(std::make_pair(frm->asFrameBox(), dueToSelf));
+    vec.emplace_back(frm->asFrameBox(), dueToSelf);
 }
 
 Element* Frame::offsetParent()

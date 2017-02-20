@@ -103,11 +103,11 @@ public:
             std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
             std::vector<FloatingBoxInfo>* s2 = new std::vector<FloatingBoxInfo>();
             std::unordered_map<FrameBlockBox*, LayoutUnit>* s3 = new std::unordered_map<FrameBlockBox*, LayoutUnit>();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2, s3));
+            m_blockFormattingContextInfo.emplace_back(isNormalFlow, isRoot, s, s2, s3);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s = new std::vector<FloatingBoxInfo>();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionPerVAInlineBlock));
+            m_blockFormattingContextInfo.emplace_back(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionPerVAInlineBlock);
         }
     }
 
