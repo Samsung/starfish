@@ -327,19 +327,19 @@ public:
             SkPoint pt;
             pt = SkPoint::Make(rt.x(), rt.y());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             clipper.AddPath(path, ClipperLib::PolyType::ptClip, true);
 
@@ -351,10 +351,10 @@ public:
         } else if (hasValidMatrixValue()) {
             ClipperLib::Path path;
 
-            path.push_back(ClipperLib::IntPoint(lastState().m_clipRect.x(), lastState().m_clipRect.y()));
-            path.push_back(ClipperLib::IntPoint(lastState().m_clipRect.x() + lastState().m_clipRect.width(), lastState().m_clipRect.y()));
-            path.push_back(ClipperLib::IntPoint(lastState().m_clipRect.x() + lastState().m_clipRect.width(), lastState().m_clipRect.y() + lastState().m_clipRect.height()));
-            path.push_back(ClipperLib::IntPoint(lastState().m_clipRect.x(), lastState().m_clipRect.y() + lastState().m_clipRect.height()));
+            path.emplace_back(lastState().m_clipRect.x(), lastState().m_clipRect.y());
+            path.emplace_back(lastState().m_clipRect.x() + lastState().m_clipRect.width(), lastState().m_clipRect.y());
+            path.emplace_back(lastState().m_clipRect.x() + lastState().m_clipRect.width(), lastState().m_clipRect.y() + lastState().m_clipRect.height());
+            path.emplace_back(lastState().m_clipRect.x(), lastState().m_clipRect.y() + lastState().m_clipRect.height());
             path.push_back(path[0]);
 
             ClipperLib::Clipper clipper;
@@ -366,19 +366,19 @@ public:
             SkPoint pt;
             pt = SkPoint::Make(rt.x(), rt.y());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
             lastState().m_matrix.mapPoints(&pt, 1);
-            path.push_back(ClipperLib::IntPoint(pt.x(), pt.y()));
+            path.emplace_back(pt.x(), pt.y());
 
             path.push_back(path[0]);
 
