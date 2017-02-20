@@ -22,6 +22,7 @@
 #include "FrameTableSectionBox.h"
 #include "FrameTableRowBox.h"
 #include "FrameTableCellBox.h"
+#include "FrameTableColGroupBox.h"
 
 namespace StarFish {
 
@@ -77,7 +78,7 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
 
         // NEED TO DISCUSSION : StarFish generate anonymous block box which has only wihtespace,
         // below code treat above situation
-        while (before->isAnonymous() && before->firstChild()->isFrameText()
+        while (before && before->isAnonymous() && before->firstChild()->isFrameText()
             && before->firstChild()->asFrameText()->text()->containsOnlyWhitespace()) {
             before = before->previous();
         }
@@ -130,9 +131,15 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
     case DisplayValue::TableColumnDisplayValue:
-        // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        break;
+        // buildFrameTableColGroupBox allways return a pointer of Frame object
+        // If childFrame is reused anonymous, it will already have a parent,
+        // so only forms a parent-child relationship when there is no parent.
+        childFrame = FrameTableColGroupBox::buildFrameTableColGroupBox(child, ctx, force);
+        if (!childFrame->parent()) {
+            ctx.currentBlockContainer()->appendChild(childFrame);
+            m_colGroups.push_back(childFrame->asFrameTableColGroupBox());
+        }
+        return;
     case DisplayValue::TableHeaderGroupDisplayValue:
     case DisplayValue::TableFooterGroupDisplayValue:
     case DisplayValue::TableRowGroupDisplayValue:
@@ -504,6 +511,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
             maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        } else if (c->isFrameTableColGroupBox()) {
+            continue;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

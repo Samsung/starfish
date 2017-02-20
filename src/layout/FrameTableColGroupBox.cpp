@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "FrameTableColGroupBox.h"
-
+#include "FrameTableColBox.h"
 #include "FrameTreeBuilder.h"
 
 namespace StarFish {
@@ -29,13 +29,71 @@ FrameTableColGroupBox::FrameTableColGroupBox(Node* node, ComputedStyle* style)
 
 FrameTableColGroupBox* FrameTableColGroupBox::buildFrameTableColGroupBox(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    return nullptr;
+    STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableBox());
+
+    FrameTableColGroupBox* colGroupBox;
+    FrameBlockBox* parentWrapperBox = ctx.currentBlockContainer();
+    bool isColGroup = current->style()->display() == DisplayValue::TableColumnGroupDisplayValue;
+
+    if (isColGroup) {
+        colGroupBox = new FrameTableColGroupBox(current, nullptr);
+        current->setFrame(colGroupBox);
+    } else {
+        // If the current node is not a colGroup node, make either
+        // * an anonymous table colGroup box, or
+        // * use the last anonymous table colGroup box if it has already been created
+        //   by a previous (and continuous) sibling of the current node.
+        Frame* last = parentWrapperBox->lastChild();
+        if (last && last->isAnonymous() && last->isFrameTableColGroupBox()) {
+            colGroupBox = last->asFrameTableColGroupBox();
+        } else {
+            colGroupBox = FrameTableColGroupBox::createAnonymousWithParent(parentWrapperBox, current);
+        }
+    }
+
+    ctx.setCurrentBlockContainer(colGroupBox);
+    ctx.mergeTextDecorationData(colGroupBox->style());
+
+    if (isColGroup) {
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            colGroupBox->addChild(c, ctx, force);
+        }
+    } else if (colGroupBox->isAnonymous()) {
+        colGroupBox->addChild(current, ctx, force);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    ctx.setCurrentBlockContainer(parentWrapperBox);
+
+    // allways return a pointer of Frame object
+    return colGroupBox;
 }
 
 FrameTableColGroupBox* FrameTableColGroupBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableColumnGroupDisplayValue);
+    style->loadResources(node);
+    style->arrangeStyleValues(parent->style(), node);
 
-    return nullptr;
+    return new FrameTableColGroupBox(nullptr, style);
+}
+
+void FrameTableColGroupBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+{
+    FrameTableColBox* childFrame;
+
+    if (child->style()->display() == DisplayValue::TableColumnDisplayValue) {
+        // FrameTableCol must have no children frame, so don't build the sub frame-tree
+        childFrame = new FrameTableColBox(child, nullptr);
+        ctx.currentBlockContainer()->appendChild(childFrame);
+        child->setFrame(childFrame);
+        STARFISH_ASSERT(childFrame->parent());
+        return;
+    }
+    // Ignore the child node which display value is not 'TableColumnDisplayValue'.
+    return;
 }
 
 void FrameTableColGroupBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)

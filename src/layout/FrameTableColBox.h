@@ -27,11 +27,6 @@ class FrameTableColBox : public FrameTableObjectBox {
 public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 
-    static FrameTableColBox* buildFrameTableColBox(Node* colNode,
-        FrameTreeBuilderContext& ctx, bool force = false);
-
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-
     virtual const char* name()
     {
         return "FrameTableCol";
@@ -43,7 +38,7 @@ public:
     }
 
 private:
-
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 };
 
 }

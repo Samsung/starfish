@@ -44,6 +44,7 @@ public:
 
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 };
 
 }
