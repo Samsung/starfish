@@ -27,11 +27,6 @@ FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
 
 }
 
-FrameTableColBox* FrameTableColBox::buildFrameTableColBox(Node* colNode, FrameTreeBuilderContext& ctx, bool force)
-{
-    return nullptr;
-}
-
 void FrameTableColBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     STARFISH_ASSERT_NOT_REACHED();
