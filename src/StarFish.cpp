@@ -736,6 +736,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_lang = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "lang"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "colspan"));
     m_rowspan = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "rowspan"));
+    m_span = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "span"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "default"));
     m_loop = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loop"));

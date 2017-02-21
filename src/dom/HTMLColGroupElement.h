@@ -52,6 +52,16 @@ public:
         return true;
     }
 
+    void setSpan(int span)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_span, String::fromInt(span));
+    }
+
+    String* span()
+    {
+        return getAttribute(document()->window()->starFish()->staticStrings()->m_span);
+    }
+
 protected:
 };
 

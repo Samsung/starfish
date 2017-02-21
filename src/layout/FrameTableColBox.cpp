@@ -27,6 +27,22 @@ FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
 
 }
 
+unsigned FrameTableColBox::span()
+{
+    unsigned ret = 0;
+    if (node() && node()->asElement()->asHTMLElement()->isHTMLColElement()) {
+        String* span = node()->asElement()->asHTMLElement()->asHTMLColElement()->span();
+        ret = String::parseInt(span);
+    }
+    // span is only accepted when HTML element is either <col> or <colGroup>,
+    // hence it is not applied when used in other elements.
+    // e.g., <div style="display: table-column" span="2">
+    // In this case, we ignore the span value
+
+    // If span is not defined, use 1 as the default value
+    return ret == 0 ? 1 : ret;
+}
+
 void FrameTableColBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     STARFISH_ASSERT_NOT_REACHED();

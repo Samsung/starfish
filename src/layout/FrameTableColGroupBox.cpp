@@ -96,6 +96,22 @@ void FrameTableColGroupBox::addChild(Node* child, FrameTreeBuilderContext& ctx, 
     return;
 }
 
+unsigned FrameTableColGroupBox::span()
+{
+    unsigned ret = 0;
+    if (node() && node()->asElement()->asHTMLElement()->isHTMLColGroupElement()) {
+        String* span = node()->asElement()->asHTMLElement()->asHTMLColGroupElement()->span();
+        ret = String::parseInt(span);
+    }
+    // span is only accepted when HTML element is either <col> or <colGroup>,
+    // hence it is not applied when used in other elements.
+    // e.g., <div style="display: table-column" span="2">
+    // In this case, we ignore the span value
+
+    // If span is not defined, use 1 as the default value
+    return ret == 0 ? 1 : ret;
+}
+
 void FrameTableColGroupBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     STARFISH_ASSERT_NOT_REACHED();

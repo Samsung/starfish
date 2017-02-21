@@ -37,6 +37,8 @@ public:
         return true;
     }
 
+    unsigned span();
+
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 };

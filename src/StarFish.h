@@ -217,6 +217,7 @@ public:
     QualifiedName m_lang;
     QualifiedName m_colspan;
     QualifiedName m_rowspan;
+    QualifiedName m_span;
     QualifiedName m_disabled;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
