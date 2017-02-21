@@ -128,8 +128,8 @@ protected:
     TextRun m_textRun;
 };
 
-struct InlineNonReplacedBoxMBPStore;
-struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
+struct OrgMBPStore;
+struct MBPStore;
 
 template <typename Box>
 class InlineBoxLayoutParentBox {
@@ -206,15 +206,13 @@ protected:
 };
 
 class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
-    friend struct InlineNonReplacedBoxMBPStore;
-    friend struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
+    friend struct OrgMBPStore;
     friend class FrameBlockBox;
     friend class LineFormattingContext;
 public:
     InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)
         : InlineNonReplacedBox(inlineBox, inlineBox->origin())
     {
-        m_isProcessedStartingMBP = inlineBox->m_isProcessedStartingMBP;
     }
 
     InlineNonReplacedBox(FrameInline* frame)
@@ -278,16 +276,16 @@ public:
         m_isProcessedStartingMBP = true;
     }
 
+    void unsetLeftRightMBP();
     void setStartingMBP(LineFormattingContext* lineFormattingContext);
     void setEndingMBP(LineFormattingContext* lineFormattingContext);
-
-    void unsetTopBottomMBP();
-    void unsetLeftMBP();
-    void unsetRightMBP();
     void unsetEndingMBP(DirectionValue direction);
+    void unsetEndingOrgMBP(DirectionValue direction);
     void unsetStartingMBP(DirectionValue direction);
-    void resetOrgMBP(InlineNonReplacedBoxMBPStore* origin = nullptr);
-    void resetLeftRightMBP(InlineNonReplacedBoxMBPStore* origin);
+    void unsetStartingOrgMBP(DirectionValue direction);
+    void reset();
+    void reset(InlineNonReplacedBox* inrb);
+    void reset(OrgMBPStore* store);
 
 protected:
     bool m_isCollapsed;
@@ -319,49 +317,83 @@ protected:
         // so we could not consider that what kind of frame is this
         computeStyleFlags();
     }
+
+    void unsetTopBottomMBP();
+    void unsetLeftMBP();
+    void unsetLeftOrgMBP();
+    void unsetRightMBP();
+    void unsetRightOrgMBP();
+    void unsetLeftRightOrgMBP();
 };
 
-struct InlineNonReplacedBoxMBPStore {
-    LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+struct OrgMBPStore {
+    LayoutBoxSurroundData m_orgMargin, m_orgBorder, m_orgPadding;
+    bool m_isProcessedStartingMBP;
 
-    InlineNonReplacedBoxMBPStore(InlineNonReplacedBox* origin)
+    OrgMBPStore(FrameBox* box)
     {
-        m_orgMargin = origin->m_orgMargin;
-        m_orgBorder = origin->m_orgBorder;
-        m_orgPadding = origin->m_orgPadding;
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
-    void unsetStartingMBP(DirectionValue direction)
+    OrgMBPStore(InlineNonReplacedBox* inrb)
+    {
+        m_orgMargin = inrb->m_orgMargin;
+        m_orgBorder = inrb->m_orgBorder;
+        m_orgPadding = inrb->m_orgPadding;
+        m_isProcessedStartingMBP = inrb->m_isProcessedStartingMBP;
+    }
+
+    void unsetStartingOrgMBP(DirectionValue direction)
     {
         if (direction == LtrDirectionValue) {
-            unsetLeftMBP();
+            unsetLeftOrgMBP();
         } else {
-            unsetRightMBP();
+            unsetRightOrgMBP();
         }
     }
 
-    void unsetEndingMBP(DirectionValue direction)
+    void unsetEndingOrgMBP(DirectionValue direction)
     {
         if (direction == LtrDirectionValue) {
-            unsetRightMBP();
+            unsetRightOrgMBP();
         } else {
-            unsetLeftMBP();
+            unsetLeftOrgMBP();
         }
     }
 
 private:
-    void unsetLeftMBP()
+    void unsetLeftOrgMBP()
     {
         m_orgMargin.setLeft(0);
         m_orgBorder.setLeft(0);
         m_orgPadding.setLeft(0);
     }
 
-    void unsetRightMBP()
+    void unsetRightOrgMBP()
     {
         m_orgMargin.setRight(0);
         m_orgBorder.setRight(0);
         m_orgPadding.setRight(0);
+    }
+};
+
+struct MBPStore : public OrgMBPStore {
+    LayoutBoxSurroundData m_margin, m_border, m_padding;
+
+    MBPStore(FrameBox* box)
+        : OrgMBPStore(box)
+    {
+        m_margin = box->m_margin;
+        m_border = box->m_border;
+        m_padding = box->m_padding;
+    }
+
+    MBPStore(InlineNonReplacedBox* inrb)
+        : OrgMBPStore(inrb)
+    {
+        m_margin = inrb->m_margin;
+        m_border = inrb->m_border;
+        m_padding = inrb->m_padding;
     }
 };
 
@@ -660,27 +692,6 @@ protected:
     bool m_heightComputed;
 };
 
-struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
-    DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine(InlineNonReplacedBox* inrb)
-        : m_isFirstEdgeProcessed(false)
-    {
-        m_margin = inrb->m_margin;
-        m_border = inrb->m_border;
-        m_padding = inrb->m_padding;
-        m_orgMargin = inrb->m_orgMargin;
-        m_orgBorder = inrb->m_orgBorder;
-        m_orgPadding = inrb->m_orgPadding;
-    }
-
-    LayoutBoxSurroundData m_margin;
-    LayoutBoxSurroundData m_border;
-    LayoutBoxSurroundData m_padding;
-    LayoutBoxSurroundData m_orgMargin;
-    LayoutBoxSurroundData m_orgBorder;
-    LayoutBoxSurroundData m_orgPadding;
-    bool m_isFirstEdgeProcessed;
-};
-
 struct FloatingBoxLayoutContext {
     int m_hasFloat;
     LayoutUnit m_y;
@@ -746,7 +757,7 @@ private:
     void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(GCVector<FrameBox*>& boxes);
     void reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<FrameBox*>& boxes);
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
-    void splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
+    void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
@@ -789,7 +800,8 @@ public:
 
     bool hasFloatingBoxAlreadyInLineBox(Frame* f)
     {
-        if (f->style()->position() != AbsolutePositionValue && f->isFloating()) {
+        if (f->isFloating()) {
+            STARFISH_ASSERT(f->style()->position() != AbsolutePositionValue);
             FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
             return fbCtx.m_hasFloat != HasNone;
         } else {
@@ -829,8 +841,8 @@ public:
     std::vector<FrameBox*> m_pendingFloatingBoxes;
     std::vector<FrameBox*> m_pendingInlineBoxes;
 
-    std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
-    std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
+    std::unordered_map<FrameInline*, MBPStore> m_mbpStorePerFrameInline;
+    std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_lastInlineNonReplacedPerFrameInline;
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText* , std::vector<TextRun>> m_textRunsPerFrameText;
 };

@@ -30,6 +30,7 @@ struct MarginCollapseResult {
 };
 
 class FrameBox : public Frame {
+    friend struct MBPStore;
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
