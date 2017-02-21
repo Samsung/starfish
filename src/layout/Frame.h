@@ -471,7 +471,7 @@ class Frame : public gc {
 public:
     Frame(Node* node, ComputedStyle* s)
         : m_node(node)
-        , m_styleWhenNodeIsNull(s)
+        , m_styleWhenNodeIsAnonymous(s)
     {
         m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
         m_flags.m_needsLayout = true;
@@ -727,21 +727,22 @@ public:
 
     ComputedStyle* style()
     {
-        if (LIKELY(node() != nullptr))
+        if (UNLIKELY(isAnonymous())) {
+            return m_styleWhenNodeIsAnonymous;
+        } else {
             return node()->style();
-        else
-            return m_styleWhenNodeIsNull;
+        }
     }
 
     void updateComputedStyle(Node* refNode)
     {
-        STARFISH_ASSERT(node() == nullptr);
-        STARFISH_ASSERT(m_styleWhenNodeIsNull);
+        STARFISH_ASSERT(isAnonymous());
+        STARFISH_ASSERT(m_styleWhenNodeIsAnonymous);
         ComputedStyle* newStyle = new ComputedStyle(refNode->style());
-        newStyle->setDisplay(m_styleWhenNodeIsNull->display());
-        newStyle->loadResources(refNode, m_styleWhenNodeIsNull);
+        newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
+        newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
         newStyle->arrangeStyleValues(refNode->style(), refNode);
-        m_styleWhenNodeIsNull = newStyle;
+        m_styleWhenNodeIsAnonymous = newStyle;
     }
 
     Node* node()
@@ -1052,7 +1053,7 @@ protected:
 private:
     Node* m_node;
     // TODO implement FrameRareData
-    ComputedStyle* m_styleWhenNodeIsNull;
+    ComputedStyle* m_styleWhenNodeIsAnonymous;
 
     Frame* m_parent;
     Frame* m_layoutParent;

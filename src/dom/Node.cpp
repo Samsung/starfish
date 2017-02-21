@@ -945,7 +945,7 @@ void Node::setNeedsFrameTreeBuild()
             parent = document()->frame();
         } else {
             while (parent) {
-                if (parent->isFrameBlockBox() && parent->node()) {
+                if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
                     break;
                 }
                 parent = parent->parent();

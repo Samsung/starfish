@@ -1135,7 +1135,7 @@ Node* Window::hitTest(float x, float y)
         if (!frame)
             return nullptr;
 
-        while (!frame->node()) {
+        while (frame->isAnonymous()) {
             frame = frame->parent();
         }
 #ifdef STARFISH_ENABLE_TEST

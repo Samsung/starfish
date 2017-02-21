@@ -30,7 +30,7 @@ Frame* LayoutContext::blockContainer(Frame* currentFrame)
         return currentFrame;
 
     while (true) {
-        if (f->isFrameBlockBox() && f->node() != nullptr) {
+        if (f->isFrameBlockBox() && !f->isAnonymous()) {
             return f;
         }
         f = f->layoutParent();
@@ -95,7 +95,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     m_isLeft = box->style()->floating() == LeftFloatValue;
     Frame* parent = box->layoutParent();
     while (parent) {
-        if (parent->isFrameBlockBox() && parent->node()) {
+        if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
             m_canLayoutParentCollapseWithMarginTop = parent->asFrameBlockBox()->marginInfo()->canCollapseWithMarginTop();
             break;
         }

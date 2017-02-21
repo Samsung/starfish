@@ -531,7 +531,7 @@ public:
 
     bool isNecessaryBlockBox()
     {
-        if (!node()) {
+        if (isAnonymous()) {
             if (firstChild() && firstChild()->isFrameInline()) {
                 FrameInline* fi = firstChild()->asFrameInline();
                 if (fi->isLeftMBPCleared() && fi->isRightMBPCleared()) {
@@ -684,8 +684,8 @@ struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
 struct FloatingBoxLayoutContext {
     int m_hasFloat;
     LayoutUnit m_y;
-    LayoutUnit m_accumulatedLeftFloatBoxWidth;
-    LayoutUnit m_accumulatedRightFloatBoxWidth;
+    LayoutUnit m_accumulatedLeftFloatingBoxWidth;
+    LayoutUnit m_accumulatedRightFloatingBoxWidth;
     LayoutUnit m_originalLineBoxX;
     LayoutUnit m_originalLineBoxWidth;
 
