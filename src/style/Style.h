@@ -492,7 +492,8 @@ class CSSStyleDeclaration;
     F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")                       \
     F(TableLayout, tableLayout, "table-layout")                    \
-    F(UnicodeBidi, unicodeBidi, "unicode-bidi")
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                    \
+    F(Content, content, "content")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                    \
@@ -1102,13 +1103,14 @@ protected:
 class ValueList : public gc {
 public:
     enum Separator {
+        None,
         SpaceSeparator,
         CommaSeparator,
         SlashSeparator
     };
 
     ValueList()
-        : m_separator(SpaceSeparator)
+        : m_separator(None)
     {
     }
 
@@ -1139,12 +1141,15 @@ public:
 
     String* separatorString()
     {
-        if (m_separator == SpaceSeparator)
+        if (m_separator == None) {
+            return String::emptyString;
+        } else if (m_separator == SpaceSeparator) {
             return String::spaceString;
-        else if (m_separator == CommaSeparator)
+        } else if (m_separator == CommaSeparator) {
             return String::fromUTF8(", ");
-        else
+        } else {
             return String::fromUTF8("/ ");
+        }
     }
 
 protected:

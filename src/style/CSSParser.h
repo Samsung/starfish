@@ -385,6 +385,18 @@ public:
         return NamedColor::parseNamedColor(str->utf8Data(), str->length(), *ret);
     }
 
+    static bool parseString(String* str, String** ret)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
+        if (parser->consumeIfNext('"') || parser->consumeIfNext('\'')) {
+            if (parser->consumeString() && (parser->consumeIfNext('"') || parser->consumeIfNext('\''))) {
+                *ret = parser->parsedString();
+                return true;
+            }
+        }
+        return false;
+    }
+
     char* m_startPos;
     char* m_endPos;
     char* m_curPos;
