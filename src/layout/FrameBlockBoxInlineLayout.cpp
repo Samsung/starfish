@@ -415,6 +415,18 @@ static bool isNumber(String* text, size_t start, size_t end)
     return true;
 }
 
+static bool isNumber(const TextRun& run)
+{
+    const StringView& sv = run.m_stringView;
+    return isNumber(sv.originalString(), sv.start(), sv.end());
+}
+
+static bool isWhiteSpace(const TextRun& run)
+{
+    const StringView& sv = run.m_stringView;
+    return sv.originalString()->containsOnlyWhitespace(sv.start(), sv.end());
+}
+
 static bool hasIsolateBidiContent(InlineNonReplacedBox* box)
 {
     if (box->style()->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
@@ -446,70 +458,45 @@ static FrameBox* fetchContentForResolveBidi(FrameBox* box)
     }
 }
 
-void LineFormattingContext::splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes)
+void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
-        if (box->isInlineBox()) {
-            InlineBox* ib = box->asInlineBox();
-            if (ib->isInlineTextBox()) {
-            } else if (ib->isInlineNonReplacedBox()) {
-                if (!hasIsolateBidiContent(ib->asInlineNonReplacedBox())) {
-                    splitInlineBoxesAndMarkDirectionForResolveBidi(parentDir, ib->asInlineNonReplacedBox()->boxes());
-                    // split every content for resolve bidi after
-                    InlineNonReplacedBox* inrb = ib->asInlineNonReplacedBox();
-                    STARFISH_ASSERT(m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.find(inrb->origin()) == m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.end());
+        if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+            InlineNonReplacedBox* inrb = box->asInlineBox()->asInlineNonReplacedBox();
+            if (!hasIsolateBidiContent(inrb)) {
+                splitInlineBoxes(inrb->boxes());
+                // split every content for resolve bidi after
+                STARFISH_ASSERT(m_mbpStorePerFrameInline.find(inrb->origin()) == m_mbpStorePerFrameInline.end());
 
-                    DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine mbpData(inrb);
+                MBPStore mbpData(inrb);
+                mbpData.m_isProcessedStartingMBP = false;
 
-                    m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.insert({inrb->origin(), mbpData});
+                m_mbpStorePerFrameInline.emplace(inrb->origin(), mbpData);
 
-                    auto& boxesNeedsCopy = inrb->boxes();
-                    if (boxesNeedsCopy.size()) {
-                        FrameBox* parent = ib->layoutParent()->asFrameBox();
-                        LayoutUnit x = box->x();
+                auto& boxesNeedsCopy = inrb->boxes();
+                if (boxesNeedsCopy.size()) {
+                    boxes.erase(boxes.begin() + i);
 
-                        STARFISH_ASSERT(boxesNeedsCopy.size());
-                        boxes.erase(boxes.begin() + i);
+                    size_t insertPos = i;
 
-                        size_t insertPos = i;
-
-                        for (size_t j = 0; j < boxesNeedsCopy.size(); j++) {
-                            InlineNonReplacedBox* newBox = new InlineNonReplacedBox(inrb);
-                            newBox->setX(boxesNeedsCopy[j]->x() + ib->x());
-                            newBox->setY(ib->y());
-                            boxesNeedsCopy[j]->setX(0);
-                            newBox->insertInlineBox(boxesNeedsCopy[j]);
-                            newBox->setLayoutParent(parent);
-                            if (boxesNeedsCopy[j]->isNormalFlow()) {
-                                newBox->setWidth(boxesNeedsCopy[j]->width());
-                            }
-                            newBox->setHeight(ib->height());
-                            newBox->m_ascender = inrb->ascender();
-                            newBox->m_descender = inrb->decender();
-                            newBox->m_orgMargin = inrb->m_orgMargin;
-                            newBox->m_orgMargin.setLeft(0);
-                            newBox->m_orgMargin.setRight(0);
-                            newBox->m_orgBorder = inrb->m_orgBorder;
-                            newBox->m_orgBorder.setLeft(0);
-                            newBox->m_orgBorder.setRight(0);
-                            newBox->m_orgPadding = inrb->m_orgPadding;
-                            newBox->m_orgPadding.setLeft(0);
-                            newBox->m_orgPadding.setRight(0);
-                            newBox->m_absolutePositionedLayoutParentCnt = inrb->m_absolutePositionedLayoutParentCnt;
-                            boxes.insert(boxes.begin() + insertPos++, newBox);
+                    for (size_t j = 0; j < boxesNeedsCopy.size(); j++) {
+                        InlineNonReplacedBox* newBox = new InlineNonReplacedBox(inrb);
+                        newBox->setX(boxesNeedsCopy[j]->x() + inrb->x());
+                        newBox->setY(inrb->y());
+                        boxesNeedsCopy[j]->setX(0);
+                        newBox->insertInlineBox(boxesNeedsCopy[j]);
+                        if (boxesNeedsCopy[j]->isNormalFlow()) {
+                            newBox->setWidth(boxesNeedsCopy[j]->width());
                         }
-
-                        i += (boxesNeedsCopy.size() - 1);
-                    } else {
-                        inrb->setWidth(0);
-                        inrb->m_margin.setLeft(0);
-                        inrb->m_border.setLeft(0);
-                        inrb->m_padding.setLeft(0);
-                        inrb->m_margin.setRight(0);
-                        inrb->m_border.setRight(0);
-                        inrb->m_padding.setRight(0);
+                        newBox->reset(inrb);
+                        boxes.insert(boxes.begin() + insertPos++, newBox);
                     }
+
+                    i += (boxesNeedsCopy.size() - 1);
+                } else {
+                    inrb->setWidth(0);
+                    inrb->unsetLeftRightMBP();
                 }
             }
         }
@@ -523,12 +510,12 @@ CharDirection LineFormattingContext::contentDir(FrameBox* box)
         if (ib->isInlineTextBox()) {
             return ib->asInlineTextBox()->charDirection();
         } else if (ib->isInlineNonReplacedBox()) {
-            InlineNonReplacedBox* b = ib->asInlineNonReplacedBox();
-            if (hasIsolateBidiContent(b)) {
+            InlineNonReplacedBox* inrb = ib->asInlineNonReplacedBox();
+            if (hasIsolateBidiContent(inrb)) {
                 // when unicode-bidi property is isolate, we should return neutral direction
                 return CharDirection::Neutral;
             } else {
-                const auto& boxes = b->boxes();
+                const auto& boxes = inrb->boxes();
                 for (size_t i = 0; i < boxes.size(); i ++) {
                     CharDirection dir = contentDir(boxes[i]);
                     if (dir == CharDirection::Ltr) {
@@ -559,17 +546,14 @@ void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
-        if (box->isInlineBox()) {
-            InlineBox* ib = box->asInlineBox();
-            if (ib->isInlineTextBox()) {
-            } else if (ib->isInlineNonReplacedBox()) {
-                if (!hasIsolateBidiContent(ib->asInlineNonReplacedBox())) {
-                    reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(ib->asInlineNonReplacedBox()->boxes());
+        if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+            InlineNonReplacedBox* inrb = box->asInlineBox()->asInlineNonReplacedBox();
+            if (!hasIsolateBidiContent(inrb)) {
+                reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(inrb->boxes());
 
-                    // find last box
-                    FrameInline* origin = ib->asInlineNonReplacedBox()->origin();
-                    m_checkLastInlineNonReplacedPerLine[origin] = ib->asInlineNonReplacedBox();
-                }
+                // find last box
+                FrameInline* origin = inrb->origin();
+                m_lastInlineNonReplacedPerFrameInline[origin] = inrb;
             }
         }
     }
@@ -579,69 +563,65 @@ void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
-        if (box->isInlineBox()) {
-            InlineBox* ib = box->asInlineBox();
-            if (ib->isInlineTextBox()) {
-            } else if (ib->isInlineNonReplacedBox()) {
-                if (!hasIsolateBidiContent(ib->asInlineNonReplacedBox())) {
-                    reassignLeftRightMBPOfInlineNonReplacedBox(ib->asInlineNonReplacedBox()->boxes());
+        if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+            InlineNonReplacedBox* inrb = box->asInlineBox()->asInlineNonReplacedBox();
+            if (!hasIsolateBidiContent(inrb)) {
+                reassignLeftRightMBPOfInlineNonReplacedBox(inrb->boxes());
 
-                    // restore left
-                    FrameInline* origin = ib->asInlineNonReplacedBox()->origin();
-                    auto iter = m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.find(origin);
+                // restore left
+                FrameInline* origin = inrb->origin();
+                auto iter = m_mbpStorePerFrameInline.find(origin);
 
-                    if (!iter->second.m_isFirstEdgeProcessed) {
-                        ib->asInlineNonReplacedBox()->m_orgPadding.setLeft(iter->second.m_orgPadding.left());
-                        ib->asInlineNonReplacedBox()->m_orgBorder.setLeft(iter->second.m_orgBorder.left());
-                        ib->asInlineNonReplacedBox()->m_orgMargin.setLeft(iter->second.m_orgMargin.left());
+                if (!iter->second.m_isProcessedStartingMBP) {
+                    inrb->m_orgPadding.setLeft(iter->second.m_orgPadding.left());
+                    inrb->m_orgBorder.setLeft(iter->second.m_orgBorder.left());
+                    inrb->m_orgMargin.setLeft(iter->second.m_orgMargin.left());
 
-                        ib->setMarginLeft(iter->second.m_margin.left());
-                        ib->setBorderLeft(iter->second.m_border.left());
-                        ib->setPaddingLeft(iter->second.m_padding.left());
+                    inrb->setMarginLeft(iter->second.m_margin.left());
+                    inrb->setBorderLeft(iter->second.m_border.left());
+                    inrb->setPaddingLeft(iter->second.m_padding.left());
 
-                        LayoutUnit widthNeedToPropagateToParent;
-                        widthNeedToPropagateToParent = iter->second.m_margin.left();
-                        ib->moveX(widthNeedToPropagateToParent);
-                        LayoutUnit bp = iter->second.m_border.left() + iter->second.m_padding.left();
-                        widthNeedToPropagateToParent += bp;
-                        if (ib->asInlineNonReplacedBox()->boxes().size()) {
-                            STARFISH_ASSERT(ib->asInlineNonReplacedBox()->boxes().size() == 1);
-                            ib->asInlineNonReplacedBox()->boxes()[0]->moveX(bp);
-                        }
-                        ib->setWidth(ib->width() + bp);
-
-                        if (widthNeedToPropagateToParent) {
-                            FrameBox* parent = ib->layoutParent()->asFrameBox();
-                            while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
-                                parent->setWidth(parent->width() + widthNeedToPropagateToParent);
-                                parent = parent->layoutParent()->asFrameBox();
-                            }
-                        }
-                        iter->second.m_isFirstEdgeProcessed = true;
+                    LayoutUnit width = iter->second.m_margin.left();
+                    inrb->moveX(width);
+                    LayoutUnit bp = iter->second.m_border.left() + iter->second.m_padding.left();
+                    width += bp;
+                    if (inrb->boxes().size()) {
+                        STARFISH_ASSERT(inrb->boxes().size() == 1);
+                        inrb->boxes()[0]->moveX(bp);
                     }
+                    inrb->setWidth(inrb->width() + bp);
 
-                    // restore right
-                    if (m_checkLastInlineNonReplacedPerLine[origin] == ib) {
-                        ib->asInlineNonReplacedBox()->m_orgPadding.setRight(iter->second.m_orgPadding.right());
-                        ib->asInlineNonReplacedBox()->m_orgBorder.setRight(iter->second.m_orgBorder.right());
-                        ib->asInlineNonReplacedBox()->m_orgMargin.setRight(iter->second.m_orgMargin.right());
+                    if (width) {
+                        FrameBox* parent = inrb->layoutParent()->asFrameBox();
+                        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
+                            parent->setWidth(parent->width() + width);
+                            parent = parent->layoutParent()->asFrameBox();
+                        }
+                    }
+                    iter->second.m_isProcessedStartingMBP = true;
+                }
 
-                        ib->setMarginRight(iter->second.m_margin.right());
-                        ib->setBorderRight(iter->second.m_border.right());
-                        ib->setPaddingRight(iter->second.m_padding.right());
+                // restore right
+                if (m_lastInlineNonReplacedPerFrameInline[origin] == inrb) {
+                    inrb->m_orgPadding.setRight(iter->second.m_orgPadding.right());
+                    inrb->m_orgBorder.setRight(iter->second.m_orgBorder.right());
+                    inrb->m_orgMargin.setRight(iter->second.m_orgMargin.right());
 
-                        LayoutUnit widthNeedToPropagateToParent;
-                        widthNeedToPropagateToParent = iter->second.m_margin.right();
-                        LayoutUnit bp = iter->second.m_border.right() + iter->second.m_padding.right();
-                        widthNeedToPropagateToParent += bp;
-                        ib->setWidth(ib->width() + bp);
+                    inrb->setMarginRight(iter->second.m_margin.right());
+                    inrb->setBorderRight(iter->second.m_border.right());
+                    inrb->setPaddingRight(iter->second.m_padding.right());
 
-                        if (widthNeedToPropagateToParent) {
-                            FrameBox* parent = ib->layoutParent()->asFrameBox();
-                            while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
-                                parent->setWidth(parent->width() + widthNeedToPropagateToParent);
-                                parent = parent->layoutParent()->asFrameBox();
-                            }
+                    LayoutUnit width;
+                    width = iter->second.m_margin.right();
+                    LayoutUnit bp = iter->second.m_border.right() + iter->second.m_padding.right();
+                    width += bp;
+                    inrb->setWidth(inrb->width() + bp);
+
+                    if (width) {
+                        FrameBox* parent = inrb->layoutParent()->asFrameBox();
+                        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
+                            parent->setWidth(parent->width() + width);
+                            parent = parent->layoutParent()->asFrameBox();
                         }
                     }
                 }
@@ -652,32 +632,27 @@ void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<
 
 void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes)
 {
-    splitInlineBoxesAndMarkDirectionForResolveBidi(parentDir, boxes);
+    splitInlineBoxes(boxes);
 
     if (parentDir == DirectionValue::RtlDirectionValue) {
         // find inline Text Boxes has only number for
         // <LTR> <Number> <RTL> case
         // Number following LTR Text should be LTR
         // <LTR> <Number> <RTL> -> <LTR> <Number-LTR not neutral> <RTL>
-        for (size_t i = 0; i < boxes.size(); i ++) {
+        for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = fetchContentForResolveBidi(boxes[i]);
-            if (box->isInlineBox()) {
-                InlineBox* ib = box->asInlineBox();
-                if (ib->isInlineTextBox()) {
-                    const StringView& sv = ib->asInlineTextBox()->textRun().m_stringView;
-                    if (isNumber(sv.originalString(), sv.start(), sv.end())) {
-                        for (size_t j = i - 1; j != SIZE_MAX; j--) {
-                            FrameBox* box2 = fetchContentForResolveBidi(boxes[j]);
-                            if (box2->isInlineBox()) {
-                                InlineBox* ib2 = box2->asInlineBox();
-                                if (ib2->isInlineTextBox()) {
-                                    if (ib2->asInlineTextBox()->charDirection() == CharDirection::Ltr) {
-                                        ib->asInlineTextBox()->setCharDirection(CharDirection::Ltr);
-                                        break;
-                                    } else if (ib2->asInlineTextBox()->charDirection() == CharDirection::Rtl) {
-                                        break;
-                                    }
-                                }
+            if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+                InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+                if (isNumber(itb->textRun())) {
+                    for (size_t j = i - 1; j != SIZE_MAX; j--) {
+                        FrameBox* box2 = fetchContentForResolveBidi(boxes[j]);
+                        if (box2->isInlineBox() && box2->asInlineBox()->isInlineTextBox()) {
+                            InlineTextBox* itb2 = box2->asInlineBox()->asInlineTextBox();
+                            if (itb2->charDirection() == CharDirection::Ltr) {
+                                itb->setCharDirection(CharDirection::Ltr);
+                                break;
+                            } else if (itb2->charDirection() == CharDirection::Rtl) {
+                                break;
                             }
                         }
                     }
@@ -689,25 +664,20 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         // <RTL> <Number> <LTR> case
         // Number following RTL Text should be RTL
         // <RTL> <Number> <LTR> -> <RTL> <Number-RTL not neutral> <LTR>
-        for (size_t i = 0; i < boxes.size(); i ++) {
+        for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = fetchContentForResolveBidi(boxes[i]);
-            if (box->isInlineBox()) {
-                InlineBox* ib = box->asInlineBox();
-                if (ib->isInlineTextBox()) {
-                    const StringView& sv = ib->asInlineTextBox()->textRun().m_stringView;
-                    if (isNumber(sv.originalString(), sv.start(), sv.end())) {
-                        for (size_t j = i - 1; j != SIZE_MAX; j--) {
-                            FrameBox* box2 = fetchContentForResolveBidi(boxes[j]);
-                            if (box2->isInlineBox()) {
-                                InlineBox* ib2 = box2->asInlineBox();
-                                if (ib2->isInlineTextBox()) {
-                                    if (ib2->asInlineTextBox()->charDirection() == CharDirection::Rtl) {
-                                        ib->asInlineTextBox()->setCharDirection(CharDirection::Rtl);
-                                        break;
-                                    } else if (ib2->asInlineTextBox()->charDirection() == CharDirection::Ltr) {
-                                        break;
-                                    }
-                                }
+            if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+                InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+                if (isNumber(itb->textRun())) {
+                    for (size_t j = i - 1; j != SIZE_MAX; j--) {
+                        FrameBox* box2 = fetchContentForResolveBidi(boxes[j]);
+                        if (box2->isInlineBox() && box2->asInlineBox()->isInlineTextBox()) {
+                            InlineTextBox* itb2 = box2->asInlineBox()->asInlineTextBox();
+                            if (itb2->charDirection() == CharDirection::Rtl) {
+                                itb->setCharDirection(CharDirection::Rtl);
+                                break;
+                            } else if (itb2->charDirection() == CharDirection::Ltr) {
+                                break;
                             }
                         }
                     }
@@ -717,14 +687,11 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
     }
 
 #ifndef NDEBUG
-    for (size_t i = 0; i < boxes.size(); i ++) {
+    for (size_t i = 0; i < boxes.size(); i++) {
         FrameBox* box = fetchContentForResolveBidi(boxes[i]);
-        if (box->isInlineBox()) {
-            InlineBox* ib = box->asInlineBox();
-            if (ib->isInlineTextBox()) {
-                InlineTextBox* tb = ib->asInlineTextBox();
-                STARFISH_ASSERT(tb->charDirection() != CharDirection::Mixed);
-            }
+        if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+            InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+            STARFISH_ASSERT(itb->charDirection() != CharDirection::Mixed);
         }
     }
 #endif
@@ -735,7 +702,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         std::vector<FrameBox*> rtlStorage; // use normal allocator because oldBoxes has strong reference
 
         CharDirection currentDirection = CharDirection::Ltr;
-        for (size_t i = 0; i < oldBoxes.size(); i ++) {
+        for (size_t i = 0; i < oldBoxes.size(); i++) {
             CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
             CharDirection dir = contentDir(box);
@@ -754,17 +721,13 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
                     currentDirection = CharDirection::Ltr;
                 }
 
-                if (box->isInlineBox()) {
-                    InlineBox* ib = box->asInlineBox();
-                    if (ib->isInlineTextBox()) {
-                        const StringView& sv = ib->asInlineTextBox()->textRun().m_stringView;
-                        if (sv.originalString()->containsOnlyWhitespace(sv.start(), sv.end())) {
-                        } else {
-                            if (isNumber(sv.originalString(), sv.start(), sv.end())) {
-                                currentDirection = currentDirectionBefore;
-                            }
-                            ib->asInlineTextBox()->setCharDirection(currentDirection);
+                if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+                    if (!isWhiteSpace(itb->textRun())) {
+                        if (isNumber(itb->textRun())) {
+                            currentDirection = currentDirectionBefore;
                         }
+                        itb->setCharDirection(currentDirection);
                     }
                 }
             } else {
@@ -792,7 +755,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         std::vector<FrameBox*> ltrStorage; // use normal allocator because oldBoxes has strong reference
 
         CharDirection currentDirection = CharDirection::Rtl;
-        for (size_t i = 0; i < oldBoxes.size(); i ++) {
+        for (size_t i = 0; i < oldBoxes.size(); i++) {
             CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
             CharDirection dir = contentDir(box);
@@ -811,17 +774,13 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
                     currentDirection = CharDirection::Rtl;
                 }
 
-                if (box->isInlineBox()) {
-                    InlineBox* ib = box->asInlineBox();
-                    if (ib->isInlineTextBox()) {
-                        const StringView& sv = ib->asInlineTextBox()->textRun().m_stringView;
-                        if (sv.originalString()->containsOnlyWhitespace(sv.start(), sv.end())) {
-                        } else {
-                            if (isNumber(sv.originalString(), sv.start(), sv.end())) {
-                                currentDirection = currentDirectionBefore;
-                            }
-                            ib->asInlineTextBox()->setCharDirection(currentDirection);
+                if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+                    if (!isWhiteSpace(itb->textRun())) {
+                        if (isNumber(itb->textRun())) {
+                            currentDirection = currentDirectionBefore;
                         }
+                        itb->setCharDirection(currentDirection);
                     }
                 }
             } else {
@@ -861,12 +820,12 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         0, 0, 0, 125, 0, 123, 0, 0
     };
 
-    for (size_t i = 0; i < boxes.size(); i ++) {
+    for (size_t i = 0; i < boxes.size(); i++) {
         FrameBox* box = fetchContentForResolveBidi(boxes[i]);
-        if (box->isInlineBox()) {
-            if (box->asInlineBox()->isInlineTextBox() && box->asInlineBox()->asInlineTextBox()->charDirection() == CharDirection::Rtl) {
-                InlineTextBox* b = box->asInlineBox()->asInlineTextBox();
-                const StringView& sv = b->textRun().m_stringView;
+        if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+            InlineTextBox* itb = box->asInlineBox()->asInlineTextBox();
+            if (itb->charDirection() == CharDirection::Rtl) {
+                const StringView& sv = itb->textRun().m_stringView;
                 bool shouldReplaceString = false;
                 for (size_t j = sv.start(); j < sv.end(); j++) {
                     char32_t ch = sv.originalString()->charAt(j);
@@ -890,7 +849,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
                             }
                             str += (char)ch;
                         }
-                        b->setText(new StringDataASCII(std::move(str)));
+                        itb->setText(new StringDataASCII(std::move(str)));
                     } else {
                         UTF32String str;
                         for (size_t j = sv.start(); j < sv.end(); j++) {
@@ -902,7 +861,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
                             }
                             str += ch;
                         }
-                        b->setText(new StringDataUTF32(std::move(str)));
+                        itb->setText(new StringDataUTF32(std::move(str)));
                     }
                 }
             }
@@ -914,8 +873,8 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
     reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(boxes);
     reassignLeftRightMBPOfInlineNonReplacedBox(boxes);
 
-    m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.clear();
-    m_checkLastInlineNonReplacedPerLine.clear();
+    m_mbpStorePerFrameInline.clear();
+    m_lastInlineNonReplacedPerFrameInline.clear();
 }
 
 static void removeBoxFromLine(FrameBox* box)
@@ -924,8 +883,8 @@ static void removeBoxFromLine(FrameBox* box)
         auto& boxes = box->layoutParent()->asFrameBox()->asLineBox()->boxes();
         boxes.erase(std::find(boxes.begin(), boxes.end(), box));
     } else {
-        auto& boxes = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
-        auto parent = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+        InlineNonReplacedBox* parent = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+        auto& boxes = parent->boxes();
         while (true) {
             parent->setWidth(parent->width() - box->width());
             if (parent->layoutParent()->asFrameBox()->isLineBox()) {
@@ -2080,7 +2039,7 @@ void LineFormattingContext::generateInlineBoxes(Frame *origin)
     }
 }
 
-static void computeDirection(LineFormattingContext& ctx, Frame* parent, DirectionValue directionValue);
+static void computeDirection(LineFormattingContext& ctx, Frame* parent, DirectionValue direction);
 static void collectComputeDirectionsCandidate(LineFormattingContext& ctx, Frame* parent, std::vector<Frame*>& frames)
 {
 
@@ -2116,9 +2075,8 @@ static void breakTextRun(std::vector<TextRun>& runs, size_t breakRunIndex, size_
     runs.insert(runs.begin() + breakRunIndex, TextRun(target.m_frameText, target.m_stringView.originalString(), start, end, charDirFromICUDir(getTextDir(target.m_stringView, start, end))));
 }
 
-static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValue directionValue)
+static void textBidiResolver(FrameText* frameText, DirectionValue directionValue, std::vector<TextRun>& runs)
 {
-    std::vector<TextRun> result;
     UBiDi* bidi = ubidi_open();
     UTF16NonGCString str = frameText->text()->toUTF16NonGCString();
     UErrorCode err = (UErrorCode)0;
@@ -2128,7 +2086,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
     STARFISH_ASSERT(U_SUCCESS(err));
     if (total == 1) {
         UBiDiDirection dir = getTextDir(StringView(frameText->text(), 0, frameText->text()->length()), 0, frameText->text()->length());
-        result.emplace_back(frameText, frameText->text(), 0, frameText->text()->length(), charDirFromICUDir(dir));
+        runs.emplace_back(frameText, frameText->text(), 0, frameText->text()->length(), charDirFromICUDir(dir));
     } else {
         int32_t start = 0;
         int32_t end;
@@ -2144,7 +2102,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
                 utf32Len++;
             }
 
-            result.emplace_back(frameText, frameText->text(), utf32Pos, utf32Pos + utf32Len, charDirFromICUDir(dir));
+            runs.emplace_back(frameText, frameText->text(), utf32Pos, utf32Pos + utf32Len, charDirFromICUDir(dir));
             utf32Pos += utf32Len;
 
             start = end;
@@ -2152,84 +2110,82 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
     }
     ubidi_close(bidi);
 
-    for (size_t i = 0; i < result.size(); i ++) {
-        if (isNumber(result[i].m_stringView.originalString(), result[i].m_stringView.start(), result[i].m_stringView.end())) {
-            result[i].m_direction = CharDirection::Neutral;
+    for (size_t i = 0; i < runs.size(); i ++) {
+        if (isNumber(runs[i])) {
+            runs[i].m_direction = CharDirection::Neutral;
             continue;
         }
 
         // check it has leading neutral chars
-        char32_t first = result[i].m_stringView.originalString()->charAt(result[i].m_stringView.start());
-        if ((result[i].m_stringView.end() - result[i].m_stringView.start()) > 1 && charDirection(first) == 2 && !isNumberChar(first)) {
-            breakTextRun(result, i, result[i].m_stringView.start());
+        char32_t first = runs[i].m_stringView.originalString()->charAt(runs[i].m_stringView.start());
+        if ((runs[i].m_stringView.end() - runs[i].m_stringView.start()) > 1 && charDirection(first) == 2 && !isNumberChar(first)) {
+            breakTextRun(runs, i, runs[i].m_stringView.start());
             i--;
             continue;
         }
 
         // check it has trailing neutral chars
-        if (result[i].m_stringView.end() - result[i].m_stringView.start() > 1) {
-            size_t lastPos = result[i].m_stringView.end() - 1;
-            char32_t last = result[i].m_stringView.originalString()->charAt(lastPos);
+        if (runs[i].m_stringView.end() - runs[i].m_stringView.start() > 1) {
+            size_t lastPos = runs[i].m_stringView.end() - 1;
+            char32_t last = runs[i].m_stringView.originalString()->charAt(lastPos);
             if (charDirection(last) == 2 && !isNumberChar(last)) {
-                breakTextRun(result, i, lastPos - 1);
+                breakTextRun(runs, i, lastPos - 1);
                 i--;
                 continue;
             }
         }
     }
-
-    return result;
 }
 
 
-static void computeDirection(LineFormattingContext& ctx, Frame* parent, DirectionValue directionValue)
+static void computeDirection(LineFormattingContext& ctx, Frame* parent, DirectionValue direction)
 {
     std::vector<Frame*> frames;
     collectComputeDirectionsCandidate(ctx, parent, frames);
 
-    DirectionValue currentDirection = directionValue;
+    DirectionValue currentDirection = direction;
     bool everMeetNonNeutralThing = false;
-    std::vector<Frame*> putOffNeutralFrames;
-    std::vector<TextRun> putOffTextRuns;
-    DirectionValue directionValueWhenNeturalMeets = directionValue;
+    std::vector<Frame*> pendingNeutralFrames;
+    std::vector<TextRun> pendingTextRuns;
+    DirectionValue directionWhenNeturalMeets = direction;
 
     auto putOffNeutral = [&](Frame* f)
     {
-        if (putOffNeutralFrames.size() == 0) {
-            directionValueWhenNeturalMeets = currentDirection;
+        if (pendingNeutralFrames.size() == 0) {
+            directionWhenNeturalMeets = currentDirection;
         }
-        putOffNeutralFrames.push_back(f);
+        pendingNeutralFrames.push_back(f);
     };
 
     auto flushNeurtal = [&](DirectionValue dir)
     {
         DirectionValue result;
-        if (directionValue == LtrDirectionValue) {
-            if (directionValueWhenNeturalMeets == RtlDirectionValue && dir == RtlDirectionValue) {
+        if (direction == LtrDirectionValue) {
+            if (directionWhenNeturalMeets == RtlDirectionValue && dir == RtlDirectionValue) {
                 result = RtlDirectionValue;
             } else {
                 result = LtrDirectionValue;
             }
         } else {
-            if (directionValueWhenNeturalMeets == LtrDirectionValue && dir == LtrDirectionValue) {
+            if (directionWhenNeturalMeets == LtrDirectionValue && dir == LtrDirectionValue) {
                 result = LtrDirectionValue;
             } else {
                 result = RtlDirectionValue;
             }
         }
 
-        for (size_t i = 0; i < putOffNeutralFrames.size(); i ++) {
-            ctx.m_computedDirectionValuePerFrame[putOffNeutralFrames[i]] = result;
+        for (size_t i = 0; i < pendingNeutralFrames.size(); i ++) {
+            ctx.m_computedDirectionValuePerFrame[pendingNeutralFrames[i]] = result;
         }
 
         CharDirection ch = (result == DirectionValue::LtrDirectionValue ? CharDirection::Ltr : CharDirection::Rtl);
-        for (size_t i = 0; i < putOffTextRuns.size(); i ++) {
-            TextRun run = putOffTextRuns[i];
+        for (size_t i = 0; i < pendingTextRuns.size(); i ++) {
+            TextRun run = pendingTextRuns[i];
             ctx.m_textRunsPerFrameText[run.m_frameText].emplace_back(run.m_frameText, run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end(), ch);
         }
 
-        putOffNeutralFrames.clear();
-        putOffTextRuns.clear();
+        pendingNeutralFrames.clear();
+        pendingTextRuns.clear();
         currentDirection = dir;
     };
 
@@ -2237,18 +2193,19 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
         Frame* f = frames[i];
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
-            std::vector<TextRun> runs = textBidiResolver(f->asFrameText(), directionValue);
+            std::vector<TextRun> runs;
+            textBidiResolver(f->asFrameText(), direction, runs);
 
             for (size_t i = 0; i < runs.size(); i ++) {
                 TextRun run = runs[i];
                 if (run.m_direction == CharDirection::Neutral) {
-                    if (isNumber(run.m_stringView.originalString(), run.m_stringView.start(), run.m_stringView.end())) {
+                    if (isNumber(run)) {
                         continue;
                     }
-                    if (putOffTextRuns.size() == 0) {
-                        directionValueWhenNeturalMeets = currentDirection;
+                    if (pendingTextRuns.size() == 0) {
+                        directionWhenNeturalMeets = currentDirection;
                     }
-                    putOffTextRuns.push_back(run);
+                    pendingTextRuns.push_back(run);
                 } else {
                     STARFISH_ASSERT(run.m_direction == CharDirection::Ltr || run.m_direction == CharDirection::Rtl);
                     everMeetNonNeutralThing = true;
@@ -2261,7 +2218,7 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
             if (everMeetNonNeutralThing) {
                 putOffNeutral(f);
             } else {
-                ctx.m_computedDirectionValuePerFrame[f] = directionValue;
+                ctx.m_computedDirectionValuePerFrame[f] = direction;
             }
         } else if (f->isFrameInline()) {
             if (f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue) {
@@ -2271,18 +2228,18 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
                 if (everMeetNonNeutralThing) {
                     putOffNeutral(f);
                 } else {
-                    ctx.m_computedDirectionValuePerFrame[f] = directionValue;
+                    ctx.m_computedDirectionValuePerFrame[f] = direction;
                 }
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         } else if (f->isFrameLineBreak()) {
             everMeetNonNeutralThing = true;
-            flushNeurtal(directionValue);
+            flushNeurtal(direction);
         }
     }
 
-    flushNeurtal(directionValue);
+    flushNeurtal(direction);
 }
 
 void InlineNonReplacedBox::setStartingMBP(LineFormattingContext* lineFormattingContext)
@@ -2327,12 +2284,27 @@ void InlineNonReplacedBox::unsetTopBottomMBP()
     m_padding.setBottom(0);
 }
 
+void InlineNonReplacedBox::unsetLeftRightMBP()
+{
+    unsetLeftMBP();
+    unsetRightMBP();
+}
+
+void InlineNonReplacedBox::unsetLeftRightOrgMBP()
+{
+    unsetLeftOrgMBP();
+    unsetRightOrgMBP();
+}
+
 void InlineNonReplacedBox::unsetLeftMBP()
 {
     m_margin.setLeft(0);
     m_border.setLeft(0);
     m_padding.setLeft(0);
+}
 
+void InlineNonReplacedBox::unsetLeftOrgMBP()
+{
     m_orgMargin.setLeft(0);
     m_orgBorder.setLeft(0);
     m_orgPadding.setLeft(0);
@@ -2343,7 +2315,10 @@ void InlineNonReplacedBox::unsetRightMBP()
     m_margin.setRight(0);
     m_border.setRight(0);
     m_padding.setRight(0);
+}
 
+void InlineNonReplacedBox::unsetRightOrgMBP()
+{
     m_orgMargin.setRight(0);
     m_orgBorder.setRight(0);
     m_orgPadding.setRight(0);
@@ -2358,6 +2333,15 @@ void InlineNonReplacedBox::unsetStartingMBP(DirectionValue direction)
     }
 }
 
+void InlineNonReplacedBox::unsetStartingOrgMBP(DirectionValue direction)
+{
+    if (direction == LtrDirectionValue) {
+        unsetLeftOrgMBP();
+    } else {
+        unsetRightOrgMBP();
+    }
+}
+
 void InlineNonReplacedBox::unsetEndingMBP(DirectionValue direction)
 {
     if (direction == LtrDirectionValue) {
@@ -2367,27 +2351,43 @@ void InlineNonReplacedBox::unsetEndingMBP(DirectionValue direction)
     }
 }
 
-void InlineNonReplacedBox::resetOrgMBP(InlineNonReplacedBoxMBPStore* store)
+void InlineNonReplacedBox::unsetEndingOrgMBP(DirectionValue direction)
 {
-    if (store) {
-        m_orgMargin = store->m_orgMargin;
-        m_orgBorder = store->m_orgBorder;
-        m_orgPadding = store->m_orgPadding;
+    if (direction == LtrDirectionValue) {
+        unsetRightOrgMBP();
     } else {
-        m_orgBorder = m_border;
-        m_orgPadding = m_padding;
-        m_orgMargin = m_margin;
+        unsetLeftOrgMBP();
     }
 }
 
-void InlineNonReplacedBox::resetLeftRightMBP(InlineNonReplacedBoxMBPStore* store)
+void InlineNonReplacedBox::reset()
 {
-    m_margin.setLeft(store->m_orgMargin.left());
-    m_margin.setRight(store->m_orgMargin.right());
-    m_border.setLeft(store->m_orgBorder.left());
-    m_border.setRight(store->m_orgBorder.right());
-    m_padding.setLeft(store->m_orgPadding.left());
-    m_padding.setRight(store->m_orgPadding.right());
+    m_orgBorder = m_border;
+    m_orgPadding = m_padding;
+    m_orgMargin = m_margin;
+}
+
+void InlineNonReplacedBox::reset(InlineNonReplacedBox* inrb)
+{
+    setLayoutParent(inrb->layoutParent());
+    m_frameRect.setHeight(inrb->m_frameRect.height());
+    m_ascender = inrb->m_ascender;
+    m_descender = inrb->m_descender;
+    m_orgMargin = inrb->m_orgMargin;
+    m_orgBorder = inrb->m_orgBorder;
+    m_orgPadding = inrb->m_orgPadding;
+    unsetLeftRightOrgMBP();
+    m_isProcessedStartingMBP = inrb->m_isProcessedStartingMBP;
+    m_absolutePositionedLayoutParentCnt = inrb->m_absolutePositionedLayoutParentCnt;
+}
+
+void InlineNonReplacedBox::reset(OrgMBPStore* store)
+{
+    m_margin = m_orgMargin = store->m_orgMargin;
+    m_border = m_orgBorder = store->m_orgBorder;
+    m_padding = m_orgPadding = store->m_orgPadding;
+    unsetTopBottomMBP();
+    m_isProcessedStartingMBP = store->m_isProcessedStartingMBP;
 }
 
 void LineFormattingContext::finishLineForInlineNonReplacedBox(FrameLineBreak* br, bool isLastNode)
@@ -2445,20 +2445,22 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    GCVector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>> stack;
+    GCVector<std::pair<InlineNonReplacedBox*, OrgMBPStore>> stack;
 
     InlineNonReplacedBox* current = self;
     while (current) {
         if (current->isProcessedStartingMBP()) {
-            InlineNonReplacedBoxMBPStore store(current);
-            store.unsetStartingMBP(current->style()->direction());
+            OrgMBPStore store(current);
+            store.unsetStartingOrgMBP(current->style()->direction());
             stack.push_back(std::make_pair(current, store));
         } else {
-            stack.push_back(std::make_pair(current, InlineNonReplacedBoxMBPStore(current)));
+            stack.push_back(std::make_pair(current, OrgMBPStore(current)));
             current->unsetStartingMBP(current->style()->direction());
+            current->unsetStartingOrgMBP(current->style()->direction());
         }
 
         current->unsetEndingMBP(current->style()->direction());
+        current->unsetEndingOrgMBP(current->style()->direction());
 
         if (current->layoutParent()->asFrameBox()->isLineBox()) {
             break;
@@ -2473,7 +2475,7 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
     InlineNonReplacedBox* layoutParent = nullptr;
     while (stack.rend() != riter) {
         InlineNonReplacedBox* origin = riter->first;
-        InlineNonReplacedBoxMBPStore store = riter->second;
+        OrgMBPStore store = riter->second;
         InlineNonReplacedBox* newInrpBox = new InlineNonReplacedBox(origin);
 
         if (layoutParent) {
@@ -2484,8 +2486,7 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
         }
         layoutParent = newInrpBox;
 
-        newInrpBox->resetOrgMBP(&store);
-        newInrpBox->resetLeftRightMBP(&store);
+        newInrpBox->reset(&store);
         m_currentLayoutParent = newInrpBox;
         riter++;
     }
@@ -2494,7 +2495,7 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
     if (!isNecessaryBlockBox()) {
-        return 0;
+        return LayoutUnit(0);
     }
 
     LayoutUnit inlineContentWidth = contentWidth();
@@ -2564,7 +2565,7 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext* lineFormattingCon
     LayoutUnit inlineContentWidth = lineFormattingContext->m_block.contentWidth();
 
     computeBorderMarginPadding(inlineContentWidth);
-    resetOrgMBP();
+    reset();
     unsetTopBottomMBP();
     lineFormattingContext->m_unprocessedStartingMBPWidth += startingMBPWidth();
 
