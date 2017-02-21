@@ -168,7 +168,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
 
             STARFISH_ASSERT(last);
 
-            if (last->node() || (last->isFrameTableBox() && last->isAnonymous())) {
+            if (!last->isAnonymous() || last->isFrameTableBox()) {
                 FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
                 blockBox->appendChild(currentFrame);
                 frameBlockBox->appendChild(blockBox);
@@ -287,8 +287,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
             STARFISH_ASSERT(current->parentNode());
             Frame* parent = current->parentNode()->frame();
             while (parent) {
-                if (parent->isFrameBlockBox() && parent->node())
+                if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
                     break;
+                }
                 parent = parent->parent();
             }
 
@@ -330,7 +331,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
                 Frame* last = ctx.currentBlockContainer()->lastChild();
                 if (last) {
                     STARFISH_ASSERT(last->isFrameBlockBox());
-                    if (!last->node() && !last->asFrameBlockBox()->hasBlockFlow()) {
+                    if (last->isAnonymous() && !last->asFrameBlockBox()->hasBlockFlow()) {
                         originalFrameBlockBox = ctx.currentBlockContainer();
                         ctx.setCurrentBlockContainer(last->asFrameBlockBox());
                     }
@@ -427,10 +428,10 @@ void dump(Frame* frm, unsigned depth)
     }
     printf("%s", frm->name());
     printf("[%p]", frm);
-    if (frm->node()) {
-        frm->node()->dump();
-    } else {
+    if (frm->isAnonymous()) {
         printf("[anonymous block box] ");
+    } else {
+        frm->node()->dump();
     }
 
     frm->dump(depth);

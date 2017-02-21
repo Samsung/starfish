@@ -121,7 +121,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             computeBorderMarginPadding(cb->contentWidth());
 
-            STARFISH_ASSERT(node() != nullptr);
+            STARFISH_ASSERT(!isAnonymous());
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
             DirectionValue direction = ctx.blockContainer(this)->style()->direction();
 
@@ -715,7 +715,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
                 return FrameBox::hitTest(x, y, stage);
             } else {
-                return node() ? FrameBox::hitTest(x, y, stage) : nullptr;
+                return isAnonymous() ? nullptr : FrameBox::hitTest(x, y, stage);
             }
         } else {
             return hitTestChildrenWith(x, y, stage);

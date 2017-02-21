@@ -3344,8 +3344,9 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
             Frame* frame = element->frame();
             frame = frame->firstChild();
             while (frame) {
-                if (frame->node() == nullptr)
+                if (frame->isAnonymous()) {
                     frame->updateComputedStyle(element);
+                }
                 frame = frame->next();
             }
         }

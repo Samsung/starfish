@@ -1127,7 +1127,7 @@ void LineFormattingContext::markInlineBoxIndex(FrameBox* box)
 }
 
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width);
-static bool clearAffected(int hasFloat, Frame* f)
+static bool dontClear(int hasFloat, Frame* f)
 {
     return (f->style()->clear() == LeftClearValue && (hasFloat & HasLeft) == 0)
         || (f->style()->clear() == RightClearValue && (hasFloat & HasRight) == 0)
@@ -1143,7 +1143,7 @@ static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f, bool a
 
     FloatingBoxLayoutContext* fbCtx = &ctx->m_floatingBoxLayoutContexts[ctx->m_floatingBoxLayoutContexts.size() - 1];
 
-    if (f->style()->clear() == NoneClearValue || clearAffected(fbCtx->m_hasFloat, f)) {
+    if (f->style()->clear() == NoneClearValue || dontClear(fbCtx->m_hasFloat, f)) {
     } else {
         ctx->makeFloatingBoxLayoutContextDueToClearIfNeeds(f);
     }
@@ -1299,27 +1299,27 @@ void LineFormattingContext::generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBo
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.rbegin();
     if (box->style()->floating() == LeftFloatValue) {
         fbCtx.m_hasFloat |= HasLeft;
-        LayoutUnit lastAccumulatedLeftFloatBoxWidth = fbCtx.m_accumulatedLeftFloatBoxWidth;
+        LayoutUnit lastAccumulatedLeftFloatingBoxWidth = fbCtx.m_accumulatedLeftFloatingBoxWidth;
         LayoutUnit oldLineBoxX = m_lineBoxX;
-        fbCtx.m_accumulatedLeftFloatBoxWidth += box->boxWidth();
+        fbCtx.m_accumulatedLeftFloatingBoxWidth += box->boxWidth();
         if (fbCtx.m_y == 0 && box->boxWidth() > 0) {
-            m_lineBoxX = fbCtx.m_originalLineBoxX + fbCtx.m_accumulatedLeftFloatBoxWidth;
-            m_lineBoxWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
+            m_lineBoxX = fbCtx.m_originalLineBoxX + fbCtx.m_accumulatedLeftFloatingBoxWidth;
+            m_lineBoxWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatingBoxWidth - fbCtx.m_accumulatedRightFloatingBoxWidth;
         }
 
-        box->setX(fbCtx.m_originalLineBoxX + lastAccumulatedLeftFloatBoxWidth + box->marginLeft() - m_lineBoxX);
+        box->setX(fbCtx.m_originalLineBoxX + lastAccumulatedLeftFloatingBoxWidth + box->marginLeft() - m_lineBoxX);
 
         if (oldLineBoxX != m_lineBoxX) {
             reCacheFloatingBoxes(oldLineBoxX - m_lineBoxX);
         }
     } else {
         fbCtx.m_hasFloat |= HasRight;
-        fbCtx.m_accumulatedRightFloatBoxWidth += box->boxWidth();
+        fbCtx.m_accumulatedRightFloatingBoxWidth += box->boxWidth();
         if (fbCtx.m_y == 0 && box->boxWidth() > 0) {
-            m_lineBoxWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
+            m_lineBoxWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatingBoxWidth - fbCtx.m_accumulatedRightFloatingBoxWidth;
         }
 
-        LayoutUnit rightFloatX = fbCtx.m_originalLineBoxX + fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
+        LayoutUnit rightFloatX = fbCtx.m_originalLineBoxX + fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedRightFloatingBoxWidth;
         LayoutUnit marginLeft = std::max(LayoutUnit(0), box->marginLeft());
         LayoutUnit marginRight = box->marginRight();
         if (marginRight < 0) {
@@ -1417,12 +1417,12 @@ LayoutUnit LineFormattingContext::distanceToNextLineBox(FrameLineBreak* br, bool
 
     if (fbCtx.m_hasFloat != HasNone) {
         if (br != nullptr) {
-            distance = std::max(lineBox->height(),
+            distance = std::max(distance,
                 m_layoutContext.clearedDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, br->style()->clear()));
             lineBox->setHeight(distance);
         } else {
-            if (m_currentLineWidth == 0 || lineBox->height() == 0) {
-                distance = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, lineBox->height());
+            if (m_currentLineWidth == 0) {
+                distance = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, distance);
             }
         }
     }
@@ -1705,11 +1705,11 @@ bool canInsertToCurrentLine(PreferredWidthContext* ctx, LayoutUnit width)
     return width < ctx->m_remainedWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth;
 }
 
-static bool canInsertInlineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit width)
+static bool canInsertToLineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit width)
 {
     if (f->isFloating()) {
         FloatingBoxLayoutContext& fbCtx = *ctx->m_floatingBoxLayoutContexts.rbegin();
-        LayoutUnit remainedWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatBoxWidth - fbCtx.m_accumulatedRightFloatBoxWidth;
+        LayoutUnit remainedWidth = fbCtx.m_originalLineBoxWidth - fbCtx.m_accumulatedLeftFloatingBoxWidth - fbCtx.m_accumulatedRightFloatingBoxWidth;
         if (fbCtx.m_y == 0) {
             return width <= (remainedWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth);
         } else {
@@ -1723,7 +1723,7 @@ static bool canInsertInlineBox(LineFormattingContext* ctx, Frame* f, LayoutUnit 
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width)
 {
     return (!ctx->hasFloatingBoxAlreadyInLineBox(f) && ctx->m_currentLineWidth == 0)
-        || canInsertInlineBox(ctx, f, width)
+        || canInsertToLineBox(ctx, f, width)
         || !hasBreakableWhiteSpaceProperty(f);
 }
 
@@ -2064,7 +2064,7 @@ void LineFormattingContext::generateInlineBoxes(Frame *origin)
         } else if (f->isFrameLineBreak()) {
             if (!m_shouldLineBreakForBr) {
                 FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.begin();
-                if (clearAffected(fbCtx.m_hasFloat, f)) {
+                if (dontClear(fbCtx.m_hasFloat, f)) {
                     breakLine(f->asFrameLineBreak());
                 }
                 m_shouldLineBreakForBr = true;
@@ -2605,7 +2605,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool 
 {
     if (f->isFloating()) {
         if (f->style()->clear() == NoneClearValue
-            || clearAffected(m_hasFloat, f)) {
+            || dontClear(m_hasFloat, f)) {
             if (canInsertToCurrentLine(this, w)) {
                 m_currentLineWidth += w;
                 if (m_breakedLineStatus == MaybeBreaked) {
