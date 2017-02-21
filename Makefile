@@ -872,4 +872,7 @@ reftest_target_3.0:
 tidy:
 	./test/tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1
 
+style_check:
+	./test/tool/style_checker/check_tidy.py > error_report
+
 .PHONY: clean tct
