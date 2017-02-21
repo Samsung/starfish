@@ -22,7 +22,7 @@
 #include "FrameTableSectionBox.h"
 #include "FrameTableRowBox.h"
 #include "FrameTableCellBox.h"
-#include "FrameTableColGroupBox.h"
+#include "FrameTableColBox.h"
 
 namespace StarFish {
 
@@ -76,7 +76,7 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
         //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
 
-        // NEED TO DISCUSSION : StarFish generate anonymous block box which has only wihtespace,
+        // NEED TO DISCUSSION : StarFish generate anonymous block box which has only whitespace,
         // below code treat above situation
         while (before && before->isAnonymous() && before->firstChild()->isFrameText()
             && before->firstChild()->asFrameText()->text()->containsOnlyWhitespace()) {
@@ -131,13 +131,13 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
     case DisplayValue::TableColumnDisplayValue:
-        // buildFrameTableColGroupBox allways return a pointer of Frame object
+        // buildFrameTableColBox allways return a pointer of Frame object
         // If childFrame is reused anonymous, it will already have a parent,
         // so only forms a parent-child relationship when there is no parent.
-        childFrame = FrameTableColGroupBox::buildFrameTableColGroupBox(child, ctx, force);
+        childFrame = FrameTableColBox::buildFrameTableColBox(child, ctx, force);
         if (!childFrame->parent()) {
             ctx.currentBlockContainer()->appendChild(childFrame);
-            m_colGroups.push_back(childFrame->asFrameTableColGroupBox());
+            m_colObjects.push_back(childFrame->asFrameTableColBox());
         }
         return;
     case DisplayValue::TableHeaderGroupDisplayValue:
@@ -511,8 +511,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
             maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
-        } else if (c->isFrameTableColGroupBox()) {
-            continue;
+        } else if (c->isFrameTableColBox()) {
+            // The FrameTableColBox must not be laid out.
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -732,6 +732,35 @@ LayoutUnit FrameTableBox::calBaseline()
     }
     // Empty first row
     return ySoFar;
+}
+
+FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
+{
+    if (m_colObjects.size() == 0) {
+        return nullptr;
+    }
+
+    unsigned l = 0, r = 0;
+    for (auto colGroup : m_colObjects) {
+        if (colGroup->firstChild() == nullptr) {
+            STARFISH_ASSERT(colGroup->isFrameTableColBox());
+            r = l + colGroup->span();
+            if (l <= index && index < r) {
+                return colGroup;
+            }
+            l = r;
+        } else {
+            for (Frame* p = colGroup->firstChild(); p; p = p->next()) {
+                STARFISH_ASSERT(p->isFrameTableColBox());
+                r = l + p->asFrameTableColBox()->span();
+                if (l <= index && index < r) {
+                    return p->asFrameTableColBox();
+                }
+                l = r;
+            }
+        }
+    }
+    return nullptr;
 }
 
 }

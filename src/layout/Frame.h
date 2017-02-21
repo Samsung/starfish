@@ -41,7 +41,6 @@ class FrameTableSectionBox;
 class FrameTableRowBox;
 class FrameTableCellBox;
 class FrameTableColBox;
-class FrameTableColGroupBox;
 class LineBox;
 
 enum PaintingStage {
@@ -626,11 +625,6 @@ public:
         return false;
     }
 
-    virtual bool isFrameTableColGroupBox()
-    {
-        return false;
-    }
-
     virtual bool isFrameTableSectionBox()
     {
         return false;
@@ -717,12 +711,6 @@ public:
     {
         STARFISH_ASSERT(isFrameTableColBox());
         return (FrameTableColBox*)this;
-    }
-
-    FrameTableColGroupBox* asFrameTableColGroupBox()
-    {
-        STARFISH_ASSERT(isFrameTableColGroupBox());
-        return (FrameTableColGroupBox*)this;
     }
 
     ComputedStyle* style()

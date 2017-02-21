@@ -23,13 +23,22 @@ namespace StarFish {
 
 class FrameTreeBuilderContext;
 
+// The FrameTableColBox is for <col> and <colgroup>
+// In the specification, <col> and <colgroup> are very similar
+// The only difference is that <col> should not have children
+// So we will use A appropriately for <col> and <colgroup>
 class FrameTableColBox : public FrameTableObjectBox {
 public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 
+    static FrameTableColBox* buildFrameTableColBox(Node* current,
+        FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableColBox* createAnonymousWithParent(
+        FrameBlockBox* parent, Node* node);
+
     virtual const char* name()
     {
-        return "FrameTableCol";
+        return "FrameTableColBox";
     }
 
     virtual bool isFrameTableColBox()
@@ -41,6 +50,8 @@ public:
 
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void paint(PaintingContext& ctx);
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 };
 
 }
