@@ -2931,6 +2931,9 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::Content:
+            // TODO: Set ComputedStyle for the content property.
+            break;
         }
     }
 }
@@ -3696,6 +3699,31 @@ bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_alloc
     return updateValueBackgroundImage(tokens, true);
 }
 
+bool CSSStyleValuePair::updateValueContent(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    ValueList* values = new ValueList();
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = (*tokens)[i];
+        CSSStyleValuePair ret;
+        if (!ret.updateValueUnitUrlOrNone(value)) {
+            CSSPropertyParser* parser = new CSSPropertyParser((char*)(*tokens)[i]->utf8Data());
+            if (parser->parseString(value, &(ret.m_value.m_stringValue))) {
+                ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+            } else if (value->equals("normal")) {
+                ret.m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+            } else {
+                // TODO: Consider various value types of the 'content' property.
+                // https://www.w3.org/TR/CSS2/generate.html#content
+                return false;
+            }
+        }
+        values->append(ret);
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    m_value.m_multiValue = values;
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
     if (tokens->size() != 1)
@@ -3910,7 +3938,7 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(std::vector<String*, gc_allo
         return false;
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    m_value.m_multiValue = new ValueList();
+    m_value.m_multiValue = new ValueList(ValueList::Separator::SpaceSeparator);
     bool isNum = false, isFill = false;
     float result = 0.f;
     for (unsigned int i = 0; i < tokens->size(); i++) {
@@ -4104,7 +4132,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList();
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
 
     CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
     CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);

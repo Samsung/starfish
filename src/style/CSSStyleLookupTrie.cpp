@@ -104,11 +104,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 7:
+        // Content
         // Display
         // Padding
         // Z-Index
         // Opacity
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "content", 7) == 0) {
+                return CSSStyleKind::Content;
+            }
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
                 return CSSStyleKind::Display;
@@ -592,6 +597,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 7:
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "content", 7) == 0) {
+                return CSSStyleKind::Content;
+            }
+            break;
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
                 return CSSStyleKind::Display;
