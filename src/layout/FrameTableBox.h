@@ -25,7 +25,7 @@ class FrameTableCaptionBox;
 class FrameTreeBuilderContext;
 class TableFormattingContextBlock;
 class FrameTableCellBox;
-class FrameTableColGroupBox;
+class FrameTableColBox;
 
 // Table has the following table structure
 //
@@ -93,9 +93,16 @@ public:
         return m_cellsInTheFirstRow;
     }
 
-    virtual void paintBackgroundAndBorders(Canvas* canvas);
+    GCVector<FrameTableColBox*>& colObjects()
+    {
+        return m_colObjects;
+    }
 
+    virtual void paintBackgroundAndBorders(Canvas* canvas);
     LayoutUnit calBaseline();
+
+    // This function return nullptr if there is no valid column object
+    FrameTableColBox* columnAtAbsoluteColumnIndex(unsigned index);
 
 private:
     void layoutWidth(LayoutContext& ctx);
@@ -112,7 +119,7 @@ private:
     bool isCellWidthAuto(unsigned i);
 
     GCVector<FrameTableCaptionBox*> m_captions;
-    GCVector<FrameTableColGroupBox*> m_colGroups;
+    GCVector<FrameTableColBox*> m_colObjects;
     GCVector<ColSizeStruct> m_columnWidths;
 
     // We use vector here because "FrameTableCellBox"es are already stored

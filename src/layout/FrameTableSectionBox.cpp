@@ -21,6 +21,7 @@
 #include "FrameTableBox.h"
 #include "FrameTableRowBox.h"
 #include "FrameTableCellBox.h"
+#include "FrameTableColBox.h"
 
 namespace StarFish {
 
@@ -98,16 +99,6 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
     return tableSection->parent() ? nullptr : tableSection;
 }
 
-FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
-{
-    ComputedStyle* style = new ComputedStyle(parent->style());
-    style->setDisplay(DisplayValue::TableRowDisplayValue);
-    style->loadResources(parentNode);
-    style->arrangeStyleValues(parent->style(), parentNode);
-
-    return new FrameTableCellBox(nullptr, style);
-}
-
 FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
@@ -116,6 +107,32 @@ FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(FrameBlock
     style->arrangeStyleValues(parent->style(), node);
 
     return new FrameTableSectionBox(nullptr, style);
+}
+
+void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
+{
+    for (const auto& rowStruct : m_grid) {
+        for (auto& cellStruct : rowStruct.cells) {
+            LayoutRect rect(rowStruct.tableRow->x() + cellStruct.cell->x(),
+                rowStruct.tableRow->y() + cellStruct.cell->y(),
+                cellStruct.cell->frameRect().width(),
+                cellStruct.cell->frameRect().height());
+
+            FrameTableColBox* col =
+                tableBox()->columnAtAbsoluteColumnIndex(
+                    cellStruct.cell->absoluteColumnIndex());
+            if (col) {
+                // Paint background using column style
+                paintBackground(canvas, col->style(), rect, rect, false);
+            }
+            // Paint background using section style
+            paintBackground(canvas, style(), rect, rect, false);
+        }
+    }
+
+    // TODO : Below should be fixed when 'border-collpase:collapse' is supported.
+    paintBorders(canvas, m_frameRect);
+    return;
 }
 
 FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)

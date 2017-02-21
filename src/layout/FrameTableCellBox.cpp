@@ -70,6 +70,16 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
     return tableCell->parent() ? nullptr : tableCell;
 }
 
+FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+{
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->loadResources(parentNode);
+    style->arrangeStyleValues(parent->style(), parentNode);
+
+    return new FrameTableCellBox(nullptr, style);
+}
+
 void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
