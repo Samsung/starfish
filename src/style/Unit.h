@@ -231,19 +231,20 @@ public:
 
     String* toString() const
     {
-        char* buf;
+        char buf[256];
         if (m_a == 255) {
-            asprintf(&buf, "rgb(%d, %d, %d)", m_r, m_g, m_b);
+            snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
         } else {
             float a = (float)m_a / 255;
-            if (a > 0.05)
-                asprintf(&buf, "rgba(%d, %d, %d, %.1f)", m_r, m_g, m_b, a);
-            else
-                asprintf(&buf, "rgba(%d, %d, %d, 0)", m_r, m_g, m_b);
+            if (a > 0.05) {
+                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r, m_g, m_b, a);
+            }
+            else {
+                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g, m_b);
+            }
         }
 
         String* toStr = String::createASCIIString(buf);
-        free(buf);
         return toStr;
     }
 
