@@ -100,19 +100,6 @@ public:
         m_element->setReadyState(HTMLTrackElement::LOADED);
         m_element->generateCues();
         m_element->m_VTTFileResource = nullptr;
-
-        // // TEST (Play 0-20 sec)
-        // for (unsigned int i = 0; i < 20; i++) {
-        //     TextTrackCueList* list = m_element->track()->updateActiveCues(i);
-        //     if (!list)
-        //         continue;
-        //     fprintf(stderr, "[TIME %f]\n", (double)i);
-        //     for (unsigned int j = 0; j < list->length(); j++) {
-        //         STARFISH_ASSERT((*list)[j]->isVTTCue());
-        //         VTTCue* cue = (VTTCue*) (*list)[j];
-        //         fprintf(stderr, "activeCue[%u] : %s\n", j, cue->text()->utf8Data());
-        //     }
-        // }
     }
 
 protected:

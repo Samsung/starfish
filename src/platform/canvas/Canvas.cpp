@@ -993,10 +993,10 @@ public:
 
             char underlineColor[128];
             char lineThroughColor[128];
-            snprintf(underlineColor, 128, "#%02x%02x%02x%02x", (int)lastState().m_underLineColor.r(), (int)lastState().m_underLineColor.g(), (int)lastState().m_underLineColor.b(), (int)lastState().m_underLineColor.a());
-            snprintf(lineThroughColor, 128, "#%02x%02x%02x%02x", (int)lastState().m_lineThroughColor.r(), (int)lastState().m_lineThroughColor.g(), (int)lastState().m_lineThroughColor.b(), (int)lastState().m_lineThroughColor.a());
+            snprintf(underlineColor, sizeof(underlineColor), "#%02x%02x%02x%02x", (int)lastState().m_underLineColor.r(), (int)lastState().m_underLineColor.g(), (int)lastState().m_underLineColor.b(), (int)lastState().m_underLineColor.a());
+            snprintf(lineThroughColor, sizeof(lineThroughColor), "#%02x%02x%02x%02x", (int)lastState().m_lineThroughColor.r(), (int)lastState().m_lineThroughColor.g(), (int)lastState().m_lineThroughColor.b(), (int)lastState().m_lineThroughColor.a());
 
-            snprintf(buf, 512, "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x valign=middle font_weight=%s font_style=%s strikethrough=%s strikethrough_color=%s underline=%s underline_color=%s '", lastState().m_font->familyName()->utf8Data(), ptSize,
+            snprintf(buf, sizeof(buf), "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x valign=middle font_weight=%s font_style=%s strikethrough=%s strikethrough_color=%s underline=%s underline_color=%s '", lastState().m_font->familyName()->utf8Data(), ptSize,
                 (int)lastState().m_color.r(), (int)lastState().m_color.g(), (int)lastState().m_color.b(), (int)lastState().m_color.a(), weight, fontStyle, lineThroughMode, lineThroughColor, underlineMode, underlineColor);
             evas_textblock_style_set(st, buf);
             evas_object_textblock_style_set(eo, st);

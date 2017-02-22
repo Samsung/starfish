@@ -107,7 +107,7 @@ static void parseMP4(DemuxerSource* source, bool findStream, const std::function
             dataLength = length - 8;
         }
 
-        // printf("found %x %s\n", (int)orgPos, type);
+        // STARFISH_LOG_INFO("found %x %s\n", (int)orgPos, type);
         uint32_t typeInt = MP4_PARSER_DEFINE_TYPE_STRING(type);
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("meta")) {
             source->onSeek(orgLength, DemuxerSource::SeekWhenceCurrent);
@@ -117,7 +117,7 @@ static void parseMP4(DemuxerSource* source, bool findStream, const std::function
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
             if (!findStream) {
                 maxPos = orgPos + orgLength;
-                printf("found movv. (endpos %d)\n", (int)maxPos);
+                STARFISH_LOG_INFO("found movv. (endpos %d)\n", (int)maxPos);
             }
         }
 
@@ -168,10 +168,10 @@ public:
             if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mvhd")) {
                 MP4::MVHD* mvhd = (MP4::MVHD*)atom;
                 time_scale = mvhd->_timeScale;
-                // fprintf(stderr, "[parseMP4][%p] Found mvhd\n", source);
-                // fprintf(stderr, "[parseMP4][%p] mvhd->_duration : %lld\n", source, mvhd->_duration);
-                // fprintf(stderr, "[parseMP4][%p] mvhd->_timeScale : %d\n", source, mvhd->_timeScale);
-                // fprintf(stderr, "[parseMP4][%p] mvhd->_rate : %f\n", source, mvhd->_rate);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] Found mvhd\n", source);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_duration : %lld\n", source, mvhd->_duration);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_timeScale : %d\n", source, mvhd->_timeScale);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_rate : %f\n", source, mvhd->_rate);
             } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
                 MP4::TKHD* tkhd = (MP4::TKHD*)atom;
                 track_id = tkhd->track_id;
@@ -520,7 +520,7 @@ public:
                                             destBufferSize += m_spsPpsInfo.size();
                                         }
 
-                                        // printf("type %d size %d\n", (int)unitType, (int)nalSize);
+                                        // STARFISH_LOG_INFO("type %d size %d\n", (int)unitType, (int)nalSize);
                                         if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
                                             // STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                             STARFISH_LOG_ERROR("DemuxerMP4 toAnnexBFormat nalSizeError (%d)!!\n", (int)nalSize);

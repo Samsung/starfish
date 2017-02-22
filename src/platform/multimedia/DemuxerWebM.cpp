@@ -83,7 +83,7 @@ public:
         mkvparser::Segment* segment;
         ret = mkvparser::Segment::CreateInstance(&src, pos, segment);
         if (ret) {
-            // printf("\n Segment::CreateInstance() failed.");
+            // STARFISH_LOG_INFO("\n Segment::CreateInstance() failed.");
             return false;
         }
 
@@ -91,13 +91,13 @@ public:
 
         ret = pSegment->ParseHeaders();
         if (ret < 0) {
-            // printf("\n Segment::Load() failed.");
+            // STARFISH_LOG_INFO("\n Segment::Load() failed.");
             return false;
         }
 
         const mkvparser::SegmentInfo* const pSegmentInfo = pSegment->GetInfo();
         if (pSegmentInfo == NULL) {
-            // printf("\n Segment::GetInfo() failed.");
+            // STARFISH_LOG_INFO("\n Segment::GetInfo() failed.");
             return false;
         }
 
@@ -181,7 +181,7 @@ public:
 
         int ret = segment->LoadCluster();
         if (ret < 0) {
-            // printf("\n Segment::LoadCluster() failed.");
+            // STARFISH_LOG_INFO("\n Segment::LoadCluster() failed.");
             return false;
         }
 
@@ -191,17 +191,17 @@ public:
 
         while ((pCluster != NULL) && !pCluster->EOS()) {
             const long long timeCode = pCluster->GetTimeCode();
-            // printf("\t\tCluster Time Code\t: %lld\n", timeCode);
+            // STARFISH_LOG_INFO("\t\tCluster Time Code\t: %lld\n", timeCode);
 
             const long long time_ns = pCluster->GetTime();
-            // printf("\t\tCluster Time (ns)\t: %lld\n", time_ns);
+            // STARFISH_LOG_INFO("\t\tCluster Time (ns)\t: %lld\n", time_ns);
 
             const mkvparser::BlockEntry* pBlockEntry;
 
             long status = pCluster->GetFirst(pBlockEntry);
 
             if (status < 0) { // error
-                // printf("\t\tError parsing first block of cluster\n");
+                // STARFISH_LOG_INFO("\t\tError parsing first block of cluster\n");
                 return false;
             }
 
@@ -218,7 +218,7 @@ public:
                     const mkvparser::Block::Frame& theFrame = pBlock->GetFrame(i);
                     const long size = theFrame.len;
                     const long long offset = theFrame.pos;
-                    // printf("\t\t\t %15ld,%15llx\n", size, offset);
+                    // STARFISH_LOG_INFO("\t\t\t %15ld,%15llx\n", size, offset);
 
                     uint64_t pts = pBlock->GetTimeCode(pCluster);
                     uint8_t* dataPtr = (unsigned char*)malloc((size_t)size);
@@ -244,7 +244,7 @@ public:
                 status = pCluster->GetNext(pBlockEntry, pBlockEntry);
 
                 if (status < 0) {
-                    // printf("\t\t\tError parsing next block of cluster\n");
+                    // STARFISH_LOG_INFO("\t\t\tError parsing next block of cluster\n");
                     // fflush(stdout);
                     return false;
                 }

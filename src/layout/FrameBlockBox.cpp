@@ -807,18 +807,21 @@ void FrameBlockBox::dump(int depth)
         if (m_lineBoxes.size() && m_lineBoxes[0]->m_boxes.size()) {
             for (size_t i = 0; i < m_lineBoxes.size(); i++) {
                 puts("");
-                for (int k = 0; k < depth + 1; k++)
+                for (int k = 0; k < depth + 1; k++) {
                     printf("  ");
+                }
                 printf("LineBox (%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y(), (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
                 for (size_t k = 0; k < lb.m_boxes.size(); k++) {
                     FrameBox* childBox = lb.m_boxes[k];
-                    for (int j = 0; j < depth + 2; j++)
+                    for (int j = 0; j < depth + 2; j++) {
                         printf("  ");
+                    }
                     childBox->dump(depth + 3);
-                    if (k != lb.m_boxes.size() - 1)
+                    if (k != lb.m_boxes.size() - 1) {
                         puts("");
+                    }
                 }
             }
         }

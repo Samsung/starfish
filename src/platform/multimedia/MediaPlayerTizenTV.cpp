@@ -319,7 +319,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
             STARFISH_LOG_ERROR("**ERROR: player_submit_packet %x", ret);
         }
         m_isVideoBufferUnderrunState = false;
-        // printf("push packet(video) %d %p %d\n", (int)packet.first->m_pts, packet.first->m_data, (int)packet.first->m_dataSize);
+        // STARFISH_LOG_INFO("push packet(video) %d %p %d\n", (int)packet.first->m_pts, packet.first->m_data, (int)packet.first->m_dataSize);
     }
 
     if (useLock)
@@ -376,7 +376,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
             STARFISH_LOG_ERROR("**ERROR: player_submit_packet %x", ret);
         }
         m_isAudioBufferUnderrunState = false;
-        // printf("push packet(audio) %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
+        // STARFISH_LOG_INFO("push packet(audio) %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
     }
     if (useLock)
         m_audioBufferMutex->unlock();

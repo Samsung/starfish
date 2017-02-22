@@ -143,7 +143,7 @@ public:
 
     MediaPacketGroup* findRecentPacketGroup(size_t streamIndex)
     {
-        // printf("[DemuxerClinetSourceBuffer::findRecentPacketGroup] idx: %d groupSize: %d\n", (int)streamIndex, (int)m_packetGroup.size());
+        // STARFISH_LOG_INFO("[DemuxerClinetSourceBuffer::findRecentPacketGroup] idx: %d groupSize: %d\n", (int)streamIndex, (int)m_packetGroup.size());
         for (int i = m_packetGroup.size() - 1; i >= 0; i--) {
             if (m_packetGroup[i]->m_streamIndex == streamIndex) {
                 return m_packetGroup[i];
@@ -206,7 +206,7 @@ public:
             //    between decode timestamp and last decode timestamp is greater than 2 times last frame duration:
             if (trackbufferInfo.m_lastDecodeTimestamp != -1) {
                 int64_t decodedDiff = decodeTimestamp - trackbufferInfo.m_lastDecodeTimestamp;
-                // printf("[%d] diff: %d - %d = %d duration: %d\n", streamIndex, (int)decodeTimestamp, (int)trackbufferInfo.m_lastDecodeTimestamp, (int)decodedDiff, (int)trackbufferInfo.m_lastFrameDuration);
+                // STARFISH_LOG_INFO("[%d] diff: %d - %d = %d duration: %d\n", streamIndex, (int)decodeTimestamp, (int)trackbufferInfo.m_lastDecodeTimestamp, (int)decodedDiff, (int)trackbufferInfo.m_lastFrameDuration);
                 if (decodedDiff < 0 || decodedDiff > 2 * trackbufferInfo.m_lastFrameDuration) {
                     // If mode equals "segments": Set group end timestamp to presentation timestamp.
                     // TODO If mode equals "sequence": Set group start timestamp equal to the group end timestamp.
@@ -255,7 +255,7 @@ public:
             pkt->m_hasIdr = packet.m_hasIdr;
             ret = true;
             memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
-            // printf("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
+            // STARFISH_LOG_INFO("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
             group->pushMediaPacket(pkt);
 
             m_currentGroupLastTimestamp = decodeTimestamp;
@@ -857,7 +857,7 @@ void SourceBuffer::clearPacketAccessCache()
 std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind)
 {
     Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);
-    // printf("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)startPositionInPTSWantToFind);
+    // STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)startPositionInPTSWantToFind);
 
     // test cache first
     {

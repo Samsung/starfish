@@ -2918,11 +2918,13 @@ void InlineNonReplacedBox::dump(int depth)
     auto iter = boxes().begin();
     while (iter != boxes().end()) {
         FrameBox* f = *iter;
-        for (int k = 0; k < depth + 1; k++)
+        for (int k = 0; k < depth + 1; k++) {
             printf("  ");
+        }
         f->dump(depth + 2);
-        if (iter + 1 != boxes().end())
+        if (iter + 1 != boxes().end()) {
             puts("");
+        }
         iter++;
     }
 }

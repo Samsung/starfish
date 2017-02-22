@@ -232,7 +232,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height(), ownerStyle->hasTransforms(m_owner));
 
         if (!m_matrix.isIdentity()) {
-            /* printf("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
+            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
                 , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
                 , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
                 , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8)); */
