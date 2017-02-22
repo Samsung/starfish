@@ -859,6 +859,27 @@ public:
         m_lastChild = newChild;
     }
 
+    void insertBefore(Frame* nextChild, Frame* newChild)
+    {
+        STARFISH_ASSERT(!newChild->parent());
+
+        if (!nextChild) {
+            appendChild(newChild);
+            return;
+        }
+
+        Frame* prev = nextChild->m_previous;
+        if (prev) {
+            prev->m_next = newChild;
+        } else {
+            m_firstChild = newChild;
+        }
+        newChild->setParent(this);
+        newChild->m_previous = prev;
+        newChild->m_next = nextChild;
+        nextChild->m_previous = newChild;
+    }
+
     void removeChild(Frame* oldChild)
     {
         STARFISH_ASSERT(oldChild);

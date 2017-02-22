@@ -47,7 +47,6 @@ public:
 
 class Element : public Node {
 public:
-
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)
         , m_inlineStyle(nullptr)

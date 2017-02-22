@@ -67,6 +67,12 @@ public:
         case StyleResolver::PseudoElementType::PseudoElementAfter:
             m_hasAfter = true;
             break;
+        case StyleResolver::PseudoElementType::PseudoElementNone:
+            m_hasFirstLine = false;
+            m_hasFirstLetter = false;
+            m_hasBefore = false;
+            m_hasAfter = false;
+            break;
         default:
             break;
         }

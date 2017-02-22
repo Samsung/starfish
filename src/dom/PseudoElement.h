@@ -17,14 +17,16 @@
 #ifndef __StarFishPseudoElement__
 #define __StarFishPseudoElement__
 
+#include "Element.h"
+
 namespace StarFish {
 
-class Element;
 class PseudoElement : public Element {
 public:
-    PseudoElement(Document* document, const QualifiedName& name)
+    PseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
         : Element(document)
-        , m_name(name)
+        , m_name(pseudoElementTagName(pseudoId))
+        , m_pseudoId(pseudoId)
     {
     }
 
@@ -43,16 +45,42 @@ public:
         return m_name.localName();
     }
 
+    StyleResolver::PseudoElementType getPseudoId() const
+    {
+        return m_pseudoId;
+    }
+
+    QualifiedName pseudoElementTagName(StyleResolver::PseudoElementType pseudoId);
+
 protected:
     QualifiedName m_name;
+    StyleResolver::PseudoElementType m_pseudoId;
 };
+
+inline bool pseudoElementLayoutObjectIsNeeded(ComputedStyle* style)
+{
+    if (!style || style->display() == NoneDisplayValue) {
+        return false;
+    }
+    if (style->pseudoType() == StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
+        return true;
+    }
+#if 0
+    return style->contentData();
+#else
+    return false;
+#endif
+}
 
 class FirstLetterPseudoElement : public PseudoElement {
 public:
-    FirstLetterPseudoElement(Document* document, const QualifiedName& name)
-        : PseudoElement(document, name)
+    FirstLetterPseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
+        : PseudoElement(document, pseudoId)
     {
     }
+
+    static size_t firstLetterLength(String* text);
+    static Frame* firstLetterFrameText(Node* n);
 };
 
 }

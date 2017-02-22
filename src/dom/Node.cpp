@@ -393,8 +393,9 @@ DOMTokenList* Node::classList()
     if (isElement()) {
         if (!hasRareMembers()) {
             ensureRareMembers();
-        } else if (!m_rareNodeMembers->m_domTokenList)
+        } else if (m_rareNodeMembers->m_domTokenList) {
             return m_rareNodeMembers->m_domTokenList;
+        }
 
         m_rareNodeMembers->m_domTokenList = new DOMTokenList(m_document->scriptBindingInstance(), asElement(),
             document()->window()->starFish()->staticStrings()->m_class);

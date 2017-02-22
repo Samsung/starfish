@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "style/Style.h"
 #include "FrameTreeBuilder.h"
 
 #include "dom/DOM.h"
@@ -202,6 +203,85 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
             frameBlockBox->appendChild(currentFrame);
         }
     }
+}
+
+ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(Node* parent, StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle)
+{
+    STARFISH_ASSERT(pseudoId == StyleResolver::PseudoElementType::PseudoElementFirstLetter);
+    STARFISH_ASSERT(parentStyle);
+
+    Element* element = parent->asElement();
+    ComputedStyle* style = parent->document()->styleResolver()->resolveStyle(element, parentStyle, true);
+
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    damage = compareStyle(parentStyle, style);
+
+    if (style->pseudoType() != StyleResolver::PseudoElementType::PseudoElementNone
+        && damage != ComputedStyleDamage::ComputedStyleDamageNone
+        && damage != ComputedStyleDamage::ComputedStyleDamageInherited) {
+        return style;
+    }
+
+    return nullptr;
+}
+
+void FrameTreeBuilder::createPseudoElementIfNeeded(Node* parent, StyleResolver::PseudoElementType pseudoId, FrameTreeBuilderContext& ctx)
+{
+    if (!parent->isElement() || parent->asElement()->isPseudoElement()) {
+        return;
+    }
+
+    if (pseudoId == StyleResolver::PseudoElementType::PseudoElementFirstLetter && !FirstLetterPseudoElement::firstLetterFrameText(parent)) {
+        return;
+    }
+
+    Frame* parentFrame = parent->frame();
+
+    ComputedStyle* parentStyle = parentFrame->style();
+    ComputedStyle* pseudoStyle = pseudoStyleForElementInternal(parent, pseudoId, parentStyle);
+
+    if (!pseudoElementLayoutObjectIsNeeded(pseudoStyle)) {
+        return;
+    }
+
+    PseudoElement* pseudoElement = new PseudoElement(parent->document(), pseudoId);
+    pseudoElement->setParentNode(parent);
+    pseudoElement->setStyle(pseudoStyle);
+
+    Frame* pseudoParentFrame;
+    if (pseudoElement->isFirstLetterPseudoElement()) {
+        if (Frame* nextFrame = FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
+            pseudoParentFrame = nextFrame->parent(); // parentFrameForPseudoElement: frame for span, nextFrame: frameText
+        }
+    } else if (pseudoElement->parentNode()) {
+        pseudoParentFrame = pseudoElement->parentNode()->frame();
+    }
+
+    if (!pseudoParentFrame)
+        return;
+
+    Frame* pseudoFrame = new FrameInline(pseudoElement);
+    Frame* originalFrame = FirstLetterPseudoElement::firstLetterFrameText(pseudoElement);
+    pseudoParentFrame->insertBefore(originalFrame, pseudoFrame);
+
+    STARFISH_ASSERT(originalFrame->isFrameText());
+    String* originalText = originalFrame->asFrameText()->text();
+    size_t length = FirstLetterPseudoElement::firstLetterLength(originalText);
+
+    Text* firstLetter = new Text(originalFrame->node()->document(), originalText->substring(0, length));
+    firstLetter->setStyle(pseudoStyle);
+    FrameText* letterFrameText = new FrameText(firstLetter, pseudoStyle, ctx.currentDecorationData());
+    firstLetter->setFrame(letterFrameText);
+    pseudoFrame->appendChild(letterFrameText);
+
+    Text* remainingText = new Text(originalFrame->node()->document(), originalText->substring(length, originalText->length() - length));
+    remainingText->setStyle(originalFrame->style());
+    FrameText* remainingFrameText = new FrameText(remainingText, originalFrame->style(), ctx.currentDecorationData());
+    remainingText->setFrame(remainingFrameText);
+    pseudoFrame->appendChild(remainingFrameText);
+
+    pseudoParentFrame->removeChild(originalFrame);
+    parent->asElement()->setPseudoElement(StyleResolver::PseudoElementType::PseudoElementNone);
 }
 
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
@@ -405,6 +485,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
     }
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
     ctx.setCurrentTextDecorationData(textDecoBack);
+
+    createPseudoElementIfNeeded(current, StyleResolver::PseudoElementType::PseudoElementFirstLetter, ctx);
 
     return currentFrame;
 }
