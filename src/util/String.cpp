@@ -531,7 +531,7 @@ String* String::replaceAll(String* from, String* to)
 String* String::fromFloat(float f)
 {
     char buf[256];
-    snprintf(buf, sizeof buf, "%g", f);
+    snprintf(buf, sizeof(buf), "%g", f);
     return String::fromUTF8(buf);
 }
 

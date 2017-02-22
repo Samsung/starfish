@@ -235,10 +235,11 @@ void HTMLFormattingElementList::show()
 {
     for (unsigned i = 1; i <= m_entries.size(); ++i) {
         const Entry& entry = m_entries[m_entries.size() - i];
-        if (entry.isMarker())
-            fprintf(stderr, "marker\n");
+        if (entry.isMarker()) {
+            STARFISH_LOG_ERROR("marker\n");
+        }
         else {
-            fprintf(stderr, "not impl");
+            STARFISH_LOG_ERROR("not implimented\n");
             // entry.element()->showNode();
         }
     }

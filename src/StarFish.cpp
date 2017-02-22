@@ -106,7 +106,7 @@ smaps_sizes getSmapsStats()
 {
     // Setup our pipe for reading and execute our command.
     char command[512];
-    snprintf(command, 512, "cat /proc/%d/smaps", getpid());
+    snprintf(command, sizeof(command), "cat /proc/%d/smaps", getpid());
     FILE* file = popen(command, "r");
 
     struct smaps_sizes sizes;

@@ -142,13 +142,13 @@ public:
     {
         char temp[100];
         if (isFixed())
-            snprintf(temp, sizeof temp, "%.1f", fixed());
+            snprintf(temp, sizeof(temp), "%.1f", fixed());
         else if (isPercent())
-            snprintf(temp, sizeof temp, "%.1f%%", percent());
+            snprintf(temp, sizeof(temp), "%.1f%%", percent());
         else if (isAuto())
-            snprintf(temp, sizeof temp, "auto");
+            snprintf(temp, sizeof(temp), "auto");
         else if (isInheritableNumber())
-            snprintf(temp, sizeof temp, "%.1f(num)", number());
+            snprintf(temp, sizeof(temp), "%.1f(num)", number());
         return String::fromUTF8(temp);
     }
 
