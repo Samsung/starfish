@@ -854,6 +854,16 @@ public:
         return m_tableLayout;
     }
 
+    void setPseudoType(StyleResolver::PseudoElementType id)
+    {
+        m_pseudoId = id;
+    }
+
+    StyleResolver::PseudoElementType pseudoType()
+    {
+        return m_pseudoId;
+    }
+
 protected:
     void initNonInheritedStyles()
     {
@@ -902,6 +912,7 @@ protected:
     bool m_zIndexSpecifiedByUser : 1;
 
     TableLayoutValue m_tableLayout: 1; // table
+    StyleResolver::PseudoElementType m_pseudoId: 4;
 
     Length m_width;
     Length m_minWidth;

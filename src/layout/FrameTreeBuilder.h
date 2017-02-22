@@ -22,6 +22,7 @@ namespace StarFish {
 class Node;
 class Document;
 class Element;
+class StyleResolver;
 
 class FrameBlockBox;
 class Frame;
@@ -69,6 +70,9 @@ class FrameTreeBuilder {
 public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
+
+    static void createPseudoElementIfNeeded(Node* parent, StyleResolver::PseudoElementType pseudoId, FrameTreeBuilderContext& ctx);
+    static ComputedStyle* pseudoStyleForElementInternal(Node* node, StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document);

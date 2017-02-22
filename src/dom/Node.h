@@ -649,6 +649,32 @@ public:
     virtual RareNodeMembers* ensureRareMembers();
 
     void invalidateNodeListCacheDueToChangeClassNameOfDescendant();
+
+    bool isPseudoElement() const
+    {
+        return getPseudoId() != StyleResolver::PseudoElementType::PseudoElementNone;
+    }
+
+    bool isBeforePseudoElement() const
+    {
+        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementBefore;
+    }
+
+    bool isAfterPseudoElement() const
+    {
+        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementAfter;
+    }
+
+    bool isFirstLetterPseudoElement() const
+    {
+        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementFirstLetter;
+    }
+
+    virtual StyleResolver::PseudoElementType getPseudoId() const
+    {
+        return StyleResolver::PseudoElementType::PseudoElementNone;
+    }
+
 private:
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()

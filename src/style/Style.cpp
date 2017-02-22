@@ -2008,7 +2008,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     return ret;
 }
 
-ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* parent)
+ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* parent, bool isForPseudoElement)
 {
     ComputedStyle* style = new ComputedStyle(parent);
 
@@ -2028,7 +2028,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         }
     }
 
-    matchAllRules(element, style, parent);
+    matchAllRules(element, style, parent, isForPseudoElement);
 
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent);
@@ -2938,10 +2938,15 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
     }
 }
 
-void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent)
+void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent, bool isForPseudoElement)
 {
     Declarations userAgentDeclarations;
     Declarations authorDeclarations;
+
+    StyleResolver::PseudoElementType pseudoId = PseudoElementNone;
+    if (isForPseudoElement && element->hasPseudoElement(PseudoElementFirstLetter)) {
+        pseudoId = PseudoElementFirstLetter;
+    }
 
     CSSStyleSheet* sheet = m_sheets[0];
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
@@ -2959,8 +2964,13 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
         if (matchSelector(element, selectorList, 0, result) == Match::SelectorMatches) {
             if (result.pseudoType != PseudoElementNone) {
                 element->setPseudoElement(result.pseudoType);
+                if (pseudoId != PseudoElementNone) {
+                    ret->setPseudoType(pseudoId);
+                    authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
+                }
+            } else if (pseudoId == PseudoElementNone) {
+                authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
             }
-            authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
         }
     }
 
@@ -3284,7 +3294,7 @@ bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector, 
         return false;
     case CSSSelector::PseudoType::PseudoFirstLetter:
         result.pseudoType = PseudoElementType::PseudoElementFirstLetter;
-        return false;
+        return true;
     case CSSSelector::PseudoType::PseudoBefore:
         result.pseudoType = PseudoElementType::PseudoElementBefore;
         return false;

@@ -1802,11 +1802,12 @@ public:
     void dumpDOMStyle(Document* document);
 #endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
-    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
+    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent, bool isForPseudoElement = false);
+
+    void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent, bool isForPseudoElement = false);
 
 protected:
     void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
-    void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent);
 
     Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx, MatchResult& result);
     Match matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result);
