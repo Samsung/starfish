@@ -238,8 +238,7 @@ public:
             float a = (float)m_a / 255;
             if (a > 0.05) {
                 snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r, m_g, m_b, a);
-            }
-            else {
+            } else {
                 snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g, m_b);
             }
         }
