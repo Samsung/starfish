@@ -237,8 +237,7 @@ void HTMLFormattingElementList::show()
         const Entry& entry = m_entries[m_entries.size() - i];
         if (entry.isMarker()) {
             STARFISH_LOG_ERROR("marker\n");
-        }
-        else {
+        } else {
             STARFISH_LOG_ERROR("not implimented\n");
             // entry.element()->showNode();
         }
