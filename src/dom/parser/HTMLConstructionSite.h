@@ -81,8 +81,8 @@ struct HTMLConstructionSiteTask {
     bool selfClosing;
 };
 
-// Note: These are intentionally ordered so that when we concatonate
-// strings and whitespaces the resulting whitespace is ws = min(ws1, ws2).
+// Note: These are intentionally ordered so that when we concatenate
+// strings and white spaces the resulting whitespace is ws = min(ws1, ws2).
 enum WhitespaceMode {
     WhitespaceUnknown,
     NotAllWhitespace,
@@ -212,7 +212,7 @@ public:
 private:
     // In the common case, this queue will have only one task because most
     // tokens produce only one DOM mutation.
-    typedef std::vector<HTMLConstructionSiteTask, gc_allocator_ignore_off_page<HTMLConstructionSiteTask>> TaskQueue;
+    typedef GCVector<HTMLConstructionSiteTask> TaskQueue;
 
     void setCompatibilityMode(Document::CompatibilityMode);
     void setCompatibilityModeFromDoctype(String* name, String* publicId, String* systemId);

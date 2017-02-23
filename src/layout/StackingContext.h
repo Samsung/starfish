@@ -28,14 +28,14 @@ class Canvas;
 class CanvasSurface;
 class Frame;
 
-class StackingContextChild : public std::vector<StackingContext*, gc_allocator_ignore_off_page<StackingContext*> > , public gc {
+class StackingContextChild : public GCVector<StackingContext*> , public gc {
 };
 
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
 
-    const std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator_ignore_off_page<std::pair<uint32_t, StackingContextChild*> > >& childContexts()
+    const GCMap<int32_t, StackingContextChild*, std::less<int32_t>>& childContexts()
     {
         return m_childContexts;
     }
@@ -84,7 +84,7 @@ protected:
 
     SkMatrix m_matrix;
 
-    std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator_ignore_off_page<std::pair<uint32_t, StackingContextChild*> > > m_childContexts;
+    GCMap<int32_t, StackingContextChild*, std::less<int32_t>>  m_childContexts;
 };
 }
 

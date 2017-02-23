@@ -901,7 +901,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     return list;
 }
 
-void Node::parseSelector(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& selectorListContainer, String* selectors)
+void Node::parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors)
 {
     if (selectors->equals(String::emptyString))
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::SYNTAX_ERR, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
@@ -917,7 +917,7 @@ void Node::parseSelector(std::vector<CSSSelectorList*, gc_allocator_ignore_off_p
 
 Element* Node::querySelector(String* selectors)
 {
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
+    GCVector<GCDeque<CSSSelector*>*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);
@@ -926,7 +926,7 @@ Element* Node::querySelector(String* selectors)
 
 NodeList* Node::querySelectorAll(String* selectors)
 {
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
+    GCVector<GCDeque<CSSSelector*>*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);

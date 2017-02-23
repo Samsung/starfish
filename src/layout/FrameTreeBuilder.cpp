@@ -185,7 +185,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
             }
 
             // Inline... + Block case
-            std::vector<Frame*, gc_allocator_ignore_off_page<Frame*> > backup;
+            GCVector<Frame*> backup;
             while (frameBlockBox->firstChild()) {
                 backup.push_back(frameBlockBox->firstChild());
                 frameBlockBox->removeChild(frameBlockBox->firstChild());
@@ -290,7 +290,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
     bool didSplitBlock = false;
     bool shouldSkipChildren = false;
     FrameBlockBox* originalFrameBlockBox = nullptr;
-    std::vector<FrameInline*, gc_allocator_ignore_off_page<FrameInline*>> stackedFrameInline;
+    GCVector<FrameInline*> stackedFrameInline;
     FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
     FrameTextTextDecorationData* textDecoBack =  new FrameTextTextDecorationData;
     if (curDeco) {

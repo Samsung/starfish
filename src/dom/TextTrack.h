@@ -341,7 +341,7 @@ public:
     }
 
 protected:
-    std::vector<TextTrack*, gc_allocator_ignore_off_page<TextTrack*>> m_list;
+    GCVector<TextTrack*> m_list;
 };
 
 }

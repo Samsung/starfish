@@ -776,7 +776,7 @@ void Document::notifyDomContentLoaded()
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     // Trigger HTMLMediaElement's preload
     // FIXME : Should consider detached HTMLMediaElements as well
-    std::vector<Element*, gc_allocator_ignore_off_page<Element*>> mediaElements;
+    GCVector<Element*> mediaElements;
     Traverse::getherDescendant(mediaElements, this, [&](Node* child) {
         if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->isHTMLMediaElement()) {
             return true;

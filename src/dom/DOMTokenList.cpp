@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-void DOMTokenList::tokenize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, String* src)
+void DOMTokenList::tokenize(GCVector<String*>* tokens, String* src)
 {
     tokens->clear();
 
@@ -69,9 +69,9 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator_ignore_off_page<St
     }
 }
 
-void DOMTokenList::concatTokensInsideParentheses(std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens)
+void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
 {
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> newTokens;
+    GCVector<String*> newTokens;
     String* combined = String::emptyString;
     unsigned combinedCount = 0;
     // unsigned parentheseDepth = 0; // Does not count parenthese depth
@@ -103,7 +103,7 @@ void DOMTokenList::concatTokensInsideParentheses(std::vector<String*, gc_allocat
 
 unsigned long DOMTokenList::length()
 {
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     return tokens.size();
@@ -111,7 +111,7 @@ unsigned long DOMTokenList::length()
 
 String* DOMTokenList::item(unsigned long index)
 {
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     if (index < tokens.size()) {
@@ -124,7 +124,7 @@ bool DOMTokenList::contains(String* token)
 {
     validateToken(token);
 
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     for (unsigned i = 0; i < tokens.size(); i++) {
@@ -135,7 +135,7 @@ bool DOMTokenList::contains(String* token)
     return false;
 }
 
-String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, String* token)
+String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens, String* token)
 {
     bool matched = false;
     for (unsigned j = 0; j < tokens->size(); j++) {
@@ -156,10 +156,10 @@ String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_alloca
     return src;
 }
 
-void DOMTokenList::add(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokensToAdd)
+void DOMTokenList::add(GCVector<String*>* tokensToAdd)
 {
     String* str = m_element->getAttribute(m_localName);
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     tokenize(&tokens, str);
     for (unsigned i = 0; i < tokensToAdd->size(); i++) {
         validateToken((*tokensToAdd)[i]);
@@ -168,7 +168,7 @@ void DOMTokenList::add(std::vector<String*, gc_allocator_ignore_off_page<String*
     m_element->setAttribute(m_localName, str);
 }
 
-int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, String* token)
+int DOMTokenList::checkMatchedTokens(bool* matchFlags, GCVector<String*>* tokens, String* token)
 {
     int count = 0;
     for (unsigned i = 0; i < tokens->size(); i++) {
@@ -186,7 +186,7 @@ void DOMTokenList::remove(String* token)
 {
     String* src = m_element->getAttribute(m_localName);
     String* dst = String::createASCIIString("");
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     tokenize(&tokens, src);
 
     bool* matchFlags = new bool[tokens.size()];
@@ -209,11 +209,11 @@ void DOMTokenList::remove(String* token)
     delete [] matchFlags;
 }
 
-void DOMTokenList::remove(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokensToRemove)
+void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
 {
     String* src = m_element->getAttribute(m_localName);
     String* dst = String::createASCIIString("");
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     tokenize(&tokens, src);
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
@@ -241,7 +241,7 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator_ignore_off_page<Stri
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
     validateToken(token);
-    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    GCVector<String*> tokens;
     String* str = m_element->getAttribute(m_localName);
     tokenize(&tokens, str);
     bool needAdd = false;

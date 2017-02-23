@@ -174,7 +174,7 @@ private:
     void processCharacterBuffer(CharacterTokenBuffer&);
     inline void processCharacterBufferForInBody(CharacterTokenBuffer&);
 
-    void processFakeStartTag(const QualifiedName&, const AttributeVector& attributes = AttributeVector());
+    void processFakeStartTag(const QualifiedName&, const GCVector<Attribute>& attributes = GCVector<Attribute>());
     void processFakeEndTag(const QualifiedName&);
     void processFakeEndTag(const AtomicString&);
     void processFakePEndTagIfPInButtonScope();
@@ -196,7 +196,7 @@ private:
     inline bool shouldProcessTokenInForeignContent(AtomicHTMLToken*);
     void processTokenInForeignContent(AtomicHTMLToken*);
 
-    AttributeVector attributesForIsindexInput(AtomicHTMLToken*);
+    GCVector<Attribute> attributesForIsindexInput(AtomicHTMLToken*);
 
     void callTheAdoptionAgency(AtomicHTMLToken*);
 
@@ -244,7 +244,7 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#original-insertion-mode
     InsertionMode m_originalInsertionMode;
 
-    std::vector<InsertionMode, gc_allocator_ignore_off_page<InsertionMode>> m_templateInsertionModes;
+    GCVector<InsertionMode> m_templateInsertionModes;
 
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html#pending-table-character-tokens
     UTF32String m_pendingTableCharacters;

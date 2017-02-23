@@ -122,7 +122,7 @@ void Element::removeAttribute(QualifiedName name)
             STARFISH_ASSERT(hasRareMembers());
             STARFISH_ASSERT(rareMembers()->isRareElementMembers());
             STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
-            AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
+            auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
             for (unsigned i = 0, size = attrList->size(); i < size; i++) {
                 if ((*attrList)[i] == attrNode) {
                     attrList->erase(attrList->begin() + i);
@@ -360,7 +360,7 @@ void Element::addAttr(Attr* attr)
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_attrList)
-        rareMembers->m_attrList = new (GC) AttrList();
+        rareMembers->m_attrList = new (GC) GCVector<Attr*>();
     STARFISH_ASSERT(this->attr(attr->name()) == nullptr);
     rareMembers->m_attrList->push_back(attr);
 }
@@ -369,7 +369,7 @@ Attr* Element::attr(QualifiedName name)
 {
     STARFISH_ASSERT((hasRareMembers() && rareMembers()->isRareElementMembers()) || !hasRareMembers());
     if (hasRareMembers() && rareMembers()->asRareElementMembers()->m_attrList) {
-        AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
+        auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
         for (Attr* item : *attrList) {
             STARFISH_ASSERT(item);
             if (item->name() == name) {
@@ -388,7 +388,7 @@ Attr* Element::ensureAttr(QualifiedName name)
         RareElementMembers* rareMembers = ensureRareElementMembers();
         STARFISH_ASSERT(rareMembers->isRareElementMembers());
         if (!rareMembers->m_attrList)
-            rareMembers->m_attrList = new (GC) AttrList();
+            rareMembers->m_attrList = new (GC) GCVector<Attr*>();
         returnAttr = new Attr(document(), document()->scriptBindingInstance(), this, name);
         rareMembers->m_attrList->push_back(returnAttr);
     }

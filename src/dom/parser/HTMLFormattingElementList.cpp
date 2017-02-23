@@ -147,7 +147,7 @@ void HTMLFormattingElementList::clearToLastMarker()
     }
 }
 
-void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackItem* newItem, std::vector<HTMLStackItem*, gc_allocator_ignore_off_page<HTMLStackItem*>>& remainingCandidates)
+void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackItem* newItem, GCVector<HTMLStackItem*>& remainingCandidates)
 {
     STARFISH_ASSERT(remainingCandidates.size() == 0);
 
@@ -156,7 +156,7 @@ void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackIte
 
     // Use a vector with inline capacity to avoid a malloc in the common case
     // of a quickly ensuring the condition.
-    std::vector<HTMLStackItem*, gc_allocator_ignore_off_page<HTMLStackItem*>> candidates;
+    GCVector<HTMLStackItem*> candidates;
 
     size_t newItemAttributeCount = newItem->attributes().size();
 
@@ -187,17 +187,17 @@ void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackIte
 
 void HTMLFormattingElementList::ensureNoahsArkCondition(HTMLStackItem* newItem)
 {
-    std::vector<HTMLStackItem*, gc_allocator_ignore_off_page<HTMLStackItem*>> candidates;
+    GCVector<HTMLStackItem*> candidates;
     tryToEnsureNoahsArkConditionQuickly(newItem, candidates);
     if (candidates.size() == 0)
         return;
 
     // We pre-allocate and re-use this second vector to save one malloc per
     // attribute that we verify.
-    std::vector<HTMLStackItem*, gc_allocator_ignore_off_page<HTMLStackItem*>> remainingCandidates;
+    GCVector<HTMLStackItem*> remainingCandidates;
     // remainingCandidates.reserveInitialCapacity(candidates.size());
 
-    const AttributeVector& attributes = newItem->attributes();
+    const auto& attributes = newItem->attributes();
     for (size_t i = 0; i < attributes.size(); ++i) {
         const Attribute& attribute = attributes[i];
 

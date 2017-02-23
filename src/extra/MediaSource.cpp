@@ -344,7 +344,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                     uint64_t newDurationMS = 0;
                     for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
                         STARFISH_ASSERT((*m_sourceBuffers)[i]->m_streamInfo.size() != 0);
-                        const StreamInfoVector& streamInfo = (*m_sourceBuffers)[i]->m_streamInfo[0];
+                        const GCVector<StreamInfo*>& streamInfo = (*m_sourceBuffers)[i]->m_streamInfo[0];
                         bool thisBufferAdded = false;
                         for (size_t j = 0; j < streamInfo.size(); j ++) {
                             if (streamInfo[j]->m_type == StreamInfo::Video) {

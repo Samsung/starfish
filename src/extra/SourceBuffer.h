@@ -83,8 +83,7 @@ struct MediaPacketGroup {
     }
 };
 
-typedef std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>> SourceBufferDataVector;
-typedef std::vector<StreamInfo*, gc_allocator_ignore_off_page<StreamInfo*>> StreamInfoVector;
+typedef GCVector<uint8_t> SourceBufferDataVector;
 
 class SourceBuffer : public EventTarget {
 public:
@@ -230,10 +229,10 @@ protected:
     String* m_type;
     MediaSource* m_parentMediaSource;
     SourceBufferDataVector m_bufferUnprocessed;
-    std::vector<SourceBufferDataVector, gc_allocator_ignore_off_page<SourceBufferDataVector>> m_bufferHeader;
-    std::vector<StreamInfoVector, gc_allocator_ignore_off_page<StreamInfoVector>> m_streamInfo;
+    GCVector<SourceBufferDataVector> m_bufferHeader;
+    GCVector<GCVector<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroup;
-    std::vector<std::pair<size_t, size_t>, gc_allocator_ignore_off_page<std::pair<size_t, size_t>>> m_packetAccessCachePerStream;
+    GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
     Mutex* m_packetGroupMutex;
 };
 
@@ -314,7 +313,7 @@ public:
     void scheduleEvent(String* eventName);
 
 protected:
-    std::vector<SourceBuffer*, gc_allocator_ignore_off_page<SourceBuffer*>> m_list;
+    GCVector<SourceBuffer*> m_list;
     StarFish* m_starFish;
     MediaSource* m_parentMediaSource;
 };

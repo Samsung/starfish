@@ -24,8 +24,6 @@ class Traverse {
     }
 
 public:
-    typedef std::vector<Node*, gc_allocator_ignore_off_page<Node*>> NodeCollection;
-
     template<typename Func>
     static Node* findDescendant(Node* parent, Func matchingRule)
     {
@@ -44,7 +42,7 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    static void getherDescendant(GCVector<Node*>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
@@ -60,7 +58,7 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    static void getherDescendant(GCVector<Element*>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
@@ -140,9 +138,9 @@ public:
     }
 
     template<typename Func>
-    static NodeCollection* nextSiblings(Node* start, Func matchingRule)
+    static GCVector<Node*>* nextSiblings(Node* start, Func matchingRule)
     {
-        auto siblings = new NodeCollection();
+        auto siblings = new GCVector<Node*>();
         for (Node* sibling = start->nextSibling(); sibling; sibling = sibling -> nextSibling()) {
             if (matchingRule(sibling)) {
                 siblings->push_back(sibling);
@@ -152,9 +150,9 @@ public:
     }
 
     template<typename Func>
-    static NodeCollection* previousSiblings(Node* start, Func matchingRule)
+    static GCVector<Node*>* previousSiblings(Node* start, Func matchingRule)
     {
-        auto siblings = new NodeCollection();
+        auto siblings = new GCVector<Node*>();
         for (Node* sibling = start->previousSibling(); sibling; sibling = sibling -> previousSibling()) {
             if (matchingRule(sibling)) {
                 siblings->push_back(sibling);

@@ -144,10 +144,10 @@ private:
 
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#list-of-active-formatting-elements
     // These functions enforce the "Noah's Ark" condition, which removes redundant mis-nested elements.
-    void tryToEnsureNoahsArkConditionQuickly(HTMLStackItem*, std::vector<HTMLStackItem*, gc_allocator_ignore_off_page<HTMLStackItem*>>& remainingCandiates);
+    void tryToEnsureNoahsArkConditionQuickly(HTMLStackItem*, GCVector<HTMLStackItem*>& remainingCandiates);
     void ensureNoahsArkCondition(HTMLStackItem*);
 
-    std::vector<Entry, gc_allocator_ignore_off_page<Entry>> m_entries;
+    GCVector<Entry> m_entries;
 };
 
 }

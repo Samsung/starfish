@@ -25,8 +25,6 @@ namespace StarFish {
 class HTMLElement;
 class CSSStyleDeclaration;
 
-typedef std::vector<Attr*, gc_allocator_ignore_off_page<Attr*>> AttrList;
-
 class RareElementMembers : public RareNodeMembers {
 public:
     RareElementMembers()
@@ -41,7 +39,7 @@ public:
         return true;
     }
     NamedNodeMap* m_namedNodeMap;
-    AttrList* m_attrList;
+    GCVector<Attr*>* m_attrList;
     PseudoElementData* m_pseudoElementData;
 };
 
@@ -218,7 +216,7 @@ public:
     }
 
     // DO NOT MODIFY THIS VECTOR
-    const std::vector<String*, gc_allocator_ignore_off_page<String*> >& classNames()
+    const GCVector<String*>& classNames()
     {
         return m_classNames;
     }
@@ -281,7 +279,7 @@ protected:
     void getClientQuads(std::vector<DOMQuad>& quads);
 
     // DO NOT MODIFY ATTRIBUTES.
-    const AttributeVector* getAttributes() { return (AttributeVector*)&m_attributes; }
+    const GCVector<Attribute>* getAttributes() { return (GCVector<Attribute>*)&m_attributes; }
     virtual Node* clone();
 
     CSSStyleDeclaration* m_inlineStyle;
@@ -293,8 +291,8 @@ protected:
 private:
     String* m_id;
     String* m_className;
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> m_classNames;
-    AttributeVector m_attributes;
+    GCVector<String*> m_classNames;
+    GCVector<Attribute> m_attributes;
 };
 
 // used for not of html, xhtml, svg element

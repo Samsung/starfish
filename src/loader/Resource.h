@@ -89,7 +89,7 @@ public:
         m_resourceClients.push_back(rc);
     }
 
-    void addResourceClient(const ResourceClientVector& rc)
+    void addResourceClient(const GCVector<ResourceClient*>& rc)
     {
         m_resourceClients.insert(m_resourceClients.end(), rc.begin(), rc.end());
     }
@@ -176,8 +176,8 @@ protected:
     URL* m_url;
     ResourceLoader* m_loader;
     NetworkRequest* m_networkRequest;
-    ResourceClientVector m_resourceClients;
-    std::vector<size_t, gc_allocator_ignore_off_page<size_t>> m_requstedIdlers;
+    GCVector<ResourceClient*> m_resourceClients;
+    GCVector<size_t> m_requstedIdlers;
 };
 
 class ResourceNetworkRequestClient : public NetworkRequestClient {

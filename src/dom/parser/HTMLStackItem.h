@@ -90,7 +90,7 @@ public:
     const AtomicString& namespaceURI() const { return m_namespaceURI; }
     const AtomicString& localName() const { return m_tokenLocalName; }
 
-    const AttributeVector& attributes() const { STARFISH_ASSERT(m_tokenLocalName.string()->length()); return m_tokenAttributes; }
+    const GCVector<Attribute>& attributes() const { STARFISH_ASSERT(m_tokenLocalName.string()->length()); return m_tokenAttributes; }
     Attribute* getAttributeItem(const QualifiedName& attributeName)
     {
         STARFISH_ASSERT(m_tokenLocalName);
@@ -229,7 +229,7 @@ private:
     }
 
     AtomicString m_tokenLocalName;
-    AttributeVector m_tokenAttributes;
+    GCVector<Attribute> m_tokenAttributes;
     AtomicString m_namespaceURI;
     bool m_isDocumentFragmentNode;
 };

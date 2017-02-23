@@ -374,8 +374,8 @@ protected:
     NetworkState m_networkState;
 
     MediaOperationQueueData* m_currentOperation;
-    MediaOperationQueue m_operationQueue;
-    MediaOperationQueue m_playOperationQueue;
+    GCDeque<MediaOperationQueueData*> m_operationQueue;
+    GCDeque<MediaOperationQueueData*> m_playOperationQueue;
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
     ResourceSelectionContext* m_resourceSelectionContext;

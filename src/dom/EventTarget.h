@@ -95,8 +95,6 @@ protected:
 
 };
 
-typedef std::vector<EventListener*, gc_allocator_ignore_off_page<EventListener*>> EventListenerVector;
-
 class EventTarget : public ScriptWrappable {
 protected:
     EventTarget()
@@ -133,7 +131,7 @@ public:
         return (Node*)this;
     }
 
-    EventListenerVector* getEventListeners(const String* eventType);
+    GCVector<EventListener*>* getEventListeners(const String* eventType);
 
     bool addEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
     bool removeEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
@@ -184,8 +182,7 @@ public:
     }
 
 protected:
-    std::unordered_map<String*, EventListenerVector*, std::hash<String*>, std::equal_to<String*>,
-        gc_allocator_ignore_off_page<std::pair<String*, EventListenerVector*>>> m_eventListeners;
+    GCUnorderedMap<String*, GCVector<EventListener*>*> m_eventListeners;
 };
 
 }
