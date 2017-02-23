@@ -32,7 +32,7 @@ static inline SelectorQuery::SelectorCheckingContext prepareNextContextForRelati
     return nextContext;
 }
 
-static bool contains(const std::vector<String*, gc_allocator_ignore_off_page<String*> >& vector, const String* string)
+static bool contains(const GCVector<String*>& vector, const String* string)
 {
     size_t size = vector.size();
     for (size_t i = 0; i < size; ++i) {
@@ -99,7 +99,7 @@ private:
 
 Element* SelectorQuery::queryFirst(Node& rootNode)
 {
-    std::vector<Element*, gc_allocator_ignore_off_page<Element*>> matchedElement;
+    GCVector<Element*> matchedElement;
     execute(rootNode, matchedElement, true);
 
     if (matchedElement.size() > 0)
@@ -109,7 +109,7 @@ Element* SelectorQuery::queryFirst(Node& rootNode)
 
 NodeList* SelectorQuery::queryAll(Node& rootNode)
 {
-    std::vector<Element*, gc_allocator_ignore_off_page<Element*>> matchedElement;
+    GCVector<Element*> matchedElement;
     execute(rootNode, matchedElement, false);
 
     NodeList* list = new NodeList(rootNode.document()->scriptBindingInstance(), &rootNode, true);
@@ -142,10 +142,10 @@ bool SelectorQuery::match(const SelectorQuery::SelectorCheckingContext& context)
     return match(context, ignoreResult);
 }
 
-CSSSelector* SelectorQuery::selectorForIdLookup(CSSSelectorList& selectors)
+CSSSelector* SelectorQuery::selectorForIdLookup(GCDeque<CSSSelector*>& selectors)
 {
     int i = 0;
-    for (CSSSelectorList::iterator it = selectors.begin(); it != selectors.end(); ++it) {
+    for (GCDeque<CSSSelector*>::iterator it = selectors.begin(); it != selectors.end(); ++it) {
         if ((*it)->type() == CSSSelector::Id) {
             return *it;
         }
@@ -157,7 +157,7 @@ CSSSelector* SelectorQuery::selectorForIdLookup(CSSSelectorList& selectors)
 }
 
 
-void SelectorQuery::collectElementsById(Node& rootNode, String* id, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection)
+void SelectorQuery::collectElementsById(Node& rootNode, String* id, GCVector<Element*>& collection)
 {
     Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
         if (child->isElement() && child->asElement()->hasId() && child->asElement()->id()->equals(id)) {
@@ -168,7 +168,7 @@ void SelectorQuery::collectElementsById(Node& rootNode, String* id, std::vector<
     });
 }
 
-void SelectorQuery::collectElementsByClassName(Node& rootNode, const String* className,  std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::collectElementsByClassName(Node& rootNode, const String* className,  GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement)
 {
     Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
         if (child->isElement() && child->asElement()->hasClass() && contains(child->asElement()->classNames(), className)) {
@@ -178,7 +178,7 @@ void SelectorQuery::collectElementsByClassName(Node& rootNode, const String* cla
     }, shouldOnlyMatchFirstElement);
 }
 
-void SelectorQuery::collectElementsByTagName(Node& rootNode, const String* tagName, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::collectElementsByTagName(Node& rootNode, const String* tagName, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement)
 {
     Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
         if (child->isElement() && (tagName->equals(String::fromUTF8("*")) || child->asElement()->tagName()->equals(tagName))) {
@@ -188,7 +188,7 @@ void SelectorQuery::collectElementsByTagName(Node& rootNode, const String* tagNa
     }, shouldOnlyMatchFirstElement);
 }
 
-void SelectorQuery::traverseDescendants(CSSSelectorList& selectors, Node* traverseRoot, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::traverseDescendants(GCDeque<CSSSelector*>& selectors, Node* traverseRoot, Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement)
 {
     Traverse::getherDescendant(collection, traverseRoot, [&](Node* child) {
         if (child->isElement() && selectorMatches(selectors, child->asElement(), rootNode)) {
@@ -198,7 +198,7 @@ void SelectorQuery::traverseDescendants(CSSSelectorList& selectors, Node* traver
     }, shouldOnlyMatchFirstElement);
 }
 
-bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element, Node& rootNode)
+bool SelectorQuery::selectorMatches(GCDeque<CSSSelector*>& selector, Element* element, Node& rootNode)
 {
     SelectorCheckingContext context(element, VisitedMatchDisabled);
     context.selector = selector;
@@ -206,7 +206,7 @@ bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element,
     return match(context);
 }
 
-void SelectorQuery::executeForTraverseRoot(CSSSelectorList& selectors, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::executeForTraverseRoot(GCDeque<CSSSelector*>& selectors, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
     if (!traverseRoot) {
         return;
@@ -226,7 +226,7 @@ void SelectorQuery::executeForTraverseRoot(CSSSelectorList& selectors, Node* tra
 }
 
 template <typename SimpleElementListType>
-void SelectorQuery::executeForTraverseRoots(CSSSelectorList& selectors, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::executeForTraverseRoots(GCDeque<CSSSelector*>& selectors, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
     if (traverseRoots.isEmpty()) {
         return;
@@ -250,7 +250,7 @@ void SelectorQuery::executeForTraverseRoots(CSSSelectorList& selectors, SimpleEl
     }
 }
 
-void SelectorQuery::findTraverseRootsAndExecute(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
     // We need to return the matches in document order. To use id lookup while there is possibility of multiple matches
     // we would need to sort the results. For now, just traverse the document in that case.
@@ -259,9 +259,9 @@ void SelectorQuery::findTraverseRootsAndExecute(Node& rootNode, std::vector<Elem
     bool isRightmostSelector = true;
     bool startFromParent = false;
 
-    CSSSelectorList selectors = *m_selectorListContainer[0];
-    for (CSSSelectorList::iterator it = selectors.begin(); it != selectors.end(); ++it) {
-        std::vector<Element*, gc_allocator_ignore_off_page<Element*>> elements;
+    GCDeque<CSSSelector*> selectors = *m_selectorListContainer[0];
+    for (auto it = selectors.begin(); it != selectors.end(); ++it) {
+        GCVector<Element*> elements;
         collectElementsById(rootNode, (*it)->selectorText(), elements);
         if ((*it)->type() == CSSSelector::Id && elements.size() == 1) {
             Element* element = rootNode.document()->getElementById((*it)->selectorText());
@@ -325,7 +325,7 @@ inline bool SelectorQuery::canUseFastQuery(const Node& rootNode)
     return m_selectorListContainer.size() == 1;
 }
 
-bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output)
+bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element, GCVector<Element*>& output)
 {
     for (unsigned i = 0; i < m_selectorListContainer.size(); ++i) {
         if (selectorMatches(*m_selectorListContainer[i], element, rootNode)) {
@@ -335,7 +335,7 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element, std::v
     return false;
 }
 
-void SelectorQuery::executeSlow(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::executeSlow(Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement)
 {
     Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
         if (child->isElement() && selectorListMatches(rootNode, child->asElement(), collection))
@@ -344,7 +344,7 @@ void SelectorQuery::executeSlow(Node& rootNode, std::vector<Element*, gc_allocat
     }, shouldOnlyMatchFirstElement);
 }
 
-void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
     if (!m_selectorListContainer.size())
         return;
@@ -359,12 +359,12 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator_i
 
     STARFISH_ASSERT(m_selectorListContainer.size() == 1);
 
-    CSSSelectorList selectors = *m_selectorListContainer[0];
+    GCDeque<CSSSelector*> selectors = *m_selectorListContainer[0];
     CSSSelector* firstSelector = selectors[0];
 
     // Fast path for querySelector*('#id'), querySelector*('tag#id').
     if (CSSSelector* idSelector = selectorForIdLookup(selectors)) {
-        std::vector<Element*, gc_allocator_ignore_off_page<Element*>> elements;
+        GCVector<Element*> elements;
         collectElementsById(rootNode, idSelector->selectorText(), elements);
         if (elements.size() > 1) {
             size_t count = elements.size();
@@ -410,7 +410,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator_i
 bool SelectorQuery::checkPseudoClass(const SelectorCheckingContext& context, MatchResult& result)
 {
     Element& element = *context.element;
-    const CSSSelectorList& selector = context.selector;
+    const GCDeque<CSSSelector*>& selector = context.selector;
 
     switch (selector[0]->pseudoType()) {
     case CSSSelector::PseudoFirstChild:
@@ -466,7 +466,7 @@ bool SelectorQuery::checkOne(const SelectorCheckingContext& context, MatchResult
     STARFISH_ASSERT(context.element);
     Element& element = *context.element;
     STARFISH_ASSERT(context.selector.size() > 0);
-    const CSSSelectorList& selector = context.selector;
+    const GCDeque<CSSSelector*>& selector = context.selector;
 
     switch (selector[0]->type()) {
     case CSSSelector::Tag:

@@ -39,7 +39,7 @@ static bool g_traceMSEGCInited = false;
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
-    DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer, std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>* bufferRemain)
+    DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer, GCVector<uint8_t>* bufferRemain)
         : m_inputBuffer(inputBuffer)
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
@@ -109,7 +109,7 @@ public:
         // STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(m_readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
     }
     SourceBufferData* m_inputBuffer;
-    std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>* m_bufferRemain;
+    GCVector<uint8_t>* m_bufferRemain;
     size_t m_readPos;
 };
 
@@ -792,7 +792,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                     inputBuffer->m_sourceBuffer->m_bufferHeader.push_back(std::move(data));
                     std::vector<uint8_t>().swap(inputBuffer->m_headerBuffer);
 
-                    StreamInfoVector streamInfo;
+                    GCVector<StreamInfo*> streamInfo;
                     if (inputBuffer->m_sourceBuffer->m_indexPerInitSegment == 0) {
                         for (size_t i = 0; i < (cl->m_detectedVideoStream.size() + cl->m_detectedAudioStream.size()); i ++) {
                             inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
@@ -1147,7 +1147,7 @@ TimeRanges* SourceBuffer::buffered()
 
 StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex, size_t streamIndex)
 {
-    const StreamInfoVector& streamInfo = m_streamInfo[initSegmentIndex];
+    const GCVector<StreamInfo*>& streamInfo = m_streamInfo[initSegmentIndex];
     for (size_t i = 0; i < streamInfo.size(); i ++) {
         if (streamInfo[i]->m_streamIndex == streamIndex) {
             return streamInfo[i];

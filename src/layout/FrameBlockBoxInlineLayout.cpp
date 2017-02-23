@@ -49,7 +49,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
     bool hasBoxOtherThanCollapsedInlineNonReplacedBox = false;
     bool hasNormalFlowChild = false;
 
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >* boxes;
+    GCVector<FrameBox*>* boxes;
     if (parentBox->isLineBox()) {
         boxes = &parentBox->asLineBox()->boxes();
     } else {
@@ -446,7 +446,7 @@ static FrameBox* fetchContentForResolveBidi(FrameBox* box)
     }
 }
 
-void LineFormattingContext::splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes)
+void LineFormattingContext::splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes)
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
@@ -464,7 +464,7 @@ void LineFormattingContext::splitInlineBoxesAndMarkDirectionForResolveBidi(Direc
 
                     m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.insert({inrb->origin(), mbpData});
 
-                    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxesNeedsCopy = inrb->boxes();
+                    auto& boxesNeedsCopy = inrb->boxes();
                     if (boxesNeedsCopy.size()) {
                         FrameBox* parent = ib->layoutParent()->asFrameBox();
                         LayoutUnit x = box->x();
@@ -528,7 +528,7 @@ CharDirection LineFormattingContext::contentDir(FrameBox* box)
                 // when unicode-bidi property is isolate, we should return neutral direction
                 return CharDirection::Neutral;
             } else {
-                const std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes = b->boxes();
+                const auto& boxes = b->boxes();
                 for (size_t i = 0; i < boxes.size(); i ++) {
                     CharDirection dir = contentDir(boxes[i]);
                     if (dir == CharDirection::Ltr) {
@@ -555,7 +555,7 @@ CharDirection LineFormattingContext::contentDir(FrameBox* box)
     }
 }
 
-void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes)
+void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(GCVector<FrameBox*>& boxes)
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
@@ -575,7 +575,7 @@ void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess
     }
 }
 
-void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes)
+void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<FrameBox*>& boxes)
 {
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
@@ -650,7 +650,7 @@ void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(std::vect
     }
 }
 
-void LineFormattingContext::resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes)
+void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes)
 {
     splitInlineBoxesAndMarkDirectionForResolveBidi(parentDir, boxes);
 
@@ -730,7 +730,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, std::vector<Fr
 #endif
 
     if (parentDir == DirectionValue::LtrDirectionValue) {
-        std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>> oldBoxes = std::move(boxes);
+        GCVector<FrameBox*> oldBoxes = std::move(boxes);
         boxes.reserve(oldBoxes.size());
         std::vector<FrameBox*> rtlStorage; // use normal allocator because oldBoxes has strong reference
 
@@ -787,7 +787,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, std::vector<Fr
             rtlStorage.clear();
         }
     } else {
-        std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>> oldBoxes = std::move(boxes);
+        GCVector<FrameBox*> oldBoxes = std::move(boxes);
         boxes.reserve(oldBoxes.size());
         std::vector<FrameBox*> ltrStorage; // use normal allocator because oldBoxes has strong reference
 
@@ -2445,7 +2445,7 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    std::vector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>, gc_allocator_ignore_off_page<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>>> stack;
+    GCVector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>> stack;
 
     InlineNonReplacedBox* current = self;
     while (current) {

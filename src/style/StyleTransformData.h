@@ -267,7 +267,7 @@ private:
     friend inline bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
     friend inline bool operator!=(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
 
-    std::vector<StyleTransformData, gc_allocator_ignore_off_page<StyleTransformData> > m_group;
+    GCVector<StyleTransformData> m_group;
 };
 
 bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b)

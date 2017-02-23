@@ -22,7 +22,7 @@
 namespace StarFish {
 
 template <typename Func>
-static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>* collection, Node* root, Func filter)
+static void getherDescendant(GCVector<Node*>* collection, Node* root, Func filter)
 {
     Node* child = root->firstChild();
     while (child) {
@@ -40,7 +40,7 @@ unsigned long NodeListImpl::length() const
         fillCacheIfNeed();
         return m_cachedNodeList.size();
     }
-    std::vector<Node*, gc_allocator_ignore_off_page<Node*>> collection;
+    GCVector<Node*> collection;
     getherDescendant(&collection, m_root, [this](Node* child) -> bool {
         return m_filter(child, this->m_data);
     });
@@ -53,7 +53,7 @@ Node* NodeListImpl::item(unsigned long index)
         fillCacheIfNeed();
         return m_cachedNodeList[index];
     }
-    std::vector<Node*, gc_allocator_ignore_off_page<Node*>> collection;
+    GCVector<Node*> collection;
     getherDescendant(&collection, m_root, [this](Node* child) -> bool {
         return m_filter(child, this->m_data);
     });
@@ -75,7 +75,7 @@ void NodeListImpl::fillCacheIfNeed() const
 
 }
 
-void NodeListImpl::setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements)
+void NodeListImpl::setItems(GCVector<Element*>& elements)
 {
     for (auto element : elements) {
         m_cachedNodeList.push_back(element);

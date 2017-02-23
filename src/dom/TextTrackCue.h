@@ -209,7 +209,7 @@ public:
     }
 
 protected:
-    std::vector<TextTrackCue*, gc_allocator_ignore_off_page<TextTrackCue*>> m_list;
+    GCVector<TextTrackCue*> m_list;
 };
 
 }

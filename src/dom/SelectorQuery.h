@@ -31,7 +31,7 @@ public:
     enum VisitedMatchType { VisitedMatchDisabled, VisitedMatchEnabled };
     enum MatchTraverseRootState { DoesNotMatchTraverseRoots, MatchesTraverseRoots };
 
-    SelectorQuery(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& selector)
+    SelectorQuery(GCVector<GCDeque<CSSSelector*>*>& selector)
         : m_selectorListContainer(selector)
     { }
     Element* queryFirst(Node& rootNode);
@@ -53,7 +53,7 @@ public:
         {
         }
 
-        std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*>> selector;
+        GCDeque<CSSSelector*> selector;
         Element* element;
         Element* previousElement;
         Node* scope;
@@ -83,20 +83,20 @@ private:
     Match matchForRelation(const SelectorCheckingContext& context, MatchResult& result);
     Match matchForSubSelector(const SelectorCheckingContext& context, MatchResult& result);
     Match matchSelector(const SelectorCheckingContext&, MatchResult&);
-    void traverseDescendants(CSSSelectorList& selectors, Node* traverseRoot, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement);
-    void executeForTraverseRoot(CSSSelectorList& selector, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement);
+    void traverseDescendants(GCDeque<CSSSelector*>& selectors, Node* traverseRoot, Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
+    void executeForTraverseRoot(GCDeque<CSSSelector*>& selector, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
-    void executeForTraverseRoots(CSSSelectorList& selector, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement);
-    void findTraverseRootsAndExecute(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output, bool shouldOnlyMatchFirstElement);
-    bool selectorListMatches(Node& rootNode, Element* element, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& output);
-    void executeSlow(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement);
-    void execute(Node& rootNode, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& matchedElement, bool shouldOnlyMatchFirstElement);
-    void collectElementsById(Node& rootNode, String* id, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection);
-    void collectElementsByClassName(Node& rootNode, const String* className,  std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement);
-    void collectElementsByTagName(Node& rootNode, const String* tagName, std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(CSSSelectorList& selector, Element* element, Node& rootNode);
-    CSSSelector* selectorForIdLookup(CSSSelectorList& firstSelector);
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& m_selectorListContainer;
+    void executeForTraverseRoots(GCDeque<CSSSelector*>& selector, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
+    void findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
+    bool selectorListMatches(Node& rootNode, Element* element, GCVector<Element*>& output);
+    void executeSlow(Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
+    void execute(Node& rootNode, GCVector<Element*>& matchedElement, bool shouldOnlyMatchFirstElement);
+    void collectElementsById(Node& rootNode, String* id, GCVector<Element*>& collection);
+    void collectElementsByClassName(Node& rootNode, const String* className,  GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
+    void collectElementsByTagName(Node& rootNode, const String* tagName, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
+    bool selectorMatches(GCDeque<CSSSelector*>& selector, Element* element, Node& rootNode);
+    CSSSelector* selectorForIdLookup(GCDeque<CSSSelector*>& firstSelector);
+    GCVector<GCDeque<CSSSelector*>*>& m_selectorListContainer;
 };
 
 }

@@ -175,7 +175,7 @@ public:
     }
 
 protected:
-    std::vector<char, gc_allocator_ignore_off_page<char>> m_buffer;
+    GCVector<char> m_buffer;
     HTMLDocumentBuilder& m_builder;
     HTMLParser* m_parser;
     String* m_htmlSource;

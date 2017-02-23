@@ -100,7 +100,6 @@ enum CharDirection {
 class String {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
-    typedef std::vector<String*, gc_allocator_ignore_off_page<String*> > Vector;
 
     static String* const emptyString;
     static String* const spaceString;
@@ -325,11 +324,11 @@ public:
     }
 
     String* concat(String* str);
-    void split(char delim, Vector& tokens);
+    void split(char delim, GCVector<String*>& tokens);
     String* trim();
 
     // token is only 1-byte char now.
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> tokenize(const char* tokens, size_t tokensLength);
+    GCVector<String*> tokenize(const char* tokens, size_t tokensLength);
 
     icu::UnicodeString toUnicodeString() const
     {
@@ -913,7 +912,7 @@ private:
     int m_numberOfCharactersConsumedPriorToCurrentString;
     int m_numberOfCharactersConsumedPriorToCurrentLine;
     int m_currentLine;
-    std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>> m_substrings;
+    GCDeque<SegmentedSubstring> m_substrings;
     bool m_closed;
     bool m_empty;
     unsigned char m_fastPathFlags;

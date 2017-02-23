@@ -26,10 +26,6 @@ namespace StarFish {
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef unsigned long long DOMTimeStamp;
 
-// typedef of GC-aware vector
-template <typename T>
-using GCVector = std::vector<T, gc_allocator_ignore_off_page<T>>;
-
 class MessageLoop;
 class Window;
 class ScriptBindingInstance;
@@ -456,7 +452,7 @@ public:
     }
 
     int& offset() { return m_offset; }
-    std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>>& history() { return m_historyList; }
+    GCVector<HistoryEntry*>& history() { return m_historyList; }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
@@ -495,16 +491,12 @@ protected:
     unsigned int m_seed;
 
     int m_offset;
-    std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>> m_historyList;
+    GCVector<HistoryEntry*> m_historyList;
 
-    std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
-        gc_allocator_ignore_off_page<std::pair<void*, size_t>>> m_rootMap;
-    std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
-        gc_allocator_ignore_off_page<BlobURLStore>> m_urlBlobStore;
-    std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
-        gc_allocator_ignore_off_page<BlobURLStore>> m_urlMediaSourceBlobStore;
-    std::unordered_map<std::string, AtomicString,
-        std::hash<std::string>, std::equal_to<std::string>, gc_allocator_ignore_off_page<std::pair<std::string, AtomicString>>> m_atomicStringMap;
+    GCUnorderedMap<void*, size_t> m_rootMap;
+    GCUnorderedSet<BlobURLStore> m_urlBlobStore;
+    GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
+    GCUnorderedMap<std::string, AtomicString> m_atomicStringMap;
 };
 
 class StarFishEnterer {

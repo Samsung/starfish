@@ -119,12 +119,10 @@ Element* HTMLDocument::createElement(AtomicString localName, bool shouldCheckNam
     return HTMLDocument::createHTMLElement(this, localName);
 }
 
-typedef std::unordered_map<String*, size_t, std::hash<String*>, std::equal_to<String*>,
-    gc_allocator_ignore_off_page<std::pair<String*, size_t>>> AttributeSet;
-static AttributeSet* createHtmlCaseInsensitiveAttributesSet(Document& document)
+static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(Document& document)
 {
     // This is the list of attributes in HTML 4.01 with values marked as "[CI]" or case-insensitive
-    AttributeSet* attrSet = new AttributeSet();
+    GCUnorderedMap<String*, size_t>* attrSet = new GCUnorderedMap<String*, size_t>();
     StaticStrings* str = document.window()->starFish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
@@ -153,7 +151,7 @@ static AttributeSet* createHtmlCaseInsensitiveAttributesSet(Document& document)
 
 bool HTMLDocument::isCaseSensitiveAttribute(Document& document, const QualifiedName& attributeName)
 {
-    static AttributeSet* caseInsensitiveAttrSet = createHtmlCaseInsensitiveAttributesSet(document);
+    static GCUnorderedMap<String*, size_t>* caseInsensitiveAttrSet = createHtmlCaseInsensitiveAttributesSet(document);
     return caseInsensitiveAttrSet->find(attributeName.localName()) == caseInsensitiveAttrSet->end();
 }
 

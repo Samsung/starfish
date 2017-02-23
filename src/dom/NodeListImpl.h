@@ -52,7 +52,7 @@ public:
         m_cachedNodeList.clear();
     }
 
-    void setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements);
+    void setItems(GCVector<Element*>& elements);
 private:
     void fillCacheIfNeed() const;
     bool m_canCache;
@@ -61,7 +61,7 @@ private:
     Node* m_root;
     NodeListFilterFunction m_filter;
     void* m_data;
-    mutable std::vector<Node*, gc_allocator_ignore_off_page<Node*>> m_cachedNodeList;
+    mutable GCVector<Node*> m_cachedNodeList;
 };
 
 }

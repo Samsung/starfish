@@ -48,7 +48,7 @@ int& History::offset()
     return starFish()->offset();
 }
 
-std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>>& History::history()
+GCVector<HistoryEntry*>& History::history()
 {
     return starFish()->history();
 }

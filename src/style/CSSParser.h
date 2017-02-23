@@ -333,7 +333,7 @@ public:
                 return false;
 
             String* sub = str->substring(s1 + 1, s2 - s1 - 1);
-            String::Vector v;
+            GCVector<String*> v;
             sub->split(',', v);
             size_t size = v.size();
             if (!(maybeRGBA && size == 4) && !(maybeRGB && size == 3))
@@ -428,7 +428,7 @@ public:
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector = false);
+    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, GCVector<GCDeque<CSSSelector*>*>* sList, bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
@@ -438,12 +438,12 @@ protected:
     void restoreState();
     void forgetState();
     CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
-    void parseSelector(std::vector<CSSSelectorList *, gc_allocator_ignore_off_page<CSSSelectorList *>>& list, bool& validSelector);
+    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& list, bool& validSelector);
 
 
-    bool parseComplexSelectorList(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& sList);
-    void parseComplexSelector(CSSSelectorList* selectorList);
-    void parseCompoundSelector(CSSSelectorList* selectorList);
+    bool parseComplexSelectorList(GCVector<GCDeque<CSSSelector*>*>& sList);
+    void parseComplexSelector(GCDeque<CSSSelector*>* selectorList);
+    void parseCompoundSelector(GCDeque<CSSSelector*>* selectorList);
     CSSSelector::RelationType parseCombinator();
     bool parseName(String** name);
     CSSSelector* getSimpleSelector();
@@ -466,11 +466,11 @@ protected:
     void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
     void reportError(const char *aMsg);
     bool parseCharsetRule(CSSStyleSheet* aSheet);
-    static String* combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>>* list);
+    static String* combineAndTrimTokenValues(GCVector<CSSToken*>* list);
     Document* m_document;
     bool m_preserveWS;
     bool m_preserveComments;
-    std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*> > m_preservedTokens;
+    GCVector<CSSToken*> m_preservedTokens;
     CSSScanner* m_scanner;
     CSSToken* m_lookAhead;
     CSSToken* m_token;

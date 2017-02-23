@@ -42,16 +42,16 @@ public:
         return ScriptWrappable::Type::DOMTokenListObject;
     }
 
-    static void tokenize(std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens, String* src);
-    static void concatTokensInsideParentheses(std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens);
+    static void tokenize(GCVector<String*>* tokens, String* src);
+    static void concatTokensInsideParentheses(GCVector<String*>* tokens);
     unsigned long length();
     String* item(unsigned long index);
     bool contains(String* token);
-    String* addSingleToken(String* src, std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens, String* token);
-    void add(std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens);
-    int checkMatchedTokens(bool* flags, std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens, String* token);
+    String* addSingleToken(String* src, GCVector<String*>* tokens, String* token);
+    void add(GCVector<String*>* tokens);
+    int checkMatchedTokens(bool* flags, GCVector<String*>* tokens, String* token);
     void remove(String* token);
-    void remove(std::vector<String*, gc_allocator_ignore_off_page<String*>>* tokens);
+    void remove(GCVector<String*>* tokens);
     bool toggle(String* token, bool isForced, bool forceValue);
     String* toString();
     void validateToken(String* token); // Throw Exceptions

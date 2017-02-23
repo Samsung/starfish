@@ -37,7 +37,7 @@ public:
         if (request->progressState() == NetworkRequest::LOADSTART) {
             request->document()->m_activeNetworkRequests.push_back(request);
         } else if (request->progressState() == NetworkRequest::LOADEND) {
-            std::vector<NetworkRequest*, gc_allocator_ignore_off_page<NetworkRequest*>>& v = request->document()->m_activeNetworkRequests;
+            auto& v = request->document()->m_activeNetworkRequests;
             auto iter = std::find(v.begin(), v.end(), request);
             if (iter != v.end())
                 v.erase(iter);

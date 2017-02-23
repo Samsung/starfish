@@ -233,8 +233,8 @@ protected:
     String* m_responseMimeType;
     NetworkRequestResponse m_response;
     NetworkRequestResponseHeader m_responseHeaderData;
-    std::vector<size_t, gc_allocator_ignore_off_page<size_t>> m_requstedIdlers;
-    std::vector<std::pair<String*, String*>, gc_allocator_ignore_off_page<std::pair<String*, String*>>> m_requestHeaders;
+    GCVector<size_t> m_requstedIdlers;
+    GCVector<std::pair<String*, String*>> m_requestHeaders;
     void pushIdlerHandle(size_t handle)
     {
         m_requstedIdlers.push_back(handle);
@@ -253,7 +253,7 @@ protected:
 
     volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
 
-    std::vector<NetworkRequestClient*, gc_allocator_ignore_off_page<NetworkRequestClient*>> m_clients;
+    GCVector<NetworkRequestClient*> m_clients;
 };
 
 inline void NetworkRequestFileWorker(NetworkRequest* res, String* filePath)

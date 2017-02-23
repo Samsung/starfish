@@ -92,12 +92,10 @@ public:
         UTF32String value;
     };
 
-    typedef std::vector<Attribute, gc_allocator_ignore_off_page<Attribute>> AttributeList;
-
     // By using an inline capacity of 256, we avoid spilling over into an malloced buffer
     // approximately 99% of the time based on a non-scientific browse around a number of
     // popular web sites on 23 May 2013.
-    typedef std::vector<char32_t, gc_allocator_ignore_off_page<char32_t>> DataVector;
+    typedef GCVector<char32_t> DataVector;
 
     HTMLToken()
     {
@@ -279,7 +277,7 @@ public:
         m_data.push_back(character);
     }
 
-    void beginEndTag(const std::vector<char, gc_allocator_ignore_off_page<char>>& characters)
+    void beginEndTag(const GCVector<char>& characters)
     {
         STARFISH_ASSERT(m_type == Uninitialized);
         m_type = EndTag;
@@ -355,7 +353,7 @@ public:
         }
     }
 
-    const AttributeList& attributes() const
+    const GCVector<Attribute>& attributes() const
     {
         STARFISH_ASSERT(m_type == StartTag || m_type == EndTag);
         return m_attributes;
@@ -407,7 +405,7 @@ public:
         m_orAllData |= character;
     }
 
-    void appendToCharacter(const std::vector<char, gc_allocator_ignore_off_page<char>>& characters)
+    void appendToCharacter(const GCVector<char>& characters)
     {
         STARFISH_ASSERT(m_type == Character);
 
@@ -455,7 +453,7 @@ private:
 
     // For StartTag and EndTag
     bool m_selfClosing;
-    AttributeList m_attributes;
+    GCVector<Attribute> m_attributes;
 
     // A pointer into m_attributes used during lexing.
     Attribute* m_currentAttribute;

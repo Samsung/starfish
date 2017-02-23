@@ -30,7 +30,7 @@ public:
     void addWork(ThreadWorker fn, void* data);
 protected:
     MessageLoop* m_messageLoop;
-    std::vector<Thread*, gc_allocator_ignore_off_page<Thread*>> m_threads;
+    GCVector<Thread*> m_threads;
     std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
     Mutex* m_workerQueueMutex;
 

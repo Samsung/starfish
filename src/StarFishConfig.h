@@ -219,6 +219,48 @@
 
 #include "StarFishExport.h"
 
+// typedef of GC-aware vector
+template <
+    typename T,
+    typename Allocator = gc_allocator_ignore_off_page<T>
+>
+using GCVector = std::vector<T, Allocator>;
+
+// typedef of GC-aware deque
+template <
+    typename T,
+    typename Allocator = gc_allocator_ignore_off_page<T>
+>
+using GCDeque = std::deque<T, Allocator>;
+
+// typedef of GC-aware unordered_map
+template <
+    typename Key,
+    typename Value,
+    typename Hasher = std::hash<Key>,
+    typename Predicate = std::equal_to<Key>,
+    typename Allocator = gc_allocator_ignore_off_page<std::pair<Key, Value>>
+>
+using GCUnorderedMap = std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
+
+// typedef of GC-aware map
+template <
+    typename Key,
+    typename Value,
+    typename Comparator,
+    typename Allocator = gc_allocator_ignore_off_page<std::pair<Key, Value>>
+>
+using GCMap = std::map<Key, Value, Comparator, Allocator>;
+
+// typedef of GC-aware unordered_set
+template <
+    typename T,
+    typename Hasher = std::hash<T>,
+    typename Predicate = std::equal_to<T>,
+    typename Allocator = gc_allocator_ignore_off_page<T>
+>
+using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
+
 #include "util/String.h"
 #include "util/QualifiedName.h"
 #include "style/Unit.h"

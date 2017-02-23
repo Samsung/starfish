@@ -71,7 +71,7 @@ protected:
     int historyBackListCount();
     bool navigateBackForward(int offset);
     int& offset();
-    std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>>& history();
+    GCVector<HistoryEntry*>& history();
     bool isPushState();
 };
 

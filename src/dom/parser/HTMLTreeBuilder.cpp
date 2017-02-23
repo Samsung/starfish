@@ -459,7 +459,7 @@ void HTMLTreeBuilder::processDoctypeToken(AtomicHTMLToken* token)
     parseError(token);
 }
 
-void HTMLTreeBuilder::processFakeStartTag(const QualifiedName& tagName, const AttributeVector& attributes)
+void HTMLTreeBuilder::processFakeStartTag(const QualifiedName& tagName, const GCVector<Attribute>& attributes)
 {
     // FIXME: We'll need a fancier conversion than just "localName" for SVG/MathML tags.
     AtomicHTMLToken fakeToken(m_tree.document()->window()->starFish(), HTMLToken::StartTag, tagName.localNameAtomic(), attributes);

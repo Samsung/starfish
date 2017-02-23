@@ -49,7 +49,7 @@ private:
     DOMRectList();
     explicit DOMRectList(const std::vector<DOMQuad>&);
 
-    std::vector<DOMRect*, gc_allocator_ignore_off_page<DOMRect*>> m_list;
+    GCVector<DOMRect*> m_list;
 };
 
 }

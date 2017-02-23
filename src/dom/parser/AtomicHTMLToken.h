@@ -84,13 +84,13 @@ public:
         return findAttributeInVector(m_attributes, attributeName);
     }
 
-    AttributeVector& attributes()
+    GCVector<Attribute>& attributes()
     {
         ASSERT(usesAttributes());
         return m_attributes;
     }
 
-    AttributeVector& attributes() const
+    GCVector<Attribute>& attributes() const
     {
         ASSERT(usesAttributes());
         return const_cast<AtomicHTMLToken*>(this)->m_attributes;
@@ -210,7 +210,7 @@ public:
         m_doctypeData = nullptr;
     }
 
-    AtomicHTMLToken(StarFish* sf, HTMLToken::Type type, AtomicString name, const AttributeVector& attributes = AttributeVector())
+    AtomicHTMLToken(StarFish* sf, HTMLToken::Type type, AtomicString name, const GCVector<Attribute>& attributes = GCVector<Attribute>())
         : m_starFish(sf)
         , m_type(type)
         , m_name(name)
@@ -226,7 +226,7 @@ private:
     StarFish* m_starFish;
     HTMLToken::Type m_type;
 
-    void initializeAttributes(const HTMLToken::AttributeList& attributes);
+    void initializeAttributes(const GCVector<HTMLToken::Attribute>& attributes);
     QualifiedName nameForAttribute(const HTMLToken::Attribute&) const;
 
     bool usesName() const;
@@ -245,10 +245,10 @@ private:
     // For StartTag and EndTag
     bool m_selfClosing;
 
-    AttributeVector m_attributes;
+    GCVector<Attribute> m_attributes;
 };
 
-inline void AtomicHTMLToken::initializeAttributes(const HTMLToken::AttributeList& attributes)
+inline void AtomicHTMLToken::initializeAttributes(const GCVector<HTMLToken::Attribute>& attributes)
 {
     size_t size = attributes.size();
     if (!size)

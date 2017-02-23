@@ -44,7 +44,7 @@ ScriptValue EventListener::call(Event* event)
     return listenerFunc;
 }
 
-EventListenerVector* EventTarget::getEventListeners(const String* eventType)
+GCVector<EventListener*>* EventTarget::getEventListeners(const String* eventType)
 {
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
         if (it->first->equals(eventType)) {
@@ -62,7 +62,7 @@ bool EventTarget::addEventListener(const String* eventType, EventListener* liste
     listener->setCapture(useCapture);
 
     String* type = const_cast<String*>(eventType);
-    EventListenerVector* v = nullptr;
+    GCVector<EventListener*>* v = nullptr;
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
         if (it->first->equals(eventType)) {
@@ -72,7 +72,7 @@ bool EventTarget::addEventListener(const String* eventType, EventListener* liste
         }
     }
     if (!hasEvent) {
-        v = new (GC) EventListenerVector();
+        v = new (GC) GCVector<EventListener*>();
         m_eventListeners.insert(std::make_pair(type, v));
     }
 
@@ -92,7 +92,7 @@ bool EventTarget::removeEventListener(const String* eventType, EventListener* li
     if (!listener)
         return false;
 
-    EventListenerVector* v = nullptr;
+    GCVector<EventListener*>* v = nullptr;
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
         if (it->first->equals(eventType)) {
@@ -135,7 +135,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setTarget(origin);
 
     // 4. If event's target attribute value is participating in a tree, let event path be a static ordered list of all its ancestors in tree order, and let event path be the empty list otherwise.
-    std::vector<EventTarget*, gc_allocator_ignore_off_page<EventTarget*> > eventPath;
+    GCVector<EventTarget*> eventPath;
     EventTarget* eventTarget = origin;
     while (eventTarget) {
         if (eventTarget->isNode()) {
@@ -164,10 +164,10 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         if (event->stopPropagation())
             break;
         EventTarget* eventTarget = eventPath[i - 1];
-        EventListenerVector* originals = eventTarget->getEventListeners(event->eventType());
+        GCVector<EventListener*>* originals = eventTarget->getEventListeners(event->eventType());
         if (originals) {
             // Iterate Copied Vector : listeners can be removed during iteration
-            EventListenerVector copies = EventListenerVector(*originals);
+            GCVector<EventListener*> copies = GCVector<EventListener*>(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
                 if (event->stopImmediatePropagation())
@@ -186,11 +186,11 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setEventPhase(Event::AT_TARGET);
 
     // 8. Invoke the event listeners of event's target attribute value with event, if event's stop propagation flag is unset.
-    EventListenerVector* originals = origin->getEventListeners(event->eventType());
+    GCVector<EventListener*>* originals = origin->getEventListeners(event->eventType());
     if (originals) {
         if (!event->stopPropagation()) {
             // Iterate Copied Vector : listeners can be removed during iteration
-            EventListenerVector copies = EventListenerVector(*originals);
+            GCVector<EventListener*> copies = GCVector<EventListener*>(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
                 if (std::find(originals->begin(), originals->end(), listener) != originals->end()) {
@@ -212,10 +212,10 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             if (event->stopPropagation())
                 break;
             EventTarget* eventTarget = eventPath[i];
-            EventListenerVector* originals = eventTarget->getEventListeners(event->eventType());
+            GCVector<EventListener*>* originals = eventTarget->getEventListeners(event->eventType());
             if (originals) {
                 // Iterate Copied Vector : listeners can be removed during iteration
-                EventListenerVector copies = EventListenerVector(*originals);
+                GCVector<EventListener*> copies = GCVector<EventListener*>(*originals);
                 for (auto listener : copies) {
                     STARFISH_ASSERT(listener);
                     if (event->stopImmediatePropagation())
@@ -260,7 +260,7 @@ bool EventTarget::setAttributeEventListener(const String* eventType, EventListen
 
 EventListener* EventTarget::getAttributeEventListener(const String* eventType)
 {
-    EventListenerVector* v;
+    GCVector<EventListener*>* v;
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
         if (it->first->equals(eventType)) {

@@ -144,7 +144,7 @@ public:
         return m_descender;
     }
 
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
+    GCVector<FrameBox*>& boxes()
     {
         return m_boxes;
     }
@@ -201,7 +201,7 @@ public:
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
+    GCVector<FrameBox*> m_boxes;
     size_t m_absolutePositionedLayoutParentCnt;
 };
 
@@ -655,7 +655,7 @@ protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
 
-    std::vector<LineBox*, gc_allocator_ignore_off_page<LineBox*> > m_lineBoxes;
+    GCVector<LineBox*> m_lineBoxes;
     MarginInfo* m_marginInfo;
     bool m_heightComputed;
 };
@@ -743,10 +743,10 @@ private:
     void breakLineForInlineNonReplacedBox(FrameLineBreak* br);
 
     CharDirection contentDir(FrameBox* box);
-    void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
-    void reassignLeftRightMBPOfInlineNonReplacedBox(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
-    void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
-    void splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
+    void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(GCVector<FrameBox*>& boxes);
+    void reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<FrameBox*>& boxes);
+    void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
+    void splitInlineBoxesAndMarkDirectionForResolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 

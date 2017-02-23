@@ -43,8 +43,8 @@ String* Text::wholeText()
     {
         return node->isText();
     };
-    Traverse::NodeCollection* pSiblings = Traverse::previousSiblings(this, filter);
-    Traverse::NodeCollection* nSiblings = Traverse::nextSiblings(this, filter);
+    GCVector<Node*>* pSiblings = Traverse::previousSiblings(this, filter);
+    GCVector<Node*>* nSiblings = Traverse::nextSiblings(this, filter);
 
     String* str = String::createASCIIString("");
     std::for_each(pSiblings->begin(), pSiblings->end(), [&](Node* n) {

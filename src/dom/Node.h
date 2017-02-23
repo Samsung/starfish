@@ -42,7 +42,7 @@ class RareNodeMembers;
 class RareElementMembers;
 
 // TODO use weak reference for activeHtmlCollectionLists
-typedef std::vector<std::pair<String*, HTMLCollection*>, gc_allocator_ignore_off_page<std::pair<String*, HTMLCollection*>>> ActiveHTMLCollectionList;
+typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 
 class RareNodeMembers : public gc {
 public:
@@ -325,7 +325,7 @@ public:
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
-    void parseSelector(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& selectorListContainer, String* selectors);
+    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors);
     Element* querySelector(String* selector);
     NodeList* querySelectorAll(String* selector);
 

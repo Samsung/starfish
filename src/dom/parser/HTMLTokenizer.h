@@ -164,7 +164,7 @@ public:
     size_t numberOfBufferedCharacters() const
     {
         // Notice that we add 2 to the length of the m_temporaryBuffer to
-        // account for the "</" characters, which are effecitvely buffered in
+        // account for the "</" characters, which are effectively buffered in
         // the tokenizer's state machine.
         return m_temporaryBuffer.size() ? m_temporaryBuffer.size() + 2 : 0;
     }
@@ -282,15 +282,15 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/#preprocessing-the-input-stream
     InputStreamPreprocessor<HTMLTokenizer> m_inputStreamPreprocessor;
 
-    std::vector<char32_t, gc_allocator_ignore_off_page<char32_t>> m_appropriateEndTagName;
+    GCVector<char32_t> m_appropriateEndTagName;
 
     // http://www.whatwg.org/specs/web-apps/current-work/#temporary-buffer
-    std::vector<char, gc_allocator_ignore_off_page<char>> m_temporaryBuffer;
+    GCVector<char> m_temporaryBuffer;
 
-    // We occationally want to emit both a character token and an end tag
+    // We occasionally want to emit both a character token and an end tag
     // token (e.g., when lexing script). We buffer the name of the end tag
     // token here so we remember it next time we re-enter the tokenizer.
-    std::vector<char, gc_allocator_ignore_off_page<char>> m_bufferedEndTagName;
+    GCVector<char> m_bufferedEndTagName;
 };
 
 }

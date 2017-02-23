@@ -36,12 +36,12 @@ extern "C" {
 namespace StarFish {
 
 struct FFMpegIOContext {
-    FFMpegIOContext(const std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>& buf)
+    FFMpegIOContext(const GCVector<uint8_t>& buf)
         : m_readPos(0)
         , m_buffer(buf)
     { }
     size_t m_readPos;
-    const std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>& m_buffer;
+    const GCVector<uint8_t>& m_buffer;
 };
 
 static int FFMpegIOContextReadCallback(void *opaque, uint8_t *buf, int buf_size)

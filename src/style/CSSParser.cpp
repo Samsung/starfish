@@ -686,7 +686,7 @@ public:
 protected:
     String* m_string;
     size_t m_pos;
-    std::vector<size_t, gc_allocator_ignore_off_page<size_t> > m_preservedPos;
+    GCVector<size_t> m_preservedPos;
 
 };
 
@@ -922,7 +922,7 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
     return String::emptyString;
 }
 
-void CSSParser::parseSelector(std::vector<CSSSelectorList *, gc_allocator_ignore_off_page<CSSSelectorList *>>& list, bool& validSelector)
+void CSSParser::parseSelector(GCVector<GCDeque<CSSSelector*>*>& list, bool& validSelector)
 {
     validSelector = parseComplexSelectorList(list);
     if (!validSelector)
@@ -1008,7 +1008,7 @@ CSSSelector* CSSParser::getPseudoSelector()
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot:
         {
-            CSSSelectorList selectorList;
+            GCDeque<CSSSelector*> selectorList;
             parseCompoundSelector(&selectorList);
 
             if (selectorList.size() != 1) {
@@ -1339,7 +1339,7 @@ bool CSSParser::parseName(String** name)
     return true;
 }
 
-void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
+void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
 {
     CSSSelector* compoundSelector;
 
@@ -1402,7 +1402,7 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
     return HasPseudoElementForRightmostCompound;
 }
 
-void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
+void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
 {
     CSSToken* token = currentToken();
     while (token->isSGMLComment() || token->isWhiteSpace())
@@ -1429,7 +1429,7 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         return;
     }
 
-    CSSSelectorList secondSelectorList;
+    GCDeque<CSSSelector*> secondSelectorList;
 
     while (CSSSelector::RelationType combinator = parseCombinator()) {
         secondSelectorList.clear();
@@ -1461,9 +1461,9 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
     }
 }
 
-bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& listOfSelectorList)
+bool CSSParser::parseComplexSelectorList(GCVector<GCDeque<CSSSelector*>*>& listOfSelectorList)
 {
-    CSSSelectorList* selectorList = new (GC) CSSSelectorList();
+    GCDeque<CSSSelector*>* selectorList = new (GC) GCDeque<CSSSelector*>();
     parseComplexSelector(selectorList);
 
     if (selectorList->size() == 0) {
@@ -1478,7 +1478,7 @@ bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_alloca
             token = getToken(false, true);
         } while (token->isSGMLComment() || token->isWhiteSpace());
 
-        CSSSelectorList* nextSelectorList = new (GC) CSSSelectorList();
+        GCDeque<CSSSelector*>* nextSelectorList = new (GC) GCDeque<CSSSelector*>();
         parseComplexSelector(nextSelectorList);
         if (nextSelectorList->size() == 0) {
             return false;
@@ -1497,10 +1497,10 @@ bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_alloca
 
 String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 {
-    std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>> willBeConcat;
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
+    GCVector<CSSToken*> willBeConcat;
+    GCVector<String*> blocks;
     // bool foundPriority = false;
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> values;
+    GCVector<String*> values;
     bool isURLFunc = false;
     int urlTokens = 0;
     while (token->isNotNull()) {
@@ -1579,11 +1579,11 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 }
 
 // Remove comments from both sides of a tokenList & Concat
-String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>>* list)
+String* CSSParser::combineAndTrimTokenValues(GCVector<CSSToken*>* list)
 {
     String* result = String::emptyString;
     if (list != nullptr) {
-        std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>> stashed;
+        GCVector<CSSToken*> stashed;
         bool seenNoneComment = false;
         for (CSSToken* item : *list) {
             if (seenNoneComment && item->isComment()) {
@@ -1606,7 +1606,7 @@ String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator
 void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration)
 {
     preserveState();
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
+    GCVector<String*> blocks;
     if (aToken->isIdent()) {
         String* descriptor = aToken->m_value->toLower();
 #ifdef STARFISH_TC_COVERAGE
@@ -1713,14 +1713,14 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     return;
 }
 
-void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector)
+void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, GCVector<GCDeque<CSSSelector*>*>* sList, bool isQueryingSelector)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
     // first let's see if we have a selector here...
     bool validSelector = true;
 
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> list;
+    GCVector<GCDeque<CSSSelector*>*> list;
     parseSelector(list, validSelector);
 
     bool valid = false;
@@ -1787,7 +1787,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
 void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
-    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
+    GCVector<String*> blocks;
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
         aString = aString->concat(token->m_value);

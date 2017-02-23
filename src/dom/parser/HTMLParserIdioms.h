@@ -206,7 +206,7 @@ bool parseHTMLInteger(String*, int&);
 // http://www.whatwg.org/specs/web-apps/current-work/#rules-for-parsing-non-negative-integers
 bool parseHTMLNonNegativeInteger(String*, unsigned int&);
 
-typedef std::vector<std::pair<String*, String*>, gc_allocator_ignore_off_page<std::pair<String*, String*>>> HTMLAttributeList;
+typedef GCVector<std::pair<String*, String*>> HTMLAttributeList;
 // The returned encoding might not be valid.
 // WTF::TextEncoding encodingFromMetaAttributes(const HTMLAttributeList&);
 

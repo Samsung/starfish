@@ -85,7 +85,7 @@ public:
         }
     }
 private:
-    std::vector<size_t, gc_allocator_ignore_off_page<size_t>> m_pendingJobs;
+    GCVector<size_t> m_pendingJobs;
 };
 #endif
 
@@ -4851,7 +4851,7 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
         try {
-            std::vector<String*, gc_allocator_ignore_off_page<String*>> tokens;
+            GCVector<String*> tokens;
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
@@ -4873,7 +4873,7 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
         try {
-            std::vector<String*, gc_allocator_ignore_off_page<String*>> tokens;
+            GCVector<String*> tokens;
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
@@ -4987,7 +4987,7 @@ escargot::ESFunctionObject* bindingDOMSettableTokenList(ScriptBindingInstance* s
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
         try {
-            std::vector<String*, gc_allocator_ignore_off_page<String*>> tokens;
+            GCVector<String*> tokens;
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
@@ -5012,7 +5012,7 @@ escargot::ESFunctionObject* bindingDOMSettableTokenList(ScriptBindingInstance* s
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
         try {
-            std::vector<String*, gc_allocator_ignore_off_page<String*>> tokens;
+            GCVector<String*> tokens;
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
@@ -5626,7 +5626,7 @@ escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInst
 
         size_t length = (size_t)lengthValue.toNumber();
 
-        std::vector<std::pair<void* , size_t>, gc_allocator_ignore_off_page<std::pair<void*, size_t>>> bufferInfo;
+        GCVector<std::pair<void* , size_t>> bufferInfo;
         size_t totalByteLength = 0;
         for (size_t i = 0; i < length; i ++) {
             escargot::ESValue element = obj->get(escargot::ESValue(i));

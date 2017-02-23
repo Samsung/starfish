@@ -623,7 +623,7 @@ public:
     String* toString();
 
 protected:
-    std::vector<CSSTransformFunction, gc_allocator_ignore_off_page<CSSTransformFunction> > m_transforms;
+    GCVector<CSSTransformFunction> m_transforms;
 };
 
 class CSSStyleValuePair : public gc {
@@ -729,7 +729,7 @@ public:
         m_flagImportant = isImportant;
     }
 
-    bool updateValueCommon(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens);
+    bool updateValueCommon(GCVector<String*>* tokens);
 
     bool isAuto()
     {
@@ -1065,19 +1065,19 @@ public:
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
-    bool updateValue##name(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens);
+    bool updateValue##name(GCVector<String*>* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
-    bool updateValueLengthOrPercent(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercent(GCVector<String*>* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(GCVector<String*>* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(GCVector<String*>* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
     bool updateValueLengthOrPercentOrAutoOrNone(String* token, bool allowNegative);
 
-    bool updateValueBackgroundImage(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);
-    bool updateValueBackgroundSize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);
+    bool updateValueBackgroundImage(GCVector<String*>* tokens, bool allowComma);
+    bool updateValueBackgroundSize(GCVector<String*>* tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(String* token);
     bool updateValueUnitBackgroundPositionX(String* token);
     bool updateValueUnitBackgroundPositionY(String* token);
@@ -1154,7 +1154,7 @@ public:
 
 protected:
     Separator m_separator;
-    std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > m_values;
+    GCVector<CSSStyleValuePair> m_values;
 };
 
 class CSSStyleDeclaration : public ScriptWrappable {
@@ -1230,7 +1230,7 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, String* src, String* seperator = String::emptyString);
+    void tokenizeCSSValue(GCVector<String*>* tokens, String* src, String* seperator = String::emptyString);
 
     String* Border();
     String* BorderTop();
@@ -1308,7 +1308,7 @@ public:
             removeCSSValuePair(CSSStyleValuePair::KeyKind::name);                      \
             return;                                                                    \
         }                                                                              \
-        std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;           \
+        GCVector<String*> tokens;           \
         tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
         if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {        \
@@ -1391,14 +1391,11 @@ public:
     }
 
 protected:
-    std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > m_cssValues;
+    GCVector<CSSStyleValuePair> m_cssValues;
     Document* m_document;
     Element* m_element;
     StyleType m_styleType;
 };
-
-class CSSSelector;
-typedef std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > CSSSelectorList;
 
 class CSSSelector : public gc {
 public:
@@ -1555,7 +1552,7 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    CSSSelectorList& pseudoSelectorList()
+    GCDeque<CSSSelector*>& pseudoSelectorList()
     {
         return m_pseudoSelectorList;
     }
@@ -1612,7 +1609,7 @@ public:
     String* value();
     void setValue(String* value, bool matchLowerCase = false);
 
-    bool isSimple(CSSSelectorList* selectorList);
+    bool isSimple(GCDeque<CSSSelector*>* selectorList);
 
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
@@ -1628,7 +1625,7 @@ protected:
     String* m_selectorText;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
-    CSSSelectorList m_pseudoSelectorList;
+    GCDeque<CSSSelector*> m_pseudoSelectorList;
     String* m_argument;
     struct {
         int m_a; // Used for :nth-*
@@ -1647,14 +1644,14 @@ public:
         , m_document(document)
     {
         CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
-        CSSSelectorList* selectorList = new (GC) CSSSelectorList();
+        GCDeque<CSSSelector*>* selectorList = new (GC) GCDeque<CSSSelector*>();
         selectorList->push_back(selector);
         m_selectorList = selectorList;
         m_styleDeclaration = new CSSStyleDeclaration(document);
         m_document = document;
     }
 
-    CSSStyleRule(CSSSelectorList* selectorList, Document* document, CSSStyleDeclaration* decl)
+    CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document, CSSStyleDeclaration* decl)
         : ScriptWrappable(this)
         , m_selectorList(selectorList)
         , m_styleDeclaration(decl)
@@ -1672,7 +1669,7 @@ public:
         return ScriptWrappable::Type::CSSStyleRuleObject;
     }
 
-    CSSSelectorList* selectorList()
+    GCDeque<CSSSelector*>* selectorList()
     {
         return m_selectorList;
     }
@@ -1688,7 +1685,7 @@ public:
     }
 
 protected:
-    CSSSelectorList* m_selectorList;
+    GCDeque<CSSSelector*>* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
     Document* m_document;
 };
@@ -1714,7 +1711,7 @@ public:
 
     void parseSheetIfneeds();
 
-    std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> >& rules()
+    GCVector<CSSStyleRule*>& rules()
     {
         STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_rules;
@@ -1725,7 +1722,7 @@ public:
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet before access style rules.
     String* m_sourceString;
-    std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> > m_rules;
+    GCVector<CSSStyleRule*> m_rules;
     Node* m_origin;
 };
 
@@ -1747,7 +1744,7 @@ public:
     }
 
 protected:
-    std::vector<CSSStyleDeclaration*, gc_allocator_ignore_off_page<CSSStyleDeclaration*> > m_declarations;
+    GCVector<CSSStyleDeclaration*> m_declarations;
 };
 
 class StyleResolver {
@@ -1784,7 +1781,7 @@ public:
         m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
     }
 
-    std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> >& sheets()
+    GCVector<CSSStyleSheet*>& sheets()
     {
         return m_sheets;
     }
@@ -1807,10 +1804,10 @@ public:
     void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent, bool isForPseudoElement = false);
 
 protected:
-    void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
+    void apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
 
-    Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx, MatchResult& result);
-    Match matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result);
+    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList, unsigned idx, MatchResult& result);
+    Match matchForRelation(Element* element, GCDeque<CSSSelector*>* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result);
 
     bool checkOne(Element* element, CSSSelector* selector, MatchResult& result);
     bool checkPseudoClass(Element* element, CSSSelector* selector, MatchResult& result);
@@ -1819,7 +1816,7 @@ protected:
 
     Document& m_document;
     float m_mediumFontSize;
-    std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> > m_sheets;
+    GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_allRules;
 };
 }
