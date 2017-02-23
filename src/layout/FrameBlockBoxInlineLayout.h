@@ -21,30 +21,74 @@
 
 namespace StarFish {
 
-class TextUtils {
-public:
-    static LayoutUnit textWidth(bool isWhiteSpace, FrameText* f, size_t offset, size_t nextOffset)
-    {
-        LayoutUnit ret;
-        if (isWhiteSpace) {
-            ret = f->style()->font()->spaceWidth();
-        } else {
-            ret = f->style()->font()->measureText(StringView(f->text(), offset, nextOffset));
-        }
+struct TextToken {
+    FrameText* m_frameText;
+    size_t m_start;
+    size_t m_end;
+    LayoutUnit m_width;
+    WordType m_type;
 
-        return ret;
+    TextToken(FrameText* ft, size_t start, size_t end, WordType type)
+        : m_frameText(ft)
+        , m_start(start)
+        , m_end(end)
+        , m_type(type)
+    {
+        switch (m_type) {
+        case CollapsibleWhiteSpace:
+            m_width = m_frameText->style()->font()->spaceWidth();
+            break;
+        case NonCollapsibleWhiteSpace:
+            m_width = m_frameText->style()->font()->spaceWidth() * (m_end - m_start);
+            break;
+        case ForcedNewline:
+            m_width = 0;
+            break;
+        case General:
+            m_width = m_frameText->style()->font()->measureText(StringView(m_frameText->text(), m_start, m_end));
+            break;
+        }
     }
+
+    bool isWhiteSpace()
+    {
+        return m_type != General;
+    }
+
+    LayoutUnit width()
+    {
+        return m_width;
+    }
+
+#ifndef NDEBUG
+    void dump()
+    {
+        std::string str = m_frameText->text()->substring(m_start, m_end - m_start)->utf8Data();
+        str = FrameText::replaceAll(str, "\n", "\\n");
+        printf("%s (", str.data());
+        printf("width:%d, ", width().toInt());
+        printf("type:%s)\n", m_type == General ? "GN" : m_type == ForcedNewline ? "NL" : "WS");
+    }
+#endif
 };
 
 template <typename Context>
 void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
 {
+    // TODO : Consider direction
     String* txt = f->text();
-    // TODO consider white-space
+    size_t len = txt->length();
+
+    bool collapseSpace = !f->shouldPreserveWhiteSpaces();
+    bool collapseNewline = f->shouldIgnoreNewlineChar();
+
     unsigned offset = 0;
-    while (true) {
-        if (offset >= txt->length()) {
-            break;
+    while (offset < len) {
+        if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
+            TextToken token = TextToken(f, offset, offset + 1, WordType::ForcedNewline);
+            offset++;
+            ctx->handleTextToken(token);
+            continue;
         }
         bool isWhiteSpace = false;
         if (String::isSpaceOrNewline(txt->charAt(offset))) {
@@ -55,10 +99,21 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
         unsigned nextOffset = offset + 1;
         if (isWhiteSpace) {
             while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
+                if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
+                    break;
+                }
                 nextOffset++;
             }
 
-            ctx->handleTextToken(f, offset, nextOffset, isWhiteSpace);
+            // Mostly white-spaces in text are collaped.
+            // But the text in <pre> or depending on CSS white-space property,
+            // user agent should preserve white-spaces in text.
+            WordType type = WordType::CollapsibleWhiteSpace;
+            if (!collapseSpace) {
+                type = WordType::NonCollapsibleWhiteSpace;
+            }
+            TextToken token = TextToken(f, offset, nextOffset, type);
+            ctx->handleTextToken(token);
         } else {
             size_t start = offset;
             while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
@@ -70,7 +125,8 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
             int32_t c, prev = 0;
             size_t txtLen = txt->length();
             while (((c = breaker->next()) != icu::BreakIterator::DONE) && (c + start <= txtLen)) {
-                ctx->handleTextToken(f, prev + start, c + start, isWhiteSpace);
+                TextToken token = TextToken(f, prev + start, c + start, WordType::General);
+                ctx->handleTextToken(token);
                 prev = c;
             }
         }

@@ -170,3 +170,4 @@
 58957:test/internal-test/css/zindex/zindex-internal-test-7.html
 377:test/internal-test/css/border/starting_unprocessed_mbp.html
 341:test/internal-test/css/border/next-line-dont-show-end-mbp.html
+527:test/internal-test/css/whitespace/white_space_rules.html

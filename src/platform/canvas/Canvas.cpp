@@ -793,7 +793,7 @@ public:
 
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            if (!(sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ')) {
+            if (sv.originalString()->charAt(sv.start()) != ' ') {
                 float h = lastState().m_font->size();
                 float xx = x;
                 for (size_t i = sv.start(); i < sv.end(); i++) {

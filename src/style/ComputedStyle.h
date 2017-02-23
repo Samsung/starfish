@@ -893,7 +893,7 @@ protected:
         FontWeightValue m_fontWeight : 4;
         SideValue m_textAlign : 3;
         DirectionValue m_direction : 2;
-        WhiteSpaceValue m_whiteSpace : 1;
+        WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;
         BorderCollapseValue m_borderCollapse: 1; // table
         Length m_borderSpacing; // table

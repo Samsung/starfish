@@ -993,9 +993,11 @@ static bool containOnlyWhiteSpace(FrameBox* box)
 template <typename Box>
 void InlineBoxLayoutParentBox<Box>::removeDanglingSpace(LineFormattingContext* ctx)
 {
+    // TODO : Consider moving LastFrameTextContainingWhiteSpaceAtLast logic to here
     FrameBox* last = lastInlineBox();
     while (last) {
-        if (containOnlyWhiteSpace(last)) {
+        if (last->shouldWrapLines() && !last->shouldPreserveWhiteSpaces() && containOnlyWhiteSpace(last)) {
+            // Ignore last whitespace when wrapping lines.
             removeBoxFromLine(last);
             ctx->m_currentLineWidth -= last->boxWidth();
         } else {
@@ -1654,11 +1656,6 @@ void LineFormattingContext::breakLineForLineBox(FrameLineBreak* br, bool isLastL
     }
 }
 
-static bool hasBreakableWhiteSpaceProperty(Frame* f)
-{
-    return f->style()->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue;
-}
-
 bool canInsertToCurrentLine(PreferredWidthContext* ctx, LayoutUnit width)
 {
     return width < ctx->m_remainedWidth - ctx->m_currentLineWidth - ctx->m_unprocessedStartingMBPWidth;
@@ -1683,7 +1680,7 @@ static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width
 {
     return (!ctx->hasFloatingBoxAlreadyInLineBox(f) && ctx->m_currentLineWidth == 0)
         || canInsertToLineBox(ctx, f, width)
-        || !hasBreakableWhiteSpaceProperty(f);
+        || !f->shouldWrapLines();
 }
 
 void LineFormattingContext::generateInlineBox(FrameBox* box)
@@ -1731,10 +1728,16 @@ void LineFormattingContext::breakLine(FrameLineBreak* br)
     }
 }
 
-void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textWidth, String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace)
+void LineFormattingContext::generateInlineTextBox(TextToken& token)
 {
-    const std::vector<TextRun>& runs = m_textRunsPerFrameText[f->asFrameText()];
-    if (isWhiteSpace) {
+    FrameText* f = token.m_frameText;
+    String* srcTxt = f->text();
+    size_t offset = token.m_start;
+    size_t nextOffset = token.m_end;
+    LayoutUnit textWidth = token.width();
+    const std::vector<TextRun>& runs = m_textRunsPerFrameText[f];
+
+    if (token.isWhiteSpace()) {
         CharDirection dir = CharDirection::Ltr;
         for (size_t i = 0; i < runs.size(); i ++) {
             if (offset <= runs[i].m_stringView.start() && runs[i].m_stringView.end() <= nextOffset) {
@@ -1742,7 +1745,17 @@ void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textW
                 break;
             }
         }
-        InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), String::spaceString, 0, 1, dir));
+        String* source = String::spaceString;
+        size_t start = 0, end = 1;
+        if (token.m_type == WordType::NonCollapsibleWhiteSpace) {
+            source = srcTxt;
+            start = offset;
+            end = nextOffset;
+        } else if (token.m_type == WordType::ForcedNewline) {
+            source = String::emptyString;
+            start = end = 0;
+        }
+        InlineBox* ib = new InlineTextBox(f, TextRun(f, source, start, end, dir));
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
         generateInlineBox(ib);
@@ -1777,7 +1790,7 @@ void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textW
                     }
                 }
 
-                InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, start, end, dir));
+                InlineBox* ib = new InlineTextBox(f, TextRun(f, srcTxt, start, end, dir));
                 ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
                 generateInlineBox(ib);
@@ -1793,7 +1806,7 @@ void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textW
                         break;
                     }
                 }
-                InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, end, nextOffset, dir));
+                InlineBox* ib = new InlineTextBox(f, TextRun(f, srcTxt, end, nextOffset, dir));
                 ib->setWidth(f->style()->font()->measureText(ib->asInlineTextBox()->textRun().m_stringView));
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
                 generateInlineBox(ib);
@@ -1806,7 +1819,7 @@ void LineFormattingContext::generateInlineTextBox(FrameText* f, LayoutUnit textW
                     break;
                 }
             }
-            InlineBox* ib = new InlineTextBox(f->asFrameText(), TextRun(f->asFrameText(), srcTxt, offset, nextOffset, dir));
+            InlineBox* ib = new InlineTextBox(f, TextRun(f, srcTxt, offset, nextOffset, dir));
             ib->setWidth(textWidth);
             ib->setHeight(f->style()->font()->metrics().m_fontHeight);
             generateInlineBox(ib);
@@ -1903,15 +1916,23 @@ void LineFormattingContext::setLastFrameTextContainingWhiteSpaceAtLast(FrameBloc
     m_lastFrameText = lastFrameTextContainingWhiteSpaceAtLast(f).first;
 }
 
-void LineFormattingContext::handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+void LineFormattingContext::handleTextToken(TextToken& token)
 {
-    textAppendRetry:
-    if (isWhiteSpace) {
+    FrameText* f = token.m_frameText;
+    if (token.isWhiteSpace()) {
+        // If the text is newline character such as LineFeed(U+000A),
+        // break line after generate box and return.
+        if (token.m_type == WordType::ForcedNewline) {
+            generateInlineTextBox(token);
+            breakLine(nullptr);
+            return;
+        }
+
         if (m_shouldIgnoreWhiteSpace) {
             return;
         }
 
-        if (isLastFrameTextContainingWhiteSpaceAtLast(f) && nextOffset == f->text()->length()) {
+        if (isLastFrameTextContainingWhiteSpaceAtLast(f) && token.m_end == f->text()->length()) {
             // The reason why this condition is added is to handle ending MBP width for InlineNonReplacedBox.
             // If we can't prevent the last white space from line being breaked, and the ending MBP width is
             // painted on the breaked next line, not on the line as it should be.
@@ -1919,23 +1940,22 @@ void LineFormattingContext::handleTextToken(FrameText* f, size_t offset, size_t 
             return;
         }
 
-        if (isWhiteSpaceAtLast()) {
+        if (isWhiteSpaceAtLast() && !f->shouldPreserveWhiteSpaces()) {
             return;
         }
     }
 
-    LayoutUnit textWidth = TextUtils::textWidth(isWhiteSpace, f->asFrameText(), offset, nextOffset);
-
-    if (dontBreakLine(this, f, textWidth)) {
-    } else {
-        // try this at nextline
+    LayoutUnit textWidth = token.width();
+    // NOTE : Currently, non-collapsible white spaces at the end of line
+    //        will not make linebreak
+    if (token.m_type != WordType::NonCollapsibleWhiteSpace && !dontBreakLine(this, f, textWidth)) {
         breakLine(nullptr);
         m_shouldLineBreakForBr = false;
-        goto textAppendRetry;
+        handleTextToken(token);
+        return;
     }
     m_shouldLineBreakForBr = true;
-
-    generateInlineTextBox(f->asFrameText(), textWidth, f->text(), offset, nextOffset, isWhiteSpace);
+    generateInlineTextBox(token);
 }
 
 void LineFormattingContext::generateInlineBoxes(Frame *origin)
@@ -2575,26 +2595,26 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext* lineFormattingCon
     lineFormattingContext->finishLineForInlineNonReplacedBox(nullptr, true);
 }
 
-void PreferredWidthContext::handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+void PreferredWidthContext::handleTextToken(TextToken& token)
 {
-    if (isWhiteSpace && isWhiteSpaceAtLast()) {
+    if (token.m_type == WordType::CollapsibleWhiteSpace && isWhiteSpaceAtLast()) {
         return;
     }
 
-    LayoutUnit w = TextUtils::textWidth(isWhiteSpace, f->asFrameText(), offset, nextOffset);
-
-    if (isWhiteSpace) {
+    LayoutUnit w = token.width();
+    if (token.m_type == WordType::CollapsibleWhiteSpace || token.m_type == WordType::ForcedNewline) {
         if (m_breakedLineStatus == Never) {
             m_candidateLineWidth = m_currentLineWidth;
         }
     } else {
-        updatePreferredMinWidth(w);
+        if (token.m_type == WordType::General) {
+            updatePreferredMinWidth(w);
+        }
         w += m_unprocessedStartingMBPWidth;
     }
 
-    updateCurrentLineWidth(f, w, isWhiteSpace);
-    setIsWhiteSpaceAtLast(isWhiteSpace);
-
+    updateCurrentLineWidth(token.m_frameText, w, token.m_type);
+    setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace || token.m_type == WordType::NonCollapsibleWhiteSpace);
 }
 
 void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
@@ -2602,7 +2622,7 @@ void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
     m_unprocessedStartingMBPWidth += f->startingMBPWidth();
 }
 
-void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool isWhiteSpace)
+void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, WordType type)
 {
     if (f->isFloating()) {
         if (f->style()->clear() == NoneClearValue
@@ -2622,7 +2642,11 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool 
             m_hasFloat = HasNone;
             m_currentLineWidth = w;
         }
-    } else if (hasBreakableWhiteSpaceProperty(f)) {
+    } else if (type == WordType::ForcedNewline) {
+        m_breakedLineStatus = AbsolutelyBreaked;
+        updatePreferredWidth(m_currentLineWidth);
+        m_currentLineWidth = 0;
+    } else if (f->shouldWrapLines()) {
         if (canInsertToCurrentLine(this, w)) {
             m_currentLineWidth += w;
             if (m_breakedLineStatus == MaybeBreaked) {
@@ -2630,12 +2654,15 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool 
                 updatePreferredWidth(m_remainedWidth);
             }
         } else {
-            if (isWhiteSpace) {
+            if (type == WordType::CollapsibleWhiteSpace) {
                 if (m_breakedLineStatus == Never) {
                     m_breakedLineStatus = MaybeBreaked;
                 }
                 updatePreferredWidth(m_currentLineWidth);
                 m_currentLineWidth = 0;
+            } else if (type == WordType::NonCollapsibleWhiteSpace) {
+                updatePreferredWidth(m_remainedWidth);
+                m_currentLineWidth += w;
             } else {
                 m_currentLineWidth = w;
                 m_breakedLineStatus = AbsolutelyBreaked;
@@ -2650,14 +2677,14 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, bool 
         }
     }
 
-    if (!isWhiteSpace && !f->isFloating()) {
+    if (type == WordType::General && !f->isFloating()) {
         m_unprocessedStartingMBPWidth = 0;
     }
 }
 
 void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
 {
-    updateCurrentLineWidth(f, w, false);
+    updateCurrentLineWidth(f, w);
 
     if (f->style()->floating() == LeftFloatValue) {
         m_hasFloat |= HasLeft;
@@ -2690,7 +2717,7 @@ void PreferredWidthContext::computePreferredWidth(Frame* origin)
             if (f->isFloating()) {
                 handleFloatingBox(f, w);
             } else {
-                updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth, false);
+                updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth);
                 setIsWhiteSpaceAtLast(false);
             }
         } else if (f->isFrameBlockBox() || f->isFrameTableBox()) {
@@ -2701,7 +2728,7 @@ void PreferredWidthContext::computePreferredWidth(Frame* origin)
             updatePreferredWidth(w);
 
             if ((f->style()->display() == DisplayValue::InlineBlockDisplayValue) || (f->style()->display() == DisplayValue::InlineTableDisplayValue)) {
-                updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth, false);
+                updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth);
                 setIsWhiteSpaceAtLast(false);
             } else {
                 STARFISH_ASSERT(f->isFloating());
@@ -2718,7 +2745,7 @@ void PreferredWidthContext::computePreferredWidth(Frame* origin)
             computePreferredWidth(f);
 
             if (m_unprocessedStartingMBPWidth > 0) {
-                updateCurrentLineWidth(f, m_unprocessedStartingMBPWidth, false);
+                updateCurrentLineWidth(f, m_unprocessedStartingMBPWidth);
             }
 
             m_currentLineWidth += f->endingMBPWidth();

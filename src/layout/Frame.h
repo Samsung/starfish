@@ -68,6 +68,7 @@ enum PaintingInlineStage {
 class LineBox;
 class MarginInfo;
 class FloatingBoxInfo;
+class TextToken;
 
 class LayoutContext {
 public:
@@ -328,6 +329,13 @@ enum HasFloat {
     HasRight,
 };
 
+enum WordType {
+    CollapsibleWhiteSpace,
+    NonCollapsibleWhiteSpace,
+    ForcedNewline,
+    General,
+};
+
 class PreferredWidthContext {
     friend bool canInsertToCurrentLine(PreferredWidthContext* ctx, LayoutUnit width);
 public:
@@ -424,11 +432,11 @@ public:
         return m_breakedLineStatus == Never;
     }
 
-    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace);
+    void handleTextToken(TextToken& token);
     void computePreferredWidth(Frame* origin);
 
     void handleFloatingBox(Frame* f, LayoutUnit w);
-    void updateCurrentLineWidth(Frame* f, LayoutUnit w, bool whiteSpace);
+    void updateCurrentLineWidth(Frame* f, LayoutUnit w, WordType type = General);
     void updateUnprocessedStartingMBPWidth(Frame* f);
 private:
     LayoutContext& m_layoutContext;
@@ -1029,6 +1037,24 @@ public:
     }
 
     Element* offsetParent();
+
+    bool shouldWrapLines()
+    {
+        // When true, break lines as necessary to fill line boxes
+        return style()->whiteSpace() & WhiteSpaceValue::PreLineWhiteSpaceValue;
+    }
+
+    bool shouldPreserveWhiteSpaces()
+    {
+        // When true, preserve sequences of white space (Anti-collapsing)
+        return style()->whiteSpace() & WhiteSpaceValue::PreWhiteSpaceValue;
+    }
+
+    bool shouldIgnoreNewlineChar()
+    {
+        // When true, newline characters are handled as other whitespace
+        return style()->whiteSpace() & WhiteSpaceValue::NoWrapWhiteSpaceValue;
+    }
 
 protected:
     struct {
