@@ -25,9 +25,9 @@ struct PreferedMinWidthComputer {
     PreferedMinWidthComputer()
         : m_maxWidthSoFar(0) { }
 
-    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+    void handleTextToken(TextToken& token)
     {
-        m_maxWidthSoFar = std::max(m_maxWidthSoFar, TextUtils::textWidth(isWhiteSpace, f, offset, nextOffset));
+        m_maxWidthSoFar = std::max(m_maxWidthSoFar, token.width());
     }
 
     LayoutUnit m_maxWidthSoFar;
@@ -46,9 +46,9 @@ struct PreferedWidthComputer {
     PreferedWidthComputer()
         : m_widthSoFar(0) { }
 
-    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace)
+    void handleTextToken(TextToken& token)
     {
-        m_widthSoFar += TextUtils::textWidth(isWhiteSpace, f, offset, nextOffset);
+        m_widthSoFar += token.width();
     }
 
     LayoutUnit m_widthSoFar;

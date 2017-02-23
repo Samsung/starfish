@@ -734,7 +734,7 @@ private:
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
     void generateInlineBox(FrameBox* box);
-    void generateInlineTextBox(FrameText* f, LayoutUnit textWidth, String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace);
+    void generateInlineTextBox(TextToken& token);
     void generateInlineNonReplacedBox(FrameInline* f);
     void generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
     void registerAbsolutePositionedBox(FrameBox* box);
@@ -782,7 +782,7 @@ public:
         return m_block.m_lineBoxes.back();
     }
 
-    void handleTextToken(FrameText* f, size_t offset, size_t nextOffset, bool isWhiteSpace);
+    void handleTextToken(TextToken& token);
 
     void setLastFrameTextContainingWhiteSpaceAtLast(FrameBlockBox* f);
     bool isWhiteSpaceAtLast();

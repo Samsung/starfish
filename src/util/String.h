@@ -261,6 +261,11 @@ public:
         return c <= 0x7F ? isASCIISpace(c) : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;
     }
 
+    static inline bool isNewline(char32_t c)
+    {
+        return isSpaceOrNewline(c) && !u_isblank(c);
+    }
+
     bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX)
     {
         if (end == SIZE_MAX) {

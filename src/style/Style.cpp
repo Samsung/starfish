@@ -1218,6 +1218,12 @@ String* CSSStyleValuePair::toString()
             return String::fromUTF8("normal");
         case NoWrapWhiteSpaceValue:
             return String::fromUTF8("nowrap");
+        case PreWhiteSpaceValue:
+            return String::fromUTF8("pre");
+        case PreWrapWhiteSpaceValue:
+            return String::fromUTF8("pre-wrap");
+        case PreLineWhiteSpaceValue:
+            return String::fromUTF8("pre-line");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -3533,6 +3539,12 @@ bool CSSStyleValuePair::updateValueWhiteSpace(GCVector<String*>* tokens)
         m_value.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
     } else if (STRING_VALUE_IS_STRING("nowrap")) {
         m_value.m_whiteSpace = WhiteSpaceValue::NoWrapWhiteSpaceValue;
+    } else if (STRING_VALUE_IS_STRING("pre")) {
+        m_value.m_whiteSpace = WhiteSpaceValue::PreWhiteSpaceValue;
+    } else if (STRING_VALUE_IS_STRING("pre-wrap")) {
+        m_value.m_whiteSpace = WhiteSpaceValue::PreWrapWhiteSpaceValue;
+    } else if (STRING_VALUE_IS_STRING("pre-line")) {
+        m_value.m_whiteSpace = WhiteSpaceValue::PreLineWhiteSpaceValue;
     } else {
         return false;
     }

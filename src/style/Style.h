@@ -318,8 +318,11 @@ enum FontSizeValue {
 };
 
 enum WhiteSpaceValue {
-    NormalWhiteSpaceValue,
-    NoWrapWhiteSpaceValue
+    NoWrapWhiteSpaceValue = 1 << 0,  /* Ignore newline characters */
+    PreWhiteSpaceValue = 1 << 1,     /* Preserve spaces */
+    PreLineWhiteSpaceValue = 1 << 2, /* Wrap lines */
+    NormalWhiteSpaceValue = PreLineWhiteSpaceValue | NoWrapWhiteSpaceValue,
+    PreWrapWhiteSpaceValue = PreLineWhiteSpaceValue | PreWhiteSpaceValue,
 };
 
 // Widget Engine will support only visible and hidden values.
