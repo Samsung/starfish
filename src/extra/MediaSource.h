@@ -37,8 +37,8 @@ public:
 
     enum EndOfStreamError {
         None,
-        Network, // Terminates playback and signals that a network error has occured.
-        Decode, // Terminates playback and signals that a decoding error has occured.
+        Network, // Terminates playback and signals that a network error has occurred.
+        Decode, // Terminates playback and signals that a decoding error has occurred.
     };
 
     MediaSource(StarFish* starFish);
@@ -78,7 +78,7 @@ public:
     static bool isTypeSupported(String* type)
     {
         // TODO
-        // Currently, check only whether containier is mp4 or NOT
+        // Currently, check only whether container is mp4 or NOT
         if (type->contains("video/mp4") || type->contains("audio/mp4"))
             return true;
         return false;

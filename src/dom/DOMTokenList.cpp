@@ -74,9 +74,9 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
     GCVector<String*> newTokens;
     String* combined = String::emptyString;
     unsigned combinedCount = 0;
-    // unsigned parentheseDepth = 0; // Does not count parenthese depth
+    // unsigned parentheseDepth = 0; // Does not count parentheses depth
     for (auto token : *tokens) {
-        // TODO: Sould Consider brakets insize QuotationMarks
+        // TODO: Should Consider brackets insize QuotationMarks
         if (combinedCount) {
             combined = combined->concat(token);
             combinedCount++;

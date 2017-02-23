@@ -106,7 +106,7 @@ public:
         if (sizeWantToRead != sizeSuccessToRead) {
             error = -1;
         }
-        // STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(m_readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
+        // STARFISH_LOG_INFO("onRead pos %d read %d\n", (int)(m_readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
     }
     SourceBufferData* m_inputBuffer;
     GCVector<uint8_t>* m_bufferRemain;

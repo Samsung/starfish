@@ -60,7 +60,7 @@ void HTMLParser::parseStep()
         AtomicHTMLToken at(m_starFish, rawToken);
 
         // We clear the rawToken in case constructTreeFromAtomicToken
-        // synchronously re-enters the parser. We don't clear the token immedately
+        // synchronously re-enters the parser. We don't clear the token immediately
         // for Character tokens because the AtomicHTMLToken avoids copying the
         // characters by keeping a pointer to the underlying buffer in the
         // HTMLToken. Fortunately, Character tokens can't cause us to re-enter

@@ -223,7 +223,7 @@ void HTMLFormattingElementList::ensureNoahsArkCondition(HTMLStackItem* newItem)
     }
 
     // Inductively, we shouldn't spin this loop very many times. It's possible,
-    // however, that we wil spin the loop more than once because of how the
+    // however, that we will spin the loop more than once because of how the
     // formatting element list gets permuted.
     for (size_t i = kNoahsArkCapacity - 1; i < candidates.size(); ++i)
         remove(candidates[i]->element());
@@ -238,7 +238,7 @@ void HTMLFormattingElementList::show()
         if (entry.isMarker()) {
             STARFISH_LOG_ERROR("marker\n");
         } else {
-            STARFISH_LOG_ERROR("not implimented\n");
+            STARFISH_LOG_ERROR("not implemented\n");
             // entry.element()->showNode();
         }
     }
