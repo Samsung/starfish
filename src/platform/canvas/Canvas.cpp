@@ -435,7 +435,7 @@ public:
         STARFISH_ASSERT(lastState().m_hasPathClip);
 
         const ClipperLib::Paths& clipPaths = lastState().m_clipPath;
-        // FIXME evas could not support polygon cliping
+        // FIXME evas could not support polygon clipping
         /*
         STARFISH_ASSERT(clipPaths.size() < 2);
 

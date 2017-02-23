@@ -625,7 +625,7 @@ public:
 
         Length heightLength = style()->height();
         // NOTE: In case of percentage height,
-        // if containing blocks' height is fixed, the block is not self-collaping block.
+        // if containing blocks' height is fixed, the block is not self-collapsing block.
         if (heightLength.isPercent() && !heightLength.isZero() && ctx.parentHasFixedHeight(this)) {
             return false;
         }
@@ -820,7 +820,7 @@ public:
 
     // std::set<size_t> m_breakedLinesSet;
 
-    // we dont need gc_allocater here
+    // we don't need gc_allocater here
     // frame tree has strong reference already
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 

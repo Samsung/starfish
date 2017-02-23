@@ -131,7 +131,7 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
     case DisplayValue::TableColumnDisplayValue:
-        // buildFrameTableColBox allways return a pointer of Frame object
+        // buildFrameTableColBox always return a pointer of Frame object
         // If childFrame is reused anonymous, it will already have a parent,
         // so only forms a parent-child relationship when there is no parent.
         childFrame = FrameTableColBox::buildFrameTableColBox(child, ctx, force);
@@ -171,7 +171,7 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         // hierarchical anonymous table box, the point is the second one. If the second one does the same
         // with the first one, then we might have duplication processing about reused anonymous box
         // so that currentBlockContainer has 2 children which referencing the same thing.
-        // To prevent this situation, we separtate two cases with which returned pointer is nullptr.
+        // To prevent this situation, we separate two cases with which returned pointer is nullptr.
 
         // TODO: but this behavior seems a bit confusing. So I am thinking of a better design.
         childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);

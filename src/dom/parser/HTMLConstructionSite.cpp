@@ -212,7 +212,7 @@ static unsigned findBreakIndexBetween(const StringBuilder& string, unsigned curr
     if (proposedBreakIndex == string.length())
         return proposedBreakIndex;
 
-    // Latin-1 does not have breakable boundaries. If we ever moved to a differnet 8-bit encoding this could be wrong.
+    // Latin-1 does not have breakable boundaries. If we ever moved to a different 8-bit encoding this could be wrong.
     // if (string.is8Bit())
     //     return proposedBreakIndex;
 

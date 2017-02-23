@@ -1009,7 +1009,7 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
         }
         // We're supposed to switch back to the attribute value state that
         // we were in when we were switched into this state. Rather than
-        // keeping track of this explictly, we observe that the previous
+        // keeping track of this explicitly, we observe that the previous
         // state can be determined by m_additionalAllowedCharacter.
         if (m_additionalAllowedCharacter == '"')
             HTML_SWITCH_TO(AttributeValueDoubleQuotedState);

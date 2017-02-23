@@ -658,7 +658,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         // find inline Text Boxes has only number for
         // <LTR> <Number> <RTL> case
         // Number following LTR Text should be LTR
-        // <LTR> <Number> <RTL> -> <LTR> <Number-LTR not netural> <RTL>
+        // <LTR> <Number> <RTL> -> <LTR> <Number-LTR not neutral> <RTL>
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = fetchContentForResolveBidi(boxes[i]);
             if (box->isInlineBox()) {
@@ -688,7 +688,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
         // find inline Text Boxes has only number for
         // <RTL> <Number> <LTR> case
         // Number following RTL Text should be RTL
-        // <RTL> <Number> <LTR> -> <RTL> <Number-RTL not netural> <LTR>
+        // <RTL> <Number> <LTR> -> <RTL> <Number-RTL not neutral> <LTR>
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = fetchContentForResolveBidi(boxes[i]);
             if (box->isInlineBox()) {

@@ -267,7 +267,7 @@ public:
         return m;
     }
 
-    // Versions of max/min that are slightly smaller/larger than max/min() to allow for roinding without overflowing.
+    // Versions of max/min that are slightly smaller/larger than max/min() to allow for rounding without overflowing.
     static const LayoutUnit nearlyMax()
     {
         LayoutUnit m;
