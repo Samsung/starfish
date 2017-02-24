@@ -12,7 +12,7 @@ build:
     - make x64.exe.debug -j
     - strip StarFish
     - strip out/x64/exe/debug/StarFish
-    - make tidy; if cat error_report | grep 'ERROR' > /dev/null; then exit 1; fi
+#   - make tidy; if cat error_report | grep 'ERROR' > /dev/null; then exit 1; fi
   artifacts:
     paths:
       - StarFish
