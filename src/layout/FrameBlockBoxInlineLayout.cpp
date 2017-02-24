@@ -1920,19 +1920,21 @@ void LineFormattingContext::handleTextToken(TextToken& token)
 {
     FrameText* f = token.m_frameText;
     if (token.isWhiteSpace()) {
-        // If the text is newline character such as LineFeed(U+000A),
-        // break line after generate box and return.
+        if (m_shouldIgnoreWhiteSpace) {
+            return;
+        }
+
         if (token.m_type == WordType::ForcedNewline) {
             generateInlineTextBox(token);
             breakLine(nullptr);
             return;
         }
-
-        if (m_shouldIgnoreWhiteSpace) {
-            return;
-        }
-
-        if (isLastFrameTextContainingWhiteSpaceAtLast(f) && token.m_end == f->text()->length()) {
+        // TODO : Consider moving check-code of "preserve whitepace"
+        //        into isLastFrameTextContainingWhiteSpaceAtLast()
+        //        to reduce redundant calculations when refactoring codes here.
+        if (!f->shouldPreserveWhiteSpaces() &&
+            isLastFrameTextContainingWhiteSpaceAtLast(f) &&
+            token.m_end == f->text()->length()) {
             // The reason why this condition is added is to handle ending MBP width for InlineNonReplacedBox.
             // If we can't prevent the last white space from line being breaked, and the ending MBP width is
             // painted on the breaked next line, not on the line as it should be.
@@ -2602,7 +2604,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     }
 
     LayoutUnit w = token.width();
-    if (token.m_type == WordType::CollapsibleWhiteSpace || token.m_type == WordType::ForcedNewline) {
+    if (token.m_type == WordType::CollapsibleWhiteSpace) {
         if (m_breakedLineStatus == Never) {
             m_candidateLineWidth = m_currentLineWidth;
         }
@@ -2613,8 +2615,10 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
         w += m_unprocessedStartingMBPWidth;
     }
 
+
     updateCurrentLineWidth(token.m_frameText, w, token.m_type);
-    setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace || token.m_type == WordType::NonCollapsibleWhiteSpace);
+    setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace ||
+                          token.m_type == WordType::NonCollapsibleWhiteSpace);
 }
 
 void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
@@ -2677,7 +2681,8 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w, WordT
         }
     }
 
-    if (type == WordType::General && !f->isFloating()) {
+    if ((type == WordType::General ||
+        type == WordType::NonCollapsibleWhiteSpace) && !f->isFloating()) {
         m_unprocessedStartingMBPWidth = 0;
     }
 }
