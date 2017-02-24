@@ -28,6 +28,7 @@ test/reftest/csswg-test/css21_original/floats/floats-wrap-top-below-inline-001r.
 test/reftest/csswg-test/css21_original/floats/floats-zero-height-wrap-002.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-105.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-141.htm
+test/reftest/csswg-test/css21_original/linebox/inline-formatting-context-012.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/background-size-cover.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/background-size-contain.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/border-image-1.html
