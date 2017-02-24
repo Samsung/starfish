@@ -467,36 +467,32 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
             if (!hasIsolateBidiContent(inrb)) {
                 splitInlineBoxes(inrb->boxes());
                 // split every content for resolve bidi after
-                STARFISH_ASSERT(m_mbpStorePerFrameInline.find(inrb->origin()) == m_mbpStorePerFrameInline.end());
-
-                MBPStore mbpData(inrb);
-                mbpData.m_isProcessedStartingMBP = false;
-
-                m_mbpStorePerFrameInline.emplace(inrb->origin(), mbpData);
-
-                auto& boxesNeedsCopy = inrb->boxes();
-                if (boxesNeedsCopy.size()) {
+                auto& boxesToCopy = inrb->boxes();
+                if (boxesToCopy.size()) {
                     boxes.erase(boxes.begin() + i);
 
                     size_t insertPos = i;
 
-                    for (size_t j = 0; j < boxesNeedsCopy.size(); j++) {
+                    for (size_t j = 0; j < boxesToCopy.size(); j++) {
                         InlineNonReplacedBox* newBox = new InlineNonReplacedBox(inrb);
-                        newBox->setX(boxesNeedsCopy[j]->x() + inrb->x());
+                        newBox->setX(boxesToCopy[j]->x() + inrb->x());
                         newBox->setY(inrb->y());
-                        boxesNeedsCopy[j]->setX(0);
-                        newBox->insertInlineBox(boxesNeedsCopy[j]);
-                        if (boxesNeedsCopy[j]->isNormalFlow()) {
-                            newBox->setWidth(boxesNeedsCopy[j]->width());
+                        boxesToCopy[j]->setX(0);
+                        newBox->insertInlineBox(boxesToCopy[j]);
+                        if (boxesToCopy[j]->isNormalFlow()) {
+                            newBox->setWidth(boxesToCopy[j]->width());
+                            newBox->setHeight(inrb->height());
+                        } else {
+                            STARFISH_ASSERT(boxesToCopy[j]->style()->position() == AbsolutePositionValue);
+                            newBox->markAbsolutePositionedBoxLayoutParent();
                         }
-                        newBox->reset(inrb);
+                        newBox->setLayoutParent(inrb->layoutParent());
                         boxes.insert(boxes.begin() + insertPos++, newBox);
                     }
 
-                    i += (boxesNeedsCopy.size() - 1);
+                    i += (boxesToCopy.size() - 1);
                 } else {
                     inrb->setWidth(0);
-                    inrb->unsetLeftRightMBP();
                 }
             }
         }
@@ -542,87 +538,55 @@ CharDirection LineFormattingContext::contentDir(FrameBox* box)
     }
 }
 
-void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(GCVector<FrameBox*>& boxes)
+template <typename Box>
+void InlineBoxLayoutParentBox<Box>::setLeftMBPs()
 {
-    for (size_t i = 0; i < boxes.size(); i ++) {
-        FrameBox* box = boxes[i];
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        FrameBox* box = m_boxes[i];
         if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineBox()->asInlineNonReplacedBox();
             if (!hasIsolateBidiContent(inrb)) {
-                reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(inrb->boxes());
+                inrb->setLeftMBPs();
 
-                // find last box
-                FrameInline* origin = inrb->origin();
-                m_lastInlineNonReplacedPerFrameInline[origin] = inrb;
+                if (inrb->style()->direction() == LtrDirectionValue) {
+                    if (!inrb->isSetLeftMBP() && inrb->isProcessedStartingMBP()) {
+                        inrb->setOrgLeftMBP();
+                    } else {
+                        inrb->unsetLeftMBP();
+                    }
+                } else {
+                    if (!inrb->isSetLeftMBP() && inrb->isProcessedEndingMBP()) {
+                        inrb->setOrgLeftMBP();
+                    } else {
+                        inrb->unsetLeftMBP();
+                    }
+                }
             }
         }
     }
 }
 
-void LineFormattingContext::reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<FrameBox*>& boxes)
+template <typename Box>
+void InlineBoxLayoutParentBox<Box>::setRightMBPs()
 {
-    for (size_t i = 0; i < boxes.size(); i ++) {
-        FrameBox* box = boxes[i];
+    for (size_t i = m_boxes.size() - 1; i != SIZE_MAX; i--) {
+        FrameBox* box = m_boxes[i];
         if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineBox()->asInlineNonReplacedBox();
             if (!hasIsolateBidiContent(inrb)) {
-                reassignLeftRightMBPOfInlineNonReplacedBox(inrb->boxes());
+                inrb->setRightMBPs();
 
-                // restore left
-                FrameInline* origin = inrb->origin();
-                auto iter = m_mbpStorePerFrameInline.find(origin);
-
-                if (!iter->second.m_isProcessedStartingMBP) {
-                    inrb->m_orgPadding.setLeft(iter->second.m_orgPadding.left());
-                    inrb->m_orgBorder.setLeft(iter->second.m_orgBorder.left());
-                    inrb->m_orgMargin.setLeft(iter->second.m_orgMargin.left());
-
-                    inrb->setMarginLeft(iter->second.m_margin.left());
-                    inrb->setBorderLeft(iter->second.m_border.left());
-                    inrb->setPaddingLeft(iter->second.m_padding.left());
-
-                    LayoutUnit width = iter->second.m_margin.left();
-                    inrb->moveX(width);
-                    LayoutUnit bp = iter->second.m_border.left() + iter->second.m_padding.left();
-                    width += bp;
-                    if (inrb->boxes().size()) {
-                        STARFISH_ASSERT(inrb->boxes().size() == 1);
-                        inrb->boxes()[0]->moveX(bp);
+                if (inrb->style()->direction() == LtrDirectionValue) {
+                    if (!inrb->isSetRightMBP() && inrb->isProcessedEndingMBP()) {
+                        inrb->setOrgRightMBP();
+                    } else {
+                        inrb->unsetRightMBP();
                     }
-                    inrb->setWidth(inrb->width() + bp);
-
-                    if (width) {
-                        FrameBox* parent = inrb->layoutParent()->asFrameBox();
-                        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
-                            parent->setWidth(parent->width() + width);
-                            parent = parent->layoutParent()->asFrameBox();
-                        }
-                    }
-                    iter->second.m_isProcessedStartingMBP = true;
-                }
-
-                // restore right
-                if (m_lastInlineNonReplacedPerFrameInline[origin] == inrb) {
-                    inrb->m_orgPadding.setRight(iter->second.m_orgPadding.right());
-                    inrb->m_orgBorder.setRight(iter->second.m_orgBorder.right());
-                    inrb->m_orgMargin.setRight(iter->second.m_orgMargin.right());
-
-                    inrb->setMarginRight(iter->second.m_margin.right());
-                    inrb->setBorderRight(iter->second.m_border.right());
-                    inrb->setPaddingRight(iter->second.m_padding.right());
-
-                    LayoutUnit width;
-                    width = iter->second.m_margin.right();
-                    LayoutUnit bp = iter->second.m_border.right() + iter->second.m_padding.right();
-                    width += bp;
-                    inrb->setWidth(inrb->width() + bp);
-
-                    if (width) {
-                        FrameBox* parent = inrb->layoutParent()->asFrameBox();
-                        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
-                            parent->setWidth(parent->width() + width);
-                            parent = parent->layoutParent()->asFrameBox();
-                        }
+                } else {
+                    if (!inrb->isSetRightMBP() && inrb->isProcessedStartingMBP()) {
+                        inrb->setOrgRightMBP();
+                    } else {
+                        inrb->unsetRightMBP();
                     }
                 }
             }
@@ -869,12 +833,8 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir, GCVector<Frame
     }
 
 
-    // reassign left, right mbp for inlineNonReplacedBox
-    reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(boxes);
-    reassignLeftRightMBPOfInlineNonReplacedBox(boxes);
-
-    m_mbpStorePerFrameInline.clear();
-    m_lastInlineNonReplacedPerFrameInline.clear();
+    currentLine()->setLeftMBPs();
+    currentLine()->setRightMBPs();
 }
 
 static void removeBoxFromLine(FrameBox* box)
@@ -1692,7 +1652,7 @@ void LineFormattingContext::generateInlineBox(FrameBox* box)
         InlineNonReplacedBox* self = m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox();
         self->insertInlineBox(box);
         self->setWidth(self->width() + box->boxWidth());
-        self->setStartingMBP(this);
+        self->processStartingMBP(this);
     }
     markInlineBoxIndex(box);
 }
@@ -2264,16 +2224,60 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
     flushNeurtal(direction);
 }
 
-void InlineNonReplacedBox::setStartingMBP(LineFormattingContext* lineFormattingContext)
+void InlineNonReplacedBox::setOrgLeftMBP()
+{
+    m_orgMargin.setLeft(m_margin.left());
+    m_orgBorder.setLeft(m_border.left());
+    m_orgPadding.setLeft(m_padding.left());
+
+    LayoutUnit w;
+    moveX(m_margin.left());
+    LayoutUnit bp = m_border.left() + m_padding.left();
+    w += m_margin.left() + bp;
+    if (boxes().size()) {
+        STARFISH_ASSERT(boxes().size() == 1);
+        boxes()[0]->moveX(bp);
+    }
+    setWidth(width() + bp);
+
+    if (w > 0) {
+        FrameBox* parent = layoutParent()->asFrameBox();
+        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
+            parent->setWidth(parent->width() + w);
+            parent = parent->layoutParent()->asFrameBox();
+        }
+    }
+
+    markSetLeftMBP();
+}
+
+void InlineNonReplacedBox::setOrgRightMBP()
+{
+    m_orgMargin.setRight(m_margin.right());
+    m_orgBorder.setRight(m_border.right());
+    m_orgPadding.setRight(m_padding.right());
+
+    LayoutUnit w = m_margin.right();
+    LayoutUnit bp = m_border.right() + m_padding.right();
+    w += bp;
+    setWidth(width() + bp);
+
+    if (w > 0) {
+        FrameBox* parent = layoutParent()->asFrameBox();
+        while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
+            parent->setWidth(parent->width() + w);
+            parent = parent->layoutParent()->asFrameBox();
+        }
+    }
+
+    markSetRightMBP();
+}
+
+void InlineNonReplacedBox::processStartingMBP(LineFormattingContext* lineFormattingContext)
 {
     InlineNonReplacedBox* current = this;
     while (current) {
         if (!current->isProcessedStartingMBP()) {
-            if (current->style()->direction() == LtrDirectionValue) {
-                current->setWidth(current->width() + current->paddingLeft() + current->borderLeft());
-            } else {
-                current->setWidth(current->width() + current->paddingRight() + current->borderRight());
-            }
             LayoutUnit unprocessedStartingMBPWidth = current->startingMBPWidth();
             lineFormattingContext->m_currentLineWidth += unprocessedStartingMBPWidth;
             lineFormattingContext->m_unprocessedStartingMBPWidth -= unprocessedStartingMBPWidth;
@@ -2290,126 +2294,11 @@ void InlineNonReplacedBox::setStartingMBP(LineFormattingContext* lineFormattingC
     }
 }
 
-void InlineNonReplacedBox::setEndingMBP(LineFormattingContext* lineFormattingContext)
+void InlineNonReplacedBox::processEndingMBP(LineFormattingContext* lineFormattingContext)
 {
     LayoutUnit unprocessedEndingMBP = endingMBPWidth();
     lineFormattingContext->m_currentLineWidth += unprocessedEndingMBP;
-}
-
-void InlineNonReplacedBox::unsetTopBottomMBP()
-{
-    m_margin.setTop(0);
-    m_margin.setBottom(0);
-    m_border.setTop(0);
-    m_border.setBottom(0);
-    m_padding.setTop(0);
-    m_padding.setBottom(0);
-}
-
-void InlineNonReplacedBox::unsetLeftRightMBP()
-{
-    unsetLeftMBP();
-    unsetRightMBP();
-}
-
-void InlineNonReplacedBox::unsetLeftRightOrgMBP()
-{
-    unsetLeftOrgMBP();
-    unsetRightOrgMBP();
-}
-
-void InlineNonReplacedBox::unsetLeftMBP()
-{
-    m_margin.setLeft(0);
-    m_border.setLeft(0);
-    m_padding.setLeft(0);
-}
-
-void InlineNonReplacedBox::unsetLeftOrgMBP()
-{
-    m_orgMargin.setLeft(0);
-    m_orgBorder.setLeft(0);
-    m_orgPadding.setLeft(0);
-}
-
-void InlineNonReplacedBox::unsetRightMBP()
-{
-    m_margin.setRight(0);
-    m_border.setRight(0);
-    m_padding.setRight(0);
-}
-
-void InlineNonReplacedBox::unsetRightOrgMBP()
-{
-    m_orgMargin.setRight(0);
-    m_orgBorder.setRight(0);
-    m_orgPadding.setRight(0);
-}
-
-void InlineNonReplacedBox::unsetStartingMBP(DirectionValue direction)
-{
-    if (direction == LtrDirectionValue) {
-        unsetLeftMBP();
-    } else {
-        unsetRightMBP();
-    }
-}
-
-void InlineNonReplacedBox::unsetStartingOrgMBP(DirectionValue direction)
-{
-    if (direction == LtrDirectionValue) {
-        unsetLeftOrgMBP();
-    } else {
-        unsetRightOrgMBP();
-    }
-}
-
-void InlineNonReplacedBox::unsetEndingMBP(DirectionValue direction)
-{
-    if (direction == LtrDirectionValue) {
-        unsetRightMBP();
-    } else {
-        unsetLeftMBP();
-    }
-}
-
-void InlineNonReplacedBox::unsetEndingOrgMBP(DirectionValue direction)
-{
-    if (direction == LtrDirectionValue) {
-        unsetRightOrgMBP();
-    } else {
-        unsetLeftOrgMBP();
-    }
-}
-
-void InlineNonReplacedBox::reset()
-{
-    m_orgBorder = m_border;
-    m_orgPadding = m_padding;
-    m_orgMargin = m_margin;
-}
-
-void InlineNonReplacedBox::reset(InlineNonReplacedBox* inrb)
-{
-    setLayoutParent(inrb->layoutParent());
-    m_frameRect.setHeight(inrb->m_frameRect.height());
-    m_ascender = inrb->m_ascender;
-    m_descender = inrb->m_descender;
-    m_orgMargin = inrb->m_orgMargin;
-    m_orgBorder = inrb->m_orgBorder;
-    m_orgPadding = inrb->m_orgPadding;
-    unsetLeftRightOrgMBP();
-    m_isProcessedStartingMBP = inrb->m_isProcessedStartingMBP;
-    m_absolutePositionedLayoutParentCnt = inrb->m_absolutePositionedLayoutParentCnt;
-}
-
-void InlineNonReplacedBox::reset(OrgMBPStore* store)
-{
-    m_margin = m_orgMargin = store->m_orgMargin;
-    m_border = m_orgBorder = store->m_orgBorder;
-    m_padding = m_orgPadding = store->m_orgPadding;
-    unsetTopBottomMBP();
-    m_isProcessedStartingMBP = store->m_isProcessedStartingMBP;
+    markProcessedEndingMBP();
 }
 
 void LineFormattingContext::finishLineForInlineNonReplacedBox(FrameLineBreak* br, bool isLastNode)
@@ -2417,14 +2306,9 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(FrameLineBreak* br
     InlineNonReplacedBox* self = m_currentLayoutParent->asInlineBox()->asInlineNonReplacedBox();
 
     if (isLastNode) {
-        self->setStartingMBP(this);
-        self->setEndingMBP(this);
+        self->processStartingMBP(this);
+        self->processEndingMBP(this);
     }
-
-    if (hasIsolateBidiContent(self)) {
-        resolveBidi(self->style()->direction(), self->boxes());
-    }
-    self->layoutInlineBoxes(self->paddingLeft() + self->borderLeft());
 
     InlineNonReplacedBox* current = self;
     InlineNonReplacedBox* last = nullptr;
@@ -2451,6 +2335,11 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(FrameLineBreak* br
 
         current = current->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
     }
+
+    if (hasIsolateBidiContent(self)) {
+        resolveBidi(self->style()->direction(), self->boxes());
+    }
+    self->layoutInlineBoxes(self->paddingLeft() + self->borderLeft());
 }
 
 void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
@@ -2467,51 +2356,21 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    GCVector<std::pair<InlineNonReplacedBox*, OrgMBPStore>> stack;
-
-    InlineNonReplacedBox* current = self;
-    while (current) {
-        if (current->isProcessedStartingMBP()) {
-            OrgMBPStore store(current);
-            store.unsetStartingOrgMBP(current->style()->direction());
-            stack.push_back(std::make_pair(current, store));
-        } else {
-            stack.push_back(std::make_pair(current, OrgMBPStore(current)));
-            current->unsetStartingMBP(current->style()->direction());
-            current->unsetStartingOrgMBP(current->style()->direction());
-        }
-
-        current->unsetEndingMBP(current->style()->direction());
-        current->unsetEndingOrgMBP(current->style()->direction());
-
-        if (current->layoutParent()->asFrameBox()->isLineBox()) {
-            break;
-        }
-
-        current = current->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
-    }
-
     breakLineForLineBox(br, false, false);
 
-    auto riter = stack.rbegin();
-    InlineNonReplacedBox* layoutParent = nullptr;
-    while (stack.rend() != riter) {
-        InlineNonReplacedBox* origin = riter->first;
-        OrgMBPStore store = riter->second;
-        InlineNonReplacedBox* newInrpBox = new InlineNonReplacedBox(origin);
+    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(self);
+    m_currentLayoutParent = newSelf;
 
-        if (layoutParent) {
-            layoutParent->insertInlineBox(newInrpBox);
-        } else {
-            currentLine()->insertInlineBox(newInrpBox);
-            markInlineBoxIndex(newInrpBox);
-        }
-        layoutParent = newInrpBox;
-
-        newInrpBox->reset(&store);
-        m_currentLayoutParent = newInrpBox;
-        riter++;
+    FrameBox* parent = self->layoutParent()->asFrameBox();
+    InlineNonReplacedBox* current = newSelf;
+    while (parent->isInlineBox() && parent->asInlineBox()->isInlineNonReplacedBox()) {
+        InlineNonReplacedBox* newInrb = new InlineNonReplacedBox(parent->asInlineBox()->asInlineNonReplacedBox());
+        newInrb->insertInlineBox(current);
+        current = newInrb;
+        parent = parent->layoutParent()->asFrameBox();
     }
+    currentLine()->insertInlineBox(current);
+    markInlineBoxIndex(current);
 }
 
 LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
@@ -2587,7 +2446,7 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext* lineFormattingCon
     LayoutUnit inlineContentWidth = lineFormattingContext->m_block.contentWidth();
 
     computeBorderMarginPadding(inlineContentWidth);
-    reset();
+    setTopBottomOrgMBP();
     unsetTopBottomMBP();
     lineFormattingContext->m_unprocessedStartingMBPWidth += startingMBPWidth();
 

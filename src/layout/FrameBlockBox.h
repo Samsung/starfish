@@ -198,11 +198,23 @@ public:
     }
 
     void moveToNewLineBox(FrameBox* box, LineBox* lineBox);
+
+    void setLeftMBPs();
+    void setRightMBPs();
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     GCVector<FrameBox*> m_boxes;
     size_t m_absolutePositionedLayoutParentCnt;
+};
+
+
+enum MBPStatus {
+    None = 0,
+    ProcessedStaringMBP = 1,
+    ProcessedEndingMBP = 2,
+    SetLeftMBP = 4,
+    SetRightMBP = 8,
 };
 
 class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
@@ -213,11 +225,28 @@ public:
     InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)
         : InlineNonReplacedBox(inlineBox, inlineBox->origin())
     {
+        m_mbpStatus = inlineBox->m_mbpStatus;
+
+        m_ascender = inlineBox->m_ascender;
+        m_descender = inlineBox->m_descender;
+
+        m_margin = inlineBox->m_margin;
+        m_border = inlineBox->m_border;
+        m_padding = inlineBox->m_padding;
+
+        m_orgMargin = inlineBox->m_orgMargin;
+        m_orgBorder = inlineBox->m_orgBorder;
+        m_orgPadding = inlineBox->m_orgPadding;
     }
 
     InlineNonReplacedBox(FrameInline* frame)
         : InlineNonReplacedBox(frame, frame)
     {
+        m_mbpStatus = new (UseGC) unsigned int;
+        *m_mbpStatus = 0;
+
+        m_ascender = 0;
+        m_descender = 0;
     }
 
     virtual bool isInlineNonReplacedBox() const { return true; }
@@ -268,36 +297,78 @@ public:
 
     bool isProcessedStartingMBP() const
     {
-        return m_isProcessedStartingMBP;
+        return ((*m_mbpStatus) & ProcessedStaringMBP) != 0;
     }
 
     void markProcessedStartingMBP()
     {
-        m_isProcessedStartingMBP = true;
+        STARFISH_ASSERT(!isProcessedStartingMBP());
+        (*m_mbpStatus) |= ProcessedStaringMBP;
     }
 
-    void unsetLeftRightMBP();
-    void setStartingMBP(LineFormattingContext* lineFormattingContext);
-    void setEndingMBP(LineFormattingContext* lineFormattingContext);
-    void unsetEndingMBP(DirectionValue direction);
-    void unsetEndingOrgMBP(DirectionValue direction);
-    void unsetStartingMBP(DirectionValue direction);
-    void unsetStartingOrgMBP(DirectionValue direction);
-    void reset();
-    void reset(InlineNonReplacedBox* inrb);
-    void reset(OrgMBPStore* store);
+    bool isProcessedEndingMBP() const
+    {
+        return ((*m_mbpStatus) & ProcessedEndingMBP) != 0;
+    }
+
+    void markProcessedEndingMBP()
+    {
+        STARFISH_ASSERT(!isProcessedEndingMBP());
+        (*m_mbpStatus) |= ProcessedEndingMBP;
+    }
+
+    bool isSetLeftMBP() const
+    {
+        return ((*m_mbpStatus) & SetLeftMBP) != 0;
+    }
+
+    void markSetLeftMBP()
+    {
+        STARFISH_ASSERT(!isSetLeftMBP());
+        (*m_mbpStatus) |= SetLeftMBP;
+    }
+
+    bool isSetRightMBP() const
+    {
+        return ((*m_mbpStatus) & SetRightMBP) != 0;
+    }
+
+    void markSetRightMBP()
+    {
+        STARFISH_ASSERT(!isSetRightMBP());
+        (*m_mbpStatus) |= SetRightMBP;
+    }
+
+    void processStartingMBP(LineFormattingContext* lineFormattingContext);
+    void processEndingMBP(LineFormattingContext* lineFormattingContext);
+    void setOrgLeftMBP();
+    void setOrgRightMBP();
+
+    void unsetLeftMBP()
+    {
+        m_margin.setLeft(0);
+        m_border.setLeft(0);
+        m_padding.setLeft(0);
+    }
+
+    void unsetRightMBP()
+    {
+        m_margin.setRight(0);
+        m_border.setRight(0);
+        m_padding.setRight(0);
+    }
 
 protected:
     bool m_isCollapsed;
-    bool m_isProcessedStartingMBP;
     FrameInline* m_origin;
+    unsigned* m_mbpStatus;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin)
         : InlineBox(frame->node(), frame->style())
         , m_isCollapsed(false)
-        , m_isProcessedStartingMBP(false)
         , m_origin(origin)
+        , m_mbpStatus(nullptr)
     {
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
@@ -307,8 +378,6 @@ protected:
             setRightMBPCleared();
         }
 
-        m_ascender = 0;
-        m_descender = 0;
         m_absolutePositionedLayoutParentCnt = 0;
 
         // recompute style flags
@@ -318,82 +387,24 @@ protected:
         computeStyleFlags();
     }
 
-    void unsetTopBottomMBP();
-    void unsetLeftMBP();
-    void unsetLeftOrgMBP();
-    void unsetRightMBP();
-    void unsetRightOrgMBP();
-    void unsetLeftRightOrgMBP();
-};
-
-struct OrgMBPStore {
-    LayoutBoxSurroundData m_orgMargin, m_orgBorder, m_orgPadding;
-    bool m_isProcessedStartingMBP;
-
-    OrgMBPStore(FrameBox* box)
+    void setTopBottomOrgMBP()
     {
-        STARFISH_ASSERT_NOT_REACHED();
+        m_orgMargin.setTop(m_margin.top());
+        m_orgMargin.setBottom(m_margin.bottom());
+        m_orgBorder.setTop(m_border.top());
+        m_orgBorder.setBottom(m_border.bottom());
+        m_orgPadding.setTop(m_padding.top());
+        m_orgPadding.setBottom(m_padding.bottom());
     }
 
-    OrgMBPStore(InlineNonReplacedBox* inrb)
+    void unsetTopBottomMBP()
     {
-        m_orgMargin = inrb->m_orgMargin;
-        m_orgBorder = inrb->m_orgBorder;
-        m_orgPadding = inrb->m_orgPadding;
-        m_isProcessedStartingMBP = inrb->m_isProcessedStartingMBP;
-    }
-
-    void unsetStartingOrgMBP(DirectionValue direction)
-    {
-        if (direction == LtrDirectionValue) {
-            unsetLeftOrgMBP();
-        } else {
-            unsetRightOrgMBP();
-        }
-    }
-
-    void unsetEndingOrgMBP(DirectionValue direction)
-    {
-        if (direction == LtrDirectionValue) {
-            unsetRightOrgMBP();
-        } else {
-            unsetLeftOrgMBP();
-        }
-    }
-
-private:
-    void unsetLeftOrgMBP()
-    {
-        m_orgMargin.setLeft(0);
-        m_orgBorder.setLeft(0);
-        m_orgPadding.setLeft(0);
-    }
-
-    void unsetRightOrgMBP()
-    {
-        m_orgMargin.setRight(0);
-        m_orgBorder.setRight(0);
-        m_orgPadding.setRight(0);
-    }
-};
-
-struct MBPStore : public OrgMBPStore {
-    LayoutBoxSurroundData m_margin, m_border, m_padding;
-
-    MBPStore(FrameBox* box)
-        : OrgMBPStore(box)
-    {
-        m_margin = box->m_margin;
-        m_border = box->m_border;
-        m_padding = box->m_padding;
-    }
-
-    MBPStore(InlineNonReplacedBox* inrb)
-        : OrgMBPStore(inrb)
-    {
-        m_margin = inrb->m_margin;
-        m_border = inrb->m_border;
-        m_padding = inrb->m_padding;
+        m_margin.setTop(0);
+        m_margin.setBottom(0);
+        m_border.setTop(0);
+        m_border.setBottom(0);
+        m_padding.setTop(0);
+        m_padding.setBottom(0);
     }
 };
 
@@ -754,8 +765,6 @@ private:
     void breakLineForInlineNonReplacedBox(FrameLineBreak* br);
 
     CharDirection contentDir(FrameBox* box);
-    void reassignLeftRightMBPOfInlineNonReplacedBoxPreProcess(GCVector<FrameBox*>& boxes);
-    void reassignLeftRightMBPOfInlineNonReplacedBox(GCVector<FrameBox*>& boxes);
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 public:
@@ -841,8 +850,6 @@ public:
     std::vector<FrameBox*> m_pendingFloatingBoxes;
     std::vector<FrameBox*> m_pendingInlineBoxes;
 
-    std::unordered_map<FrameInline*, MBPStore> m_mbpStorePerFrameInline;
-    std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_lastInlineNonReplacedPerFrameInline;
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText* , std::vector<TextRun>> m_textRunsPerFrameText;
 };
