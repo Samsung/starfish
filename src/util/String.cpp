@@ -1396,10 +1396,9 @@ void SegmentedString::advanceAndUpdateLineNumberSlowCase()
         }
         if (!--m_currentString.m_length) {
             advanceSubstring();
-        }
-        else {
+        } else {
             // Only need the ++
-            m_currentString.incrementAndGetCurrentChar(); 
+            m_currentString.incrementAndGetCurrentChar();
         }
     } else if (!isComposite()) {
         m_currentString.clear();
