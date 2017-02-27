@@ -27,35 +27,42 @@ namespace StarFish {
 void ElementResourceClient::didLoadFinished()
 {
     ResourceClient::didLoadFinished();
-    auto fn = [](size_t handle, void* data)
-    {
+    auto fn = [](size_t handle, void* data) {
         Element* element = (Element*)data;
-        String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
+        String* eventType = element->document()
+                                ->window()
+                                ->starFish()
+                                ->staticStrings()
+                                ->m_load.localName();
         Event* e = new Event(eventType, EventInit(false, false));
         element->EventTarget::dispatchEvent(element, e);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->document()->window()->starFish()->messageLoop()->addIdler(fn, m_element);
+        m_element->document()->window()->starFish()->messageLoop()->addIdler(
+            fn, m_element);
     }
 }
 
 void ElementResourceClient::didLoadFailed()
 {
     ResourceClient::didLoadFailed();
-    auto fn = [](size_t handle, void* data)
-    {
+    auto fn = [](size_t handle, void* data) {
         Element* element = (Element*)data;
-        String* eventType = element->document()->window()->starFish()->staticStrings()->m_error.localName();
+        String* eventType = element->document()
+                                ->window()
+                                ->starFish()
+                                ->staticStrings()
+                                ->m_error.localName();
         Event* e = new Event(eventType, EventInit(false, false));
         element->EventTarget::dispatchEvent(element, e);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->document()->window()->starFish()->messageLoop()->addIdler(fn, m_element);
+        m_element->document()->window()->starFish()->messageLoop()->addIdler(
+            fn, m_element);
     }
 }
-
 }

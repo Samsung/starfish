@@ -36,11 +36,13 @@ class ResourceLoader : public gc {
     friend class DocumentOnLoadChecker;
     friend class ResourceAliveChecker;
     friend class ResourceSizeTracer;
+
 public:
     ResourceLoader(Document& doc);
 
     Resource* fetch(URL* url);
-    TextResource* fetchText(URL* url, String* preferredEncoding = String::emptyString);
+    TextResource* fetchText(URL* url,
+                            String* preferredEncoding = String::emptyString);
     ImageResource* fetchImage(URL* url);
 
     void markDocumentOpenState()
@@ -81,11 +83,14 @@ public:
     {
         return m_documentOpenTime;
     }
+
 private:
     void cancelAllOfPendingRequests();
-    void cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel);
+    void cacheHit(Resource* org, Resource* now,
+                  Resource::ResourceRequestSyncLevel syncLevel);
     // return value means cache hit
-    bool requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel);
+    bool requestResourcePreprocess(
+        Resource* res, Resource::ResourceRequestSyncLevel syncLevel);
     void fireDocumentOnLoadEventIfNeeded();
     bool m_isDocumentInOpenState;
     uint64_t m_documentOpenTime;
@@ -97,7 +102,6 @@ private:
     size_t m_resourceCacheSize;
     uint64_t m_lastCachePruneTime;
 };
-
 }
 
 #endif

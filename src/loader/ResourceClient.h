@@ -23,39 +23,32 @@ class Resource;
 
 class ResourceClient : public gc {
 public:
-    ResourceClient(Resource* resource)
-        : m_resource(resource)
+    ResourceClient(Resource* resource) : m_resource(resource)
     {
     }
 
     virtual ~ResourceClient()
     {
-
     }
 
     virtual void didLoadFinished()
     {
-
     }
 
     virtual void didLoadFailed()
     {
-
     }
 
     virtual void didLoadCanceled()
     {
-
     }
 
     virtual void didDataReceived(const char*, size_t length)
     {
-
     }
 
     virtual void didHeaderReceived(String* header)
     {
-
     }
 
     Resource* resource()

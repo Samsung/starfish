@@ -29,16 +29,20 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_networkRequest = new NetworkRequest(loader()->document());
-        m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
-        m_networkRequest->open(NetworkRequest::GET_METHOD, url()->urlString(), !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
+        m_networkRequest->addNetworkRequestClient(
+            new ResourceNetworkRequestClient(this));
+        m_networkRequest->open(
+            NetworkRequest::GET_METHOD, url()->urlString(),
+            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
         m_networkRequest->send();
     }
 }
 
 void Resource::cancel()
 {
-    if (m_state == BeforeSend || m_state == Receiving)
+    if (m_state == BeforeSend || m_state == Receiving) {
         didLoadCanceled();
+    }
 }
 
 void Resource::didHeaderReceived(String* header)
@@ -99,7 +103,8 @@ void Resource::didLoadCanceled()
     }
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
-        m_loader->m_document->window()->starFish()->messageLoop()->removeIdler(*iter2);
+        m_loader->m_document->window()->starFish()->messageLoop()->removeIdler(
+            *iter2);
         iter2++;
     }
     m_requstedIdlers.clear();
@@ -109,5 +114,4 @@ void Resource::didLoadCanceled()
         m_networkRequest = nullptr;
     }
 }
-
 }

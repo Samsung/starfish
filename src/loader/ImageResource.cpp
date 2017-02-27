@@ -65,11 +65,17 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
             if (ResourceRequestSyncLevel::NeverSync != syncLevel) {
                 doLoadFile(this);
             } else {
-                pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-                    Resource* res = (Resource*)data;
-                    res->removeIdlerHandle(handle);
-                    res->asImageResource()->doLoadFile(data);
-                }, this));
+                pushIdlerHandle(m_loader->m_document->window()
+                                    ->starFish()
+                                    ->messageLoop()
+                                    ->addIdler(
+                                        [](size_t handle, void* data) {
+                                            Resource* res = (Resource*)data;
+                                            res->removeIdlerHandle(handle);
+                                            res->asImageResource()->doLoadFile(
+                                                data);
+                                        },
+                                        this));
             }
         }
     } else {
@@ -84,14 +90,17 @@ void ImageResource::didLoadFinished()
 {
 #ifdef STARFISH_EFL
     if (!m_url->isFileURL()) {
-        m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+        m_imageData =
+            ImageData::create(m_networkRequest->responseData().data(),
+                              m_networkRequest->responseData().size());
         if (!m_imageData) {
             Resource::didLoadFailed();
             return;
         }
     }
 #else
-    m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+    m_imageData = ImageData::create(m_networkRequest->responseData().data(),
+                                    m_networkRequest->responseData().size());
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;
@@ -99,5 +108,4 @@ void ImageResource::didLoadFinished()
 #endif
     Resource::didLoadFinished();
 }
-
 }

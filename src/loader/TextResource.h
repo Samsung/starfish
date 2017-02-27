@@ -26,12 +26,13 @@ namespace StarFish {
 class TextResource : public Resource {
     friend class ResourceLoader;
     TextResource(URL* url, ResourceLoader* loader, String* preferredEncoding)
-        : Resource(url, loader)
-        , m_converter(nullptr)
-        , m_preferredEncoding(preferredEncoding)
-        , m_text(String::emptyString)
+        : Resource(url, loader),
+          m_converter(nullptr),
+          m_preferredEncoding(preferredEncoding),
+          m_text(String::emptyString)
     {
     }
+
 public:
     virtual bool isTextResource()
     {
@@ -42,7 +43,8 @@ public:
 
     virtual size_t contentSize()
     {
-        return m_text->isASCIIString() ? m_text->length() : 4 * m_text->length();
+        return m_text->isASCIIString() ? m_text->length()
+                                       : 4 * m_text->length();
     }
 
     virtual Type type()
@@ -57,7 +59,8 @@ public:
 
     String* characterEncoding()
     {
-        return m_converter ? m_converter->encoding() : String::createASCIIString("UTF-8");
+        return m_converter ? m_converter->encoding()
+                           : String::createASCIIString("UTF-8");
     }
 
 protected:
