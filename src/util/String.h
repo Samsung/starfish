@@ -982,8 +982,7 @@ private:
             if (m_currentString.doNotExcludeLineNumbers()) {
                 m_advanceAndUpdateLineNumberFunc =
                     &SegmentedString::advanceAndUpdateLineNumber16;
-            }
-            else {
+            } else {
                 m_advanceAndUpdateLineNumberFunc = &SegmentedString::advance16;
             }
             return;
