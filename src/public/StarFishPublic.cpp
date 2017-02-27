@@ -25,11 +25,11 @@ using namespace StarFish;
 
 namespace StarFish {
 
-typedef FILE * (*sfopen_cb) (const char * filename);
-typedef long int (*sflength_cb) (FILE* fp);
-typedef size_t (*sfread_cb) (void * buf, size_t size, size_t count, FILE * fp);
-typedef int (*sfclose_cb) (FILE * fp);
-typedef const char* (*sfmatchLocation_cb) (const char* filename);
+typedef FILE* (*sfopen_cb)(const char* filename);
+typedef long int (*sflength_cb)(FILE* fp);
+typedef size_t (*sfread_cb)(void* buf, size_t size, size_t count, FILE* fp);
+typedef int (*sfclose_cb)(FILE* fp);
+typedef const char* (*sfmatchLocation_cb)(const char* filename);
 
 sfopen_cb open_cb = nullptr;
 sflength_cb length_cb = nullptr;
@@ -40,10 +40,14 @@ sfmatchLocation_cb matchLocation_cb = nullptr;
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(void* window, int windowWidth, int windowHeight, const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
+extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
+    void* window, int windowWidth, int windowHeight, const char* locale,
+    const char* timezoneID, float defaultFontSizeMultiplier)
 {
-    StarFishInstance* instance = new(NoGC) StarFishInstance;
-    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, windowWidth, windowHeight, defaultFontSizeMultiplier);
+    StarFishInstance* instance = new (NoGC) StarFishInstance;
+    instance->m_starfish = new StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
+        windowWidth, windowHeight, defaultFontSizeMultiplier);
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif
@@ -59,7 +63,8 @@ extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
     GC_gcollect_and_unmap();
 }
 
-extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance, const char* path)
+extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
+    StarFishInstance* instance, const char* path)
 {
     TO_STARFISH(instance)->loadHTMLDocument(String::fromUTF8(path));
 }
@@ -74,7 +79,8 @@ extern "C" STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance)
     TO_STARFISH(instance)->resume();
 }
 
-extern "C" STARFISH_EXPORT void registerFileOpenCB(FILE* (*cb)(const char* fileName))
+extern "C" STARFISH_EXPORT void registerFileOpenCB(
+    FILE* (*cb)(const char* fileName))
 {
     open_cb = cb;
 }
@@ -84,17 +90,19 @@ extern "C" STARFISH_EXPORT void registerFileLengthCB(long int (*cb)(FILE* fp))
     length_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileReadCB(size_t (*cb)(void * buf, size_t size, size_t count, FILE * fp))
+extern "C" STARFISH_EXPORT void registerFileReadCB(
+    size_t (*cb)(void* buf, size_t size, size_t count, FILE* fp))
 {
     read_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileCloseCB(int (*cb)(FILE * fp))
+extern "C" STARFISH_EXPORT void registerFileCloseCB(int (*cb)(FILE* fp))
 {
     close_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(const char* (*cb)(const char* fileName))
+extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
+    const char* (*cb)(const char* fileName))
 {
     matchLocation_cb = cb;
 }
