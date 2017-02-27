@@ -26,8 +26,8 @@ class CanvasSurface : public gc {
 protected:
     CanvasSurface()
     {
-
     }
+
 public:
     static CanvasSurface* create(Window* window, size_t w, size_t h);
     virtual void* unwrap() = 0;
@@ -38,7 +38,6 @@ public:
     virtual void detachNativeBuffer() = 0;
     virtual ~CanvasSurface()
     {
-
     }
 };
 
@@ -46,21 +45,20 @@ class Canvas : public gc {
 protected:
     Canvas()
     {
-
     }
+
 public:
     static Canvas* createDirect(void* data);
     static Canvas* create(CanvasSurface* data);
 
     virtual ~Canvas()
     {
-
     }
 
     virtual void clearColor(const Color& clr) = 0;
 
     // state
-    virtual void save() = 0; // push state on state stack
+    virtual void save() = 0;    // push state on state stack
     virtual void restore() = 0; // pop state stack and restore state
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
@@ -85,16 +83,24 @@ public:
 
     virtual void drawRect(const Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
-    virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4) = 0; // left, top, right, bottom
+    virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
+                          LayoutLocation p3,
+                          LayoutLocation p4) = 0; // left, top, right, bottom
 
     virtual void punchHole(const Rect& rt) = 0;
 
-    virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth, const StringView& text) = 0;
+    virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
+                          const StringView& text) = 0;
 
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
     virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;
-    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill) = 0;
-    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight, bool xRepeat, bool yRepeat, bool isRootElement) = 0;
+    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l,
+                                 size_t t, size_t r, size_t b, double scale,
+                                 bool fill) = 0;
+    virtual void drawRepeatImage(ImageData* data, const Rect& dst,
+                                 float imageWidth, float imageHeight,
+                                 bool xRepeat, bool yRepeat,
+                                 bool isRootElement) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
@@ -103,7 +109,6 @@ public:
 
     virtual void* unwrap() = 0;
 };
-
 }
 
 #endif

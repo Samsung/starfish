@@ -39,8 +39,9 @@ public:
         } else if (request->progressState() == NetworkRequest::LOADEND) {
             auto& v = request->document()->m_activeNetworkRequests;
             auto iter = std::find(v.begin(), v.end(), request);
-            if (iter != v.end())
+            if (iter != v.end()) {
                 v.erase(iter);
+            }
         }
     }
 };
@@ -56,15 +57,22 @@ void* NetworkWorkerHelper::networkWorker(void* data)
     requestData->responseCode = code;
     requestData->res = res;
 
-    if (requestData->res != CURLE_ABORTED_BY_CALLBACK)
+    if (requestData->res != CURLE_ABORTED_BY_CALLBACK) {
         responseHandlerWrapper(res, requestData);
-    else {
-        requestData->request->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-            if (requestData == requestData->request->m_activeNetworkWorkerData)
-                requestData->request->m_activeNetworkWorkerData = nullptr;
-            GC_FREE(requestData);
-        }, requestData);
+    } else {
+        requestData->request->starFish()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                [](size_t, void* data) {
+                    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                    if (requestData ==
+                        requestData->request->m_activeNetworkWorkerData) {
+                        requestData->request->m_activeNetworkWorkerData =
+                            nullptr;
+                    }
+                    GC_FREE(requestData);
+                },
+                requestData);
     }
 
     curl_slist_free_all(list);
@@ -74,34 +82,46 @@ void* NetworkWorkerHelper::networkWorker(void* data)
 
 void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
 {
-    NetworkWorkerData* requestData = (NetworkWorkerData*) data;
+    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(requestData->res != CURLE_ABORTED_BY_CALLBACK);
     if (requestData->isAborted) {
     } else if (requestData->res == 0) {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
+                SIZE_MAX;
         }
-        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
+        STARFISH_ASSERT(
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
+            SIZE_MAX);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleResponseEOF();
     } else if (requestData->res == CURLE_OPERATION_TIMEDOUT) {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
+                SIZE_MAX;
         }
-        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-        STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url->urlString()->utf8Data(), (int)requestData->responseCode);
+        STARFISH_ASSERT(
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
+            SIZE_MAX);
+        STARFISH_LOG_INFO("got timeout %s[%d]\n",
+                          requestData->request->m_url->urlString()->utf8Data(),
+                          (int)requestData->responseCode);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::TIMEOUT);
     } else {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
+                SIZE_MAX;
         }
-        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-        STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url->urlString()->utf8Data());
+        STARFISH_ASSERT(
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
+            SIZE_MAX);
+        STARFISH_LOG_INFO("failed to open %s\n",
+                          requestData->request->m_url->urlString()->utf8Data());
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::ERROR);
     }
@@ -110,47 +130,53 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
     GC_FREE(requestData);
 }
 
-void SyncNetworkWorkHelper::responseHandlerWrapper(int res, NetworkWorkerData *requestData)
+void SyncNetworkWorkHelper::responseHandlerWrapper(
+    int res, NetworkWorkerData* requestData)
 {
     responseHandler(res, requestData);
 }
 
-void AsyncNetworkWorkHelper::responseHandlerWrapper(int res, NetworkWorkerData *requestData)
+void AsyncNetworkWorkHelper::responseHandlerWrapper(
+    int res, NetworkWorkerData* requestData)
 {
     Locker<Mutex> locker(*requestData->request->m_mutex);
-    requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(this->responseHandler, requestData);
+    requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
+        requestData->request->m_starFish->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(this->responseHandler,
+                                                   requestData);
 }
 
 NetworkRequest::NetworkRequest(Document* document)
-    : m_starFish(document->window()->starFish())
-    , m_document(document)
-    , m_url(nullptr)
-    , m_readyState(UNSENT)
-    , m_progressState(NONE)
-    , m_method(UNKNOWN_METHOD)
-    , m_responseType(DEFAULT_RESPONSE)
-    , m_status(0)
-    , m_timeout(0)
-    , m_activeNetworkWorkerData(nullptr)
-    , m_mutex(new Mutex())
-    , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
-    , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
-    , m_loaded(0)
-    , m_total(0)
-    , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
+    : m_starFish(document->window()->starFish()),
+      m_document(document),
+      m_url(nullptr),
+      m_readyState(UNSENT),
+      m_progressState(NONE),
+      m_method(UNKNOWN_METHOD),
+      m_responseType(DEFAULT_RESPONSE),
+      m_status(0),
+      m_timeout(0),
+      m_activeNetworkWorkerData(nullptr),
+      m_mutex(new Mutex()),
+      m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX),
+      m_pendingOnProgressEventIdlerHandle(SIZE_MAX),
+      m_loaded(0),
+      m_total(0),
+      m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
-
-    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest %p\n", obj);
-        NetworkRequest* nr = (NetworkRequest*)obj;
-        NetworkRequestResponse().swap(nr->m_response);
-        NetworkRequestResponseHeader().swap(nr->m_responseHeaderData);
-    }, NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest %p\n", obj);
+            NetworkRequest* nr = (NetworkRequest*)obj;
+            NetworkRequestResponse().swap(nr->m_response);
+            NetworkRequestResponseHeader().swap(nr->m_responseHeaderData);
+        },
+        NULL, NULL, NULL);
 
     initVariables();
     addNetworkRequestClient(new ActiveNetworkRequestTracker());
 }
-
 
 void NetworkRequest::initVariables()
 {
@@ -176,17 +202,20 @@ void NetworkRequest::clearIdlers()
     m_requstedIdlers.clear();
 
     if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnHeaderReceivedEventIdlerHandle);
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+            m_pendingOnHeaderReceivedEventIdlerHandle);
         m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
     }
 
     if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnProgressEventIdlerHandle);
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+            m_pendingOnProgressEventIdlerHandle);
         m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
     }
 
     if (m_pendingNetworkWorkerEndIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingNetworkWorkerEndIdlerHandle);
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+            m_pendingNetworkWorkerEndIdlerHandle);
         m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
     }
 
@@ -214,19 +243,24 @@ void NetworkRequest::handleError(ProgressState error)
 }
 
 // trim from start (in place)
-static inline void ltrim(std::string &s)
+static inline void ltrim(std::string& s)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(),
+            std::find_if(s.begin(), s.end(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))));
 }
 
 // trim from end (in place)
-static inline void rtrim(std::string &s)
+static inline void rtrim(std::string& s)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace)))
+                .base(),
+            s.end());
 }
 
 // trim from both ends (in place)
-static inline void trim(std::string &s)
+static inline void trim(std::string& s)
 {
     ltrim(s);
     rtrim(s);
@@ -255,8 +289,9 @@ static inline std::string trimmed(std::string s)
 
 static void skipSpaces(const std::string& input, unsigned long int& startIndex)
 {
-    while (startIndex < input.length() && input[startIndex] == ' ')
+    while (startIndex < input.length() && input[startIndex] == ' ') {
         ++startIndex;
+    }
 }
 
 static std::vector<std::string> split(const std::string& s, char seperator)
@@ -273,7 +308,8 @@ static std::vector<std::string> split(const std::string& s, char seperator)
     return output;
 }
 
-void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
+void NetworkRequest::changeReadyState(ReadyState readyState,
+                                      bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
     if (!m_gotError && readyState == LOADING && m_readyState == OPENED) {
@@ -290,7 +326,7 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
     if (readyState == HEADERS_RECEIVED) {
         std::vector<std::string> s = split(m_responseHeaderData, '\n');
         std::string::size_type index;
-        for (size_t i = 0; i < s.size(); i ++) {
+        for (size_t i = 0; i < s.size(); i++) {
             std::string& header = s[i];
             if (header == "\r") {
                 continue;
@@ -308,26 +344,33 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
                     unsigned long int index = 0;
                     unsigned long int contentTypeLength = part.length();
                     skipSpaces(part, index);
-                    if (index >= contentTypeLength)  {
-                        STARFISH_LOG_ERROR("Invalid Content-Type string '%s'\n", part.c_str());
+                    if (index >= contentTypeLength) {
+                        STARFISH_LOG_ERROR("Invalid Content-Type string '%s'\n",
+                                           part.c_str());
                         continue;
                     }
 
-                    // There should not be any quoted strings until we reach the parameters.
+                    // There should not be any quoted strings until we reach the
+                    // parameters.
                     size_t semiColonIndex = part.find(";", index);
                     if (semiColonIndex < 0) {
-                        m_responseMimeType = String::fromUTF8(part.substr(index, contentTypeLength - index).data());
+                        m_responseMimeType = String::fromUTF8(
+                            part.substr(index, contentTypeLength - index)
+                                .data());
                         continue;
                     }
 
-                    m_responseMimeType = String::fromUTF8(part.substr(index, semiColonIndex - index).data());
+                    m_responseMimeType = String::fromUTF8(
+                        part.substr(index, semiColonIndex - index).data());
                     index = semiColonIndex + 1;
                 } else if (h == "Content-Transfer-Encoding") {
                     std::string part = d;
                     trim(part);
-                    std::transform(part.begin(), part.end(), part.begin(), ::tolower);
-                    if (part == "base64")
+                    std::transform(part.begin(), part.end(), part.begin(),
+                                   ::tolower);
+                    if (part == "base64") {
                         m_containsBase64Content = true;
+                    }
                 }
             }
         }
@@ -339,24 +382,27 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
 
     if (readyState != m_readyState) {
         m_readyState = readyState;
-        for (size_t i = 0; i < m_clients.size(); i ++) {
+        for (size_t i = 0; i < m_clients.size(); i++) {
             m_clients[i]->onReadyStateChange(this, isExplicitAction);
         }
     }
 
     if (m_readyState == ReadyState::DONE) {
-        m_starFish->messageLoop()->addIdler([](size_t, void* data, void* data2) {
-            ((StarFish*)data)->removePointerFromRootSet(data2);
-        }, m_starFish, this);
+        m_starFish->messageLoop()->addIdler(
+            [](size_t, void* data, void* data2) {
+                ((StarFish*)data)->removePointerFromRootSet(data2);
+            },
+            m_starFish, this);
     }
 }
 
-void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitAction)
+void NetworkRequest::changeProgress(ProgressState progress,
+                                    bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
     if (m_progressState != progress || (progress == ProgressState::PROGRESS)) {
         m_progressState = progress;
-        for (size_t i = 0; i < m_clients.size(); i ++) {
+        for (size_t i = 0; i < m_clients.size(); i++) {
             m_clients[i]->onProgressEvent(this, isExplicitAction);
         }
     }
@@ -365,10 +411,10 @@ void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitActio
         NetworkRequestResponse().swap(m_response);
         NetworkRequestResponseHeader().swap(m_responseHeaderData);
     }
-
 }
 
-void NetworkRequest::open(MethodType method, String* url, bool async, String* userName, String* password)
+void NetworkRequest::open(MethodType method, String* url, bool async,
+                          String* userName, String* password)
 {
     bool shouldAbort = false;
     {
@@ -381,11 +427,14 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
     {
         initVariables();
         m_method = method;
-        m_url = URL::createURL(m_starFish->window()->document()->documentURI()->baseURI(), url);
-        if (userName->length())
+        m_url = URL::createURL(
+            m_starFish->window()->document()->documentURI()->baseURI(), url);
+        if (userName->length()) {
             m_url->setUsername(userName);
-        if (password->length())
+        }
+        if (password->length()) {
             m_url->setPassword(password);
+        }
         m_isSync = !async;
     }
     changeReadyState(OPENED, true);
@@ -414,21 +463,25 @@ void NetworkRequest::abort(bool isExplicitAction)
     }
 }
 
-int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal,
+                                         curl_off_t dlnow, curl_off_t ultotal,
+                                         curl_off_t ulnow)
 {
     NetworkWorkerData* workerData = (NetworkWorkerData*)clientp;
     NetworkRequest* request = workerData->request;
     Locker<Mutex> locker(*request->m_mutex);
     // check abort
-    if (workerData->isAborted)
+    if (workerData->isAborted) {
         return 1;
+    }
 
     request->m_loaded = static_cast<uint32_t>(dlnow);
     request->m_total = static_cast<uint32_t>(dltotal);
     return 0;
 }
 
-size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data)
+size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb,
+                                         void* data)
 {
     NetworkRequest* request = (NetworkRequest*)data;
     Locker<Mutex> locker(*request->m_mutex);
@@ -436,30 +489,40 @@ size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, v
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
-    request->m_response.insert(request->m_response.end(), memPtr, memPtr + realSize);
+    request->m_response.insert(request->m_response.end(), memPtr,
+                               memPtr + realSize);
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         if (request->isSync()) {
             request->changeReadyState(LOADING, true);
             request->changeProgress(PROGRESS, true);
         } else {
-            request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                Locker<Mutex> locker(*request->m_mutex);
-                {
-                    STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
-                    request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
-                }
-                request->changeReadyState(LOADING, true);
-                request->changeProgress(PROGRESS, true);
-            }, request);
+            request->m_pendingOnProgressEventIdlerHandle =
+                request->m_starFish->messageLoop()
+                    ->addIdlerWithNoGCRootingInOtherThread(
+                        [](size_t handle, void* data) {
+                            NetworkRequest* request = (NetworkRequest*)data;
+                            Locker<Mutex> locker(*request->m_mutex);
+                            {
+                                STARFISH_ASSERT(
+                                    handle ==
+                                    request
+                                        ->m_pendingOnProgressEventIdlerHandle);
+                                request->m_pendingOnProgressEventIdlerHandle =
+                                    SIZE_MAX;
+                            }
+                            request->changeReadyState(LOADING, true);
+                            request->changeProgress(PROGRESS, true);
+                        },
+                        request);
         }
     }
 
     return realSize;
 }
 
-size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data)
+size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size,
+                                               size_t nmemb, void* data)
 {
     size_t realsize = size * nmemb;
     NetworkWorkerData* request = (NetworkWorkerData*)data;
@@ -476,7 +539,9 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
         request->request->m_responseHeaderData.clear();
     }
 
-    request->request->m_responseHeaderData.insert(request->request->m_responseHeaderData.end(), memPtr, memPtr + realSize);
+    request->request->m_responseHeaderData.insert(
+        request->request->m_responseHeaderData.end(), memPtr,
+        memPtr + realSize);
     return realsize;
 }
 
@@ -494,24 +559,30 @@ void NetworkRequest::send(String* body)
         if (m_isSync) {
             fileWorker(this, filePath);
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                request->removeIdlerHandle(handle);
-                NetworkRequestFileWorker((NetworkRequest*)data, (String*)data1);
-            }, this, filePath);
+            size_t handle = m_starFish->messageLoop()->addIdler(
+                [](size_t handle, void* data, void* data1) {
+                    NetworkRequest* request = (NetworkRequest*)data;
+                    request->removeIdlerHandle(handle);
+                    NetworkRequestFileWorker((NetworkRequest*)data,
+                                             (String*)data1);
+                },
+                this, filePath);
             pushIdlerHandle(handle);
         }
-    } else if (m_url->isDataURL())  {
+    } else if (m_url->isDataURL()) {
         // this area doesn't require lock.
         // reading url does not require thread
         if (m_isSync) {
             dataURLWorker(this, m_url->urlString());
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                request->removeIdlerHandle(handle);
-                NetworkRequestDataURLWorker((NetworkRequest*)data, (String*)data1);
-            }, this, m_url->urlString());
+            size_t handle = m_starFish->messageLoop()->addIdler(
+                [](size_t handle, void* data, void* data1) {
+                    NetworkRequest* request = (NetworkRequest*)data;
+                    request->removeIdlerHandle(handle);
+                    NetworkRequestDataURLWorker((NetworkRequest*)data,
+                                                (String*)data1);
+                },
+                this, m_url->urlString());
             pushIdlerHandle(handle);
         }
     } else if (m_url->isBlobURL()) {
@@ -520,15 +591,18 @@ void NetworkRequest::send(String* body)
         if (m_isSync) {
             blobURLWorker(this, m_url->urlString());
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                request->removeIdlerHandle(handle);
-                NetworkRequestBlobURLWorker((NetworkRequest*)data, (String*)data1);
-            }, this, m_url->urlString());
+            size_t handle = m_starFish->messageLoop()->addIdler(
+                [](size_t handle, void* data, void* data1) {
+                    NetworkRequest* request = (NetworkRequest*)data;
+                    request->removeIdlerHandle(handle);
+                    NetworkRequestBlobURLWorker((NetworkRequest*)data,
+                                                (String*)data1);
+                },
+                this, m_url->urlString());
             pushIdlerHandle(handle);
         }
     } else {
-        NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
+        NetworkWorkerData* data = new (NoGC) NetworkWorkerData;
         m_activeNetworkWorkerData = data;
         {
             CURL* curl = curl_easy_init();
@@ -546,21 +620,24 @@ void NetworkRequest::send(String* body)
             conn_err = connection_create(&connection);
             char* proxy_address = NULL;
             if (conn_err == CONNECTION_ERROR_NONE) {
-                connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4, &proxy_address);
+                connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4,
+                                     &proxy_address);
                 if (proxy_address) {
                     curl_easy_setopt(curl, CURLOPT_PROXY, proxy_address);
                     free(proxy_address);
                 }
                 connection_destroy(connection);
             } else {
-                STARFISH_LOG_INFO("got error while opening tizen network connection\n");
+                STARFISH_LOG_INFO(
+                    "got error while opening tizen network connection\n");
             }
 #endif
 
             const char* url = m_url->urlString()->utf8Data();
             curl_easy_setopt(curl, CURLOPT_URL, url);
             STARFISH_LOG_INFO("sending network request to %s\n", url);
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(m_timeout));
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS,
+                             static_cast<unsigned long>(m_timeout));
 
             std::string headerText;
             struct curl_slist* list = NULL;
@@ -571,7 +648,8 @@ void NetworkRequest::send(String* body)
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
-            list = curl_slist_append(list, "User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
+            list = curl_slist_append(
+                list, "User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
 
             if (!m_document->documentURI()->isNetworkURL()) {
                 list = curl_slist_append(list, "Origin:null");
@@ -580,12 +658,14 @@ void NetworkRequest::send(String* body)
                 headerText += m_url->getHostname()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
-                headerText += m_document->documentURI()->urlString()->utf8Data();
+                headerText +=
+                    m_document->documentURI()->urlString()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
             }
 
             for (size_t i = 0; i < m_requestHeaders.size(); i++) {
-                headerText = std::string(m_requestHeaders[i].first->utf8Data()) + ":";
+                headerText =
+                    std::string(m_requestHeaders[i].first->utf8Data()) + ":";
                 headerText += m_requestHeaders[i].second->utf8Data();
                 list = curl_slist_append(list, headerText.data());
             }
@@ -595,16 +675,17 @@ void NetworkRequest::send(String* body)
 
             curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-            // TODO
-            // we should prevent infinite redirect
+            // TODO: we should prevent infinite redirect
             curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 128);
 
-            curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curlProgressCallback);
+            curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION,
+                             curlProgressCallback);
             curl_easy_setopt(curl, CURLOPT_XFERINFODATA, data);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, data);
-            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curlWriteHeaderCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION,
+                             curlWriteHeaderCallback);
 
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteCallback);
@@ -629,7 +710,6 @@ void NetworkRequest::send(String* body)
             // Thread* t = new Thread();
             // t->run(networkWorker, data);
         }
-
     }
 }
 
@@ -646,14 +726,15 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
         fio->close();
         res->handleResponseEOF();
     } else {
-        STARFISH_LOG_INFO("failed to open %s\n", res->m_url->urlString()->utf8Data());
+        STARFISH_LOG_INFO("failed to open %s\n",
+                          res->m_url->urlString()->utf8Data());
         res->m_status = 0;
         res->handleError(ERROR);
     }
     delete fio;
 }
 
-static String* decodeURL(String *src, size_t idx)
+static String* decodeURL(String* src, size_t idx)
 {
     bool gotUTF32Char = false;
     UTF32String ret;
@@ -713,17 +794,19 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     size_t idx = url->indexOf(',');
 
     if (idx != SIZE_MAX && idxColon != SIZE_MAX && idxColon < idx) {
-        String* sub = url->substring(idxColon + 1, idx - idxColon - 1)->toLower();
+        String* sub =
+            url->substring(idxColon + 1, idx - idxColon - 1)->toLower();
         size_t base64 = sub->find(";base64");
 
         if (base64 == sub->length() - 7) {
             sub = sub->substring(0, base64);
-            res->m_responseHeaderData = "Content-Transfer-Encoding:base64\r\nContent-Type:";
+            res->m_responseHeaderData =
+                "Content-Transfer-Encoding:base64\r\nContent-Type:";
         } else {
             res->m_responseHeaderData = "Content-Type:";
         }
 
-        for (size_t i = 0; i < sub->length(); i ++) {
+        for (size_t i = 0; i < sub->length(); i++) {
             res->m_responseHeaderData.push_back((char)sub->charAt(i));
         }
     }
@@ -775,25 +858,139 @@ void NetworkRequest::setRequestHeader(String* h, String* c)
 
 void* NetworkRequest::networkWorker(void* data)
 {
-    NetworkWorkerData* requestData = (NetworkWorkerData*) data;
+    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
     return requestData->networkWorker->networkWorker(data);
 }
 
-static size_t base64Table[128] =
-{
-    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 0~9
-    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 10~19
-    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 20~29
-    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 30~39
-    std::string::npos, std::string::npos, std::string::npos, 62, std::string::npos, std::string::npos, std::string::npos, 63, 52, 53, // 40~49
-    54, 55, 56, 57, 58, 59, 60, 61, std::string::npos, std::string::npos, // 50~59
-    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, 0, 1, 2, 3, 4, // 60~69
-    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, // 70~79
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, // 80~89
-    25, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, 26, 27, 28, // 90~99
-    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, // 100~109
-    39, 40, 41, 42, 43, 44, 45, 46, 47, 48, // 110~119
-    49, 50, 51, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos,
+static size_t base64Table[128] = {
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos, // 0~9
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos, // 10~19
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos, // 20~29
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos, // 30~39
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    62,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    63,
+    52,
+    53, // 40~49
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    std::string::npos,
+    std::string::npos, // 50~59
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    0,
+    1,
+    2,
+    3,
+    4, // 60~69
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14, // 70~79
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24, // 80~89
+    25,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    26,
+    27,
+    28, // 90~99
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38, // 100~109
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48, // 110~119
+    49,
+    50,
+    51,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
+    std::string::npos,
 };
 
 #ifndef NDEBUG
@@ -808,31 +1005,37 @@ static inline bool isBase64(unsigned char c)
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-
 template <typename StrType>
-NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, size_t startAt, size_t endAt)
+NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str,
+                                                         size_t startAt,
+                                                         size_t endAt)
 {
     size_t inLen = endAt - startAt;
     size_t i = 0;
     size_t j = 0;
     size_t in_ = startAt;
-    unsigned char charArray4[4] = { }, charArray3[3] = { };
+    unsigned char charArray4[4] = {}, charArray3[3] = {};
     NetworkRequestResponse result;
 
     while (inLen--) {
-        if (((unsigned char) str[in_] != '=') && isBase64((unsigned char) str[in_])) {
+        if (((unsigned char)str[in_] != '=') &&
+            isBase64((unsigned char)str[in_])) {
             charArray4[i++] = str[in_];
             in_++;
             if (i == 4) {
                 for (i = 0; i < 4; i++) {
 #ifndef NDEBUG
-                    STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[i]) == (char)base64Table[charArray4[i]]);
+                    STARFISH_ASSERT(
+                        (char)base64CharsDebug.find(charArray4[i]) ==
+                        (char)base64Table[charArray4[i]]);
 #endif
                     charArray4[i] = base64Table[charArray4[i]];
                 }
 
-                charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
-                charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+                charArray3[0] =
+                    (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+                charArray3[1] = ((charArray4[1] & 0xf) << 4) +
+                                ((charArray4[2] & 0x3c) >> 2);
                 charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
 
                 for (i = 0; (i < 3); i++) {
@@ -844,19 +1047,22 @@ NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, siz
     }
 
     if (i) {
-        for (j = i; j < 4; j++)
+        for (j = i; j < 4; j++) {
             charArray4[j] = 0;
+        }
         for (j = 0; j < 4; j++) {
 #ifndef NDEBUG
             auto ret = base64CharsDebug.find(charArray4[j]);
-            STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) == (char)base64Table[charArray4[j]]);
+            STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) ==
+                            (char)base64Table[charArray4[j]]);
             ret = !ret;
 #endif
             charArray4[j] = base64Table[charArray4[j]];
         }
 
         charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
-        charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+        charArray3[1] =
+            ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
         charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
 
         for (j = 0; (j < i - 1); j++) {
@@ -866,6 +1072,4 @@ NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, siz
 
     return result;
 }
-
-
 }

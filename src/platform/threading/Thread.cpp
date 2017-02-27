@@ -52,25 +52,27 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
         pthread_t tid;
     };
 
-    ThreadData* d = new(NoGC) ThreadData;
+    ThreadData* d = new (NoGC) ThreadData;
     d->thread = this;
     d->messageLoop = msgLoop;
     d->fn = fn;
     d->data = data;
 
-    pthread_create(&d->tid, NULL, [](void* data) -> void* {
-        ThreadData* d = (ThreadData*)data;
-        auto ret = d->fn(d->data);
-        d->thread->m_alive = false;
-        d->messageLoop->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            ThreadData* d = (ThreadData*)data;
-            void* ret;
-            pthread_join(d->tid, &ret);
-            GC_FREE(data);
-        }, d);
-        pthread_exit(ret);
-    }, d);
+    pthread_create(&d->tid, NULL,
+                   [](void* data) -> void* {
+                       ThreadData* d = (ThreadData*)data;
+                       auto ret = d->fn(d->data);
+                       d->thread->m_alive = false;
+                       d->messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                           [](size_t handle, void* data) {
+                               ThreadData* d = (ThreadData*)data;
+                               void* ret;
+                               pthread_join(d->tid, &ret);
+                               GC_FREE(data);
+                           },
+                           d);
+                       pthread_exit(ret);
+                   },
+                   d);
 }
-
-
 }

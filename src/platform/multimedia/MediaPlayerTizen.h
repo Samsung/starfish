@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayerTizen__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishMediaPlayerTizen__)
 #define __StarFishMediaPlayerTizen__
 
 #include "MediaPlayer.h"
@@ -40,7 +41,10 @@ public:
     virtual void play();
     virtual void pause();
 
-    void setLoop(bool loop) { m_isLooping = true; }
+    void setLoop(bool loop)
+    {
+        m_isLooping = true;
+    }
     bool loop()
     {
         return m_isLooping;
@@ -84,29 +88,33 @@ public:
     {
         if (m_hasVideo) {
             return m_videoWidth;
-        } else
+        } else {
             return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+        }
     }
 
     virtual unsigned long videoHeight()
     {
         if (m_hasVideo) {
             return m_videoHeight;
-        } else
+        } else {
             return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+        }
     }
 
     virtual double currentTime()
     {
         int s;
         int ret = player_get_play_position(m_nativePlayer, &s);
-        if (ret)
+        if (ret) {
             return 0;
+        }
         return s / 1000.0;
     }
 
     virtual double duration();
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+                           const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
 
     bool m_inPrepare;

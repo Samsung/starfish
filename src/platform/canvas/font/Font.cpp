@@ -25,8 +25,8 @@
 #include "style/UnitHelper.h"
 
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
-extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text *obj);
-extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text *obj);
+extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text* obj);
+extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text* obj);
 #endif
 
 namespace StarFish {
@@ -34,35 +34,45 @@ namespace StarFish {
 extern int g_screenDpi;
 Evas* internalCanvas();
 
-static String* convertStyleParamStr(String* familyName, unsigned char style, char weight)
+static String* convertStyleParamStr(String* familyName, unsigned char style,
+                                    char weight)
 {
     switch (weight) {
     case 1:
-        familyName = familyName->concat(String::createASCIIString(":style=thin"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=thin"));
         break;
     case 2:
-        familyName = familyName->concat(String::createASCIIString(":style=ultralight"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=ultralight"));
         break;
     case 3:
-        familyName = familyName->concat(String::createASCIIString(":style=light"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=light"));
         break;
     case 4:
-        familyName = familyName->concat(String::createASCIIString(":style=medium"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=medium"));
         break;
     case 5:
-        familyName = familyName->concat(String::createASCIIString(":style=semibold"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=semibold"));
         break;
     case 6:
-        familyName = familyName->concat(String::createASCIIString(":style=bold"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=bold"));
         break;
     case 7:
-        familyName = familyName->concat(String::createASCIIString(":style=ultrabold"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=ultrabold"));
         break;
     case 8:
-        familyName = familyName->concat(String::createASCIIString(":style=black"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=black"));
         break;
     case 9:
-        familyName = familyName->concat(String::createASCIIString(":style=extrablack"));
+        familyName =
+            familyName->concat(String::createASCIIString(":style=extrablack"));
         break;
     }
 
@@ -72,12 +82,12 @@ static String* convertStyleParamStr(String* familyName, unsigned char style, cha
         familyName = familyName->concat(String::createASCIIString(" oblique"));
     }
     return familyName;
-
 }
 
 class FontImplEFL : public Font {
 public:
-    FontImplEFL(String* familyName, float size, char style, char weight, FontMetrics met)
+    FontImplEFL(String* familyName, float size, char style, char weight,
+                FontMetrics met)
     {
         m_text = nullptr;
         m_metrics = met;
@@ -92,13 +102,15 @@ public:
         if (!g_enablePixelTest) {
             m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
             m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
-            m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_fontHeight =
+                m_metrics.m_ascender - m_metrics.m_descender;
             m_metrics.m_xheightRate = met.m_xheightRate;
         } else {
             // Set the FontMetrics as if font is Ahem.
             m_metrics.m_ascender = m_size * 0.8;
             m_metrics.m_descender = m_metrics.m_ascender - m_size;
-            m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_fontHeight =
+                m_metrics.m_ascender - m_metrics.m_descender;
             m_metrics.m_xheightRate = 0.8f;
         }
 #else
@@ -110,14 +122,16 @@ public:
 
         m_spaceWidth = measureText(StringView(String::spaceString, 0, 1));
 
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
-            FontImplEFL* m = (FontImplEFL*)obj;
-            if (m->m_text) {
-                evas_object_hide(m->m_text);
-                evas_object_del(m->m_text);
-            }
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
+                                           FontImplEFL* m = (FontImplEFL*)obj;
+                                           if (m->m_text) {
+                                               evas_object_hide(m->m_text);
+                                               evas_object_del(m->m_text);
+                                           }
+                                       },
+                                       NULL, NULL, NULL);
     }
     ~FontImplEFL()
     {
@@ -125,8 +139,9 @@ public:
 
     void loadFont(int size)
     {
-        if (m_text)
+        if (m_text) {
             unloadFont();
+        }
         m_text = evas_object_text_add(internalCanvas());
         evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), size);
     }
@@ -146,15 +161,19 @@ public:
 #endif
         if (str.originalString()->isASCIIString()) {
             bool isShort = str.length() < 128;
-            char* buf = isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
-            strncpy(buf, str.originalString()->asASCIIString()->data() + str.start(), str.end() - str.start());
+            char* buf =
+                isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
+            strncpy(buf,
+                    str.originalString()->asASCIIString()->data() + str.start(),
+                    str.end() - str.start());
             buf[str.length()] = 0;
             evas_object_text_text_set(m_text, buf);
             if (!isShort) {
                 free(buf);
             }
         } else {
-            UTF8NonGCString s = str.originalString()->toUTF8NonGCString(str.start(), str.end());
+            UTF8NonGCString s =
+                str.originalString()->toUTF8NonGCString(str.start(), str.end());
             evas_object_text_text_set(m_text, s.c_str());
         }
 
@@ -223,7 +242,8 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     FT_Int xheight = face->glyph->bitmap_top;
 
     Font::FontMetrics met;
-    met.m_fontHeight = ((face->ascender - face->descender) * size) / face->units_per_EM;
+    met.m_fontHeight =
+        ((face->ascender - face->descender) * size) / face->units_per_EM;
     met.m_ascender = ((face->ascender * size) / (face->units_per_EM));
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
@@ -233,19 +253,24 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     return met;
 }
 
-Font* FontSelector::loadFont(String* familyName, float size, char style, char weight)
+Font* FontSelector::loadFont(String* familyName, float size, char style,
+                             char weight)
 {
     FontImplEFL* f = nullptr;
 
     for (unsigned i = 0; i < m_fontCache.size(); i++) {
         if (std::get<1>(m_fontCache[i])->equals(familyName)) {
-            if (std::get<2>(m_fontCache[i]) == size && std::get<3>(m_fontCache[i]) == style && std::get<4>(m_fontCache[i]) == weight) {
+            if (std::get<2>(m_fontCache[i]) == size &&
+                std::get<3>(m_fontCache[i]) == style &&
+                std::get<4>(m_fontCache[i]) == weight) {
                 return std::get<0>(m_fontCache[i]);
             }
         }
     }
 
-    f = new FontImplEFL(familyName, size, style, weight, loadFontMetrics(convertStyleParamStr(familyName, style, weight),  size));
+    f = new FontImplEFL(
+        familyName, size, style, weight,
+        loadFontMetrics(convertStyleParamStr(familyName, style, weight), size));
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }

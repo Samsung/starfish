@@ -26,16 +26,18 @@ class StarFish;
 
 class Coordinates : public ScriptWrappable {
 public:
-    Coordinates(StarFish* starFish, double latitude, double longitude, double* altitude, double accuracy, double* altitudeAccuracy, double* heading, double* speed)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_latitude(latitude)
-        , m_longitude(longitude)
-        , m_altitude(altitude)
-        , m_accuracy(accuracy)
-        , m_altitudeAccuracy(altitudeAccuracy)
-        , m_heading(heading)
-        , m_speed(speed)
+    Coordinates(StarFish* starFish, double latitude, double longitude,
+                double* altitude, double accuracy, double* altitudeAccuracy,
+                double* heading, double* speed)
+        : ScriptWrappable(this),
+          m_starFish(starFish),
+          m_latitude(latitude),
+          m_longitude(longitude),
+          m_altitude(altitude),
+          m_accuracy(accuracy),
+          m_altitudeAccuracy(altitudeAccuracy),
+          m_heading(heading),
+          m_speed(speed)
     {
     }
 
@@ -88,6 +90,7 @@ public:
     {
         return m_speed;
     }
+
 protected:
     StarFish* m_starFish;
     double m_latitude;
@@ -95,17 +98,17 @@ protected:
     double* m_altitude; // should be allcated by GC_MALLOC or null
     double m_accuracy;
     double* m_altitudeAccuracy; // should be allcated by GC_MALLOC or null
-    double* m_heading; // should be allcated by GC_MALLOC or null
-    double* m_speed; // should be allcated by GC_MALLOC or null
+    double* m_heading;          // should be allcated by GC_MALLOC or null
+    double* m_speed;            // should be allcated by GC_MALLOC or null
 };
 
 class Geoposition : public ScriptWrappable {
 public:
     Geoposition(StarFish* starFish, Coordinates* c, DOMTimeStamp timestamp)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_coords(c)
-        , m_timestamp(timestamp)
+        : ScriptWrappable(this),
+          m_starFish(starFish),
+          m_coords(c),
+          m_timestamp(timestamp)
     {
     }
 
@@ -134,7 +137,6 @@ public:
         return ScriptWrappable::Type::GeopositionObject;
     }
 
-
 protected:
     StarFish* m_starFish;
     Coordinates* m_coords;
@@ -143,16 +145,10 @@ protected:
 
 class PositionError : public ScriptWrappable {
 public:
-    enum Error {
-        PERMISSION_DENIED = 1,
-        POSITION_UNAVAILABLE = 2,
-        TIMEOUT = 3
-    };
+    enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
 
     PositionError(StarFish* starFish, Error code)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_code(code)
+        : ScriptWrappable(this), m_starFish(starFish), m_code(code)
     {
     }
 
@@ -189,14 +185,14 @@ public:
         return ScriptWrappable::Type::PositionErrorObject;
     }
 
-
 protected:
     StarFish* m_starFish;
     Error m_code;
 };
 
 typedef void (*GeopositionCallback)(StarFish*, Geoposition*, void* data);
-typedef void (*GeopositionErrorCallback)(StarFish*, PositionError* error, void* data);
+typedef void (*GeopositionErrorCallback)(StarFish*, PositionError* error,
+                                         void* data);
 
 class Geolocation : public ScriptWrappable {
 public:
@@ -217,14 +213,23 @@ public:
         return ScriptWrappable::Type::GeolocationObject;
     }
 
-    virtual void getCurrentPosition(GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb, void* errorCbData, bool enableHighAccuracy, int32_t timeout, int32_t maximumAge);
-    virtual void close() { }
+    virtual void getCurrentPosition(GeopositionCallback cb, void* cbData,
+                                    GeopositionErrorCallback errorCb,
+                                    void* errorCbData, bool enableHighAccuracy,
+                                    int32_t timeout, int32_t maximumAge);
+    virtual void close()
+    {
+    }
+
 protected:
     Geolocation(StarFish* starFish);
-    bool getCurrentPositionPreprocessing(GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb, void* errorCbData, bool enableHighAccuracy, int32_t timeout, int32_t maximumAge);
+    bool getCurrentPositionPreprocessing(GeopositionCallback cb, void* cbData,
+                                         GeopositionErrorCallback errorCb,
+                                         void* errorCbData,
+                                         bool enableHighAccuracy,
+                                         int32_t timeout, int32_t maximumAge);
     StarFish* m_starFish;
 };
-
 }
 
 #endif

@@ -26,17 +26,19 @@ bool isMainThread();
 class Thread : public gc {
 public:
     Thread();
-    ~Thread() { }
+    ~Thread()
+    {
+    }
 
     void run(MessageLoop* msgLoop, ThreadWorker fn, void* data);
     bool isAlive()
     {
         return m_alive;
     }
+
 protected:
     volatile bool m_alive;
 };
-
 }
 
 #endif

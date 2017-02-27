@@ -25,8 +25,7 @@
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
-    MP4BinaryStreamAdapter(StarFish::DemuxerSource* source)
-        : m_source(source)
+    MP4BinaryStreamAdapter(StarFish::DemuxerSource* source) : m_source(source)
     {
     }
     virtual void ignore(std::streamsize n = 1)
@@ -38,20 +37,24 @@ public:
         size_t sizeWantToRead = n;
         size_t out;
         int error = 0;
-        // virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& errorCode, uint8_t* buffer) = 0;
+        // virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead,
+        // int& errorCode, uint8_t* buffer) = 0;
         m_source->onRead(n, out, error, (uint8_t*)s);
         STARFISH_ASSERT(error == 0);
     }
 
     virtual bool eof() const
     {
-        return m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceLookSize) != m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
+        return m_source->onSeek(0,
+                                StarFish::DemuxerSource::SeekWhenceLookSize) !=
+               m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
     }
 
     virtual size_t pos()
     {
         return m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
     }
+
 private:
     virtual void get(char& c)
     {
@@ -75,17 +78,19 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source)
     int err;
     source->onRead(4, t1, err, c);
 
-    n = (uint32_t) c[0] << 24 | (uint32_t) c[1] << 16 | (uint32_t) c[2] << 8 | (uint32_t) c[3];
+    n = (uint32_t)c[0] << 24 | (uint32_t)c[1] << 16 | (uint32_t)c[2] << 8 |
+        (uint32_t)c[3];
 
     return n;
 }
 
-static void parseMP4(DemuxerSource* source, bool findStream, const std::function<void(MP4::Atom* atom)>& fn)
+static void parseMP4(DemuxerSource* source, bool findStream,
+                     const std::function<void(MP4::Atom* atom)>& fn)
 {
     bool container = false;
     uint32_t length;
     uint64_t dataLength;
-    char type[ 5 ];
+    char type[5];
     char* data = NULL;
     MP4::Atom* atom = NULL;
     MP4BinaryStreamAdapter src(source);
@@ -122,7 +127,8 @@ static void parseMP4(DemuxerSource* source, bool findStream, const std::function
         }
 
         if (!findStream) {
-            if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat") || typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
+            if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat") ||
+                typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
@@ -137,19 +143,21 @@ static void parseMP4(DemuxerSource* source, bool findStream, const std::function
 
 class DemuxerMP4 : public Demuxer {
 public:
-    DemuxerMP4()
-        : Demuxer()
+    DemuxerMP4() : Demuxer()
     {
         m_isStreamFinded = false;
         m_nalLengthSize = 2;
         m_isAnnexBType = false;
         m_isAnnexBTypeTestEvaled = false;
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("DemuxerMP4::~DemuxerMP4\n");
-            DemuxerMP4* self = (DemuxerMP4*)obj;
-            self->m_streamInfo.clear();
-            std::vector<uint8_t>().swap(self->m_spsPpsInfo);
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                STARFISH_LOG_INFO("DemuxerMP4::~DemuxerMP4\n");
+                DemuxerMP4* self = (DemuxerMP4*)obj;
+                self->m_streamInfo.clear();
+                std::vector<uint8_t>().swap(self->m_spsPpsInfo);
+            },
+            NULL, NULL, NULL);
     }
 
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint)
@@ -169,63 +177,91 @@ public:
                 MP4::MVHD* mvhd = (MP4::MVHD*)atom;
                 time_scale = mvhd->_timeScale;
                 // STARFISH_LOG_ERROR("[parseMP4][%p] Found mvhd\n", source);
-                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_duration : %lld\n", source, mvhd->_duration);
-                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_timeScale : %d\n", source, mvhd->_timeScale);
-                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_rate : %f\n", source, mvhd->_rate);
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_duration : %lld\n",
+                // source, mvhd->_duration);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_timeScale : %d\n",
+                // source, mvhd->_timeScale);
+                // STARFISH_LOG_ERROR("[parseMP4][%p] mvhd->_rate : %f\n",
+                // source, mvhd->_rate);
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
                 MP4::TKHD* tkhd = (MP4::TKHD*)atom;
                 track_id = tkhd->track_id;
                 track_width = tkhd->track_width;
                 track_height = tkhd->track_height;
                 duration = tkhd->duration;
                 seenTkhd = true;
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mdhd")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("mdhd")) {
                 MP4::MDHD* mdhd = (MP4::MDHD*)atom;
 
                 if (seenTkhd && mdhd) {
-                    m_streamInfo[track_id - 1] = std::make_pair(mdhd->_timeScale, track_width ? true : false);
+                    m_streamInfo[track_id - 1] = std::make_pair(
+                        mdhd->_timeScale, track_width ? true : false);
                     if (track_width && track_height) {
                         // video
                         VideoStreamInfo info;
                         info.m_streamIndex = track_id - 1;
                         // Set duration
-                        // Note : https://www.w3.org/2008/WebVideo/Annotations/drafts/ontology10/CR/mappings_tested/container-MPEG4.htm
-                        //      - Find the movie header box (mvhd) and get the timescale field,
-                        //      - and then retrieve the duration field from the movie or track header (mvhd, tkhd) as appropriate, and divide.
-                        info.m_duration = time_scale > 0 ? (duration * 1000LL / time_scale) : 0;
+                        // Note :
+                        // https://www.w3.org/2008/WebVideo/Annotations/drafts/
+                        // ontology10/CR/mappings_tested/container-MPEG4.htm
+                        //
+                        //   - Find the movie header box (mvhd) and get the
+                        //     timescale field,
+                        //   - and then retrieve the duration field from the
+                        //     movie or track header (mvhd, tkhd) as
+                        //     appropriate, and divide.
+                        info.m_duration = time_scale > 0
+                                              ? (duration * 1000LL / time_scale)
+                                              : 0;
                         // TODO read avg_frame_rate
                         info.m_timeBaseNum = 0;
                         info.m_timeBaseDen = 1;
                         // TODO read codec name
                         info.m_codecName = "h264";
-                        // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
+                        // info.m_bitRate =
+                        // m_formatContext->streams[i]->codec->bit_rate;
                         info.m_width = track_width;
                         info.m_height = track_height;
-                        STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded video. %d %d %d\n", (int)info.m_streamIndex, (int)info.m_width, (int)info.m_height);
-                        for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                        STARFISH_LOG_INFO(
+                            "DemuxerMP4::findStreamInfo finded video. %d %d "
+                            "%d\n",
+                            (int)info.m_streamIndex, (int)info.m_width,
+                            (int)info.m_height);
+                        for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                             m_demuxerClients[j]->onDetectVideoStream(info);
                         }
                     } else {
                         AudioStreamInfo info;
                         info.m_streamIndex = track_id - 1;
-                        info.m_duration = time_scale > 0 ? (duration * 1000LL / time_scale) : 0;
+                        info.m_duration = time_scale > 0
+                                              ? (duration * 1000LL / time_scale)
+                                              : 0;
                         // TODO read codec name
                         info.m_codecName = "aac";
-                        // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                        // info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
-                        // info.m_channels = m_formatContext->streams[i]->codec->channels;
+                        // info.m_bitRate =
+                        // m_formatContext->streams[i]->codec->bit_rate;
+                        // info.m_sampleFormat =
+                        //     (AudioSampleFormat)m_formatContext->
+                        //     streams[i]->codec->sample_fmt;
+                        // info.m_channels =
+                        // m_formatContext->streams[i]->codec->channels;
                         info.m_sampleRate = mdhd->_timeScale;
-                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded audio. %d\n", (int)info.m_streamIndex);
-                        for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded
+                        // audio. %d\n", (int)info.m_streamIndex);
+                        for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                             m_demuxerClients[j]->onDetectAudioStream(info);
                         }
                     }
                 }
                 seenTkhd = false;
                 mdhd = nullptr;
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
                 seenTrack = true;
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("avcC")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("avcC")) {
                 MP4::AVCC* avcc = (MP4::AVCC*)atom;
                 m_nalLengthSize = avcc->nal_length;
                 m_spsPpsInfo.clear();
@@ -235,8 +271,9 @@ public:
                 // uint8_t naluHeader[4] = { 0, 0, 0, 1 };
                 std::vector<uint8_t> nalBuffer;
                 nalBuffer.resize(m_nalLengthSize);
-                for (size_t i = 0; i < avcc->spsVector.size(); i ++) {
-                    // m_spsPpsInfo.insert(m_spsPpsInfo.end(), &naluHeader[0], &naluHeader[4]);
+                for (size_t i = 0; i < avcc->spsVector.size(); i++) {
+                    // m_spsPpsInfo.insert(m_spsPpsInfo.end(), &naluHeader[0],
+                    // &naluHeader[4]);
                     size_t nalSize = avcc->spsVector[i].size();
                     nalBuffer[3] = nalSize;
                     nalSize = nalSize >> 8;
@@ -245,11 +282,15 @@ public:
                     nalBuffer[1] = nalSize;
                     nalSize = nalSize >> 8;
                     nalBuffer[0] = nalSize;
-                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), nalBuffer.begin(), nalBuffer.end());
-                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), avcc->spsVector[i].begin(), avcc->spsVector[i].end());
+                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), nalBuffer.begin(),
+                                        nalBuffer.end());
+                    m_spsPpsInfo.insert(m_spsPpsInfo.end(),
+                                        avcc->spsVector[i].begin(),
+                                        avcc->spsVector[i].end());
                 }
-                for (size_t i = 0; i < avcc->ppsVector.size(); i ++) {
-                    // m_spsPpsInfo.insert(m_spsPpsInfo.end(), &naluHeader[0], &naluHeader[4]);
+                for (size_t i = 0; i < avcc->ppsVector.size(); i++) {
+                    // m_spsPpsInfo.insert(m_spsPpsInfo.end(), &naluHeader[0],
+                    // &naluHeader[4]);
                     size_t nalSize = avcc->ppsVector[i].size();
                     nalBuffer[3] = nalSize;
                     nalSize = nalSize >> 8;
@@ -258,8 +299,11 @@ public:
                     nalBuffer[1] = nalSize;
                     nalSize = nalSize >> 8;
                     nalBuffer[0] = nalSize;
-                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), nalBuffer.begin(), nalBuffer.end());
-                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), avcc->ppsVector[i].begin(), avcc->ppsVector[i].end());
+                    m_spsPpsInfo.insert(m_spsPpsInfo.end(), nalBuffer.begin(),
+                                        nalBuffer.end());
+                    m_spsPpsInfo.insert(m_spsPpsInfo.end(),
+                                        avcc->ppsVector[i].begin(),
+                                        avcc->ppsVector[i].end());
                 }
 
                 STARFISH_LOG_INFO("got avcC %d\n", (int)m_spsPpsInfo.size());
@@ -267,8 +311,9 @@ public:
         });
 
         if (seenTrack) {
-            if (!m_isStreamFinded)
+            if (!m_isStreamFinded) {
                 m_isStreamFinded = seenTrack;
+            }
         } else {
             source->onSeek(before, DemuxerSource::SeekWhenceSet);
         }
@@ -298,19 +343,24 @@ public:
                 has_default_sample_size = tfhd->has_default_sample_size;
                 default_sample_size = tfhd->default_sample_size;
                 default_sample_duration = tfhd->default_sample_duration;
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tfdt")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("tfdt")) {
                 MP4::TFDT* tfdt = (MP4::TFDT*)atom;
                 dts = tfdt->decodeTime;
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("trun")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("trun")) {
                 MP4::TRUN* trun = (MP4::TRUN*)atom;
                 has_sample_size = trun->has_sample_size;
                 has_sample_duration = trun->has_sample_duration;
                 seenTrun = true;
                 samples = std::move(trun->samples);
-            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
+            } else if (atom->getType() ==
+                       MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
-                if (trackID != SIZE_MAX && dts != SIZE_MAX && seenTrun && seenTfhd) {
-                    int64_t before = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                if (trackID != SIZE_MAX && dts != SIZE_MAX && seenTrun &&
+                    seenTfhd) {
+                    int64_t before =
+                        source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
                     source->onSeek(mdat->dataPos, DemuxerSource::SeekWhenceSet);
 
                     MediaPacket packet;
@@ -319,20 +369,24 @@ public:
                     size_t dataPtr = 0;
                     uint64_t ptsInMP4 = dts;
 
-                    STARFISH_RELEASE_ASSERT(has_sample_size || has_default_sample_size);
-                    for (size_t i = 0; i < samples.size(); i ++) {
-                        if (has_sample_size)
+                    STARFISH_RELEASE_ASSERT(has_sample_size ||
+                                            has_default_sample_size);
+                    for (size_t i = 0; i < samples.size(); i++) {
+                        if (has_sample_size) {
                             packet.m_dataSize = samples[i].size;
-                        else
+                        } else {
                             packet.m_dataSize = default_sample_size;
+                        }
                         packet.m_pts = ptsInMP4 * 1000LL / scale;
 
                         if (has_sample_duration) {
                             ptsInMP4 += samples[i].duration;
-                            packet.m_duration = samples[i].duration * 1000LL / scale;
+                            packet.m_duration =
+                                samples[i].duration * 1000LL / scale;
                         } else if (has_default_sample_duration) {
                             ptsInMP4 += default_sample_duration;
-                            packet.m_duration = default_sample_duration * 1000LL / scale;
+                            packet.m_duration =
+                                default_sample_duration * 1000LL / scale;
                         } else {
                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                         }
@@ -353,13 +407,17 @@ public:
                                 bool sawIdr = false;
                                 uint8_t* buf = data;
                                 while (buf < bufEnd) {
-                                    for (nalSize = 0, i = 0 ; i < m_nalLengthSize; i ++)
+                                    for (nalSize = 0, i = 0;
+                                         i < m_nalLengthSize; i++) {
                                         nalSize = (nalSize << 8) | buf[i];
+                                    }
                                     buf += m_nalLengthSize;
                                     unitType = *buf & 0x1f;
 
-                                    if ((buf + nalSize) > bufEnd || nalSize < 0)
+                                    if ((buf + nalSize) > bufEnd ||
+                                        nalSize < 0) {
                                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                    }
 
                                     if (unitType == 7) {
                                         sawSps = true;
@@ -379,36 +437,46 @@ public:
                                 delete[] data;
                                 if (!sawIdr) {
                                     dataPtr += packet.m_dataSize;
-                                    source->onSeek(dataPtr, DemuxerSource::SeekWhenceSet);
+                                    source->onSeek(
+                                        dataPtr, DemuxerSource::SeekWhenceSet);
                                     continue;
                                 }
-                                source->onSeek(-packet.m_dataSize, DemuxerSource::SeekWhenceCurrent);
-                                STARFISH_LOG_INFO("DemuxerMP4 got AnnexBType? %d\n", m_isAnnexBType);
+                                source->onSeek(
+                                    -packet.m_dataSize,
+                                    DemuxerSource::SeekWhenceCurrent);
+                                STARFISH_LOG_INFO(
+                                    "DemuxerMP4 got AnnexBType? %d\n",
+                                    m_isAnnexBType);
                             }
 
                             bool isAnnexBType = m_isAnnexBType;
 
                             if (isAnnexBType) {
                                 // Check whether it has idr
-                                size_t bufStart = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                size_t bufStart = source->onSeek(
+                                    0, DemuxerSource::SeekWhenceCurrent);
                                 size_t bufEnd = packet.m_dataSize + bufStart;
                                 size_t nalSize, unitType;
                                 STARFISH_RELEASE_ASSERT(m_nalLengthSize < 32);
                                 uint8_t nalBuffer[32];
                                 packet.m_hasIdr = false;
                                 {
-                                    size_t bufOrignalPosition = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                    size_t bufOrignalPosition = source->onSeek(
+                                        0, DemuxerSource::SeekWhenceCurrent);
                                     size_t bufPtr = bufStart;
                                     while (bufPtr < bufEnd) {
                                         size_t s;
                                         int err = 0;
-                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
+                                        source->onRead(m_nalLengthSize, s, err,
+                                                       nalBuffer);
                                         if (err) {
                                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                         }
                                         nalSize = 0;
-                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
-                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        for (size_t i = 0; i < m_nalLengthSize;
+                                             i++) {
+                                            nalSize =
+                                                (nalSize << 8) | nalBuffer[i];
                                         }
                                         bufPtr += m_nalLengthSize;
                                         source->onRead(1, s, err, nalBuffer);
@@ -420,14 +488,21 @@ public:
                                             packet.m_hasIdr = true;
                                             break;
                                         }
-                                        if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
-                                            STARFISH_LOG_ERROR("DemuxerMP4 nalSizeError (%d)!!\n", (int)nalSize);
+                                        if ((bufPtr + nalSize) > bufEnd ||
+                                            nalSize < 0) {
+                                            STARFISH_LOG_ERROR(
+                                                "DemuxerMP4 nalSizeError "
+                                                "(%d)!!\n",
+                                                (int)nalSize);
                                             goto fail_in_annexb_idr_check;
                                         }
 
                                         if (nalSize) {
                                             size_t nalDataSize = nalSize - 1;
-                                            source->onSeek(nalDataSize, DemuxerSource::SeekWhenceCurrent);
+                                            source->onSeek(
+                                                nalDataSize,
+                                                DemuxerSource::
+                                                    SeekWhenceCurrent);
                                             if (err) {
                                                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                             }
@@ -435,26 +510,35 @@ public:
                                         }
                                         bufPtr += nalSize;
                                     }
-                                    source->onSeek(bufOrignalPosition, DemuxerSource::SeekWhenceSet);
+                                    source->onSeek(
+                                        bufOrignalPosition,
+                                        DemuxerSource::SeekWhenceSet);
                                 }
                                 {
-                                    // STARFISH_LOG_INFO("DemuxerMP4 create packet AnnexBType (idr:%s)\n", packet.m_hasIdr ? "true" : "false");
-                                    uint8_t* data = new uint8_t[packet.m_dataSize];
+                                    // STARFISH_LOG_INFO("DemuxerMP4 create
+                                    // packet AnnexBType (idr:%s)\n",
+                                    // packet.m_hasIdr ? "true" : "false");
+                                    uint8_t* data =
+                                        new uint8_t[packet.m_dataSize];
                                     size_t s;
                                     int err;
-                                    source->onRead(packet.m_dataSize, s, err, data);
+                                    source->onRead(packet.m_dataSize, s, err,
+                                                   data);
                                     STARFISH_ASSERT(packet.m_dataSize == s);
                                     packet.m_data = data;
-                                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                                        if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                                    for (size_t j = 0;
+                                         j < m_demuxerClients.size(); j++) {
+                                        if (m_demuxerClients[j]->onDetectPacket(
+                                                packet)) {
                                             data = nullptr;
                                             break;
                                         }
                                     }
                                     delete[] data;
                                 }
-                                fail_in_annexb_idr_check:
-                                source->onSeek(bufEnd, DemuxerSource::SeekWhenceSet);
+                            fail_in_annexb_idr_check:
+                                source->onSeek(bufEnd,
+                                               DemuxerSource::SeekWhenceSet);
                             } else {
                                 // debug code
                                 /*
@@ -464,8 +548,10 @@ public:
                                 source->onRead(packet.m_dataSize, s, err, data);
                                 STARFISH_ASSERT(packet.m_dataSize == s);
                                 packet.m_data = data;
-                                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                                    if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                                for (size_t j = 0; j < m_demuxerClients.size();
+                                j++) {
+                                    if
+                                (m_demuxerClients[j]->onDetectPacket(packet)) {
                                         data = nullptr;
                                         break;
                                     }
@@ -475,7 +561,8 @@ public:
 
                                 size_t destBufferSize = 0;
                                 size_t destBufferPtr = 0;
-                                size_t bufStart = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                size_t bufStart = source->onSeek(
+                                    0, DemuxerSource::SeekWhenceCurrent);
                                 size_t bufEnd = packet.m_dataSize + bufStart;
                                 size_t nalSize;
                                 size_t unitType;
@@ -485,19 +572,23 @@ public:
                                 bool shouldPrependSpsPps = false;
 
                                 {
-                                    size_t bufOrignalPosition = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                    size_t bufOrignalPosition = source->onSeek(
+                                        0, DemuxerSource::SeekWhenceCurrent);
                                     size_t bufPtr = bufStart;
                                     while (bufPtr < bufEnd) {
                                         size_t s;
                                         int err = 0;
-                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
+                                        source->onRead(m_nalLengthSize, s, err,
+                                                       nalBuffer);
                                         if (err) {
                                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                         }
 
                                         nalSize = 0;
-                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
-                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        for (size_t i = 0; i < m_nalLengthSize;
+                                             i++) {
+                                            nalSize =
+                                                (nalSize << 8) | nalBuffer[i];
                                         }
                                         bufPtr += m_nalLengthSize;
                                         destBufferSize += m_nalLengthSize;
@@ -515,21 +606,31 @@ public:
                                             sawIdr = true;
                                         }
 
-                                        if (sawIdr && !sawSps && !sawPps && !shouldPrependSpsPps) {
+                                        if (sawIdr && !sawSps && !sawPps &&
+                                            !shouldPrependSpsPps) {
                                             shouldPrependSpsPps = true;
-                                            destBufferSize += m_spsPpsInfo.size();
+                                            destBufferSize +=
+                                                m_spsPpsInfo.size();
                                         }
 
-                                        // STARFISH_LOG_INFO("type %d size %d\n", (int)unitType, (int)nalSize);
-                                        if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
+                                        // STARFISH_LOG_INFO("type %d size
+                                        // %d\n", (int)unitType, (int)nalSize);
+                                        if ((bufPtr + nalSize) > bufEnd ||
+                                            nalSize < 0) {
                                             // STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                                            STARFISH_LOG_ERROR("DemuxerMP4 toAnnexBFormat nalSizeError (%d)!!\n", (int)nalSize);
+                                            STARFISH_LOG_ERROR(
+                                                "DemuxerMP4 toAnnexBFormat "
+                                                "nalSizeError (%d)!!\n",
+                                                (int)nalSize);
                                             goto fail;
                                         }
 
                                         if (nalSize) {
                                             size_t nalDataSize = nalSize - 1;
-                                            source->onSeek(nalDataSize, DemuxerSource::SeekWhenceCurrent);
+                                            source->onSeek(
+                                                nalDataSize,
+                                                DemuxerSource::
+                                                    SeekWhenceCurrent);
                                             if (err) {
                                                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                             }
@@ -539,7 +640,9 @@ public:
                                         destBufferSize += nalSize;
                                     }
 
-                                    source->onSeek(bufOrignalPosition, DemuxerSource::SeekWhenceSet);
+                                    source->onSeek(
+                                        bufOrignalPosition,
+                                        DemuxerSource::SeekWhenceSet);
                                 }
 
                                 {
@@ -547,36 +650,45 @@ public:
                                     size_t bufPtr = bufStart;
 
                                     if (shouldPrependSpsPps) {
-                                        memcpy(&data[destBufferPtr], m_spsPpsInfo.data(), m_spsPpsInfo.size());
+                                        memcpy(&data[destBufferPtr],
+                                               m_spsPpsInfo.data(),
+                                               m_spsPpsInfo.size());
                                         destBufferPtr += m_spsPpsInfo.size();
                                     }
 
                                     while (bufPtr < bufEnd) {
                                         size_t s;
                                         int err = 0;
-                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
+                                        source->onRead(m_nalLengthSize, s, err,
+                                                       nalBuffer);
                                         if (err) {
                                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                         }
-                                        memcpy(&data[destBufferPtr], nalBuffer, m_nalLengthSize);
+                                        memcpy(&data[destBufferPtr], nalBuffer,
+                                               m_nalLengthSize);
                                         destBufferPtr += m_nalLengthSize;
 
                                         nalSize = 0;
-                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
-                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        for (size_t i = 0; i < m_nalLengthSize;
+                                             i++) {
+                                            nalSize =
+                                                (nalSize << 8) | nalBuffer[i];
                                         }
                                         bufPtr += m_nalLengthSize;
                                         source->onRead(1, s, err, nalBuffer);
                                         if (err) {
                                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                         }
-                                        memcpy(&data[destBufferPtr], nalBuffer, 1);
+                                        memcpy(&data[destBufferPtr], nalBuffer,
+                                               1);
                                         destBufferPtr += 1;
                                         unitType = nalBuffer[0] & 0x1f;
 
                                         if (nalSize) {
                                             size_t nalDataSize = nalSize - 1;
-                                            source->onRead(nalDataSize, s, err, &data[destBufferPtr]);
+                                            source->onRead(
+                                                nalDataSize, s, err,
+                                                &data[destBufferPtr]);
                                             destBufferPtr += nalDataSize;
                                             if (err) {
                                                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -586,19 +698,23 @@ public:
                                         bufPtr += nalSize;
                                     }
                                     packet.m_hasIdr = sawIdr;
-                                    STARFISH_ASSERT(destBufferPtr == destBufferSize);
+                                    STARFISH_ASSERT(destBufferPtr ==
+                                                    destBufferSize);
                                     packet.m_data = data;
                                     packet.m_dataSize = destBufferSize;
-                                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                                        if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                                    for (size_t j = 0;
+                                         j < m_demuxerClients.size(); j++) {
+                                        if (m_demuxerClients[j]->onDetectPacket(
+                                                packet)) {
                                             data = nullptr;
                                             break;
                                         }
                                     }
                                     delete[] data;
                                 }
-                                fail:
-                                source->onSeek(bufEnd, DemuxerSource::SeekWhenceSet);
+                            fail:
+                                source->onSeek(bufEnd,
+                                               DemuxerSource::SeekWhenceSet);
                             }
                         } else {
                             uint8_t* data = new uint8_t[packet.m_dataSize];
@@ -607,8 +723,10 @@ public:
                             source->onRead(packet.m_dataSize, s, err, data);
                             STARFISH_ASSERT(packet.m_dataSize == s);
                             packet.m_data = data;
-                            for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                                if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                            for (size_t j = 0; j < m_demuxerClients.size();
+                                 j++) {
+                                if (m_demuxerClients[j]->onDetectPacket(
+                                        packet)) {
                                     data = nullptr;
                                     break;
                                 }
@@ -649,7 +767,6 @@ Demuxer* Demuxer::createMP4Demuxer()
 {
     return new DemuxerMP4();
 }
-
 }
 
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

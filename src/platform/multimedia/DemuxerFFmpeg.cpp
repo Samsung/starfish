@@ -30,10 +30,10 @@ static const int g_ioBufferSize = 4096;
 class DemuxerFFmpeg : public Demuxer {
 public:
     DemuxerFFmpeg()
-        : Demuxer()
-        , m_isStreamFinded(false)
-        , m_formatContext(nullptr)
-        , m_ioContext(nullptr)
+        : Demuxer(),
+          m_isStreamFinded(false),
+          m_formatContext(nullptr),
+          m_ioContext(nullptr)
     {
         init();
     }
@@ -46,39 +46,49 @@ public:
             avformat_network_init();
             // av_log_set_level(AV_LOG_TRACE);
 
-            STARFISH_LOG_INFO("avcodec_version->%d avformat_version->%d \n", avcodec_version(), avformat_version());
+            STARFISH_LOG_INFO("avcodec_version->%d avformat_version->%d \n",
+                              avcodec_version(), avformat_version());
             g_ffmpegInited = true;
         }
 
-
-
         m_bufferForIO = (uint8_t*)av_malloc(g_ioBufferSize);
 
-        m_ioContext = avio_alloc_context(m_bufferForIO, g_ioBufferSize, 0, this, [](void *opaque, uint8_t *buf, int buf_size) -> int
-        {
-            DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
-            size_t sizeSuccessToRead = 0;
-            int error = 0;
-            self->m_demuxerSource->onRead(buf_size, sizeSuccessToRead, error, buf);
-            if (error)
-                return AVERROR(EIO);
-            return sizeSuccessToRead;
-        }, nullptr, [](void *opaque, int64_t offset, int whence) -> int64_t {
-            DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
-            if (whence == AVSEEK_SIZE) {
-                return self->m_demuxerSource->onSeek(offset, DemuxerSource::SeekWhence::SeekWhenceLookSize);
-            }
-            return self->m_demuxerSource->onSeek(offset, (DemuxerSource::SeekWhence)whence);
-        });
+        m_ioContext = avio_alloc_context(
+            m_bufferForIO, g_ioBufferSize, 0, this,
+            [](void* opaque, uint8_t* buf, int buf_size) -> int {
+                DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
+                size_t sizeSuccessToRead = 0;
+                int error = 0;
+                self->m_demuxerSource->onRead(buf_size, sizeSuccessToRead,
+                                              error, buf);
+                if (error) {
+                    return AVERROR(EIO);
+                }
+                return sizeSuccessToRead;
+            },
+            nullptr,
+            [](void* opaque, int64_t offset, int whence) -> int64_t {
+                DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
+                if (whence == AVSEEK_SIZE) {
+                    return self->m_demuxerSource->onSeek(
+                        offset, DemuxerSource::SeekWhence::SeekWhenceLookSize);
+                }
+                return self->m_demuxerSource->onSeek(
+                    offset, (DemuxerSource::SeekWhence)whence);
+            });
 
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("DemuxerFFmpeg::~DemuxerFFmpeg\n");
-            DemuxerFFmpeg* self = (DemuxerFFmpeg*)obj;
-            av_free(self->m_ioContext);
-            av_free(self->m_bufferForIO);
-            if (self->m_formatContext)
-                avformat_free_context(self->m_formatContext);
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                STARFISH_LOG_INFO("DemuxerFFmpeg::~DemuxerFFmpeg\n");
+                DemuxerFFmpeg* self = (DemuxerFFmpeg*)obj;
+                av_free(self->m_ioContext);
+                av_free(self->m_bufferForIO);
+                if (self->m_formatContext) {
+                    avformat_free_context(self->m_formatContext);
+                }
+            },
+            NULL, NULL, NULL);
     }
 
     class DemuxerSourceController {
@@ -102,11 +112,16 @@ public:
         DemuxerSourceController c(*this, source);
 
         if (!formatHint->equals(String::emptyString)) {
-            if (formatHint->startsWith("video/", false) || formatHint->startsWith("audio/", false)) {
-                formatHint = formatHint->substring(6, formatHint->length() - 6)->toLower();
-                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n", formatHint->utf8Data());
+            if (formatHint->startsWith("video/", false) ||
+                formatHint->startsWith("audio/", false)) {
+                formatHint = formatHint->substring(6, formatHint->length() - 6)
+                                 ->toLower();
+                STARFISH_LOG_INFO(
+                    "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n",
+                    formatHint->utf8Data());
             } else {
-                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
+                STARFISH_LOG_INFO(
+                    "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
                 formatHint = String::emptyString;
             }
         }
@@ -115,59 +130,86 @@ public:
         if (!m_formatContext) {
             m_formatContext = avformat_alloc_context();
 
-            if (formatHint->length())
-                m_formatContext->iformat = av_find_input_format(formatHint->utf8Data());
-            m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO | AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER | AVFMT_FLAG_GENPTS;
+            if (formatHint->length()) {
+                m_formatContext->iformat =
+                    av_find_input_format(formatHint->utf8Data());
+            }
+            m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO |
+                                     AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER |
+                                     AVFMT_FLAG_GENPTS;
             m_formatContext->pb = m_ioContext;
             av_dict_set(&m_formatContext->metadata, "skip_id3v1_tags", "", 0);
 
-            if ((ret = avformat_open_input(&m_formatContext, NULL, NULL, NULL)) < 0) {
+            if ((ret = avformat_open_input(&m_formatContext, NULL, NULL,
+                                           NULL)) < 0) {
                 m_formatContext = nullptr;
                 char error[128];
                 av_strerror(ret, error, 128);
-                STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_open_input: Error(%s).\n", error);
+                STARFISH_LOG_ERROR(
+                    "DemuxerFFmpeg::findStreamInfo avformat_open_input: "
+                    "Error(%s).\n",
+                    error);
                 return false;
             }
 
-            STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_open_input: ok.\n");
+            STARFISH_LOG_ERROR(
+                "DemuxerFFmpeg::findStreamInfo avformat_open_input: ok.\n");
         }
-/*
+        /*
         if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
             char error[128];
             av_strerror(ret, error, 128);
             STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: Error(%s)\n", error);
             return false;
         }
-*/
-        STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: ok(duration %d).\n", (int)m_formatContext->duration / 1000);
+        */
+        STARFISH_LOG_ERROR(
+            "DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: "
+            "ok(duration %d).\n",
+            (int)m_formatContext->duration / 1000);
 
         for (size_t i = 0; i < m_formatContext->nb_streams; i++) {
             STARFISH_ASSERT(m_formatContext->streams[i]->codec);
-            STARFISH_LOG_INFO("DemuxerFFmpeg::findStreamInfo finded stream info. codec id %d\n", (int)m_formatContext->streams[i]->codec->codec_id);
-            if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            STARFISH_LOG_INFO(
+                "DemuxerFFmpeg::findStreamInfo finded stream info. codec id "
+                "%d\n",
+                (int)m_formatContext->streams[i]->codec->codec_id);
+            if (m_formatContext->streams[i]->codec->codec_type ==
+                AVMEDIA_TYPE_VIDEO) {
                 VideoStreamInfo info;
                 info.m_streamIndex = i;
-                info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
+                info.m_codecName =
+                    m_formatContext->streams[i]->codec->codec_name;
                 info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                info.m_timeBaseNum = m_formatContext->streams[i]->codec->time_base.num;
-                info.m_timeBaseDen = m_formatContext->streams[i]->codec->time_base.den;
-                info.m_width = info.m_timeBaseDen = m_formatContext->streams[i]->codec->width;
-                info.m_height = info.m_timeBaseDen = m_formatContext->streams[i]->codec->height;
-                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                info.m_timeBaseNum =
+                    m_formatContext->streams[i]->codec->time_base.num;
+                info.m_timeBaseDen =
+                    m_formatContext->streams[i]->codec->time_base.den;
+                info.m_width = info.m_timeBaseDen =
+                    m_formatContext->streams[i]->codec->width;
+                info.m_height = info.m_timeBaseDen =
+                    m_formatContext->streams[i]->codec->height;
+                for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectVideoStream(info);
                 }
-            } else if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            } else if (m_formatContext->streams[i]->codec->codec_type ==
+                       AVMEDIA_TYPE_AUDIO) {
                 AudioStreamInfo info;
                 info.m_streamIndex = i;
-                info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
+                info.m_codecName =
+                    m_formatContext->streams[i]->codec->codec_name;
                 info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
+                info.m_sampleFormat =
+                    (AudioSampleFormat)m_formatContext->streams[i]
+                        ->codec->sample_fmt;
                 info.m_channels = m_formatContext->streams[i]->codec->channels;
-                info.m_sampleRate = m_formatContext->streams[i]->codec->sample_rate;
-                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                info.m_sampleRate =
+                    m_formatContext->streams[i]->codec->sample_rate;
+                for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectAudioStream(info);
                 }
-            } else if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+            } else if (m_formatContext->streams[i]->codec->codec_type ==
+                       AVMEDIA_TYPE_SUBTITLE) {
                 // TODO
             }
         }
@@ -195,9 +237,14 @@ public:
         av_init_packet(&avPacket);
 
         while ((ret = av_read_frame(m_formatContext, &avPacket)) == 0) {
-            uint64_t pts = av_q2d(m_formatContext->streams[avPacket.stream_index]->time_base) * avPacket.pts * 1000;
-            // STARFISH_LOG_INFO("DemuxerFFmpeg::process av_read_frame streamIndex(%d, %dbyte, %dms)\n", (int)avPacket.stream_index, (int)avPacket.size, (int)pts);
-            for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+            uint64_t pts =
+                av_q2d(m_formatContext->streams[avPacket.stream_index]
+                           ->time_base) *
+                avPacket.pts * 1000;
+            // STARFISH_LOG_INFO("DemuxerFFmpeg::process av_read_frame
+            // streamIndex(%d, %dbyte, %dms)\n", (int)avPacket.stream_index,
+            // (int)avPacket.size, (int)pts);
+            for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                 MediaPacket packet;
                 packet.m_streamIndex = avPacket.stream_index;
                 packet.m_data = avPacket.data;
@@ -211,12 +258,13 @@ public:
             }
             av_free_packet(&avPacket);
         }
-        
+
         av_free_packet(&avPacket);
 
         char error[128];
         av_strerror(ret, error, 128);
-        STARFISH_LOG_ERROR("DemuxerFFmpeg::process av_read_frame: Error(%s)\n", error);
+        STARFISH_LOG_ERROR("DemuxerFFmpeg::process av_read_frame: Error(%s)\n",
+                           error);
 
         return false;
     }
@@ -237,7 +285,6 @@ Demuxer* Demuxer::createFFmpegDemuxer()
 {
     return new DemuxerFFmpeg();
 }
-
 }
 
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

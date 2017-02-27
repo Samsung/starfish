@@ -26,17 +26,17 @@ namespace StarFish {
 class ThreadPool : public gc {
 public:
     ThreadPool(size_t maxThreadCount, MessageLoop* ml);
-    ~ThreadPool() { }
+    ~ThreadPool()
+    {
+    }
     void addWork(ThreadWorker fn, void* data);
+
 protected:
     MessageLoop* m_messageLoop;
     GCVector<Thread*> m_threads;
     std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
     Mutex* m_workerQueueMutex;
-
 };
-
 }
-
 
 #endif
