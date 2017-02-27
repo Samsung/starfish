@@ -42,7 +42,6 @@ const float pi = static_cast<float>(M_PI);
 float convertFromGradToDeg(float value);
 float convertFromRadToDeg(float value);
 float convertFromTurnToDeg(float value);
-
 }
 
 #endif

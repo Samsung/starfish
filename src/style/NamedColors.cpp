@@ -19,9 +19,14 @@
 
 namespace StarFish {
 
-#define MATCH(name) if (memcmp(str, #name, sizeof(#name)) == 0) { ret = name##NamedColor; return true; }
+#define MATCH(name)                               \
+    if (memcmp(str, #name, sizeof(#name)) == 0) { \
+        ret = name##NamedColor;                   \
+        return true;                              \
+    }
 
-bool NamedColor::parseNamedColor(const char* str, size_t length, NamedColorValue& ret)
+bool NamedColor::parseNamedColor(const char* str, size_t length,
+                                 NamedColorValue& ret)
 {
     if (UNLIKELY(length == 0)) {
         return false;
@@ -352,7 +357,7 @@ bool NamedColor::parseNamedColor(const char* str, size_t length, NamedColorValue
 String* NamedColor::namedColorToString(NamedColorValue namedColor)
 {
     switch (namedColor) {
-#define ADD_COLOR_ITEM(name, ...) \
+#define ADD_COLOR_ITEM(name, ...)           \
     case NamedColorValue::name##NamedColor: \
         return String::createASCIIString(#name);
 
@@ -368,15 +373,14 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
 Color NamedColor::namedColorToColor(NamedColorValue namedColor)
 {
     switch (namedColor) {
-#define ADD_COLOR_ITEM(name, value) \
-    case NamedColorValue::name##NamedColor: \
-        { \
-            char r = (value & 0xff0000) >> 16; \
-            char g = (value & 0xff00) >> 8; \
-            char b = (value & 0xff); \
-            char a = 255; \
-            return Color(r, g, b, a); \
-        }
+#define ADD_COLOR_ITEM(name, value)           \
+    case NamedColorValue::name##NamedColor: { \
+        char r = (value & 0xff0000) >> 16;    \
+        char g = (value & 0xff00) >> 8;       \
+        char b = (value & 0xff);              \
+        char a = 255;                         \
+        return Color(r, g, b, a);             \
+    }
 
         NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
 #undef ADD_COLOR_ITEM
@@ -385,5 +389,4 @@ Color NamedColor::namedColorToColor(NamedColorValue namedColor)
     }
     return Color();
 }
-
 }

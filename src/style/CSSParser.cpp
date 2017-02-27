@@ -72,19 +72,26 @@
 
 namespace StarFish {
 
-const char* kCHARSET_RULE_MISSING_SEMICOLON = "Missing semicolon at the end of @charset rule";
-const char* kCHARSET_RULE_CHARSET_IS_STRING = "The charset in the @charset rule should be a string";
-const char* kCHARSET_RULE_MISSING_WS = "Missing mandatory whitespace after @charset";
+const char* kCHARSET_RULE_MISSING_SEMICOLON =
+    "Missing semicolon at the end of @charset rule";
+const char* kCHARSET_RULE_CHARSET_IS_STRING =
+    "The charset in the @charset rule should be a string";
+const char* kCHARSET_RULE_MISSING_WS =
+    "Missing mandatory whitespace after @charset";
 const char* kIMPORT_RULE_MISSING_URL = "Missing URL in @import rule";
 const char* kURL_EOF = "Unexpected end of stylesheet";
 const char* kURL_WS_INSIDE = "Multiple tokens inside a url() notation";
-const char* kVARIABLES_RULE_POSITION = "@variables rule invalid at this position in the stylesheet";
-const char* kIMPORT_RULE_POSITION = "@import rule invalid at this position in the stylesheet";
-const char* kNAMESPACE_RULE_POSITION = "@namespace rule invalid at this position in the stylesheet";
-const char* kCHARSET_RULE_CHARSET_SOF = "@charset rule invalid at this position in the stylesheet";
+const char* kVARIABLES_RULE_POSITION =
+    "@variables rule invalid at this position in the stylesheet";
+const char* kIMPORT_RULE_POSITION =
+    "@import rule invalid at this position in the stylesheet";
+const char* kNAMESPACE_RULE_POSITION =
+    "@namespace rule invalid at this position in the stylesheet";
+const char* kCHARSET_RULE_CHARSET_SOF =
+    "@charset rule invalid at this position in the stylesheet";
 const char* kUNKNOWN_AT_RULE = "Unknow @-rule";
 
-unsigned char CSS_ESCAPE  = '\\';
+unsigned char CSS_ESCAPE = '\\';
 
 char IS_HEX_DIGIT = 1;
 char START_IDENT = 2;
@@ -101,7 +108,7 @@ char XSI = IS_IDENT | START_IDENT | IS_HEX_DIGIT;
 size_t countLF(String* s)
 {
     size_t cnt = 1;
-    for (size_t i = 0; i < s->length(); i ++) {
+    for (size_t i = 0; i < s->length(); i++) {
         if (s->charAt(i) == '\n') {
             cnt++;
         }
@@ -110,28 +117,29 @@ size_t countLF(String* s)
 }
 
 char kLexTable[] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, W, W, 0, W, W, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, I, 0, 0,
-    XI, XI, XI, XI, XI, XI, XI, XI, XI, XI, 0, 0, 0, 0, 0, 0,
-    0, XSI, XSI, XSI, XSI, XSI, XSI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0, S, 0, 0, SI,
-    0, XSI, XSI, XSI, XSI, XSI, XSI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI
+    0,  0,   0,   0,   0,   0,   0,   0,  0,  W,  W,  0,  W,  W,  0,  0,
+    0,  0,   0,   0,   0,   0,   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,
+    W,  0,   0,   0,   0,   0,   0,   0,  0,  0,  0,  0,  0,  I,  0,  0,
+    XI, XI,  XI,  XI,  XI,  XI,  XI,  XI, XI, XI, 0,  0,  0,  0,  0,  0,
+    0,  XSI, XSI, XSI, XSI, XSI, XSI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, 0,  S,  0,  0,  SI,
+    0,  XSI, XSI, XSI, XSI, XSI, XSI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, 0,  0,  0,  0,  0,
+    0,  0,   0,   0,   0,   0,   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,   0,   0,   0,   0,   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI,
+    SI, SI,  SI,  SI,  SI,  SI,  SI,  SI, SI, SI, SI, SI, SI, SI, SI, SI
 };
 size_t kLexTableSize = sizeof kLexTable / sizeof(int);
 
 class CSSToken : public gc {
 public:
-    CSSToken(char type, String* value = String::emptyString, String* unit = String::emptyString)
+    CSSToken(char type, String* value = String::emptyString,
+             String* unit = String::emptyString)
     {
         m_type = type;
         m_value = value;
@@ -145,7 +153,8 @@ public:
 
     bool isOfType(char aType, String* aValue = nullptr)
     {
-        return (m_type == aType && (!aValue || m_value->equalsWithoutCase(aValue)));
+        return (m_type == aType &&
+                (!aValue || m_value->equalsWithoutCase(aValue)));
     }
 
     bool isWhiteSpace(String* w = nullptr)
@@ -215,7 +224,8 @@ public:
 
     bool isSymbol(char32_t c)
     {
-        return (m_type == CSSToken::SYMBOL_TYPE && ((m_value->length() == 1) && (m_value->charAt(0) == c)));
+        return (m_type == CSSToken::SYMBOL_TYPE &&
+                ((m_value->length() == 1) && (m_value->charAt(0) == c)));
     }
 
     bool isSymbol(String* c = nullptr)
@@ -245,22 +255,17 @@ public:
 
     bool isLength()
     {
-        return (isPercentage()
-            || isDimensionOfUnit("cm")
-            || isDimensionOfUnit("mm")
-            || isDimensionOfUnit("in")
-            || isDimensionOfUnit("pc")
-            || isDimensionOfUnit("px")
-            || isDimensionOfUnit("em")
-            || isDimensionOfUnit("ex")
-            || isDimensionOfUnit("pt"));
+        return (isPercentage() || isDimensionOfUnit("cm") ||
+                isDimensionOfUnit("mm") || isDimensionOfUnit("in") ||
+                isDimensionOfUnit("pc") || isDimensionOfUnit("px") ||
+                isDimensionOfUnit("em") || isDimensionOfUnit("ex") ||
+                isDimensionOfUnit("pt"));
     }
 
     bool isAngle()
     {
-        return (isDimensionOfUnit("deg")
-            || isDimensionOfUnit("rad")
-            || isDimensionOfUnit("grad"));
+        return (isDimensionOfUnit("deg") || isDimensionOfUnit("rad") ||
+                isDimensionOfUnit("grad"));
     }
 
     char m_type;
@@ -286,8 +291,6 @@ public:
     static const char HEX_TYPE = 16;
     static const char SGML_COMMENT_TYPE = 17;
 };
-
-
 
 class CSSScanner : public gc {
 public:
@@ -329,15 +332,17 @@ public:
 
     int read()
     {
-        if (m_pos < m_string->length())
+        if (m_pos < m_string->length()) {
             return m_string->charAt(m_pos++);
+        }
         return -1;
     }
 
     int peek()
     {
-        if (m_pos < m_string->length())
+        if (m_pos < m_string->length()) {
             return m_string->charAt(m_pos);
+        }
         return -1;
     }
 
@@ -353,7 +358,8 @@ public:
 
     bool startsWithIdent(char32_t aFirstChar, char32_t aSecondChar)
     {
-        return isIdentStart(aFirstChar) || (aFirstChar == '-' && isIdentStart(aSecondChar));
+        return isIdentStart(aFirstChar) ||
+               (aFirstChar == '-' && isIdentStart(aSecondChar));
     }
 
     bool isIdent(char32_t code)
@@ -369,8 +375,9 @@ public:
     CSSToken* nextHexValue()
     {
         int c = read();
-        if (c == -1 || !isHexDigit((char32_t)c))
+        if (c == -1 || !isHexDigit((char32_t)c)) {
             return new CSSToken(CSSToken::NULL_TYPE, String::emptyString);
+        }
         String* s = String::createUTF32String((char32_t)c);
         c = read();
         while (c != -1 && isHexDigit((char32_t)c)) {
@@ -385,22 +392,25 @@ public:
     String* gatherEscape()
     {
         int c = peek();
-        if (c == -1)
+        if (c == -1) {
             return String::emptyString;
+        }
         if (isHexDigit((char32_t)c)) {
             int code = 0;
             size_t i;
             for (i = 0; i < 6; i++) {
                 c = read();
-                if (isDigit((char32_t)c))
+                if (isDigit((char32_t)c)) {
                     code = code * 16 + (c - '0');
-                else if (isHexDigit((char32_t)c))
+                } else if (isHexDigit((char32_t)c)) {
                     code = code * 16 + (towlower(c) - 'a' + 10);
-                else if (!isHexDigit((char32_t)c) && !isWhiteSpace((char32_t)c)) {
+                } else if (!isHexDigit((char32_t)c) &&
+                           !isWhiteSpace((char32_t)c)) {
                     pushback();
                     break;
-                } else
+                } else {
                     break;
+                }
             }
             if (i == 6) {
                 c = peek();
@@ -410,32 +420,37 @@ public:
             return String::createUTF32String((char32_t)code);
         }
         c = read();
-        if (c != '\n')
+        if (c != '\n') {
             return String::createUTF32String((char32_t)c);
+        }
         return String::emptyString;
     }
 
     String* gatherIdent(int c)
     {
         String* s = String::emptyString;
-        if (c == CSS_ESCAPE)
+        if (c == CSS_ESCAPE) {
             s = s->concat(gatherEscape());
-        else
+        } else {
             s = s->concat(String::createUTF32String((char32_t)c));
+        }
         c = read();
         while (c != -1 && (isIdent(c) || c == CSS_ESCAPE)) {
             if (c == CSS_ESCAPE) {
                 String* tmp = gatherEscape();
-                if (!tmp->length())
+                if (!tmp->length()) {
                     return String::emptyString;
-                else
+                } else {
                     s = s->concat(tmp);
-            } else
+                }
+            } else {
                 s = s->concat(String::createUTF32String((char32_t)c));
+            }
             c = read();
         }
-        if (c != -1)
+        if (c != -1) {
             pushback();
+        }
         return s;
     }
 
@@ -453,24 +468,29 @@ public:
     CSSToken* parseURL(int c)
     {
         String* value = String::emptyString;
-        if (c == CSS_ESCAPE)
+        if (c == CSS_ESCAPE) {
             value = value->concat(gatherEscape());
-        else
+        } else {
             value = value->concat(String::createUTF32String((char32_t)c));
+        }
         c = read();
         while (c != -1 && c != ' ' && c != ')') {
             if (c == CSS_ESCAPE) {
                 String* tmp = gatherEscape();
-                if (!tmp->length())
-                    return new CSSToken(CSSToken::STRING_TYPE, String::emptyString);
-                else
+                if (!tmp->length()) {
+                    return new CSSToken(CSSToken::STRING_TYPE,
+                                        String::emptyString);
+                } else {
                     value = value->concat(tmp);
-            } else
+                }
+            } else {
                 value = value->concat(String::createUTF32String((char32_t)c));
+            }
             c = read();
         }
-        if (c != -1)
+        if (c != -1) {
             pushback();
+        }
         return new CSSToken(CSSToken::STRING_TYPE, value);
     }
 
@@ -486,8 +506,9 @@ public:
             s = s->concat(String::createUTF32String((char32_t)c));
             if (c == '*') {
                 c = read();
-                if (c == -1)
+                if (c == -1) {
                     break;
+                }
                 if (c == '/') {
                     s = s->concat(String::createUTF32String((char32_t)c));
                     break;
@@ -504,16 +525,17 @@ public:
         bool foundDot = false;
         while ((c = read()) != -1) {
             if (c == '.') {
-                if (foundDot)
+                if (foundDot) {
                     break;
-                else {
+                } else {
                     s = s->concat(String::createUTF32String((char32_t)c));
                     foundDot = true;
                 }
-            } else if (isDigit(c))
+            } else if (isDigit(c)) {
                 s = s->concat(String::createUTF32String((char32_t)c));
-            else
+            } else {
                 break;
+            }
         }
 
         if (c != -1 && startsWithIdent(c, peek())) { // DIMENSION
@@ -523,8 +545,9 @@ public:
         } else if (c == '%') {
             s = s->concat(String::createUTF32String('%'));
             return new CSSToken(CSSToken::PERCENTAGE_TYPE, s);
-        } else if (c != -1)
+        } else if (c != -1) {
             pushback();
+        }
         return new CSSToken(CSSToken::NUMBER_TYPE, s);
     }
 
@@ -539,16 +562,17 @@ public:
                 break;
             } else if (c == CSS_ESCAPE) {
                 c = peek();
-                if (c == -1)
+                if (c == -1) {
                     break;
-                else if (c == '\n' || c == '\r' || c == '\f') {
+                } else if (c == '\n' || c == '\r' || c == '\f') {
                     int d = c;
                     c = read();
                     // special for Opera that preserves \r\n...
                     if (d == '\r') {
                         c = peek();
-                        if (c == '\n')
+                        if (c == '\n') {
                             c = read();
+                        }
                     }
                 } else {
                     s = s->concat(gatherEscape());
@@ -556,8 +580,9 @@ public:
                 }
             } else if (c == '\n' || c == '\r' || c == '\f') {
                 break;
-            } else
+            } else {
                 s = s->concat(String::createUTF32String((char32_t)c));
+            }
             previousChar = c;
         }
         return new CSSToken(CSSToken::STRING_TYPE, s);
@@ -573,12 +598,14 @@ public:
     {
         String* s = String::createUTF32String((char32_t)c);
         while ((c = read()) != -1) {
-            if (!isWhiteSpace(c))
+            if (!isWhiteSpace(c)) {
                 break;
+            }
             s = s->concat(String::createUTF32String((char32_t)c));
         }
-        if (c != -1)
+        if (c != -1) {
             pushback();
+        }
         return s;
     }
 
@@ -590,22 +617,27 @@ public:
     CSSToken* nextToken(bool isURL = false)
     {
         int c = read();
-        if (c == -1)
+        if (c == -1) {
             return new CSSToken(CSSToken::NULL_TYPE, String::emptyString);
+        }
 
-        if (isURL && c != '\'' && c != '"' && c != ')' && c != ' ') // url starts without \' nor \"
+        // url starts without \' nor \"
+        if (isURL && c != '\'' && c != '"' && c != ')' && c != ' ') {
             return parseURL(c);
+        }
 
-        if (startsWithIdent(c, peek()))
+        if (startsWithIdent(c, peek())) {
             return parseIdent(c);
+        }
 
         if (c == '@') {
             int nextChar = read();
             if (nextChar != -1) {
                 int followingChar = peek();
                 pushback();
-                if (startsWithIdent(nextChar, followingChar))
+                if (startsWithIdent(nextChar, followingChar)) {
                     return parseAtKeyword(c);
+                }
             }
         }
 
@@ -613,7 +645,8 @@ public:
             if (read() == '!') {
                 if (read() == '-') {
                     if (read() == '-') {
-                        return new CSSToken(CSSToken::SGML_COMMENT_TYPE, String::createASCIIString("<!--"));
+                        return new CSSToken(CSSToken::SGML_COMMENT_TYPE,
+                                            String::createASCIIString("<!--"));
                     }
                     pushback();
                 }
@@ -625,7 +658,8 @@ public:
         if (c == '-') {
             if (read() == '-') {
                 if (read() == '>') {
-                    return new CSSToken(CSSToken::SGML_COMMENT_TYPE, String::createASCIIString("-->"));
+                    return new CSSToken(CSSToken::SGML_COMMENT_TYPE,
+                                        String::createASCIIString("-->"));
                 }
                 pushback();
             }
@@ -634,23 +668,25 @@ public:
 
         if (c == '.' || c == '+' || c == '-') {
             int nextChar = peek();
-            if (isDigit(nextChar))
+            if (isDigit(nextChar)) {
                 return parseNumber(c);
-            else if (nextChar == '.' && c != '.') {
+            } else if (nextChar == '.' && c != '.') {
                 // int firstChar = read();
                 read();
                 int secondChar = peek();
                 pushback();
-                if (isDigit(secondChar))
+                if (isDigit(secondChar)) {
                     return parseNumber(c);
+                }
             }
         }
         if (isDigit(c)) {
             return parseNumber(c);
         }
 
-        if (c == '\'' || c == '"')
+        if (c == '\'' || c == '"') {
             return parseString(c);
+        }
 
         if (isWhiteSpace(c)) {
             String* s = eatWhiteSpace(c);
@@ -662,32 +698,40 @@ public:
             if (nextChar == '=') {
                 switch (c) {
                 case '~':
-                    return new CSSToken(CSSToken::INCLUDES_TYPE, String::createASCIIString("~="));
+                    return new CSSToken(CSSToken::INCLUDES_TYPE,
+                                        String::createASCIIString("~="));
                 case '|':
-                    return new CSSToken(CSSToken::DASHMATCH_TYPE, String::createASCIIString("|="));
+                    return new CSSToken(CSSToken::DASHMATCH_TYPE,
+                                        String::createASCIIString("|="));
                 case '^':
-                    return new CSSToken(CSSToken::BEGINSMATCH_TYPE, String::createASCIIString("^="));
+                    return new CSSToken(CSSToken::BEGINSMATCH_TYPE,
+                                        String::createASCIIString("^="));
                 case '$':
-                    return new CSSToken(CSSToken::ENDSMATCH_TYPE, String::createASCIIString("$="));
+                    return new CSSToken(CSSToken::ENDSMATCH_TYPE,
+                                        String::createASCIIString("$="));
                 case '*':
-                    return new CSSToken(CSSToken::CONTAINSMATCH_TYPE, String::createASCIIString("*="));
+                    return new CSSToken(CSSToken::CONTAINSMATCH_TYPE,
+                                        String::createASCIIString("*="));
                 default:
                     break;
                 }
-            } else if (nextChar != -1)
+            } else if (nextChar != -1) {
                 pushback();
+            }
         }
 
-        if (c == '/' && peek() == '*')
+        if (c == '/' && peek() == '*') {
             return parseComment(c);
+        }
 
-        return new CSSToken(CSSToken::SYMBOL_TYPE, String::createUTF32String((char32_t)c));
+        return new CSSToken(CSSToken::SYMBOL_TYPE,
+                            String::createUTF32String((char32_t)c));
     }
+
 protected:
     String* m_string;
     size_t m_pos;
     GCVector<size_t> m_preservedPos;
-
 };
 
 CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment, bool isURL)
@@ -699,8 +743,10 @@ CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment, bool isURL)
     }
 
     m_token = m_scanner->nextToken(isURL);
-    while (m_token && ((aSkipWS && m_token->isWhiteSpace()) || (aSkipComment && m_token->isComment())))
+    while (m_token && ((aSkipWS && m_token->isWhiteSpace()) ||
+                       (aSkipComment && m_token->isComment()))) {
         m_token = m_scanner->nextToken(isURL);
+    }
     return m_token;
 }
 
@@ -748,13 +794,14 @@ void CSSParser::forgetState()
     }
 }
 
-String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector)
+String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain,
+                                       bool canNegate, bool& validSelector)
 {
     String* s = String::emptyString;
     // var specificity = {a: 0, b: 0, c: 0, d: 0}; // CSS 2.1 section 6.4.3
 
-    if (isFirstInChain
-        && (token->isSymbol('*') || token->isSymbol('|') || token->isIdent())) {
+    if (isFirstInChain &&
+        (token->isSymbol('*') || token->isSymbol('|') || token->isIdent())) {
         // type or universal selector
         if (token->isSymbol('*') || token->isIdent()) {
             // we don't know yet if it's a prefix or a universal
@@ -771,16 +818,19 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
                     // selector
                     s = s->concat(token->m_value);
                     /*
-                    if (token->isIdent())
+                    if (token->isIdent()) {
                         specificity.d++;
-                     */
-                } else // oops that's an error...
+                    }
+                    */
+                } else { // oops that's an error...
                     return String::emptyString;
+                }
             } else {
                 ungetToken();
                 /*
-                if (isIdent)
+                if (isIdent) {
                     specificity.d++;
+                }
                 */
             }
         } else if (token->isSymbol('|')) {
@@ -789,31 +839,35 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
             if (token->isIdent() || token->isSymbol('*')) {
                 s = s->concat(token->m_value);
                 /*
-                if (token->isIdent())
+                if (token->isIdent()) {
                     specificity.d++;
+                }
                 */
-            } else // oops that's an error
+            } else { // oops that's an error
                 return String::emptyString;
+            }
         }
     } else if (token->isSymbol('.') || token->isSymbol('#')) {
         // bool isClass = token->isSymbol('.');
         s = s->concat(token->m_value);
         token = getToken(false, true);
         if (token->isIdent()) {
-            if (token->m_value->length())
+            if (token->m_value->length()) {
                 s = s->concat(token->m_value);
-            else {
+            } else {
                 validSelector = false;
                 return String::emptyString;
             }
             /*
-            if (isClass)
+            if (isClass) {
                 specificity.c++;
-            else
+            } else {
                 specificity.b++;
+            }
             */
-        } else
+        } else {
             return String::emptyString;
+        }
     } else if (token->isSymbol(':')) {
         s = s->concat(token->m_value);
         token = getToken(false, true);
@@ -824,28 +878,33 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
         if (token->isIdent()) {
             s = s->concat(token->m_value);
             /*
-            if (isPseudoElement(token->value))
+            if (isPseudoElement(token->value)) {
                 specificity.d++;
-            else
+            }
+            else {
                 specificity.c++;
+            }
             */
         } else if (token->isFunction()) {
             s = s->concat(token->m_value);
             if (token->isFunction(String::createASCIIString(":not("))) {
-                if (!canNegate)
+                if (!canNegate) {
                     return String::emptyString;
+                }
                 token = getToken(true, true);
-                String* simpleSelector = parseSimpleSelector(token, isFirstInChain, false, validSelector);
-                if (simpleSelector->length() == 0)
+                String* simpleSelector = parseSimpleSelector(
+                    token, isFirstInChain, false, validSelector);
+                if (simpleSelector->length() == 0) {
                     return String::emptyString;
-                else {
+                } else {
                     // s += simpleSelector.selector;
                     s = s->concat(simpleSelector);
                     token = getToken(true, true);
-                    if (token->isSymbol(')'))
+                    if (token->isSymbol(')')) {
                         s = s->concat(String::createASCIIString(")"));
-                    else
+                    } else {
                         return String::emptyString;
+                    }
                 }
                 // specificity.c++;
             } else {
@@ -854,13 +913,15 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
                     if (token->isSymbol(')')) {
                         s = s->concat(String::createASCIIString(")"));
                         break;
-                    } else
+                    } else {
                         s = s->concat(token->m_value);
+                    }
                 }
                 // specificity.c++;
             }
-        } else
+        } else {
             return String::emptyString;
+        }
     } else if (token->isSymbol('[')) {
         s = s->concat(String::createASCIIString("["));
         token = getToken(true, true);
@@ -870,68 +931,78 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
             if (nextToken->isSymbol('|')) {
                 s = s->concat(String::createASCIIString("|"));
                 token = getToken(true, true);
-                if (token->isIdent())
+                if (token->isIdent()) {
                     s = s->concat(token->m_value);
-                else
+                } else {
                     return String::emptyString;
-            } else
+                }
+            } else {
                 ungetToken();
+            }
         } else if (token->isSymbol('|')) {
             s = s->concat(String::createASCIIString("|"));
             token = getToken(true, true);
-            if (token->isIdent())
+            if (token->isIdent()) {
                 s = s->concat(token->m_value);
-            else
+            } else {
                 return String::emptyString;
-        } else
+            }
+        } else {
             return String::emptyString;
+        }
 
         // nothing, =, *=, $=, ^=, |=
         token = getToken(true, true);
-        if (token->isIncludes()
-            || token->isDashmatch()
-            || token->isBeginsmatch()
-            || token->isEndsmatch()
-            || token->isContainsmatch()
-            || token->isSymbol('=')) {
+        if (token->isIncludes() || token->isDashmatch() ||
+            token->isBeginsmatch() || token->isEndsmatch() ||
+            token->isContainsmatch() || token->isSymbol('=')) {
             s = s->concat(token->m_value);
             token = getToken(true, true);
             if (token->isString() || token->isIdent()) {
                 s = s->concat(token->m_value);
                 token = getToken(true, true);
-            } else
+            } else {
                 return String::emptyString;
+            }
 
             if (token->isSymbol(']')) {
                 s = s->concat(token->m_value);
                 // specificity.c++;
-            } else
+            } else {
                 return String::emptyString;
+            }
         } else if (token->isSymbol(']')) {
             s = s->concat(token->m_value);
             // specificity.c++;
-        } else
+        } else {
             return String::emptyString;
+        }
     } else if (token->isWhiteSpace()) {
         CSSToken* t = lookAhead(true, true);
-        if (t->isSymbol('{'))
+        if (t->isSymbol('{')) {
             return String::emptyString;
+        }
     }
-    if (s->length())
+    if (s->length()) {
         return s;
+    }
+
     return String::emptyString;
 }
 
-void CSSParser::parseSelector(GCVector<GCDeque<CSSSelector*>*>& list, bool& validSelector)
+void CSSParser::parseSelector(GCVector<GCDeque<CSSSelector*>*>& list,
+                              bool& validSelector)
 {
     validSelector = parseComplexSelectorList(list);
-    if (!validSelector)
+    if (!validSelector) {
         list.clear();
+    }
 }
 
 CSSSelector::RelationType CSSParser::parseCombinator()
 {
-    CSSSelector::RelationType fallbackResult = CSSSelector::RelationType::SubSelector;
+    CSSSelector::RelationType fallbackResult =
+        CSSSelector::RelationType::SubSelector;
 
     CSSToken* token = currentToken();
     while (token->isWhiteSpace()) {
@@ -955,15 +1026,21 @@ CSSSelector::RelationType CSSParser::parseCombinator()
 
 String* CSSParser::determineNamespace(String* prefix)
 {
-    if (prefix == nullptr)
+    if (prefix == nullptr) {
         return String::emptyString;
-    if (prefix->equals(String::emptyString))
-        return String::emptyString; // No namespace. If an element/attribute has a namespace, we won't match it.
-    if (prefix->equals(String::fromUTF8("*")))
+    }
+    if (prefix->equals(String::emptyString)) {
+        return String::emptyString; // No namespace. If an element/attribute has
+                                    // a namespace, we won't match it.
+    }
+    if (prefix->equals(String::fromUTF8("*"))) {
         return String::fromUTF8("*"); // We'll match any namespace.
+    }
 
-    if (m_document->styleResolver()->sheets().size() == 0)
-        return nullptr; // Cannot resolve prefix to namespace without a stylesheet, syntax error.
+    if (m_document->styleResolver()->sheets().size() == 0) {
+        return nullptr; // Cannot resolve prefix to namespace without a
+                        // stylesheet, syntax error.
+    }
 
     // TODO: Implement logic for getting namespace uri from prefix in stylesheet
     // return m_styleSheet->namespaceURIFromPrefix(prefix);
@@ -980,14 +1057,17 @@ CSSSelector* CSSParser::getPseudoSelector()
         colons++;
     }
 
-    if (!token->isIdent() && !token->isFunction())
+    if (!token->isIdent() && !token->isFunction()) {
         return nullptr;
+    }
 
-    if (token->isIdent() && token->m_value->indexOf('(') != SIZE_MAX)
+    if (token->isIdent() && token->m_value->indexOf('(') != SIZE_MAX) {
         return nullptr;
+    }
 
     CSSSelector* selector = new CSSSelector();
-    selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass: CSSSelector::Type::PseudoElement);
+    selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass
+                                  : CSSSelector::Type::PseudoElement);
     selector->setRelation(CSSSelector::RelationType::SubSelector);
     selector->updatePseudoType(token->m_value->toLower(), token->isFunction());
 
@@ -1006,57 +1086,59 @@ CSSSelector* CSSParser::getPseudoSelector()
     getToken(true, true);
 
     switch (selector->pseudoType()) {
-    case CSSSelector::PseudoNot:
-        {
-            GCDeque<CSSSelector*> selectorList;
-            parseCompoundSelector(&selectorList);
+    case CSSSelector::PseudoNot: {
+        GCDeque<CSSSelector*> selectorList;
+        parseCompoundSelector(&selectorList);
 
-            if (selectorList.size() != 1) {
-                return nullptr;
-            }
-
-            CSSSelector* innerSelector = selectorList[0];
-            if (innerSelector->pseudoSelectorList().size() || innerSelector->type() == CSSSelector::PseudoElement) {
-                return nullptr;
-            }
-
-            selector->setPseudoSelectorList(innerSelector);
-            getToken(false, true);
-
-            return selector;
+        if (selectorList.size() != 1) {
+            return nullptr;
         }
-    case CSSSelector::PseudoLang:
-        {
-            CSSToken* token = currentToken();
-            if (!token->isIdent())
-                return nullptr;
 
-            selector->setArgument(token->m_value);
-            token = getToken(true, true);
-            if (!token->isSymbol(')'))
-                return nullptr;
-            getToken(false, true);
-
-            return selector;
+        CSSSelector* innerSelector = selectorList[0];
+        if (innerSelector->pseudoSelectorList().size() ||
+            innerSelector->type() == CSSSelector::PseudoElement) {
+            return nullptr;
         }
+
+        selector->setPseudoSelectorList(innerSelector);
+        getToken(false, true);
+
+        return selector;
+    }
+    case CSSSelector::PseudoLang: {
+        CSSToken* token = currentToken();
+        if (!token->isIdent()) {
+            return nullptr;
+        }
+
+        selector->setArgument(token->m_value);
+        token = getToken(true, true);
+        if (!token->isSymbol(')')) {
+            return nullptr;
+        }
+        getToken(false, true);
+
+        return selector;
+    }
     case CSSSelector::PseudoNthChild:
     case CSSSelector::PseudoNthLastChild:
     case CSSSelector::PseudoNthOfType:
-    case CSSSelector::PseudoNthLastOfType:
-        {
-            std::pair<int, int> ab;
+    case CSSSelector::PseudoNthLastOfType: {
+        std::pair<int, int> ab;
 
-            if (!getANPlusB(ab))
-                return nullptr;
-            token = getToken(true, true);
-            if (!token->isSymbol(')'))
-                return nullptr;
-            getToken(false, true);
-
-            selector->setNth(ab.first, ab.second);
-
-            return selector;
+        if (!getANPlusB(ab)) {
+            return nullptr;
         }
+        token = getToken(true, true);
+        if (!token->isSymbol(')')) {
+            return nullptr;
+        }
+        getToken(false, true);
+
+        selector->setNth(ab.first, ab.second);
+
+        return selector;
+    }
     default:
         break;
     }
@@ -1095,10 +1177,12 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     } else if (token->isDimension() && !token->m_value->contains(".")) { // an+b
         result.first = String::parseInt(token->m_value);
         size_t pos = token->m_value->find("n");
-        if (pos < 0)
+        if (pos < 0) {
             return false;
-        nString = token->m_value->substring(pos, token->m_value->length()-pos);
-    } else if (token->isIdent()) { // -n or n
+        }
+        nString =
+            token->m_value->substring(pos, token->m_value->length() - pos);
+    } else if (token->isIdent()) {              // -n or n
         if (token->m_value->charAt(0) == '-') { // -n
             result.first = -1;
             nString = token->m_value->substring(1, 1);
@@ -1108,37 +1192,46 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
         }
     }
 
-    while (lookAhead(false, true)->isWhiteSpace())
+    while (lookAhead(false, true)->isWhiteSpace()) {
         token = getToken(false, true);
+    }
 
-    if (nString->equals(String::emptyString) || nString->toLower()->charAt(0) != 'n')
+    if (nString->equals(String::emptyString) ||
+        nString->toLower()->charAt(0) != 'n') {
         return false;
-    if (nString->length() > 1 && nString->charAt(1) != '-')
+    }
+    if (nString->length() > 1 && nString->charAt(1) != '-') {
         return false;
+    }
     if (nString->length() > 2) {
         // TODO: return result after checking whether nString is valid.
-        result.second = String::parseInt(nString->substring(1, nString->length() - 1));
+        result.second =
+            String::parseInt(nString->substring(1, nString->length() - 1));
         return true;
     }
 
     NumericSign sign = nString->length() == 1 ? NoSign : MinusSign;
-    if (sign == NoSign && lookAhead(false, true)->isSymbol() && !lookAhead(false, true)->isSymbol(')')) {
+    if (sign == NoSign && lookAhead(false, true)->isSymbol() &&
+        !lookAhead(false, true)->isSymbol(')')) {
         token = getToken(true, true);
         if (token->isSymbol('+')) {
             sign = PlusSign;
-            if (lookAhead(false, true)->m_value->charAt(0) == '+'
-                || lookAhead(false, true)->m_value->charAt(0) == '-')
+            if (lookAhead(false, true)->m_value->charAt(0) == '+' ||
+                lookAhead(false, true)->m_value->charAt(0) == '-') {
                 return false;
+            }
         } else if (token->isSymbol('-')) {
-            if (lookAhead(false, true)->m_value->charAt(0) == '+'
-                || lookAhead(false, true)->m_value->charAt(0) == '-')
+            if (lookAhead(false, true)->m_value->charAt(0) == '+' ||
+                lookAhead(false, true)->m_value->charAt(0) == '-') {
                 return false;
+            }
             sign = MinusSign;
         } else {
             return false;
         }
-        while (lookAhead(false, true)->isWhiteSpace())
+        while (lookAhead(false, true)->isWhiteSpace()) {
             token = getToken(false, true);
+        }
     }
 
     if (sign == NoSign && !lookAhead(false, true)->isNumber()) {
@@ -1147,13 +1240,18 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     }
 
     CSSToken* b = getToken(false, true);
-    if (!b->isNumber() || b->m_value->contains("."))
+    if (!b->isNumber() || b->m_value->contains(".")) {
         return false;
-//    if ((b.numericSign() == NoSign) == (sign == NoSign))
-//        return false;
+    }
+/*
+    if ((b.numericSign() == NoSign) == (sign == NoSign)) {
+        return false;
+    }
+*/
     result.second = String::parseInt(b->m_value);
-    if (sign == MinusSign)
+    if (sign == MinusSign) {
         result.second = -result.second;
+    }
     return true;
 }
 
@@ -1179,11 +1277,13 @@ CSSSelector::Type CSSParser::getAttributeMatch(CSSToken* token)
 
 CSSSelector::AttributeMatchType CSSParser::getAttributeFlags()
 {
-    if (!lookAhead(false, true)->isIdent())
+    if (!lookAhead(false, true)->isIdent()) {
         return CSSSelector::CaseSensitive;
+    }
     CSSToken* flag = getToken(true, true);
-    if (flag->m_value->equalsWithoutCase("i"))
+    if (flag->m_value->equalsWithoutCase("i")) {
         return CSSSelector::CaseInsensitive;
+    }
     m_failedParsing = true;
     return CSSSelector::CaseSensitive;
 }
@@ -1193,13 +1293,15 @@ String* CSSParser::getStringWithoutQuotationMarks(String* value)
     const char* curPos = value->utf8Data();
     const char* endPos = curPos + value->length();
 
-    while (String::isSpaceOrNewline(*curPos) && curPos < endPos)
+    while (String::isSpaceOrNewline(*curPos) && curPos < endPos) {
         curPos++;
+    }
 
     int len = 0;
     char mark = '\0';
-    if (*curPos == '\\')
+    if (*curPos == '\\') {
         curPos++;
+    }
     if (*curPos == '"' || *curPos == '\'') {
         mark = *curPos;
         curPos++;
@@ -1210,11 +1312,13 @@ String* CSSParser::getStringWithoutQuotationMarks(String* value)
         len++;
     }
     if (mark != '\0' && mark == *curPos) {
-        if (*(curPos - 1) == '\\')
+        if (*(curPos - 1) == '\\') {
             len--;
+        }
         curPos++;
-        while (String::isSpaceOrNewline(*curPos) && curPos < endPos)
+        while (String::isSpaceOrNewline(*curPos) && curPos < endPos) {
             curPos++;
+        }
     }
 
     return String::fromUTF8(start, len);
@@ -1225,18 +1329,24 @@ CSSSelector* CSSParser::getAttributeSelector()
     CSSToken* token = getToken(true, true);
 
     String* attributeName = nullptr;
-    if (!parseName(&attributeName))
+    if (!parseName(&attributeName)) {
         return nullptr;
+    }
 
-    while (currentToken()->isWhiteSpace())
+    while (currentToken()->isWhiteSpace()) {
         getToken(false, true);
+    }
 
     attributeName = attributeName->toLower();
-    QualifiedName attrQualifiedName = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(m_document->window()->starFish(), attributeName));
+    QualifiedName attrQualifiedName =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(
+                          m_document->window()->starFish(), attributeName));
 
     CSSSelector* selector = new CSSSelector();
     if (currentToken()->isSymbol(']')) {
-        selector->setAttribute(attrQualifiedName, CSSSelector::AttributeMatchType::CaseSensitive);
+        selector->setAttribute(attrQualifiedName,
+                               CSSSelector::AttributeMatchType::CaseSensitive);
         selector->setRelation(CSSSelector::RelationType::SubSelector);
         selector->setType(CSSSelector::Type::AttributeSet);
 
@@ -1247,8 +1357,9 @@ CSSSelector* CSSParser::getAttributeSelector()
     selector->setType(getAttributeMatch(currentToken()));
 
     CSSToken* attributeValue = getToken(true, true);
-    if (!attributeValue->isIdent() && !attributeValue->isString())
+    if (!attributeValue->isIdent() && !attributeValue->isString()) {
         return nullptr;
+    }
 
     selector->setRelation(CSSSelector::RelationType::SubSelector);
     selector->setValue(getStringWithoutQuotationMarks(attributeValue->m_value));
@@ -1257,8 +1368,9 @@ CSSSelector* CSSParser::getAttributeSelector()
     token = getToken(false, false);
     getToken(false, false);
 
-    if (!token->isSymbol(']'))
+    if (!token->isSymbol(']')) {
         return nullptr;
+    }
 
     return selector;
 }
@@ -1266,10 +1378,12 @@ CSSSelector* CSSParser::getAttributeSelector()
 CSSSelector* CSSParser::getClassSelector()
 {
     CSSToken* token = getToken(false, true);
-    if (!token->isIdent())
+    if (!token->isIdent()) {
         return nullptr;
+    }
 
-    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector, token->m_value);
+    CSSSelector* selector = new CSSSelector(
+        CSSSelector::Type::Class, CSSSelector::SubSelector, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1278,10 +1392,12 @@ CSSSelector* CSSParser::getClassSelector()
 CSSSelector* CSSParser::getIdSelector()
 {
     CSSToken* token = getToken(false, true);
-    if (!token->isIdent())
+    if (!token->isIdent()) {
         return nullptr;
+    }
 
-    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector, token->m_value);
+    CSSSelector* selector = new CSSSelector(
+        CSSSelector::Type::Id, CSSSelector::SubSelector, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1291,19 +1407,21 @@ CSSSelector* CSSParser::getSimpleSelector()
 {
     CSSToken* token = currentToken();
     CSSSelector* selector;
-    if (token->isSymbol('#'))
+    if (token->isSymbol('#')) {
         selector = getIdSelector();
-    else if (token->isSymbol('.'))
+    } else if (token->isSymbol('.')) {
         selector = getClassSelector();
-    else if (token->isSymbol('['))
+    } else if (token->isSymbol('[')) {
         selector = getAttributeSelector();
-    else if (token->isSymbol(':'))
+    } else if (token->isSymbol(':')) {
         selector = getPseudoSelector();
-    else
+    } else {
         return nullptr;
+    }
 
-    if (!selector)
+    if (!selector) {
         m_failedParsing = true;
+    }
 
     return selector;
 }
@@ -1323,8 +1441,9 @@ bool CSSParser::parseName(String** name)
         return false;
     }
 
-    if (!firstToken->isSymbol('|'))
+    if (!firstToken->isSymbol('|')) {
         return true;
+    }
 
     CSSToken* nameToken = getToken(true, true);
     if (nameToken->isIdent()) {
@@ -1367,15 +1486,19 @@ void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
     }
 
     if (selectorList->size() > 0) {
-        (*selectorList)[selectorList->size() - 1]->setRelation(CSSSelector::None);
+        (*selectorList)[selectorList->size() - 1]->setRelation(
+            CSSSelector::None);
     }
 
     if (elementName) {
-        if (elementName->equals(String::fromUTF8("*")) && selectorList->size() > 0) {
+        if (elementName->equals(String::fromUTF8("*")) &&
+            selectorList->size() > 0) {
             return;
         }
 
-        CSSSelector* selector = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, elementName->toLower());
+        CSSSelector* selector = new CSSSelector(
+            CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector,
+            elementName->toLower());
         if (elementName->equals(String::fromUTF8("*"))) {
             selector->setType(CSSSelector::Type::Universal);
         }
@@ -1394,10 +1517,14 @@ enum CompoundSelectorFlags {
 
 unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
 {
-    if (simpleSelector->type() != CSSSelector::PseudoElement)
+    if (simpleSelector->type() != CSSSelector::PseudoElement) {
         return 0;
-//    if (simpleSelector->pseudoType() == CSSSelector::PseudoContent)
-//        return HasContentPseudoElement;
+    }
+/*
+    if (simpleSelector->pseudoType() == CSSSelector::PseudoContent) {
+        return HasContentPseudoElement;
+    }
+*/
 
     return HasPseudoElementForRightmostCompound;
 }
@@ -1405,13 +1532,15 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
 void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
 {
     CSSToken* token = currentToken();
-    while (token->isSGMLComment() || token->isWhiteSpace())
+    while (token->isSGMLComment() || token->isWhiteSpace()) {
         token = getToken(false, true);
+    }
 
     parseCompoundSelector(selectorList);
 
-    if (selectorList->size() == 0)
+    if (selectorList->size() == 0) {
         return;
+    }
 
     unsigned selectorSize = selectorList->size();
 
@@ -1457,11 +1586,13 @@ void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
             end->relationIsAffectedByPseudoContent();
         }
         previousCompoundFlags = compoundFlags;
-        selectorList->insert(selectorList->begin(), secondSelectorList.begin(), secondSelectorList.end());
+        selectorList->insert(selectorList->begin(), secondSelectorList.begin(),
+                             secondSelectorList.end());
     }
 }
 
-bool CSSParser::parseComplexSelectorList(GCVector<GCDeque<CSSSelector*>*>& listOfSelectorList)
+bool CSSParser::parseComplexSelectorList(
+    GCVector<GCDeque<CSSSelector*>*>& listOfSelectorList)
 {
     GCDeque<CSSSelector*>* selectorList = new (GC) GCDeque<CSSSelector*>();
     parseComplexSelector(selectorList);
@@ -1478,7 +1609,8 @@ bool CSSParser::parseComplexSelectorList(GCVector<GCDeque<CSSSelector*>*>& listO
             token = getToken(false, true);
         } while (token->isSGMLComment() || token->isWhiteSpace());
 
-        GCDeque<CSSSelector*>* nextSelectorList = new (GC) GCDeque<CSSSelector*>();
+        GCDeque<CSSSelector*>* nextSelectorList =
+            new (GC) GCDeque<CSSSelector*>();
         parseComplexSelector(nextSelectorList);
         if (nextSelectorList->size() == 0) {
             return false;
@@ -1504,12 +1636,12 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
     bool isURLFunc = false;
     int urlTokens = 0;
     while (token->isNotNull()) {
-        if ((token->isSymbol(';')
-            || token->isSymbol('}')
-            || token->isSymbol('!'))
-            && !blocks.size()) {
-            if (token->isSymbol('}') && willBeConcat.size() > 0)
+        if ((token->isSymbol(';') || token->isSymbol('}') ||
+             token->isSymbol('!')) &&
+            !blocks.size()) {
+            if (token->isSymbol('}') && willBeConcat.size() > 0) {
                 ungetToken();
+            }
             break;
         }
         if (token->isIdent(String::inheritString)) {
@@ -1532,23 +1664,30 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 token = getToken(true, true);
                 break;
             }
-        } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
-            if (token->isFunction() && token->m_value->toLower()->equals("url(")) {
+        } else if (token->isSymbol('{') || token->isSymbol('(') ||
+                   token->isSymbol('[') || token->isFunction()) {
+            if (token->isFunction() &&
+                token->m_value->toLower()->equals("url(")) {
                 blocks.push_back(String::createASCIIString("url("));
                 isURLFunc = true;
-            } else
-                blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
-        } else if (token->isSymbol('}') || token->isSymbol(')') || token->isSymbol(']')) {
+            } else {
+                blocks.push_back(token->isFunction()
+                                     ? String::createASCIIString("(")
+                                     : token->m_value);
+            }
+        } else if (token->isSymbol('}') || token->isSymbol(')') ||
+                   token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{"))
-                    || (token->isSymbol(')') && ontop->equals("("))
-                    || (token->isSymbol(']') && ontop->equals("["))) {
+                if ((token->isSymbol('}') && ontop->equals("{")) ||
+                    (token->isSymbol(')') && ontop->equals("(")) ||
+                    (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') && ontop->equals("url(")) {
                     blocks.pop_back();
-                    if (urlTokens > 2)
+                    if (urlTokens > 2) {
                         return String::emptyString;
+                    }
                     isURLFunc = false;
                     urlTokens = 0;
                 } else {
@@ -1563,13 +1702,15 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
         if (isURLFunc) {
             token = getToken(true, false, true);
             urlTokens++;
-        } else
+        } else {
             token = getToken(false, false);
+        }
     }
     /*
     if (values.length && valueText) {
         this.forgetState();
-        aDecl.push(this._createJscsspDeclarationFromValuesArray(descriptor, values, valueText));
+        aDecl.push(this._createJscsspDeclarationFromValuesArray(descriptor,
+                   values, valueText));
         return valueText;
     }*/
     if (willBeConcat.size() > 0) {
@@ -1603,7 +1744,8 @@ String* CSSParser::combineAndTrimTokenValues(GCVector<CSSToken*>* list)
     return result;
 }
 
-void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration)
+void CSSParser::parseDeclaration(CSSToken* aToken,
+                                 CSSStyleDeclaration* declaration)
 {
     preserveState();
     GCVector<String*> blocks;
@@ -1622,18 +1764,25 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 bool priority = false;
                 if (token->isSymbol('!')) {
                     token = getToken(true, true);
-                    if (token->isIdent(String::createASCIIString("important"))) {
+                    if (token->isIdent(
+                            String::createASCIIString("important"))) {
                         priority = true;
                         token = getToken(true, true);
-                        if (token->isSymbol(';') || token->isSymbol('}') || token->m_type == CSSToken::NULL_TYPE) {
-                            if (token->isSymbol('}'))
+                        if (token->isSymbol(';') || token->isSymbol('}') ||
+                            token->m_type == CSSToken::NULL_TYPE) {
+                            if (token->isSymbol('}')) {
                                 ungetToken();
-                        } else
+                            }
+                        } else {
                             return;
-                    } else
+                        }
+                    } else {
                         return;
-                } else if (token->isNotNull() && !token->isSymbol(';') && !token->isSymbol('}'))
+                    }
+                } else if (token->isNotNull() && !token->isSymbol(';') &&
+                           !token->isSymbol('}')) {
                     return;
+                }
                 // use decls
                 /*
                 for (size_t i = 0; i < declarations.length; i++) {
@@ -1650,15 +1799,18 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 CSSStyleKind kind = lookupCSSStyle(name, strlen(name));
 
                 if (false) {
-
                 }
-#define SET_ATTR(name, nameLower, nameCSSCase) \
-                else if (kind == CSSStyleKind::name) { \
-                    declaration->set##name(value, priority);\
-                }
+#define SET_ATTR(name, nameLower, nameCSSCase)   \
+    else if (kind == CSSStyleKind::name)         \
+    {                                            \
+        declaration->set##name(value, priority); \
+    }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                else {
-                    STARFISH_LOG_ERROR("unsupported property name(CSSParser) -> %s\n", descriptor->utf8Data());
+                else
+                {
+                    STARFISH_LOG_ERROR(
+                        "unsupported property name(CSSParser) -> %s\n",
+                        descriptor->utf8Data());
                 }
                 return;
             }
@@ -1666,10 +1818,10 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     } else if (aToken->isComment()) {
         /*
         if (this.mPreserveComments) {
-          this.forgetState();
-          var comment = new jscsspComment();
-          comment.parsedCssText = aToken.value;
-          aDecl.push(comment);
+            this.forgetState();
+            var comment = new jscsspComment();
+            comment.parsedCssText = aToken.value;
+            aDecl.push(comment);
         }
         return aToken.value;
         */
@@ -1688,16 +1840,24 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
         } else if (token->isSymbol('}') && !blocks.size()) {
             ungetToken();
             break;
-        } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
-            if (token->isFunction() && token->m_value->toLower()->equals("url(")) {
+        } else if (token->isSymbol('{') || token->isSymbol('(') ||
+                   token->isSymbol('[') || token->isFunction()) {
+            if (token->isFunction() &&
+                token->m_value->toLower()->equals("url(")) {
                 blocks.push_back(String::createASCIIString("url("));
                 isURLFunc = true;
-            } else
-                blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
-        } else if (token->isSymbol('}') || token->isSymbol(')') || token->isSymbol(']')) {
+            } else {
+                blocks.push_back(token->isFunction()
+                                     ? String::createASCIIString("(")
+                                     : token->m_value);
+            }
+        } else if (token->isSymbol('}') || token->isSymbol(')') ||
+                   token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{")) || (token->isSymbol(')') && ontop->equals("(")) || (token->isSymbol(']') && ontop->equals("["))) {
+                if ((token->isSymbol('}') && ontop->equals("{")) ||
+                    (token->isSymbol(')') && ontop->equals("(")) ||
+                    (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') && ontop->equals("url(")) {
                     blocks.pop_back();
@@ -1705,15 +1865,19 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 }
             }
         }
-        if (isURLFunc)
+        if (isURLFunc) {
             token = getToken(true, false, true);
-        else
+        } else {
             token = getToken(false, false);
+        }
     }
     return;
 }
 
-void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, GCVector<GCDeque<CSSSelector*>*>* sList, bool isQueryingSelector)
+void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
+                               bool aIsInsideMediaRule,
+                               GCVector<GCDeque<CSSSelector*>*>* sList,
+                               bool isQueryingSelector)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
@@ -1749,10 +1913,12 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
     } else if (!validSelector) {
         // selector is invalid so the whole rule is invalid with it
         CSSToken* token = getToken(true, true);
-        while (!token->isSymbol('{') && token->isNotNull())
+        while (!token->isSymbol('{') && token->isNotNull()) {
             token = getToken(true, false);
-        if (token->isSymbol('{'))
+        }
+        if (token->isSymbol('{')) {
             token = getToken(true, false);
+        }
         while (true) {
             if (!token->isNotNull()) {
                 return;
@@ -1772,7 +1938,8 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                CSSStyleRule* rule = new CSSStyleRule(list[i], m_document, declarations);
+                CSSStyleRule* rule =
+                    new CSSStyleRule(list[i], m_document, declarations);
                 aOwner->addRule(rule);
             }
         }
@@ -1791,24 +1958,25 @@ void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
         aString = aString->concat(token->m_value);
-        if (token->isSymbol(';') && !blocks.size())
+        if (token->isSymbol(';') && !blocks.size()) {
             break;
-        else if (token->isSymbol('{')
-            || token->isSymbol('(')
-            || token->isSymbol('[')
-            || token->m_type == CSSToken::FUNCTION_TYPE) {
-            blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
-        } else if (token->isSymbol('}')
-            || token->isSymbol(')')
-            || token->isSymbol(']')) {
+        } else if (token->isSymbol('{') || token->isSymbol('(') ||
+                   token->isSymbol('[') ||
+                   token->m_type == CSSToken::FUNCTION_TYPE) {
+            blocks.push_back(token->isFunction()
+                                 ? String::createASCIIString("(")
+                                 : token->m_value);
+        } else if (token->isSymbol('}') || token->isSymbol(')') ||
+                   token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{"))
-                    || (token->isSymbol(')') && ontop->equals("("))
-                    || (token->isSymbol(']') && ontop->equals("["))) {
+                if ((token->isSymbol('}') && ontop->equals("{")) ||
+                    (token->isSymbol(')') && ontop->equals("(")) ||
+                    (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
-                    if (!blocks.size() && token->isSymbol('}'))
+                    if (!blocks.size() && token->isSymbol('}')) {
                         break;
+                    }
                 }
             }
         }
@@ -1819,7 +1987,8 @@ void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
 }
 
 /*
-void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString, size_t aCurrentLine)
+void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString,
+                               size_t aCurrentLine)
 {
     String* errorMsg = consumeError();
     // var rule = new jscsspErrorRule(errorMsg);
@@ -1830,7 +1999,7 @@ void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString, size_t aC
 }
 */
 
-void CSSParser::reportError(const char *aMsg)
+void CSSParser::reportError(const char* aMsg)
 {
     m_error = String::createASCIIString(aMsg);
 }
@@ -1839,7 +2008,8 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
 {
     CSSToken* token = getToken(false, false);
     String* s = String::emptyString;
-    if (token->isAtRule(String::createASCIIString("@charset")) && token->m_value->equals("@charset")) { // lowercase check
+    if (token->isAtRule(String::createASCIIString("@charset")) &&
+        token->m_value->equals("@charset")) { // lowercase check
         s = token->m_value;
         token = getToken(false, false);
         s = s->concat(token->m_value);
@@ -1857,12 +2027,15 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
                     // rule.parentStyleSheet = aSheet;
                     // aSheet.cssRules.push(rule);
                     return true;
-                } else
+                } else {
                     reportError(kCHARSET_RULE_MISSING_SEMICOLON);
-            } else
+                }
+            } else {
                 reportError(kCHARSET_RULE_CHARSET_IS_STRING);
-        } else
+            }
+        } else {
             reportError(kCHARSET_RULE_MISSING_WS);
+        }
     }
 
     addUnknownAtRule(aSheet, s);
@@ -1892,8 +2065,9 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
     */
     // @charset can only appear at first char of the stylesheet
     CSSToken* token = makeToken(sourceString);
-    if (!token->isNotNull())
+    if (!token->isNotNull()) {
         return;
+    }
     if (token->isAtRule(String::createASCIIString("@charset"))) {
         ungetToken();
         parseCharsetRule(target);
@@ -1905,87 +2079,88 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
     // bool foundNameSpaceRules = false;
 
     while (true) {
-        if (!token->isNotNull())
+        if (!token->isNotNull()) {
             break;
+        }
         if (token->isWhiteSpace()) {
-            // if (aTryToPreserveWhitespaces)
+            // if (aTryToPreserveWhitespaces) {
             //     this.addWhitespace(sheet, token.value);
+            // }
         } else if (token->isComment()) {
-            // if (this.mPreserveComments)
+            // if (this.mPreserveComments) {
             //     this.addComment(sheet, token.value);
+            // }
         } else if (token->isAtRule()) {
             addUnknownAtRule(target, token->m_value);
             /*
             if (token.isAtRule("@variables")) {
-              if (!foundImportRules && !foundStyleRules)
-                this.parseVariablesRule(token, sheet);
-              else {
-                this.reportError(kVARIABLES_RULE_POSITION);
+                if (!foundImportRules && !foundStyleRules) {
+                    this.parseVariablesRule(token, sheet);
+                } else {
+                    this.reportError(kVARIABLES_RULE_POSITION);
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@import")) {
+                // @import rules MUST occur before all style and namespace
+                // rules
+                if (!foundStyleRules && !foundNameSpaceRules) {
+                    foundImportRules = this.parseImportRule(token, sheet);
+                } else {
+                    this.reportError(kIMPORT_RULE_POSITION);
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@namespace")) {
+                // @namespace rules MUST occur before all style rule and
+                // after all @import rules
+                if (!foundStyleRules) {
+                    foundNameSpaceRules = this.parseNamespaceRule(token, sheet);
+                } else {
+                    this.reportError(kNAMESPACE_RULE_POSITION);
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@font-face")) {
+                if (this.parseFontFaceRule(token, sheet)) {
+                    foundStyleRules = true;
+                } else {
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@page")) {
+                if (this.parsePageRule(token, sheet)) {
+                    foundStyleRules = true;
+                } else {
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@media")) {
+                if (this.parseMediaRule(token, sheet)) {
+                    foundStyleRules = true;
+                } else {
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@keyframes")) {
+                if (!this.parseKeyframesRule(token, sheet)) {
+                    this.addUnknownAtRule(sheet, token.value);
+                }
+            } else if (token.isAtRule("@charset")) {
+                this.reportError(kCHARSET_RULE_CHARSET_SOF);
                 this.addUnknownAtRule(sheet, token.value);
-              }
-            }
-            else if (token.isAtRule("@import")) {
-              // @import rules MUST occur before all style and namespace
-              // rules
-              if (!foundStyleRules && !foundNameSpaceRules)
-                foundImportRules = this.parseImportRule(token, sheet);
-              else {
-                this.reportError(kIMPORT_RULE_POSITION);
+            } else {
+                this.reportError(kUNKNOWN_AT_RULE);
                 this.addUnknownAtRule(sheet, token.value);
-              }
-            }
-            else if (token.isAtRule("@namespace")) {
-              // @namespace rules MUST occur before all style rule and
-              // after all @import rules
-              if (!foundStyleRules)
-                foundNameSpaceRules = this.parseNamespaceRule(token, sheet);
-              else {
-                this.reportError(kNAMESPACE_RULE_POSITION);
-                this.addUnknownAtRule(sheet, token.value);
-              }
-            }
-            else if (token.isAtRule("@font-face")) {
-              if (this.parseFontFaceRule(token, sheet))
-                foundStyleRules = true;
-              else
-                this.addUnknownAtRule(sheet, token.value);
-            }
-            else if (token.isAtRule("@page")) {
-              if (this.parsePageRule(token, sheet))
-                foundStyleRules = true;
-              else
-                this.addUnknownAtRule(sheet, token.value);
-            }
-            else if (token.isAtRule("@media")) {
-              if (this.parseMediaRule(token, sheet))
-                foundStyleRules = true;
-              else
-                this.addUnknownAtRule(sheet, token.value);
-            }
-            else if (token.isAtRule("@keyframes")) {
-              if (!this.parseKeyframesRule(token, sheet))
-                this.addUnknownAtRule(sheet, token.value);
-            }
-            else if (token.isAtRule("@charset")) {
-              this.reportError(kCHARSET_RULE_CHARSET_SOF);
-              this.addUnknownAtRule(sheet, token.value);
-            }
-            else {
-              this.reportError(kUNKNOWN_AT_RULE);
-              this.addUnknownAtRule(sheet, token.value);
             } */
         } else {
             // plain style rules
             parseStyleRule(token, target, false, nullptr, false);
             // String* ruleText = parseStyleRule(token, sheet, false);
-            // if (ruleText)
+            // if (ruleText) {
             //     foundStyleRules = true;
+            // }
         }
         token = getToken(false, false);
     }
 }
 
-void CSSParser::parseStyleDeclaration(String* str, CSSStyleDeclaration* declarations)
+void CSSParser::parseStyleDeclaration(String* str,
+                                      CSSStyleDeclaration* declarations)
 {
     m_lookAhead = nullptr;
     m_token = nullptr;
@@ -2003,6 +2178,4 @@ void CSSParser::parseStyleDeclaration(String* str, CSSStyleDeclaration* declarat
         token = getToken(true, false);
     }
 }
-
-
 }

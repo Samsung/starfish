@@ -21,11 +21,10 @@
 
 namespace StarFish {
 
-class SkewTransform: public gc {
+class SkewTransform : public gc {
 public:
     SkewTransform(double anglex, double angley)
-        : m_angleX(anglex)
-        , m_angleY(angley)
+        : m_angleX(anglex), m_angleY(angley)
     {
     }
 
@@ -39,12 +38,18 @@ public:
         m_angleY = angley;
     }
 
-    double angleX() { return m_angleX; }
-    double angleY() { return m_angleY; }
+    double angleX()
+    {
+        return m_angleX;
+    }
+    double angleY()
+    {
+        return m_angleY;
+    }
 
     bool operator==(const SkewTransform& o)
     {
-        return this->m_angleX == o.m_angleX && this->m_angleY == o.m_angleY;
+        return (this->m_angleX == o.m_angleX) && (this->m_angleY == o.m_angleY);
     }
 
     bool operator!=(const SkewTransform& o)
@@ -56,7 +61,6 @@ private:
     double m_angleX;
     double m_angleY;
 };
-
 }
 
 #endif

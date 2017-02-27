@@ -21,11 +21,9 @@
 
 namespace StarFish {
 
-class TranslateTransform: public gc {
+class TranslateTransform : public gc {
 public:
-    TranslateTransform(Length& tx, Length& ty)
-        : m_tx(tx)
-        , m_ty(ty)
+    TranslateTransform(Length& tx, Length& ty) : m_tx(tx), m_ty(ty)
     {
     }
 
@@ -39,12 +37,18 @@ public:
         m_ty = b;
     }
 
-    Length tx() { return m_tx; }
-    Length ty() { return m_ty; }
+    Length tx()
+    {
+        return m_tx;
+    }
+    Length ty()
+    {
+        return m_ty;
+    }
 
     bool operator==(const TranslateTransform& o)
     {
-        return this->m_tx == o.m_tx && this->m_ty == o.m_ty;
+        return (this->m_tx == o.m_tx) && (this->m_ty == o.m_ty);
     }
 
     bool operator!=(const TranslateTransform& o)
@@ -55,7 +59,6 @@ public:
     Length m_tx;
     Length m_ty;
 };
-
 }
 
 #endif

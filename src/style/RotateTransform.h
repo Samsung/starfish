@@ -21,10 +21,9 @@
 
 namespace StarFish {
 
-class RotateTransform: public gc {
+class RotateTransform : public gc {
 public:
-    RotateTransform(double angle)
-        : m_angle(angle)
+    RotateTransform(double angle) : m_angle(angle)
     {
     }
 
@@ -37,7 +36,10 @@ public:
         m_angle = angle;
     }
 
-    double angle() { return m_angle; }
+    double angle()
+    {
+        return m_angle;
+    }
 
     bool operator==(const RotateTransform& o)
     {
@@ -52,7 +54,6 @@ public:
 private:
     double m_angle;
 };
-
 }
 
 #endif

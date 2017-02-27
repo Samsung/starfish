@@ -49,7 +49,10 @@ public:
         return m_height;
     }
 
-    bool isEmpty() const { return m_width <= 0 || m_height <= 0; }
+    bool isEmpty() const
+    {
+        return m_width <= 0 || m_height <= 0;
+    }
 
 protected:
     float m_width, m_height;
@@ -94,42 +97,77 @@ inline Size operator-(const Location& a, const Location& b)
 
 class Rect {
 public:
-    Rect(float x, float y, float w, float h)
-        : m_location(x, y)
-        , m_size(w, h)
+    Rect(float x, float y, float w, float h) : m_location(x, y), m_size(w, h)
     {
     }
 
-    float x() const { return m_location.x(); }
-    float y() const { return m_location.y(); }
-    float maxX() const { return x() + width(); }
-    float maxY() const { return y() + height(); }
-    float width() const { return m_size.width(); }
-    float height() const { return m_size.height(); }
+    float x() const
+    {
+        return m_location.x();
+    }
+    float y() const
+    {
+        return m_location.y();
+    }
+    float maxX() const
+    {
+        return x() + width();
+    }
+    float maxY() const
+    {
+        return y() + height();
+    }
+    float width() const
+    {
+        return m_size.width();
+    }
+    float height() const
+    {
+        return m_size.height();
+    }
 
-    void setX(float x) { m_location.setX(x); }
-    void setY(float y) { m_location.setY(y); }
-    void setWidth(float width) { m_size.setWidth(width); }
-    void setHeight(float height) { m_size.setHeight(height); }
+    void setX(float x)
+    {
+        m_location.setX(x);
+    }
+    void setY(float y)
+    {
+        m_location.setY(y);
+    }
+    void setWidth(float width)
+    {
+        m_size.setWidth(width);
+    }
+    void setHeight(float height)
+    {
+        m_size.setHeight(height);
+    }
 
-    bool isEmpty() const { return m_size.isEmpty(); }
+    bool isEmpty() const
+    {
+        return m_size.isEmpty();
+    }
 
     bool contains(float px, float py) const
     {
-        return px >= x() && px < (x() + width()) && py >= y() && py < (y() + height());
+        return px >= x() && px < (x() + width()) && py >= y() &&
+               py < (y() + height());
     }
 
     void unite(const Rect& other)
     {
-        if (other.isEmpty())
+        if (other.isEmpty()) {
             return;
+        }
         if (isEmpty()) {
             *this = other;
             return;
         }
 
-        Location newLocation(std::min(x(), other.x()), std::min(y(), other.y()));
-        Location newMaxPoint(std::max(maxX(), other.maxX()), std::max(maxY(), other.maxY()));
+        Location newLocation(std::min(x(), other.x()),
+                             std::min(y(), other.y()));
+        Location newMaxPoint(std::max(maxX(), other.maxX()),
+                             std::max(maxY(), other.maxY()));
 
         m_location = newLocation;
         m_size = newMaxPoint - newLocation;
@@ -142,7 +180,8 @@ private:
 
 class BoxSurroundData {
 public:
-    BoxSurroundData(float top = 0, float right = 0, float bottom = 0, float left = 0)
+    BoxSurroundData(float top = 0, float right = 0, float bottom = 0,
+                    float left = 0)
     {
         m_top = top;
         m_right = right;
@@ -199,18 +238,11 @@ protected:
 
 class Color {
 public:
-    Color()
-        : m_r(0)
-        , m_g(0)
-        , m_b(0)
-        , m_a(0)
+    Color() : m_r(0), m_g(0), m_b(0), m_a(0)
     {
     }
     Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-        : m_r(r)
-        , m_g(g)
-        , m_b(b)
-        , m_a(a)
+        : m_r(r), m_g(g), m_b(b), m_a(a)
     {
     }
 
@@ -237,9 +269,11 @@ public:
         } else {
             float a = (float)m_a / 255;
             if (a > 0.05) {
-                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r, m_g, m_b, a);
+                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r, m_g,
+                         m_b, a);
             } else {
-                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g, m_b);
+                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g,
+                         m_b);
             }
         }
 
@@ -247,10 +281,22 @@ public:
         return toStr;
     }
 
-    unsigned char r() const { return m_r; }
-    unsigned char g() const { return m_g; }
-    unsigned char b() const { return m_b; }
-    unsigned char a() const { return m_a; }
+    unsigned char r() const
+    {
+        return m_r;
+    }
+    unsigned char g() const
+    {
+        return m_g;
+    }
+    unsigned char b() const
+    {
+        return m_b;
+    }
+    unsigned char a() const
+    {
+        return m_a;
+    }
 
     unsigned char m_r, m_g, m_b, m_a;
 };

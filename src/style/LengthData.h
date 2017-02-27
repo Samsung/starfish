@@ -22,18 +22,15 @@ namespace StarFish {
 class LengthData {
 public:
     LengthData()
-        : m_top(Length(Length::Fixed, 0))
-        , m_right(Length(Length::Fixed, 0))
-        , m_bottom(Length(Length::Fixed, 0))
-        , m_left(Length(Length::Fixed, 0))
+        : m_top(Length(Length::Fixed, 0)),
+          m_right(Length(Length::Fixed, 0)),
+          m_bottom(Length(Length::Fixed, 0)),
+          m_left(Length(Length::Fixed, 0))
     {
     }
 
     LengthData(Length length)
-        : m_top(length)
-        , m_right(length)
-        , m_bottom(length)
-        , m_left(length)
+        : m_top(length), m_right(length), m_bottom(length), m_left(length)
     {
     }
 
@@ -87,12 +84,13 @@ public:
 
     bool operator==(const LengthData& o)
     {
-        return m_left == o.m_left && m_right == o.m_right && m_top == o.m_top && m_bottom == o.m_bottom;
+        return m_left == o.m_left && m_right == o.m_right && m_top == o.m_top &&
+               m_bottom == o.m_bottom;
     }
 
     bool operator!=(const LengthData& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
 private:

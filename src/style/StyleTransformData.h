@@ -30,24 +30,13 @@ class ImageData;
 
 class StyleTransformData : public gc {
 public:
-    enum OperationType {
-        Matrix,
-        Translate,
-        Scale,
-        Rotate,
-        Skew,
-        None
-    };
+    enum OperationType { Matrix, Translate, Scale, Rotate, Skew, None };
 
-    StyleTransformData()
-        : m_type(None)
-        , m_value(NULL)
+    StyleTransformData() : m_type(None), m_value(NULL)
     {
     }
 
-    StyleTransformData(OperationType type)
-        : m_type(type)
-        , m_value(NULL)
+    StyleTransformData(OperationType type) : m_type(type), m_value(NULL)
     {
     }
 
@@ -149,15 +138,22 @@ public:
     {
         char temp[100];
         if (m_type == Matrix) {
-            snprintf(temp, sizeof(temp), "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", matrix()->a(), matrix()->b(), matrix()->c(), matrix()->d(), matrix()->e(), matrix()->f());
+            snprintf(temp, sizeof(temp),
+                     "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", matrix()->a(),
+                     matrix()->b(), matrix()->c(), matrix()->d(), matrix()->e(),
+                     matrix()->f());
         } else if (m_type == Scale) {
-            snprintf(temp, sizeof(temp), "scale(%.3f %.3f) ", scale()->x(), scale()->y());
+            snprintf(temp, sizeof(temp), "scale(%.3f %.3f) ", scale()->x(),
+                     scale()->y());
         } else if (m_type == Rotate) {
             snprintf(temp, sizeof(temp), "rotate(%.3f) ", rotate()->angle());
         } else if (m_type == Skew) {
-            snprintf(temp, sizeof(temp), "skew(%.3f %.3f) ", skew()->angleX(), skew()->angleY());
+            snprintf(temp, sizeof(temp), "skew(%.3f %.3f) ", skew()->angleX(),
+                     skew()->angleY());
         } else if (m_type == Translate) {
-            snprintf(temp, sizeof(temp), "translate(%s %s) ", translate()->tx().dumpString()->utf8Data(), translate()->ty().dumpString()->utf8Data());
+            snprintf(temp, sizeof(temp), "translate(%s %s) ",
+                     translate()->tx().dumpString()->utf8Data(),
+                     translate()->ty().dumpString()->utf8Data());
         } else {
             return String::emptyString;
         }
@@ -175,8 +171,10 @@ public:
     }
 
 private:
-    friend inline bool operator==(const StyleTransformData& a, const StyleTransformData& b);
-    friend inline bool operator!=(const StyleTransformData& a, const StyleTransformData& b);
+    friend inline bool operator==(const StyleTransformData& a,
+                                  const StyleTransformData& b);
+    friend inline bool operator!=(const StyleTransformData& a,
+                                  const StyleTransformData& b);
 
     OperationType m_type;
     union TransformPointer {
@@ -185,7 +183,10 @@ private:
         ScaleTransform* m_scale;
         RotateTransform* m_rotate;
         SkewTransform* m_skew;
-        TransformPointer(MatrixTransform* v) { m_matrix = v; }
+        TransformPointer(MatrixTransform* v)
+        {
+            m_matrix = v;
+        }
     };
 
     TransformPointer m_value;
@@ -193,29 +194,35 @@ private:
 
 bool operator==(const StyleTransformData& a, const StyleTransformData& b)
 {
-    if (a.type() != b.type())
+    if (a.type() != b.type()) {
         return false;
+    }
 
     switch (a.type()) {
     case StyleTransformData::OperationType::Matrix:
-        if (*(a.matrix()) != *(b.matrix()))
+        if (*(a.matrix()) != *(b.matrix())) {
             return false;
+        }
         break;
     case StyleTransformData::OperationType::Scale:
-        if (*(a.scale()) != *(b.scale()))
+        if (*(a.scale()) != *(b.scale())) {
             return false;
+        }
         break;
     case StyleTransformData::OperationType::Translate:
-        if (*(a.translate()) != *(b.translate()))
+        if (*(a.translate()) != *(b.translate())) {
             return false;
+        }
         break;
     case StyleTransformData::OperationType::Rotate:
-        if (*(a.rotate()) != *(b.rotate()))
+        if (*(a.rotate()) != *(b.rotate())) {
             return false;
+        }
         break;
     case StyleTransformData::OperationType::Skew:
-        if (*(a.skew()) != *(b.skew()))
+        if (*(a.skew()) != *(b.skew())) {
             return false;
+        }
         break;
     case StyleTransformData::OperationType::None:
     default:
@@ -264,30 +271,35 @@ public:
     }
 
 private:
-    friend inline bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
-    friend inline bool operator!=(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
+    friend inline bool operator==(const StyleTransformDataGroup& a,
+                                  const StyleTransformDataGroup& b);
+    friend inline bool operator!=(const StyleTransformDataGroup& a,
+                                  const StyleTransformDataGroup& b);
 
     GCVector<StyleTransformData> m_group;
 };
 
-bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b)
+bool operator==(const StyleTransformDataGroup& a,
+                const StyleTransformDataGroup& b)
 {
-    if (a.size() != b.size())
+    if (a.size() != b.size()) {
         return false;
+    }
 
     for (size_t i = 0; i < a.size(); i++) {
-        if (a.at(i) != b.at(i))
+        if (a.at(i) != b.at(i)) {
             return false;
+        }
     }
 
     return true;
 }
 
-bool operator!=(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b)
+bool operator!=(const StyleTransformDataGroup& a,
+                const StyleTransformDataGroup& b)
 {
     return !operator==(a, b);
 }
-
 }
 
 #endif
