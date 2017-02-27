@@ -31,11 +31,13 @@ class URL : public ScriptWrappable {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
         DATA_PROTOCOL,
-        // FILE, BLOB, DATA should be smaller than HTTP (there's code which assumes this)
+        // FILE, BLOB, DATA should be smaller than HTTP
+        // (there's code which assumes this)
         HTTP_PROTOCOL,
         HTTPS_PROTOCOL,
         UNKNOWN,
     };
+
 public:
     static String* getURLString(String* baseURL, String* url);
     static String* createObjectURL(Blob* blob);

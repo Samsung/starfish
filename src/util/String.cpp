@@ -29,13 +29,16 @@
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND
+ * ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE FOR
+ * ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -49,8 +52,10 @@ namespace StarFish {
 
 String* const String::emptyString = String::createASCIIStringWithNoGC("");
 String* const String::spaceString = String::createASCIIStringWithNoGC(" ");
-String* const String::inheritString = String::createASCIIStringWithNoGC("inherit");
-String* const String::initialString = String::createASCIIStringWithNoGC("initial");
+String* const String::inheritString =
+    String::createASCIIStringWithNoGC("inherit");
+String* const String::initialString =
+    String::createASCIIStringWithNoGC("initial");
 
 size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 {
@@ -60,62 +65,56 @@ size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 
     // ASCII byte
     if (0 == (UTF8[0] & 0x80)) {
-        uc = (char32_t) UTF8[0];
+        uc = (char32_t)UTF8[0];
         tRequiredSize = 1;
     } else // Start byte for 2byte
-        if (0xC0 == (UTF8[0] & 0xE0) && &UTF8[1] < bufferEnd
-            && 0x80 == (UTF8[1] & 0xC0)) {
-            uc += (UTF8[0] & 0x1F) << 6;
-            uc += (UTF8[1] & 0x3F) << 0;
-            tRequiredSize = 2;
-        } else // Start byte for 3byte
-            if (0xE0 == (UTF8[0] & 0xF0) && &UTF8[2] < bufferEnd
-                && 0x80 == (UTF8[1] & 0xC0)
-                && 0x80 == (UTF8[2] & 0xC0)) {
-                uc += (UTF8[0] & 0x0F) << 12;
-                uc += (UTF8[1] & 0x3F) << 6;
-                uc += (UTF8[2] & 0x3F) << 0;
-                tRequiredSize = 3;
-            } else // Start byte for 4byte
-                if (0xF0 == (UTF8[0] & 0xF8) && &UTF8[3] < bufferEnd
-                    && 0x80 == (UTF8[1] & 0xC0)
-                    && 0x80 == (UTF8[2] & 0xC0)
-                    && 0x80 == (UTF8[3] & 0xC0)) {
-                    uc += (UTF8[0] & 0x07) << 18;
-                    uc += (UTF8[1] & 0x3F) << 12;
-                    uc += (UTF8[2] & 0x3F) << 6;
-                    uc += (UTF8[3] & 0x3F) << 0;
-                    tRequiredSize = 4;
-                } else // Start byte for 5byte
-                    if (0xF8 == (UTF8[0] & 0xFC) && &UTF8[4] < bufferEnd
-                        && 0x80 == (UTF8[1] & 0xC0)
-                        && 0x80 == (UTF8[2] & 0xC0)
-                        && 0x80 == (UTF8[3] & 0xC0)
-                        && 0x80 == (UTF8[4] & 0xC0)) {
-                        uc += (UTF8[0] & 0x03) << 24;
-                        uc += (UTF8[1] & 0x3F) << 18;
-                        uc += (UTF8[2] & 0x3F) << 12;
-                        uc += (UTF8[3] & 0x3F) << 6;
-                        uc += (UTF8[4] & 0x3F) << 0;
-                        tRequiredSize = 5;
-                    } else // Start byte for 6byte
-                        if (0xFC == (UTF8[0] & 0xFE) && &UTF8[5] < bufferEnd
-                            && 0x80 == (UTF8[1] & 0xC0)
-                            && 0x80 == (UTF8[2] & 0xC0)
-                            && 0x80 == (UTF8[3] & 0xC0)
-                            && 0x80 == (UTF8[4] & 0xC0)
-                            && 0x80 == (UTF8[5] & 0xC0)) {
-                            uc += (UTF8[0] & 0x01) << 30;
-                            uc += (UTF8[1] & 0x3F) << 24;
-                            uc += (UTF8[2] & 0x3F) << 18;
-                            uc += (UTF8[3] & 0x3F) << 12;
-                            uc += (UTF8[4] & 0x3F) << 6;
-                            uc += (UTF8[5] & 0x3F) << 0;
-                            tRequiredSize = 6;
-                        } else {
-                            tRequiredSize = 1;
-                            uc = 0xFFFD;
-                        }
+        if (0xC0 == (UTF8[0] & 0xE0) && &UTF8[1] < bufferEnd &&
+            0x80 == (UTF8[1] & 0xC0)) {
+        uc += (UTF8[0] & 0x1F) << 6;
+        uc += (UTF8[1] & 0x3F) << 0;
+        tRequiredSize = 2;
+    } else // Start byte for 3byte
+        if (0xE0 == (UTF8[0] & 0xF0) && &UTF8[2] < bufferEnd &&
+            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0)) {
+        uc += (UTF8[0] & 0x0F) << 12;
+        uc += (UTF8[1] & 0x3F) << 6;
+        uc += (UTF8[2] & 0x3F) << 0;
+        tRequiredSize = 3;
+    } else // Start byte for 4byte
+        if (0xF0 == (UTF8[0] & 0xF8) && &UTF8[3] < bufferEnd &&
+            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+            0x80 == (UTF8[3] & 0xC0)) {
+        uc += (UTF8[0] & 0x07) << 18;
+        uc += (UTF8[1] & 0x3F) << 12;
+        uc += (UTF8[2] & 0x3F) << 6;
+        uc += (UTF8[3] & 0x3F) << 0;
+        tRequiredSize = 4;
+    } else // Start byte for 5byte
+        if (0xF8 == (UTF8[0] & 0xFC) && &UTF8[4] < bufferEnd &&
+            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+            0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0)) {
+        uc += (UTF8[0] & 0x03) << 24;
+        uc += (UTF8[1] & 0x3F) << 18;
+        uc += (UTF8[2] & 0x3F) << 12;
+        uc += (UTF8[3] & 0x3F) << 6;
+        uc += (UTF8[4] & 0x3F) << 0;
+        tRequiredSize = 5;
+    } else // Start byte for 6byte
+        if (0xFC == (UTF8[0] & 0xFE) && &UTF8[5] < bufferEnd &&
+            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+            0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0) &&
+            0x80 == (UTF8[5] & 0xC0)) {
+        uc += (UTF8[0] & 0x01) << 30;
+        uc += (UTF8[1] & 0x3F) << 24;
+        uc += (UTF8[2] & 0x3F) << 18;
+        uc += (UTF8[3] & 0x3F) << 12;
+        uc += (UTF8[4] & 0x3F) << 6;
+        uc += (UTF8[5] & 0x3F) << 0;
+        tRequiredSize = 6;
+    } else {
+        tRequiredSize = 1;
+        uc = 0xFFFD;
+    }
 
     return tRequiredSize;
 }
@@ -146,32 +145,32 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
         tRequiredSize = 3;
     } else if (uc <= 0x1fffff) {
         if (NULL != UTF8) {
-            UTF8[0] = (char)(0xf0 + uc / (0x01 <<18));
-            UTF8[1] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[0] = (char)(0xf0 + uc / (0x01 << 18));
+            UTF8[1] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
             UTF8[2] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
             UTF8[3] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[4] = (char) '\0';
+            UTF8[4] = (char)'\0';
         }
         tRequiredSize = 4;
     } else if (uc <= 0x3ffffff) {
         if (NULL != UTF8) {
-            UTF8[0] = (char)(0xf8 + uc / (0x01 <<24));
-            UTF8[1] = (char)(0x80 + uc / (0x01 <<18) % (0x01 <<18));
-            UTF8[2] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[0] = (char)(0xf8 + uc / (0x01 << 24));
+            UTF8[1] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
+            UTF8[2] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
             UTF8[3] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
             UTF8[4] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[5] = (char) '\0';
+            UTF8[5] = (char)'\0';
         }
         tRequiredSize = 5;
     } else if (uc <= 0x7fffffff) {
         if (NULL != UTF8) {
-            UTF8[0] = (char)(0xfc + uc / (0x01 <<30));
-            UTF8[1] = (char)(0x80 + uc / (0x01 <<24) % (0x01 <<24));
-            UTF8[2] = (char)(0x80 + uc / (0x01 <<18) % (0x01 <<18));
-            UTF8[3] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[0] = (char)(0xfc + uc / (0x01 << 30));
+            UTF8[1] = (char)(0x80 + uc / (0x01 << 24) % (0x01 << 24));
+            UTF8[2] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
+            UTF8[3] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
             UTF8[4] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
             UTF8[5] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[6] = (char) '\0';
+            UTF8[6] = (char)'\0';
         }
         tRequiredSize = 6;
     } else {
@@ -181,8 +180,8 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
     return tRequiredSize;
 }
 
-
-const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
+const char* utf32ToUtf8(const char32_t* t, const size_t& len,
+                        size_t* bufferSize = NULL)
 {
     unsigned strLength = 0;
     char buffer[8];
@@ -209,25 +208,31 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize
 bool isZeroWidthChar(char32_t CHAR)
 {
     if (CHAR < 32) {
-        if (CHAR != 9 && CHAR !=10 && CHAR != 13)
+        if (CHAR != 9 && CHAR != 10 && CHAR != 13) {
             return true;
+        }
     }
     if (CHAR >= 0x7F && CHAR < 0xA0) {
         return true;
     }
-    if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E || CHAR == 0x200F || CHAR == 0x202A || CHAR == 0x202B || CHAR == 0x202C || CHAR == 0x202D || CHAR == 0x202C || CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC)
+    if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E || CHAR == 0x200F ||
+        CHAR == 0x202A || CHAR == 0x202B || CHAR == 0x202C || CHAR == 0x202D ||
+        CHAR == 0x202C || CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC) {
         return true;
+    }
     return false;
 }
 
-UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end, bool ignoreZeroWidthChar)
+UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end,
+                            bool ignoreZeroWidthChar)
 {
     UTF8NonGCString ret;
     ret.reserve((end - start) * 2);
     char buffer[8];
     for (size_t i = start; i < end; i++) {
-        if (ignoreZeroWidthChar && isZeroWidthChar(str.data()[i]))
+        if (ignoreZeroWidthChar && isZeroWidthChar(str.data()[i])) {
             continue;
+        }
         size_t length = utf32ToUtf8(str.data()[i], buffer);
         if (length == 1) {
             ret.push_back(buffer[0]);
@@ -263,25 +268,29 @@ UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end, bo
     return ret;
 }
 
-const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
+const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
+                                           size_t* bufferSize = NULL)
 {
     unsigned strLength = 0;
     char buffer[8];
     for (size_t i = 0; i < len; i++) {
-        if (isZeroWidthChar(t[i]))
+        if (isZeroWidthChar(t[i])) {
             continue;
+        }
         int length = utf32ToUtf8(t[i], buffer);
         strLength += length;
     }
 
     char* result = (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(strLength + 1);
-    if (bufferSize)
+    if (bufferSize) {
         *bufferSize = strLength + 1;
+    }
     unsigned currentPosition = 0;
 
     for (size_t i = 0; i < len; i++) {
-        if (isZeroWidthChar(t[i]))
+        if (isZeroWidthChar(t[i])) {
             continue;
+        }
         int length = utf32ToUtf8(t[i], buffer);
         memcpy(&result[currentPosition], buffer, length);
         currentPosition += length;
@@ -306,14 +315,16 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
 const char* String::utf8DataSlowCase(bool ignoreZeroWidthChar)
 {
     STARFISH_ASSERT(!m_isASCIIString);
-    if (ignoreZeroWidthChar)
-        return utf32ToUtf8IgnoreZeroWidthChar(asUTF32String()->data(), asUTF32String()->length());
+    if (ignoreZeroWidthChar) {
+        return utf32ToUtf8IgnoreZeroWidthChar(asUTF32String()->data(),
+                                              asUTF32String()->length());
+    }
     return utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length());
 }
 
 String* String::fromUTF8(const char* src, size_t len)
 {
-    for (unsigned i = 0; i < len; i ++) {
+    for (unsigned i = 0; i < len; i++) {
         if (src[i] & 0x80) {
             return new StringDataUTF32(src, len);
         }
@@ -336,7 +347,7 @@ String* String::fromUTF8(const char* str)
 
 String* String::fromUTF16(const char16_t* src, size_t len)
 {
-    for (unsigned i = 0; i < len; i ++) {
+    for (unsigned i = 0; i < len; i++) {
         if (src[i] > 127) {
             UTF32String utf32;
             for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
@@ -349,7 +360,7 @@ String* String::fromUTF16(const char16_t* src, size_t len)
     }
 
     ASCIIString ascii;
-    for (unsigned i = 0; i < len; i ++) {
+    for (unsigned i = 0; i < len; i++) {
         ascii.push_back((char)src[i]);
     }
 
@@ -363,7 +374,7 @@ String* String::createASCIIString(const char* str)
 
 String* String::createASCIIStringWithNoGC(const char* str)
 {
-    return new(NoGC) StringDataASCII(str);
+    return new (NoGC) StringDataASCII(str);
 }
 
 String* String::createUTF32String(const UTF32String& src)
@@ -374,38 +385,39 @@ String* String::createUTF32String(const UTF32String& src)
 String* String::createUTF32String(char32_t c)
 {
     if (c < 128) {
-        char s[2] = {(char)c, '\0'};
+        char s[2] = { (char)c, '\0' };
         return new StringDataASCII(s);
     }
-    char32_t s[2] = {c, '\0'};
+    char32_t s[2] = { c, '\0' };
     return new StringDataUTF32(s);
 }
 
 String* String::createASCIIStringFromUTF32Source(const UTF32String& src)
 {
 #ifndef NDEBUG
-    for (size_t i = 0; i < src.length(); i ++) {
+    for (size_t i = 0; i < src.length(); i++) {
         const char32_t c = src[i];
         STARFISH_ASSERT(c < 128);
     }
 #endif
     ASCIIString ascii;
-    for (size_t i = 0; i < src.length(); i ++) {
+    for (size_t i = 0; i < src.length(); i++) {
         ascii.push_back(src[i]);
     }
     return new StringDataASCII(std::move(ascii));
 }
 
-String* String::createASCIIStringFromUTF32SourceIfPossible(const UTF32String& src)
+String* String::createASCIIStringFromUTF32SourceIfPossible(
+    const UTF32String& src)
 {
-    for (size_t i = 0; i < src.length(); i ++) {
+    for (size_t i = 0; i < src.length(); i++) {
         const char32_t c = src[i];
         if (c > 127) {
             return String::createUTF32String(src);
         }
     }
     ASCIIString ascii;
-    for (size_t i = 0; i < src.length(); i ++) {
+    for (size_t i = 0; i < src.length(); i++) {
         ascii.push_back(src[i]);
     }
     return new StringDataASCII(std::move(ascii));
@@ -419,7 +431,8 @@ NullableUTF8String String::toNullableUTF8String()
         return NullableUTF8String((const char*)ptr, asASCIIString()->size());
     } else {
         size_t len;
-        const char* ptr = utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length(), &len);
+        const char* ptr = utf32ToUtf8(asUTF32String()->data(),
+                                      asUTF32String()->length(), &len);
         return NullableUTF8String(ptr, len - 1);
     }
 }
@@ -437,7 +450,7 @@ const char* String::utf8DataIgnoreZeroWidthChar()
 {
     if (m_isASCIIString) {
         StringDataASCII* newStr = new StringDataASCII("");
-        for (size_t i = 0; i < length(); i ++) {
+        for (size_t i = 0; i < length(); i++) {
             if (!isZeroWidthChar(charAt(i))) {
                 newStr->insert(newStr->end(), (*asASCIIString())[i]);
             }
@@ -451,9 +464,11 @@ const char* String::utf8DataIgnoreZeroWidthChar()
 String* String::substring(size_t pos, size_t len)
 {
     if (m_isASCIIString) {
-        return new StringDataASCII(std::move(asASCIIString()->substr(pos, len)));
+        return new StringDataASCII(
+            std::move(asASCIIString()->substr(pos, len)));
     } else {
-        return new StringDataUTF32(std::move(asUTF32String()->substr(pos, len)));
+        return new StringDataUTF32(
+            std::move(asUTF32String()->substr(pos, len)));
     }
 }
 
@@ -509,9 +524,11 @@ String* String::replaceAll(String* from, String* to)
         std::string to_str = std::string(to->utf8Data());
 
         size_t start_pos = 0;
-        while ((start_pos = str.find(from_str, start_pos)) != std::string::npos) {
+        while ((start_pos = str.find(from_str, start_pos)) !=
+               std::string::npos) {
             str.replace(start_pos, from_str.length(), to_str);
-            start_pos += to_str.length(); // Handles case where 'to' is a substring of 'from'
+            start_pos += to_str.length(); // Handles case where 'to' is a
+                                          // substring of 'from'
         }
         return createASCIIString(str.c_str());
     } else {
@@ -520,9 +537,11 @@ String* String::replaceAll(String* from, String* to)
         std::basic_string<char32_t> to_str(to->toUTF32String().data());
 
         size_t start_pos = 0;
-        while ((start_pos = str.find(from_str, start_pos)) != std::string::npos) {
+        while ((start_pos = str.find(from_str, start_pos)) !=
+               std::string::npos) {
             str.replace(start_pos, from_str.length(), to_str);
-            start_pos += to_str.length(); // Handles case where 'to' is a substring of 'from'
+            start_pos += to_str.length(); // Handles case where 'to' is a
+                                          // substring of 'from'
         }
         return createUTF32String(UTF32String(str.begin(), str.end()));
     }
@@ -557,14 +576,18 @@ static VectorType splitString(const StringType& s, char seperator)
 void String::split(char delim, GCVector<String*>& tokens)
 {
     if (m_isASCIIString) {
-        GCVector<ASCIIString> ss = splitString<ASCIIString, GCVector<ASCIIString>>(*asASCIIString(), delim);
-        for (size_t i = 0; i < ss.size(); i ++) {
+        GCVector<ASCIIString> ss =
+            splitString<ASCIIString, GCVector<ASCIIString>>(*asASCIIString(),
+                                                            delim);
+        for (size_t i = 0; i < ss.size(); i++) {
             ASCIIString& item = ss[i];
             tokens.push_back(new StringDataASCII(std::move(item)));
         }
     } else {
-        GCVector<UTF32String> ss = splitString<UTF32String, GCVector<UTF32String>>(*asUTF32String(), delim);
-        for (size_t i = 0; i < ss.size(); i ++) {
+        GCVector<UTF32String> ss =
+            splitString<UTF32String, GCVector<UTF32String>>(*asUTF32String(),
+                                                            delim);
+        for (size_t i = 0; i < ss.size(); i++) {
             UTF32String& item = ss[i];
             tokens.push_back(new StringDataUTF32(std::move(item)));
         }
@@ -578,7 +601,7 @@ String* String::trim()
     if (length()) {
         last = length() - 1;
 
-        for (size_t i = 0; i < length(); i ++) {
+        for (size_t i = 0; i < length(); i++) {
             if (!String::isSpaceOrNewline(charAt(i))) {
                 first = i;
                 break;
@@ -586,8 +609,9 @@ String* String::trim()
         }
 
         do {
-            if (!String::isSpaceOrNewline(charAt(last)))
+            if (!String::isSpaceOrNewline(charAt(last))) {
                 break;
+            }
         } while (last--);
     }
 
@@ -630,15 +654,15 @@ GCVector<String*> String::tokenize(const char* tokens, size_t tokensLength)
     return result;
 }
 
-static int utf32ToUtf16(char32_t i, char16_t *u)
+static int utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i < 0xffff) {
-        *u= (char16_t)(i & 0xffff);
+        *u = (char16_t)(i & 0xffff);
         return 1;
     } else if (i < 0x10ffff) {
-        i-= 0x10000;
-        *u++= 0xd800 | (i >> 10);
-        *u= 0xdc00 | (i & 0x3ff);
+        i -= 0x10000;
+        *u++ = 0xd800 | (i >> 10);
+        *u = 0xdc00 | (i & 0x3ff);
         return 2;
     } else {
         // produce error char
@@ -654,7 +678,7 @@ UTF32String String::toUTF32String()
         UTF32String str;
         const ASCIIString& src = *asASCIIString();
         size_t len = src.length();
-        for (size_t i = 0; i < len; i ++) {
+        for (size_t i = 0; i < len; i++) {
             str.push_back(src[i]);
         }
         return str;
@@ -689,7 +713,8 @@ UTF16NonGCString String::toUTF16NonGCString(size_t start, size_t end) const
 {
     UTF16NonGCString out;
     if (isASCIIString()) {
-        out.assign(asASCIIString()->begin() +  start, asASCIIString()->begin() + end);
+        out.assign(asASCIIString()->begin() + start,
+                   asASCIIString()->begin() + end);
     } else {
         out.reserve(end - start);
         for (size_t i = start; i < end; i++) {
@@ -715,13 +740,15 @@ UTF16NonGCString String::toUTF16NonGCString() const
     return toUTF16NonGCString(0, length());
 }
 
-UTF8NonGCString String::toUTF8NonGCString(size_t start, size_t end, bool ignoreZeroWidthChar) const
+UTF8NonGCString String::toUTF8NonGCString(size_t start, size_t end,
+                                          bool ignoreZeroWidthChar) const
 {
     if (isASCIIString()) {
         UTF8NonGCString ret;
         ret.reserve(end - start);
-        for (size_t i = start; i < end; i ++) {
-            if (ignoreZeroWidthChar && isZeroWidthChar(asASCIIString()->data()[i]))
+        for (size_t i = start; i < end; i++) {
+            if (ignoreZeroWidthChar &&
+                isZeroWidthChar(asASCIIString()->data()[i]))
                 continue;
             ret.push_back(asASCIIString()->data()[i]);
         }
@@ -739,13 +766,17 @@ bool String::equals(const String* str) const
         bool aa = isASCIIString();
         bool bb = str->isASCIIString();
         if (aa && bb) {
-            return stringEqual(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
+            return stringEqual(asASCIIString()->data(),
+                               str->asASCIIString()->data(), lenA);
         } else if (aa && !bb) {
-            return stringEqual(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
+            return stringEqual(str->asUTF32String()->data(),
+                               asASCIIString()->data(), lenA);
         } else if (!aa && bb) {
-            return stringEqual(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
+            return stringEqual(asUTF32String()->data(),
+                               str->asASCIIString()->data(), lenA);
         } else {
-            return stringEqual(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
+            return stringEqual(asUTF32String()->data(),
+                               str->asUTF32String()->data(), lenA);
         }
     }
     return false;
@@ -754,16 +785,18 @@ bool String::equals(const String* str) const
 template <typename T>
 bool stringEqualWithoutCase(const T* s, const T* s1, const size_t& len)
 {
-    for (size_t i = 0; i < len; i ++) {
-        if (tolower(s[i]) != tolower(s1[i]))
+    for (size_t i = 0; i < len; i++) {
+        if (tolower(s[i]) != tolower(s1[i])) {
             return false;
+        }
     }
     return true;
 }
 
-bool stringEqualWithoutCase(const char32_t* s, const char* s1, const size_t& len)
+bool stringEqualWithoutCase(const char32_t* s, const char* s1,
+                            const size_t& len)
 {
-    for (size_t i = 0; i < len ; i ++) {
+    for (size_t i = 0; i < len; i++) {
         if (towlower(s[i]) != towlower((unsigned char)s1[i])) {
             return false;
         }
@@ -779,13 +812,17 @@ bool String::equalsWithoutCase(const String* str) const
         bool aa = isASCIIString();
         bool bb = str->isASCIIString();
         if (aa && bb) {
-            return stringEqualWithoutCase(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(asASCIIString()->data(),
+                                          str->asASCIIString()->data(), lenA);
         } else if (aa && !bb) {
-            return stringEqualWithoutCase(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(str->asUTF32String()->data(),
+                                          asASCIIString()->data(), lenA);
         } else if (!aa && bb) {
-            return stringEqualWithoutCase(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(asUTF32String()->data(),
+                                          str->asASCIIString()->data(), lenA);
         } else {
-            return stringEqualWithoutCase(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
+            return stringEqualWithoutCase(asUTF32String()->data(),
+                                          str->asUTF32String()->data(), lenA);
         }
     }
     return false;
@@ -869,8 +906,6 @@ bool String::endsWith(String* str, bool caseSensitive)
     return true;
 }
 
-
-
 size_t String::find(String* str, size_t pos)
 {
     const size_t srcLen = str->length();
@@ -890,8 +925,9 @@ size_t String::find(String* str, size_t pos)
                         break;
                     }
                 }
-                if (same)
+                if (same) {
                     return pos;
+                }
             }
         }
     }
@@ -903,11 +939,12 @@ size_t String::find(const char* str, size_t pos)
     const size_t srcLen = strlen(str);
     const size_t dstLen = length();
 
-    if (srcLen == 0)
+    if (srcLen == 0) {
         return pos <= dstLen ? pos : SIZE_MAX;
+    }
 
     if (srcLen <= dstLen) {
-        char32_t src0 = (char32_t) str[0];
+        char32_t src0 = (char32_t)str[0];
         for (; pos <= dstLen - srcLen; ++pos) {
             if (charAt(pos) == src0) {
                 bool same = true;
@@ -917,8 +954,9 @@ size_t String::find(const char* str, size_t pos)
                         break;
                     }
                 }
-                if (same)
+                if (same) {
                     return pos;
+                }
             }
         }
     }
@@ -930,8 +968,9 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
     const size_t srcLen = str->length();
     const size_t dstLen = length();
 
-    if (srcLen == 0)
+    if (srcLen == 0) {
         return pos <= dstLen ? pos : SIZE_MAX;
+    }
 
     if (caseSensitive) {
         if (srcLen <= dstLen) {
@@ -945,8 +984,9 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return pos;
+                    }
                 }
             }
         }
@@ -957,13 +997,15 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
                 if (charAt(pos) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < srcLen; k++) {
-                        if (tolower(charAt(pos + k)) != tolower(str->charAt(k))) {
+                        if (tolower(charAt(pos + k)) !=
+                            tolower(str->charAt(k))) {
                             same = false;
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return pos;
+                    }
                 }
             }
         }
@@ -976,12 +1018,13 @@ bool String::contains(const char* str, bool caseSensitive)
     size_t len = length();
     size_t strLen = strlen(str);
 
-    if (strLen == 0)
+    if (strLen == 0) {
         return true;
+    }
 
     if (caseSensitive) {
         if (strLen <= len) {
-            char32_t src0 = (char32_t) str[0];
+            char32_t src0 = (char32_t)str[0];
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
                 if (charAt(pos) == src0) {
@@ -992,14 +1035,15 @@ bool String::contains(const char* str, bool caseSensitive)
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return true;
+                    }
                 }
             }
         }
     } else {
         if (strLen <= len) {
-            char32_t src0 = (char32_t) str[0];
+            char32_t src0 = (char32_t)str[0];
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
                 if (charAt(pos) == src0) {
@@ -1010,8 +1054,9 @@ bool String::contains(const char* str, bool caseSensitive)
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return true;
+                    }
                 }
             }
         }
@@ -1025,8 +1070,9 @@ bool String::contains(String* str, bool caseSensitive)
     size_t len = length();
     size_t strLen = str->length();
 
-    if (strLen == 0)
+    if (strLen == 0) {
         return true;
+    }
 
     if (caseSensitive) {
         if (strLen <= len) {
@@ -1041,8 +1087,9 @@ bool String::contains(String* str, bool caseSensitive)
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return true;
+                    }
                 }
             }
         }
@@ -1054,13 +1101,15 @@ bool String::contains(String* str, bool caseSensitive)
                 if (charAt(pos) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < strLen; k++) {
-                        if (tolower(charAt(pos + k)) != tolower(str->charAt(k))) {
+                        if (tolower(charAt(pos + k)) !=
+                            tolower(str->charAt(k))) {
                             same = false;
                             break;
                         }
                     }
-                    if (same)
+                    if (same) {
                         return true;
+                    }
                 }
             }
         }
@@ -1074,14 +1123,16 @@ unsigned SegmentedString::length() const
     unsigned length = m_currentString.m_length;
     if (m_pushedChar1) {
         ++length;
-        if (m_pushedChar2)
+        if (m_pushedChar2) {
             ++length;
+        }
     }
     if (isComposite()) {
         auto it = m_substrings.cbegin();
         auto e = m_substrings.cend();
-        for (; it != e; ++it)
+        for (; it != e; ++it) {
             length += it->m_length;
+        }
     }
     return length;
 }
@@ -1092,8 +1143,9 @@ void SegmentedString::setExcludeLineNumbers()
     if (isComposite()) {
         auto it = m_substrings.begin();
         auto e = m_substrings.end();
-        for (; it != e; ++it)
+        for (; it != e; ++it) {
             it->setExcludeLineNumbers();
+        }
     }
 }
 
@@ -1117,11 +1169,13 @@ void SegmentedString::clear()
 void SegmentedString::append(const SegmentedSubstring& s)
 {
     STARFISH_ASSERT(!m_closed);
-    if (!s.m_length)
+    if (!s.m_length) {
         return;
+    }
 
     if (!m_currentString.m_length) {
-        m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+        m_numberOfCharactersConsumedPriorToCurrentString +=
+            m_currentString.numberOfCharactersConsumed();
         m_currentString = s;
         updateAdvanceFunctionPointers();
     } else {
@@ -1134,15 +1188,17 @@ void SegmentedString::prepend(const SegmentedSubstring& s)
 {
     STARFISH_ASSERT(!escaped());
     STARFISH_ASSERT(!s.numberOfCharactersConsumed());
-    if (!s.m_length)
+    if (!s.m_length) {
         return;
+    }
 
     // FIXME: We're assuming that the prepend were originally consumed by
     //        this SegmentedString. We're also ASSERTing that s is a fresh
     //        SegmentedSubstring. These assumptions are sufficient for our
     //        current use, but we might need to handle the more elaborate
     //        cases in the future.
-    m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+    m_numberOfCharactersConsumedPriorToCurrentString +=
+        m_currentString.numberOfCharactersConsumed();
     m_numberOfCharactersConsumedPriorToCurrentString -= s.m_length;
     if (!m_currentString.m_length) {
         m_currentString = s;
@@ -1175,7 +1231,10 @@ void SegmentedString::append(const SegmentedString& s)
             append(*it);
         }
     }
-    m_currentChar = m_pushedChar1 ? m_pushedChar1 : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
+    m_currentChar =
+        m_pushedChar1
+            ? m_pushedChar1
+            : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
 }
 
 void SegmentedString::prepend(const SegmentedString& s)
@@ -1190,19 +1249,24 @@ void SegmentedString::prepend(const SegmentedString& s)
         }
     }
     prepend(s.m_currentString);
-    m_currentChar = m_pushedChar1 ? m_pushedChar1 : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
+    m_currentChar =
+        m_pushedChar1
+            ? m_pushedChar1
+            : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
 }
 
 void SegmentedString::advanceSubstring()
 {
     if (isComposite()) {
-        m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+        m_numberOfCharactersConsumedPriorToCurrentString +=
+            m_currentString.numberOfCharactersConsumed();
         m_currentString = m_substrings.front();
         m_substrings.pop_front();
         // If we've previously consumed some characters of the non-current
         // string, we now account for those characters as part of the current
         // string, not as part of "prior to current string."
-        m_numberOfCharactersConsumedPriorToCurrentString -= m_currentString.numberOfCharactersConsumed();
+        m_numberOfCharactersConsumedPriorToCurrentString -=
+            m_currentString.numberOfCharactersConsumed();
         updateAdvanceFunctionPointers();
     } else {
         m_currentString.clear();
@@ -1218,8 +1282,9 @@ String* SegmentedString::toString() const
     UTF32String result;
     if (m_pushedChar1) {
         result.push_back(m_pushedChar1);
-        if (m_pushedChar2)
+        if (m_pushedChar2) {
             result.push_back(m_pushedChar2);
+        }
     }
     m_currentString.appendTo(result);
     if (isComposite()) {
@@ -1261,7 +1326,8 @@ void SegmentedString::advanceAndUpdateLineNumber8()
     STARFISH_ASSERT(m_currentString.getCurrentChar() == m_currentChar);
     if (m_currentChar == '\n') {
         ++m_currentLine;
-        m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+        m_numberOfCharactersConsumedPriorToCurrentLine =
+            numberOfCharactersConsumed() + 1;
     }
     decrementAndCheckLength();
     m_currentChar = m_currentString.incrementAndGetCurrentChar8();
@@ -1273,7 +1339,8 @@ void SegmentedString::advanceAndUpdateLineNumber16()
     STARFISH_ASSERT(m_currentString.getCurrentChar() == m_currentChar);
     if (m_currentChar == '\n') {
         ++m_currentLine;
-        m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+        m_numberOfCharactersConsumedPriorToCurrentLine =
+            numberOfCharactersConsumed() + 1;
     }
     decrementAndCheckLength();
     m_currentChar = m_currentString.incrementAndGetCurrentChar32();
@@ -1292,8 +1359,9 @@ void SegmentedString::advanceSlowCase()
 
         updateAdvanceFunctionPointers();
     } else if (m_currentString.m_length) {
-        if (!--m_currentString.m_length)
+        if (!--m_currentString.m_length) {
             advanceSubstring();
+        }
     } else if (!isComposite()) {
         m_currentString.clear();
         m_empty = true;
@@ -1301,7 +1369,8 @@ void SegmentedString::advanceSlowCase()
         m_advanceFunc = &SegmentedString::advanceEmpty;
         m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
     }
-    m_currentChar = m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
+    m_currentChar =
+        m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
 }
 
 void SegmentedString::advanceAndUpdateLineNumberSlowCase()
@@ -1317,15 +1386,21 @@ void SegmentedString::advanceAndUpdateLineNumberSlowCase()
 
         updateAdvanceFunctionPointers();
     } else if (m_currentString.m_length) {
-        if (m_currentString.getCurrentChar() == '\n' && m_currentString.doNotExcludeLineNumbers()) {
+        if (m_currentString.getCurrentChar() == '\n' &&
+            m_currentString.doNotExcludeLineNumbers()) {
             ++m_currentLine;
-            // Plus 1 because numberOfCharactersConsumed value hasn't incremented yet; it does with m_length decrement below.
-            m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+            // Plus 1 because numberOfCharactersConsumed value hasn't
+            // incremented yet; it does with m_length decrement below.
+            m_numberOfCharactersConsumedPriorToCurrentLine =
+                numberOfCharactersConsumed() + 1;
         }
-        if (!--m_currentString.m_length)
+        if (!--m_currentString.m_length) {
             advanceSubstring();
-        else
-            m_currentString.incrementAndGetCurrentChar(); // Only need the ++
+        }
+        else {
+            // Only need the ++
+            m_currentString.incrementAndGetCurrentChar(); 
+        }
     } else if (!isComposite()) {
         m_currentString.clear();
         m_empty = true;
@@ -1334,7 +1409,8 @@ void SegmentedString::advanceAndUpdateLineNumberSlowCase()
         m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
     }
 
-    m_currentChar = m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
+    m_currentChar =
+        m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
 }
 
 void SegmentedString::advanceEmpty()
@@ -1347,7 +1423,8 @@ void SegmentedString::updateSlowCaseFunctionPointers()
 {
     m_fastPathFlags = NoFastPath;
     m_advanceFunc = &SegmentedString::advanceSlowCase;
-    m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceAndUpdateLineNumberSlowCase;
+    m_advanceAndUpdateLineNumberFunc =
+        &SegmentedString::advanceAndUpdateLineNumberSlowCase;
 }
 
 OrdinalNumber SegmentedString::currentLine() const
@@ -1357,14 +1434,18 @@ OrdinalNumber SegmentedString::currentLine() const
 
 OrdinalNumber SegmentedString::currentColumn() const
 {
-    int zeroBasedColumn = numberOfCharactersConsumed() - m_numberOfCharactersConsumedPriorToCurrentLine;
+    int zeroBasedColumn = numberOfCharactersConsumed() -
+                          m_numberOfCharactersConsumedPriorToCurrentLine;
     return OrdinalNumber::fromZeroBasedInt(zeroBasedColumn);
 }
 
-void SegmentedString::setCurrentPosition(OrdinalNumber line, OrdinalNumber columnAftreProlog, int prologLength)
+void SegmentedString::setCurrentPosition(OrdinalNumber line,
+                                         OrdinalNumber columnAftreProlog,
+                                         int prologLength)
 {
     m_currentLine = line.zeroBasedInt();
-    m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + prologLength - columnAftreProlog.zeroBasedInt();
+    m_numberOfCharactersConsumedPriorToCurrentLine =
+        numberOfCharactersConsumed() + prologLength -
+        columnAftreProlog.zeroBasedInt();
 }
-
 }
