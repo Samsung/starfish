@@ -155,7 +155,8 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                 LayoutUnit halfHeight = boxHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
-                     parentStyle->font()->size()) / 2;
+                     parentStyle->font()->size()) /
+                    2;
                 box->setY(halfHeight + halfXHeight);
                 maxAscenderSoFar =
                     std::max(halfHeight + halfXHeight, maxAscenderSoFar);
@@ -220,7 +221,8 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                 LayoutUnit halfHeight = boxHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
-                     parentStyle->font()->size()) / 2;
+                     parentStyle->font()->size()) /
+                    2;
                 box->setY(halfHeight + halfXHeight);
                 maxAscenderSoFar =
                     std::max(halfHeight + halfXHeight, maxAscenderSoFar);
@@ -273,17 +275,6 @@ FontHeights LineFormattingContext::computeVerticalProperties(
 
         if (!hasBoxOtherThanCollapsedInlineNonReplacedBox) {
             return FontHeights{ 0, 0 };
-        }
-    } else {
-        if (!hasNormalFlowChild) {
-            if (parentBox->width() == 0 && parentBox->marginLeft() == 0 &&
-                parentBox->marginRight() == 0 &&
-                parentBox->style()->hasNormalLineHeight()) {
-                parentBox->asInlineBox()
-                    ->asInlineNonReplacedBox()
-                    ->markCollapsed();
-                return FontHeights{ ascender, descender };
-            }
         }
     }
 
@@ -344,6 +335,19 @@ FontHeights LineFormattingContext::computeVerticalProperties(
         }
     }
 
+    if (parentBox->isInlineBox() &&
+        parentBox->asInlineBox()->isInlineNonReplacedBox()) {
+        InlineNonReplacedBox* inrb =
+            parentBox->asInlineBox()->asInlineNonReplacedBox();
+        if (!hasNormalFlowChild) {
+            if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
+                inrb->marginRight() == 0) {
+                inrb->markCollapsed();
+                return FontHeights{ maxAscender, maxDescender };
+            }
+        }
+    }
+
     LayoutUnit height = maxAscender - maxDescender;
     for (size_t k = 0; k < boxes->size(); k++) {
         FrameBox* f = (*boxes)[k];
@@ -353,12 +357,24 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                 /*
                 InlineBox* ib = f->asFrameBox()->asInlineBox();
                 if (UNLIKELY(descenderInOut == 0)) {
-                    if (height < ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight) {
-                        ib->setY((height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
-                        + ib->asInlineTextBox()->style()->font()->metrics().m_descender) / 2);
+                    if (height <
+                        ib->asInlineTextBox()->style()->font()->metrics()
+                        .m_fontHeight)
+                    {
+                        ib->setY((height -
+                            ib->asInlineTextBox()->style()->font()->metrics()
+                                .m_fontHeight
+                        +
+                        ib->asInlineTextBox()->style()->font()->metrics()
+                                .m_descender) /
+                        2);
                     } else {
-                        ib->setY(height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
-                        - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                        ib->setY(height -
+                            ib->asInlineTextBox()->style()->font()->metrics()
+                            .m_fontHeight
+                        -
+                        ib->asInlineTextBox()->style()->font()->metrics()
+                            .m_descender);
                     }
                 } else {
                     ib->setY(height + maxDescender - ib->height() -
@@ -990,8 +1006,6 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block,
       m_unprocessedStartingMBPWidth(0),
       m_block(block),
       m_layoutContext(ctx),
-      m_lastFrameText(nullptr),
-      m_shouldIgnoreWhiteSpace(false),
       m_inlineBoxIndex(0)
 {
     m_absPosition =
@@ -1087,12 +1101,9 @@ template <typename Box>
 void InlineBoxLayoutParentBox<Box>::removeDanglingSpace(
     LineFormattingContext* ctx)
 {
-    // TODO : Consider moving LastFrameTextContainingWhiteSpaceAtLast logic to
-    // here
     FrameBox* last = lastInlineBox();
     while (last) {
-        if (last->shouldWrapLines() && !last->shouldPreserveWhiteSpaces() &&
-            containOnlyWhiteSpace(last)) {
+        if (!last->shouldPreserveWhiteSpaces() && containOnlyWhiteSpace(last)) {
             // Ignore last whitespace when wrapping lines.
             removeBoxFromLine(last);
             ctx->m_currentLineWidth -= last->boxWidth();
@@ -1117,17 +1128,19 @@ bool InlineBoxLayoutParentBox<Box>::containOnlyEmptyInlineNonReplacedBoxes()
     while (iter != m_boxes.rend()) {
         FrameBox* last = *iter;
         if (last->isInlineBox() &&
-            last->asInlineBox()->isInlineNonReplacedBox() &&
-            last->width() == 0 && last->marginLeft() == 0 &&
-            last->marginRight() == 0 &&
-            last->asInlineBox()
-                    ->asInlineNonReplacedBox()
-                    ->absolutePositionedBoxLayoutParentCnt() == 0) {
-        } else {
-            ret = false;
-            break;
+            last->asInlineBox()->isInlineNonReplacedBox()) {
+            InlineNonReplacedBox* inrb =
+                last->asInlineBox()->asInlineNonReplacedBox();
+            if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
+                inrb->marginRight() == 0 &&
+                inrb->absolutePositionedBoxLayoutParentCnt() == 0) {
+                iter++;
+                continue;
+            }
         }
-        iter++;
+
+        ret = false;
+        break;
     }
 
     return ret;
@@ -1676,6 +1689,7 @@ void LineFormattingContext::resetLineBox()
             m_pendingFloatingBoxes.size();
     }
     m_shouldLineBreakForBr = true;
+    m_isPendingBreakLine = false;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
 }
 
@@ -1734,6 +1748,8 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
 {
     LineBox* back = currentLine();
     if (isLastLine) {
+        back->removeDanglingSpace(this);
+
         if (back->containOnlyEmptyInlineNonReplacedBoxes()) {
             if (back->absolutePositionedBoxLayoutParentCnt() == 0) {
                 m_block.m_lineBoxes.erase(m_block.m_lineBoxes.end() - 1);
@@ -1876,7 +1892,6 @@ static bool dontBreakLine(LineFormattingContext* ctx, Frame* f,
 
 void LineFormattingContext::generateInlineBox(FrameBox* box)
 {
-    STARFISH_ASSERT(!m_shouldIgnoreWhiteSpace);
     if (m_currentLayoutParent->isLineBox()) {
         m_currentLayoutParent->asLineBox()->insertInlineBox(box);
     } else {
@@ -2074,95 +2089,18 @@ bool LineFormattingContext::isWhiteSpaceAtLast()
     return containOnlyWhiteSpace(last);
 }
 
-bool LineFormattingContext::isLastFrameTextContainingWhiteSpaceAtLast(
-    FrameText* f)
-{
-    return f == m_lastFrameText;
-}
-
-static std::pair<FrameText*, bool> lastFrameTextContainingWhiteSpaceAtLast(
-    Frame* f)
-{
-    FrameText* ret = nullptr;
-    bool hasNonWhiteSpace = false;
-    Frame* last = f->lastChild();
-
-    while (last) {
-        if (last->isFrameText()) {
-            String* str = last->asFrameText()->text();
-            if (str->length() > 0) {
-                if (String::isSpaceOrNewline(str->charAt(str->length() - 1))) {
-                    ret = last->asFrameText();
-                    if (!str->containsOnlyWhitespace()) {
-                        hasNonWhiteSpace = true;
-                        break;
-                    }
-                } else {
-                    hasNonWhiteSpace = true;
-                    break;
-                }
-            }
-        } else if (last->isFrameInline()) {
-            auto candidate = lastFrameTextContainingWhiteSpaceAtLast(last);
-            if (candidate.first) {
-                ret = candidate.first;
-            }
-            if (candidate.second) {
-                hasNonWhiteSpace = true;
-                break;
-            }
-        } else if (last->isNormalFlow()) {
-            hasNonWhiteSpace = true;
-            break;
-        } else if (last->style()->position() == AbsolutePositionValue &&
-                   last->style()->originalDisplay() != BlockDisplayValue) {
-            // FIXME: This is the temporary workaround to pass internal tests.
-            // Technically saying, the last white space isn't related to non
-            // normal flow box, but we found in node-webkit and chrome handles,
-            // line box is breaked even on the last white space. The tests to
-            // modify is too many so instead I made this path so that our
-            // line box is braked as the same with them.
-            hasNonWhiteSpace = true;
-            break;
-        }
-
-        last = last->previous();
-    }
-
-    return std::make_pair(ret, hasNonWhiteSpace);
-}
-
-void LineFormattingContext::setLastFrameTextContainingWhiteSpaceAtLast(
-    FrameBlockBox* f)
-{
-    m_lastFrameText = lastFrameTextContainingWhiteSpaceAtLast(f).first;
-}
-
 void LineFormattingContext::handleTextToken(TextToken& token)
 {
+    if (m_isPendingBreakLine) {
+        breakLine(nullptr);
+        m_isPendingBreakLine = false;
+    }
+
     FrameText* f = token.m_frameText;
     if (token.isWhiteSpace()) {
-        if (m_shouldIgnoreWhiteSpace) {
-            return;
-        }
-
         if (token.m_type == WordType::ForcedNewline) {
             generateInlineTextBox(token);
             breakLine(nullptr);
-            return;
-        }
-        // TODO : Consider moving check-code of "preserve whitepace"
-        //        into isLastFrameTextContainingWhiteSpaceAtLast()
-        //        to reduce redundant calculations when refactoring codes here.
-        if (!f->shouldPreserveWhiteSpaces() &&
-            isLastFrameTextContainingWhiteSpaceAtLast(f) &&
-            token.m_end == f->text()->length()) {
-            // The reason why this condition is added is to handle ending MBP
-            // width for InlineNonReplacedBox. If we can't prevent the last
-            // white space from line being breaked, and the ending MBP width is
-            // painted on the breaked next line, not on the line as it should
-            // be.
-            m_shouldIgnoreWhiteSpace = true;
             return;
         }
 
@@ -2176,9 +2114,13 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     //        will not make linebreak
     if (token.m_type != WordType::NonCollapsibleWhiteSpace &&
         !dontBreakLine(this, f, textWidth)) {
-        breakLine(nullptr);
-        m_shouldLineBreakForBr = false;
-        handleTextToken(token);
+        if (token.isWhiteSpace()) {
+            m_isPendingBreakLine = true;
+            m_shouldLineBreakForBr = false;
+        } else {
+            breakLine(nullptr);
+            handleTextToken(token);
+        }
         return;
     }
     m_shouldLineBreakForBr = true;
@@ -2194,6 +2136,10 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
 
         if (f->style() &&
             f->style()->position() == PositionValue::AbsolutePositionValue) {
+            if (m_isPendingBreakLine) {
+                breakLine(nullptr);
+                m_isPendingBreakLine = false;
+            }
             registerAbsolutePositionedBox(f->asFrameBox());
             f = f->next();
             continue;
@@ -2204,6 +2150,11 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
             // token, execute the following function
             tokenizeText(m_layoutContext.starFish(), f->asFrameText(), this);
         } else if (f->isFrameReplaced()) {
+            if (m_isPendingBreakLine) {
+                breakLine(nullptr);
+                m_isPendingBreakLine = false;
+            }
+
             FrameReplaced* r = f->asFrameReplaced();
 
             r->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
@@ -2226,6 +2177,11 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
                 }
             }
         } else if (f->isFrameBlockBox() || f->isFrameTableBox()) {
+            if (m_isPendingBreakLine) {
+                breakLine(nullptr);
+                m_isPendingBreakLine = false;
+            }
+
             FrameBlockBox* r = f->asFrameBlockBox();
 
             if ((f->style()->display() ==
@@ -2643,9 +2599,23 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
     InlineNonReplacedBox* current = self;
     InlineNonReplacedBox* last = nullptr;
     while (current) {
-        current->setWidth(std::max(LayoutUnit(0), current->width() +
-                                                      current->paddingWidth() +
-                                                      current->borderWidth()));
+        LayoutUnit w = current->width();
+        if (current->isProcessedStartingMBP()) {
+            if (current->style()->direction() == LtrDirectionValue) {
+                w += current->borderLeft() + current->paddingLeft();
+            } else {
+                w += current->borderRight() + current->paddingRight();
+            }
+        }
+
+        if (current->isProcessedEndingMBP()) {
+            if (current->style()->direction() == LtrDirectionValue) {
+                w += current->borderRight() + current->paddingRight();
+            } else {
+                w += current->borderLeft() + current->paddingLeft();
+            }
+        }
+        current->setWidth(std::max(LayoutUnit(0), w));
         if (last) {
             current->setWidth(current->width() + last->boxWidth());
         }
@@ -2694,11 +2664,7 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    breakLineForLineBox(br, false, false);
-
     InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(self);
-    m_currentLayoutParent = newSelf;
-
     FrameBox* parent = self->layoutParent()->asFrameBox();
     InlineNonReplacedBox* current = newSelf;
     while (parent->isInlineBox() &&
@@ -2709,6 +2675,11 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
         current = newInrb;
         parent = parent->layoutParent()->asFrameBox();
     }
+
+    breakLineForLineBox(br, false, false);
+
+    m_currentLayoutParent = newSelf;
+
     currentLine()->insertInlineBox(current);
     markInlineBoxIndex(current);
 }
@@ -2735,7 +2706,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 
     lineFormattingContext.m_currentLayoutParent =
         lineFormattingContext.currentLine();
-    lineFormattingContext.setLastFrameTextContainingWhiteSpaceAtLast(this);
     lineFormattingContext.generateInlineBoxes(this);
 
     lineFormattingContext.finishLineForLineBox(nullptr, true);

@@ -143,9 +143,6 @@ protected:
     TextRun m_textRun;
 };
 
-struct OrgMBPStore;
-struct MBPStore;
-
 template <typename Box>
 class InlineBoxLayoutParentBox {
 public:
@@ -239,7 +236,6 @@ enum MBPStatus {
 class InlineNonReplacedBox
     : public InlineBox,
       public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
-    friend struct OrgMBPStore;
     friend class FrameBlockBox;
     friend class LineFormattingContext;
 
@@ -877,9 +873,7 @@ public:
 
     void handleTextToken(TextToken& token);
 
-    void setLastFrameTextContainingWhiteSpaceAtLast(FrameBlockBox* f);
     bool isWhiteSpaceAtLast();
-    bool isLastFrameTextContainingWhiteSpaceAtLast(FrameText* f);
 
     LayoutUnit currentLineWidth()
     {
@@ -920,7 +914,7 @@ public:
     FrameBox* m_currentLayoutParent;
     FrameText* m_lastFrameText;
     bool m_shouldLineBreakForBr;
-    bool m_shouldIgnoreWhiteSpace;
+    bool m_isPendingBreakLine;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
