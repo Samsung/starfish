@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayer__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaPlayer__)
 #define __StarFishMockMediaPlayer__
 
 #include "platform/multimedia/MediaPlayer.h"
@@ -23,6 +23,7 @@ namespace StarFish {
 
 class MockMediaPlayer : public MediaPlayer {
     friend class MediaPlayer;
+
 public:
     virtual void close()
     {
@@ -34,43 +35,62 @@ public:
         if (!m_inPlaying) {
             m_inPlaying = true;
             m_starFish->addPointerInRootSet(this);
-            m_currentTimeUpdateTimer = m_starFish->window()->setInterval([](Window* window, void* data) {
-                MockMediaPlayer* self = (MockMediaPlayer*)data;
+            m_currentTimeUpdateTimer = m_starFish->window()->setInterval(
+                [](Window* window, void* data) {
+                    MockMediaPlayer* self = (MockMediaPlayer*)data;
 
-                if (self->activeMediaSource()) {
-                    uint64_t videoStart = self->m_currentTimestamp;
-                    uint64_t audioStart = self->m_currentTimestamp;
-                    while (self->m_currentTimestamp - videoStart < 250) {
-                        std::pair<MediaPacket*, size_t> packet = self->activeMediaSource()->activeVideoSourceBuffer()->findProperMediaPacket(self->activeMediaSource()->activeVideoStreamIndex(), self->m_currentTimestamp);
-                        if (!packet.first) {
-                            break;
+                    if (self->activeMediaSource()) {
+                        uint64_t videoStart = self->m_currentTimestamp;
+                        uint64_t audioStart = self->m_currentTimestamp;
+                        while (self->m_currentTimestamp - videoStart < 250) {
+                            std::pair<MediaPacket*, size_t> packet =
+                                self->activeMediaSource()
+                                    ->activeVideoSourceBuffer()
+                                    ->findProperMediaPacket(
+                                        self->activeMediaSource()
+                                            ->activeVideoStreamIndex(),
+                                        self->m_currentTimestamp);
+                            if (!packet.first) {
+                                break;
+                            }
+                            self->m_currentTimestamp =
+                                packet.first->m_pts + packet.first->m_duration;
                         }
-                        self->m_currentTimestamp = packet.first->m_pts + packet.first->m_duration;
+
+                        while (audioStart < self->m_currentTimestamp) {
+                            std::pair<MediaPacket*, size_t> packet =
+                                self->activeMediaSource()
+                                    ->activeAudioSourceBuffer()
+                                    ->findProperMediaPacket(
+                                        self->activeMediaSource()
+                                            ->activeAudioStreamIndex(),
+                                        audioStart);
+                            if (!packet.first) {
+                                break;
+                            }
+                            audioStart =
+                                packet.first->m_pts + packet.first->m_duration;
+                        }
+                    } else {
+                        self->m_currentTimestamp += 250;
                     }
 
-                    while (audioStart < self->m_currentTimestamp) {
-                        std::pair<MediaPacket*, size_t> packet = self->activeMediaSource()->activeAudioSourceBuffer()->findProperMediaPacket(self->activeMediaSource()->activeAudioStreamIndex(), audioStart);
-                        if (!packet.first) {
-                            break;
-                        }
-                        audioStart = packet.first->m_pts + packet.first->m_duration;
+                    if (self->m_currentTimestamp > self->duration() * 1000) {
+                        self->m_currentTimestamp = self->duration() * 1000;
                     }
-                } else {
-                    self->m_currentTimestamp += 250;
-                }
+                    STARFISH_LOG_INFO("MockMediaPlayer currentTimeStamp %fs\n",
+                                      self->m_currentTimestamp / 1000.f);
 
-                if (self->m_currentTimestamp > self->duration() * 1000) {
-                    self->m_currentTimestamp = self->duration() * 1000;
-                }
-                STARFISH_LOG_INFO("MockMediaPlayer currentTimeStamp %fs\n", self->m_currentTimestamp / 1000.f);
+                    if (self->duration() * 1000 - self->m_currentTimestamp <
+                        1000) {
+                        self->pause();
+                        self->m_container->mediaPlayerNotifyEndedItsContainer();
+                    }
 
-                if (self->duration() * 1000 - self->m_currentTimestamp < 1000) {
-                    self->pause();
-                    self->m_container->mediaPlayerNotifyEndedItsContainer();
-                }
-
-                self->m_container->setOfficialPlaybackPosition(self->m_currentTimestamp / 1000.0);
-            }, 250, this);
+                    self->m_container->setOfficialPlaybackPosition(
+                        self->m_currentTimestamp / 1000.0);
+                },
+                250, this);
         }
     }
 
@@ -106,11 +126,9 @@ public:
     }
     virtual void setVolume(double volume)
     {
-
     }
     virtual void setMuted(bool muted)
     {
-
     }
     virtual void prepareMediaSource();
 
@@ -119,21 +137,20 @@ public:
         return m_playbackState;
     }
 
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+                           const LayoutRect& absVideoRect)
     {
         canvas->setColor(Color(0, 0, 0, 255));
         canvas->drawRect(videoRect);
     }
+
 protected:
     MockMediaPlayer(HTMLMediaElement* element)
-        : MediaPlayer(element)
-        , m_currentTimestamp(0)
+        : MediaPlayer(element), m_currentTimestamp(0)
     {
-
     }
     uint64_t m_currentTimestamp;
 };
-
 }
 
 #endif

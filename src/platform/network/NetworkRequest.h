@@ -33,9 +33,16 @@ typedef std::string NetworkRequestResponseHeader;
 
 class NetworkRequestClient : public gc {
 public:
-    virtual ~NetworkRequestClient() { }
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction) { }
-    virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction) { }
+    virtual ~NetworkRequestClient()
+    {
+    }
+    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    {
+    }
+    virtual void onReadyStateChange(NetworkRequest* request,
+                                    bool isExplicitAction)
+    {
+    }
 };
 
 struct NetworkWorkerData {
@@ -49,24 +56,33 @@ struct NetworkWorkerData {
     int res;
 };
 
-class NetworkWorkerHelper: public gc {
+class NetworkWorkerHelper : public gc {
 public:
-    NetworkWorkerHelper() { }
-    virtual ~NetworkWorkerHelper() { }
+    NetworkWorkerHelper()
+    {
+    }
+    virtual ~NetworkWorkerHelper()
+    {
+    }
     void* networkWorker(void* data);
+
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData) { }
+    virtual void responseHandlerWrapper(int res, NetworkWorkerData* requestData)
+    {
+    }
     static void responseHandler(size_t handle, void* requestData);
 };
 
 class AsyncNetworkWorkHelper : public NetworkWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData);
+    virtual void responseHandlerWrapper(int res,
+                                        NetworkWorkerData* requestData);
 };
 
 class SyncNetworkWorkHelper : public NetworkWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData);
+    virtual void responseHandlerWrapper(int res,
+                                        NetworkWorkerData* requestData);
 };
 
 class NetworkRequest : public gc {
@@ -76,12 +92,9 @@ class NetworkRequest : public gc {
     friend void NetworkRequestFileWorker(NetworkRequest* res, String* filePath);
     friend void NetworkRequestDataURLWorker(NetworkRequest* res, String* url);
     friend void NetworkRequestBlobURLWorker(NetworkRequest* res, String* url);
+
 public:
-    enum MethodType {
-        UNKNOWN_METHOD,
-        POST_METHOD,
-        GET_METHOD
-    };
+    enum MethodType { UNKNOWN_METHOD, POST_METHOD, GET_METHOD };
 
     enum ResponseType {
         TEXT_RESPONSE,
@@ -92,13 +105,7 @@ public:
         DEFAULT_RESPONSE
     };
 
-    enum ReadyState {
-        UNSENT,
-        OPENED,
-        HEADERS_RECEIVED,
-        LOADING,
-        DONE
-    };
+    enum ReadyState { UNSENT, OPENED, HEADERS_RECEIVED, LOADING, DONE };
 
     enum ProgressState {
         NONE,
@@ -112,7 +119,9 @@ public:
     };
 
     NetworkRequest(Document* document);
-    void open(MethodType method, String* url, bool async, String* userName = String::emptyString, String* password = String::emptyString);
+    void open(MethodType method, String* url, bool async,
+              String* userName = String::emptyString,
+              String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
     void send(String* body = String::emptyString);
 
@@ -197,6 +206,7 @@ public:
     }
 
     void setRequestHeader(String* h, String* c);
+
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
@@ -204,13 +214,19 @@ protected:
     static void fileWorker(NetworkRequest* res, String* filePath);
     static void dataURLWorker(NetworkRequest* res, String* url);
     static void blobURLWorker(NetworkRequest* res, String* url);
-    static int curlProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
-    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data);
-    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data);
+    static int curlProgressCallback(void* clientp, curl_off_t dltotal,
+                                    curl_off_t dlnow, curl_off_t ultotal,
+                                    curl_off_t ulnow);
+    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb,
+                                    void* data);
+    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
+                                          void* data);
     static void* networkWorker(void*);
 
     template <typename StrType>
-    static NetworkRequestResponse parseBase64String(const StrType& str, size_t startAt, size_t endAt);
+    static NetworkRequestResponse parseBase64String(const StrType& str,
+                                                    size_t startAt,
+                                                    size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
@@ -242,7 +258,8 @@ protected:
 
     void removeIdlerHandle(size_t handle)
     {
-        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
+        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(),
+                                         m_requstedIdlers.end(), handle));
     }
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
@@ -270,7 +287,6 @@ inline void NetworkRequestBlobURLWorker(NetworkRequest* res, String* url)
 {
     NetworkRequest::blobURLWorker(res, url);
 }
-
 }
 
 #endif

@@ -22,32 +22,36 @@
 
 class MkvReaderAdapter : public mkvparser::IMkvReader {
 public:
-    MkvReaderAdapter(StarFish::DemuxerSource* source)
-        : m_source(source)
+    MkvReaderAdapter(StarFish::DemuxerSource* source) : m_source(source)
     {
-
     }
     virtual int Read(long long pos, long len, unsigned char* buf)
     {
         size_t sizeSuccessToRead = 0;
         size_t sizeWantToToRead = len;
         int errorCode = 0;
-        if (m_source->onSeek(pos, StarFish::DemuxerSource::SeekWhenceSet) != pos) {
+        if (m_source->onSeek(pos, StarFish::DemuxerSource::SeekWhenceSet) !=
+            pos) {
             return -1;
         }
-        m_source->onRead(sizeWantToToRead, sizeSuccessToRead, errorCode, (uint8_t*)buf);
-        if (errorCode || (sizeWantToToRead != sizeSuccessToRead))
+        m_source->onRead(sizeWantToToRead, sizeSuccessToRead, errorCode,
+                         (uint8_t*)buf);
+        if (errorCode || (sizeWantToToRead != sizeSuccessToRead)) {
             return -1;
+        }
         return 0;
     }
 
     virtual int Length(long long* total, long long* available)
     {
-        size_t size = m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceLookSize);
-        if (total)
+        size_t size =
+            m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceLookSize);
+        if (total) {
             *total = size;
-        if (available)
+        }
+        if (available) {
             *available = size;
+        }
         return 0;
     }
 
@@ -58,16 +62,18 @@ namespace StarFish {
 
 class DemuxerWebM : public Demuxer {
 public:
-    DemuxerWebM()
-        : Demuxer()
+    DemuxerWebM() : Demuxer()
     {
         m_isStreamFinded = false;
         m_headerSegment = nullptr;
 
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("DemuxerWebM::~DemuxerWebM\n");
-            delete ((DemuxerWebM*)obj)->m_headerSegment;
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                STARFISH_LOG_INFO("DemuxerWebM::~DemuxerWebM\n");
+                delete ((DemuxerWebM*)obj)->m_headerSegment;
+            },
+            NULL, NULL, NULL);
     }
 
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint)
@@ -77,8 +83,9 @@ public:
         long long pos = 0;
         MkvReaderAdapter src(source);
         long long ret = ebmlHeader.Parse(&src, pos);
-        if (ret < 0)
+        if (ret < 0) {
             return false;
+        }
 
         mkvparser::Segment* segment;
         ret = mkvparser::Segment::CreateInstance(&src, pos, segment);
@@ -111,13 +118,15 @@ public:
         const unsigned long numTracks = pTracks->GetTracksCount();
 
         while (trackNum != numTracks) {
-            const mkvparser::Track* const pTrack = pTracks->GetTrackByIndex(trackNum++);
+            const mkvparser::Track* const pTrack =
+                pTracks->GetTrackByIndex(trackNum++);
 
             const long trackType = pTrack->GetType();
             const long trackNumber = pTrack->GetNumber();
 
             if (trackType == mkvparser::Track::kVideo) {
-                const mkvparser::VideoTrack* const pVideoTrack = static_cast<const mkvparser::VideoTrack*>(pTrack);
+                const mkvparser::VideoTrack* const pVideoTrack =
+                    static_cast<const mkvparser::VideoTrack*>(pTrack);
 
                 const long long width = pVideoTrack->GetWidth();
                 const long long height = pVideoTrack->GetHeight();
@@ -127,16 +136,18 @@ public:
                 info.m_streamIndex = trackNum - 1;
                 // TODO read codec
                 info.m_codecName = "vp9";
-                // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
+                // info.m_bitRate =
+                // m_formatContext->streams[i]->codec->bit_rate;
                 info.m_timeBaseNum = rate * 1000;
                 info.m_timeBaseDen = 1000;
                 info.m_width = width;
                 info.m_height = height;
-                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectVideoStream(info);
                 }
             } else if (trackType == mkvparser::Track::kAudio) {
-                const mkvparser::AudioTrack* const pAudioTrack = static_cast<const mkvparser::AudioTrack*>(pTrack);
+                const mkvparser::AudioTrack* const pAudioTrack =
+                    static_cast<const mkvparser::AudioTrack*>(pTrack);
 
                 const long long channels = pAudioTrack->GetChannels();
                 const long long bitDepth = pAudioTrack->GetBitDepth();
@@ -147,24 +158,29 @@ public:
                 info.m_streamIndex = trackNum - 1;
                 // TODO read codec
                 info.m_codecName = "vorbis";
-                // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                // info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
-                // info.m_channels = m_formatContext->streams[i]->codec->channels;
-                // info.m_sampleRate = m_formatContext->streams[i]->codec->sample_rate;
-                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                // info.m_bitRate =
+                // m_formatContext->streams[i]->codec->bit_rate;
+                // info.m_sampleFormat =
+                // (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
+                // info.m_channels =
+                // m_formatContext->streams[i]->codec->channels;
+                // info.m_sampleRate =
+                // m_formatContext->streams[i]->codec->sample_rate;
+                for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectAudioStream(info);
                 }
             }
 
-
-            if (pTrack == NULL)
+            if (pTrack == NULL) {
                 continue;
+            }
         }
 
         m_isStreamFinded = true;
         m_headerSegment = pSegment.release();
 
-        if (source->onSeek(m_headerSegment->getPos(), DemuxerSource::SeekWhence::SeekWhenceSet) != pos) {
+        if (source->onSeek(m_headerSegment->getPos(),
+                           DemuxerSource::SeekWhence::SeekWhenceSet) != pos) {
             // return false;
         }
 
@@ -175,7 +191,8 @@ public:
     {
         STARFISH_ASSERT(m_isStreamFinded);
         MkvReaderAdapter src(source);
-        mkvparser::Segment* segment = mkvparser::Segment::CreateInstance(&src, m_headerSegment);
+        mkvparser::Segment* segment =
+            mkvparser::Segment::CreateInstance(&src, m_headerSegment);
 
         segment->setPos(source->onSeek(0, DemuxerSource::SeekWhenceCurrent));
 
@@ -184,7 +201,6 @@ public:
             // STARFISH_LOG_INFO("\n Segment::LoadCluster() failed.");
             return false;
         }
-
 
         const unsigned long clusterCount = segment->GetCount();
         const mkvparser::Cluster* pCluster = segment->GetFirst();
@@ -201,7 +217,8 @@ public:
             long status = pCluster->GetFirst(pBlockEntry);
 
             if (status < 0) { // error
-                // STARFISH_LOG_INFO("\t\tError parsing first block of cluster\n");
+                // STARFISH_LOG_INFO("\t\tError parsing first block of
+                // cluster\n");
                 return false;
             }
 
@@ -215,7 +232,8 @@ public:
                 const long long discard_padding = pBlock->GetDiscardPadding();
 
                 for (int i = 0; i < frameCount; ++i) {
-                    const mkvparser::Block::Frame& theFrame = pBlock->GetFrame(i);
+                    const mkvparser::Block::Frame& theFrame =
+                        pBlock->GetFrame(i);
                     const long size = theFrame.len;
                     const long long offset = theFrame.pos;
                     // STARFISH_LOG_INFO("\t\t\t %15ld,%15llx\n", size, offset);
@@ -232,7 +250,7 @@ public:
                     // TODO : find duration.
                     packet.m_duration = 33; // temp soluation
 
-                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                    for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                         if (m_demuxerClients[j]->onDetectPacket(packet)) {
                             dataPtr = nullptr;
                             break;
@@ -244,7 +262,8 @@ public:
                 status = pCluster->GetNext(pBlockEntry, pBlockEntry);
 
                 if (status < 0) {
-                    // STARFISH_LOG_INFO("\t\t\tError parsing next block of cluster\n");
+                    // STARFISH_LOG_INFO("\t\t\tError parsing next block of
+                    // cluster\n");
                     // fflush(stdout);
                     return false;
                 }
@@ -272,7 +291,6 @@ Demuxer* Demuxer::createWebMDemuxer()
 {
     return new DemuxerWebM();
 }
-
 }
 
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

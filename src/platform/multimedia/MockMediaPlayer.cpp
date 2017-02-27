@@ -36,13 +36,19 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 class MediaPlayerMediaSourceClient : public MediaSourceClient {
 public:
     MediaPlayerMediaSourceClient(MediaPlayer* player)
-        : MediaSourceClient()
-        , m_player(player)
+        : MediaSourceClient(), m_player(player)
     {
 #ifndef NDEBUG
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerMediaSourceClient::~MediaPlayerMediaSourceClient (%p)\n", obj);
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           STARFISH_LOG_INFO(
+                                               "[TRACE_MSE_GC] "
+                                               "MediaPlayerMediaSourceClient::~"
+                                               "MediaPlayerMediaSourceClient "
+                                               "(%p)\n",
+                                               obj);
+                                       },
+                                       NULL, NULL, NULL);
 #endif
     }
 
@@ -67,7 +73,10 @@ void MockMediaPlayer::prepareMediaSource()
     if (activeMediaSource()->activeVideoSourceBuffer()) {
         m_hasVideo = true;
     }
-    VideoStreamInfo* v = (VideoStreamInfo*)activeMediaSource()->activeVideoSourceBuffer()->streamInfo(0, activeMediaSource()->activeVideoStreamIndex());
+    VideoStreamInfo* v =
+        (VideoStreamInfo*)activeMediaSource()
+            ->activeVideoSourceBuffer()
+            ->streamInfo(0, activeMediaSource()->activeVideoStreamIndex());
     m_videoWidth = v->m_width;
     m_videoHeight = v->m_height;
     processNextOperationQueueInContainer();
@@ -76,8 +85,10 @@ void MockMediaPlayer::prepareMediaSource()
         container()->setNeedsLayout();
     }
 
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
+    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+        HTMLMediaElement::HAVE_METADATA);
+    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+        HTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
 void MockMediaPlayer::prepare(URL* url)
@@ -89,7 +100,8 @@ void MockMediaPlayer::prepare(URL* url)
         }
         if (m_starFish->isValidMediaSourceBlobURL(store)) {
             m_activeMediaSource = ((MediaSource*)store.m_blob);
-            m_activeMediaSource->addClient(new MediaPlayerMediaSourceClient(this));
+            m_activeMediaSource->addClient(
+                new MediaPlayerMediaSourceClient(this));
             m_activeMediaSource->attach(m_container);
             return;
         }
@@ -103,10 +115,10 @@ void MockMediaPlayer::prepare(URL* url)
     }
     m_videoWidth = STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
     m_videoHeight = STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
+    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+        HTMLMediaElement::HAVE_METADATA);
+    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+        HTMLMediaElement::HAVE_FUTURE_DATA);
 }
-
-
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

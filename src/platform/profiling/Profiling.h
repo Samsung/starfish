@@ -40,7 +40,6 @@ protected:
     unsigned long m_start;
     const char* m_msg;
 };
-
 }
 
 #endif

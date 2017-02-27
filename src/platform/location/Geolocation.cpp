@@ -30,34 +30,46 @@ Geolocation* Geolocation::create(StarFish* starFish)
 #endif
 
 Geolocation::Geolocation(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
+    : ScriptWrappable(this), m_starFish(starFish)
 {
-
 }
 
-bool Geolocation::getCurrentPositionPreprocessing(GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb, void* errorCbData, bool enableHighAccuracy, int32_t timeout, int32_t maximumAge)
+bool Geolocation::getCurrentPositionPreprocessing(
+    GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb,
+    void* errorCbData, bool enableHighAccuracy, int32_t timeout,
+    int32_t maximumAge)
 {
     if (timeout == 0) {
-        m_starFish->messageLoop()->addIdler([](size_t, void* data, void* data2, void* data3) {
-            StarFish* sf = (StarFish*)data;
-            GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
-            cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT), data3);
-        }, m_starFish, (void*)errorCb, errorCbData);
+        m_starFish->messageLoop()->addIdler(
+            [](size_t, void* data, void* data2, void* data3) {
+                StarFish* sf = (StarFish*)data;
+                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT),
+                   data3);
+            },
+            m_starFish, (void*)errorCb, errorCbData);
         return false;
     }
     return true;
 }
 
-void Geolocation::getCurrentPosition(GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb, void* errorCbData, bool enableHighAccuracy, int32_t timeout, int32_t maximumAge)
+void Geolocation::getCurrentPosition(GeopositionCallback cb, void* cbData,
+                                     GeopositionErrorCallback errorCb,
+                                     void* errorCbData, bool enableHighAccuracy,
+                                     int32_t timeout, int32_t maximumAge)
 {
-    if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData, enableHighAccuracy, timeout, maximumAge)) {
-        m_starFish->messageLoop()->addIdler([](size_t, void* data, void* data2, void* data3) {
-            StarFish* sf = (StarFish*)data;
-            GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
-            cb(sf, new PositionError(sf, PositionError::Error::POSITION_UNAVAILABLE), data3);
-        }, m_starFish, (void*)errorCb, errorCbData);
+    if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
+                                        enableHighAccuracy, timeout,
+                                        maximumAge)) {
+        m_starFish->messageLoop()->addIdler(
+            [](size_t, void* data, void* data2, void* data3) {
+                StarFish* sf = (StarFish*)data;
+                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                cb(sf, new PositionError(
+                           sf, PositionError::Error::POSITION_UNAVAILABLE),
+                   data3);
+            },
+            m_starFish, (void*)errorCb, errorCbData);
     }
 }
-
 }

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayer__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaPlayer__)
 #define __StarFishMediaPlayer__
 
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
@@ -55,7 +55,10 @@ public:
     virtual void play() = 0;
     virtual void pause() = 0;
     virtual void seek(double time) = 0;
-    void setLoop(bool loop) { m_isLooping = true; }
+    void setLoop(bool loop)
+    {
+        m_isLooping = true;
+    }
     bool loop()
     {
         return m_isLooping;
@@ -72,22 +75,25 @@ public:
         return m_playbackState;
     }
 
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect) = 0;
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+                           const LayoutRect& absVideoRect) = 0;
 
     virtual unsigned long videoWidth()
     {
-        if (m_hasVideo)
+        if (m_hasVideo) {
             return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
-        else
+        } else {
             return m_videoWidth;
+        }
     }
 
     virtual unsigned long videoHeight()
     {
-        if (m_hasVideo)
+        if (m_hasVideo) {
             return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
-        else
+        } else {
             return m_videoHeight;
+        }
     }
 
     MediaSource* activeMediaSource()
@@ -106,6 +112,7 @@ public:
     }
 
     virtual void prepareMediaSource() = 0;
+
 protected:
     MediaPlayer(HTMLMediaElement* element);
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
@@ -122,7 +129,6 @@ protected:
     unsigned long m_videoWidth, m_videoHeight;
     size_t m_currentTimeUpdateTimer;
 };
-
 }
 
 #endif

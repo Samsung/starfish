@@ -24,13 +24,15 @@ namespace StarFish {
 class Window;
 class FileIO : public gc_cleanup {
 protected:
-    FileIO() { }
+    FileIO()
+    {
+    }
+
 public:
     static FileIO* create();
     static FileIO* createInNonGCArea();
     virtual ~FileIO()
     {
-
     }
 
     bool open(String* filePath)
@@ -49,7 +51,6 @@ public:
     PathResolver() = delete;
     static String* matchLocation(String* filePath);
 };
-
 }
 
 #endif

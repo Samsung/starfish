@@ -21,7 +21,6 @@
 
 namespace StarFish {
 
-
 Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
 {
     if (mimeTypeOfContainer->contains("mp4", false)) {
@@ -32,6 +31,5 @@ Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
         return Demuxer::createFFmpegDemuxer();
     }
 }
-
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

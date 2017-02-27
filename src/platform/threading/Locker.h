@@ -19,12 +19,12 @@
 
 namespace StarFish {
 
-template<typename T>
+template <typename T>
 class Locker {
     STARFISH_MAKE_STACK_ALLOCATED();
+
 public:
-    Locker(T& lock)
-        : m_lock(lock)
+    Locker(T& lock) : m_lock(lock)
     {
         m_lock.lock();
     }
@@ -33,10 +33,10 @@ public:
     {
         m_lock.unlock();
     }
+
 protected:
     T& m_lock;
 };
-
 }
 
 #endif

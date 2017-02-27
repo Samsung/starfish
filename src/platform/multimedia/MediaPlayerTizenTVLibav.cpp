@@ -32,19 +32,17 @@ extern "C" {
 
 #include <media/player.h>
 
-
 namespace StarFish {
 
 struct FFMpegIOContext {
-    FFMpegIOContext(const GCVector<uint8_t>& buf)
-        : m_readPos(0)
-        , m_buffer(buf)
-    { }
+    FFMpegIOContext(const GCVector<uint8_t>& buf) : m_readPos(0), m_buffer(buf)
+    {
+    }
     size_t m_readPos;
     const GCVector<uint8_t>& m_buffer;
 };
 
-static int FFMpegIOContextReadCallback(void *opaque, uint8_t *buf, int buf_size)
+static int FFMpegIOContextReadCallback(void* opaque, uint8_t* buf, int buf_size)
 {
     FFMpegIOContext* self = (FFMpegIOContext*)opaque;
     int sizeSuccessToRead = buf_size;
@@ -59,7 +57,8 @@ static int FFMpegIOContextReadCallback(void *opaque, uint8_t *buf, int buf_size)
     return sizeSuccessToRead;
 }
 
-static int64_t FFMpegIOContextSeekCallback(void *opaque, int64_t offset, int whence)
+static int64_t FFMpegIOContextSeekCallback(void* opaque, int64_t offset,
+                                           int whence)
 {
     FFMpegIOContext* self = (FFMpegIOContext*)opaque;
     if (whence == AVSEEK_SIZE) {
@@ -87,7 +86,11 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
     player_video_stream_info_s videoInfo;
     if (m_activeMediaSource->activeVideoSourceBuffer()) {
         STARFISH_LOG_INFO("MediaPlayerTizenTV::setVideoStreamInfo\n");
-        VideoStreamInfo* info = (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()->streamInfo(0, m_activeMediaSource->activeVideoStreamIndex()));
+        VideoStreamInfo* info =
+            (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()
+                                   ->streamInfo(
+                                       0, m_activeMediaSource
+                                              ->activeVideoStreamIndex()));
         memset(&videoInfo, 0, sizeof(player_video_stream_info_s));
 
         const char* mediaFormat = "";
@@ -110,18 +113,33 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
         videoInfo.framerate_num = info->m_timeBaseNum;
 
         uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(m_activeMediaSource->activeVideoSourceBuffer()->bufferHeader(0));
-        AVIOContext* ioContext = avio_alloc_context(bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr, FFMpegIOContextSeekCallback);
+        FFMpegIOContext ctx(
+            m_activeMediaSource->activeVideoSourceBuffer()->bufferHeader(0));
+        AVIOContext* ioContext = avio_alloc_context(
+            bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr,
+            FFMpegIOContextSeekCallback);
         AVFormatContext* fc = avformat_alloc_context();
         fc->flags = AVFMT_FLAG_CUSTOM_IO;
         fc->pb = ioContext;
         fc->iformat = av_find_input_format(mediaFormat);
-        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) == 0);
-        videoInfo.codec_extradata = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata;
-        videoInfo.extradata_size = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata_size;
-        STARFISH_LOG_INFO("ffmpegVideo Info[%d].. %d %d\n", (int)m_activeMediaSource->activeVideoStreamIndex(), (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->width,
-            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->height);
-        STARFISH_LOG_INFO("tizen video Info.. %d %d %d %d\n", info->m_width, info->m_height, (int)videoInfo.framerate_den, (int)videoInfo.framerate_num);
+        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) ==
+                                0);
+        videoInfo.codec_extradata =
+            fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
+                ->codec->extradata;
+        videoInfo.extradata_size =
+            fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
+                ->codec->extradata_size;
+        STARFISH_LOG_INFO(
+            "ffmpegVideo Info[%d].. %d %d\n",
+            (int)m_activeMediaSource->activeVideoStreamIndex(),
+            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
+                ->codec->width,
+            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
+                ->codec->height);
+        STARFISH_LOG_INFO("tizen video Info.. %d %d %d %d\n", info->m_width,
+                          info->m_height, (int)videoInfo.framerate_den,
+                          (int)videoInfo.framerate_num);
 
         int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
         STARFISH_RELEASE_ASSERT(ret == 0);
@@ -146,7 +164,10 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
         STARFISH_LOG_INFO("MSE set Audio\n");
         memset(&audioInfo, 0, sizeof(player_audio_stream_info_s));
 
-        StreamInfo* info = (m_activeMediaSource->activeAudioSourceBuffer()->streamInfo(initSegmentIndex, m_activeMediaSource->activeAudioStreamIndex()));
+        StreamInfo* info =
+            (m_activeMediaSource->activeAudioSourceBuffer()->streamInfo(
+                initSegmentIndex,
+                m_activeMediaSource->activeAudioStreamIndex()));
 
         const char* mediaFormat = "";
         if (strstr(info->m_codecName, "aac")) {
@@ -163,16 +184,23 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
         }
 
         uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(m_activeMediaSource->activeAudioSourceBuffer()->bufferHeader(initSegmentIndex));
-        AVIOContext* ioContext = avio_alloc_context(bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr, FFMpegIOContextSeekCallback);
+        FFMpegIOContext ctx(
+            m_activeMediaSource->activeAudioSourceBuffer()->bufferHeader(
+                initSegmentIndex));
+        AVIOContext* ioContext = avio_alloc_context(
+            bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr,
+            FFMpegIOContextSeekCallback);
         AVFormatContext* fc = avformat_alloc_context();
         fc->flags = AVFMT_FLAG_CUSTOM_IO;
         fc->pb = ioContext;
         fc->iformat = av_find_input_format(mediaFormat);
-        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) == 0);
+        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) ==
+                                0);
 
-        AVStream* audioStream = fc->streams[m_activeMediaSource->activeAudioStreamIndex()];
-        AVCodecContext* audioCodecCtx = fc->streams[m_activeMediaSource->activeAudioStreamIndex()]->codec;
+        AVStream* audioStream =
+            fc->streams[m_activeMediaSource->activeAudioStreamIndex()];
+        AVCodecContext* audioCodecCtx =
+            fc->streams[m_activeMediaSource->activeAudioStreamIndex()]->codec;
         audioInfo.channels = audioCodecCtx->channels;
         audioInfo.sample_rate = audioCodecCtx->sample_rate;
         audioInfo.bit_rate = audioCodecCtx->bit_rate;
@@ -191,7 +219,6 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
         m_audioInitSegmentIndex = initSegmentIndex;
     }
 }
-
 }
 
 #endif

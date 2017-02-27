@@ -20,14 +20,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-
 namespace StarFish {
 
 class FileIOPosix : public FileIO {
 public:
-    FileIOPosix()
-        : m_fp(NULL)
-    { }
+    FileIOPosix() : m_fp(NULL)
+    {
+    }
     ~FileIOPosix()
     {
         close();
@@ -44,8 +43,9 @@ public:
         }
 
         m_fp = fopen(filePath, "r");
-        if (m_fp)
+        if (m_fp) {
             return true;
+        }
         return false;
     }
     long int length()
@@ -55,7 +55,10 @@ public:
         rewind(m_fp);
         return len;
     }
-    size_t read(void* buf, size_t size, size_t count) { return fread(buf, size, count, m_fp); }
+    size_t read(void* buf, size_t size, size_t count)
+    {
+        return fread(buf, size, count, m_fp);
+    }
     int close()
     {
         int ret = -1;
@@ -65,6 +68,7 @@ public:
         }
         return ret;
     }
+
 private:
     FILE* m_fp;
 };
@@ -76,14 +80,13 @@ String* PathResolver::matchLocation(String* filePath)
 }
 #endif
 
-
 #ifdef STARFISH_TIZEN_WEARABLE_LIB
 
 typedef FILE* (*sfopen_cb)(const char* fileName);
 typedef long int (*sflength_cb)(FILE* fp);
 typedef size_t (*sfread_cb)(void* buf, size_t size, size_t count, FILE* fp);
 typedef int (*sfclose_cb)(FILE* fp);
-typedef const char* (*sfmatchLocation_cb) (const char* fileName);
+typedef const char* (*sfmatchLocation_cb)(const char* fileName);
 
 extern sfopen_cb open_cb;
 extern sflength_cb length_cb;
@@ -107,25 +110,29 @@ public:
     {
         close();
 
-        String* newName = PathResolver::matchLocation(String::fromUTF8(fileName));
+        String* newName =
+            PathResolver::matchLocation(String::fromUTF8(fileName));
 
-        if (!newName)
+        if (!newName) {
             return false;
+        }
 
-        if (open_cb)
+        if (open_cb) {
             m_fp = open_cb(newName->utf8Data());
-        else {
+        } else {
             m_fp = fopen(newName->utf8Data(), "r");
         }
-        if (m_fp)
+        if (m_fp) {
             return true;
+        }
         return false;
     }
 
     long int length()
     {
-        if (length_cb)
+        if (length_cb) {
             return length_cb(m_fp);
+        }
         fseek(m_fp, 0, 2);
         long int len = ftell(m_fp);
         rewind(m_fp);
@@ -134,8 +141,9 @@ public:
 
     size_t read(void* buf, size_t size, size_t count)
     {
-        if (read_cb)
+        if (read_cb) {
             return read_cb(buf, size, count, m_fp);
+        }
         return fread(buf, size, count, m_fp);
     }
 
@@ -143,10 +151,11 @@ public:
     {
         int res = -1;
         if (m_fp) {
-            if (close_cb)
+            if (close_cb) {
                 res = close_cb(m_fp);
-            else
+            } else {
                 res = fclose(m_fp);
+            }
             m_fp = NULL;
         }
         return res;
@@ -158,12 +167,14 @@ private:
 
 String* PathResolver::matchLocation(String* filePath)
 {
-    if (!matchLocation_cb)
+    if (!matchLocation_cb) {
         return filePath;
+    }
 
     const char* ret = matchLocation_cb(filePath->utf8Data());
-    if (!ret)
+    if (!ret) {
         return nullptr;
+    }
     String* r = String::fromUTF8(ret);
     free((char*)ret);
     return r;
@@ -184,11 +195,10 @@ FileIO* FileIO::create()
 FileIO* FileIO::createInNonGCArea()
 {
 #ifdef STARFISH_TIZEN_WEARABLE_LIB
-    FileIOTizen* fio = new(malloc(sizeof (FileIOTizen))) FileIOTizen();
+    FileIOTizen* fio = new (malloc(sizeof(FileIOTizen))) FileIOTizen();
 #else
-    FileIOPosix* fio = new(malloc(sizeof (FileIOPosix))) FileIOPosix();
+    FileIOPosix* fio = new (malloc(sizeof(FileIOPosix))) FileIOPosix();
 #endif
     return fio;
 }
-
 }

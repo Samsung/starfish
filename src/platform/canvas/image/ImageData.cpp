@@ -28,11 +28,15 @@ class ImageDataEFL : public ImageData {
 public:
     ImageDataEFL(String* localImageSrc)
     {
-        // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n", localImageSrc->utf8Data());
+        // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
+        // localImageSrc->utf8Data());
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(), NULL);
+        evas_object_image_file_set(
+            m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(),
+            NULL);
         evas_object_data_set(m_image, "local", "1");
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
+                                EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);
         if (err == EVAS_LOAD_ERROR_NONE) {
@@ -54,8 +58,10 @@ public:
         m_image = evas_object_image_add(internalCanvas());
         evas_object_data_set(m_image, "local", "0");
         char format[4] = "";
-        evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format, NULL);
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
+        evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format,
+                                      NULL);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
+                                EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);
         if (err == EVAS_LOAD_ERROR_NONE) {
@@ -83,12 +89,14 @@ public:
 
     void reigsterFinalizer()
     {
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
-            Evas_Object* m = (Evas_Object*)cd;
-            evas_object_hide(m);
-            evas_object_del(m);
-        }, m_image, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
+                                           Evas_Object* m = (Evas_Object*)cd;
+                                           evas_object_hide(m);
+                                           evas_object_del(m);
+                                       },
+                                       m_image, NULL, NULL);
     }
 
     virtual void* unwrap()
@@ -115,17 +123,18 @@ protected:
 ImageData* ImageData::create(String* localImageSrc)
 {
     ImageData* imageData = new ImageDataEFL(localImageSrc);
-    if (imageData->unwrap() == NULL)
+    if (imageData->unwrap() == NULL) {
         return NULL;
+    }
     return imageData;
 }
 
 ImageData* ImageData::create(const char* buf, size_t len)
 {
     ImageData* imageData = new ImageDataEFL(buf, len);
-    if (imageData->unwrap() == NULL)
+    if (imageData->unwrap() == NULL) {
         return NULL;
+    }
     return imageData;
 }
-
 }

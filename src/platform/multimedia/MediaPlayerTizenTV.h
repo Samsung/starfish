@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayerTizen__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishMediaPlayerTizen__)
 #define __StarFishMediaPlayerTizenTV__
 
 #include "MediaPlayerTizen.h"
@@ -29,16 +30,22 @@ class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizenTV : public MediaPlayerTizen {
 public:
-    MediaPlayerTizenTV(HTMLMediaElement* element)
-        : MediaPlayerTizen(element)
+    MediaPlayerTizenTV(HTMLMediaElement* element) : MediaPlayerTizen(element)
     {
-        m_lastVideoPts = m_lastAudioPts = element->defaultPlaybackStartPosition() * 1000;
+        m_lastVideoPts = m_lastAudioPts =
+            element->defaultPlaybackStartPosition() * 1000;
         m_videoInitSegmentIndex = 0;
         m_audioInitSegmentIndex = 0;
 #ifndef NDEBUG
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerTizenTV::~MediaPlayerTizenTV (%p)\n", obj);
-        }, NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           STARFISH_LOG_INFO(
+                                               "[TRACE_MSE_GC] "
+                                               "MediaPlayerTizenTV::~"
+                                               "MediaPlayerTizenTV (%p)\n",
+                                               obj);
+                                       },
+                                       NULL, NULL, NULL);
 #endif
     }
 
@@ -47,7 +54,8 @@ public:
     }
 
     virtual void setNativePlayerDefaultOptions(URL* url);
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+                           const LayoutRect& absVideoRect);
     virtual double currentTime();
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
@@ -73,7 +81,6 @@ public:
     size_t m_videoInitSegmentIndex;
     size_t m_audioInitSegmentIndex;
 };
-
 }
 
 #endif

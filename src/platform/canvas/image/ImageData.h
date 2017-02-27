@@ -23,8 +23,8 @@ class ImageData : public gc {
 protected:
     ImageData()
     {
-
     }
+
 public:
     static ImageData* create(String* localImageSrc);
     static ImageData* create(const char* buf, size_t len);
@@ -34,10 +34,8 @@ public:
     virtual size_t height() = 0;
     virtual ~ImageData()
     {
-
     }
 };
-
 }
 
 #endif

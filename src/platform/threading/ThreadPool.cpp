@@ -24,7 +24,7 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     : m_messageLoop(ml)
 {
     m_workerQueueMutex = new Mutex();
-    for (size_t i = 0; i < maxThreadCount; i ++) {
+    for (size_t i = 0; i < maxThreadCount; i++) {
         m_threads.push_back(new Thread());
     }
 }
@@ -36,17 +36,17 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
     struct DataRooter {
         void* data;
     };
-    DataRooter* r = new(NoGC) DataRooter;
+    DataRooter* r = new (NoGC) DataRooter;
     r->data = data;
     m_workerQueue.push_back(std::make_pair(fn, r));
     m_workerQueueMutex->unlock();
 
-    for (size_t i = 0; i < m_threads.size(); i ++) {
+    for (size_t i = 0; i < m_threads.size(); i++) {
         if (!m_threads[i]->isAlive()) {
             struct Rooter {
                 ThreadPool* pool;
             };
-            Rooter* rooter = new(NoGC) Rooter;
+            Rooter* rooter = new (NoGC) Rooter;
             rooter->pool = this;
             ThreadWorker worker = [](void* data) -> void* {
                 Rooter* rooter = (Rooter*)data;
@@ -57,20 +57,24 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
                         rooter->pool->m_workerQueueMutex->unlock();
                         break;
                     }
-                    std::pair<ThreadWorker, void*> first = rooter->pool->m_workerQueue.front();
-                    rooter->pool->m_workerQueue.erase(rooter->pool->m_workerQueue.begin());
+                    std::pair<ThreadWorker, void*> first =
+                        rooter->pool->m_workerQueue.front();
+                    rooter->pool->m_workerQueue.erase(
+                        rooter->pool->m_workerQueue.begin());
                     rooter->pool->m_workerQueueMutex->unlock();
 
                     DataRooter* r = (DataRooter*)first.second;
                     first.first(r->data);
-                    rooter->pool->m_messageLoop->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-                        GC_FREE(data);
-                    }, r);
+                    rooter->pool->m_messageLoop
+                        ->addIdlerWithNoGCRootingInOtherThread(
+                            [](size_t handle, void* data) { GC_FREE(data); },
+                            r);
                 }
                 // STARFISH_LOG_INFO("threadPool worker end\n");
-                rooter->pool->m_messageLoop->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-                    GC_FREE(data);
-                }, rooter);
+                rooter->pool->m_messageLoop
+                    ->addIdlerWithNoGCRootingInOtherThread(
+                        [](size_t handle, void* data) { GC_FREE(data); },
+                        rooter);
                 return NULL;
             };
 
@@ -79,6 +83,4 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
         }
     }
 }
-
-
 }

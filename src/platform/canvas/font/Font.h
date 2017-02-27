@@ -35,14 +35,15 @@ enum FontWeight {
 
 class Font : public gc {
     friend class FontSelector;
+
 protected:
     Font()
     {
     }
+
 public:
     virtual ~Font()
     {
-
     }
 
     virtual LayoutUnit measureText(const StringView& sv) = 0;
@@ -99,21 +100,20 @@ protected:
     friend class StarFish;
     FontSelector()
     {
-
     }
     ~FontSelector()
     {
-
     }
-    Font* loadFont(String* familyName, float size, char style = 0, char weight = 4);
+    Font* loadFont(String* familyName, float size, char style = 0,
+                   char weight = 4);
     void clearCache()
     {
         m_fontCache.clear();
         m_fontCache.shrink_to_fit();
     }
+
 public:
     GCVector<std::tuple<Font*, String*, float, char, char>> m_fontCache;
 };
-
 };
 #endif

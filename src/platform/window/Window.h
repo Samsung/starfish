@@ -44,6 +44,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
     friend class Node;
+
 public:
     static Window* create(StarFish* sf, void* win, int width, int height);
     ~Window();
@@ -144,7 +145,7 @@ public:
         return m_location;
     }
 
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     webapis* Webapis()
     {
         return m_webapis;
@@ -161,9 +162,11 @@ public:
         return m_scriptBindingInstance;
     }
 
-    uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
+    uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay,
+                        void* data);
     void clearTimeout(uint32_t id);
-    uint32_t setInterval(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
+    uint32_t setInterval(WindowSetTimeoutHandler handler, uint32_t delay,
+                         void* data);
     void clearInterval(uint32_t id);
 
     uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
@@ -177,10 +180,7 @@ public:
     };
     void dispatchTouchEvent(float x, float y, TouchEventKind kind);
 
-    enum KeyEventKind {
-        KeyEventDown,
-        KeyEventUp
-    };
+    enum KeyEventKind { KeyEventDown, KeyEventUp };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
     Node* hitTest(float x, float y);
@@ -205,7 +205,7 @@ public:
     void setFocusedNode(Node* n);
     void releaseFocusedNode();
 
-    void setActiveNodeWithMouseMove(Node *n);
+    void setActiveNodeWithMouseMove(Node* n);
     void releaseActiveNodeWithMouseMove();
 
     void processUrlFragment(String* name);
@@ -231,7 +231,8 @@ public:
     virtual void resizeTo(int w, int h) = 0;
     virtual void* unwrap() = 0;
 
-    // The viewport width and height are same as the window size for wearable widget.
+    // The viewport width and height are same as the window size for wearable
+    // widget.
     double innerWidth()
     {
         return width();
@@ -242,7 +243,8 @@ public:
         return height();
     }
 
-    // These attributes should return the real coordinate when we support scroll.
+    // These attributes should return the real coordinate when we support
+    // scroll.
     double scrollX()
     {
         return 0;
@@ -253,7 +255,8 @@ public:
         return 0;
     }
 
-    // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+    // https://html.spec.whatwg.org/multipage/
+    // browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
 
     void layoutIfNeeds();
@@ -308,7 +311,7 @@ protected:
     Navigator* m_navigator;
     LocationObj* m_location;
     Document* m_document;
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     webapis* m_webapis;
 #endif
     StackingContext* m_rootStackingContext;
@@ -334,7 +337,6 @@ protected:
     GCVector<Node*> m_activeNodes;
     GCVector<Node*> m_hoveredNodes;
 };
-
 }
 
 #endif
