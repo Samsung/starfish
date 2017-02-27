@@ -17,6 +17,7 @@
 import sys
 import os
 import fileinput
+import argparse
 
 #from check_license import CheckLicenser
 import os.path as fs
@@ -30,6 +31,8 @@ TERM_EMPTY = "\033[0m"
 
 
 count_err = 0
+count_lines = 0
+count_empty_lines = 0
 
 interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
 clang_format_exts = ['.cpp', '.h']
@@ -50,60 +53,36 @@ def report_error(msg):
     report_error_name_line(fileinput.filename(), fileinput.filelineno(), msg)
 
 
-def is_interesting(file):
-    _, ext = fs.splitext(file)
-    return ext in interesting_exts and file not in skip_files
-
-
 def is_checked_by_clang(file):
     _, ext = fs.splitext(file)
     return ext in clang_format_exts and file not in skip_files
 
-
-def check_tidy(src_dir, update=False):
-    print src_dir
-    count_lines = 0
-    count_empty_lines = 0
-
-    option = ''
+def check_tidy_at_file(file, update):
     if update:
-        print("All files will be fomatted. Check the change: git diff");
-        option = '-i'
+        formatted = subprocess.check_output(['clang-format-3.8',
+            '-style=file', '-i', file])
+    else:
+        formatted = subprocess.check_output(['clang-format-3.8',
+            '-style=file', file])
+        f = open(file + '.formatted', 'w')
+        f.write(formatted)
+        f.close()
+        if subprocess.call(['diff'] + [file, file + '.formatted']) != 0:
+            print(file + '\n')
+        os.remove(file + '.formatted')
 
-    for (dirpath, dirnames, filenames) in os.walk(src_dir):
-        if any(d in fs.relpath(dirpath, src_dir) for d in skip_dirs):
-            continue
-
-        files = [fs.join(dirpath, name) for name in filenames
-                 if is_checked_by_clang(name)]
-
-        if not files:
-            continue
-
-        for file in files:
-            if is_checked_by_clang(file):
-                if update:
-                    formatted = subprocess.check_output(['clang-format-3.8',
-                        '-style=file', option, file])
-                else:
-                    formatted = subprocess.check_output(['clang-format-3.8',
-                        '-style=file', file])
-                    f = open(file + '.formatted', 'w')
-                    f.write(formatted)
-                    f.close()
-                    if subprocess.call(['diff'] + [file, file+'.formatted']) != 0:
-                        print(file + '\n')
-                    os.remove(file + '.formatted')
-
-        for line in fileinput.input(files):
-            if '\t' in line:
-                report_error('TAB character')
-            if '\r' in line:
-                report_error('CR character')
-            if line.endswith(' \n') or line.endswith('\t\n'):
-                report_error('trailing whitespace')
-            if not line.endswith('\n'):
-                report_error('line ends without NEW LINE character')
+def check_whitespace_error(files):
+    global count_lines
+    global count_empty_lines
+    for line in fileinput.input(files):
+        if '\t' in line:
+            report_error('TAB character')
+        if '\r' in line:
+            report_error('CR character')
+        if line.endswith(' \n') or line.endswith('\t\n'):
+            report_error('trailing whitespace')
+        if not line.endswith('\n'):
+            report_error('line ends without NEW LINE character')
 
 #            if fileinput.isfirstline():
 #                if not CheckLicenser.check(fileinput.filename()):
@@ -111,9 +90,36 @@ def check_tidy(src_dir, update=False):
 #                                           None,
 #                                       'incorrect license')
 
-            count_lines += 1
-            if not line.strip():
-                count_empty_lines += 1
+        count_lines += 1
+        if not line.strip():
+            count_empty_lines += 1
+
+def check_tidy(args):
+    print args.path
+
+    if args.update:
+        print("Files will be fomatted. Check the change: git diff")
+
+    if os.path.isfile(args.path):
+        if is_checked_by_clang(args.path):
+            check_tidy_at_file(args.path, args.update)
+
+        check_whitespace_error([args.path])
+
+    for (dirpath, _, filenames) in os.walk(args.path):
+        if any(d in fs.relpath(dirpath, args.path) for d in skip_dirs):
+            continue
+
+        files = [fs.join(dirpath, name) for name in filenames
+                 if is_checked_by_clang(name)]
+        if not files:
+            continue
+
+        for file in files:
+            if is_checked_by_clang(file):
+                check_tidy_at_file(file, args.update)
+
+        check_whitespace_error(files)
 
     print "* total lines of code: %d" % count_lines
     print ("* total non-blank lines of code: %d"
@@ -126,7 +132,10 @@ def check_tidy(src_dir, update=False):
     return count_err == 0
 
 if __name__ == '__main__':
-    if len(sys.argv) >= 2 and sys.argv[1] == 'update':
-        check_tidy("./", True)
-    else:
-        check_tidy("./")
+    parser = argparse.ArgumentParser(description='Tidy Checker')
+    parser.add_argument('--update', '-u', dest='update', action='store_true',
+                        help='flag to update')
+    parser.add_argument('--path', '-p', dest='path', default='.', type=str,
+                        help='path to check tidy')
+    args = parser.parse_args()
+    check_tidy(args)
