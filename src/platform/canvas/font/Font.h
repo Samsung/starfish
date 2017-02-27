@@ -86,6 +86,30 @@ public:
         return m_metrics;
     }
 
+#ifdef STARFISH_ENABLE_TEST
+#define SPACE_SIZE_DENOMINATOR 60
+    static inline size_t spaceSizeNumerator(char32_t c)
+    {
+        size_t count = 60;
+        if (c == 0x2000 || c == 0x2002) {
+            count = 30;
+        } else if (c == 0x2004) {
+            count = 20;
+        } else if (c == 0x2005) {
+            count = 15;
+        } else if (c == 0x2009) {
+            count = 12;
+        } else if (c == 0x2006) {
+            count = 10;
+        } else if (c == 0x200A) {
+            count = 6;
+        } else if (String::isZeroWidthChar(c)) {
+            count = 0;
+        }
+        return count;
+    }
+#endif
+
 protected:
     FontMetrics m_metrics;
     float m_size;

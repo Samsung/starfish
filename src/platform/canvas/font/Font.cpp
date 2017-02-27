@@ -154,9 +154,16 @@ public:
 
     virtual LayoutUnit measureText(const StringView& str)
     {
+        if (str.length() == 0) {
+            return 0;
+        }
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            return str.length() * m_size;
+            size_t count = 0;
+            for (size_t i = str.start(); i < str.end(); i++) {
+                count += Font::spaceSizeNumerator((*str.originalString())[i]);
+            }
+            return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
         if (str.originalString()->isASCIIString()) {
