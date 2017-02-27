@@ -38,144 +38,145 @@ class Inspector;
 class HistoryEntry;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
-F(abbr) \
-F(acronym) \
-F(address) \
-F(article) \
-F(aside) \
-F(b) \
-F(basefont) \
-F(bdo) \
-F(bgsound) \
-F(big) \
-F(center) \
-F(cite) \
-F(code) \
-F(command) \
-F(dd) \
-F(dfn) \
-F(dt) \
-F(em) \
-F(figcaption) \
-F(figure) \
-F(footer) \
-F(header) \
-F(hgroup) \
-F(i) \
-F(kbd) \
-F(layer) \
-F(main) \
-F(mark) \
-F(nav) \
-F(nobr) \
-F(noframes) \
-F(nolayer) \
-F(plaintext) \
-F(rp) \
-F(s) \
-F(samp) \
-F(section) \
-F(small) \
-F(strike) \
-F(strong) \
-F(sub) \
-F(sup) \
-F(tt) \
-F(u) \
-F(var) \
-F(a) \
-F(area) \
-F(audio) \
-F(br) \
-F(base) \
-F(body) \
-F(canvas) \
-F(content) \
-F(dl) \
-F(datalist) \
-F(details) \
-F(dir) \
-F(div) \
-F(font) \
-F(form) \
-F(frame) \
-F(frameset) \
-F(hr) \
-F(head) \
-F(h1) \
-F(h2) \
-F(h3) \
-F(h4) \
-F(h5) \
-F(h6) \
-F(html) \
-F(iframe) \
-F(li) \
-F(label) \
-F(legend) \
-F(map) \
-F(marquee) \
-F(menu) \
-F(meta) \
-F(meter) \
-F(del) \
-F(ins) \
-F(ol) \
-F(optgroup) \
-F(option) \
-F(p) \
-F(param) \
-F(pre) \
-F(listing) \
-F(xmp) \
-F(progress) \
-F(blockquote) \
-F(q) \
-F(shadow) \
-F(source) \
-F(span) \
-F(caption) \
-F(td) \
-F(th) \
-F(col) \
-F(colgroup) \
-F(table) \
-F(tr) \
-F(tbody) \
-F(tfoot) \
-F(thead) \
-F(template) \
-F(title) \
-F(track) \
-F(ul) \
-F(img) \
-F(image) \
-F(video) \
-F(dialog) \
-F(button) \
-F(fieldset) \
-F(keygen) \
-F(output) \
-F(select) \
-F(textarea) \
-F(applet) \
-F(embed) \
-F(link) \
-F(script) \
-F(style) \
-F(input) \
-F(object) \
-F(bdi) \
-F(noembed) \
-F(noscript) \
-F(rt) \
-F(ruby) \
-F(summary) \
-F(wbr)
+    F(abbr)                             \
+    F(acronym)                          \
+    F(address)                          \
+    F(article)                          \
+    F(aside)                            \
+    F(b)                                \
+    F(basefont)                         \
+    F(bdo)                              \
+    F(bgsound)                          \
+    F(big)                              \
+    F(center)                           \
+    F(cite)                             \
+    F(code)                             \
+    F(command)                          \
+    F(dd)                               \
+    F(dfn)                              \
+    F(dt)                               \
+    F(em)                               \
+    F(figcaption)                       \
+    F(figure)                           \
+    F(footer)                           \
+    F(header)                           \
+    F(hgroup)                           \
+    F(i)                                \
+    F(kbd)                              \
+    F(layer)                            \
+    F(main)                             \
+    F(mark)                             \
+    F(nav)                              \
+    F(nobr)                             \
+    F(noframes)                         \
+    F(nolayer)                          \
+    F(plaintext)                        \
+    F(rp)                               \
+    F(s)                                \
+    F(samp)                             \
+    F(section)                          \
+    F(small)                            \
+    F(strike)                           \
+    F(strong)                           \
+    F(sub)                              \
+    F(sup)                              \
+    F(tt)                               \
+    F(u)                                \
+    F(var)                              \
+    F(a)                                \
+    F(area)                             \
+    F(audio)                            \
+    F(br)                               \
+    F(base)                             \
+    F(body)                             \
+    F(canvas)                           \
+    F(content)                          \
+    F(dl)                               \
+    F(datalist)                         \
+    F(details)                          \
+    F(dir)                              \
+    F(div)                              \
+    F(font)                             \
+    F(form)                             \
+    F(frame)                            \
+    F(frameset)                         \
+    F(hr)                               \
+    F(head)                             \
+    F(h1)                               \
+    F(h2)                               \
+    F(h3)                               \
+    F(h4)                               \
+    F(h5)                               \
+    F(h6)                               \
+    F(html)                             \
+    F(iframe)                           \
+    F(li)                               \
+    F(label)                            \
+    F(legend)                           \
+    F(map)                              \
+    F(marquee)                          \
+    F(menu)                             \
+    F(meta)                             \
+    F(meter)                            \
+    F(del)                              \
+    F(ins)                              \
+    F(ol)                               \
+    F(optgroup)                         \
+    F(option)                           \
+    F(p)                                \
+    F(param)                            \
+    F(pre)                              \
+    F(listing)                          \
+    F(xmp)                              \
+    F(progress)                         \
+    F(blockquote)                       \
+    F(q)                                \
+    F(shadow)                           \
+    F(source)                           \
+    F(span)                             \
+    F(caption)                          \
+    F(td)                               \
+    F(th)                               \
+    F(col)                              \
+    F(colgroup)                         \
+    F(table)                            \
+    F(tr)                               \
+    F(tbody)                            \
+    F(tfoot)                            \
+    F(thead)                            \
+    F(template)                         \
+    F(title)                            \
+    F(track)                            \
+    F(ul)                               \
+    F(img)                              \
+    F(image)                            \
+    F(video)                            \
+    F(dialog)                           \
+    F(button)                           \
+    F(fieldset)                         \
+    F(keygen)                           \
+    F(output)                           \
+    F(select)                           \
+    F(textarea)                         \
+    F(applet)                           \
+    F(embed)                            \
+    F(link)                             \
+    F(script)                           \
+    F(style)                            \
+    F(input)                            \
+    F(object)                           \
+    F(bdi)                              \
+    F(noembed)                          \
+    F(noscript)                         \
+    F(rt)                               \
+    F(ruby)                             \
+    F(summary)                          \
+    F(wbr)
 
 class StaticStrings : public gc {
     friend class QualifiedName;
     friend class AtomicString;
+
 public:
     StaticStrings(StarFish* sf);
     StarFish* m_starFish;
@@ -186,9 +187,8 @@ public:
     AtomicString m_cDataSectionLocalName;
     AtomicString m_commentLocalName;
 
-    // HTML Tag Names
-#define DEFINE_HTML_LOCAL_NAMES(name) \
-    QualifiedName m_##name##TagName;
+// HTML Tag Names
+#define DEFINE_HTML_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
 
@@ -297,6 +297,7 @@ public:
     QualifiedName m_keydown;
     QualifiedName m_onkeydown;
     QualifiedName m_keyup;
+
 protected:
 };
 
@@ -307,7 +308,6 @@ enum StarFishStartUpFlag {
     enableHitTestDump = 1 << 4,
     enableRegressionTest = 1 << 5,
 };
-
 
 enum StarFishDeviceKind {
     deviceKindUseMouse = 0,
@@ -326,19 +326,21 @@ struct BlobURLStore {
     uint32_t m_b;
 #endif
 };
-
 }
 
 namespace std {
-template<> struct hash<StarFish::BlobURLStore> {
-    size_t operator()(StarFish::BlobURLStore const &x) const
+template <>
+struct hash<StarFish::BlobURLStore> {
+    size_t operator()(StarFish::BlobURLStore const& x) const
     {
         return (size_t)x.m_blob;
     }
 };
 
-template<> struct equal_to<StarFish::BlobURLStore> {
-    bool operator()(StarFish::BlobURLStore const &a, StarFish::BlobURLStore const &b) const
+template <>
+struct equal_to<StarFish::BlobURLStore> {
+    bool operator()(StarFish::BlobURLStore const& a,
+                    StarFish::BlobURLStore const& b) const
     {
         return a.m_blob == b.m_blob;
     }
@@ -355,8 +357,11 @@ class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
     friend class StarFishEnterer;
+
 public:
-    StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier);
+    StarFish(StarFishStartUpFlag flag, const char* locale,
+             const char* timezoneID, void* win, int w, int h,
+             float defaultFontSizeMultiplier);
     ~StarFish();
     void run();
 
@@ -372,7 +377,9 @@ public:
     void close();
     String* evaluate(String* s);
 
-    Font* fetchFont(String* familyName, float size, char style = FontStyle::FontStyleNormal, char weight = FontWeight::FontWeightNormal)
+    Font* fetchFont(String* familyName, float size,
+                    char style = FontStyle::FontStyleNormal,
+                    char weight = FontWeight::FontWeightNormal)
     {
         Font* f = nullptr;
         f = m_fontSelector.loadFont(familyName, size, style, weight);
@@ -451,8 +458,14 @@ public:
         return m_console;
     }
 
-    int& offset() { return m_offset; }
-    GCVector<HistoryEntry*>& history() { return m_historyList; }
+    int& offset()
+    {
+        return m_offset;
+    }
+    GCVector<HistoryEntry*>& history()
+    {
+        return m_historyList;
+    }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
@@ -501,8 +514,7 @@ protected:
 
 class StarFishEnterer {
 public:
-    StarFishEnterer(StarFish* instance)
-        : m_instance(instance)
+    StarFishEnterer(StarFish* instance) : m_instance(instance)
     {
         m_instance->enter();
     }
@@ -511,6 +523,7 @@ public:
     {
         m_instance->exit();
     }
+
 protected:
     StarFish* m_instance;
 };
@@ -520,6 +533,5 @@ extern bool g_enablePixelTest;
 extern bool g_memLogDump;
 #endif
 }
-
 
 #endif
