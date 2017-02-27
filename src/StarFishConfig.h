@@ -57,8 +57,7 @@
 #include <curl/curl.h>
 
 /* COMPILER() - the compiler being used to build the project */
-#define COMPILER(FEATURE) (defined COMPILER_##FEATURE  && COMPILER_##FEATURE)
-
+#define COMPILER(FEATURE) (defined COMPILER_##FEATURE && COMPILER_##FEATURE)
 
 /* COMPILER(MSVC) - Microsoft Visual C++ */
 #if defined(_MSC_VER)
@@ -70,7 +69,9 @@
 #endif
 
 #if COMPILER(CLANG)
-/* Keep strong enums turned off when building with clang-cl: We cannot yet build all of Blink without fallback to cl.exe, and strong enums are exposed at ABI boundaries. */
+/* Keep strong enums turned off when building with clang-cl: We cannot yet build
+ * all of Blink without fallback to cl.exe, and strong enums are exposed at ABI
+ * boundaries. */
 #undef COMPILER_SUPPORTS_CXX_STRONG_ENUMS
 #else
 #define COMPILER_SUPPORTS_CXX_OVERRIDE_CONTROL 1
@@ -82,13 +83,15 @@
 /* COMPILER(GCC) - GNU Compiler Collection */
 #if defined(__GNUC__)
 #define COMPILER_GCC 1
-#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#define GCC_VERSION_AT_LEAST(major, minor, patch) (GCC_VERSION >= (major * 10000 + minor * 100 + patch))
+#define GCC_VERSION \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#define GCC_VERSION_AT_LEAST(major, minor, patch) \
+    (GCC_VERSION >= (major * 10000 + minor * 100 + patch))
 #else
-/* Define this for !GCC compilers, just so we can write things like GCC_VERSION_AT_LEAST(4, 1, 0). */
+/* Define this for !GCC compilers, just so we can write things like
+ * GCC_VERSION_AT_LEAST(4, 1, 0). */
 #define GCC_VERSION_AT_LEAST(major, minor, patch) 0
 #endif
-
 
 /* ALWAYS_INLINE */
 #ifndef ALWAYS_INLINE
@@ -110,7 +113,6 @@
 #endif
 #endif
 
-
 /* UNLIKELY */
 #ifndef UNLIKELY
 #if COMPILER(GCC)
@@ -120,7 +122,6 @@
 #endif
 #endif
 
-
 /* LIKELY */
 #ifndef LIKELY
 #if COMPILER(GCC)
@@ -129,7 +130,6 @@
 #define LIKELY(x) (x)
 #endif
 #endif
-
 
 /* NO_RETURN */
 #ifndef NO_RETURN
@@ -141,7 +141,6 @@
 #define NO_RETURN
 #endif
 #endif
-
 
 #if !COMPILER(GCC)
 #include <codecvt>
@@ -184,8 +183,12 @@
 #define STARFISH_ASSERT_STATIC(assertion, reason)
 #else
 #define STARFISH_ASSERT(assertion) assert(assertion);
-#define STARFISH_ASSERT_NOT_REACHED() do { assert(false); } while (0)
-#define STARFISH_ASSERT_STATIC(assertion, reason) static_assert(assertion, reason)
+#define STARFISH_ASSERT_NOT_REACHED() \
+    do {                              \
+        assert(false);                \
+    } while (0)
+#define STARFISH_ASSERT_STATIC(assertion, reason) \
+    static_assert(assertion, reason)
 #endif
 
 #define STARFISH_ASSERT_UNUSED(variable, assertion) STARFISH_ASSERT(assertion)
@@ -195,10 +198,22 @@
 #define STARFISH_COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #endif
 
-#define STARFISH_RELEASE_ASSERT(assertion) do { if (!(assertion)) { STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, __LINE__); ::abort(); } } while (0);
-#define STARFISH_RELEASE_ASSERT_NOT_REACHED() do { STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", __FILE__, __LINE__); ::abort(); } while (0)
+#define STARFISH_RELEASE_ASSERT(assertion)                              \
+    do {                                                                \
+        if (!(assertion)) {                                             \
+            STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, \
+                               __LINE__);                               \
+            ::abort();                                                  \
+        }                                                               \
+    } while (0);
+#define STARFISH_RELEASE_ASSERT_NOT_REACHED()                         \
+    do {                                                              \
+        STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", \
+                           __FILE__, __LINE__);                       \
+        ::abort();                                                    \
+    } while (0)
 
-#define STARFISH_MAKE_STACK_ALLOCATED() \
+#define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \
     inline void* operator new(size_t size, void* p) = delete;
 
@@ -214,51 +229,38 @@
 #define APP_CODE_NAME "StarFish"
 #define VERSION "0.1.0"
 #define APP_VERSION(APP_NAME, VERSION) APP_NAME "/" VERSION
-#define USER_AGENT(APP_CODE_NAME, VERSION) "Mozilla/5.0 " APP_CODE_NAME "/" VERSION
+#define USER_AGENT(APP_CODE_NAME, VERSION) \
+    "Mozilla/5.0 " APP_CODE_NAME "/" VERSION
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
 
 #include "StarFishExport.h"
 
 // typedef of GC-aware vector
-template <
-    typename T,
-    typename Allocator = gc_allocator_ignore_off_page<T>
->
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCVector = std::vector<T, Allocator>;
 
 // typedef of GC-aware deque
-template <
-    typename T,
-    typename Allocator = gc_allocator_ignore_off_page<T>
->
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCDeque = std::deque<T, Allocator>;
 
 // typedef of GC-aware unordered_map
-template <
-    typename Key,
-    typename Value,
-    typename Hasher = std::hash<Key>,
-    typename Predicate = std::equal_to<Key>,
-    typename Allocator = gc_allocator_ignore_off_page<std::pair<Key, Value>>
->
-using GCUnorderedMap = std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+using GCUnorderedMap =
+    std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
 
 // typedef of GC-aware map
-template <
-    typename Key,
-    typename Value,
-    typename Comparator,
-    typename Allocator = gc_allocator_ignore_off_page<std::pair<Key, Value>>
->
+template <typename Key, typename Value, typename Comparator,
+          typename Allocator =
+              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
 using GCMap = std::map<Key, Value, Comparator, Allocator>;
 
 // typedef of GC-aware unordered_set
-template <
-    typename T,
-    typename Hasher = std::hash<T>,
-    typename Predicate = std::equal_to<T>,
-    typename Allocator = gc_allocator_ignore_off_page<T>
->
+template <typename T, typename Hasher = std::hash<T>,
+          typename Predicate = std::equal_to<T>,
+          typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
 
 #include "util/String.h"

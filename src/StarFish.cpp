@@ -52,7 +52,7 @@ bool g_memLogDump = false;
 FILE* fp_mem = NULL;
 static double process_mem_usage()
 {
-    double vm_usage     = 0.0;
+    double vm_usage = 0.0;
     double resident_set = 0.0;
 
     // 'file' stat seems to give the most reliable results
@@ -60,26 +60,26 @@ static double process_mem_usage()
     std::ifstream stat_stream("/proc/self/stat", std::ios_base::in);
 
     // dummy vars for leading entries in stat that we don't care about
-    //
     std::string pid, comm, state, ppid, pgrp, session, tty_nr;
     std::string tpgid, flags, minflt, cminflt, majflt, cmajflt;
     std::string utime, stime, cutime, cstime, priority, nice;
     std::string O, itrealvalue, starttime;
 
     // the two fields we want
-    //
     unsigned long vsize;
     long rss;
 
-    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
-    >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
-    >> utime >> stime >> cutime >> cstime >> priority >> nice
-    >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+    // don't care about the rest
+    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr >>
+        tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >>
+        stime >> cutime >> cstime >> priority >> nice >> O >> itrealvalue >>
+        starttime >> vsize >> rss; 
 
     stat_stream.close();
 
-    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-    vm_usage     = vsize / 1024.0;
+    // in case x86-64 is configured to use 2MB pages
+    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; 
+    vm_usage = vsize / 1024.0;
     resident_set = rss * page_size_kb;
 
     return resident_set;
@@ -156,18 +156,22 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
     g_gcCollectionEventListenterList.push_back(fn);
 }
 
-StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier)
-    : m_locale(icu::Locale::createFromName(locale))
-    , m_lineBreaker(nullptr)
-    , m_timezoneID(String::fromUTF8(timezoneID))
-    , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
-    , m_console(new Console(this))
+StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
+                   const char* timezoneID, void* win, int w, int h,
+                   float defaultFontSizeMultiplier)
+    : m_locale(icu::Locale::createFromName(locale)),
+      m_lineBreaker(nullptr),
+      m_timezoneID(String::fromUTF8(timezoneID)),
+      m_defaultFontSizeMultiplier(defaultFontSizeMultiplier),
+      m_console(new Console(this))
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    , m_inspector(nullptr)
+      ,
+      m_inspector(nullptr)
 #endif
-    , m_enterCount(0)
-    , m_seed((unsigned int)time(NULL))
-    , m_offset(-1)
+      ,
+      m_enterCount(0),
+      m_seed((unsigned int)time(NULL)),
+      m_offset(-1)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -180,23 +184,30 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
-        GC_set_warn_proc([](char *msg, GC_word arg)
-        {
-            STARFISH_LOG_ERROR(msg, arg);
-        });
+        GC_set_warn_proc(
+            [](char* msg, GC_word arg) { STARFISH_LOG_ERROR(msg, arg); });
 
         addGCCollectionListener([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef STARFISH_ENABLE_TEST
-                if (fp_mem&&g_memLogDump)
-                    fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
+                if (fp_mem && g_memLogDump)
+                    fprintf(fp_mem, "%f %f\n",
+                            GC_get_memory_use() / 1024.f / 1024.f,
+                            process_mem_usage() / 1024.f);
 
                 auto stat = getSmapsStats();
 
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB] Private_Dirty[%.1fMB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage() / 1024.f, stat.Private_Dirty / 1024.f);
-                // malloc_stats();
+                STARFISH_LOG_INFO(
+                    "did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB] "
+                    "Private_Dirty[%.1fMB]\n",
+                    GC_get_memory_use() / 1024.f / 1024.f,
+                    GC_get_heap_size() / 1024.f / 1024.f,
+                    process_mem_usage() / 1024.f, stat.Private_Dirty / 1024.f);
+// malloc_stats();
 #else
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
+                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n",
+                                  GC_get_memory_use() / 1024.f / 1024.f,
+                                  GC_get_heap_size() / 1024.f / 1024.f);
 #endif
                 // malloc_stats();
             }
@@ -211,7 +222,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
         });
         GC_set_free_space_divisor(64);
         GC_set_force_unmap_on_gcollect(1);
-
     }
 
     if (!win) {
@@ -241,7 +251,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
     m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
-
 }
 
 StarFish::~StarFish()
@@ -267,7 +276,8 @@ void StarFish::run()
 void StarFish::enter()
 {
     if (m_enterCount == 0) {
-        g_internalCanvas = evas_object_evas_get((Evas_Object*)m_window->unwrap());
+        g_internalCanvas =
+            evas_object_evas_get((Evas_Object*)m_window->unwrap());
         m_window->scriptBindingInstance()->enter();
     }
     m_enterCount++;
@@ -311,19 +321,21 @@ void StarFish::loadHTMLDocument(String* filePath)
 
             path = std::string("file://") + path + fileName;
 #ifdef STARFISH_ENABLE_TEST
-            std::string mem_log =  fileName.substr(0, fileName.length()-5)+"_mem.txt";
+            std::string mem_log =
+                fileName.substr(0, fileName.length() - 5) + "_mem.txt";
             if (g_memLogDump)
                 fp_mem = fopen(mem_log.c_str(), "w");
 #endif
         }
     }
 
-
     int width;
     int height;
-    evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
+    evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width,
+                             &height);
     m_window = Window::create(this, m_nativeWindow, width, height);
-    URL* url = URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
+    URL* url =
+        URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
 
     m_window->setHistory(url);
     m_window->navigate(url);
@@ -355,7 +367,7 @@ String* StarFish::evaluate(String* s)
     return m_window->scriptBindingInstance()->evaluate(s);
 }
 
-void StarFish::addPointerInRootSet(void *ptr)
+void StarFish::addPointerInRootSet(void* ptr)
 {
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
@@ -365,7 +377,7 @@ void StarFish::addPointerInRootSet(void *ptr)
     }
 }
 
-void StarFish::removePointerFromRootSet(void *ptr)
+void StarFish::removePointerFromRootSet(void* ptr)
 {
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
@@ -408,7 +420,8 @@ bool StarFish::stringToBlobURLString(String* url, BlobURLStore& store)
     }
 
     unsigned int a0, a1, a2, a3, a4, a5, a6, a7;
-    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
+    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4,
+           &a5, &a6, &a7);
 
     union {
         struct {
@@ -438,7 +451,6 @@ bool StarFish::stringToBlobURLString(String* url, BlobURLStore& store)
     spliter.small.a = a2;
     spliter.small.b = a3;
     store.m_b = spliter.big;
-
 
     spliter64.small.a = a4;
     spliter64.small.b = a5;
@@ -600,9 +612,11 @@ bool StarFish::isValidBlobURL(BlobURLStore ptr)
 {
     auto iter = m_urlBlobStore.find(ptr);
 #ifdef STARFISH_32
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
+    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
+           ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
 #else
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b;
+    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
+           ptr.m_b == iter->m_b;
 #endif
 }
 
@@ -622,14 +636,14 @@ BlobURLStore StarFish::findBlobURL(Blob* ptr)
     return *iter;
 }
 
-
 BlobURLStore StarFish::addMediaSourceInBlobURLStore(MediaSource* ptr)
 {
 #ifndef NDEBUG
     {
         BlobURLStore s;
         s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) == m_urlMediaSourceBlobStore.end());
+        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) ==
+                        m_urlMediaSourceBlobStore.end());
     }
 #endif
     BlobURLStore a;
@@ -652,11 +666,13 @@ BlobURLStore StarFish::addMediaSourceInBlobURLStore(MediaSource* ptr)
 void StarFish::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 {
 #ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] StarFish::removeMediaSourceFromBlobURLStore\n");
+    STARFISH_LOG_INFO(
+        "[TRACE_MSE_GC] StarFish::removeMediaSourceFromBlobURLStore\n");
     {
         BlobURLStore s;
         s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) != m_urlMediaSourceBlobStore.end());
+        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) !=
+                        m_urlMediaSourceBlobStore.end());
     }
 #endif
     BlobURLStore s;
@@ -668,9 +684,11 @@ bool StarFish::isValidMediaSourceBlobURL(BlobURLStore ptr)
 {
     auto iter = m_urlMediaSourceBlobStore.find(ptr);
 #ifdef STARFISH_32
-    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
+    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a &&
+           ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
 #else
-    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b;
+    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a &&
+           ptr.m_b == iter->m_b;
 #endif
 }
 
@@ -704,119 +722,254 @@ void StarFish::setupInspector(uint32_t portNumber)
 }
 #endif
 StaticStrings::StaticStrings(StarFish* sf)
-    : m_starFish(sf)
-    , m_xhtmlNamespaceURI(AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
-    , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
-    , m_documentFragmentLocalName(AtomicString::createAtomicString(sf, "#document-fragment"))
-    , m_textLocalName(AtomicString::createAtomicString(sf, "#text"))
-    , m_cDataSectionLocalName(AtomicString::createAtomicString(sf, "#cdata-section"))
-    , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
+    : m_starFish(sf),
+      m_xhtmlNamespaceURI(
+          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml")),
+      m_documentLocalName(AtomicString::createAtomicString(sf, "#document")),
+      m_documentFragmentLocalName(
+          AtomicString::createAtomicString(sf, "#document-fragment")),
+      m_textLocalName(AtomicString::createAtomicString(sf, "#text")),
+      m_cDataSectionLocalName(
+          AtomicString::createAtomicString(sf, "#cdata-section")),
+      m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
 {
-#define DEFINE_HTML_LOCAL_NAMES(name) \
-    m_##name##TagName = QualifiedName(m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
+#define DEFINE_HTML_LOCAL_NAMES(name)  \
+    m_##name##TagName = QualifiedName( \
+        m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
-    m_id = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "id"));
-    m_name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "name"));
-    m_class = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "class"));
-    m_localName = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "localName"));
-    m_style = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "style"));
-    m_src = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "src"));
-    m_width = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "width"));
-    m_height = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "height"));
-    m_rel = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "rel"));
-    m_href = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "href"));
-    m_type = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "type"));
-    m_dir = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "dir"));
-    m_color = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "color"));
-    m_face = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "face"));
-    m_size = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "size"));
-    m_charset = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "charset"));
-    m_content = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "content"));
-    m_lang = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "lang"));
-    m_colspan = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "colspan"));
-    m_rowspan = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "rowspan"));
-    m_span = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "span"));
+    m_id = QualifiedName(AtomicString::emptyAtomicString(),
+                         AtomicString::createAtomicString(sf, "id"));
+    m_name = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "name"));
+    m_class = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "class"));
+    m_localName =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "localName"));
+    m_style = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "style"));
+    m_src = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "src"));
+    m_width = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "width"));
+    m_height = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "height"));
+    m_rel = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "rel"));
+    m_href = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "href"));
+    m_type = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "type"));
+    m_dir = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "dir"));
+    m_color = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "color"));
+    m_face = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "face"));
+    m_size = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "size"));
+    m_charset = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "charset"));
+    m_content = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "content"));
+    m_lang = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "lang"));
+    m_colspan = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "colspan"));
+    m_rowspan = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "rowspan"));
+    m_span = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "span"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    m_default = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "default"));
-    m_loop = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loop"));
-    m_autoplay = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "autoplay"));
-    m_preload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "preload"));
-    m_controls = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "controls"));
-    m_kind = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "kind"));
-    m_label = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "label"));
-    m_srclang = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "srclang"));
+    m_default = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "default"));
+    m_loop = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "loop"));
+    m_autoplay =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "autoplay"));
+    m_preload = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "preload"));
+    m_controls =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "controls"));
+    m_kind = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "kind"));
+    m_label = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "label"));
+    m_srclang = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "srclang"));
 #endif
 
-    m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
-    m_onclick = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onclick"));
-    m_mousedown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mousedown"));
-    m_onmousedown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmousedown"));
-    m_mousemove = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mousemove"));
-    m_onmousemove = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmousemove"));
-    m_mouseout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseout"));
-    m_onmouseout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseout"));
-    m_mouseover = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseover"));
-    m_onmouseover = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseover"));
-    m_mouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseup"));
-    m_onmouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseup"));
-    m_load = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "load"));
-    m_onload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onload"));
-    m_error = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "error"));
-    m_onerror = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onerror"));
-    m_unload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "unload"));
-    m_onunload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onunload"));
-    m_visibilitychange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "visibilitychange"));
-    m_DOMContentLoaded = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "DOMContentLoaded"));
-    m_readystatechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "readystatechange"));
-    m_progress = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "progress"));
-    m_abort = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "abort"));
-    m_timeout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeout"));
-    m_loadend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadend"));
-    m_loadstart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadstart"));
-    m_enter = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "enter"));
-    m_exit = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "exit"));
-    m_blur = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "blur"));
-    m_onblur = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onblur"));
-    m_focus = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focus"));
-    m_onfocus = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocus"));
-    m_focusin = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focusin"));
-    m_onfocusin = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocusin"));
-    m_focusout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focusout"));
-    m_onfocusout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocusout"));
+    m_click = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "click"));
+    m_onclick = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "onclick"));
+    m_mousedown =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mousedown"));
+    m_onmousedown =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmousedown"));
+    m_mousemove =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mousemove"));
+    m_onmousemove =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmousemove"));
+    m_mouseout =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mouseout"));
+    m_onmouseout =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmouseout"));
+    m_mouseover =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mouseover"));
+    m_onmouseover =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmouseover"));
+    m_mouseup = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "mouseup"));
+    m_onmouseup =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmouseup"));
+    m_load = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "load"));
+    m_onload = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "onload"));
+    m_error = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "error"));
+    m_onerror = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "onerror"));
+    m_unload = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "unload"));
+    m_onunload =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onunload"));
+    m_visibilitychange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "visibilitychange"));
+    m_DOMContentLoaded =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "DOMContentLoaded"));
+    m_readystatechange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "readystatechange"));
+    m_progress =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "progress"));
+    m_abort = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "abort"));
+    m_timeout = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "timeout"));
+    m_loadend = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "loadend"));
+    m_loadstart =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "loadstart"));
+    m_enter = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "enter"));
+    m_exit = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "exit"));
+    m_blur = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "blur"));
+    m_onblur = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "onblur"));
+    m_focus = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "focus"));
+    m_onfocus = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "onfocus"));
+    m_focusin = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "focusin"));
+    m_onfocusin =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onfocusin"));
+    m_focusout =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "focusout"));
+    m_onfocusout =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onfocusout"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
-    m_sourceopen = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceopen"));
-    m_sourceended = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceended"));
-    m_sourceclose = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceclose"));
-    m_addsourcebuffer = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "addsourcebuffer"));
-    m_removesourcebuffer = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "removesourcebuffer"));
-    m_updatestart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updatestart"));
-    m_update = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "update"));
-    m_updateend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updateend"));
-    m_suspend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "suspend"));
-    m_emptied = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "emptied"));
-    m_stalled = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "stalled"));
-    m_loadedmetadata = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadedmetadata"));
-    m_loadeddata = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadeddata"));
-    m_canplay = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "canplay"));
-    m_canplaythrough = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "canplaythrough"));
-    m_playing = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "playing"));
-    m_waiting = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "waiting"));
-    m_seeking = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeking"));
-    m_seeked = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeked"));
-    m_ended = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ended"));
-    m_open = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "open"));
-    m_closed = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "closed"));
-    m_durationchange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "durationchange"));
-    m_timeupdate = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeupdate"));
-    m_play = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "play"));
-    m_pause = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "pause"));
-    m_ratechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ratechange"));
-    m_volumechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "volumechange"));
+    m_cuechange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "cuechange"));
+    m_sourceopen =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "sourceopen"));
+    m_sourceended =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "sourceended"));
+    m_sourceclose =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "sourceclose"));
+    m_addsourcebuffer =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "addsourcebuffer"));
+    m_removesourcebuffer = QualifiedName(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAtomicString(sf, "removesourcebuffer"));
+    m_updatestart =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "updatestart"));
+    m_update = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "update"));
+    m_updateend =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "updateend"));
+    m_suspend = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "suspend"));
+    m_emptied = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "emptied"));
+    m_stalled = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "stalled"));
+    m_loadedmetadata =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "loadedmetadata"));
+    m_loadeddata =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "loadeddata"));
+    m_canplay = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "canplay"));
+    m_canplaythrough =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "canplaythrough"));
+    m_playing = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "playing"));
+    m_waiting = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "waiting"));
+    m_seeking = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "seeking"));
+    m_seeked = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "seeked"));
+    m_ended = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "ended"));
+    m_open = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "open"));
+    m_closed = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "closed"));
+    m_durationchange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "durationchange"));
+    m_timeupdate =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "timeupdate"));
+    m_play = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "play"));
+    m_pause = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "pause"));
+    m_ratechange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "ratechange"));
+    m_volumechange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "volumechange"));
 #endif
-    m_keydown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "keydown"));
-    m_keyup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "keyup"));
+    m_keydown = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "keydown"));
+    m_keyup = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "keyup"));
 }
-
 }
