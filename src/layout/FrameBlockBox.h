@@ -27,13 +27,12 @@ namespace StarFish {
 
 class FrameBlockBox;
 class LineFormattingContext;
-class InlineTextBox; // TextNode
+class InlineTextBox;        // TextNode
 class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
 public:
-    InlineBox(Node* node, ComputedStyle* style)
-        : FrameBox(node, style)
+    InlineBox(Node* node, ComputedStyle* style) : FrameBox(node, style)
     {
     }
 
@@ -45,9 +44,20 @@ public:
         return nullptr;
     }
 
-    virtual bool isInlineBox() { return true; }
-    virtual bool isInlineTextBox() const { return false; }
-    virtual bool isInlineNonReplacedBox() const { return false; }
+    virtual bool isInlineBox()
+    {
+        return true;
+    }
+
+    virtual bool isInlineTextBox() const
+    {
+        return false;
+    }
+
+    virtual bool isInlineNonReplacedBox() const
+    {
+        return false;
+    }
 
     InlineTextBox* asInlineTextBox()
     {
@@ -67,7 +77,8 @@ struct TextRun {
     StringView m_stringView;
     CharDirection m_direction;
 
-    TextRun(FrameText* frameText, String* str, size_t startPosition, size_t endPosition, CharDirection dir)
+    TextRun(FrameText* frameText, String* str, size_t startPosition,
+            size_t endPosition, CharDirection dir)
         : m_stringView(StringView(str, startPosition, endPosition))
     {
         m_frameText = frameText;
@@ -78,20 +89,24 @@ struct TextRun {
 class InlineTextBox : public InlineBox {
 public:
     InlineTextBox(FrameText* frame, const TextRun& run)
-        : InlineBox(frame->node(), frame->style())
-        , m_textRun(run)
+        : InlineBox(frame->node(), frame->style()), m_textRun(run)
     {
     }
 
-    virtual bool isInlineTextBox() const { return true; }
+    virtual bool isInlineTextBox() const
+    {
+        return true;
+    }
 
     virtual void paint(PaintingContext& ctx);
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
-        printf(" [(%s), dir: %d, start: %d, end %d] ", m_textRun.m_stringView.substring()->utf8Data(), (int)charDirection(),
-            (int)m_textRun.m_stringView.start(), (int)m_textRun.m_stringView.end());
+        printf(" [(%s), dir: %d, start: %d, end %d] ",
+               m_textRun.m_stringView.substring()->utf8Data(),
+               (int)charDirection(), (int)m_textRun.m_stringView.start(),
+               (int)m_textRun.m_stringView.end());
     }
 #endif
     virtual const char* name()
@@ -149,7 +164,10 @@ public:
         return m_boxes;
     }
 
-    void iterateInlineBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    void iterateInlineBoxes(
+        const std::function<bool(FrameBox*)>& fn,
+        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
+        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
         if (!fn((Box*)this)) {
             return;
@@ -159,8 +177,9 @@ public:
             beforeIterateChild((Box*)this);
         }
 
-        for (size_t i = 0; i < m_boxes.size(); i ++) {
-            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
+        for (size_t i = 0; i < m_boxes.size(); i++) {
+            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild,
+                                          afterIterateChild);
         }
 
         if (afterIterateChild) {
@@ -201,13 +220,13 @@ public:
 
     void setLeftMBPs();
     void setRightMBPs();
+
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     GCVector<FrameBox*> m_boxes;
     size_t m_absolutePositionedLayoutParentCnt;
 };
-
 
 enum MBPStatus {
     None = 0,
@@ -217,10 +236,13 @@ enum MBPStatus {
     SetRightMBP = 8,
 };
 
-class InlineNonReplacedBox : public InlineBox, public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
+class InlineNonReplacedBox
+    : public InlineBox,
+      public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
     friend struct OrgMBPStore;
     friend class FrameBlockBox;
     friend class LineFormattingContext;
+
 public:
     InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)
         : InlineNonReplacedBox(inlineBox, inlineBox->origin())
@@ -249,7 +271,11 @@ public:
         m_descender = 0;
     }
 
-    virtual bool isInlineNonReplacedBox() const { return true; }
+    virtual bool isInlineNonReplacedBox() const
+    {
+        return true;
+    }
+
     virtual const char* name()
     {
         return "InlineNonReplacedBox";
@@ -263,7 +289,8 @@ public:
         while (iter != boxes().end()) {
             FrameBox* child = *iter;
             ctx.m_canvas->save();
-            ctx.m_canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                    child->asFrameBox()->y());
             child->paint(ctx);
             ctx.m_canvas->restore();
             iter++;
@@ -273,9 +300,13 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void iterateChildBoxes(
+        const std::function<bool(FrameBox*)>& fn,
+        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
+        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        InlineBoxLayoutParentBox<InlineNonReplacedBox>::iterateInlineBoxes(fn, beforeIterateChild, afterIterateChild);
+        InlineBoxLayoutParentBox<InlineNonReplacedBox>::iterateInlineBoxes(
+            fn, beforeIterateChild, afterIterateChild);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -365,10 +396,10 @@ protected:
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin)
-        : InlineBox(frame->node(), frame->style())
-        , m_isCollapsed(false)
-        , m_origin(origin)
-        , m_mbpStatus(nullptr)
+        : InlineBox(frame->node(), frame->style()),
+          m_isCollapsed(false),
+          m_origin(origin),
+          m_mbpStatus(nullptr)
     {
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
@@ -414,8 +445,7 @@ class LineBox : public FrameBox, public InlineBoxLayoutParentBox<LineBox> {
     friend class InlineNonReplacedBox;
 
 public:
-    LineBox(Frame* parent)
-        : FrameBox(nullptr, nullptr)
+    LineBox(Frame* parent) : FrameBox(nullptr, nullptr)
     {
         setParent(parent);
         m_ascender = 0;
@@ -433,19 +463,27 @@ public:
         return "LineBox";
     }
 
-    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void iterateChildBoxes(
+        const std::function<bool(FrameBox*)>& fn,
+        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
+        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        InlineBoxLayoutParentBox<LineBox>::iterateInlineBoxes(fn, beforeIterateChild, afterIterateChild);
+        InlineBoxLayoutParentBox<LineBox>::iterateInlineBoxes(
+            fn, beforeIterateChild, afterIterateChild);
     }
 };
 
 class MarginInfo {
 public:
-    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding, bool isNewContext, Length height)
+    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding,
+               bool isNewContext, Length height)
     {
         m_canCollapseWithChildren = !isNewContext;
-        m_canCollapseTopWithChildren = m_canCollapseWithChildren && !topBorderPadding;
-        m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding && height.isAuto();
+        m_canCollapseTopWithChildren =
+            m_canCollapseWithChildren && !topBorderPadding;
+        m_canCollapseBottomWithChildren = m_canCollapseWithChildren &&
+                                          !bottomBorderPadding &&
+                                          height.isAuto();
         m_atTopSideOfBlock = true;
     }
 
@@ -510,9 +548,15 @@ public:
         return m_canCollapseTopWithChildren;
     }
 
-    void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
+    void setAtTopSideOfBlock(bool b)
+    {
+        m_atTopSideOfBlock = b;
+    }
 
-    bool atTopSideOfBlock() const { return m_atTopSideOfBlock; }
+    bool atTopSideOfBlock() const
+    {
+        return m_atTopSideOfBlock;
+    }
 
     bool canCollapseWithMarginTop() const
     {
@@ -548,13 +592,13 @@ class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
     friend class FrameDocument;
+
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
-        : FrameBox(node, style)
-        , m_marginInfo(nullptr)
-        , m_heightComputed(false)
+        : FrameBox(node, style), m_marginInfo(nullptr), m_heightComputed(false)
     {
-        STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+        STARFISH_ASSERT((node == nullptr && style != nullptr) ||
+                        (node != nullptr && style == nullptr));
     }
 
     virtual bool isFrameBlockBox()
@@ -580,8 +624,12 @@ public:
                 if (fi->isLeftMBPCleared() && fi->isRightMBPCleared()) {
                     if (!fi->firstChild())
                         return false;
-                    if (fi->firstChild() == fi->lastChild() && fi->firstChild()->isFrameText()) {
-                        if (fi->firstChild()->asFrameText()->text()->containsOnlyWhitespace())
+                    if (fi->firstChild() == fi->lastChild() &&
+                        fi->firstChild()->isFrameText()) {
+                        if (fi->firstChild()
+                                ->asFrameText()
+                                ->text()
+                                ->containsOnlyWhitespace())
                             return false;
                     }
                 }
@@ -590,7 +638,7 @@ public:
         return true;
     }
 
-    void setMarginInfo(MarginInfo * marginInfo)
+    void setMarginInfo(MarginInfo* marginInfo)
     {
         m_marginInfo = marginInfo;
     }
@@ -610,7 +658,8 @@ public:
         return m_heightComputed;
     }
 
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
@@ -619,12 +668,17 @@ public:
     virtual void paint(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
-    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
+                                       HitTestStage stage);
 
-    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void iterateChildBoxes(
+        const std::function<bool(FrameBox*)>& fn,
+        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
+        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
         if (hasBlockFlow()) {
-            FrameBox::iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
+            FrameBox::iterateChildBoxes(fn, beforeIterateChild,
+                                        afterIterateChild);
             return;
         }
 
@@ -634,8 +688,9 @@ public:
         if (beforeIterateChild)
             beforeIterateChild(this);
 
-        for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
-            m_lineBoxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            m_lineBoxes[i]->iterateChildBoxes(fn, beforeIterateChild,
+                                              afterIterateChild);
         }
 
         if (afterIterateChild)
@@ -648,7 +703,8 @@ public:
             return true;
 
         Frame* child = firstChild();
-        return (child->style()->originalDisplay() == BlockDisplayValue) && child->isNormalFlow();
+        return (child->style()->originalDisplay() == BlockDisplayValue) &&
+               child->isNormalFlow();
     }
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
@@ -668,8 +724,10 @@ public:
 
         Length heightLength = style()->height();
         // NOTE: In case of percentage height,
-        // if containing blocks' height is fixed, the block is not self-collapsing block.
-        if (heightLength.isPercent() && !heightLength.isZero() && ctx.parentHasFixedHeight(this)) {
+        // if containing blocks' height is fixed, the block is not
+        // self-collapsing block.
+        if (heightLength.isPercent() && !heightLength.isZero() &&
+            ctx.parentHasFixedHeight(this)) {
             return false;
         }
 
@@ -711,9 +769,15 @@ struct FloatingBoxLayoutContext {
     LayoutUnit m_originalLineBoxX;
     LayoutUnit m_originalLineBoxWidth;
 
-    FloatingBoxLayoutContext(int hasFloat, LayoutUnit y, LayoutUnit originalLineBoxX, LayoutUnit originalLineBoxWidth)
-        : m_hasFloat(hasFloat), m_y(y), m_originalLineBoxX(originalLineBoxX), m_originalLineBoxWidth(originalLineBoxWidth)
-    { }
+    FloatingBoxLayoutContext(int hasFloat, LayoutUnit y,
+                             LayoutUnit originalLineBoxX,
+                             LayoutUnit originalLineBoxWidth)
+        : m_hasFloat(hasFloat),
+          m_y(y),
+          m_originalLineBoxX(originalLineBoxX),
+          m_originalLineBoxWidth(originalLineBoxWidth)
+    {
+    }
 };
 
 struct FontHeights {
@@ -722,7 +786,8 @@ struct FontHeights {
 
     FontHeights(LayoutUnit ascender, LayoutUnit descender)
         : m_ascender(ascender), m_descender(descender)
-    { }
+    {
+    }
 };
 
 class LineFormattingContext {
@@ -731,12 +796,14 @@ private:
     void registerInlineContent();
     LayoutUnit inlineBlockAscender(FrameBlockBox* box)
     {
-        STARFISH_ASSERT(m_inlineBlockAscender.find(box) != m_inlineBlockAscender.end());
+        STARFISH_ASSERT(m_inlineBlockAscender.find(box) !=
+                        m_inlineBlockAscender.end());
         return m_inlineBlockAscender[box];
     }
 
     void computeHorizontalProperties();
-    LayoutUnit distanceToNextLineBox(FrameLineBreak* br, bool hasMoreInlineBoxes);
+    LayoutUnit distanceToNextLineBox(FrameLineBreak* br,
+                                     bool hasMoreInlineBoxes);
 
     void insertPendingFloatingBoxes();
     void insertPendingInlineBoxes();
@@ -761,16 +828,23 @@ private:
     void reCacheFloatingBoxes(LayoutUnit xDiff);
     void makeFloatingBoxLayoutContext(LayoutUnit yDiff);
 
-    void breakLineForLineBox(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
+    void breakLineForLineBox(FrameLineBreak* br, bool isLastLine,
+                             bool skipFinishLine);
     void breakLineForInlineNonReplacedBox(FrameLineBreak* br);
 
     CharDirection contentDir(FrameBox* box);
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
-public:
-    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    FontHeights computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, bool dueToBr);
+public:
+    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx,
+                          const LayoutUnit& lineBoxX,
+                          const LayoutUnit& lineBoxY,
+                          const LayoutUnit& lineBoxWidth);
+
+    FontHeights computeVerticalProperties(FrameBox* parentBox,
+                                          ComputedStyle* parentStyle,
+                                          bool dueToBr);
 
     void generateInlineBoxes(Frame* origin);
 
@@ -811,10 +885,12 @@ public:
     {
         if (f->isFloating()) {
             STARFISH_ASSERT(f->style()->position() != AbsolutePositionValue);
-            FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
+            FloatingBoxLayoutContext& fbCtx =
+                (*m_floatingBoxLayoutContexts.rbegin());
             return fbCtx.m_hasFloat != HasNone;
         } else {
-            FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.begin());
+            FloatingBoxLayoutContext& fbCtx =
+                (*m_floatingBoxLayoutContexts.begin());
             return fbCtx.m_hasFloat != HasNone;
         }
     }
@@ -851,7 +927,7 @@ public:
     std::vector<FrameBox*> m_pendingInlineBoxes;
 
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
-    std::unordered_map<FrameText* , std::vector<TextRun>> m_textRunsPerFrameText;
+    std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;
 };
 }
 
