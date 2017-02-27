@@ -1777,20 +1777,20 @@ test/reftest/csswg-test/css21_original/normal-flow/inlines-016.htm
 test/reftest/csswg-test/css21_original/normal-flow/blocks-018.htm
 test/reftest/csswg-test/css21_original/normal-flow/blocks-019.htm
 test/reftest/csswg-test/css21_original/text/white-space-nowrap-001.htm
-# test/reftest/csswg-test/css21_original/text/white-space-nowrap-005.htm
-# test/reftest/csswg-test/css21_original/text/white-space-nowrap-006.htm
+test/reftest/csswg-test/css21_original/text/white-space-nowrap-005.htm
+test/reftest/csswg-test/css21_original/text/white-space-nowrap-006.htm
 test/reftest/csswg-test/css21_original/text/white-space-normal-001.htm
 test/reftest/csswg-test/css21_original/text/white-space-normal-002.htm
 # test/reftest/csswg-test/css21_original/text/white-space-normal-003.htm
 # test/reftest/csswg-test/css21_original/text/white-space-normal-004.htm
-# test/reftest/csswg-test/css21_original/text/white-space-normal-005.htm
-# test/reftest/csswg-test/css21_original/text/white-space-normal-006.htm
+test/reftest/csswg-test/css21_original/text/white-space-normal-005.htm
+test/reftest/csswg-test/css21_original/text/white-space-normal-006.htm
 test/reftest/csswg-test/css21_original/text/white-space-normal-007.htm
 test/reftest/csswg-test/css21_original/text/white-space-normal-008.htm
 test/reftest/csswg-test/css21_original/text/white-space-normal-009.htm
 # test/reftest/csswg-test/css21_original/text/white-space-pre-002.htm
-# test/reftest/csswg-test/css21_original/text/white-space-pre-005.htm
-# test/reftest/csswg-test/css21_original/text/white-space-pre-006.htm
+test/reftest/csswg-test/css21_original/text/white-space-pre-005.htm
+test/reftest/csswg-test/css21_original/text/white-space-pre-006.htm
 # test/reftest/csswg-test/css21_original/text/white-space-pre-007.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-002.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-003.htm
@@ -1822,11 +1822,8 @@ test/reftest/csswg-test/css21_original/text/white-space-processing-028.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-029.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-030.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-031.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-032.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-033.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-034.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-035.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-036.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-037.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-038.htm
 test/reftest/csswg-test/css21_original/text/white-space-processing-039.htm
@@ -1843,18 +1840,19 @@ test/reftest/csswg-test/css21_original/text/white-space-processing-049.htm
 # test/reftest/csswg-test/css21_original/text/white-space-processing-051.htm
 # test/reftest/csswg-test/css21_original/text/white-space-processing-052.htm
 # test/reftest/csswg-test/css21_original/text/white-space-processing-053.htm
+test/reftest/csswg-test/css21_original/text/white-space-processing-054.htm
 # test/reftest/csswg-test/css21_original/text/white-space-processing-055.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-056.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-057.htm
-# test/reftest/csswg-test/css21_original/text/white-space-processing-058.htm
+test/reftest/csswg-test/css21_original/text/white-space-processing-056.htm
+test/reftest/csswg-test/css21_original/text/white-space-processing-057.htm
+test/reftest/csswg-test/css21_original/text/white-space-processing-058.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-001.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-002.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-003.htm
-test/reftest/csswg-test/css21_original/text/text-align-white-space-004.htm
+# test/reftest/csswg-test/css21_original/text/text-align-white-space-004.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-005.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-006.htm
 # test/reftest/csswg-test/css21_original/text/text-align-white-space-007.htm
-test/reftest/csswg-test/css21_original/text/text-align-white-space-008.htm
+# test/reftest/csswg-test/css21_original/text/text-align-white-space-008.htm
 test/reftest/csswg-test/css21_original/text/white-space-001.htm
 test/reftest/csswg-test/css21_original/text/white-space-002.htm
 test/reftest/csswg-test/css21_original/text/white-space-003.htm

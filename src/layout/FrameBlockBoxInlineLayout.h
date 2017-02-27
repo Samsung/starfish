@@ -75,6 +75,17 @@ struct TextToken {
 #endif
 };
 
+inline bool isSeparator(char32_t c)
+{
+    // Fixed-width spaces (such as U+3000 and U+2000 through U+200A)
+    // are whitespace but are not considered word-separator characters
+    // (https://drafts.csswg.org/css-text-3)
+    if (c == 0x3000 || (c >= 0x2000 && c <= 0x200A)) {
+        return false;
+    }
+    return String::isSpaceOrNewline(c);
+}
+
 template <typename Context>
 void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
 {
@@ -95,7 +106,7 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
             continue;
         }
         bool isWhiteSpace = false;
-        if (String::isSpaceOrNewline(txt->charAt(offset))) {
+        if (isSeparator(txt->charAt(offset))) {
             isWhiteSpace = true;
         }
 
@@ -103,7 +114,7 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
         unsigned nextOffset = offset + 1;
         if (isWhiteSpace) {
             while (nextOffset < txt->length() &&
-                   String::isSpaceOrNewline((*txt)[nextOffset])) {
+                   isSeparator((*txt)[nextOffset])) {
                 if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
                     break;
                 }
@@ -122,7 +133,7 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
         } else {
             size_t start = offset;
             while (nextOffset < txt->length() &&
-                   !String::isSpaceOrNewline((*txt)[nextOffset])) {
+                   !isSeparator((*txt)[nextOffset])) {
                 nextOffset++;
             }
 

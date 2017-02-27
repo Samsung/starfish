@@ -829,13 +829,19 @@ public:
 
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            if (sv.originalString()->charAt(sv.start()) != ' ') {
+            if (sv.originalString() != String::emptyString &&
+                sv.originalString()->charAt(sv.start()) != ' ') {
                 float h = lastState().m_font->size();
                 float xx = x;
                 for (size_t i = sv.start(); i < sv.end(); i++) {
                     char32_t ch = sv.originalString()->charAt(i);
                     if (ch == 160) { // nbsp
 
+                    } else if (String::isSpaceOrNewline(ch)) {
+                        // Fixed-width spaces
+                        size_t num = Font::spaceSizeNumerator(ch);
+                        xx += h * ((float)num / SPACE_SIZE_DENOMINATOR);
+                        continue;
                     } else {
                         if (ch != 'p') {
                             Font* fnt = lastState().m_font;

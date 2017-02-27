@@ -205,24 +205,6 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len,
     return result;
 }
 
-bool isZeroWidthChar(char32_t CHAR)
-{
-    if (CHAR < 32) {
-        if (CHAR != 9 && CHAR != 10 && CHAR != 13) {
-            return true;
-        }
-    }
-    if (CHAR >= 0x7F && CHAR < 0xA0) {
-        return true;
-    }
-    if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E || CHAR == 0x200F ||
-        CHAR == 0x202A || CHAR == 0x202B || CHAR == 0x202C || CHAR == 0x202D ||
-        CHAR == 0x202C || CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC) {
-        return true;
-    }
-    return false;
-}
-
 UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end,
                             bool ignoreZeroWidthChar)
 {
@@ -230,7 +212,7 @@ UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end,
     ret.reserve((end - start) * 2);
     char buffer[8];
     for (size_t i = start; i < end; i++) {
-        if (ignoreZeroWidthChar && isZeroWidthChar(str.data()[i])) {
+        if (ignoreZeroWidthChar && String::isZeroWidthChar(str.data()[i])) {
             continue;
         }
         size_t length = utf32ToUtf8(str.data()[i], buffer);
@@ -274,7 +256,7 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
     unsigned strLength = 0;
     char buffer[8];
     for (size_t i = 0; i < len; i++) {
-        if (isZeroWidthChar(t[i])) {
+        if (String::isZeroWidthChar(t[i])) {
             continue;
         }
         int length = utf32ToUtf8(t[i], buffer);
@@ -288,7 +270,7 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
     unsigned currentPosition = 0;
 
     for (size_t i = 0; i < len; i++) {
-        if (isZeroWidthChar(t[i])) {
+        if (String::isZeroWidthChar(t[i])) {
             continue;
         }
         int length = utf32ToUtf8(t[i], buffer);
@@ -451,7 +433,7 @@ const char* String::utf8DataIgnoreZeroWidthChar()
     if (m_isASCIIString) {
         StringDataASCII* newStr = new StringDataASCII("");
         for (size_t i = 0; i < length(); i++) {
-            if (!isZeroWidthChar(charAt(i))) {
+            if (!String::isZeroWidthChar(charAt(i))) {
                 newStr->insert(newStr->end(), (*asASCIIString())[i]);
             }
         }
@@ -748,8 +730,9 @@ UTF8NonGCString String::toUTF8NonGCString(size_t start, size_t end,
         ret.reserve(end - start);
         for (size_t i = start; i < end; i++) {
             if (ignoreZeroWidthChar &&
-                isZeroWidthChar(asASCIIString()->data()[i]))
+                String::isZeroWidthChar(asASCIIString()->data()[i])) {
                 continue;
+            }
             ret.push_back(asASCIIString()->data()[i]);
         }
         return ret;

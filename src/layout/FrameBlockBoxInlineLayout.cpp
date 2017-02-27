@@ -1978,7 +1978,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
             new InlineTextBox(f, TextRun(f, source, start, end, dir));
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
-        setIsWhiteSpaceAtLast(true);
+        setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace);
         generateInlineBox(ib);
     } else {
         size_t startPos = offset;
@@ -2097,21 +2097,21 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     }
 
     FrameText* f = token.m_frameText;
-    if (token.isWhiteSpace()) {
-        if (token.m_type == WordType::ForcedNewline) {
-            generateInlineTextBox(token);
-            breakLine(nullptr);
-            return;
-        }
-
-        if (isWhiteSpaceAtLast() && !f->shouldPreserveWhiteSpaces()) {
-            return;
-        }
+    if (token.m_type == WordType::ForcedNewline) {
+        generateInlineTextBox(token);
+        breakLine(nullptr);
+        return;
     }
-
+    // Ignore first White space
+    if (m_currentLineWidth == 0 && token.isWhiteSpace() &&
+        !f->shouldPreserveWhiteSpaces()) {
+        return;
+    }
     LayoutUnit textWidth = token.width();
     // NOTE : Currently, non-collapsible white spaces at the end of line
     //        will not make linebreak
+    // Regarding wrapping, line breaking opportunities are determined
+    // on the text prior to white space collapsing steps.
     if (token.m_type != WordType::NonCollapsibleWhiteSpace &&
         !dontBreakLine(this, f, textWidth)) {
         if (token.isWhiteSpace()) {
@@ -2120,6 +2120,11 @@ void LineFormattingContext::handleTextToken(TextToken& token)
             breakLine(nullptr);
             handleTextToken(token);
         }
+        return;
+    }
+    // White space collapsing
+    if (token.isWhiteSpace() && isWhiteSpaceAtLast() &&
+        !f->shouldPreserveWhiteSpaces()) {
         return;
     }
     generateInlineTextBox(token);
@@ -2792,8 +2797,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     }
 
     updateCurrentLineWidth(token.m_frameText, w, token.m_type);
-    setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace ||
-                          token.m_type == WordType::NonCollapsibleWhiteSpace);
+    setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace);
 }
 
 void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
