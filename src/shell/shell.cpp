@@ -26,13 +26,14 @@
 #include <pthread.h>
 #include <Elementary.h>
 
-
 using namespace StarFish;
 
-bool hasEnding(std::string const &fullString, std::string const &ending)
+bool hasEnding(std::string const& fullString, std::string const& ending)
 {
     if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+        return (0 ==
+                fullString.compare(fullString.length() - ending.length(),
+                                   ending.length(), ending));
     } else {
         return false;
     }
@@ -42,11 +43,13 @@ void test(size_t, void* data)
 {
     StarFish::StarFish* sf2 = (StarFish::StarFish*)data;
     STARFISH_LOG_INFO("asdf\n");
-    ecore_timer_add(0.0001, [](void* data)->Eina_Bool {
-        StarFish::StarFish* sf2 = (StarFish::StarFish*)data;
-        sf2->messageLoop()->addIdler(test, sf2);
-        return ECORE_CALLBACK_CANCEL;
-    }, sf2);
+    ecore_timer_add(0.0001,
+                    [](void* data) -> Eina_Bool {
+                        StarFish::StarFish* sf2 = (StarFish::StarFish*)data;
+                        sf2->messageLoop()->addIdler(test, sf2);
+                        return ECORE_CALLBACK_CANCEL;
+                    },
+                    sf2);
 }
 
 // #define STARFISH_ENABLE_TV_MEMPS
@@ -66,31 +69,45 @@ void test(size_t, void* data)
 #ifdef STARFISH_ENABLE_TV_MEMPS
 #include <chrono>
 
-static void printMemps(std::chrono::time_point<std::chrono::system_clock>& startTime)
+static void printMemps(
+    std::chrono::time_point<std::chrono::system_clock>& startTime)
 {
-    std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> currentTime =
+        std::chrono::system_clock::now();
     std::chrono::duration<double> diff = currentTime - startTime;
     char command[512];
 #ifdef STARFISH_TIZEN_TV_EMULATOR
-    snprintf(command, sizeof(command), "memps -v 2> /dev/null | sed 's/^[ \\t]*//' | sed 's/,//g' | grep -E %d | grep -v grep | egrep -o '[0-9]+ '", getpid());
+    snprintf(command, sizeof(command),
+             "memps -v 2> /dev/null | sed 's/^[ \\t]*//' | sed 's/,//g' | grep "
+             "-E %d | grep -v grep | egrep -o '[0-9]+ '",
+             getpid());
     FILE* file = popen(command, "r");
     char line[512];
     int tmp, pss, gempss, gemrss;
-    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &pss, &tmp, &gempss, &gemrss, &tmp);
-    STARFISH_LOG_INFO("[MEMPS] PSS: %d, GEM_PSS: %d, GEM_RSS: %d\n", pss, gempss, gemrss);
+    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp,
+           &pss, &tmp, &gempss, &gemrss, &tmp);
+    STARFISH_LOG_INFO("[MEMPS] PSS: %d, GEM_PSS: %d, GEM_RSS: %d\n", pss,
+                      gempss, gemrss);
 #else
-    snprintf(command, sizeof(command), "vd_memps -x 1 2> /dev/null  | sed 's/^[ \\t]*//' | sed 's/,//g' | grep -E %d | grep -v grep | egrep -o '[0-9]+ '", getpid());
+    snprintf(command, sizeof(command),
+             "vd_memps -x 1 2> /dev/null  | sed 's/^[ \\t]*//' | sed 's/,//g' "
+             "| grep -E %d | grep -v grep | egrep -o '[0-9]+ '",
+             getpid());
     FILE* file = popen(command, "r");
     char line[512];
     int tmp, pss, gem, maliprocess, malidevice;
-    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &pss, &tmp, &tmp, &gem, &maliprocess, &malidevice);
-    STARFISH_LOG_INFO("[VD_MEMPS][%lf sec] PSS: %d, GEM: %d, MALI(PROCESS): %d, MALI(DEVICE): %d\n", diff.count(), pss, gem, maliprocess, malidevice);
+    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp,
+           &pss, &tmp, &tmp, &gem, &maliprocess, &malidevice);
+    STARFISH_LOG_INFO(
+        "[VD_MEMPS][%lf sec] PSS: %d, GEM: %d, MALI(PROCESS): %d, "
+        "MALI(DEVICE): %d\n",
+        diff.count(), pss, gem, maliprocess, malidevice);
 #endif
     fclose(file);
 }
 #endif
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 #ifndef NDEBUG
     setbuf(stdout, NULL);
@@ -112,7 +129,7 @@ int main(int argc, char *argv[])
 
     std::string screenShot;
     int width = 360, height = 360;
-    for (int i = 2; i < argc; i ++) {
+    for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
             flag |= StarFish::enableComputedStyleDump;
         } else if (strcmp(argv[i], "--dump-frame-tree") == 0) {
@@ -136,9 +153,11 @@ int main(int argc, char *argv[])
             screenShot = argv[i] + strlen("--screen-shot=");
             setenv("SCREEN_SHOT_FILE", screenShot.c_str(), 1);
         } else if (strstr(argv[i], "--screen-shot-width=") == argv[i]) {
-            setenv("SCREEN_SHOT_WIDTH", argv[i] + strlen("--screen-shot-width="), 1);
+            setenv("SCREEN_SHOT_WIDTH",
+                   argv[i] + strlen("--screen-shot-width="), 1);
         } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {
-            setenv("SCREEN_SHOT_HEIGHT", argv[i] + strlen("--screen-shot-height="), 1);
+            setenv("SCREEN_SHOT_HEIGHT",
+                   argv[i] + strlen("--screen-shot-height="), 1);
         } else if (strcmp(argv[i], "--hide-window") == 0) {
             // regression test, pixel test only
             setenv("HIDE_WINDOW", "1", 1);
@@ -163,18 +182,24 @@ int main(int argc, char *argv[])
     pthread_t vdm;
     pthread_attr_t attrAttr;
     pthread_attr_init(&attrAttr);
-    pthread_create(&vdm, &attrAttr, [](void* data) -> void* {
-        std::chrono::time_point<std::chrono::system_clock> startTime = std::chrono::system_clock::now();
-        while (1) {
-            // Print result of memps (or vd_memps) every 5 seconds
-            sleep(5);
-            printMemps(startTime);
-        }
-        return NULL;
-    }, NULL);
+    pthread_create(
+        &vdm, &attrAttr,
+        [](void* data) -> void* {
+            std::chrono::time_point<std::chrono::system_clock> startTime =
+                std::chrono::system_clock::now();
+            while (1) {
+                // Print result of memps (or vd_memps) every 5 seconds
+                sleep(5);
+                printMemps(startTime);
+            }
+            return NULL;
+        },
+        NULL);
 #endif
 
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr, width, height, 1);
+    StarFish::StarFish* sf =
+        new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
+                               "Asia/Seoul", nullptr, width, height, 1);
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
@@ -184,46 +209,51 @@ int main(int argc, char *argv[])
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_create(&t, &attr, [](void* data) -> void* {
-        char buf[1024];
-        sleep(1);
-        while (1) {
-            fgets(buf, 1024, stdin);
-            struct Pass {
-                StarFish::StarFish* sf;
-                char* buf;
-            };
-            char* b = new char[1024];
-            Pass* pass = new Pass;
-            pass->buf = b;
-            pass->sf = (StarFish::StarFish*)data;
-            memcpy(b, buf, sizeof buf);
-            ecore_thread_main_loop_begin();
-            ecore_animator_add([](void *data) -> Eina_Bool {
-                Pass* p = (Pass*)data;
+    pthread_create(&t, &attr,
+                   [](void* data) -> void* {
+                       char buf[1024];
+                       sleep(1);
+                       while (1) {
+                           fgets(buf, 1024, stdin);
+                           struct Pass {
+                               StarFish::StarFish* sf;
+                               char* buf;
+                           };
+                           char* b = new char[1024];
+                           Pass* pass = new Pass;
+                           pass->buf = b;
+                           pass->sf = (StarFish::StarFish*)data;
+                           memcpy(b, buf, sizeof buf);
+                           ecore_thread_main_loop_begin();
+                           ecore_animator_add(
+                               [](void* data) -> Eina_Bool {
+                                   Pass* p = (Pass*)data;
 
-                if (strncmp(p->buf, "!exit", 5) == 0) {
-                    delete p->sf;
+                                   if (strncmp(p->buf, "!exit", 5) == 0) {
+                                       delete p->sf;
 
-                    GC_gcollect_and_unmap();
-                    GC_gcollect_and_unmap();
-                    GC_gcollect_and_unmap();
-                    GC_gcollect_and_unmap();
-                    exit(-1);
-                }
+                                       GC_gcollect_and_unmap();
+                                       GC_gcollect_and_unmap();
+                                       GC_gcollect_and_unmap();
+                                       GC_gcollect_and_unmap();
+                                       exit(-1);
+                                   }
 
-                StarFishEnterer enter(p->sf);
-                String* str = p->sf->evaluate(String::fromUTF8(p->buf));
-                puts(str->utf8Data());
+                                   StarFishEnterer enter(p->sf);
+                                   String* str = p->sf->evaluate(
+                                       String::fromUTF8(p->buf));
+                                   puts(str->utf8Data());
 
-                delete [] p->buf;
-                delete p;
-                return ECORE_CALLBACK_CANCEL;
-            }, pass);
-            ecore_thread_main_loop_end();
-        }
-        return NULL;
-    }, sf);
+                                   delete[] p->buf;
+                                   delete p;
+                                   return ECORE_CALLBACK_CANCEL;
+                               },
+                               pass);
+                           ecore_thread_main_loop_end();
+                       }
+                       return NULL;
+                   },
+                   sf);
 
     // sf->messageLoop()->addIdler(test, sf);
 
