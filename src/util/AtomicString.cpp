@@ -64,6 +64,4 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
 
     return name;
 }
-
-
 }

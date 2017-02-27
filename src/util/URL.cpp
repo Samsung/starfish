@@ -23,10 +23,10 @@
 
 namespace StarFish {
 
-URL::URL(String* baseURL, String* url)
-    : ScriptWrappable(this), m_string(url)
+URL::URL(String* baseURL, String* url) : ScriptWrappable(this), m_string(url)
 {
-    m_protocolEnd = m_userStart = m_userEnd = m_passwordEnd = m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = 0;
+    m_protocolEnd = m_userStart = m_userEnd = m_passwordEnd = m_hostEnd =
+        m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = 0;
 
     parseURLString(baseURL, url);
 }
@@ -51,13 +51,16 @@ String* removingDots(String* origPath)
                 removed = true;
                 pos += 2;
                 continue;
-            } else if (str[pos + 1] == '.' && (pos + 2 == pathLen || str[pos + 2] == '/')) {
+            } else if (str[pos + 1] == '.' &&
+                       (pos + 2 == pathLen || str[pos + 2] == '/')) {
                 removed = true;
                 pos += 3;
-                if (dstPos > 1)
+                if (dstPos > 1) {
                     dstPos--;
-                while (dstPos > 0 && dst[dstPos - 1] != '/')
+                }
+                while (dstPos > 0 && dst[dstPos - 1] != '/') {
                     dstPos--;
+                }
                 continue;
             }
         }
@@ -65,10 +68,11 @@ String* removingDots(String* origPath)
         pos++;
         dstPos++;
     }
-    if (removed)
+    if (removed) {
         return String::fromUTF16(dst.data(), dstPos);
-    else
+    } else {
         return origPath;
+    }
 }
 
 void URL::resolvePositions()
@@ -78,7 +82,8 @@ void URL::resolvePositions()
     m_protocolEnd = pos + 1;
 
     bool hierarchical = m_urlString->charAt(m_protocolEnd) == '/';
-    bool hasSecondSlash = hierarchical && m_urlString->charAt(m_protocolEnd + 1) == '/';
+    bool hasSecondSlash =
+        hierarchical && m_urlString->charAt(m_protocolEnd + 1) == '/';
 
     // username & password
     m_userStart = m_protocolEnd;
@@ -87,8 +92,9 @@ void URL::resolvePositions()
         if (hasSecondSlash) {
             m_userStart++;
             if (m_protocol != FILE_PROTOCOL) {
-                while (m_urlString->charAt(m_userStart) == '/')
+                while (m_urlString->charAt(m_userStart) == '/') {
                     m_userStart++;
+                }
             }
         }
     }
@@ -119,7 +125,6 @@ void URL::resolvePositions()
                 m_pathEnd = m_queryEnd = m_fragmentEnd = m_urlString->length();
             }
         }
-
     } else {
         size_t pos2 = m_urlString->find("?");
         if (pos2 != SIZE_MAX) {
@@ -137,7 +142,8 @@ void URL::resolvePositions()
                 m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = pos3;
                 m_fragmentEnd = m_urlString->length();
             } else {
-                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = m_urlString->length();
+                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd =
+                    m_urlString->length();
             }
         }
     }
@@ -171,7 +177,6 @@ void URL::resolvePositions()
         m_portEnd = m_hostEnd;
     }
 
-
     STARFISH_ASSERT(m_protocolEnd);
     STARFISH_ASSERT(m_userStart);
     STARFISH_ASSERT(m_userEnd);
@@ -181,7 +186,6 @@ void URL::resolvePositions()
     STARFISH_ASSERT(m_pathEnd);
     STARFISH_ASSERT(m_queryEnd);
     STARFISH_ASSERT(m_fragmentEnd);
-
 }
 
 void URL::parseURLString(String* baseURL, String* url)
@@ -191,24 +195,30 @@ void URL::parseURLString(String* baseURL, String* url)
 
     size_t urlLength = url->length();
     for (; numLeadingSpaces < urlLength; ++numLeadingSpaces) {
-        if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces)))
+        if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces))) {
             break;
+        }
     }
     if (numLeadingSpaces != urlLength) {
         for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
-            if (!String::isSpaceOrNewline(url->charAt(urlLength - 1 - numTrailingSpaces)))
+            if (!String::isSpaceOrNewline(
+                    url->charAt(urlLength - 1 - numTrailingSpaces))) {
                 break;
+            }
         }
         STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
 
         if (numLeadingSpaces || numTrailingSpaces) {
-            url = url->substring(numLeadingSpaces, urlLength - (numLeadingSpaces + numTrailingSpaces));
+            url = url->substring(numLeadingSpaces,
+                                 urlLength -
+                                     (numLeadingSpaces + numTrailingSpaces));
         }
     }
 
     bool isAbsolute = false;
 
-    if (url->startsWith("data:", false) || url->startsWith("blob:", false) || url->contains("://")) {
+    if (url->startsWith("data:", false) || url->startsWith("blob:", false) ||
+        url->contains("://")) {
         isAbsolute = true;
     }
 
@@ -250,7 +260,8 @@ void URL::parseURLString(String* baseURL, String* url)
 
         if (baseEndsWithSlash) {
             url = baseURL->concat(url);
-        } else if (url->startsWith("?") || url->startsWith("#") || urlLength == 0) {
+        } else if (url->startsWith("?") || url->startsWith("#") ||
+                   urlLength == 0) {
             url = baseURL->concat(url);
         } else {
             size_t f = baseURL->find("://");
@@ -346,7 +357,9 @@ String* URL::createObjectURL(Blob* blob)
     } else {
         store = blob->starFish()->addBlobInBlobURLStore(blob);
     }
-    return StarFish::blobURLStoreToString(store, blob->starFish()->window()->document()->documentURI()->urlString());
+    return StarFish::blobURLStoreToString(
+        store,
+        blob->starFish()->window()->document()->documentURI()->urlString());
 }
 
 void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)
@@ -371,9 +384,14 @@ String* URL::createObjectURL(MediaSource* mediaSource)
     if (mediaSource->starFish()->isValidMediaSourceBlobURL(mediaSource)) {
         store = mediaSource->starFish()->findMediaSourceBlobURL(mediaSource);
     } else {
-        store = mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
+        store =
+            mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
     }
-    return StarFish::blobURLStoreToString(store, mediaSource->starFish()->window()->document()->documentURI()->urlString());
+    return StarFish::blobURLStoreToString(store, mediaSource->starFish()
+                                                     ->window()
+                                                     ->document()
+                                                     ->documentURI()
+                                                     ->urlString());
 }
 #endif
 
@@ -398,7 +416,8 @@ String* URL::getProtocol()
 void URL::setProtocol(String* newProtocol)
 {
     if (newProtocol->length()) {
-        m_urlString = newProtocol->concat(m_urlString->substring(m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1));
+        m_urlString = newProtocol->concat(m_urlString->substring(
+            m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1));
     }
 
     if (m_urlString->startsWith("file", false)) {
@@ -425,34 +444,63 @@ String* URL::getUsername()
 void URL::setUsername(String* newUser)
 {
     if (m_protocol >= HTTP_PROTOCOL) {
-        if (m_passwordEnd != m_userEnd || m_userStart != m_userEnd) // user or password exists
-            m_urlString = m_urlString->substring(0, m_userStart)->concat(newUser)->concat(m_urlString->substring(m_userEnd, m_urlString->length() - m_userEnd));
-        else
-            m_urlString = m_urlString->substring(0, m_userStart)->concat(newUser)->concat(String::createASCIIString("@"))->concat(m_urlString->substring(m_userEnd, m_urlString->length() - m_userEnd));
-
+        // user or password exists
+        if (m_passwordEnd != m_userEnd || m_userStart != m_userEnd) {
+            m_urlString =
+                m_urlString->substring(0, m_userStart)
+                    ->concat(newUser)
+                    ->concat(m_urlString->substring(
+                        m_userEnd, m_urlString->length() - m_userEnd));
+        } else {
+            m_urlString =
+                m_urlString->substring(0, m_userStart)
+                    ->concat(newUser)
+                    ->concat(String::createASCIIString("@"))
+                    ->concat(m_urlString->substring(
+                        m_userEnd, m_urlString->length() - m_userEnd));
+        }
         resolvePositions();
     }
 }
 
 String* URL::getPassword()
 {
-    if (m_passwordEnd != m_userEnd)
-        return m_urlString->substring(m_userEnd + 1, m_passwordEnd - m_userEnd - 1);
-    else
+    if (m_passwordEnd != m_userEnd) {
+        return m_urlString->substring(m_userEnd + 1,
+                                      m_passwordEnd - m_userEnd - 1);
+    } else {
         return String::emptyString;
+    }
 }
 
 void URL::setPassword(String* newPass)
 {
     if (m_protocol >= HTTP_PROTOCOL) {
-        if (m_passwordEnd != m_userEnd) // password exists
-            m_urlString = m_urlString->substring(0, m_userEnd + 1)->concat(newPass)->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
-        else {
-            if (m_userStart != m_userEnd) // user exists
-                m_urlString = m_urlString->substring(0, m_userEnd)->concat(String::createASCIIString(":"))->concat(newPass)->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
-            else
-                m_urlString = m_urlString->substring(0, m_userEnd)->concat(String::createASCIIString(":"))->concat(newPass)->concat(String::createASCIIString("@"))->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
-
+        // password exists
+        if (m_passwordEnd != m_userEnd) {
+            m_urlString =
+                m_urlString->substring(0, m_userEnd + 1)
+                    ->concat(newPass)
+                    ->concat(m_urlString->substring(
+                        m_passwordEnd, m_urlString->length() - m_passwordEnd));
+        } else {
+            // user exists
+            if (m_userStart != m_userEnd) {
+                m_urlString = m_urlString->substring(0, m_userEnd)
+                                  ->concat(String::createASCIIString(":"))
+                                  ->concat(newPass)
+                                  ->concat(m_urlString->substring(
+                                      m_passwordEnd,
+                                      m_urlString->length() - m_passwordEnd));
+            } else {
+                m_urlString = m_urlString->substring(0, m_userEnd)
+                                  ->concat(String::createASCIIString(":"))
+                                  ->concat(newPass)
+                                  ->concat(String::createASCIIString("@"))
+                                  ->concat(m_urlString->substring(
+                                      m_passwordEnd,
+                                      m_urlString->length() - m_passwordEnd));
+            }
         }
     }
     resolvePositions();
@@ -460,30 +508,34 @@ void URL::setPassword(String* newPass)
 
 String* URL::getHost()
 {
-    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    size_t start =
+        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
 String* URL::getHostname()
 {
-    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    size_t start =
+        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
 String* URL::getPort()
 {
-    if (m_hostEnd != m_portEnd)
+    if (m_hostEnd != m_portEnd) {
         return m_urlString->substring(m_hostEnd + 1, m_portEnd - m_hostEnd - 1);
-    else
+    } else {
         return String::emptyString;
+    }
 }
 
 String* URL::getPathname()
 {
-    if (m_portEnd != m_pathEnd)
+    if (m_portEnd != m_pathEnd) {
         return m_urlString->substring(m_portEnd, m_pathEnd - m_portEnd);
-    else
+    } else {
         return String::createASCIIString("/");
+    }
 }
 
 void URL::setPathname(String* newPath, bool needRemovingDots)
@@ -493,8 +545,9 @@ void URL::setPathname(String* newPath, bool needRemovingDots)
     }
     if (needRemovingDots) {
         String* tmp = removingDots(newPath);
-        if (tmp != newPath)
+        if (tmp != newPath) {
             newPath = tmp;
+        }
     }
     m_urlString = m_urlString->substring(0, m_portEnd)->concat(newPath);
     resolvePositions();
@@ -502,10 +555,11 @@ void URL::setPathname(String* newPath, bool needRemovingDots)
 
 String* URL::getSearch()
 {
-    if (m_pathEnd != m_queryEnd)
+    if (m_pathEnd != m_queryEnd) {
         return m_urlString->substring(m_pathEnd, m_queryEnd - m_pathEnd);
-    else
+    } else {
         return String::emptyString;
+    }
 }
 
 void URL::setSearch(String* newPath)
@@ -513,16 +567,20 @@ void URL::setSearch(String* newPath)
     if (newPath->length() && newPath->charAt(0) != '?') {
         newPath = String::createASCIIString("?")->concat(newPath);
     }
-    m_urlString = m_urlString->substring(0, m_pathEnd)->concat(newPath)->concat(m_urlString->substring(m_queryEnd, m_urlString->length() - m_queryEnd));
+    m_urlString = m_urlString->substring(0, m_pathEnd)
+                      ->concat(newPath)
+                      ->concat(m_urlString->substring(
+                          m_queryEnd, m_urlString->length() - m_queryEnd));
     resolvePositions();
 }
 
 String* URL::getHash()
 {
-    if (m_queryEnd != m_fragmentEnd)
+    if (m_queryEnd != m_fragmentEnd) {
         return m_urlString->substring(m_queryEnd, m_fragmentEnd - m_queryEnd);
-    else
+    } else {
         return String::emptyString;
+    }
 }
 
 void URL::setHash(String* newPath)
@@ -533,5 +591,4 @@ void URL::setHash(String* newPath)
     m_urlString = m_urlString->substring(0, m_queryEnd)->concat(newPath);
     resolvePositions();
 }
-
 }

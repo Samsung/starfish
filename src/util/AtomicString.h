@@ -57,10 +57,10 @@ public:
     {
         return m_string;
     }
+
 private:
     String* m_string;
 };
-
 }
 
 namespace std {
@@ -74,7 +74,8 @@ struct hash<StarFish::AtomicString> {
 
 template <>
 struct equal_to<StarFish::AtomicString> {
-    size_t operator()(const StarFish::AtomicString& lqn, const StarFish::AtomicString& rqn) const
+    size_t operator()(const StarFish::AtomicString& lqn,
+                      const StarFish::AtomicString& rqn) const
     {
         return lqn.string() == rqn.string();
     }
