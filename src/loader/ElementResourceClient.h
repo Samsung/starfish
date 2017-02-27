@@ -24,14 +24,16 @@ namespace StarFish {
 class Element;
 class ElementResourceClient : public ResourceClient {
 public:
-    ElementResourceClient(Element* element, Resource* resource, bool needsSyncEventDispatch = false)
-        : ResourceClient(resource)
-        , m_needsSyncEventDispatch(needsSyncEventDispatch)
-        , m_element(element)
+    ElementResourceClient(Element* element, Resource* resource,
+                          bool needsSyncEventDispatch = false)
+        : ResourceClient(resource),
+          m_needsSyncEventDispatch(needsSyncEventDispatch),
+          m_element(element)
     {
     }
     virtual void didLoadFinished();
     virtual void didLoadFailed();
+
 protected:
     bool m_needsSyncEventDispatch;
     Element* m_element;

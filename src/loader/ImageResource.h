@@ -25,11 +25,11 @@ namespace StarFish {
 class ImageData;
 class ImageResource : public Resource {
     friend class ResourceLoader;
-    ImageResource(URL* url, ResourceLoader* loader)
-        : Resource(url, loader)
+    ImageResource(URL* url, ResourceLoader* loader) : Resource(url, loader)
     {
         m_imageData = nullptr;
     }
+
 public:
     virtual bool isImageResource()
     {
@@ -64,7 +64,6 @@ public:
 protected:
     ImageData* m_imageData;
 };
-
 }
 
 #endif

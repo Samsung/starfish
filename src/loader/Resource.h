@@ -31,6 +31,7 @@ class NetworkRequest;
 class Resource : public gc {
     friend class ResourceLoader;
     friend class ResourceWatcher;
+
 public:
     enum State {
         BeforeSend,
@@ -47,19 +48,18 @@ public:
     };
 
     Resource(URL* url, ResourceLoader* loader)
-        : m_isIncludedInComputingWindowOnLoadEvent(true)
-        , m_isReferencedByAnoterResource(false)
-        , m_isCanceledButContinueLoadingDueToCache(false)
-        , m_state(BeforeSend)
-        , m_url(url)
-        , m_loader(loader)
-        , m_networkRequest(nullptr)
+        : m_isIncludedInComputingWindowOnLoadEvent(true),
+          m_isReferencedByAnoterResource(false),
+          m_isCanceledButContinueLoadingDueToCache(false),
+          m_state(BeforeSend),
+          m_url(url),
+          m_loader(loader),
+          m_networkRequest(nullptr)
     {
     }
 
     virtual ~Resource()
     {
-
     }
 
     virtual bool isTextResource()
@@ -96,7 +96,8 @@ public:
 
     void removeResourceClient(ResourceClient* rc)
     {
-        m_resourceClients.erase(std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
+        m_resourceClients.erase(
+            std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
     NetworkRequest* networkRequest()
@@ -149,8 +150,11 @@ public:
     void removeIdlerHandle(size_t handle)
     {
         STARFISH_ASSERT(m_requstedIdlers.size());
-        STARFISH_ASSERT(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle) != m_requstedIdlers.end());
-        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
+        STARFISH_ASSERT(std::find(m_requstedIdlers.begin(),
+                                  m_requstedIdlers.end(),
+                                  handle) != m_requstedIdlers.end());
+        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(),
+                                         m_requstedIdlers.end(), handle));
     }
 
     void markThisResourceIsDoesNotAffectWindowOnLoad()
@@ -182,22 +186,25 @@ protected:
 
 class ResourceNetworkRequestClient : public NetworkRequestClient {
 public:
-    ResourceNetworkRequestClient(Resource* resource)
-        : m_resource(resource)
+    ResourceNetworkRequestClient(Resource* resource) : m_resource(resource)
     {
     }
 
-    virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction)
+    virtual void onReadyStateChange(NetworkRequest* request,
+                                    bool isExplicitAction)
     {
         if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
-            m_resource->didHeaderReceived(String::fromUTF8(request->responseHeaderData().data(), request->responseHeaderData().length()));
+            m_resource->didHeaderReceived(
+                String::fromUTF8(request->responseHeaderData().data(),
+                                 request->responseHeaderData().length()));
         }
     }
 
     virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
     {
         if (request->progressState() == NetworkRequest::LOAD) {
-            m_resource->didDataReceived(request->responseData().data(), request->responseData().size());
+            m_resource->didDataReceived(request->responseData().data(),
+                                        request->responseData().size());
             m_resource->didLoadFinished();
         } else if (request->progressState() == NetworkRequest::ERROR) {
             m_resource->didLoadFailed();
@@ -209,7 +216,6 @@ public:
 protected:
     Resource* m_resource;
 };
-
 }
 
 #endif
