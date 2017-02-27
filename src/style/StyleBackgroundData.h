@@ -27,14 +27,14 @@ class ImageResource;
 class BackgroundLayer : public gc {
 public:
     BackgroundLayer()
-        : m_image(String::emptyString)
-        , m_imageResource(NULL)
-        , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
-        , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
-        , m_sizeType(BackgroundSizeType::SizeValue)
-        , m_positionX(Length(Length::Percent, 0.0f))
-        , m_positionY(Length(Length::Percent, 0.0f))
-        , m_sizeValue(nullptr)
+        : m_image(String::emptyString),
+          m_imageResource(NULL),
+          m_repeatX(BackgroundRepeatValue::RepeatRepeatValue),
+          m_repeatY(BackgroundRepeatValue::RepeatRepeatValue),
+          m_sizeType(BackgroundSizeType::SizeValue),
+          m_positionX(Length(Length::Percent, 0.0f)),
+          m_positionY(Length(Length::Percent, 0.0f)),
+          m_sizeValue(nullptr)
     {
     }
 
@@ -51,11 +51,13 @@ public:
     {
         m_sizeType = BackgroundSizeType::SizeValue;
         if (!m_sizeValue) {
-            if (size == LengthSize())
+            if (size == LengthSize()) {
                 return;
+            }
             m_sizeValue = new LengthSize(size);
-        } else
+        } else {
             *m_sizeValue = size;
+        }
     }
 
     void setBgImage(String* img)
@@ -95,8 +97,9 @@ public:
 
     ImageData* bgImageData()
     {
-        if (m_imageResource)
+        if (m_imageResource) {
             return m_imageResource->imageData();
+        }
         return nullptr;
     }
 
@@ -133,23 +136,27 @@ public:
     LengthSize sizeValue() const
     {
         STARFISH_ASSERT(m_sizeType == BackgroundSizeType::SizeValue);
-        if (m_sizeValue)
+        if (m_sizeValue) {
             return *m_sizeValue;
+        }
         return LengthSize();
     }
 
     void checkComputed(Length fontSize, Font* font)
     {
-        if (m_sizeValue)
+        if (m_sizeValue) {
             m_sizeValue->checkComputed(fontSize, font);
+        }
 
         m_positionX.changeToFixedIfNeeded(fontSize, font);
         m_positionY.changeToFixedIfNeeded(fontSize, font);
     }
 
 private:
-    friend inline bool operator==(const BackgroundLayer& a, const BackgroundLayer& b);
-    friend inline bool operator!=(const BackgroundLayer& a, const BackgroundLayer& b);
+    friend inline bool operator==(const BackgroundLayer& a,
+                                  const BackgroundLayer& b);
+    friend inline bool operator!=(const BackgroundLayer& a,
+                                  const BackgroundLayer& b);
 
     String* m_image;
     ImageResource* m_imageResource;
@@ -170,11 +177,11 @@ private:
 class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
-        : m_bgColorNeedToUpdate(false)
-        , m_maxLayerImages(0)
-        , m_maxLayerRepeats(0)
-        , m_maxLayerSizes(0)
-        , m_maxLayerPositions(0)
+        : m_bgColorNeedToUpdate(false),
+          m_maxLayerImages(0),
+          m_maxLayerRepeats(0),
+          m_maxLayerSizes(0),
+          m_maxLayerPositions(0)
     {
     }
 
@@ -195,71 +202,80 @@ public:
 
     void resizeLayerIfNeeded(unsigned int layer)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             m_layers.resize(layer + 1);
+        }
     }
 
     void setSizeType(BackgroundSizeType type, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerSizes < layer + 1)
+        if (m_maxLayerSizes < layer + 1) {
             m_maxLayerSizes = layer + 1;
+        }
         m_layers[layer].setSizeType(type);
     }
 
     void setSizeValue(LengthSize size, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerSizes < layer + 1)
+        if (m_maxLayerSizes < layer + 1) {
             m_maxLayerSizes = layer + 1;
+        }
         m_layers[layer].setSizeValue(size);
     }
 
     void setBgImage(String* img, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerImages < layer + 1)
+        if (m_maxLayerImages < layer + 1) {
             m_maxLayerImages = layer + 1;
+        }
         m_layers[layer].setBgImage(img);
     }
 
     void setBgImageResource(ImageResource* data, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerImages < layer + 1)
+        if (m_maxLayerImages < layer + 1) {
             m_maxLayerImages = layer + 1;
+        }
         m_layers[layer].setBgImageResource(data);
     }
 
     void setRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerRepeats < layer + 1)
+        if (m_maxLayerRepeats < layer + 1) {
             m_maxLayerRepeats = layer + 1;
+        }
         m_layers[layer].setRepeatX(repeat);
     }
 
     void setRepeatY(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerRepeats < layer + 1)
+        if (m_maxLayerRepeats < layer + 1) {
             m_maxLayerRepeats = layer + 1;
+        }
         m_layers[layer].setRepeatY(repeat);
     }
 
     void setPositionX(Length position, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerPositions < layer + 1)
+        if (m_maxLayerPositions < layer + 1) {
             m_maxLayerPositions = layer + 1;
+        }
         m_layers[layer].setPositionX(position);
     }
 
     void setPositionY(Length position, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerPositions < layer + 1)
+        if (m_maxLayerPositions < layer + 1) {
             m_maxLayerPositions = layer + 1;
+        }
         m_layers[layer].setPositionY(position);
     }
 
@@ -270,77 +286,89 @@ public:
 
     String* bgImage(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return String::emptyString;
+        }
         return m_layers[layer].bgImage();
     }
 
     ImageData* bgImageData(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return nullptr;
+        }
         return m_layers[layer].bgImageData();
     }
 
     ImageResource* bgImageResource(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return nullptr;
+        }
         return m_layers[layer].bgImageResource();
     }
 
     BackgroundSizeType sizeType(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return BackgroundSizeType::SizeValue;
+        }
         return m_layers[layer].sizeType();
     }
 
     BackgroundRepeatValue repeatX(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return BackgroundRepeatValue::RepeatRepeatValue;
+        }
         return m_layers[layer].repeatX();
     }
 
     BackgroundRepeatValue repeatY(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return BackgroundRepeatValue::RepeatRepeatValue;
+        }
         return m_layers[layer].repeatY();
     }
 
     LengthSize sizeValue(unsigned int layer = 0) const
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return LengthSize();
+        }
         return m_layers[layer].sizeValue();
     }
 
     Length positionX(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return Length(Length::Percent, 0.0f);
+        }
         return m_layers[layer].positionX();
     }
 
     Length positionY(unsigned int layer = 0)
     {
-        if (m_layers.size() <= layer)
+        if (m_layers.size() <= layer) {
             return Length(Length::Percent, 0.0f);
+        }
         return m_layers[layer].positionY();
     }
 
     void checkComputed(Length fontSize, Font* font, Color color)
     {
         // NOTE: To support background layer
-        if (m_layers.size() > m_maxLayerImages)
+        if (m_layers.size() > m_maxLayerImages) {
             m_layers.resize(m_maxLayerImages);
+        }
 
-        if (m_maxLayerPositions > 0 && m_maxLayerPositions + 1 < m_layers.size()) {
+        if (m_maxLayerPositions > 0 &&
+            m_maxLayerPositions + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerPositions;
             while (i < m_layers.size()) {
-                for (unsigned int p = 0; p < m_maxLayerPositions && i < m_layers.size(); p++, i++) {
+                for (unsigned int p = 0;
+                     p < m_maxLayerPositions && i < m_layers.size(); p++, i++) {
                     m_layers[i].setPositionX(m_layers[p].positionX());
                     m_layers[i].setPositionY(m_layers[p].positionY());
                 }
@@ -349,7 +377,8 @@ public:
         if (m_maxLayerSizes > 0 && m_maxLayerSizes + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerSizes;
             while (i < m_layers.size()) {
-                for (unsigned int p = 0; p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
+                for (unsigned int p = 0;
+                     p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
                     m_layers[i].setSizeValue(m_layers[p].sizeValue());
                     m_layers[i].setSizeType(m_layers[p].sizeType());
                 }
@@ -358,7 +387,8 @@ public:
         if (m_maxLayerRepeats > 0 && m_maxLayerRepeats + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerRepeats;
             while (i < m_layers.size()) {
-                for (unsigned int p = 0; p < m_maxLayerRepeats && i < m_layers.size(); p++, i++) {
+                for (unsigned int p = 0;
+                     p < m_maxLayerRepeats && i < m_layers.size(); p++, i++) {
                     m_layers[i].setRepeatX(m_layers[p].repeatX());
                     m_layers[i].setRepeatY(m_layers[p].repeatY());
                 }
@@ -366,15 +396,18 @@ public:
         }
 
         if (m_layers.size()) {
-            for (unsigned int i = 0; i < m_layers.size(); i++)
+            for (unsigned int i = 0; i < m_layers.size(); i++) {
                 m_layers[i].checkComputed(fontSize, font);
+            }
         }
 
         // background-color
         // - default : transparent
-        // - currentColor : represents the "calculated" value of the element's color property
-        if (m_bgColorNeedToUpdate)
+        // - currentColor : represents the "calculated" value of the element's
+        // color property
+        if (m_bgColorNeedToUpdate) {
             setBgColor(color);
+        }
     }
 
     unsigned int sizeOfLayers()
@@ -383,8 +416,10 @@ public:
     }
 
 private:
-    friend inline bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b);
-    friend inline bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b);
+    friend inline bool operator==(const StyleBackgroundData& a,
+                                  const StyleBackgroundData& b);
+    friend inline bool operator!=(const StyleBackgroundData& a,
+                                  const StyleBackgroundData& b);
 
     Color m_color;
     // background-color type
@@ -395,34 +430,42 @@ private:
     unsigned int m_maxLayerPositions;
 
     GCVector<BackgroundLayer> m_layers;
-
 };
 
 bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
 {
-    if (a.m_sizeType != b.m_sizeType)
+    if (a.m_sizeType != b.m_sizeType) {
         return false;
+    }
 
-    if (!a.m_image->equals(b.m_image))
+    if (!a.m_image->equals(b.m_image)) {
         return false;
+    }
 
-    if (a.m_sizeType != b.m_sizeType)
+    if (a.m_sizeType != b.m_sizeType) {
         return false;
+    }
 
-    if (a.m_sizeType == BackgroundSizeType::SizeValue && a.sizeValue() != b.sizeValue())
+    if (a.m_sizeType == BackgroundSizeType::SizeValue &&
+        a.sizeValue() != b.sizeValue()) {
         return false;
+    }
 
-    if (a.m_repeatX != b.m_repeatX)
+    if (a.m_repeatX != b.m_repeatX) {
         return false;
+    }
 
-    if (a.m_repeatY != b.m_repeatY)
+    if (a.m_repeatY != b.m_repeatY) {
         return false;
+    }
 
-    if (a.m_positionX != b.m_positionX)
+    if (a.m_positionX != b.m_positionX) {
         return false;
+    }
 
-    if (a.m_positionY != b.m_positionY)
+    if (a.m_positionY != b.m_positionY) {
         return false;
+    }
 
     return true;
 }
@@ -434,15 +477,18 @@ bool operator!=(const BackgroundLayer& a, const BackgroundLayer& b)
 
 bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
 {
-    if (a.m_color != b.m_color)
+    if (a.m_color != b.m_color) {
         return false;
+    }
 
-    if (a.m_layers.size() != b.m_layers.size())
+    if (a.m_layers.size() != b.m_layers.size()) {
         return false;
+    }
 
     for (unsigned int i = 0; i < a.m_layers.size(); i++) {
-        if (a.m_layers[i] != b.m_layers[i])
+        if (a.m_layers[i] != b.m_layers[i]) {
             return false;
+        }
     }
 
     return true;

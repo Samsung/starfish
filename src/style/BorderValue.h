@@ -24,10 +24,10 @@ namespace StarFish {
 class BorderValue {
 public:
     BorderValue()
-        : m_style(BorderStyleValue::NoneBorderStyleValue)
-        , m_hasBorderColor(false)
-        , m_width(Length(Length::Fixed, 3))
-        , m_color(Color(0, 0, 0, 255))
+        : m_style(BorderStyleValue::NoneBorderStyleValue),
+          m_hasBorderColor(false),
+          m_width(Length(Length::Fixed, 3)),
+          m_color(Color(0, 0, 0, 255))
     {
     }
 
@@ -88,12 +88,14 @@ public:
 
     bool operator==(const BorderValue& o)
     {
-        return this->m_style == o.m_style && this->m_width == o.m_width && this->m_color == o.m_color && this->m_hasBorderColor == o.m_hasBorderColor;
+        return this->m_style == o.m_style && this->m_width == o.m_width &&
+               this->m_color == o.m_color &&
+               this->m_hasBorderColor == o.m_hasBorderColor;
     }
 
     bool operator!=(const BorderValue& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
 protected:

@@ -22,26 +22,17 @@
 namespace StarFish {
 class BorderImageLength {
 public:
-    enum Type {
-        LengthType,
-        NumberType
-    };
+    enum Type { LengthType, NumberType };
 
-    BorderImageLength()
-        : m_type(NumberType)
-        , m_number(1.0)
+    BorderImageLength() : m_type(NumberType), m_number(1.0)
     {
     }
 
-    BorderImageLength(Length length)
-        : m_type(LengthType)
-        , m_length(length)
+    BorderImageLength(Length length) : m_type(LengthType), m_length(length)
     {
     }
 
-    BorderImageLength(double number)
-        : m_type(NumberType)
-        , m_number(number)
+    BorderImageLength(double number) : m_type(NumberType), m_number(number)
     {
     }
 
@@ -67,7 +58,10 @@ public:
         return m_type == NumberType;
     }
 
-    bool isSpecified() { return isLength() || isNumber(); }
+    bool isSpecified()
+    {
+        return isLength() || isNumber();
+    }
 
     Length& length()
     {
@@ -110,7 +104,8 @@ public:
 
     bool operator==(const BorderImageLength& o)
     {
-        return m_type == o.m_type && m_length == o.m_length && m_number == o.m_number;
+        return m_type == o.m_type && m_length == o.m_length &&
+               m_number == o.m_number;
     }
 
     bool operator!=(const BorderImageLength& o)
@@ -130,26 +125,18 @@ public:
     }
 
     BorderImageLengthBox(Length l)
-        : m_left(l)
-        , m_right(l)
-        , m_top(l)
-        , m_bottom(l)
+        : m_left(l), m_right(l), m_top(l), m_bottom(l)
     {
     }
 
     BorderImageLengthBox(double num)
-        : m_left(num)
-        , m_right(num)
-        , m_top(num)
-        , m_bottom(num)
+        : m_left(num), m_right(num), m_top(num), m_bottom(num)
     {
     }
 
-    BorderImageLengthBox(BorderImageLength& l, BorderImageLength& r, BorderImageLength& t, BorderImageLength& b)
-        : m_left(l)
-        , m_right(r)
-        , m_top(t)
-        , m_bottom(b)
+    BorderImageLengthBox(BorderImageLength& l, BorderImageLength& r,
+                         BorderImageLength& t, BorderImageLength& b)
+        : m_left(l), m_right(r), m_top(t), m_bottom(b)
     {
     }
 
@@ -161,14 +148,27 @@ public:
         m_bottom.checkComputed(fontSize, font);
     }
 
-    BorderImageLength& left() { return m_left; }
-    BorderImageLength& right() { return m_right; }
-    BorderImageLength& top() { return m_top; }
-    BorderImageLength& bottom() { return m_bottom; }
+    BorderImageLength& left()
+    {
+        return m_left;
+    }
+    BorderImageLength& right()
+    {
+        return m_right;
+    }
+    BorderImageLength& top()
+    {
+        return m_top;
+    }
+    BorderImageLength& bottom()
+    {
+        return m_bottom;
+    }
 
     bool operator==(const BorderImageLengthBox& o)
     {
-        return m_left == o.m_left && m_right == o.m_right && m_top == o.m_top && m_bottom == o.m_bottom;
+        return m_left == o.m_left && m_right == o.m_right && m_top == o.m_top &&
+               m_bottom == o.m_bottom;
     }
 
     bool operator!=(const BorderImageLengthBox& o)

@@ -24,16 +24,14 @@ namespace StarFish {
 class TransformOriginData : public gc {
 public:
     TransformOriginData()
-        : m_xaxis(Length(Length::Percent, 0.5f))
-        , m_yaxis(Length(Length::Percent, 0.5f))
-        , m_zaxis(Length())
+        : m_xaxis(Length(Length::Percent, 0.5f)),
+          m_yaxis(Length(Length::Percent, 0.5f)),
+          m_zaxis(Length())
     {
     }
 
     TransformOriginData(Length x, Length y)
-        : m_xaxis(x)
-        , m_yaxis(y)
-        , m_zaxis(Length())
+        : m_xaxis(x), m_yaxis(y), m_zaxis(Length())
     {
     }
 
@@ -81,8 +79,7 @@ private:
 
 class StyleTransformOrigin : public gc {
 public:
-    StyleTransformOrigin()
-        : m_originValue(NULL)
+    StyleTransformOrigin() : m_originValue(NULL)
     {
     }
 
@@ -92,8 +89,9 @@ public:
 
     void setOriginValue(Length x, Length y)
     {
-        if (!m_originValue)
+        if (!m_originValue) {
             m_originValue = new TransformOriginData(x, y);
+        }
         m_originValue->setData(x, y);
     }
 
@@ -105,23 +103,26 @@ public:
     String* dumpString()
     {
         char temp[100];
-        snprintf(temp, sizeof(temp), "(%.3f %.3f)", m_originValue->getXAxis().isFixed() ? m_originValue->getXAxis().fixed() : m_originValue->getXAxis().percent()
-            , m_originValue->getYAxis().isFixed() ? m_originValue->getYAxis().fixed() : m_originValue->getYAxis().percent());
+        snprintf(temp, sizeof(temp), "(%.3f %.3f)",
+                 m_originValue->getXAxis().isFixed()
+                     ? m_originValue->getXAxis().fixed()
+                     : m_originValue->getXAxis().percent(),
+                 m_originValue->getYAxis().isFixed()
+                     ? m_originValue->getYAxis().fixed()
+                     : m_originValue->getYAxis().percent());
 
         return String::fromUTF8(temp);
     }
 
     bool operator==(const StyleTransformOrigin& origin)
     {
-        return m_originValue->getXAxis() == origin.m_originValue->getXAxis()
-            && m_originValue->getYAxis() == origin.m_originValue->getYAxis()
-            && m_originValue->getZAxis() == origin.m_originValue->getZAxis();
+        return m_originValue->getXAxis() == origin.m_originValue->getXAxis() &&
+               m_originValue->getYAxis() == origin.m_originValue->getYAxis() &&
+               m_originValue->getZAxis() == origin.m_originValue->getZAxis();
     }
-
 
 private:
     TransformOriginData* m_originValue;
 };
-
 }
 #endif /* STYLETRANSFORMORIGIN_H_ */

@@ -25,9 +25,9 @@ namespace StarFish {
 class StyleSurroundData : public gc {
 public:
     StyleSurroundData()
-        : margin(Length(Length::Fixed, 0))
-        , padding(Length(Length::Fixed, 0))
-        , offset(Length())
+        : margin(Length(Length::Fixed, 0)),
+          padding(Length(Length::Fixed, 0)),
+          offset(Length())
     {
     }
 
@@ -37,12 +37,13 @@ public:
 
     bool operator==(const StyleSurroundData& o)
     {
-        return border == o.border && margin == o.margin && padding == o.padding && offset == o.offset;
+        return border == o.border && margin == o.margin &&
+               padding == o.padding && offset == o.offset;
     }
 
     bool operator!=(const StyleSurroundData& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
     BorderData border;

@@ -915,5 +915,4 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
 
     return CSSStyleKind::Unknown;
 }
-
 }

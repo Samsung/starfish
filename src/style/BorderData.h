@@ -30,12 +30,14 @@ public:
 
     bool hasBorderColor()
     {
-        return m_top.hasBorderColor() || m_right.hasBorderColor() || m_bottom.hasBorderColor() || m_left.hasBorderColor();
+        return m_top.hasBorderColor() || m_right.hasBorderColor() ||
+               m_bottom.hasBorderColor() || m_left.hasBorderColor();
     }
 
     bool hasBorderStyle()
     {
-        return m_top.hasBorderStyle() || m_right.hasBorderStyle() || m_bottom.hasBorderStyle() || m_left.hasBorderStyle();
+        return m_top.hasBorderStyle() || m_right.hasBorderStyle() ||
+               m_bottom.hasBorderStyle() || m_left.hasBorderStyle();
     }
 
     bool hasBorderImageData()
@@ -63,7 +65,10 @@ public:
         return m_left;
     }
 
-    BorderImage& image() { return m_image; }
+    BorderImage& image()
+    {
+        return m_image;
+    }
 
     void checkComputed(Length fontSize, Font* font)
     {
@@ -76,9 +81,9 @@ public:
 
     bool operator==(const BorderData& o)
     {
-        return this->m_top == o.m_top && this->m_right == o.m_right
-            && this->m_bottom == o.m_bottom && this->m_left == o.m_left
-            && this->m_image == o.m_image;
+        return this->m_top == o.m_top && this->m_right == o.m_right &&
+               this->m_bottom == o.m_bottom && this->m_left == o.m_left &&
+               this->m_image == o.m_image;
     }
 
     bool operator!=(const BorderData& o)

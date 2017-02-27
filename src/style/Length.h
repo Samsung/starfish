@@ -31,13 +31,12 @@ public:
         EmToBeFixed,
 
         // This is for line-height
-        // (font-related value but does not change to Fixed since inheritance issue)
+        // (font-related value but does not change to Fixed since inheritance
+        // issue)
         InheritableNumber
     };
 
-    Length(Type type = Auto, float data = 0.f)
-        : m_type(type)
-        , m_data(data)
+    Length(Type type = Auto, float data = 0.f) : m_type(type), m_data(data)
     {
     }
 
@@ -45,8 +44,9 @@ public:
     {
         if (!isComputed()) {
             float fSize = 0.0f;
-            if (fontSize.isFixed())
+            if (fontSize.isFixed()) {
                 fSize = fontSize.fixed();
+            }
             if (m_type == EmToBeFixed) {
                 m_data = fSize * m_data;
                 m_type = Fixed;
@@ -60,26 +60,53 @@ public:
 
     void roundBorderWidth()
     {
-        // NOTE: Border Widths are rounded to the nearest integer number of pixels,
-        // but values between zero and one pixels are always rounded up to one device pixel.
-        if (m_data > 0.0 && m_data < 1.0)
+        // NOTE: Border Widths are rounded to the nearest integer number of
+        // pixels,
+        // but values between zero and one pixels are always rounded up to one
+        // device pixel.
+        if (m_data > 0.0 && m_data < 1.0) {
             m_data = 1.0;
-        else {
-            if (m_data < 0)
+        } else {
+            if (m_data < 0) {
                 m_data -= 0.01;
-            else
+            } else {
                 m_data += 0.01;
-            m_data = ((m_data > std::numeric_limits<unsigned>::max()) || (m_data < std::numeric_limits<unsigned>::min())) ? 0 : static_cast<unsigned>(m_data);
+            }
+            m_data = ((m_data > std::numeric_limits<unsigned>::max()) ||
+                      (m_data < std::numeric_limits<unsigned>::min()))
+                         ? 0
+                         : static_cast<unsigned>(m_data);
         }
     }
 
-    bool isSpecified() const { return isFixed() || isPercent(); }
-    bool isAuto() const { return m_type == Auto; }
-    bool isFixed() const { return m_type == Fixed; }
-    bool isPercent() const { return m_type == Percent; }
-    bool isInheritableNumber() const { return m_type == InheritableNumber; }
-    bool isComputed() const { return isFixed() || isPercent() || isAuto(); }
-    Type type() const { return m_type; }
+    bool isSpecified() const
+    {
+        return isFixed() || isPercent();
+    }
+    bool isAuto() const
+    {
+        return m_type == Auto;
+    }
+    bool isFixed() const
+    {
+        return m_type == Fixed;
+    }
+    bool isPercent() const
+    {
+        return m_type == Percent;
+    }
+    bool isInheritableNumber() const
+    {
+        return m_type == InheritableNumber;
+    }
+    bool isComputed() const
+    {
+        return isFixed() || isPercent() || isAuto();
+    }
+    Type type() const
+    {
+        return m_type;
+    }
 
     float percent() const
     {
@@ -127,7 +154,6 @@ public:
         return m_data >= 0;
     }
 
-
     bool operator==(const Length& src) const
     {
         return this->m_type == src.m_type && this->m_data == src.m_data;
@@ -141,14 +167,15 @@ public:
     String* dumpString()
     {
         char temp[100];
-        if (isFixed())
+        if (isFixed()) {
             snprintf(temp, sizeof(temp), "%.1f", fixed());
-        else if (isPercent())
+        } else if (isPercent()) {
             snprintf(temp, sizeof(temp), "%.1f%%", percent());
-        else if (isAuto())
+        } else if (isAuto()) {
             snprintf(temp, sizeof(temp), "auto");
-        else if (isInheritableNumber())
+        } else if (isInheritableNumber()) {
             snprintf(temp, sizeof(temp), "%.1f(num)", number());
+        }
         return String::fromUTF8(temp);
     }
 
@@ -163,14 +190,11 @@ public:
     {
     }
 
-    LengthSize(Length width)
-        : m_width(width)
+    LengthSize(Length width) : m_width(width)
     {
     }
 
-    LengthSize(Length width, Length height)
-        : m_width(width)
-        , m_height(height)
+    LengthSize(Length width, Length height) : m_width(width), m_height(height)
     {
     }
 
@@ -210,14 +234,11 @@ public:
     {
     }
 
-    LengthPosition(Length x)
-        : m_x(x)
+    LengthPosition(Length x) : m_x(x)
     {
     }
 
-    LengthPosition(Length x, Length y)
-        : m_x(x)
-        , m_y(y)
+    LengthPosition(Length x, Length y) : m_x(x), m_y(y)
     {
     }
 
@@ -251,9 +272,6 @@ public:
     Length m_y;
 };
 
-
-
-
 class LengthBox {
 public:
     LengthBox()
@@ -261,32 +279,31 @@ public:
     }
 
     LengthBox(float v)
-        : m_left(Length(Length::Fixed, v))
-        , m_right(Length(Length::Fixed, v))
-        , m_top(Length(Length::Fixed, v))
-        , m_bottom(Length(Length::Fixed, v))
+        : m_left(Length(Length::Fixed, v)),
+          m_right(Length(Length::Fixed, v)),
+          m_top(Length(Length::Fixed, v)),
+          m_bottom(Length(Length::Fixed, v))
     {
     }
 
-    LengthBox(const Length& t, const Length& r, const Length& b, const Length& l)
-        : m_left(l)
-        , m_right(r)
-        , m_top(t)
-        , m_bottom(b)
+    LengthBox(const Length& t, const Length& r, const Length& b,
+              const Length& l)
+        : m_left(l), m_right(r), m_top(t), m_bottom(b)
     {
     }
 
     LengthBox(float t, float r, float b, float l)
-        : m_left(Length(Length::Fixed, l))
-        , m_right(Length(Length::Fixed, r))
-        , m_top(Length(Length::Fixed, t))
-        , m_bottom(Length(Length::Fixed, b))
+        : m_left(Length(Length::Fixed, l)),
+          m_right(Length(Length::Fixed, r)),
+          m_top(Length(Length::Fixed, t)),
+          m_bottom(Length(Length::Fixed, b))
     {
     }
 
     bool operator==(const LengthBox& o)
     {
-        return this->m_left == o.m_left && this->m_right == o.m_right && this->m_top == o.m_top && this->m_bottom == o.m_bottom;
+        return this->m_left == o.m_left && this->m_right == o.m_right &&
+               this->m_top == o.m_top && this->m_bottom == o.m_bottom;
     }
 
     bool operator!=(const LengthBox& o)
@@ -302,10 +319,22 @@ public:
         m_bottom.changeToFixedIfNeeded(fontSize, font);
     }
 
-    const Length& left() const { return m_left; }
-    const Length& right() const { return m_right; }
-    const Length& top() const { return m_top; }
-    const Length& bottom() const { return m_bottom; }
+    const Length& left() const
+    {
+        return m_left;
+    }
+    const Length& right() const
+    {
+        return m_right;
+    }
+    const Length& top() const
+    {
+        return m_top;
+    }
+    const Length& bottom() const
+    {
+        return m_bottom;
+    }
 
     Length m_left;
     Length m_right;

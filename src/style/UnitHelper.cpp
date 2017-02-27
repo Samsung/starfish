@@ -63,5 +63,4 @@ float convertFromTurnToDeg(float value)
 {
     return value * 360;
 }
-
 }

@@ -39,16 +39,7 @@ class Document;
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:
-    enum Kind {
-        PX,
-        EM,
-        EX,
-        IN,
-        CM,
-        MM,
-        PT,
-        PC
-    };
+    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC };
 
     CSSLength(float f)
     {
@@ -64,22 +55,23 @@ public:
 
     CSSLength(String* unit, float f)
     {
-        if (unit->length() == 0 || unit->equals("px"))
+        if (unit->length() == 0 || unit->equals("px")) {
             m_kind = PX;
-        else if (unit->equals("em"))
+        } else if (unit->equals("em")) {
             m_kind = EM;
-        else if (unit->equals("ex"))
+        } else if (unit->equals("ex")) {
             m_kind = EX;
-        else if (unit->equals("in"))
+        } else if (unit->equals("in")) {
             m_kind = IN;
-        else if (unit->equals("cm"))
+        } else if (unit->equals("cm")) {
             m_kind = CM;
-        else if (unit->equals("mm"))
+        } else if (unit->equals("mm")) {
             m_kind = MM;
-        else if (unit->equals("pt"))
+        } else if (unit->equals("pt")) {
             m_kind = PT;
-        else if (unit->equals("pc"))
+        } else if (unit->equals("pc")) {
             m_kind = PC;
+        }
 
         m_value = f;
     }
@@ -96,25 +88,23 @@ public:
 
     Length toLength()
     {
-        // absolute length
-        if (m_kind == PX)
+        if (m_kind == PX) { // absolute length
             return Length(Length::Fixed, m_value);
-        else if (m_kind == CM)
+        } else if (m_kind == CM) {
             return Length(Length::Fixed, convertFromCmToPx(m_value));
-        else if (m_kind == MM)
+        } else if (m_kind == MM) {
             return Length(Length::Fixed, convertFromMmToPx(m_value));
-        else if (m_kind == IN)
+        } else if (m_kind == IN) {
             return Length(Length::Fixed, convertFromInToPx(m_value));
-        else if (m_kind == PC)
+        } else if (m_kind == PC) {
             return Length(Length::Fixed, convertFromPcToPx(m_value));
-        else if (m_kind == PT)
+        } else if (m_kind == PT) {
             return Length(Length::Fixed, convertFromPtToPx(m_value));
-
-        // font-relative length
-        else if (m_kind == EM)
+        } else if (m_kind == EM) { // font-relative length
             return Length(Length::EmToBeFixed, m_value);
-        else if (m_kind == EX)
+        } else if (m_kind == EX) {
             return Length(Length::ExToBeFixed, m_value);
+        }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -149,12 +139,7 @@ protected:
 // https://www.w3.org/TR/css3-values/#angles
 class CSSAngle {
 public:
-    enum Kind {
-        DEG,
-        GRAD,
-        RAD,
-        TURN
-    };
+    enum Kind { DEG, GRAD, RAD, TURN };
 
     CSSAngle(float f)
     {
@@ -194,14 +179,15 @@ public:
 
     float toDegreeValue()
     {
-        if (m_kind == DEG)
+        if (m_kind == DEG) {
             return m_value;
-        else if (m_kind == RAD)
+        } else if (m_kind == RAD) {
             return convertFromRadToDeg(m_value);
-        else if (m_kind == GRAD)
+        } else if (m_kind == GRAD) {
             return convertFromGradToDeg(m_value);
-        else if (m_kind == TURN)
+        } else if (m_kind == TURN) {
             return convertFromTurnToDeg(m_value);
+        }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -211,14 +197,15 @@ public:
         std::stringstream ss(std::stringstream::in | std::stringstream::out);
         ss << m_value;
         std::string stdStr = ss.str();
-        if (m_kind == DEG)
+        if (m_kind == DEG) {
             return String::fromUTF8(stdStr.append("deg").c_str());
-        else if (m_kind == RAD)
+        } else if (m_kind == RAD) {
             return String::fromUTF8(stdStr.append("rad").c_str());
-        else if (m_kind == GRAD)
+        } else if (m_kind == GRAD) {
             return String::fromUTF8(stdStr.append("grad").c_str());
-        else if (m_kind == TURN)
+        } else if (m_kind == TURN) {
             return String::fromUTF8(stdStr.append("turn").c_str());
+        }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -228,7 +215,10 @@ protected:
     float m_value;
 };
 
-// inline | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
+// inline | block | list-item | inline-block | table | inline-table |
+// table-row-group | table-header-group | table-footer-group | table-row |
+// table-column-group | table-column | table-cell | table-caption | none |
+// inherit
 enum DisplayValue {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
@@ -430,95 +420,95 @@ class CSSStyleDeclaration;
 // The following are for internal use only
 // * border-horizontal-spacing
 // * border-vertical-spacing
-#define FOR_EACH_STYLE_ATTRIBUTE(F)                                \
-    F(Color, color, "color")                                       \
-    F(Direction, direction, "direction")                           \
-    F(BackgroundColor, backgroundColor, "background-color")        \
-    F(BackgroundImage, backgroundImage, "background-image")        \
-    F(BackgroundSize, backgroundSize, "background-size")           \
-    F(LineHeight, lineHeight, "line-height")                       \
-    F(WhiteSpace, whiteSpace, "white-space")                       \
-    F(PaddingTop, paddingTop, "padding-top")                       \
-    F(PaddingRight, paddingRight, "padding-right")                 \
-    F(PaddingBottom, paddingBottom, "padding-bottom")              \
-    F(PaddingLeft, paddingLeft, "padding-left")                    \
-    F(MarginTop, marginTop, "margin-top")                          \
-    F(MarginRight, marginRight, "margin-right")                    \
-    F(MarginBottom, marginBottom, "margin-bottom")                 \
-    F(MarginLeft, marginLeft, "margin-left")                       \
-    F(Top, top, "top")                                             \
-    F(Bottom, bottom, "bottom")                                    \
-    F(Left, left, "left")                                          \
-    F(Right, right, "right")                                       \
-    F(Width, width, "width")                                       \
-    F(MaxWidth, maxWidth, "max-width")                             \
-    F(MinWidth, minWidth, "min-width")                             \
-    F(Height, height, "height")                                    \
-    F(MaxHeight, maxHeight, "max-height")                          \
-    F(MinHeight, minHeight, "min-height")                          \
-    F(FontSize, fontSize, "font-size")                             \
-    F(FontStyle, fontStyle, "font-style")                          \
-    F(Position, position, "position")                              \
-    F(TextDecoration, textDecoration, "text-decoration")           \
-    F(Display, display, "display")                                 \
-    F(Float, float, "float")                                       \
-    F(Clear, clear, "clear")                                       \
-    F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
-    F(BorderImageSource, borderImageSource, "border-image-source") \
-    F(BorderImageWidth, borderImageWidth, "border-image-width")    \
-    F(BorderTopColor, borderTopColor, "border-top-color")          \
-    F(BorderRightColor, borderRightColor, "border-right-color")    \
-    F(BorderBottomColor, borderBottomColor, "border-bottom-color") \
-    F(BorderLeftColor, borderLeftColor, "border-left-color")       \
-    F(BorderTopStyle, borderTopStyle, "border-top-style")          \
-    F(BorderRightStyle, borderRightStyle, "border-right-style")    \
-    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style") \
-    F(BorderLeftStyle, borderLeftStyle, "border-left-style")       \
-    F(BorderTopWidth, borderTopWidth, "border-top-width")          \
-    F(BorderRightWidth, borderRightWidth, "border-right-width")    \
-    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width") \
-    F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
-    F(BorderCollapse, borderCollapse, "border-collapse")           \
-    F(BorderSpacing, borderSpacing, "border-spacing")              \
-    F(CaptionSide, CaptionSide, "caption-side")                    \
-    F(TextAlign, textAlign, "text-align")                          \
-    F(Transform, transform, "transform")                           \
-    F(TransformOrigin, transformOrigin, "transform-origin")        \
-    F(Visibility, visibility, "visibility")                        \
-    F(Overflow, overflow, "overflow")                              \
-    F(ZIndex, zIndex, "z-index")                                   \
-    F(VerticalAlign, verticalAlign, "vertical-align")              \
-    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x") \
-    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
+#define FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
+    F(Color, color, "color")                                             \
+    F(Direction, direction, "direction")                                 \
+    F(BackgroundColor, backgroundColor, "background-color")              \
+    F(BackgroundImage, backgroundImage, "background-image")              \
+    F(BackgroundSize, backgroundSize, "background-size")                 \
+    F(LineHeight, lineHeight, "line-height")                             \
+    F(WhiteSpace, whiteSpace, "white-space")                             \
+    F(PaddingTop, paddingTop, "padding-top")                             \
+    F(PaddingRight, paddingRight, "padding-right")                       \
+    F(PaddingBottom, paddingBottom, "padding-bottom")                    \
+    F(PaddingLeft, paddingLeft, "padding-left")                          \
+    F(MarginTop, marginTop, "margin-top")                                \
+    F(MarginRight, marginRight, "margin-right")                          \
+    F(MarginBottom, marginBottom, "margin-bottom")                       \
+    F(MarginLeft, marginLeft, "margin-left")                             \
+    F(Top, top, "top")                                                   \
+    F(Bottom, bottom, "bottom")                                          \
+    F(Left, left, "left")                                                \
+    F(Right, right, "right")                                             \
+    F(Width, width, "width")                                             \
+    F(MaxWidth, maxWidth, "max-width")                                   \
+    F(MinWidth, minWidth, "min-width")                                   \
+    F(Height, height, "height")                                          \
+    F(MaxHeight, maxHeight, "max-height")                                \
+    F(MinHeight, minHeight, "min-height")                                \
+    F(FontSize, fontSize, "font-size")                                   \
+    F(FontStyle, fontStyle, "font-style")                                \
+    F(Position, position, "position")                                    \
+    F(TextDecoration, textDecoration, "text-decoration")                 \
+    F(Display, display, "display")                                       \
+    F(Float, float, "float")                                             \
+    F(Clear, clear, "clear")                                             \
+    F(BorderImageSlice, borderImageSlice, "border-image-slice")          \
+    F(BorderImageSource, borderImageSource, "border-image-source")       \
+    F(BorderImageWidth, borderImageWidth, "border-image-width")          \
+    F(BorderTopColor, borderTopColor, "border-top-color")                \
+    F(BorderRightColor, borderRightColor, "border-right-color")          \
+    F(BorderBottomColor, borderBottomColor, "border-bottom-color")       \
+    F(BorderLeftColor, borderLeftColor, "border-left-color")             \
+    F(BorderTopStyle, borderTopStyle, "border-top-style")                \
+    F(BorderRightStyle, borderRightStyle, "border-right-style")          \
+    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")       \
+    F(BorderLeftStyle, borderLeftStyle, "border-left-style")             \
+    F(BorderTopWidth, borderTopWidth, "border-top-width")                \
+    F(BorderRightWidth, borderRightWidth, "border-right-width")          \
+    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")       \
+    F(BorderLeftWidth, borderLeftWidth, "border-left-width")             \
+    F(BorderCollapse, borderCollapse, "border-collapse")                 \
+    F(BorderSpacing, borderSpacing, "border-spacing")                    \
+    F(CaptionSide, CaptionSide, "caption-side")                          \
+    F(TextAlign, textAlign, "text-align")                                \
+    F(Transform, transform, "transform")                                 \
+    F(TransformOrigin, transformOrigin, "transform-origin")              \
+    F(Visibility, visibility, "visibility")                              \
+    F(Overflow, overflow, "overflow")                                    \
+    F(ZIndex, zIndex, "z-index")                                         \
+    F(VerticalAlign, verticalAlign, "vertical-align")                    \
+    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")       \
+    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")       \
     F(BackgroundPositionX, backgroundPositionX, "background-position-x") \
     F(BackgroundPositionY, backgroundPositionY, "background-position-y") \
-    F(Opacity, opacity, "opacity")                                 \
-    F(FontWeight, fontWeight, "font-weight")                       \
-    F(TableLayout, tableLayout, "table-layout")                    \
-    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                    \
+    F(Opacity, opacity, "opacity")                                       \
+    F(FontWeight, fontWeight, "font-weight")                             \
+    F(TableLayout, tableLayout, "table-layout")                          \
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                          \
     F(Content, content, "content")
 
-#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
-    FOR_EACH_STYLE_ATTRIBUTE(F)                                    \
-    F(Border, border, "border")                                    \
-    F(BorderTop, borderTop, "border-top")                          \
-    F(BorderRight, borderRight, "border-right")                    \
-    F(BorderBottom, borderBottom, "border-bottom")                 \
-    F(BorderLeft, borderLeft, "border-left")                       \
-    F(BorderStyle, borderStyle, "border-style")                    \
-    F(BorderWidth, borderWidth, "border-width")                    \
-    F(BorderColor, borderColor, "border-color")                    \
-    F(Background, background, "background")                        \
-    F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
+#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
+    FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
+    F(Border, border, "border")                                      \
+    F(BorderTop, borderTop, "border-top")                            \
+    F(BorderRight, borderRight, "border-right")                      \
+    F(BorderBottom, borderBottom, "border-bottom")                   \
+    F(BorderLeft, borderLeft, "border-left")                         \
+    F(BorderStyle, borderStyle, "border-style")                      \
+    F(BorderWidth, borderWidth, "border-width")                      \
+    F(BorderColor, borderColor, "border-color")                      \
+    F(Background, background, "background")                          \
+    F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \
-    F(Margin, margin, "margin")                                    \
-    F(Padding, padding, "padding") \
+    F(Margin, margin, "margin")                                      \
+    F(Padding, padding, "padding")                                   \
     F(Font, font, "font")
 
 #define GEN_FOURSIDE(F) \
-    F(Top, top) \
-    F(Right, right) \
-    F(Bottom, bottom) \
+    F(Top, top)         \
+    F(Right, right)     \
+    F(Bottom, bottom)   \
     F(Left, left)
 
 class CSSTransformFunction {
@@ -634,8 +624,7 @@ class CSSStyleValuePair : public gc {
 
 public:
     enum KeyKind {
-#define ADD_CSS_KEYKIND(Name, name, cssname) \
-        Name,
+#define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
     };
@@ -647,7 +636,8 @@ public:
         Percentage,
         Auto,
         None,
-        Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
+        Number, // real number values -
+                // https://www.w3.org/TR/CSS21/syndata.html#value-def-number
         Int32,
         Angle, //
         Normal,
@@ -694,9 +684,7 @@ public:
         TransformFunctions,
     };
 
-    CSSStyleValuePair()
-        : m_value(0.0f)
-        , m_flagImportant(false)
+    CSSStyleValuePair() : m_value(0.0f), m_flagImportant(false)
     {
     }
 
@@ -874,7 +862,8 @@ public:
     String* urlValue(URL* urlOfStyleSheet)
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return URL::getURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
+        return URL::getURLString(urlOfStyleSheet->baseURI(),
+                                 m_value.m_stringValue);
     }
 
     String* urlStringValue()
@@ -979,40 +968,122 @@ public:
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
-        ValueData(int v) { m_floatValue = v; }
-        ValueData(float v) { m_floatValue = v; }
-        ValueData(DisplayValue v) { m_display = v; }
-        ValueData(PositionValue v) { m_position = v; }
-        ValueData(VerticalAlignValue v) { m_verticalAlign = v; }
-        ValueData(FontSizeValue v) { m_fontSize = v; }
-        ValueData(FontStyleValue v) { m_fontStyle = v; }
-        ValueData(FontWeightValue v) { m_fontWeight = v; }
-        ValueData(SideValue v) { m_side = v; }
-        ValueData(DirectionValue v) { m_direction = v; }
-        ValueData(WhiteSpaceValue v) { m_whiteSpace = v; }
-        ValueData(CSSLength v) { m_length = v; }
-        ValueData(CSSAngle v) { m_angle = v; }
-        ValueData(String* v) { m_stringValue = v; }
-        ValueData(BackgroundRepeatValue v) { m_backgroundRepeat = v; }
-        ValueData(BorderStyleValue v) { m_borderStyle = v; }
-        ValueData(BorderWidthValue v) { m_borderWidth = v; }
-        ValueData(ValueList* v) { m_multiValue = v; }
-        ValueData(OverflowValue v) { m_overflow = v; }
-        ValueData(VisibilityValue v) { m_visibility = v; }
-        ValueData(UnicodeBidiValue v) { m_unicodeBidi = v; }
-        ValueData(TextDecorationValue v) { m_textDecoration = v; }
-        ValueData(CSSTransformFunctions* v) { m_transforms = v; }
-        ValueData(::StarFish::Color v) { m_color = v; }
-        ValueData(NamedColor::NamedColorValue v) { m_namedColor = v; }
-        ValueData(BorderCollapseValue v) { m_borderCollapse = v; }
-        ValueData(CaptionSideValue v) { m_captionSide = v; }
-        ValueData(TableLayoutValue v) { m_tableLayout = v; }
+        ValueData(int v)
+        {
+            m_floatValue = v;
+        }
+        ValueData(float v)
+        {
+            m_floatValue = v;
+        }
+        ValueData(DisplayValue v)
+        {
+            m_display = v;
+        }
+        ValueData(PositionValue v)
+        {
+            m_position = v;
+        }
+        ValueData(VerticalAlignValue v)
+        {
+            m_verticalAlign = v;
+        }
+        ValueData(FontSizeValue v)
+        {
+            m_fontSize = v;
+        }
+        ValueData(FontStyleValue v)
+        {
+            m_fontStyle = v;
+        }
+        ValueData(FontWeightValue v)
+        {
+            m_fontWeight = v;
+        }
+        ValueData(SideValue v)
+        {
+            m_side = v;
+        }
+        ValueData(DirectionValue v)
+        {
+            m_direction = v;
+        }
+        ValueData(WhiteSpaceValue v)
+        {
+            m_whiteSpace = v;
+        }
+        ValueData(CSSLength v)
+        {
+            m_length = v;
+        }
+        ValueData(CSSAngle v)
+        {
+            m_angle = v;
+        }
+        ValueData(String* v)
+        {
+            m_stringValue = v;
+        }
+        ValueData(BackgroundRepeatValue v)
+        {
+            m_backgroundRepeat = v;
+        }
+        ValueData(BorderStyleValue v)
+        {
+            m_borderStyle = v;
+        }
+        ValueData(BorderWidthValue v)
+        {
+            m_borderWidth = v;
+        }
+        ValueData(ValueList* v)
+        {
+            m_multiValue = v;
+        }
+        ValueData(OverflowValue v)
+        {
+            m_overflow = v;
+        }
+        ValueData(VisibilityValue v)
+        {
+            m_visibility = v;
+        }
+        ValueData(UnicodeBidiValue v)
+        {
+            m_unicodeBidi = v;
+        }
+        ValueData(TextDecorationValue v)
+        {
+            m_textDecoration = v;
+        }
+        ValueData(CSSTransformFunctions* v)
+        {
+            m_transforms = v;
+        }
+        ValueData(::StarFish::Color v)
+        {
+            m_color = v;
+        }
+        ValueData(NamedColor::NamedColorValue v)
+        {
+            m_namedColor = v;
+        }
+        ValueData(BorderCollapseValue v)
+        {
+            m_borderCollapse = v;
+        }
+        ValueData(CaptionSideValue v)
+        {
+            m_captionSide = v;
+        }
+        ValueData(TableLayoutValue v)
+        {
+            m_tableLayout = v;
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
-        : m_valueKind(kind)
-        , m_value(value)
-        , m_flagImportant(false)
+        : m_valueKind(kind), m_value(value), m_flagImportant(false)
     {
     }
 
@@ -1072,12 +1143,16 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
-    bool updateValueLengthOrPercent(GCVector<String*>* tokens, bool allowNegative);
+    bool updateValueLengthOrPercent(GCVector<String*>* tokens,
+                                    bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(GCVector<String*>* tokens, bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(GCVector<String*>* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(GCVector<String*>* tokens,
+                                          bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(GCVector<String*>* tokens,
+                                                bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(String* token, bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(String* token,
+                                                bool allowNegative);
 
     bool updateValueBackgroundImage(GCVector<String*>* tokens, bool allowComma);
     bool updateValueBackgroundSize(GCVector<String*>* tokens, bool allowComma);
@@ -1105,24 +1180,18 @@ protected:
 
 class ValueList : public gc {
 public:
-    enum Separator {
-        None,
-        SpaceSeparator,
-        CommaSeparator,
-        SlashSeparator
-    };
+    enum Separator { None, SpaceSeparator, CommaSeparator, SlashSeparator };
 
-    ValueList()
-        : m_separator(None)
+    ValueList() : m_separator(None)
     {
     }
 
-    ValueList(Separator sep)
-        : m_separator(sep)
+    ValueList(Separator sep) : m_separator(sep)
     {
     }
 
-    void append(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData value)
+    void append(CSSStyleValuePair::ValueKind kind,
+                CSSStyleValuePair::ValueData value)
     {
         m_values.push_back(CSSStyleValuePair(kind, value));
     }
@@ -1170,9 +1239,9 @@ public:
         InlineStyle,
     };
 
-    CSSStyleDeclaration(Document* document, Element* element = NULL, StyleType styleType = InternalStyle)
-        : ScriptWrappable(this)
-        , m_document(document)
+    CSSStyleDeclaration(Document* document, Element* element = NULL,
+                        StyleType styleType = InternalStyle)
+        : ScriptWrappable(this), m_document(document)
     {
         m_element = element;
         m_styleType = styleType;
@@ -1202,7 +1271,8 @@ public:
 
     CSSStyleDeclaration* clone(Document* document, Element* element)
     {
-        CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(document, element);
+        CSSStyleDeclaration* newStyle =
+            new CSSStyleDeclaration(document, element);
         newStyle->m_cssValues = m_cssValues;
 
         return newStyle;
@@ -1230,10 +1300,10 @@ public:
 
     String* generateCSSText();
 
-
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(GCVector<String*>* tokens, String* src, String* seperator = String::emptyString);
+    void tokenizeCSSValue(GCVector<String*>* tokens, String* src,
+                          String* seperator = String::emptyString);
 
     String* Border();
     String* BorderTop();
@@ -1244,14 +1314,14 @@ public:
     String* BackgroundRepeat();
     String* BackgroundPosition();
     String* Font();
-#define ATTRIBUTE_GETTER(name, ...)                                              \
-    String* name()                                                               \
-    {                                                                            \
-        for (unsigned i = 0; i < m_cssValues.size(); i++) {                      \
+#define ATTRIBUTE_GETTER(name, ...)                                           \
+    String* name()                                                            \
+    {                                                                         \
+        for (unsigned i = 0; i < m_cssValues.size(); i++) {                   \
             if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::name) \
                 return m_cssValues[i].toString();                             \
-        }                                                                        \
-        return String::emptyString;                                              \
+        }                                                                     \
+        return String::emptyString;                                           \
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
@@ -1261,8 +1331,10 @@ public:
     {
         for (unsigned i = 0; i < m_cssValues.size(); i++) {
             if (m_cssValues[i].keyKind() == name) {
-                if (styleType() == StyleType::InlineStyle || ret.flagImportant() == true
-                    || (ret.flagImportant() == false && m_cssValues[i].flagImportant() == false)) {
+                if (styleType() == StyleType::InlineStyle ||
+                    ret.flagImportant() == true ||
+                    (ret.flagImportant() == false &&
+                     m_cssValues[i].flagImportant() == false)) {
                     m_cssValues[i].setValueKind(ret.valueKind());
                     m_cssValues[i].setValue(ret.value());
                     m_cssValues[i].setFlagImportant(ret.flagImportant());
@@ -1304,42 +1376,44 @@ public:
     void setBorderColor(String* value, bool isImportant);
     void setFont(String* value, bool isImportant);
 
-#define ATTRIBUTE_SETTER(name, ...)                                                    \
-    void set##name(String* value, bool isImportant)                                      \
-    {                                                                                  \
-        if (value->length() == 0) {                                                    \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);                      \
-            return;                                                                    \
-        }                                                                              \
-        GCVector<String*> tokens;           \
-        tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
-        CSSStyleValuePair ret;                                                         \
-        if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {        \
-            ret.setFlagImportant(isImportant);                                               \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
-        }                                                                              \
+#define ATTRIBUTE_SETTER(name, ...)                                 \
+    void set##name(String* value, bool isImportant)                 \
+    {                                                               \
+        if (value->length() == 0) {                                 \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);   \
+            return;                                                 \
+        }                                                           \
+        GCVector<String*> tokens;                                   \
+        tokenizeCSSValue(&tokens, value, String::fromUTF8(","));    \
+        CSSStyleValuePair ret;                                      \
+        if (ret.updateValueCommon(&tokens) ||                       \
+            ret.updateValue##name(&tokens)) {                       \
+            ret.setFlagImportant(isImportant);                      \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret); \
+        }                                                           \
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
 #undef ATTRIBUTE_SETTER
 
-#define ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
-    String* PRE##__VA_ARGS__(bool* isCombined = nullptr) \
-    { \
-        String* top = PRE##Top##__VA_ARGS__(); \
-        if (!top->equals(String::emptyString)) { \
-            String* right = PRE##Right##__VA_ARGS__(); \
-            if (!right->equals(String::emptyString)) { \
-                String* bottom = PRE##Bottom##__VA_ARGS__(); \
-                if (!bottom->equals(String::emptyString)) { \
-                    String* left = PRE##Left##__VA_ARGS__(); \
-                    if (!left->equals(String::emptyString)) { \
-                        return combineBoxString(top, right, bottom, left, isCombined); \
-                    } \
-                } \
-            } \
-        } \
-        return String::emptyString; \
+#define ATTRIBUTE_GETTER_FOURSIDE(PRE, ...)                               \
+    String* PRE##__VA_ARGS__(bool* isCombined = nullptr)                  \
+    {                                                                     \
+        String* top = PRE##Top##__VA_ARGS__();                            \
+        if (!top->equals(String::emptyString)) {                          \
+            String* right = PRE##Right##__VA_ARGS__();                    \
+            if (!right->equals(String::emptyString)) {                    \
+                String* bottom = PRE##Bottom##__VA_ARGS__();              \
+                if (!bottom->equals(String::emptyString)) {               \
+                    String* left = PRE##Left##__VA_ARGS__();              \
+                    if (!left->equals(String::emptyString)) {             \
+                        return combineBoxString(top, right, bottom, left, \
+                                                isCombined);              \
+                    }                                                     \
+                }                                                         \
+            }                                                             \
+        }                                                                 \
+        return String::emptyString;                                       \
     }
     ATTRIBUTE_GETTER_FOURSIDE(Margin);
     ATTRIBUTE_GETTER_FOURSIDE(Padding);
@@ -1348,7 +1422,8 @@ public:
     ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
 #undef ATTRIBUTE_GETTER_FOURSIDE
 
-    static String* combineBoxString(String* t, String* r, String* b, String* l, bool* isCombined = nullptr)
+    static String* combineBoxString(String* t, String* r, String* b, String* l,
+                                    bool* isCombined = nullptr)
     {
         if (isCombined) {
             *isCombined = true;
@@ -1366,13 +1441,18 @@ public:
         }
 
         String* space = String::spaceString;
-        if (!r->equals(l))
-            return t->concat(space)->concat(r)->concat(space)->concat(b)->concat(space)->concat(l);
-        else if (!t->equals(b))
+        if (!r->equals(l)) {
+            return t->concat(space)
+                ->concat(r)
+                ->concat(space)
+                ->concat(b)
+                ->concat(space)
+                ->concat(l);
+        } else if (!t->equals(b)) {
             return t->concat(space)->concat(r)->concat(space)->concat(b);
-        else if (!t->equals(r))
+        } else if (!t->equals(r)) {
             return t->concat(space)->concat(r);
-        else {
+        } else {
             if (isCombined) {
                 *isCombined = false;
             }
@@ -1410,23 +1490,23 @@ public:
         Class,
         PseudoClass,
         PseudoElement,
-        AttributeExact, // Example: E[foo="bar"]
-        AttributeSet, // Example: E[foo]
-        AttributeHyphen, // Example: E[foo|="bar"]
-        AttributeList, // Example: E[foo~="bar"]
+        AttributeExact,   // Example: E[foo="bar"]
+        AttributeSet,     // Example: E[foo]
+        AttributeHyphen,  // Example: E[foo|="bar"]
+        AttributeList,    // Example: E[foo~="bar"]
         AttributeContain, // css3: E[foo*="bar"]
-        AttributeBegin, // css3: E[foo^="bar"]
-        AttributeEnd, // css3: E[foo$="bar"]
+        AttributeBegin,   // css3: E[foo^="bar"]
+        AttributeEnd,     // css3: E[foo$="bar"]
         FirstAttributeSelectorMatch = AttributeExact,
     };
 
     enum RelationType {
         None,
-        SubSelector, // No combinator
-        Descendant, // "Space" combinator
-        Child, // > combinator
+        SubSelector,     // No combinator
+        Descendant,      // "Space" combinator
+        Child,           // > combinator
         AdjacentSibling, // + combinator
-        GeneralSibling // ~ combinator
+        GeneralSibling   // ~ combinator
     };
 
     enum PseudoType {
@@ -1465,28 +1545,30 @@ public:
     };
 
     CSSSelector()
-        : m_type(UnKnown)
-        , m_relation(None)
-        , m_pseudotype(PseudoNone)
-        , m_selectorText(String::emptyString)
-        , m_attributeMatch(CaseInsensitive)
-        , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(String::emptyString)
-        , m_value(String::emptyString)
-        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::emptyAtomicString()))
+        : m_type(UnKnown),
+          m_relation(None),
+          m_pseudotype(PseudoNone),
+          m_selectorText(String::emptyString),
+          m_attributeMatch(CaseInsensitive),
+          m_relationIsAffectedByPseudoContent(false),
+          m_argument(String::emptyString),
+          m_value(String::emptyString),
+          m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
+                                    AtomicString::emptyAtomicString()))
     {
     }
 
     CSSSelector(Type type, RelationType relation, String* text)
-        : m_type(type)
-        , m_relation(relation)
-        , m_pseudotype(PseudoNone)
-        , m_selectorText(text)
-        , m_attributeMatch(CaseInsensitive)
-        , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(String::emptyString)
-        , m_value(String::emptyString)
-        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::emptyAtomicString()))
+        : m_type(type),
+          m_relation(relation),
+          m_pseudotype(PseudoNone),
+          m_selectorText(text),
+          m_attributeMatch(CaseInsensitive),
+          m_relationIsAffectedByPseudoContent(false),
+          m_argument(String::emptyString),
+          m_value(String::emptyString),
+          m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
+                                    AtomicString::emptyAtomicString()))
     {
     }
 
@@ -1617,7 +1699,10 @@ public:
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
 
-    bool isLastInTagHistory() const { return relation() == RelationType::None; }
+    bool isLastInTagHistory() const
+    {
+        return relation() == RelationType::None;
+    }
     PseudoType parsePseudoType(String* name, bool hasArguments);
     void updatePseudoType(String* name, bool hasArguments);
 
@@ -1642,11 +1727,12 @@ class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
-    CSSStyleRule(CSSSelector::Type type, String* selectorText, Document* document)
-        : ScriptWrappable(this)
-        , m_document(document)
+    CSSStyleRule(CSSSelector::Type type, String* selectorText,
+                 Document* document)
+        : ScriptWrappable(this), m_document(document)
     {
-        CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
+        CSSSelector* selector = new CSSSelector(
+            type, CSSSelector::RelationType::None, selectorText);
         GCDeque<CSSSelector*>* selectorList = new (GC) GCDeque<CSSSelector*>();
         selectorList->push_back(selector);
         m_selectorList = selectorList;
@@ -1654,11 +1740,12 @@ public:
         m_document = document;
     }
 
-    CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document, CSSStyleDeclaration* decl)
-        : ScriptWrappable(this)
-        , m_selectorList(selectorList)
-        , m_styleDeclaration(decl)
-        , m_document(document)
+    CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document,
+                 CSSStyleDeclaration* decl)
+        : ScriptWrappable(this),
+          m_selectorList(selectorList),
+          m_styleDeclaration(decl),
+          m_document(document)
     {
     }
 
@@ -1723,7 +1810,8 @@ public:
     void sortRulesBySpecificity();
 
 protected:
-    // m_stringString != String::emptyString means we need to parse style sheet before access style rules.
+    // m_stringString != String::emptyString means we need to parse style sheet
+    // before access style rules.
     String* m_sourceString;
     GCVector<CSSStyleRule*> m_rules;
     Node* m_origin;
@@ -1761,15 +1849,16 @@ public:
     };
 
     enum Match {
-        SelectorMatches, // The selector matches the element
-        SelectorFailsLocally, // The selector fails for the element.
-        SelectorFailsAllSiblings, // The selector fails for the element and any sibling of the element
-        SelectorFailsCompletely // The selector fails for the element or ancestor of the element
+        SelectorMatches,          // The selector matches the element
+        SelectorFailsLocally,     // The selector fails for the element.
+        SelectorFailsAllSiblings, // The selector fails for the element and any
+                                  // sibling of the element
+        SelectorFailsCompletely   // The selector fails for the element or
+                                  // ancestor of the element
     };
 
     struct MatchResult {
-        MatchResult()
-            : pseudoType(PseudoElementType::PseudoElementNone)
+        MatchResult() : pseudoType(PseudoElementType::PseudoElementNone)
         {
         }
 
@@ -1780,7 +1869,8 @@ public:
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
-        STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) != m_sheets.end());
+        STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) !=
+                        m_sheets.end());
         m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
     }
 
@@ -1792,8 +1882,9 @@ public:
     CSSStyleSheet* allRules();
     void removeAllRules()
     {
-        if (!m_allRules)
+        if (!m_allRules) {
             return;
+        }
         m_allRules = nullptr;
     }
 
@@ -1802,20 +1893,31 @@ public:
     void dumpDOMStyle(Document* document);
 #endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
-    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent, bool isForPseudoElement = false);
+    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent,
+                                bool isForPseudoElement = false);
 
-    void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent, bool isForPseudoElement = false);
+    void matchAllRules(Element* element, ComputedStyle* ret,
+                       ComputedStyle* parent, bool isForPseudoElement = false);
 
 protected:
-    void apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
+    void apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
+               ComputedStyle* style, ComputedStyle* parentStyle,
+               bool isImportant = false);
 
-    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList, unsigned idx, MatchResult& result);
-    Match matchForRelation(Element* element, GCDeque<CSSSelector*>* selectorList, CSSSelector::RelationType relation, unsigned idx, MatchResult& result);
+    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
+                        unsigned idx, MatchResult& result);
+    Match matchForRelation(Element* element,
+                           GCDeque<CSSSelector*>* selectorList,
+                           CSSSelector::RelationType relation, unsigned idx,
+                           MatchResult& result);
 
     bool checkOne(Element* element, CSSSelector* selector, MatchResult& result);
-    bool checkPseudoClass(Element* element, CSSSelector* selector, MatchResult& result);
-    bool checkPseudoElement(Element* element, CSSSelector* selector, MatchResult& result);
-    bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector, MatchResult& result);
+    bool checkPseudoClass(Element* element, CSSSelector* selector,
+                          MatchResult& result);
+    bool checkPseudoElement(Element* element, CSSSelector* selector,
+                            MatchResult& result);
+    bool anyAttributeMatches(Element* element, CSSSelector::Type type,
+                             CSSSelector* selector, MatchResult& result);
 
     Document& m_document;
     float m_mediumFontSize;

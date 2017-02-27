@@ -39,8 +39,10 @@ enum ComputedStyleDamage {
 
 class ComputedStyle : public gc {
     friend class StyleResolver;
-    friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool force);
-    friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
+    friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
+                                     ComputedStyle* parentStyle, bool force);
+    friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
+                                            ComputedStyle* newStyle);
 
 public:
     ComputedStyle(float mediumFontSize = DEFAULT_FONT_SIZE)
@@ -52,7 +54,8 @@ public:
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
         m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
-        m_inheritedStyles.m_visibility = VisibilityValue::VisibleVisibilityValue;
+        m_inheritedStyles.m_visibility =
+            VisibilityValue::VisibleVisibilityValue;
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
@@ -198,8 +201,10 @@ public:
     SideValue textAlign()
     {
         if (m_inheritedStyles.m_textAlign == SideValue::NoneSideValue) {
-            if (m_inheritedStyles.m_direction == DirectionValue::RtlDirectionValue)
+            if (m_inheritedStyles.m_direction ==
+                DirectionValue::RtlDirectionValue) {
                 return SideValue::RightSideValue;
+            }
             return SideValue::LeftSideValue;
         }
         return m_inheritedStyles.m_textAlign;
@@ -264,7 +269,9 @@ public:
 
     StyleTransformDataGroup* transforms(Frame* frame);
 
-    SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight, bool isTransformable);
+    SkMatrix transformsToMatrix(LayoutUnit containerWidth,
+                                LayoutUnit containerHeight,
+                                bool isTransformable);
 
     void setTransformIfNeeded()
     {
@@ -273,7 +280,8 @@ public:
         }
     }
 
-    void setTransformMatrix(double a, double b, double c, double d, double e, double f)
+    void setTransformMatrix(double a, double b, double c, double d, double e,
+                            double f)
     {
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Matrix);
@@ -349,13 +357,15 @@ public:
         m_background->setBgImageResource(img, layer);
     }
 
-    void setBackgroundRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
+    void setBackgroundRepeatX(BackgroundRepeatValue repeat,
+                              unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
         m_background->setRepeatX(repeat, layer);
     }
 
-    void setBackgroundRepeatY(BackgroundRepeatValue repeat, unsigned int layer = 0)
+    void setBackgroundRepeatY(BackgroundRepeatValue repeat,
+                              unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
         m_background->setRepeatY(repeat, layer);
@@ -387,73 +397,85 @@ public:
 
     unsigned int backgroundLayerSize()
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return 0;
+        }
         return m_background->sizeOfLayers();
     }
 
     Color backgroundColor()
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return Color();
+        }
         return m_background->bgColor();
     }
 
     String* backgroundImage(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return String::emptyString;
+        }
         return m_background->bgImage(layer);
     }
 
     ImageData* backgroundImageData(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return NULL;
+        }
         return m_background->bgImageData(layer);
     }
 
     BackgroundRepeatValue backgroundRepeatX(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return BackgroundRepeatValue::RepeatRepeatValue;
+        }
         return m_background->repeatX(layer);
     }
 
     BackgroundRepeatValue backgroundRepeatY(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return BackgroundRepeatValue::RepeatRepeatValue;
+        }
         return m_background->repeatY(layer);
     }
 
     Length backgroundPositionX(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return Length(Length::Percent, 0.0f);
+        }
         return m_background->positionX(layer);
     }
 
     Length backgroundPositionY(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return Length(Length::Percent, 0.0f);
+        }
         return m_background->positionY(layer);
     }
 
     BackgroundSizeType bgSizeType(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return BackgroundSizeType::SizeValue;
+        }
         return m_background->sizeType(layer);
     }
 
     LengthSize bgSizeValue(unsigned int layer = 0)
     {
-        if (m_background == NULL)
+        if (m_background == NULL) {
             return LengthSize();
+        }
 
-        STARFISH_ASSERT(m_background && m_background->sizeType() == BackgroundSizeType::SizeValue);
+        STARFISH_ASSERT(m_background &&
+                        m_background->sizeType() ==
+                            BackgroundSizeType::SizeValue);
         return m_background->sizeValue(layer);
     }
 
@@ -465,14 +487,16 @@ public:
 
     Length lineHeight()
     {
-        // According to the CSS spec, the computed value is the absolute value for <length> and <percentage> & otherwise as specified.
+        // According to the CSS spec, the computed value is the absolute value
+        // for <length> and <percentage> & otherwise as specified.
         // However, our computed value is the absolute value.
         return m_inheritedStyles.m_lineHeight;
     }
 
     bool hasNormalLineHeight()
     {
-        return m_inheritedStyles.m_lineHeight.isPercent() && m_inheritedStyles.m_lineHeight.percent() == -100;
+        return m_inheritedStyles.m_lineHeight.isPercent() &&
+               m_inheritedStyles.m_lineHeight.percent() == -100;
     }
 
     float opacity()
@@ -522,38 +546,39 @@ public:
         }
     }
 
-#define BORDER_COLOR(UPOS, LPOS, ...) \
-    Color border##UPOS##Color() \
-    { \
-        if (m_surround == nullptr || !m_surround->border.LPOS().hasBorderColor()) { \
-            return m_inheritedStyles.m_color; \
-        } else { \
-            return m_surround->border.LPOS().color(); \
-        } \
+#define BORDER_COLOR(UPOS, LPOS, ...)                      \
+    Color border##UPOS##Color()                            \
+    {                                                      \
+        if (m_surround == nullptr ||                       \
+            !m_surround->border.LPOS().hasBorderColor()) { \
+            return m_inheritedStyles.m_color;              \
+        } else {                                           \
+            return m_surround->border.LPOS().color();      \
+        }                                                  \
     }
     GEN_FOURSIDE(BORDER_COLOR)
 #undef BORDER_COLOR
 
-#define BORDER_STYLE(UPOS, LPOS, ...) \
-    BorderStyleValue border##UPOS##Style() \
-    { \
-        if (m_surround == nullptr) { \
-            return initialBorderStyle(); \
-        } else { \
+#define BORDER_STYLE(UPOS, LPOS, ...)                 \
+    BorderStyleValue border##UPOS##Style()            \
+    {                                                 \
+        if (m_surround == nullptr) {                  \
+            return initialBorderStyle();              \
+        } else {                                      \
             return m_surround->border.LPOS().style(); \
-        } \
+        }                                             \
     }
     GEN_FOURSIDE(BORDER_STYLE)
 #undef BORDER_STYLE
 
-#define BORDER_WIDTH(UPOS, LPOS, ...) \
-    Length border##UPOS##Width() \
-    { \
-        if (m_surround == nullptr) { \
-            return initialBorderWidth(); \
-        } else { \
+#define BORDER_WIDTH(UPOS, LPOS, ...)                 \
+    Length border##UPOS##Width()                      \
+    {                                                 \
+        if (m_surround == nullptr) {                  \
+            return initialBorderWidth();              \
+        } else {                                      \
             return m_surround->border.LPOS().width(); \
-        } \
+        }                                             \
     }
     GEN_FOURSIDE(BORDER_WIDTH)
 #undef BORDER_WIDTH
@@ -570,50 +595,54 @@ public:
 
     void clearBorderTopColor()
     {
-        if (m_surround)
+        if (m_surround) {
             surround()->border.top().clearColor();
+        }
     }
 
     void clearBorderRightColor()
     {
-        if (m_surround)
+        if (m_surround) {
             surround()->border.right().clearColor();
+        }
     }
 
     void clearBorderBottomColor()
     {
-        if (m_surround)
+        if (m_surround) {
             surround()->border.bottom().clearColor();
+        }
     }
 
     void clearBorderLeftColor()
     {
-        if (m_surround)
+        if (m_surround) {
             surround()->border.left().clearColor();
+        }
     }
 
-#define SET_BORDER_COLOR(UPOS, LPOS, ...) \
-    void setBorder##UPOS##Color(Color color) \
-    { \
-        setSurroundIfNeeded(); \
+#define SET_BORDER_COLOR(UPOS, LPOS, ...)          \
+    void setBorder##UPOS##Color(Color color)       \
+    {                                              \
+        setSurroundIfNeeded();                     \
         surround()->border.LPOS().setColor(color); \
     }
     GEN_FOURSIDE(SET_BORDER_COLOR)
 #undef SET_BORDER_COLOR
 
-#define SET_BORDER_STYLE(UPOS, LPOS, ...) \
+#define SET_BORDER_STYLE(UPOS, LPOS, ...)               \
     void setBorder##UPOS##Style(BorderStyleValue style) \
-    { \
-        setSurroundIfNeeded(); \
-        surround()->border.LPOS().setStyle(style); \
+    {                                                   \
+        setSurroundIfNeeded();                          \
+        surround()->border.LPOS().setStyle(style);      \
     }
     GEN_FOURSIDE(SET_BORDER_STYLE)
 #undef SET_BORDER_STYLE
 
-#define SET_BORDER_WIDTH(UPOS, LPOS, ...) \
-    void setBorder##UPOS##Width(Length width) \
-    { \
-        setSurroundIfNeeded(); \
+#define SET_BORDER_WIDTH(UPOS, LPOS, ...)          \
+    void setBorder##UPOS##Width(Length width)      \
+    {                                              \
+        setSurroundIfNeeded();                     \
         surround()->border.LPOS().setWidth(width); \
     }
     GEN_FOURSIDE(SET_BORDER_WIDTH)
@@ -621,29 +650,33 @@ public:
 
     String* borderImageSource()
     {
-        if (m_surround)
+        if (m_surround) {
             return surround()->border.image().url();
+        }
         return initialBorderImageSource();
     }
 
     LengthBox borderImageSlices()
     {
-        if (m_surround)
+        if (m_surround) {
             return surround()->border.image().slices();
+        }
         return initialBorderImageSlices();
     }
 
     bool borderImageSliceFill()
     {
-        if (m_surround)
+        if (m_surround) {
             return surround()->border.image().sliceFill();
+        }
         return initialBorderImageSliceFill();
     }
 
     BorderImageLengthBox borderImageWidths()
     {
-        if (m_surround)
+        if (m_surround) {
             return surround()->border.image().widths();
+        }
         return initialBorderImageWidths();
     }
 
@@ -693,65 +726,65 @@ public:
         return m_overflow;
     }
 
-#define SET_SIDE(UPOS, ...) \
-    void set##UPOS(Length unit) \
-    { \
-        setSurroundIfNeeded(); \
+#define SET_SIDE(UPOS, ...)                 \
+    void set##UPOS(Length unit)             \
+    {                                       \
+        setSurroundIfNeeded();              \
         surround()->offset.set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_SIDE)
 #undef SET_SIDE
 
-#define SET_MARGIN(UPOS, ...) \
-    void setMargin##UPOS(Length unit) \
-    { \
-        setSurroundIfNeeded(); \
+#define SET_MARGIN(UPOS, ...)               \
+    void setMargin##UPOS(Length unit)       \
+    {                                       \
+        setSurroundIfNeeded();              \
         surround()->margin.set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_MARGIN)
 #undef SET_MARGIN
 
-#define SET_PADDING(UPOS, ...) \
-    void setPadding##UPOS(Length unit) \
-    { \
-        setSurroundIfNeeded(); \
+#define SET_PADDING(UPOS, ...)               \
+    void setPadding##UPOS(Length unit)       \
+    {                                        \
+        setSurroundIfNeeded();               \
         surround()->padding.set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_PADDING)
 #undef SET_PADDING
 
-#define GET_SIDE(UPOS, LPOS, ...) \
-    Length LPOS() \
-    { \
-        if (m_surround == nullptr) { \
-            return Length(); \
-        } else { \
+#define GET_SIDE(UPOS, LPOS, ...)             \
+    Length LPOS()                             \
+    {                                         \
+        if (m_surround == nullptr) {          \
+            return Length();                  \
+        } else {                              \
             return m_surround->offset.LPOS(); \
-        } \
+        }                                     \
     }
     GEN_FOURSIDE(GET_SIDE)
 #undef GET_SIDE
 
-#define GET_MARGIN(UPOS, LPOS, ...) \
-    Length margin##UPOS() \
-    { \
-        if (m_surround == nullptr) { \
-            return initialMargin(); \
-        } else { \
+#define GET_MARGIN(UPOS, LPOS, ...)           \
+    Length margin##UPOS()                     \
+    {                                         \
+        if (m_surround == nullptr) {          \
+            return initialMargin();           \
+        } else {                              \
             return m_surround->margin.LPOS(); \
-        } \
+        }                                     \
     }
     GEN_FOURSIDE(GET_MARGIN)
 #undef GET_MARGIN
 
-#define GET_PADDING(UPOS, LPOS, ...) \
-    Length padding##UPOS() \
-    { \
-        if (m_surround == nullptr) { \
-            return initialPadding(); \
-        } else { \
+#define GET_PADDING(UPOS, LPOS, ...)           \
+    Length padding##UPOS()                     \
+    {                                          \
+        if (m_surround == nullptr) {           \
+            return initialPadding();           \
+        } else {                               \
             return m_surround->padding.LPOS(); \
-        } \
+        }                                      \
     }
     GEN_FOURSIDE(GET_PADDING)
 #undef GET_PADDING
@@ -786,33 +819,71 @@ public:
         return m_inheritedStyles.m_letterSpacing;
     }
 
-    static VerticalAlignValue initialVerticalAlign() { return VerticalAlignValue::BaselineVAlignValue; }
-    static SideValue initialTextAlign() { return SideValue::NoneSideValue; }
-    static Length initialPadding() { return Length(Length::Fixed, 0); }
-    static Length initialMargin() { return Length(Length::Fixed, 0); }
-    static Length initialBorderWidth() { return Length(Length::Fixed, 0); }
-    static BorderStyleValue initialBorderStyle() { return BorderStyleValue::NoneBorderStyleValue; }
-    static String* initialBgImage() { return String::emptyString; }
-    static String* initialBorderImageSource() { return String::emptyString; }
-    static BorderImageLengthBox initialBorderImageWidths() { return BorderImageLengthBox(1.0); }
-    static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
-    static bool initialBorderImageSliceFill() { return false; }
+    static VerticalAlignValue initialVerticalAlign()
+    {
+        return VerticalAlignValue::BaselineVAlignValue;
+    }
+    static SideValue initialTextAlign()
+    {
+        return SideValue::NoneSideValue;
+    }
+    static Length initialPadding()
+    {
+        return Length(Length::Fixed, 0);
+    }
+    static Length initialMargin()
+    {
+        return Length(Length::Fixed, 0);
+    }
+    static Length initialBorderWidth()
+    {
+        return Length(Length::Fixed, 0);
+    }
+    static BorderStyleValue initialBorderStyle()
+    {
+        return BorderStyleValue::NoneBorderStyleValue;
+    }
+    static String* initialBgImage()
+    {
+        return String::emptyString;
+    }
+    static String* initialBorderImageSource()
+    {
+        return String::emptyString;
+    }
+    static BorderImageLengthBox initialBorderImageWidths()
+    {
+        return BorderImageLengthBox(1.0);
+    }
+    static LengthBox initialBorderImageSlices()
+    {
+        return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0),
+                         Length(Length::Fixed, 0), Length(Length::Fixed, 0));
+    }
+    static bool initialBorderImageSliceFill()
+    {
+        return false;
+    }
     static bool isDisplayTableValueType(DisplayValue display)
     {
-        return display == DisplayValue::TableDisplayValue
-            || display == DisplayValue::InlineTableDisplayValue
-            || display == DisplayValue::TableRowGroupDisplayValue
-            || display == DisplayValue::TableHeaderGroupDisplayValue
-            || display == DisplayValue::TableFooterGroupDisplayValue
-            || display == DisplayValue::TableRowDisplayValue
-            || display == DisplayValue::TableColumnGroupDisplayValue
-            || display == DisplayValue::TableColumnDisplayValue
-            || display == DisplayValue::TableCellDisplayValue
-            || display == DisplayValue::TableCaptionDisplayValue;
+        return display == DisplayValue::TableDisplayValue ||
+               display == DisplayValue::InlineTableDisplayValue ||
+               display == DisplayValue::TableRowGroupDisplayValue ||
+               display == DisplayValue::TableHeaderGroupDisplayValue ||
+               display == DisplayValue::TableFooterGroupDisplayValue ||
+               display == DisplayValue::TableRowDisplayValue ||
+               display == DisplayValue::TableColumnGroupDisplayValue ||
+               display == DisplayValue::TableColumnDisplayValue ||
+               display == DisplayValue::TableCellDisplayValue ||
+               display == DisplayValue::TableCaptionDisplayValue;
     }
 
-    void loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources = nullptr);
-    void arrangeStyleValues(ComputedStyle* parentStyle, Node* current = nullptr);
+    void loadResources(
+        Node* consumer,
+        ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
+            nullptr);
+    void arrangeStyleValues(ComputedStyle* parentStyle,
+                            Node* current = nullptr);
 
     void clearTransforms()
     {
@@ -882,7 +953,8 @@ protected:
     }
 
     // NOTICE
-    // if you add new property, you MUST implement comparing style for new property in [compareStyle function]
+    // if you add new property, you MUST implement comparing style for new
+    // property in [compareStyle function]
 
     struct InheritedStyles {
         Color m_color;
@@ -895,9 +967,9 @@ protected:
         DirectionValue m_direction : 2;
         WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;
-        BorderCollapseValue m_borderCollapse: 1; // table
-        Length m_borderSpacing; // table
-        CaptionSideValue m_captionSide : 1; // table
+        BorderCollapseValue m_borderCollapse : 1; // table
+        Length m_borderSpacing;                   // table
+        CaptionSideValue m_captionSide : 1;       // table
     } m_inheritedStyles;
 
     FloatValue m_float : 2;
@@ -911,8 +983,8 @@ protected:
     UnicodeBidiValue m_unicodeBidi : 2;
     bool m_zIndexSpecifiedByUser : 1;
 
-    TableLayoutValue m_tableLayout: 1; // table
-    StyleResolver::PseudoElementType m_pseudoId: 4;
+    TableLayoutValue m_tableLayout : 1; // table
+    StyleResolver::PseudoElementType m_pseudoId : 4;
 
     Length m_width;
     Length m_minWidth;
@@ -931,7 +1003,8 @@ protected:
     StyleTransformOrigin* m_transformOrigin;
 };
 
-ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
+ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
+                                 ComputedStyle* newStyle);
 }
 
 #endif
