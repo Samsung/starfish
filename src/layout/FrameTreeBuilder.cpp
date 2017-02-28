@@ -227,9 +227,13 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
                     StyleResolver::PseudoElementType::PseudoElementFirstLetter);
     STARFISH_ASSERT(parentStyle);
 
-    Element* element = parent->asElement();
-    ComputedStyle* style = parent->document()->styleResolver()->resolveStyle(
-        element, parentStyle, true);
+    ComputedStyle* style = new ComputedStyle(parentStyle);
+    parent->document()->styleResolver()->matchAllRules(
+        parent->asElement(), style, parentStyle, true);
+
+    style->setDisplay(DisplayValue::InlineDisplayValue);
+    style->loadResources(parent);
+    style->arrangeStyleValues(parentStyle, parent);
 
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     damage = compareStyle(parentStyle, style);
