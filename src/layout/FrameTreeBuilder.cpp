@@ -150,10 +150,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
         return;
     }
 
-    bool isBlockChild =
-        currentFrame->style()->originalDisplay() == BlockDisplayValue ||
-        (currentFrame->isFrameTableObjectBox() &&
-         (currentFrame->style()->originalDisplay() != InlineTableDisplayValue));
+    bool isBlockChild = currentFrame->isBlockLevel();
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() ==
             InlineDisplayValue) {
@@ -382,13 +379,12 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table
             // wrapper
-            FrameTableBox* table =
-                FrameTableBox::buildFrameTable(current, ctx, force);
-            if (!table->parent()) {
+            currentFrame = FrameTableBox::buildFrameTable(current, ctx, force);
+            if (!currentFrame->parent()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(
-                    ctx.currentBlockContainer(), table, current, ctx);
+                    ctx.currentBlockContainer(), currentFrame, current, ctx);
             }
-            return nullptr;
+            shouldSkipChildren = true;
         } else {
             if (display == DisplayValue::BlockDisplayValue ||
                 display == DisplayValue::InlineBlockDisplayValue) {
@@ -412,8 +408,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             }
         }
 
-        bool isBlockChild =
-            currentFrame->style()->originalDisplay() == BlockDisplayValue;
+        bool isBlockChild = currentFrame->isBlockLevel();
         if (isBlockChild && ctx.isInFrameInlineFlow() &&
             currentFrame->isNormalFlow()) {
             // divide block. when comes Inline.. + Block(normal flow)
@@ -477,8 +472,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             }
         }
 
-        FrameTreeBuilder::frameBlockBoxChildInserter(
-            ctx.currentBlockContainer(), currentFrame, current, ctx);
+        if (!currentFrame->parent()) {
+            FrameTreeBuilder::frameBlockBoxChildInserter(
+                ctx.currentBlockContainer(), currentFrame, current, ctx);
+        }
 
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);

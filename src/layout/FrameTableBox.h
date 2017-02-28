@@ -128,8 +128,6 @@ private:
     GCVector<FrameTableColBox*> m_colObjects;
     GCVector<ColSizeStruct> m_columnWidths;
 
-    // We use vector here because "FrameTableCellBox"es are already stored
-    // in GCVector, and it is used only to the duration of layoutWidth().
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
 
     // Border and background is drawn around FrameTableSections not FrameTable

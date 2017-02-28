@@ -124,8 +124,10 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
         parentFrame = n->frame();
     }
 
-    if (parentFrame->isAnonymous())
-        return nullptr;
+    if (parentFrame->isAnonymous()) {
+        // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     if (!(parentFrame->node()->isElement() &&
           parentFrame->node()->asElement()->hasPseudoElement(
