@@ -24,8 +24,7 @@ namespace StarFish {
 
 class FrameReplacedImage : public FrameReplaced {
 public:
-    FrameReplacedImage(Node* node)
-        : FrameReplaced(node, nullptr)
+    FrameReplacedImage(Node* node) : FrameReplaced(node, nullptr)
     {
     }
 
@@ -41,24 +40,38 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
-        if (id)
-            canvas->drawImage(id, Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-            width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
+        ImageData* id = node()
+                            ->asElement()
+                            ->asHTMLElement()
+                            ->asHTMLImageElement()
+                            ->imageData();
+        if (id) {
+            canvas->drawImage(
+                id,
+                Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                     width() - borderWidth() - paddingWidth(),
+                     height() - borderHeight() - paddingHeight()));
+        }
     }
 
     virtual IntrinsicSize intrinsicSize()
     {
         IntrinsicSize result;
-        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
+        ImageData* id = node()
+                            ->asElement()
+                            ->asHTMLElement()
+                            ->asHTMLImageElement()
+                            ->imageData();
         if (id) {
             result.m_isContentExists = true;
-            result.m_intrinsicContentSize = LayoutSize(id->width(), id->height());
+            result.m_intrinsicContentSize =
+                LayoutSize(id->width(), id->height());
         } else {
             result.m_isContentExists = false;
         }
         return result;
     }
+
 protected:
 };
 }

@@ -26,8 +26,9 @@ Frame* LayoutContext::blockContainer(Frame* currentFrame)
 {
     Frame* f = currentFrame->layoutParent();
 
-    if (!f)
+    if (!f) {
         return currentFrame;
+    }
 
     while (true) {
         if (f->isFrameBlockBox() && !f->isAnonymous()) {
@@ -69,9 +70,13 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
             FrameInline* in = block->asFrameInline();
             c->iterateChildBoxes([&finded, &first, &in](FrameBox* box) -> bool {
                 if (!finded) {
-                    if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
-                        if (box->asInlineBox()->asInlineNonReplacedBox()->origin() == in) {
-                            first = box->asInlineBox()->asInlineNonReplacedBox();
+                    if (box->isInlineBox() &&
+                        box->asInlineBox()->isInlineNonReplacedBox()) {
+                        if (box->asInlineBox()
+                                ->asInlineNonReplacedBox()
+                                ->origin() == in) {
+                            first =
+                                box->asInlineBox()->asInlineNonReplacedBox();
                             finded = true;
                             return false;
                         }
@@ -88,15 +93,17 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
-FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
-    : m_box(box)
+FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx) : m_box(box)
 {
     STARFISH_ASSERT(box->isFloating());
     m_isLeft = box->style()->floating() == LeftFloatValue;
     Frame* parent = box->layoutParent();
     while (parent) {
         if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
-            m_canLayoutParentCollapseWithMarginTop = parent->asFrameBlockBox()->marginInfo()->canCollapseWithMarginTop();
+            m_canLayoutParentCollapseWithMarginTop =
+                parent->asFrameBlockBox()
+                    ->marginInfo()
+                    ->canCollapseWithMarginTop();
             break;
         }
 
@@ -111,7 +118,8 @@ void FloatingBoxInfo::reCache(LayoutContext* ctx)
     m_top = m_loc.y() - m_box->marginTop();
     m_bottom = m_loc.y() + m_box->height() + m_box->marginBottom();
     if (m_isLeft) {
-        m_horizontalBoundary = m_loc.x() + m_box->width() + m_box->marginRight();
+        m_horizontalBoundary =
+            m_loc.x() + m_box->width() + m_box->marginRight();
     } else {
         m_horizontalBoundary = m_loc.x() - m_box->marginLeft();
     }
@@ -135,7 +143,8 @@ void LayoutContext::unregisterFloatingBoxes(size_t from)
     }
 }
 
-static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxInfo& f)
+static bool floatAffected(LayoutUnit yPosition, LayoutUnit height,
+                          FloatingBoxInfo& f)
 {
     if (height == 0) {
         // height of Linebox can be 0 for the first time.
@@ -150,7 +159,9 @@ static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxIn
     }
 }
 
-LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, ClearValue clearValue, size_t* idx)
+LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition,
+                                                       ClearValue clearValue,
+                                                       size_t* idx)
 {
     bool hasLeft = false, hasRight = false;
     LayoutUnit clearedDistanceToLeftFloatBottom;
@@ -188,7 +199,8 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
 
         if (hasLeft) {
             if (hasRight) {
-                if (clearedDistanceToLeftFloatBottom < clearedDistanceToRightFloatBottom) {
+                if (clearedDistanceToLeftFloatBottom <
+                    clearedDistanceToRightFloatBottom) {
                     if (idx) {
                         *idx = rightIdx;
                     }
@@ -282,7 +294,8 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
     }
 }
 
-LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, LayoutUnit height)
+LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition,
+                                                    LayoutUnit height)
 {
     bool hasLeft = false, hasRight = false;
     LayoutUnit lastDistanceToLeftFloatBottom;
@@ -332,7 +345,9 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
 
     if (hasLeft) {
         if (hasRight) {
-            return std::min(lastDistanceToLeftFloatBottom, lastDistanceToRightFloatBottom) - yPosition;
+            return std::min(lastDistanceToLeftFloatBottom,
+                            lastDistanceToRightFloatBottom) -
+                   yPosition;
         } else {
             return lastDistanceToLeftFloatBottom - yPosition;
         }
@@ -345,7 +360,11 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
     }
 }
 
-std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenFloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
+std::pair<LayoutUnit, LayoutUnit>
+LayoutContext::horizontalBoundaryBetweenFloatingBoxes(LayoutUnit yPosition,
+                                                      LayoutUnit height,
+                                                      LayoutUnit left,
+                                                      LayoutUnit right)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
@@ -368,13 +387,18 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenFloati
     return std::make_pair(left, right);
 }
 
-bool LayoutContext::isCollidedWithFloatingBoxes(LayoutLocation loc, FrameBox* box, LayoutUnit leftBoundary, LayoutUnit rightBoundary)
+bool LayoutContext::isCollidedWithFloatingBoxes(LayoutLocation loc,
+                                                FrameBox* box,
+                                                LayoutUnit leftBoundary,
+                                                LayoutUnit rightBoundary)
 {
     std::pair<LayoutUnit, LayoutUnit> boundaries =
-        horizontalBoundaryBetweenFloatingBoxes(loc.y(), box->height(), leftBoundary, rightBoundary);
+        horizontalBoundaryBetweenFloatingBoxes(loc.y(), box->height(),
+                                               leftBoundary, rightBoundary);
 
-    return (leftBoundary != boundaries.first && loc.x() < boundaries.first)
-        || (rightBoundary != boundaries.second && loc.x() + box->width() > boundaries.second);
+    return (leftBoundary != boundaries.first && loc.x() < boundaries.first) ||
+           (rightBoundary != boundaries.second &&
+            loc.x() + box->width() > boundaries.second);
 }
 
 void LayoutContext::resetLastTopLoc()
@@ -434,13 +458,16 @@ LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 {
     Frame* container = blockContainer(currentFrame);
-    if (currentFrame->style()->position() == PositionValue::AbsolutePositionValue) {
+    if (currentFrame->style()->position() ==
+        PositionValue::AbsolutePositionValue) {
         return true;
     }
     while (container) {
         if (container->style()->height().isFixed()) {
             return true;
-        } else if (container->style()->position() == PositionValue::AbsolutePositionValue && container->style()->height().isPercent()) {
+        } else if (container->style()->position() ==
+                       PositionValue::AbsolutePositionValue &&
+                   container->style()->height().isPercent()) {
             return true;
         } else if (container->style()->height().isAuto()) {
             return false;
@@ -460,8 +487,13 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         if (container->style()->height().isFixed()) {
             reverse.push_back(container->style()->height());
             break;
-        } else if (container->style()->position() == PositionValue::AbsolutePositionValue && container->style()->height().isPercent()) {
-            reverse.emplace_back(Length::Fixed, container->style()->height().specifiedValue(containingBlock(container)->asFrameBox()->contentHeight()));
+        } else if (container->style()->position() ==
+                       PositionValue::AbsolutePositionValue &&
+                   container->style()->height().isPercent()) {
+            reverse.emplace_back(
+                Length::Fixed,
+                container->style()->height().specifiedValue(
+                    containingBlock(container)->asFrameBox()->contentHeight()));
             break;
         } else {
             STARFISH_ASSERT(container->style()->height().isPercent());
@@ -483,11 +515,15 @@ void LayoutContext::registerYPositionPerVAInlineBlock(LineBox* lb)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
-        (*c.m_registeredYPositionPerVAInlineBlock)[(*c.m_inlineBlockBoxStack)[i]] = lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + lb->ascender();
+        (*c.m_registeredYPositionPerVAInlineBlock)[(
+            *c.m_inlineBlockBoxStack)[i]] =
+            lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() +
+            lb->ascender();
     }
 }
 
-std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(FrameBlockBox* box)
+std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(
+    FrameBlockBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == box);
@@ -512,7 +548,8 @@ void LayoutContext::registerAbsolutePositionedBox(Frame* frm)
 void LayoutContext::registerRelativePositionedBox(Frame* frm, bool dueToSelf)
 {
     Frame* cb = containingFrameBlockBox(frm);
-    m_relativePositionedBoxes.emplace(cb, std::vector<std::pair<FrameBox*, bool> >());
+    m_relativePositionedBoxes.emplace(
+        cb, std::vector<std::pair<FrameBox*, bool>>());
     auto& vec = m_relativePositionedBoxes[cb];
     vec.emplace_back(frm->asFrameBox(), dueToSelf);
 }
@@ -524,8 +561,8 @@ Element* Frame::offsetParent()
     }
 
     Node* node = nullptr;
-    for (Frame* parent = layoutParent(); parent; parent = parent->layoutParent()) {
-
+    for (Frame* parent = layoutParent(); parent;
+         parent = parent->layoutParent()) {
         node = parent->node();
 
         if (!node) {
@@ -536,12 +573,12 @@ Element* Frame::offsetParent()
             break;
         }
 
-        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        if (node->isElement() && node->asElement()->isHTMLElement() &&
+            node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
             break;
         }
     }
 
     return node && node->isElement() ? node->asElement() : nullptr;
 }
-
 }

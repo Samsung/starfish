@@ -27,10 +27,14 @@ class FrameTableCellBox : public FrameTableObjectBox {
 public:
     FrameTableCellBox(Node* node, ComputedStyle* style);
 
-    static FrameTableCellBox* buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableCellBox* buildFrameTableCell(Node* current,
+                                                  FrameTreeBuilderContext& ctx,
+                                                  bool force = false);
+    static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent,
+                                                        Node* node);
 
-    void calCellWidth(LayoutContext& ctx, unsigned pos, Frame::LayoutWantToResolve resolveWhat);
+    void calCellWidth(LayoutContext& ctx, unsigned pos,
+                      Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
@@ -75,18 +79,18 @@ public:
     LayoutUnit calBaseline();
 
 private:
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
 
     LayoutUnit calMinCellWidth(LayoutContext& ctx);
     LayoutUnit calMaxCellWidth(LayoutContext& ctx);
-    static LayoutUnit calPreferredFrameWidth(LayoutContext& ctx, FrameBlockBox* box);
+    static LayoutUnit calPreferredFrameWidth(LayoutContext& ctx,
+                                             FrameBlockBox* box);
 
     unsigned m_absoluteColumnIndex; // starts with 0
     LayoutUnit m_minCellWidth;
     LayoutUnit m_maxCellWidth;
-
 };
-
 }
 
 #endif

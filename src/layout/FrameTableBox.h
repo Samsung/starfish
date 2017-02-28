@@ -46,10 +46,11 @@ class FrameTableColBox;
 
 struct ColSizeStruct {
     ColSizeStruct()
-        : minCellWidth(LayoutUnit())
-        , maxCellWidth(LayoutUnit())
-        , cellWidth(LayoutUnit())
-    { }
+        : minCellWidth(LayoutUnit()),
+          maxCellWidth(LayoutUnit()),
+          cellWidth(LayoutUnit())
+    {
+    }
 
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
@@ -60,10 +61,14 @@ class FrameTableBox : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
-    static FrameTableBox* buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableBox* buildFrameTable(Node* current,
+                                          FrameTreeBuilderContext& ctx,
+                                          bool force = false);
+    static FrameTableBox* createAnonymousWithParent(FrameBlockBox* parent,
+                                                    Node* node);
 
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
 
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -109,7 +114,8 @@ private:
     void layoutHeight(LayoutContext& ctx);
     void calCellWidth(LayoutContext& ctx);
 
-    void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
+    void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
+                             GCVector<ColSizeStruct>& columnWidths);
     void calCellWidthForAutoTableLayout(LayoutContext& ctx);
     void calCellWidthForFixedTableLayout(LayoutContext& ctx);
 
@@ -133,7 +139,6 @@ private:
     FrameTableSectionBox* m_thead;
     FrameTableSectionBox* m_tfoot;
 };
-
 }
 
 #endif

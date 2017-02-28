@@ -23,10 +23,8 @@ namespace StarFish {
 
 class FrameInline : public Frame {
 public:
-    FrameInline(Node* node)
-        : Frame(node, nullptr)
+    FrameInline(Node* node) : Frame(node, nullptr)
     {
-
     }
 
     virtual bool isFrameInline()
@@ -47,7 +45,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

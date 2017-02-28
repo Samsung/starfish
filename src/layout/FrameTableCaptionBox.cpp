@@ -24,12 +24,13 @@ namespace StarFish {
 FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-
 }
 
-FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(
+    Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableCaptionBox* tableCaption = new FrameTableCaptionBox(captionNode, nullptr);
+    FrameTableCaptionBox* tableCaption =
+        new FrameTableCaptionBox(captionNode, nullptr);
     captionNode->setFrame(tableCaption);
 
     // Caption establishes a new block context
@@ -46,9 +47,9 @@ FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(Node* capt
     return tableCaption;
 }
 
-void FrameTableCaptionBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCaptionBox::layout(LayoutContext& ctx,
+                                  Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, resolveWhat);
 }
-
 }

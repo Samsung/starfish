@@ -19,7 +19,8 @@
 
 namespace StarFish {
 
-void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameDocument::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
 {
     int w = node()->asDocument()->window()->width();
     int h = node()->asDocument()->window()->height();
@@ -35,5 +36,4 @@ void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
 }
-
 }

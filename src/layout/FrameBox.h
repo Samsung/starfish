@@ -31,16 +31,17 @@ struct MarginCollapseResult {
 
 class FrameBox : public Frame {
     friend struct MBPStore;
+
 public:
     FrameBox(Node* node, ComputedStyle* style)
-        : Frame(node, style)
-        , m_frameRect(0, 0, 0, 0)
-        , m_padding()
-        , m_border()
-        , m_margin()
-        , m_marginCollapseResult()
-        , m_stackingContext(nullptr)
-        , m_inlineBoxIndex(SIZE_MAX)
+        : Frame(node, style),
+          m_frameRect(0, 0, 0, 0),
+          m_padding(),
+          m_border(),
+          m_margin(),
+          m_marginCollapseResult(),
+          m_stackingContext(nullptr),
+          m_inlineBoxIndex(SIZE_MAX)
     {
     }
 
@@ -75,10 +76,17 @@ public:
     virtual void dump(int depth)
     {
         Frame::dump(depth);
-        printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(), (float)width(), (float)height());
-        printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(), (float)paddingRight(), (float)paddingBottom(), (float)paddingLeft());
-        printf(" border(%g,%g,%g,%g) ", (float)borderTop(), (float)borderRight(), (float)borderBottom(), (float)borderLeft());
-        printf(" margin(%g,%g,%g,%g) ", (float)marginTop(), (float)marginRight(), (float)marginBottom(), (float)marginLeft());
+        printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(),
+               (float)width(), (float)height());
+        printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(),
+               (float)paddingRight(), (float)paddingBottom(),
+               (float)paddingLeft());
+        printf(" border(%g,%g,%g,%g) ", (float)borderTop(),
+               (float)borderRight(), (float)borderBottom(),
+               (float)borderLeft());
+        printf(" margin(%g,%g,%g,%g) ", (float)marginTop(),
+               (float)marginRight(), (float)marginBottom(),
+               (float)marginLeft());
     }
 #endif
 
@@ -87,62 +95,177 @@ public:
         return m_stackingContext;
     }
 
-    const LayoutRect& frameRect() { return m_frameRect; }
-
-    LayoutUnit x() const { return m_frameRect.x(); }
-    LayoutUnit y() const { return m_frameRect.y(); }
-    LayoutUnit width() const { return m_frameRect.width(); }
-    LayoutUnit height() const { return m_frameRect.height(); }
-
-    void setX(LayoutUnit x) { m_frameRect.setX(x); }
-    void setY(LayoutUnit y) { m_frameRect.setY(y); }
-    void moveX(LayoutUnit t) { setX(x() + t); }
-    void moveY(LayoutUnit t) { setY(y() + t); }
-    void setWidth(LayoutUnit width) { m_frameRect.setWidth(width); }
-    void setHeight(LayoutUnit height) { m_frameRect.setHeight(height); }
-
-    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth, bool parentHasFixedValue = true)
+    const LayoutRect& frameRect()
     {
-        setContentWidth(minMaxWidthAppliedIfNeeds(width, parentWidth, parentHasFixedValue));
+        return m_frameRect;
     }
 
-    void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight, bool parentHasFixedValue = true)
+    LayoutUnit x() const
     {
-        setContentHeight(minMaxHeightAppliedIfNeeds(height, parentHeight, parentHasFixedValue));
+        return m_frameRect.x();
+    }
+    LayoutUnit y() const
+    {
+        return m_frameRect.y();
+    }
+    LayoutUnit width() const
+    {
+        return m_frameRect.width();
+    }
+    LayoutUnit height() const
+    {
+        return m_frameRect.height();
     }
 
-    void setContentWidth(LayoutUnit width) { m_frameRect.setWidth(width + paddingWidth() + borderWidth()); }
-    void setContentHeight(LayoutUnit height) { m_frameRect.setHeight(height + paddingHeight() + borderHeight()); }
+    void setX(LayoutUnit x)
+    {
+        m_frameRect.setX(x);
+    }
+    void setY(LayoutUnit y)
+    {
+        m_frameRect.setY(y);
+    }
+    void moveX(LayoutUnit t)
+    {
+        setX(x() + t);
+    }
+    void moveY(LayoutUnit t)
+    {
+        setY(y() + t);
+    }
+    void setWidth(LayoutUnit width)
+    {
+        m_frameRect.setWidth(width);
+    }
+    void setHeight(LayoutUnit height)
+    {
+        m_frameRect.setHeight(height);
+    }
 
-    void setPaddingTop(LayoutUnit t) { m_padding.setTop(t); }
-    void setPaddingRight(LayoutUnit t) { m_padding.setRight(t); }
-    void setPaddingBottom(LayoutUnit t) { m_padding.setBottom(t); }
-    void setPaddingLeft(LayoutUnit t) { m_padding.setLeft(t); }
+    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth,
+                                 bool parentHasFixedValue = true)
+    {
+        setContentWidth(
+            minMaxWidthAppliedIfNeeds(width, parentWidth, parentHasFixedValue));
+    }
 
-    LayoutUnit paddingTop() const { return m_padding.top(); }
-    LayoutUnit paddingRight() const { return m_padding.right(); }
-    LayoutUnit paddingBottom() const { return m_padding.bottom(); }
-    LayoutUnit paddingLeft() const { return m_padding.left(); }
+    void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight,
+                                  bool parentHasFixedValue = true)
+    {
+        setContentHeight(minMaxHeightAppliedIfNeeds(height, parentHeight,
+                                                    parentHasFixedValue));
+    }
 
-    void setBorderTop(LayoutUnit t) { m_border.setTop(t); }
-    void setBorderRight(LayoutUnit t) { m_border.setRight(t); }
-    void setBorderBottom(LayoutUnit t) { m_border.setBottom(t); }
-    void setBorderLeft(LayoutUnit t) { m_border.setLeft(t); }
+    void setContentWidth(LayoutUnit width)
+    {
+        m_frameRect.setWidth(width + paddingWidth() + borderWidth());
+    }
+    void setContentHeight(LayoutUnit height)
+    {
+        m_frameRect.setHeight(height + paddingHeight() + borderHeight());
+    }
 
-    LayoutUnit borderTop() const { return m_border.top(); }
-    LayoutUnit borderRight() const { return m_border.right(); }
-    LayoutUnit borderBottom() const { return m_border.bottom(); }
-    LayoutUnit borderLeft() const { return m_border.left(); }
+    void setPaddingTop(LayoutUnit t)
+    {
+        m_padding.setTop(t);
+    }
+    void setPaddingRight(LayoutUnit t)
+    {
+        m_padding.setRight(t);
+    }
+    void setPaddingBottom(LayoutUnit t)
+    {
+        m_padding.setBottom(t);
+    }
+    void setPaddingLeft(LayoutUnit t)
+    {
+        m_padding.setLeft(t);
+    }
 
-    void setMarginTop(LayoutUnit t) { m_margin.setTop(t); }
-    void setMarginRight(LayoutUnit t) { m_margin.setRight(t); }
-    void setMarginBottom(LayoutUnit t) { m_margin.setBottom(t); }
-    void setMarginLeft(LayoutUnit t) { m_margin.setLeft(t); }
+    LayoutUnit paddingTop() const
+    {
+        return m_padding.top();
+    }
+    LayoutUnit paddingRight() const
+    {
+        return m_padding.right();
+    }
+    LayoutUnit paddingBottom() const
+    {
+        return m_padding.bottom();
+    }
+    LayoutUnit paddingLeft() const
+    {
+        return m_padding.left();
+    }
 
-    LayoutUnit marginTop() const { return m_margin.top(); }
-    LayoutUnit marginRight() const { return m_margin.right(); }
-    LayoutUnit marginBottom() const { return m_margin.bottom(); }
-    LayoutUnit marginLeft() const { return m_margin.left(); }
+    void setBorderTop(LayoutUnit t)
+    {
+        m_border.setTop(t);
+    }
+    void setBorderRight(LayoutUnit t)
+    {
+        m_border.setRight(t);
+    }
+    void setBorderBottom(LayoutUnit t)
+    {
+        m_border.setBottom(t);
+    }
+    void setBorderLeft(LayoutUnit t)
+    {
+        m_border.setLeft(t);
+    }
+
+    LayoutUnit borderTop() const
+    {
+        return m_border.top();
+    }
+    LayoutUnit borderRight() const
+    {
+        return m_border.right();
+    }
+    LayoutUnit borderBottom() const
+    {
+        return m_border.bottom();
+    }
+    LayoutUnit borderLeft() const
+    {
+        return m_border.left();
+    }
+
+    void setMarginTop(LayoutUnit t)
+    {
+        m_margin.setTop(t);
+    }
+    void setMarginRight(LayoutUnit t)
+    {
+        m_margin.setRight(t);
+    }
+    void setMarginBottom(LayoutUnit t)
+    {
+        m_margin.setBottom(t);
+    }
+    void setMarginLeft(LayoutUnit t)
+    {
+        m_margin.setLeft(t);
+    }
+
+    LayoutUnit marginTop() const
+    {
+        return m_margin.top();
+    }
+    LayoutUnit marginRight() const
+    {
+        return m_margin.right();
+    }
+    LayoutUnit marginBottom() const
+    {
+        return m_margin.bottom();
+    }
+    LayoutUnit marginLeft() const
+    {
+        return m_margin.left();
+    }
 
     LayoutUnit paddingWidth() const
     {
@@ -197,8 +320,9 @@ public:
     LayoutUnit boxWidth() const
     {
         LayoutUnit boxWidth = width() + marginWidth();
-        if (boxWidth < 0)
+        if (boxWidth < 0) {
             return 0;
+        }
         return boxWidth;
     }
 
@@ -221,21 +345,25 @@ public:
         return m_marginCollapseResult;
     }
 
-    virtual void paintChildrenWith(PaintingContext &ctx)
+    virtual void paintChildrenWith(PaintingContext& ctx)
     {
         Frame* child = firstChild();
         while (child) {
             ctx.m_canvas->save();
-            ctx.m_canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                    child->asFrameBox()->y());
             child->paint(ctx);
             ctx.m_canvas->restore();
             child = child->next();
         }
     }
 
-    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect imageRect, LayoutRect colorRect, bool isRootElement)
+    static void paintBackground(Canvas* canvas, ComputedStyle* style,
+                                LayoutRect imageRect, LayoutRect colorRect,
+                                bool isRootElement)
     {
-        if (!style->backgroundColor().isTransparent() && style->visibility() == VisibilityValue::VisibleVisibilityValue) {
+        if (!style->backgroundColor().isTransparent() &&
+            style->visibility() == VisibilityValue::VisibleVisibilityValue) {
             canvas->save();
             canvas->setColor(style->backgroundColor());
             canvas->drawRect(colorRect);
@@ -274,13 +402,16 @@ public:
                     h = bw / imgR;
                 }
             } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
-                if (style->bgSizeValue().width().isAuto() && style->bgSizeValue().height().isAuto()) {
+                if (style->bgSizeValue().width().isAuto() &&
+                    style->bgSizeValue().height().isAuto()) {
                     w = id->width();
                     h = id->height();
-                } else if (style->bgSizeValue().width().isAuto() && !style->bgSizeValue().height().isAuto()) {
+                } else if (style->bgSizeValue().width().isAuto() &&
+                           !style->bgSizeValue().height().isAuto()) {
                     h = style->bgSizeValue().height().specifiedValue(bh);
                     w = h * id->width() / id->height();
-                } else if (!style->bgSizeValue().width().isAuto() && style->bgSizeValue().height().isAuto()) {
+                } else if (!style->bgSizeValue().width().isAuto() &&
+                           style->bgSizeValue().height().isAuto()) {
                     w = style->bgSizeValue().width().specifiedValue(bw);
                     h = w * id->height() / id->width();
                 } else {
@@ -288,7 +419,8 @@ public:
                     h = style->bgSizeValue().height().specifiedValue(bh);
                 }
             } else {
-                STARFISH_ASSERT(style->bgSizeType() == BackgroundSizeType::SizeNone);
+                STARFISH_ASSERT(style->bgSizeType() ==
+                                BackgroundSizeType::SizeNone);
                 STARFISH_ASSERT_NOT_REACHED();
             }
 
@@ -304,12 +436,18 @@ public:
 
             auto repeatX = style->backgroundRepeatX();
             auto repeatY = style->backgroundRepeatY();
-            if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true, true, isRootElement);
-            } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false, true, isRootElement);
-            } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true, false, isRootElement);
+            if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
+                repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true,
+                                        true, isRootElement);
+            } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
+                       repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false,
+                                        true, isRootElement);
+            } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
+                       repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true,
+                                        false, isRootElement);
             } else {
                 canvas->drawImage(id, Rect(x, y, w, h));
             }
@@ -321,18 +459,25 @@ public:
     virtual void paintBackgroundAndBorders(Canvas* canvas)
     {
         do {
-            if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
+            if (node() && node()->isElement() &&
+                node()->asElement()->isHTMLElement() &&
+                node()->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
                 break;
             }
 
-            if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            if (node() && node()->isElement() &&
+                node()->asElement()->isHTMLElement() &&
+                node()->asElement()->asHTMLElement()->isHTMLBodyElement()) {
                 if (!node()->document()->window()->hasRootElementBackground()) {
                     break;
                 }
             }
 
-            LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
-            paintBackground(canvas, style(), bgRect, LayoutRect(0, 0, width(), height()), false);
+            LayoutRect bgRect(borderLeft(), borderTop(),
+                              m_frameRect.width() - borderWidth(),
+                              m_frameRect.height() - borderHeight());
+            paintBackground(canvas, style(), bgRect,
+                            LayoutRect(0, 0, width(), height()), false);
 
         } while (false);
 
@@ -340,55 +485,107 @@ public:
 
         // draw border-image
         if (style()->hasBorderImageData()) {
-            double bWidth = style()->surround()->border.top().width().specifiedValue(height());
-            double bImgWidth = style()->surround()->border.image().widths().top().specifiedValue(bWidth);
-            double bImgSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+            double bWidth =
+                style()->surround()->border.top().width().specifiedValue(
+                    height());
+            double bImgWidth = style()
+                                   ->surround()
+                                   ->border.image()
+                                   .widths()
+                                   .top()
+                                   .specifiedValue(bWidth);
+            double bImgSlice = style()
+                                   ->surround()
+                                   ->border.image()
+                                   .slices()
+                                   .top()
+                                   .specifiedValue(height());
 
-            size_t imgWidth = style()->surround()->border.image().imageData()->width();
-            size_t imgHeight = style()->surround()->border.image().imageData()->height();
+            size_t imgWidth =
+                style()->surround()->border.image().imageData()->width();
+            size_t imgHeight =
+                style()->surround()->border.image().imageData()->height();
 
-            size_t lSlice = style()->surround()->border.image().slices().left().specifiedValue(width());
-            size_t tSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
-            size_t rSlice = style()->surround()->border.image().slices().right().specifiedValue(width());
-            size_t bSlice = style()->surround()->border.image().slices().bottom().specifiedValue(height());
+            size_t lSlice = style()
+                                ->surround()
+                                ->border.image()
+                                .slices()
+                                .left()
+                                .specifiedValue(width());
+            size_t tSlice = style()
+                                ->surround()
+                                ->border.image()
+                                .slices()
+                                .top()
+                                .specifiedValue(height());
+            size_t rSlice = style()
+                                ->surround()
+                                ->border.image()
+                                .slices()
+                                .right()
+                                .specifiedValue(width());
+            size_t bSlice = style()
+                                ->surround()
+                                ->border.image()
+                                .slices()
+                                .bottom()
+                                .specifiedValue(height());
 
-            ImageData* imgData = style()->surround()->border.image().imageData();
+            ImageData* imgData =
+                style()->surround()->border.image().imageData();
 
-            if (bImgSlice > imgWidth || bImgSlice > imgHeight)
+            if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
                 bImgSlice = std::min(imgWidth, imgHeight);
+            }
 
-            double value = std::min((float)width() / (bImgWidth*2), (float)height() / (bImgWidth*2));
-            if (value < 1)
+            double value = std::min((float)width() / (bImgWidth * 2),
+                                    (float)height() / (bImgWidth * 2));
+            if (value < 1) {
                 bImgWidth *= value;
+            }
 
             double scale = bImgWidth / bImgSlice;
             bool isFill = false;
 
             if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
-                float drawRect = std::min((float)width(), (float)height()) / 2.0;
+                float drawRect =
+                    std::min((float)width(), (float)height()) / 2.0;
 
-                if (drawRect > bImgWidth)
+                if (drawRect > bImgWidth) {
                     drawRect = bImgWidth;
+                }
 
                 // left-top
-                canvas->drawBorderImage(imgData, Rect(0, 0, drawRect, drawRect), lSlice, tSlice, 0, 0, scale, isFill);
+                canvas->drawBorderImage(imgData, Rect(0, 0, drawRect, drawRect),
+                                        lSlice, tSlice, 0, 0, scale, isFill);
                 // right-top
-                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect, 0, drawRect, drawRect), 0, tSlice, rSlice, 0, scale, isFill);
+                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect,
+                                                      0, drawRect, drawRect),
+                                        0, tSlice, rSlice, 0, scale, isFill);
                 // right-bottom
-                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect, (float)height() - drawRect, drawRect, drawRect), 0, 0, rSlice, bSlice, scale, isFill);
+                canvas->drawBorderImage(imgData,
+                                        Rect((float)width() - drawRect,
+                                             (float)height() - drawRect,
+                                             drawRect, drawRect),
+                                        0, 0, rSlice, bSlice, scale, isFill);
                 // left-bottom
-                canvas->drawBorderImage(imgData, Rect(0, (float)height() - drawRect, drawRect, drawRect), lSlice, 0, 0, bSlice, scale, isFill);
+                canvas->drawBorderImage(
+                    imgData,
+                    Rect(0, (float)height() - drawRect, drawRect, drawRect),
+                    lSlice, 0, 0, bSlice, scale, isFill);
             } else {
                 isFill = style()->surround()->border.image().sliceFill();
-                canvas->drawBorderImage(imgData, Rect(0, 0, width(), height()), lSlice, tSlice, rSlice, bSlice, scale, isFill);
+                canvas->drawBorderImage(imgData, Rect(0, 0, width(), height()),
+                                        lSlice, tSlice, rSlice, bSlice, scale,
+                                        isFill);
             }
         } else if (style()->hasBorderStyle()) {
             // draw border
             // TODO border-join
 
-            if ((style()->borderTopColor() == style()->borderRightColor())
-                && (style()->borderRightColor() == style()->borderBottomColor())
-                && (style()->borderBottomColor() == style()->borderLeftColor())) {
+            if ((style()->borderTopColor() == style()->borderRightColor()) &&
+                (style()->borderRightColor() == style()->borderBottomColor()) &&
+                (style()->borderBottomColor() == style()->borderLeftColor())) {
                 // if 4-colors are same.
 
                 // top
@@ -396,23 +593,22 @@ public:
                 canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
                 // right
                 canvas->setColor(style()->borderRightColor());
-                canvas->drawRect(LayoutRect(width()-borderRight(), 0, borderRight(), height()));
+                canvas->drawRect(LayoutRect(width() - borderRight(), 0,
+                                            borderRight(), height()));
                 // bottom
                 canvas->setColor(style()->borderBottomColor());
-                canvas->drawRect(LayoutRect(0, height()-borderBottom(), width(), borderBottom()));
+                canvas->drawRect(LayoutRect(0, height() - borderBottom(),
+                                            width(), borderBottom()));
                 // left
                 canvas->setColor(style()->borderLeftColor());
                 canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
             } else {
-
                 // top
                 canvas->setColor(style()->borderTopColor());
                 canvas->drawRect(
-                    LayoutLocation(0, 0),
-                    LayoutLocation(width(), 0),
+                    LayoutLocation(0, 0), LayoutLocation(width(), 0),
                     LayoutLocation(width() - borderRight(), borderTop()),
-                    LayoutLocation(borderLeft(), borderTop())
-                );
+                    LayoutLocation(borderLeft(), borderTop()));
 
                 // right
                 canvas->setColor(style()->borderRightColor());
@@ -420,17 +616,17 @@ public:
                     LayoutLocation(width() - borderRight(), borderTop()),
                     LayoutLocation(width(), 0),
                     LayoutLocation(width(), height()),
-                    LayoutLocation(width() - borderRight(), height() - borderBottom())
-                );
+                    LayoutLocation(width() - borderRight(),
+                                   height() - borderBottom()));
 
                 // bottom
                 canvas->setColor(style()->borderBottomColor());
                 canvas->drawRect(
                     LayoutLocation(borderLeft(), height() - borderBottom()),
-                    LayoutLocation(width() - borderRight(), height() - borderBottom()),
+                    LayoutLocation(width() - borderRight(),
+                                   height() - borderBottom()),
                     LayoutLocation(width(), height()),
-                    LayoutLocation(0, height())
-                );
+                    LayoutLocation(0, height()));
 
                 // left
                 canvas->setColor(style()->borderLeftColor());
@@ -438,8 +634,7 @@ public:
                     LayoutLocation(0, 0),
                     LayoutLocation(borderLeft(), borderTop()),
                     LayoutLocation(borderLeft(), height() - borderBottom()),
-                    LayoutLocation(0, height())
-                );
+                    LayoutLocation(0, height()));
             }
         }
 
@@ -448,13 +643,15 @@ public:
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
-        if (x >= 0 && x < m_frameRect.width() && y >= 0 && y < m_frameRect.height()) {
+        if (x >= 0 && x < m_frameRect.width() && y >= 0 &&
+            y < m_frameRect.height()) {
             return this;
         }
         return nullptr;
     }
 
-    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
+                                       HitTestStage stage)
     {
         Frame* child = lastChild();
         Frame* result = nullptr;
@@ -462,8 +659,9 @@ public:
             LayoutUnit cx = x - child->asFrameBox()->x();
             LayoutUnit cy = y - child->asFrameBox()->y();
             result = child->hitTest(cx, cy, stage);
-            if (result)
+            if (result) {
                 return result;
+            }
             child = child->previous();
         }
         return result;
@@ -489,46 +687,58 @@ public:
     void computeBorderMarginPadding(LayoutUnit parentContentWidth)
     {
         // padding
-        if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-            setPaddingLeft(style()->paddingLeft().specifiedValue(parentContentWidth));
+        if (style()->paddingLeft().isSpecified() &&
+            !m_flags.m_isLeftMBPCleared) {
+            setPaddingLeft(
+                style()->paddingLeft().specifiedValue(parentContentWidth));
         } else {
             setPaddingLeft(0);
         }
         if (style()->paddingTop().isSpecified()) {
-            setPaddingTop(style()->paddingTop().specifiedValue(parentContentWidth));
+            setPaddingTop(
+                style()->paddingTop().specifiedValue(parentContentWidth));
         } else {
             setPaddingTop(0);
         }
-        if (style()->paddingRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
-            setPaddingRight(style()->paddingRight().specifiedValue(parentContentWidth));
+        if (style()->paddingRight().isSpecified() &&
+            !m_flags.m_isRightMBPCleared) {
+            setPaddingRight(
+                style()->paddingRight().specifiedValue(parentContentWidth));
         } else {
             setPaddingRight(0);
         }
         if (style()->paddingBottom().isSpecified()) {
-            setPaddingBottom(style()->paddingBottom().specifiedValue(parentContentWidth));
+            setPaddingBottom(
+                style()->paddingBottom().specifiedValue(parentContentWidth));
         } else {
             setPaddingBottom(0);
         }
 
         // border
         if (style()->hasBorderStyle()) {
-            if (style()->borderLeftWidth().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-                setBorderLeft(style()->borderLeftWidth().specifiedValue(parentContentWidth));
+            if (style()->borderLeftWidth().isSpecified() &&
+                !m_flags.m_isLeftMBPCleared) {
+                setBorderLeft(style()->borderLeftWidth().specifiedValue(
+                    parentContentWidth));
             } else {
                 setBorderLeft(0);
             }
             if (style()->borderTopWidth().isSpecified()) {
-                setBorderTop(style()->borderTopWidth().specifiedValue(parentContentWidth));
+                setBorderTop(style()->borderTopWidth().specifiedValue(
+                    parentContentWidth));
             } else {
                 setBorderTop(0);
             }
-            if (style()->borderRightWidth().isSpecified() && !m_flags.m_isRightMBPCleared) {
-                setBorderRight(style()->borderRightWidth().specifiedValue(parentContentWidth));
+            if (style()->borderRightWidth().isSpecified() &&
+                !m_flags.m_isRightMBPCleared) {
+                setBorderRight(style()->borderRightWidth().specifiedValue(
+                    parentContentWidth));
             } else {
                 setBorderRight(0);
             }
             if (style()->borderBottomWidth().isSpecified()) {
-                setBorderBottom(style()->borderBottomWidth().specifiedValue(parentContentWidth));
+                setBorderBottom(style()->borderBottomWidth().specifiedValue(
+                    parentContentWidth));
             } else {
                 setBorderBottom(0);
             }
@@ -540,23 +750,29 @@ public:
         }
 
         // margin
-        if (style()->marginLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-            setMarginLeft(style()->marginLeft().specifiedValue(parentContentWidth));
+        if (style()->marginLeft().isSpecified() &&
+            !m_flags.m_isLeftMBPCleared) {
+            setMarginLeft(
+                style()->marginLeft().specifiedValue(parentContentWidth));
         } else {
             setMarginLeft(0);
         }
         if (style()->marginTop().isSpecified()) {
-            setMarginTop(style()->marginTop().specifiedValue(parentContentWidth));
+            setMarginTop(
+                style()->marginTop().specifiedValue(parentContentWidth));
         } else {
             setMarginTop(0);
         }
-        if (style()->marginRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
-            setMarginRight(style()->marginRight().specifiedValue(parentContentWidth));
+        if (style()->marginRight().isSpecified() &&
+            !m_flags.m_isRightMBPCleared) {
+            setMarginRight(
+                style()->marginRight().specifiedValue(parentContentWidth));
         } else {
             setMarginRight(0);
         }
         if (style()->marginBottom().isSpecified()) {
-            setMarginBottom(style()->marginBottom().specifiedValue(parentContentWidth));
+            setMarginBottom(
+                style()->marginBottom().specifiedValue(parentContentWidth));
         } else {
             setMarginBottom(0);
         }
@@ -570,25 +786,28 @@ public:
                 FrameBox* p = layoutParent()->asFrameBox();
                 while (true) {
                     if (p->isEstablishesStackingContext()) {
-                        if (p->isRootElement())
+                        if (p->isRootElement()) {
                             break;
-                        if (p->needsGraphicsBuffer())
+                        }
+                        if (p->needsGraphicsBuffer()) {
                             break;
-                        if (!p->isPositioned())
+                        }
+                        if (!p->isPositioned()) {
                             break;
-                        if (p->style()->IsSpecifiedZIndex())
+                        }
+                        if (p->style()->IsSpecifiedZIndex()) {
                             break;
+                        }
                     }
                     p = p->layoutParent()->asFrameBox();
                 }
-                m_stackingContext = new StackingContext(this, p->stackingContext());
+                m_stackingContext =
+                    new StackingContext(this, p->stackingContext());
             } else {
                 m_stackingContext = new StackingContext(this, nullptr);
             }
-
         }
     }
-
 
     void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true)
     {
@@ -598,42 +817,46 @@ public:
         }
     }
 
-
     virtual void paintStackingContextContent(Canvas* canvas);
     virtual void willCompsiteStackingContext(Canvas* c)
     {
-
     }
 
     virtual void didCompsiteStackingContext(Canvas* c)
     {
-
     }
 
-    // this callback only called (establishesStackingContext && !needsGraphicsBuffer)
+    // this callback only called (establishesStackingContext &&
+    // !needsGraphicsBuffer)
     virtual void compsitingStackingContext(Canvas* c)
     {
-
     }
 
     // first return value of callback means should continue iterate its child
-    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void iterateChildBoxes(
+        const std::function<bool(FrameBox*)>& fn,
+        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
+        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
         if (fn(this) && firstChild()) {
-            if (beforeIterateChild)
+            if (beforeIterateChild) {
                 beforeIterateChild(this);
+            }
 
             FrameBox* child = firstChild()->asFrameBox();
             while (true) {
-                child->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
-                if (child->next())
+                child->iterateChildBoxes(fn, beforeIterateChild,
+                                         afterIterateChild);
+                if (child->next()) {
                     child = child->next()->asFrameBox();
-                else
+                } else {
                     break;
+                }
             }
 
-            if (afterIterateChild)
+            if (afterIterateChild) {
                 afterIterateChild(this);
+            }
         }
     }
 
@@ -648,42 +871,56 @@ public:
     }
 
 protected:
-    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width, LayoutUnit parentWidth, bool parentHasFixedValue)
+    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width,
+                                         LayoutUnit parentWidth,
+                                         bool parentHasFixedValue)
     {
         ComputedStyle* style = Frame::style();
         if (style->minWidth().isSpecified()) {
-            if (!parentHasFixedValue&&style->minWidth().isPercent())
+            if (!parentHasFixedValue && style->minWidth().isPercent()) {
                 return width;
+            }
             LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
-            if (minWidth > width)
+            if (minWidth > width) {
                 return minWidth;
+            }
         }
         if (style->maxWidth().isSpecified()) {
-            if (!parentHasFixedValue&&style->maxWidth().isPercent())
+            if (!parentHasFixedValue && style->maxWidth().isPercent()) {
                 return width;
+            }
             LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
-            if (maxWidth < width)
+            if (maxWidth < width) {
                 return maxWidth;
+            }
         }
         return width;
     }
 
-    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height, LayoutUnit parentHeight, bool parentHasFixedValue)
+    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
+                                          LayoutUnit parentHeight,
+                                          bool parentHasFixedValue)
     {
         ComputedStyle* style = Frame::style();
         if (style->minHeight().isSpecified()) {
-            if (!parentHasFixedValue&&style->minHeight().isPercent())
+            if (!parentHasFixedValue && style->minHeight().isPercent()) {
                 return height;
-            LayoutUnit minHeight = style->minHeight().specifiedValue(parentHeight);
-            if (minHeight > height)
+            }
+            LayoutUnit minHeight =
+                style->minHeight().specifiedValue(parentHeight);
+            if (minHeight > height) {
                 return minHeight;
+            }
         }
         if (style->maxHeight().isSpecified()) {
-            if (!parentHasFixedValue&&style->maxHeight().isPercent())
+            if (!parentHasFixedValue && style->maxHeight().isPercent()) {
                 return height;
-            LayoutUnit maxHeight = style->maxHeight().specifiedValue(parentHeight);
-            if (maxHeight < height)
+            }
+            LayoutUnit maxHeight =
+                style->maxHeight().specifiedValue(parentHeight);
+            if (maxHeight < height) {
                 return maxHeight;
+            }
         }
         return height;
     }
@@ -696,7 +933,6 @@ protected:
 
     size_t m_inlineBoxIndex;
 };
-
 }
 
 #endif

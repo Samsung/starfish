@@ -31,7 +31,9 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
         int32_t num = owner->style()->zIndex();
         auto iter = m_parent->m_childContexts.find(num);
         if (iter == m_parent->m_childContexts.end()) {
-            iter = m_parent->m_childContexts.insert(std::make_pair(num, new StackingContextChild())).first;
+            iter = m_parent->m_childContexts
+                       .insert(std::make_pair(num, new StackingContextChild()))
+                       .first;
         }
         iter->second->push_back(this);
     }
@@ -46,39 +48,45 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     while (iter != m_childContexts.end()) {
         auto iter2 = iter->second->begin();
         while (iter2 != iter->second->end()) {
-            childNeedsBuffer = (*iter2)->computeStackingContextProperties(childNeedsBuffer);
+            childNeedsBuffer =
+                (*iter2)->computeStackingContextProperties(childNeedsBuffer);
             iter2++;
         }
         iter++;
     }
 
     m_matrix.reset();
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
+    m_needsOwnBuffer =
+        forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
 
     if (m_needsOwnBuffer) {
-        LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
+        LayoutLocation l(-m_owner->frameRect().location().x(),
+                         -m_owner->frameRect().location().y());
 
-        m_owner->iterateChildBoxes([&](FrameBox* box) -> bool
-        {
-            if (box != m_owner && box->stackingContext() && box->stackingContext()->needsOwnBuffer())
-                return false;
-            LayoutRect r = box->frameRect();
-            r.setX(r.x() + l.x());
-            r.setY(r.y() + l.y());
-            m_visibleRect.unite(r);
-            if (box->style() && box->style()->overflow() == OverflowValue::HiddenOverflow) {
-                return false;
-            }
-            return true;
-        }, [&](FrameBox* box)
-        {
-            l.setX(l.x() + box->x());
-            l.setY(l.y() + box->y());
-        }, [&](FrameBox* box)
-        {
-            l.setX(l.x() - box->x());
-            l.setY(l.y() - box->y());
-        });
+        m_owner->iterateChildBoxes(
+            [&](FrameBox* box) -> bool {
+                if (box != m_owner && box->stackingContext() &&
+                    box->stackingContext()->needsOwnBuffer()) {
+                    return false;
+                }
+                LayoutRect r = box->frameRect();
+                r.setX(r.x() + l.x());
+                r.setY(r.y() + l.y());
+                m_visibleRect.unite(r);
+                if (box->style() &&
+                    box->style()->overflow() == OverflowValue::HiddenOverflow) {
+                    return false;
+                }
+                return true;
+            },
+            [&](FrameBox* box) {
+                l.setX(l.x() + box->x());
+                l.setY(l.y() + box->y());
+            },
+            [&](FrameBox* box) {
+                l.setX(l.x() - box->x());
+                l.setY(l.y() - box->y());
+            });
 
         if (m_visibleRect.isEmpty()) {
             m_needsOwnBuffer = false;
@@ -109,11 +117,14 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (hasStackingBuffer) {
         // TODO treat when buffer is too large
-        if (!m_buffer || ((m_buffer->width() != bufferWidth) && (m_buffer->height() != bufferHeight))) {
+        if (!m_buffer || ((m_buffer->width() != bufferWidth) &&
+                          (m_buffer->height() != bufferHeight))) {
             if (m_buffer) {
                 m_buffer->detachNativeBuffer();
             }
-            m_buffer = CanvasSurface::create(m_owner->node()->document()->window(), bufferWidth, bufferHeight);
+            m_buffer =
+                CanvasSurface::create(m_owner->node()->document()->window(),
+                                      bufferWidth, bufferHeight);
         }
 
         m_buffer->clear();
@@ -137,27 +148,33 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     canvas->save();
 
-    if (owner()->style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+    if (owner()->style()->visibility() ==
+        VisibilityValue::HiddenVisibilityValue) {
         canvas->setVisible(false);
     } else {
         canvas->setVisible(true);
     }
-    // Within each stacking context, the following layers are painted in back-to-front order:
+    // Within each stacking context, the following layers are painted in
+    // back-to-front order:
 
     // the background and borders of the element forming the stacking context.
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
-        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(), owner()->width() - owner()->borderWidth(), owner()->height() - owner()->borderHeight()));
+        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(),
+                          owner()->width() - owner()->borderWidth(),
+                          owner()->height() - owner()->borderHeight()));
     }
 
-    // the child stacking contexts with negative stack levels (most negative first).
+    // the child stacking contexts with negative stack levels (most negative
+    // first).
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
             int32_t num = iter->first;
-            if (num >= 0)
+            if (num >= 0) {
                 break;
+            }
             auto iter2 = iter->second->begin();
             while (iter2 != iter->second->end()) {
                 StackingContext* sCtx = *iter2;
@@ -176,7 +193,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     m_owner->paintStackingContextContent(canvas);
 
-    // the child stacking contexts with positive stack levels (least positive first).
+    // the child stacking contexts with positive stack levels (least positive
+    // first).
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
@@ -229,7 +247,9 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
 
-        m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height(), ownerStyle->hasTransforms(m_owner));
+        m_matrix = m_owner->style()->transformsToMatrix(
+            m_owner->width(), m_owner->height(),
+            ownerStyle->hasTransforms(m_owner));
 
         if (!m_matrix.isIdentity()) {
             /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
@@ -239,8 +259,16 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             LayoutUnit ox = m_owner->width() / 2;
             LayoutUnit oy = m_owner->height() / 2;
             if (m_owner->style()->hasTransformOrigin()) {
-                ox = m_owner->style()->transformOrigin()->originValue()->getXAxis().specifiedValue(m_owner->width());
-                oy = m_owner->style()->transformOrigin()->originValue()->getYAxis().specifiedValue(m_owner->height());
+                ox = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getXAxis()
+                         .specifiedValue(m_owner->width());
+                oy = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getYAxis()
+                         .specifiedValue(m_owner->height());
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_matrix);
@@ -252,7 +280,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
 
         owner()->willCompsiteStackingContext(canvas);
-        canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        canvas->drawImage(m_buffer,
+                          Rect(minX, minY, bufferWidth, bufferHeight));
         owner()->didCompsiteStackingContext(canvas);
 
         // draw debug rect
@@ -265,15 +294,18 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         owner()->compsitingStackingContext(canvas);
     }
 
-    // Within each stacking context, the following layers are painted in back-to-front order:
+    // Within each stacking context, the following layers are painted in
+    // back-to-front order:
 
-    // the child stacking contexts with negative stack levels (most negative first).
+    // the child stacking contexts with negative stack levels (most negative
+    // first).
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
             int32_t num = iter->first;
-            if (num >= 0)
+            if (num >= 0) {
                 break;
+            }
             auto iter2 = iter->second->begin();
             while (iter2 != iter->second->end()) {
                 StackingContext* sCtx = *iter2;
@@ -290,7 +322,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
     }
 
-    // the child stacking contexts with positive stack levels (least positive first).
+    // the child stacking contexts with positive stack levels (least positive
+    // first).
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
@@ -332,8 +365,16 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
         LayoutUnit ox = m_owner->width() / 2;
         LayoutUnit oy = m_owner->height() / 2;
         if (m_owner->style()->hasTransformOrigin()) {
-            ox = m_owner->style()->transformOrigin()->originValue()->getXAxis().specifiedValue(m_owner->width());
-            oy = m_owner->style()->transformOrigin()->originValue()->getYAxis().specifiedValue(m_owner->height());
+            ox = m_owner->style()
+                     ->transformOrigin()
+                     ->originValue()
+                     ->getXAxis()
+                     .specifiedValue(m_owner->width());
+            oy = m_owner->style()
+                     ->transformOrigin()
+                     ->originValue()
+                     ->getYAxis()
+                     .specifiedValue(m_owner->height());
         }
         x -= ox;
         y -= oy;
@@ -344,7 +385,8 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
     }
 
     Frame* result = nullptr;
-    // the child stacking contexts with positive stack levels (least positive first).
+    // the child stacking contexts with positive stack levels (least positive
+    // first).
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {
@@ -361,8 +403,9 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                     result = sCtx->hitTestStackingContext(x, y);
                     x = oldX;
                     y = oldY;
-                    if (result)
+                    if (result) {
                         return result;
+                    }
 
                     iter2++;
                 }
@@ -371,33 +414,41 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
         }
     }
 
-    // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
+    // the child stacking contexts with stack level 0 and the positioned
+    // descendants with stack level 0.
     result = m_owner->hitTestChildrenWith(x, y, HitTestPositionedElements);
-    if (result)
+    if (result) {
         return result;
+    }
 
-    // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
+    // the in-flow, inline-level, non-positioned descendants, including inline
+    // tables and inline blocks.
     result = m_owner->hitTestChildrenWith(x, y, HitTestNormalFlowInline);
-    if (result)
+    if (result) {
         return result;
+    }
 
     // the non-positioned float.
     result = m_owner->hitTestChildrenWith(x, y, HitTestNonPositionedFloats);
-    if (result)
+    if (result) {
         return result;
+    }
 
     // the in-flow, non-inline-level, non-positioned descendants.
     result = m_owner->hitTestChildrenWith(x, y, HitTestNormalFlowBlock);
-    if (result)
+    if (result) {
         return result;
+    }
 
-    // the child stacking contexts with negative stack levels (most negative first).
+    // the child stacking contexts with negative stack levels (most negative
+    // first).
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {
             int32_t num = iter->first;
-            if (num > 0)
+            if (num > 0) {
                 break;
+            }
             auto iter2 = iter->second->rbegin();
             LayoutUnit oldX = x;
             LayoutUnit oldY = y;
@@ -408,8 +459,9 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                 x -= l.x();
                 y -= l.y();
                 result = sCtx->hitTestStackingContext(x, y);
-                if (result)
+                if (result) {
                     return result;
+                }
 
                 x = oldX;
                 y = oldY;
@@ -419,13 +471,12 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
         }
     }
 
-
     // the background and borders of the element forming the stacking context.
     result = m_owner->FrameBox::hitTest(x, y, HitTestNormalFlowBlock);
-    if (result)
+    if (result) {
         return result;
+    }
 
     return nullptr;
 }
-
 }

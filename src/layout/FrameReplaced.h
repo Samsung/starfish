@@ -33,17 +33,14 @@ struct IntrinsicSizeUsedInLayout {
     LayoutSize m_intrinsicContentSize;
     std::pair<Length, Length> m_intrinsicSizeIsSpecifiedByAttributeOfElement;
 
-    IntrinsicSizeUsedInLayout()
-        : m_intrinsicContentSize(0, 0)
+    IntrinsicSizeUsedInLayout() : m_intrinsicContentSize(0, 0)
     {
-
     }
 };
 
 class FrameReplaced : public FrameBox {
 public:
-    FrameReplaced(Node* node, ComputedStyle* style)
-        : FrameBox(node, style)
+    FrameReplaced(Node* node, ComputedStyle* style) : FrameBox(node, style)
     {
     }
 
@@ -74,10 +71,16 @@ public:
         return (FrameReplacedVideo*)this;
     }
 
-    void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height, LayoutUnit parentWidth, LayoutUnit parentHeight, bool parentWidthHasFixedValue = true, bool parentHeightHasFixedValue = true)
+    void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height,
+                                 LayoutUnit parentWidth,
+                                 LayoutUnit parentHeight,
+                                 bool parentWidthHasFixedValue = true,
+                                 bool parentHeightHasFixedValue = true)
     {
-        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(width, parentWidth, parentWidthHasFixedValue);
-        LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(height, parentWidth, parentHeightHasFixedValue);
+        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(
+            width, parentWidth, parentWidthHasFixedValue);
+        LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(
+            height, parentWidth, parentHeightHasFixedValue);
         if (width != newWidth || height != newHeight) {
             if (height == 0 || newHeight == 0) {
                 setContentWidth(newWidth);
@@ -98,9 +101,13 @@ public:
         return "FrameReplaced";
     }
 
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight, LayoutUnit parentContentWidth, Length parentContentHeight);
+    virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth,
+                                      LayoutUnit& intrinsicHeight,
+                                      LayoutUnit parentContentWidth,
+                                      Length parentContentHeight);
 
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
@@ -132,11 +139,13 @@ public:
                 }
             } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
                 if (style()->display() == DisplayValue::InlineDisplayValue) {
-                    if (ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
+                    if (ctx.m_paintingInlineStage ==
+                        PaintingInlineLevelElements) {
                         paintBackgroundAndBorders(ctx.m_canvas);
                         paintReplaced(ctx.m_canvas);
                     }
-                } else if (style()->display() == DisplayValue::InlineBlockDisplayValue) {
+                } else if (style()->display() ==
+                           DisplayValue::InlineBlockDisplayValue) {
                     if (ctx.m_paintingInlineStage == PaintingInlineBlock) {
                         paintReplaced(ctx.m_canvas);
                     }
@@ -151,6 +160,7 @@ public:
     {
         paintReplaced(canvas);
     }
+
 protected:
 };
 }

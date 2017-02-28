@@ -25,8 +25,7 @@
 
 namespace StarFish {
 
-RowStruct::RowStruct(FrameTableRowBox* tableRow_)
-    : tableRow(tableRow_)
+RowStruct::RowStruct(FrameTableRowBox* tableRow_) : tableRow(tableRow_)
 {
     for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
         if (cell->isFrameTableCellBox()) {
@@ -38,16 +37,19 @@ RowStruct::RowStruct(FrameTableRowBox* tableRow_)
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-
 }
 
-FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(
+    Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableSectionBox* tableSection;
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    bool isTableSection = current->style()->display() == DisplayValue::TableRowGroupDisplayValue
-        || current->style()->display() == DisplayValue::TableHeaderGroupDisplayValue
-        || current->style()->display() == DisplayValue::TableFooterGroupDisplayValue;
+    bool isTableSection = current->style()->display() ==
+                              DisplayValue::TableRowGroupDisplayValue ||
+                          current->style()->display() ==
+                              DisplayValue::TableHeaderGroupDisplayValue ||
+                          current->style()->display() ==
+                              DisplayValue::TableFooterGroupDisplayValue;
 
     if (isTableSection) {
         tableSection = new FrameTableSectionBox(current, nullptr);
@@ -59,10 +61,12 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
         //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
 
-        if (before && before->isAnonymous() && before->isFrameTableSectionBox()) {
+        if (before && before->isAnonymous() &&
+            before->isFrameTableSectionBox()) {
             tableSection = before->asFrameTableSectionBox();
         } else {
-            tableSection = FrameTableSectionBox::createAnonymousWithParent(parent, current);
+            tableSection = FrameTableSectionBox::createAnonymousWithParent(
+                parent, current);
         }
     }
 
@@ -99,7 +103,8 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* curr
     return tableSection->parent() ? nullptr : tableSection;
 }
 
-FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(
+    FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
@@ -114,13 +119,12 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
     for (const auto& rowStruct : m_grid) {
         for (auto& cellStruct : rowStruct.cells) {
             LayoutRect rect(rowStruct.tableRow->x() + cellStruct.cell->x(),
-                rowStruct.tableRow->y() + cellStruct.cell->y(),
-                cellStruct.cell->frameRect().width(),
-                cellStruct.cell->frameRect().height());
+                            rowStruct.tableRow->y() + cellStruct.cell->y(),
+                            cellStruct.cell->frameRect().width(),
+                            cellStruct.cell->frameRect().height());
 
-            FrameTableColBox* col =
-                tableBox()->columnAtAbsoluteColumnIndex(
-                    cellStruct.cell->absoluteColumnIndex());
+            FrameTableColBox* col = tableBox()->columnAtAbsoluteColumnIndex(
+                cellStruct.cell->absoluteColumnIndex());
             if (col) {
                 // Paint background using column style
                 paintBackground(canvas, col->style(), rect, rect, false);
@@ -130,18 +134,22 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
         }
     }
 
-    // TODO : Below should be fixed when 'border-collpase:collapse' is supported.
+    // TODO : Below should be fixed when 'border-collpase:collapse' is
+    // supported.
     paintBorders(canvas, m_frameRect);
     return;
 }
 
-FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableRowBox* FrameTableSectionBox::addChild(Node* child,
+                                                 FrameTreeBuilderContext& ctx,
+                                                 bool force)
 {
     FrameTableRowBox* childFrame;
 
     if (child->style()->display() == DisplayValue::TableRowDisplayValue) {
         childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
+        FrameTreeBuilder::frameBlockBoxChildInserter(
+            ctx.currentBlockContainer(), childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
         return childFrame;
     }
@@ -153,7 +161,8 @@ FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderCo
         // please read comment in FrameTableBox::addChild
         childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
         if (childFrame != nullptr) {
-            FrameTableSectionBox* tableSection = ctx.currentBlockContainer()->asFrameTableSectionBox();
+            FrameTableSectionBox* tableSection =
+                ctx.currentBlockContainer()->asFrameTableSectionBox();
             tableSection->appendChild(childFrame);
             childFrame->setRowIndex(tableSection->grid().size());
             RowStruct row(childFrame);
@@ -267,10 +276,10 @@ bool FrameTableSectionBox::isFirstTableSection()
     return false;
 }
 
-void FrameTableSectionBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableSectionBox::layout(LayoutContext& ctx,
+                                  Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
-
 }

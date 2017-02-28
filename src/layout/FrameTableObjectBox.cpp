@@ -22,7 +22,6 @@ namespace StarFish {
 FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-
 }
 
 // Draws the border around the area defined by "rect"
@@ -40,17 +39,35 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
         //  |_|__________|_|
         //
 
-        double bWidth = style()->surround()->border.top().width().specifiedValue(height());
-        double bImgWidth = style()->surround()->border.image().widths().top().specifiedValue(bWidth);
-        double bImgSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+        double bWidth =
+            style()->surround()->border.top().width().specifiedValue(height());
+        double bImgWidth =
+            style()->surround()->border.image().widths().top().specifiedValue(
+                bWidth);
+        double bImgSlice =
+            style()->surround()->border.image().slices().top().specifiedValue(
+                height());
 
-        size_t imgWidth = style()->surround()->border.image().imageData()->width();
-        size_t imgHeight = style()->surround()->border.image().imageData()->height();
+        size_t imgWidth =
+            style()->surround()->border.image().imageData()->width();
+        size_t imgHeight =
+            style()->surround()->border.image().imageData()->height();
 
-        size_t lSlice = style()->surround()->border.image().slices().left().specifiedValue(width());
-        size_t tSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
-        size_t rSlice = style()->surround()->border.image().slices().right().specifiedValue(width());
-        size_t bSlice = style()->surround()->border.image().slices().bottom().specifiedValue(height());
+        size_t lSlice =
+            style()->surround()->border.image().slices().left().specifiedValue(
+                width());
+        size_t tSlice =
+            style()->surround()->border.image().slices().top().specifiedValue(
+                height());
+        size_t rSlice =
+            style()->surround()->border.image().slices().right().specifiedValue(
+                width());
+        size_t bSlice = style()
+                            ->surround()
+                            ->border.image()
+                            .slices()
+                            .bottom()
+                            .specifiedValue(height());
 
         ImageData* imgData = style()->surround()->border.image().imageData();
 
@@ -58,7 +75,8 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
             bImgSlice = std::min(imgWidth, imgHeight);
         }
 
-        double value = std::min((float)width() / (bImgWidth*2), (float)height() / (bImgWidth*2));
+        double value = std::min((float)width() / (bImgWidth * 2),
+                                (float)height() / (bImgWidth * 2));
         if (value < 1) {
             bImgWidth *= value;
         }
@@ -74,21 +92,31 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
             }
 
             // left-top
-            canvas->drawBorderImage(imgData,
-                Rect(rect.x(), rect.y(), drawRect, drawRect), lSlice, tSlice, 0, 0, scale, isFill);
+            canvas->drawBorderImage(
+                imgData, Rect(rect.x(), rect.y(), drawRect, drawRect), lSlice,
+                tSlice, 0, 0, scale, isFill);
             // right-top
             canvas->drawBorderImage(imgData,
-                Rect((float)rect.width() - drawRect, rect.y(), drawRect, drawRect), 0, tSlice, rSlice, 0, scale, isFill);
+                                    Rect((float)rect.width() - drawRect,
+                                         rect.y(), drawRect, drawRect),
+                                    0, tSlice, rSlice, 0, scale, isFill);
             // right-bottom
-            canvas->drawBorderImage(imgData,
-                Rect((float)rect.width() - drawRect, (float)(rect.y() + rect.height()) - drawRect, drawRect, drawRect), 0, 0, rSlice, bSlice, scale, isFill);
+            canvas->drawBorderImage(
+                imgData, Rect((float)rect.width() - drawRect,
+                              (float)(rect.y() + rect.height()) - drawRect,
+                              drawRect, drawRect),
+                0, 0, rSlice, bSlice, scale, isFill);
             // left-bottom
-            canvas->drawBorderImage(imgData,
-                Rect(rect.x(), (float)(rect.y() + rect.height()) - drawRect, drawRect, drawRect), lSlice, 0, 0, bSlice, scale, isFill);
+            canvas->drawBorderImage(
+                imgData,
+                Rect(rect.x(), (float)(rect.y() + rect.height()) - drawRect,
+                     drawRect, drawRect),
+                lSlice, 0, 0, bSlice, scale, isFill);
         } else {
             isFill = style()->surround()->border.image().sliceFill();
-            canvas->drawBorderImage(imgData,
-                Rect(rect.x(), rect.y(), rect.width(), rect.height()), lSlice, tSlice, rSlice, bSlice, scale, isFill);
+            canvas->drawBorderImage(
+                imgData, Rect(rect.x(), rect.y(), rect.width(), rect.height()),
+                lSlice, tSlice, rSlice, bSlice, scale, isFill);
         }
     } else if (style()->hasBorderStyle()) {
         // Draw trapezium-like borders around FrameTableSections
@@ -108,39 +136,40 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
         canvas->drawRect(
             LayoutLocation(rect.x(), rect.y()),
             LayoutLocation(rect.x() + rect.width(), rect.y()),
-            LayoutLocation(rect.x() + rect.width() - borderRight(), rect.y() + borderTop()),
-            LayoutLocation(rect.x() + borderLeft(), rect.y() + borderTop())
-        );
+            LayoutLocation(rect.x() + rect.width() - borderRight(),
+                           rect.y() + borderTop()),
+            LayoutLocation(rect.x() + borderLeft(), rect.y() + borderTop()));
 
         // right
         canvas->setColor(style()->borderRightColor());
         canvas->drawRect(
-            LayoutLocation(rect.x() + rect.width() - borderRight(), rect.y() + borderTop()),
+            LayoutLocation(rect.x() + rect.width() - borderRight(),
+                           rect.y() + borderTop()),
             LayoutLocation(rect.x() + rect.width(), rect.y()),
             LayoutLocation(rect.x() + rect.width(), rect.y() + rect.height()),
-            LayoutLocation(rect.x() + rect.width() - borderRight(), rect.y() + rect.height() - borderBottom())
-        );
+            LayoutLocation(rect.x() + rect.width() - borderRight(),
+                           rect.y() + rect.height() - borderBottom()));
 
         // bottom
         canvas->setColor(style()->borderBottomColor());
         canvas->drawRect(
-            LayoutLocation(rect.x() + borderLeft(), rect.y() + rect.height() - borderBottom()),
-            LayoutLocation(rect.x() + rect.width() - borderRight(), rect.y() + rect.height() - borderBottom()),
+            LayoutLocation(rect.x() + borderLeft(),
+                           rect.y() + rect.height() - borderBottom()),
+            LayoutLocation(rect.x() + rect.width() - borderRight(),
+                           rect.y() + rect.height() - borderBottom()),
             LayoutLocation(rect.x() + rect.width(), rect.y() + rect.height()),
-            LayoutLocation(rect.x(), rect.y() + rect.height())
-        );
+            LayoutLocation(rect.x(), rect.y() + rect.height()));
 
         // left
         canvas->setColor(style()->borderLeftColor());
         canvas->drawRect(
             LayoutLocation(rect.x(), rect.y()),
             LayoutLocation(rect.x() + borderLeft(), rect.y() + borderTop()),
-            LayoutLocation(rect.x() + borderLeft(), rect.y() + rect.height() - borderBottom()),
-            LayoutLocation(rect.x(), rect.y() + rect.height())
-        );
+            LayoutLocation(rect.x() + borderLeft(),
+                           rect.y() + rect.height() - borderBottom()),
+            LayoutLocation(rect.x(), rect.y() + rect.height()));
     }
 
     canvas->restore();
 }
-
 }
