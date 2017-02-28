@@ -21,11 +21,10 @@ namespace StarFish {
 
 class Element;
 
-class XMLSerializer: public gc {
+class XMLSerializer : public gc {
 public:
     static String* serializeToXML(Element* e, bool includeSelf);
 };
-
 }
 
 #endif
