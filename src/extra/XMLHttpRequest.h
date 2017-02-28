@@ -29,14 +29,15 @@ class Blob;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
-    XMLHttpRequestEventTarget()
-        : EventTarget()
+    XMLHttpRequestEventTarget() : EventTarget()
     {
     }
 };
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget, public NetworkRequestClient {
+class XMLHttpRequest : public XMLHttpRequestEventTarget,
+                       public NetworkRequestClient {
     friend class XMLHttpRequestEventEmitter;
+
 public:
     XMLHttpRequest(Document* document);
 
@@ -71,15 +72,19 @@ public:
     ScriptValue response();
     String* responseText();
 
-    void open(NetworkRequest::MethodType method, String* url, bool async, String* userName = String::emptyString, String* password = String::emptyString);
+    void open(NetworkRequest::MethodType method, String* url, bool async,
+              String* userName = String::emptyString,
+              String* password = String::emptyString);
     void send(String* body = String::emptyString);
     void abort();
 
     void setTimeout(uint32_t timeout);
     void setRequestHeader(String* h, String* c);
 
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction);
+    virtual void onProgressEvent(NetworkRequest* request,
+                                 bool isExplicitAction);
     virtual void onReadyStateChange(NetworkRequest* request, bool fromExplicit);
+
 protected:
     void initResponseData();
     NetworkRequest* m_networkRequest;
@@ -99,7 +104,6 @@ protected:
     ScriptValue m_responseArrayBuffer;
 #endif
 };
-
 }
 
 #endif

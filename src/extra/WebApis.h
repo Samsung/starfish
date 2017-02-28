@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 
 #ifndef __StarFishWebApis__
 #define __StarFishWebApis__
@@ -52,7 +52,6 @@ public:
 protected:
     StarFish* m_starFish;
     avplay* m_avplay;
-
 };
 }
 

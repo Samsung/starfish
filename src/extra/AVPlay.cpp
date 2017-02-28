@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
 #include "AVPlay.h"
 #include "platform/message_loop/MessageLoop.h"
@@ -22,69 +22,75 @@
 
 namespace StarFish {
 
-static void _videoPlayerPrepareCB(void *user_data)
+static void _videoPlayerPrepareCB(void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
     avplay* self = (avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        avplay* self = (avplay*)data;
-        self->callJSCallback(avplay::prepare_async_CALLBACK);
-    }, user_data);
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        [](size_t, void* data) {
+            avplay* self = (avplay*)data;
+            self->callJSCallback(avplay::prepare_async_CALLBACK);
+        },
+        user_data);
 }
 
-
-static void _videoPlayerCompletedCB(void *user_data)
+static void _videoPlayerCompletedCB(void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
     avplay* self = (avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        avplay* self = (avplay*)data;
-        self->callJSCallback(avplay::onstreamcompleted_CALLBACK);
-    }, user_data);
-
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        [](size_t, void* data) {
+            avplay* self = (avplay*)data;
+            self->callJSCallback(avplay::onstreamcompleted_CALLBACK);
+        },
+        user_data);
 }
 
-static void _videoPlayerbufferingCBNative(int percent, void *user_data)
+static void _videoPlayerbufferingCBNative(int percent, void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerbufferingCBNative() %d\n", percent);
     avplay* self = (avplay*)user_data;
     if (percent < 100) {
         self->setBufferingPercent(percent);
-        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-            avplay* self = (avplay*)data;
-            self->callJSCallback(avplay::onbufferingprogress_CALLBACK);
-        }, user_data);
+        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            [](size_t, void* data) {
+                avplay* self = (avplay*)data;
+                self->callJSCallback(avplay::onbufferingprogress_CALLBACK);
+            },
+            user_data);
     } else if (percent == 100) {
         self->setBufferingPercent(percent);
-        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-            avplay* self = (avplay*)data;
-            self->callJSCallback(avplay::onbufferingcomplete_CALLBACK);
-        }, user_data);
+        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            [](size_t, void* data) {
+                avplay* self = (avplay*)data;
+                self->callJSCallback(avplay::onbufferingcomplete_CALLBACK);
+            },
+            user_data);
     }
 }
 
-
-static void _videoPlayerEventCBNative(int msg, void *msg_data, void *user_data)
+static void _videoPlayerEventCBNative(int msg, void* msg_data, void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerEventCBNative()\n");
-
 }
 
-static void _videoPlayerErrorEventCBNative(int error_code, void *user_data)
+static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
     avplay* self = (avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        avplay* self = (avplay*)data;
-        self->callJSCallback(avplay::onerror_CALLBACK);
-    }, user_data);
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        [](size_t, void* data) {
+            avplay* self = (avplay*)data;
+            self->callJSCallback(avplay::onerror_CALLBACK);
+        },
+        user_data);
 }
 
 void printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
-#define GEN_ERROR_PRINTS(errorenum) \
-    case errorenum: \
+#define GEN_ERROR_PRINTS(errorenum)            \
+    case errorenum:                            \
         STARFISH_LOG_INFO("%s\n", #errorenum); \
         return;
         GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
@@ -114,16 +120,16 @@ void printNativePlayerError(int errorCode)
 }
 
 avplay::avplay(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
-    , m_offsetLeft(0)
-    , m_offsetTop(0)
-    , m_offsetWidth(0)
-    , m_offsetHeight(0)
-    , m_bufferingPercent(0)
-    , m_nativePlayer(nullptr)
-    , m_prepare_async(ScriptValueNull)
-    , m_listener(ScriptValueNull)
+    : ScriptWrappable(this),
+      m_starFish(starFish),
+      m_offsetLeft(0),
+      m_offsetTop(0),
+      m_offsetWidth(0),
+      m_offsetHeight(0),
+      m_bufferingPercent(0),
+      m_nativePlayer(nullptr),
+      m_prepare_async(ScriptValueNull),
+      m_listener(ScriptValueNull)
 {
 }
 
@@ -144,34 +150,37 @@ void avplay::open(String* url)
         printNativePlayerError(ret);
     }
 
-
-    ret = player_set_completed_cb(m_nativePlayer, _videoPlayerCompletedCB, this);
+    ret =
+        player_set_completed_cb(m_nativePlayer, _videoPlayerCompletedCB, this);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }
 
-    // ret = player_set_others_event_cb(m_nativePlayer, _videoPlayerEventCBNative, this);
+    // ret = player_set_others_event_cb(m_nativePlayer,
+    // _videoPlayerEventCBNative, this);
     // if (ret != PLAYER_ERROR_NONE) {
     //     printNativePlayerError(ret);
     // }
 
-    ret = player_set_error_cb(m_nativePlayer, _videoPlayerErrorEventCBNative, this);
+    ret = player_set_error_cb(m_nativePlayer, _videoPlayerErrorEventCBNative,
+                              this);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }
 
-    ret = player_set_buffering_cb(m_nativePlayer, _videoPlayerbufferingCBNative, this);
+    ret = player_set_buffering_cb(m_nativePlayer, _videoPlayerbufferingCBNative,
+                                  this);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }
 
-
-
-    player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get((Evas_Object*)starFish()->window()->unwrap()));
+    player_display_h display_handle = GET_DISPLAY(
+        elm_win_xwindow_get((Evas_Object*)starFish()->window()->unwrap()));
     player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
     player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
     player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
-    player_set_display(m_nativePlayer, (player_display_type_e) display_type, display_handle);
+    player_set_display(m_nativePlayer, (player_display_type_e)display_type,
+                       display_handle);
     player_set_display_mode(m_nativePlayer, display_mode);
     player_set_x11_display_roi_mode(m_nativePlayer, roi_mode);
 
@@ -189,37 +198,41 @@ void avplay::prepare()
     }
 }
 
-void avplay::setDisplayRect(double offsetLeft, double offsetTop, double offsetWidth, double offsetHeight)
+void avplay::setDisplayRect(double offsetLeft, double offsetTop,
+                            double offsetWidth, double offsetHeight)
 {
-    if (!isnan(offsetLeft))
+    if (!isnan(offsetLeft)) {
         m_offsetLeft = offsetLeft;
-    if (!isnan(offsetTop))
+    }
+    if (!isnan(offsetTop)) {
         m_offsetTop = offsetTop;
-    if (!isnan(offsetWidth))
+    }
+    if (!isnan(offsetWidth)) {
         m_offsetWidth = offsetWidth;
-    if (!isnan(offsetHeight))
+    }
+    if (!isnan(offsetHeight)) {
         m_offsetHeight = offsetHeight;
+    }
 
-    STARFISH_LOG_INFO("avplay::setDisplayRect() %lf %lf %lf %lf !!!\n", m_offsetLeft , m_offsetTop, m_offsetWidth, m_offsetHeight);
+    STARFISH_LOG_INFO("avplay::setDisplayRect() %lf %lf %lf %lf !!!\n",
+                      m_offsetLeft, m_offsetTop, m_offsetWidth, m_offsetHeight);
 }
-
 
 void avplay::play()
 {
     STARFISH_LOG_INFO("avplay::play() \n");
-    player_set_x11_display_dst_roi(m_nativePlayer, m_offsetLeft, m_offsetTop, m_offsetWidth, m_offsetHeight);
+    player_set_x11_display_dst_roi(m_nativePlayer, m_offsetLeft, m_offsetTop,
+                                   m_offsetWidth, m_offsetHeight);
     int ret = player_start(m_nativePlayer);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }
-
 }
 
 void avplay::close()
 {
     STARFISH_LOG_INFO("avplay::close()\n");
     if (m_nativePlayer) {
-
         player_unset_buffering_cb(m_nativePlayer);
 
         player_unset_completed_cb(m_nativePlayer);
@@ -308,7 +321,6 @@ void avplay::seekTo(double seekTime)
             printNativePlayerError(ret);
         }
     }
-
 }
 
 void avplay::suspend()
@@ -362,53 +374,61 @@ void avplay::setStreamingProperty(String* arg1, String* arg2)
 
 void avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 {
-
-    ScriptValue thisValue = escargot::ESVMInstance::currentInstance()->globalObject();
+    ScriptValue thisValue =
+        escargot::ESVMInstance::currentInstance()->globalObject();
     ScriptValue fn = ScriptValueNull;
-    ScriptValue* argv = { };
+    ScriptValue* argv = {};
     size_t argc = 0;
     switch (type) {
-
     case prepare_async_CALLBACK:
         fn = m_prepare_async;
         break;
 
     case onbufferingstart_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingstart"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onbufferingstart"));
         break;
 
     case onbufferingprogress_CALLBACK:
         argv = new ScriptValue(m_bufferingPercent);
         argc = 1;
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingprogress"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onbufferingprogress"));
         break;
 
     case onbufferingcomplete_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingcomplete"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onbufferingcomplete"));
         break;
 
     case oncurrentplaytime_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("oncurrentplaytime"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("oncurrentplaytime"));
         break;
 
     case onevent_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onevent"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onevent"));
         break;
 
     case onerror_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onerror"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onerror"));
         break;
 
     case onsubtitlechange_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onsubtitlechange"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onsubtitlechange"));
         break;
 
     case ondrmevent_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("ondrmevent"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("ondrmevent"));
         break;
 
     case onstreamcompleted_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onstreamcompleted"));
+        fn = m_listener.asESPointer()->asESObject()->get(
+            escargot::ESString::create("onstreamcompleted"));
         break;
 
     default:
@@ -417,6 +437,5 @@ void avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
     callScriptFunction(fn, argv, argc, thisValue);
     delete argv;
 }
-
 }
 #endif

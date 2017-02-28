@@ -25,7 +25,8 @@ class StarFish;
 
 class Blob : public ScriptWrappable {
 public:
-    Blob(StarFish* starFish, size_t size, String* mimeType, void* data, bool isClosed, bool isEntryOfBlobURLStore)
+    Blob(StarFish* starFish, size_t size, String* mimeType, void* data,
+         bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
     {
         m_starFish = starFish;

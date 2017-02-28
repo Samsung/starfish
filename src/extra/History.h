@@ -28,7 +28,9 @@ class HistoryEntry;
 class History : public ScriptWrappable {
 public:
     History(StarFish* starFish);
-    virtual ~History() { }
+    virtual ~History()
+    {
+    }
 
     StarFish* starFish()
     {
@@ -55,14 +57,16 @@ public:
     void pushState(String* state, String* title, String* url);
     void replaceState(String* state, String* title, String* url);
 
-    void setHistory(String* state, String* title, URL* url, bool isPushState = false);
+    void setHistory(String* state, String* title, URL* url,
+                    bool isPushState = false);
 
-/*  // TODO: implement functions below
+    /*
+    // TODO: implement functions below
     void setScrollRestoration(const String& value);
     String scrollRestoration();
     bool stateChanged() const;
     bool isSameAsCurrentState(StateObject*) const;
-*/
+    */
 protected:
     StarFish* m_starFish;
     URL* getURL(int delta);
@@ -74,6 +78,5 @@ protected:
     GCVector<HistoryEntry*>& history();
     bool isPushState();
 };
-
 }
 #endif

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaSource__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaSource__)
 #define __StarFishMediaSource__
 
 #include "dom/binding/ScriptWrappable.h"
@@ -28,17 +28,24 @@ class MediaSourceClient;
 
 class MediaSource : public EventTarget {
     friend class SourceBuffer;
+
 public:
     enum ReadyState {
-        Closed, // Indicates the source is not currently attached to a media element.
-        Open, // The source has been opened by a media element and is ready for data to be appended to the SourceBuffer objects in sourceBuffers.
-        Ended, // The source is still attached to a media element, but endOfStream() has been called.
+        Closed, // Indicates the source is not currently attached to a media
+                // element.
+        Open,  // The source has been opened by a media element and is ready for
+               // data to be appended to the SourceBuffer objects in
+               // sourceBuffers.
+        Ended, // The source is still attached to a media element, but
+               // endOfStream() has been called.
     };
 
     enum EndOfStreamError {
         None,
-        Network, // Terminates playback and signals that a network error has occurred.
-        Decode, // Terminates playback and signals that a decoding error has occurred.
+        Network, // Terminates playback and signals that a network error has
+                 // occurred.
+        Decode,  // Terminates playback and signals that a decoding error has
+                 // occurred.
     };
 
     MediaSource(StarFish* starFish);
@@ -64,14 +71,15 @@ public:
     void endOfStream(EndOfStreamError error);
     bool endOfStream(String* error)
     {
-        if (error == String::emptyString)
+        if (error == String::emptyString) {
             endOfStream();
-        else if (error->equals("network"))
+        } else if (error->equals("network")) {
             endOfStream(EndOfStreamError::Network);
-        else if (error->equals("decode"))
+        } else if (error->equals("decode")) {
             endOfStream(EndOfStreamError::Decode);
-        else
+        } else {
             return false;
+        }
         return true;
     }
 
@@ -79,8 +87,9 @@ public:
     {
         // TODO
         // Currently, check only whether container is mp4 or NOT
-        if (type->contains("video/mp4") || type->contains("audio/mp4"))
+        if (type->contains("video/mp4") || type->contains("audio/mp4")) {
             return true;
+        }
         return false;
     }
 
@@ -169,24 +178,20 @@ protected:
 
 class MediaSourceClient : public gc {
 public:
-    MediaSourceClient()
-        : m_mediaSource(nullptr)
+    MediaSourceClient() : m_mediaSource(nullptr)
     {
     }
 
     virtual void activeSourceComputed()
     {
-
     }
 
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
     {
-
     }
 
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
-
     }
 
     void setMediaSource(MediaSource* ms)
@@ -202,8 +207,6 @@ public:
 protected:
     MediaSource* m_mediaSource;
 };
-
-
 }
 
 #endif

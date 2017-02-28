@@ -53,7 +53,8 @@ public:
     {
         String* hostname = url()->getHostname();
         String* port = url()->getPort();
-        if (!port->equals(String::emptyString) && !hostname->equals(String::emptyString)) {
+        if (!port->equals(String::emptyString) &&
+            !hostname->equals(String::emptyString)) {
             return (hostname->concat(String::fromUTF8(":")))->concat(port);
         } else {
             return hostname;
@@ -125,13 +126,14 @@ public:
 
     void setLocation(String* newURL)
     {
-        m_starFish->window()->navigateAsync(URL::createURL(m_starFish->window()->document()->documentURI()->urlString(), newURL));
+        m_starFish->window()->navigateAsync(URL::createURL(
+            m_starFish->window()->document()->documentURI()->urlString(),
+            newURL));
     }
 
 protected:
     StarFish* m_starFish;
 };
-
 }
 
 #endif

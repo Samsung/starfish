@@ -25,16 +25,25 @@ class String;
 class HistoryEntry : public gc {
 public:
     HistoryEntry(String* state, String* title, URL* url, bool isPushState)
-        : m_state(state)
-        , m_title(title)
-        , m_url(url)
-        , m_isPushState(isPushState)
+        : m_state(state), m_title(title), m_url(url), m_isPushState(isPushState)
     {
     }
-    inline String* state() { return m_state; }
-    inline String* title() { return m_title; }
-    inline URL* url() { return m_url; }
-    inline bool isPushState() { return m_isPushState; }
+    inline String* state()
+    {
+        return m_state;
+    }
+    inline String* title()
+    {
+        return m_title;
+    }
+    inline URL* url()
+    {
+        return m_url;
+    }
+    inline bool isPushState()
+    {
+        return m_isPushState;
+    }
 
     void replaceState(String* state, String* title, URL* url)
     {
@@ -42,12 +51,12 @@ public:
         m_title = title;
         m_url = url;
     }
+
 private:
     String* m_state;
     String* m_title;
     URL* m_url;
     bool m_isPushState;
 };
-
 }
 #endif

@@ -21,10 +21,8 @@
 
 namespace StarFish {
 
-Console::Console(StarFish* starFish)
-    : m_starFish(starFish)
+Console::Console(StarFish* starFish) : m_starFish(starFish)
 {
-
 }
 
 void Console::log(String* m)
@@ -66,5 +64,4 @@ void Console::warn(String* m)
 #endif
     STARFISH_LOG_ERROR("console.warn: %s\n", m->utf8Data());
 }
-
 }
