@@ -48,11 +48,11 @@ namespace StarFish {
 class DoctypeData : public gc {
 public:
     DoctypeData()
-        : m_hasPublicIdentifier(false)
-        , m_hasSystemIdentifier(false)
-        , m_publicIdentifier(String::emptyString)
-        , m_systemIdentifier(String::emptyString)
-        , m_forceQuirks(false)
+        : m_hasPublicIdentifier(false),
+          m_hasSystemIdentifier(false),
+          m_publicIdentifier(String::emptyString),
+          m_systemIdentifier(String::emptyString),
+          m_forceQuirks(false)
     {
     }
 
@@ -92,9 +92,9 @@ public:
         UTF32String value;
     };
 
-    // By using an inline capacity of 256, we avoid spilling over into an malloced buffer
-    // approximately 99% of the time based on a non-scientific browse around a number of
-    // popular web sites on 23 May 2013.
+    // By using an inline capacity of 256, we avoid spilling over into an
+    // malloced buffer approximately 99% of the time based on a non-scientific
+    // browse around a number of popular web sites on 23 May 2013.
     typedef GCVector<char32_t> DataVector;
 
     HTMLToken()
@@ -113,8 +113,14 @@ public:
         m_orAllData = 0;
     }
 
-    bool isUninitialized() { return m_type == Uninitialized; }
-    Type type() const { return m_type; }
+    bool isUninitialized()
+    {
+        return m_type == Uninitialized;
+    }
+    Type type() const
+    {
+        return m_type;
+    }
 
     void makeEndOfFile()
     {
@@ -122,9 +128,16 @@ public:
         m_type = EndOfFile;
     }
 
-    /* Range and offset methods exposed for HTMLSourceTracker and HTMLViewSourceParser */
-    int startIndex() const { return m_range.start; }
-    int endIndex() const { return m_range.end; }
+    /* Range and offset methods exposed for HTMLSourceTracker and
+     * HTMLViewSourceParser */
+    int startIndex() const
+    {
+        return m_range.start;
+    }
+    int endIndex() const
+    {
+        return m_range.end;
+    }
 
     void setBaseOffset(int offset)
     {
@@ -138,7 +151,8 @@ public:
 
     const DataVector& data() const
     {
-        STARFISH_ASSERT(m_type == Character || m_type == Comment || m_type == StartTag || m_type == EndTag);
+        STARFISH_ASSERT(m_type == Character || m_type == Comment ||
+                        m_type == StartTag || m_type == EndTag);
         return m_data;
     }
 
@@ -149,13 +163,15 @@ public:
 
     const DataVector& name() const
     {
-        STARFISH_ASSERT(m_type == StartTag || m_type == EndTag || m_type == DOCTYPE);
+        STARFISH_ASSERT(m_type == StartTag || m_type == EndTag ||
+                        m_type == DOCTYPE);
         return m_data;
     }
 
     void appendToName(char32_t character)
     {
-        STARFISH_ASSERT(m_type == StartTag || m_type == EndTag || m_type == DOCTYPE);
+        STARFISH_ASSERT(m_type == StartTag || m_type == EndTag ||
+                        m_type == DOCTYPE);
         STARFISH_ASSERT(character);
         m_data.push_back(character);
         m_orAllData |= character;
@@ -221,7 +237,9 @@ public:
         STARFISH_ASSERT(character);
         STARFISH_ASSERT(m_type == DOCTYPE);
         STARFISH_ASSERT(m_doctypeData->m_hasPublicIdentifier);
-        m_doctypeData->m_publicIdentifier = m_doctypeData->m_publicIdentifier->concat(String::createUTF32String(character));
+        m_doctypeData->m_publicIdentifier =
+            m_doctypeData->m_publicIdentifier->concat(
+                String::createUTF32String(character));
     }
 
     void appendToSystemIdentifier(char32_t character)
@@ -229,7 +247,9 @@ public:
         STARFISH_ASSERT(character);
         STARFISH_ASSERT(m_type == DOCTYPE);
         STARFISH_ASSERT(m_doctypeData->m_hasSystemIdentifier);
-        m_doctypeData->m_systemIdentifier = m_doctypeData->m_systemIdentifier->concat(String::createUTF32String(character));
+        m_doctypeData->m_systemIdentifier =
+            m_doctypeData->m_systemIdentifier->concat(
+                String::createUTF32String(character));
     }
 
     DoctypeData* releaseDoctypeData()
@@ -409,7 +429,6 @@ public:
     {
         STARFISH_ASSERT(m_type == Character);
 
-
         for (size_t i = 0; i < characters.size(); i++) {
             m_data.push_back(characters[i]);
         }
@@ -461,7 +480,6 @@ private:
     // For DOCTYPE
     DoctypeData* m_doctypeData;
 };
-
 }
 
 #endif

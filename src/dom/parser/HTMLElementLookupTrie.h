@@ -45,8 +45,8 @@
 
 namespace StarFish {
 
-QualifiedName lookupHTMLTag(StaticStrings& s, const char32_t* data, unsigned length);
-
+QualifiedName lookupHTMLTag(StaticStrings& s, const char32_t* data,
+                            unsigned length);
 }
 
 #endif

@@ -53,10 +53,19 @@ public:
 
     void advance(char32_t);
 
-    bool isEntityPrefix() const { return !!m_first; }
-    int currentLength() const { return m_currentLength; }
+    bool isEntityPrefix() const
+    {
+        return !!m_first;
+    }
+    int currentLength() const
+    {
+        return m_currentLength;
+    }
 
-    const HTMLEntityTableEntry* mostRecentMatch() const { return m_mostRecentMatch; }
+    const HTMLEntityTableEntry* mostRecentMatch() const
+    {
+        return m_mostRecentMatch;
+    }
 
 private:
     enum CompareResult {
@@ -81,7 +90,6 @@ private:
     const HTMLEntityTableEntry* m_first;
     const HTMLEntityTableEntry* m_last;
 };
-
 }
 
 #endif

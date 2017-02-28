@@ -35,8 +35,9 @@ void HTMLParser::endParse()
     m_treeBuilder.finished();
     m_treeBuilder.detach();
     m_document->setInParsing(false);
-    if (!m_treeBuilder.isParsingFragment())
+    if (!m_treeBuilder.isParsingFragment()) {
         m_document->notifyDomContentLoaded();
+    }
 }
 
 void HTMLParser::parseStep()
@@ -44,12 +45,15 @@ void HTMLParser::parseStep()
     while (true) {
         if (m_treeBuilder.hasParserBlockingScript()) {
             TextPosition pos;
-            HTMLScriptElement* script = m_treeBuilder.takeScriptToProcess(pos)->asHTMLElement()->asHTMLScriptElement();
+            HTMLScriptElement* script = m_treeBuilder.takeScriptToProcess(pos)
+                                            ->asHTMLElement()
+                                            ->asHTMLScriptElement();
             script->clearParserInserted();
             bool shouldStop = script->executeScript(false, true);
             script->markScriptExecuted();
-            if (shouldStop)
+            if (shouldStop) {
                 break;
+            }
         }
 
         if (!m_tokenizer.nextToken(m_input.current(), token())) {
@@ -60,17 +64,20 @@ void HTMLParser::parseStep()
         AtomicHTMLToken at(m_starFish, rawToken);
 
         // We clear the rawToken in case constructTreeFromAtomicToken
-        // synchronously re-enters the parser. We don't clear the token immediately
+        // synchronously re-enters the parser. We don't clear the token
+        // immediately
         // for Character tokens because the AtomicHTMLToken avoids copying the
         // characters by keeping a pointer to the underlying buffer in the
         // HTMLToken. Fortunately, Character tokens can't cause us to re-enter
         // the parser.
         //
-        // FIXME: Stop clearing the rawToken once we start running the parser off
+        // FIXME: Stop clearing the rawToken once we start running the parser
+        // off
         // the main thread or once we stop allowing synchronous JavaScript
         // execution from parseAttribute.
-        if (rawToken.type() != HTMLToken::Character)
+        if (rawToken.type() != HTMLToken::Character) {
             rawToken.clear();
+        }
 
         m_treeBuilder.constructTree(&at);
 
@@ -80,5 +87,4 @@ void HTMLParser::parseStep()
         }
     }
 }
-
 }

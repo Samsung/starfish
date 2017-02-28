@@ -37,7 +37,8 @@ public:
         m_token = new HTMLToken();
     }
 
-    HTMLParser(StarFish* sf, DocumentFragment* df, Element* contextElement, String* sourceString)
+    HTMLParser(StarFish* sf, DocumentFragment* df, Element* contextElement,
+               String* sourceString)
         : m_treeBuilder(this, df, contextElement)
     {
         m_starFish = sf;
@@ -52,8 +53,14 @@ public:
     void parseStep();
     void endParse();
 
-    HTMLTokenizer* tokenizer() { return &m_tokenizer; }
-    HTMLTreeBuilder* treeBuilder() { return &m_treeBuilder; }
+    HTMLTokenizer* tokenizer()
+    {
+        return &m_tokenizer;
+    }
+    HTMLTreeBuilder* treeBuilder()
+    {
+        return &m_treeBuilder;
+    }
 
     TextPosition textPosition() const
     {
@@ -62,8 +69,12 @@ public:
         OrdinalNumber column = currentString.currentColumn();
         return TextPosition(line, column);
     }
+
 private:
-    HTMLToken& token() { return *m_token; }
+    HTMLToken& token()
+    {
+        return *m_token;
+    }
 
     StarFish* m_starFish;
     Document* m_document;

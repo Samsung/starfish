@@ -53,13 +53,15 @@ const char32_t kEndOfFileMarker = 0;
 template <typename Tokenizer>
 class InputStreamPreprocessor : public gc {
 public:
-    InputStreamPreprocessor(Tokenizer* tokenizer)
-        : m_tokenizer(tokenizer)
+    InputStreamPreprocessor(Tokenizer* tokenizer) : m_tokenizer(tokenizer)
     {
         reset();
     }
 
-    ALWAYS_INLINE char32_t nextInputCharacter() const { return m_nextInputCharacter; }
+    ALWAYS_INLINE char32_t nextInputCharacter() const
+    {
+        return m_nextInputCharacter;
+    }
 
     // Returns whether we succeeded in peeking at the next character.
     // The only way we can fail to peek is if there are no more
@@ -84,12 +86,16 @@ public:
     ALWAYS_INLINE bool advance(SegmentedString& source)
     {
         source.advanceAndUpdateLineNumber();
-        if (source.isEmpty())
+        if (source.isEmpty()) {
             return false;
+        }
         return peek(source);
     }
 
-    bool skipNextNewLine() const { return m_skipNextNewLine; }
+    bool skipNextNewLine() const
+    {
+        return m_skipNextNewLine;
+    }
 
     void reset(bool skipNextNewLine = false)
     {
@@ -106,8 +112,9 @@ private:
         if (m_nextInputCharacter == '\n' && m_skipNextNewLine) {
             m_skipNextNewLine = false;
             source.advancePastNewlineAndUpdateLineNumber();
-            if (source.isEmpty())
+            if (source.isEmpty()) {
                 return false;
+            }
             m_nextInputCharacter = source.currentChar();
         }
         if (m_nextInputCharacter == '\r') {
@@ -115,15 +122,19 @@ private:
             m_skipNextNewLine = true;
         } else {
             m_skipNextNewLine = false;
-            // FIXME: The spec indicates that the surrogate pair range as well as
-            // a number of specific character values are parse errors and should be replaced
-            // by the replacement character. We suspect this is a problem with the spec as doing
-            // that filtering breaks surrogate pair handling and causes us not to match Minefield.
-            if (m_nextInputCharacter == '\0' && !shouldTreatNullAsEndOfFileMarker(source)) {
+            // FIXME: The spec indicates that the surrogate pair range as well
+            // as a number of specific character values are parse errors and
+            // should be replaced by the replacement character.
+            // We suspect this is a problem with the spec as doing that
+            // filtering breaks surrogate pair handling and causes us not
+            // to match Minefield.
+            if (m_nextInputCharacter == '\0' &&
+                !shouldTreatNullAsEndOfFileMarker(source)) {
                 if (m_tokenizer->shouldSkipNullCharacters()) {
                     source.advancePastNonNewline();
-                    if (source.isEmpty())
+                    if (source.isEmpty()) {
                         return false;
+                    }
                     m_nextInputCharacter = source.currentChar();
                     goto ProcessAgain;
                 }
@@ -144,7 +155,6 @@ private:
     char32_t m_nextInputCharacter;
     bool m_skipNextNewLine;
 };
-
 }
 
 #endif

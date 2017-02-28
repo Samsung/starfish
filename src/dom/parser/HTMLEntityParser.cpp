@@ -56,7 +56,8 @@ static const char32_t windowsLatin1ExtensionArray[32] = {
 
 static bool isAlphaNumeric(char32_t cc)
 {
-    return (cc >= '0' && cc <= '9') || (cc >= 'a' && cc <= 'z') || (cc >= 'A' && cc <= 'Z');
+    return (cc >= '0' && cc <= '9') || (cc >= 'a' && cc <= 'z') ||
+           (cc >= 'A' && cc <= 'Z');
 }
 /*
 static UChar adjustEntity(UChar32 value)
@@ -84,43 +85,55 @@ static const char32_t kInvalidUnicode = -1;
 
 static bool isHexDigit(char32_t cc)
 {
-    return (cc >= '0' && cc <= '9') || (cc >= 'a' && cc <= 'f') || (cc >= 'A' && cc <= 'F');
+    return (cc >= '0' && cc <= '9') || (cc >= 'a' && cc <= 'f') ||
+           (cc >= 'A' && cc <= 'F');
 }
 
 static char32_t asHexDigit(char32_t cc)
 {
-    if (cc >= '0' && cc <= '9')
+    if (cc >= '0' && cc <= '9') {
         return cc - '0';
-    if (cc >= 'a' && cc <= 'z')
+    }
+    if (cc >= 'a' && cc <= 'z') {
         return 10 + cc - 'a';
-    if (cc >= 'A' && cc <= 'Z')
+    }
+    if (cc >= 'A' && cc <= 'Z') {
         return 10 + cc - 'A';
+    }
     STARFISH_ASSERT_NOT_REACHED();
     return 0;
 }
 
 typedef UTF32String ConsumedCharacterBuffer;
 
-static void unconsumeCharacters(SegmentedString& source, ConsumedCharacterBuffer& consumedCharacters)
+static void unconsumeCharacters(SegmentedString& source,
+                                ConsumedCharacterBuffer& consumedCharacters)
 {
-    if (consumedCharacters.size() == 1)
+    if (consumedCharacters.size() == 1) {
         source.push(consumedCharacters[0]);
-    else if (consumedCharacters.size() == 2) {
+    } else if (consumedCharacters.size() == 2) {
         source.push(consumedCharacters[0]);
         source.push(consumedCharacters[1]);
-    } else
-        source.prepend(SegmentedString(String::createUTF32String(consumedCharacters.data())));
+    } else {
+        source.prepend(SegmentedString(
+            String::createUTF32String(consumedCharacters.data())));
+    }
 }
 
-static bool consumeNamedEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity, bool& notEnoughCharacters, char32_t additionalAllowedCharacter, char32_t& cc)
+static bool consumeNamedEntity(SegmentedString& source,
+                               DecodedHTMLEntity& decodedEntity,
+                               bool& notEnoughCharacters,
+                               char32_t additionalAllowedCharacter,
+                               char32_t& cc)
 {
     ConsumedCharacterBuffer consumedCharacters;
     HTMLEntitySearch entitySearch;
     while (!source.isEmpty()) {
         cc = source.currentChar();
         entitySearch.advance(cc);
-        if (!entitySearch.isEntityPrefix())
+        if (!entitySearch.isEntityPrefix()) {
             break;
+        }
         consumedCharacters.push_back(cc);
         source.advanceAndASSERT(cc);
     }
@@ -135,7 +148,8 @@ static bool consumeNamedEntity(SegmentedString& source, DecodedHTMLEntity& decod
         unconsumeCharacters(source, consumedCharacters);
         return false;
     }
-    if (entitySearch.mostRecentMatch()->length != entitySearch.currentLength()) {
+    if (entitySearch.mostRecentMatch()->length !=
+        entitySearch.currentLength()) {
         // We've consumed too many characters. We need to walk the
         // source back to the point at which we had consumed an
         // actual entity.
@@ -152,22 +166,27 @@ static bool consumeNamedEntity(SegmentedString& source, DecodedHTMLEntity& decod
         }
         cc = source.currentChar();
     }
-    if (entitySearch.mostRecentMatch()->lastCharacter() == ';'
-        || !additionalAllowedCharacter
-        || !(isAlphaNumeric(cc) || cc == '=')) {
+    if (entitySearch.mostRecentMatch()->lastCharacter() == ';' ||
+        !additionalAllowedCharacter || !(isAlphaNumeric(cc) || cc == '=')) {
         decodedEntity.append(entitySearch.mostRecentMatch()->firstValue);
-        if (UChar32 second = entitySearch.mostRecentMatch()->secondValue)
+        if (UChar32 second = entitySearch.mostRecentMatch()->secondValue) {
             decodedEntity.append(second);
+        }
         return true;
     }
     unconsumeCharacters(source, consumedCharacters);
     return false;
 }
 
-
-bool consumeHTMLEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity, bool& notEnoughCharacters, char32_t additionalAllowedCharacter)
+bool consumeHTMLEntity(SegmentedString& source,
+                       DecodedHTMLEntity& decodedEntity,
+                       bool& notEnoughCharacters,
+                       char32_t additionalAllowedCharacter)
 {
-    STARFISH_ASSERT(!additionalAllowedCharacter || additionalAllowedCharacter == '"' || additionalAllowedCharacter == '\'' || additionalAllowedCharacter == '>');
+    STARFISH_ASSERT(!additionalAllowedCharacter ||
+                    additionalAllowedCharacter == '"' ||
+                    additionalAllowedCharacter == '\'' ||
+                    additionalAllowedCharacter == '>');
     STARFISH_ASSERT(!notEnoughCharacters);
     STARFISH_ASSERT(decodedEntity.isEmpty());
 
@@ -188,10 +207,14 @@ bool consumeHTMLEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity
         char32_t cc = source.currentChar();
         switch (entityState) {
         case Initial: {
-            if (cc == '\x09' || cc == '\x0A' || cc == '\x0C' || cc == ' ' || cc == '<' || cc == '&')
+            if (cc == '\x09' || cc == '\x0A' || cc == '\x0C' || cc == ' ' ||
+                cc == '<' || cc == '&') {
                 return false;
-            if (additionalAllowedCharacter && cc == additionalAllowedCharacter)
+            }
+            if (additionalAllowedCharacter &&
+                cc == additionalAllowedCharacter) {
                 return false;
+            }
             if (cc == '#') {
                 entityState = Number;
                 break;
@@ -238,8 +261,9 @@ bool consumeHTMLEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity
         }
         case Hex: {
             if (isHexDigit(cc)) {
-                if (result != kInvalidUnicode)
+                if (result != kInvalidUnicode) {
                     result = result * 16 + asHexDigit(cc);
+                }
             } else if (cc == ';') {
                 source.advanceAndASSERT(cc);
                 appendLegalEntityFor(result, decodedEntity);
@@ -252,8 +276,9 @@ bool consumeHTMLEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity
         }
         case Decimal: {
             if (cc >= '0' && cc <= '9') {
-                if (result != kInvalidUnicode)
+                if (result != kInvalidUnicode) {
                     result = result * 10 + cc - '0';
+                }
             } else if (cc == ';') {
                 source.advanceAndASSERT(cc);
                 appendLegalEntityFor(result, decodedEntity);
@@ -265,12 +290,15 @@ bool consumeHTMLEntity(SegmentedString& source, DecodedHTMLEntity& decodedEntity
             break;
         }
         case Named: {
-            return consumeNamedEntity(source, decodedEntity, notEnoughCharacters, additionalAllowedCharacter, cc);
+            return consumeNamedEntity(source, decodedEntity,
+                                      notEnoughCharacters,
+                                      additionalAllowedCharacter, cc);
         }
         }
 
-        if (result > UCHAR_MAX_VALUE)
+        if (result > UCHAR_MAX_VALUE) {
             result = kInvalidUnicode;
+        }
 
         consumedCharacters.push_back(cc);
         source.advanceAndASSERT(cc);
@@ -301,19 +329,21 @@ size_t decodeNamedEntityToUCharArray(const char* name, char32_t result[4])
     HTMLEntitySearch search;
     while (*name) {
         search.advance(*name++);
-        if (!search.isEntityPrefix())
+        if (!search.isEntityPrefix()) {
             return 0;
+        }
     }
     search.advance(';');
-    if (!search.isEntityPrefix())
+    if (!search.isEntityPrefix()) {
         return 0;
+    }
 
     result[0] = search.mostRecentMatch()->firstValue;
     size_t numberOfCodePoints = 1;
-    if (!search.mostRecentMatch()->secondValue)
+    if (!search.mostRecentMatch()->secondValue) {
         return numberOfCodePoints;
+    }
     result[1] = search.mostRecentMatch()->secondValue;
     return numberOfCodePoints + 1;
 }
-
 }

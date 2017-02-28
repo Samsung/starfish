@@ -57,27 +57,45 @@ class HTMLDocument;
 class Node;
 class HTMLParser;
 
-// TextPosition structure specifies coordinates within an text resource. It is used mostly
+// TextPosition structure specifies coordinates within an text resource. It is
+// used mostly
 // for saving script source position.
 class TextPosition {
 public:
     TextPosition(OrdinalNumber line, OrdinalNumber column)
-        : m_line(line)
-        , m_column(column)
+        : m_line(line), m_column(column)
     {
     }
-    TextPosition() { }
-    bool operator==(const TextPosition& other) { return m_line == other.m_line && m_column == other.m_column; }
-    bool operator!=(const TextPosition& other) { return !((*this) == other); }
+    TextPosition()
+    {
+    }
+    bool operator==(const TextPosition& other)
+    {
+        return m_line == other.m_line && m_column == other.m_column;
+    }
+    bool operator!=(const TextPosition& other)
+    {
+        return !((*this) == other);
+    }
 
     // A 'minimum' value of position, used as a default value.
-    static TextPosition minimumPosition() { return TextPosition(OrdinalNumber::first(), OrdinalNumber::first()); }
+    static TextPosition minimumPosition()
+    {
+        return TextPosition(OrdinalNumber::first(), OrdinalNumber::first());
+    }
 
-    // A value with line value less than a minimum; used as an impossible position.
-    static TextPosition belowRangePosition() { return TextPosition(OrdinalNumber::beforeFirst(), OrdinalNumber::beforeFirst()); }
+    // A value with line value less than a minimum; used as an impossible
+    // position.
+    static TextPosition belowRangePosition()
+    {
+        return TextPosition(OrdinalNumber::beforeFirst(),
+                            OrdinalNumber::beforeFirst());
+    }
 
-    // A value corresponding to a position with given offset within text having the specified line ending offsets.
-    // WTF_EXPORT static TextPosition fromOffsetAndLineEndings(unsigned, const Vector<unsigned>&);
+    // A value corresponding to a position with given offset within text having
+    // the specified line ending offsets.
+    // WTF_EXPORT static TextPosition fromOffsetAndLineEndings(unsigned, const
+    // Vector<unsigned>&);
 
     OrdinalNumber m_line;
     OrdinalNumber m_column;
@@ -88,18 +106,34 @@ public:
     HTMLTreeBuilder(HTMLParser*, Document*, bool reportErrors);
     HTMLTreeBuilder(HTMLParser*, DocumentFragment*, Element* contextElement);
 
-    const HTMLElementStack* openElements() const { return m_tree.openElements(); }
+    const HTMLElementStack* openElements() const
+    {
+        return m_tree.openElements();
+    }
 
-    bool isParsingFragment() const { return !!m_fragmentContext.fragment(); }
-    bool isParsingTemplateContents() const { return m_tree.openElements()->hasTemplateInHTMLScope(); }
-    bool isParsingFragmentOrTemplateContents() const { return isParsingFragment() || isParsingTemplateContents(); }
+    bool isParsingFragment() const
+    {
+        return !!m_fragmentContext.fragment();
+    }
+    bool isParsingTemplateContents() const
+    {
+        return m_tree.openElements()->hasTemplateInHTMLScope();
+    }
+    bool isParsingFragmentOrTemplateContents() const
+    {
+        return isParsingFragment() || isParsingTemplateContents();
+    }
 
     void detach();
 
     void constructTree(AtomicHTMLToken*);
 
-    bool hasParserBlockingScript() const { return !!m_scriptToProcess; }
-    // Must be called to take the parser-blocking script before calling the parser again.
+    bool hasParserBlockingScript() const
+    {
+        return !!m_scriptToProcess;
+    }
+    // Must be called to take the parser-blocking script before calling the
+    // parser again.
     Element* takeScriptToProcess(TextPosition& scriptStartPosition);
     Element* lookScriptToProcess();
 
@@ -107,14 +141,21 @@ public:
     void finished();
 
     // Synchronously empty any queues, possibly creating more DOM nodes.
-    void flush() { m_tree.flush(); }
+    void flush()
+    {
+        m_tree.flush();
+    }
 
-    void setShouldSkipLeadingNewline(bool shouldSkip) { m_shouldSkipLeadingNewline = shouldSkip; }
+    void setShouldSkipLeadingNewline(bool shouldSkip)
+    {
+        m_shouldSkipLeadingNewline = shouldSkip;
+    }
 
 private:
     class CharacterTokenBuffer;
     // Represents HTML5 "insertion mode"
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#insertion-mode
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        parsing.html#insertion-mode
     enum InsertionMode {
         InitialMode,
         BeforeHTMLMode,
@@ -140,7 +181,6 @@ private:
         AfterAfterBodyMode,
         AfterAfterFramesetMode,
     };
-
 
     void processToken(AtomicHTMLToken*);
 
@@ -174,7 +214,9 @@ private:
     void processCharacterBuffer(CharacterTokenBuffer&);
     inline void processCharacterBufferForInBody(CharacterTokenBuffer&);
 
-    void processFakeStartTag(const QualifiedName&, const GCVector<Attribute>& attributes = GCVector<Attribute>());
+    void processFakeStartTag(
+        const QualifiedName&,
+        const GCVector<Attribute>& attributes = GCVector<Attribute>());
     void processFakeEndTag(const QualifiedName&);
     void processFakeEndTag(const AtomicString&);
     void processFakePEndTagIfPInButtonScope();
@@ -207,8 +249,14 @@ private:
 
     void parseError(AtomicHTMLToken*);
 
-    InsertionMode insertionMode() const { return m_insertionMode; }
-    void setInsertionMode(InsertionMode mode) { m_insertionMode = mode; }
+    InsertionMode insertionMode() const
+    {
+        return m_insertionMode;
+    }
+    void setInsertionMode(InsertionMode mode)
+    {
+        m_insertionMode = mode;
+    }
 
     void resetInsertionModeAppropriately();
 
@@ -222,9 +270,20 @@ private:
         FragmentParsingContext(DocumentFragment*, Element* contextElement);
         ~FragmentParsingContext();
 
-        DocumentFragment* fragment() const { return m_fragment; }
-        Element* contextElement() const { STARFISH_ASSERT(m_fragment); return m_contextElementStackItem->element(); }
-        HTMLStackItem* contextElementStackItem() const { STARFISH_ASSERT(m_fragment); return m_contextElementStackItem; }
+        DocumentFragment* fragment() const
+        {
+            return m_fragment;
+        }
+        Element* contextElement() const
+        {
+            STARFISH_ASSERT(m_fragment);
+            return m_contextElementStackItem->element();
+        }
+        HTMLStackItem* contextElementStackItem() const
+        {
+            STARFISH_ASSERT(m_fragment);
+            return m_contextElementStackItem;
+        }
 
     private:
         DocumentFragment* m_fragment;
@@ -238,27 +297,34 @@ private:
     FragmentParsingContext m_fragmentContext;
     HTMLConstructionSite m_tree;
 
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#insertion-mode
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        parsing.html#insertion-mode
     InsertionMode m_insertionMode;
 
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#original-insertion-mode
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        parsing.html#original-insertion-mode
     InsertionMode m_originalInsertionMode;
 
     GCVector<InsertionMode> m_templateInsertionModes;
 
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html#pending-table-character-tokens
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        tokenization.html#pending-table-character-tokens
     UTF32String m_pendingTableCharacters;
 
     bool m_shouldSkipLeadingNewline;
 
-    // We access parser because HTML5 spec requires that we be able to change the state of the tokenizer
-    // from within parser actions. We also need it to track the current position.
+    // We access parser because HTML5 spec requires that we be able to change
+    // the state of the tokenizer
+    // from within parser actions. We also need it to track the current
+    // position.
     HTMLParser* m_parser;
 
-    Element* m_scriptToProcess; // <script> tag which needs processing before resuming the parser.
-    TextPosition m_scriptToProcessStartPosition; // Starting line number of the script tag needing processing.
-};
+    // <script> tag which needs processing before resuming the parser.
+    Element* m_scriptToProcess;
 
+    // Starting line number of the script tag needing processing.
+    TextPosition m_scriptToProcessStartPosition;
+};
 }
 
 #endif

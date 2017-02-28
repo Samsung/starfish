@@ -48,7 +48,9 @@
 namespace StarFish {
 
 // Biblically, Noah's Ark only had room for two of each animal, but in the
-// Book of Hixie (aka http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#list-of-active-formatting-elements),
+// Book of Hixie (aka
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/
+//        parsing.html#list-of-active-formatting-elements),
 // Noah's Ark of Formatting Elements can fit three of each element.
 static const size_t kNoahsArkCapacity = 3;
 
@@ -60,14 +62,17 @@ HTMLFormattingElementList::~HTMLFormattingElementList()
 {
 }
 
-Element* HTMLFormattingElementList::closestElementInScopeWithName(const AtomicString& targetName)
+Element* HTMLFormattingElementList::closestElementInScopeWithName(
+    const AtomicString& targetName)
 {
     for (unsigned i = 1; i <= m_entries.size(); ++i) {
         const Entry& entry = m_entries[m_entries.size() - i];
-        if (entry.isMarker())
+        if (entry.isMarker()) {
             return 0;
-        if (entry.stackItem()->matchesHTMLTag(targetName))
+        }
+        if (entry.stackItem()->matchesHTMLTag(targetName)) {
             return entry.element();
+        }
     }
     return 0;
 }
@@ -77,7 +82,8 @@ bool HTMLFormattingElementList::contains(Element* element)
     return !!find(element);
 }
 
-HTMLFormattingElementList::Entry* HTMLFormattingElementList::find(Element* element)
+HTMLFormattingElementList::Entry* HTMLFormattingElementList::find(
+    Element* element)
 {
     auto iter = m_entries.rbegin();
     for (; iter != m_entries.rend(); iter++) {
@@ -88,7 +94,8 @@ HTMLFormattingElementList::Entry* HTMLFormattingElementList::find(Element* eleme
     return 0;
 }
 
-HTMLFormattingElementList::Bookmark HTMLFormattingElementList::bookmarkFor(Element* element)
+HTMLFormattingElementList::Bookmark HTMLFormattingElementList::bookmarkFor(
+    Element* element)
 {
     auto iter = m_entries.rbegin();
     for (; iter != m_entries.rend(); iter++) {
@@ -99,7 +106,9 @@ HTMLFormattingElementList::Bookmark HTMLFormattingElementList::bookmarkFor(Eleme
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-void HTMLFormattingElementList::swapTo(Element* oldElement, HTMLStackItem* newItem, const Bookmark& bookmark)
+void HTMLFormattingElementList::swapTo(Element* oldElement,
+                                       HTMLStackItem* newItem,
+                                       const Bookmark& bookmark)
 {
     STARFISH_ASSERT(contains(oldElement));
     STARFISH_ASSERT(!contains(newItem->element()));
@@ -138,21 +147,26 @@ void HTMLFormattingElementList::appendMarker()
 
 void HTMLFormattingElementList::clearToLastMarker()
 {
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#clear-the-list-of-active-formatting-elements-up-to-the-last-marker
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        parsing.html#
+    //        clear-the-list-of-active-formatting-elements-up-to-the-last-marker
     while (m_entries.size()) {
         bool shouldStop = m_entries.back().isMarker();
         m_entries.erase(m_entries.end() - 1);
-        if (shouldStop)
+        if (shouldStop) {
             break;
+        }
     }
 }
 
-void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackItem* newItem, GCVector<HTMLStackItem*>& remainingCandidates)
+void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(
+    HTMLStackItem* newItem, GCVector<HTMLStackItem*>& remainingCandidates)
 {
     STARFISH_ASSERT(remainingCandidates.size() == 0);
 
-    if (m_entries.size() < kNoahsArkCapacity)
+    if (m_entries.size() < kNoahsArkCapacity) {
         return;
+    }
 
     // Use a vector with inline capacity to avoid a malloc in the common case
     // of a quickly ensuring the condition.
@@ -160,27 +174,34 @@ void HTMLFormattingElementList::tryToEnsureNoahsArkConditionQuickly(HTMLStackIte
 
     size_t newItemAttributeCount = newItem->attributes().size();
 
-    for (size_t i = m_entries.size(); i; ) {
+    for (size_t i = m_entries.size(); i;) {
         --i;
         Entry& entry = m_entries[i];
-        if (entry.isMarker())
+        if (entry.isMarker()) {
             break;
+        }
 
         // Quickly reject obviously non-matching candidates.
         HTMLStackItem* candidate = entry.stackItem();
-        // if (newItem->localName() != candidate->localName() || newItem->namespaceURI() != candidate->namespaceURI())
-        if (newItem->localName() != candidate->localName())
+        // if (newItem->localName() != candidate->localName() ||
+        // newItem->namespaceURI() != candidate->namespaceURI())
+        if (newItem->localName() != candidate->localName()) {
             continue;
-        if (candidate->attributes().size() != newItemAttributeCount)
+        }
+        if (candidate->attributes().size() != newItemAttributeCount) {
             continue;
+        }
 
         candidates.push_back(candidate);
     }
 
-    if (candidates.size() < kNoahsArkCapacity)
-        return; // There's room for the new element in the ark. There's no need to copy out the remainingCandidates.
+    if (candidates.size() < kNoahsArkCapacity) {
+        // There's room for the new element in the ark. There's no need
+        // to copy out the remainingCandidates.
+        return;
+    }
 
-    for (size_t i = 0; i < candidates.size(); i ++) {
+    for (size_t i = 0; i < candidates.size(); i++) {
         remainingCandidates.push_back(candidates[i]);
     }
 }
@@ -189,8 +210,9 @@ void HTMLFormattingElementList::ensureNoahsArkCondition(HTMLStackItem* newItem)
 {
     GCVector<HTMLStackItem*> candidates;
     tryToEnsureNoahsArkConditionQuickly(newItem, candidates);
-    if (candidates.size() == 0)
+    if (candidates.size() == 0) {
         return;
+    }
 
     // We pre-allocate and re-use this second vector to save one malloc per
     // attribute that we verify.
@@ -204,18 +226,25 @@ void HTMLFormattingElementList::ensureNoahsArkCondition(HTMLStackItem* newItem)
         for (size_t j = 0; j < candidates.size(); ++j) {
             HTMLStackItem* candidate = candidates[j];
 
-            // These properties should already have been checked by tryToEnsureNoahsArkConditionQuickly.
-            STARFISH_ASSERT(newItem->attributes().size() == candidate->attributes().size());
-            // STARFISH_ASSERT(newItem->localName() == candidate->localName() && newItem->namespaceURI() == candidate->namespaceURI());
+            // These properties should already have been checked by
+            // tryToEnsureNoahsArkConditionQuickly.
+            STARFISH_ASSERT(newItem->attributes().size() ==
+                            candidate->attributes().size());
+            // STARFISH_ASSERT(newItem->localName() == candidate->localName() &&
+            // newItem->namespaceURI() == candidate->namespaceURI());
             STARFISH_ASSERT(newItem->localName() == candidate->localName());
 
-            Attribute* candidateAttribute = candidate->getAttributeItem(attribute.name());
-            if (candidateAttribute && candidateAttribute->value() == attribute.value())
+            Attribute* candidateAttribute =
+                candidate->getAttributeItem(attribute.name());
+            if (candidateAttribute &&
+                candidateAttribute->value() == attribute.value()) {
                 remainingCandidates.push_back(candidate);
+            }
         }
 
-        if (remainingCandidates.size() < kNoahsArkCapacity)
+        if (remainingCandidates.size() < kNoahsArkCapacity) {
             return;
+        }
 
         candidates.swap(remainingCandidates);
         // remainingCandidates.shrink(0);
@@ -225,8 +254,9 @@ void HTMLFormattingElementList::ensureNoahsArkCondition(HTMLStackItem* newItem)
     // Inductively, we shouldn't spin this loop very many times. It's possible,
     // however, that we will spin the loop more than once because of how the
     // formatting element list gets permuted.
-    for (size_t i = kNoahsArkCapacity - 1; i < candidates.size(); ++i)
+    for (size_t i = kNoahsArkCapacity - 1; i < candidates.size(); ++i) {
         remove(candidates[i]->element());
+    }
 }
 
 #ifndef NDEBUG
@@ -245,5 +275,4 @@ void HTMLFormattingElementList::show()
 }
 
 #endif
-
 }

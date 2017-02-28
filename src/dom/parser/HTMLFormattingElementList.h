@@ -59,20 +59,26 @@ public:
     class Entry : public gc {
     public:
         // Inline because they're hot and Vector<T> uses them.
-        explicit Entry(HTMLStackItem* item)
-            : m_item(item)
+        explicit Entry(HTMLStackItem* item) : m_item(item)
         {
         }
         enum MarkerEntryType { MarkerEntry };
-        explicit Entry(MarkerEntryType)
-            : m_item(nullptr)
+        explicit Entry(MarkerEntryType) : m_item(nullptr)
         {
         }
-        ~Entry() { }
+        ~Entry()
+        {
+        }
 
-        bool isMarker() const { return !m_item; }
+        bool isMarker() const
+        {
+            return !m_item;
+        }
 
-        HTMLStackItem* stackItem() const { return m_item; }
+        HTMLStackItem* stackItem() const
+        {
+            return m_item;
+        }
         Element* element() const
         {
             // The fact that !m_item == isMarker() is an implementation detail
@@ -83,11 +89,20 @@ public:
                 return nullptr;
             }
         }
-        void replaceElement(HTMLStackItem* item) { m_item = item; }
+        void replaceElement(HTMLStackItem* item)
+        {
+            m_item = item;
+        }
 
         // Needed for use with Vector. These are super-hot and must be inline.
-        bool operator==(Element* element) const { return !m_item ? !element : m_item->element() == element; }
-        bool operator!=(Element* element) const { return !m_item ? !!element : m_item->element() != element; }
+        bool operator==(Element* element) const
+        {
+            return !m_item ? !element : m_item->element() == element;
+        }
+        bool operator!=(Element* element) const
+        {
+            return !m_item ? !!element : m_item->element() != element;
+        }
 
     private:
         HTMLStackItem* m_item;
@@ -95,9 +110,7 @@ public:
 
     class Bookmark {
     public:
-        explicit Bookmark(Entry* entry)
-            : m_hasBeenMoved(false)
-            , m_mark(entry)
+        explicit Bookmark(Entry* entry) : m_hasBeenMoved(false), m_mark(entry)
         {
         }
 
@@ -107,16 +120,28 @@ public:
             m_mark = before;
         }
 
-        bool hasBeenMoved() const { return m_hasBeenMoved; }
-        Entry* mark() const { return m_mark; }
+        bool hasBeenMoved() const
+        {
+            return m_hasBeenMoved;
+        }
+        Entry* mark() const
+        {
+            return m_mark;
+        }
 
     private:
         bool m_hasBeenMoved;
         Entry* m_mark;
     };
 
-    bool isEmpty() const { return !size(); }
-    size_t size() const { return m_entries.size(); }
+    bool isEmpty() const
+    {
+        return !size();
+    }
+    size_t size() const
+    {
+        return m_entries.size();
+    }
 
     Element* closestElementInScopeWithName(const AtomicString&);
 
@@ -132,24 +157,35 @@ public:
     // clearToLastMarker also clears the marker (per the HTML5 spec).
     void clearToLastMarker();
 
-    const Entry& at(size_t i) const { return m_entries[i]; }
-    Entry& at(size_t i) { return m_entries[i]; }
+    const Entry& at(size_t i) const
+    {
+        return m_entries[i];
+    }
+    Entry& at(size_t i)
+    {
+        return m_entries[i];
+    }
 
 #ifndef NDEBUG
     void show();
 #endif
 
 private:
-    Entry* first() { return &at(0); }
+    Entry* first()
+    {
+        return &at(0);
+    }
 
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#list-of-active-formatting-elements
-    // These functions enforce the "Noah's Ark" condition, which removes redundant mis-nested elements.
-    void tryToEnsureNoahsArkConditionQuickly(HTMLStackItem*, GCVector<HTMLStackItem*>& remainingCandiates);
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/
+    //        parsing.html#list-of-active-formatting-elements
+    // These functions enforce the "Noah's Ark" condition, which removes
+    // redundant mis-nested elements.
+    void tryToEnsureNoahsArkConditionQuickly(
+        HTMLStackItem*, GCVector<HTMLStackItem*>& remainingCandiates);
     void ensureNoahsArkCondition(HTMLStackItem*);
 
     GCVector<Entry> m_entries;
 };
-
 }
 
 #endif
