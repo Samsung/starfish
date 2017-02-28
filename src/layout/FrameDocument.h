@@ -23,8 +23,7 @@ namespace StarFish {
 
 class FrameDocument : public FrameBlockBox {
 public:
-    FrameDocument(Node* node)
-        : FrameBlockBox(node, nullptr)
+    FrameDocument(Node* node) : FrameBlockBox(node, nullptr)
     {
     }
 
@@ -38,16 +37,20 @@ public:
         return true;
     }
 
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
     virtual void paint(PaintingContext& ctx)
     {
         STARFISH_ASSERT(ctx.m_paintingStage == PaintingStageEnd);
         STARFISH_ASSERT(firstChild() == lastChild());
-        if (!firstChild())
+        if (!firstChild()) {
             return;
+        }
         ctx.m_canvas->save();
-        ctx.m_canvas->translate(firstChild()->asFrameBox()->x(), firstChild()->asFrameBox()->y());
-        firstChild()->asFrameBox()->stackingContext()->paintStackingContext(ctx.m_canvas);
+        ctx.m_canvas->translate(firstChild()->asFrameBox()->x(),
+                                firstChild()->asFrameBox()->y());
+        firstChild()->asFrameBox()->stackingContext()->paintStackingContext(
+            ctx.m_canvas);
         ctx.m_canvas->restore();
     }
 
@@ -55,16 +58,20 @@ public:
     {
         STARFISH_ASSERT(stage == HitTestStageEnd);
         STARFISH_ASSERT(firstChild() == lastChild());
-        if (!firstChild())
+        if (!firstChild()) {
             return nullptr;
+        }
 
-        Frame* result = firstChild()->asFrameBox()->stackingContext()->hitTestStackingContext(x, y);
-        if (result)
+        Frame* result = firstChild()
+                            ->asFrameBox()
+                            ->stackingContext()
+                            ->hitTestStackingContext(x, y);
+        if (result) {
             return result;
+        }
         return this;
     }
 };
-
 }
 
 #endif

@@ -38,8 +38,11 @@ public:
         return true;
     }
 
-    static FrameTableRowBox* buildFrameTableRow(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableRowBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableRowBox* buildFrameTableRow(Node* current,
+                                                FrameTreeBuilderContext& ctx,
+                                                bool force = false);
+    static FrameTableRowBox* createAnonymousWithParent(FrameBlockBox* parent,
+                                                       Node* node);
 
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
@@ -51,7 +54,8 @@ public:
         return m_baseline;
     }
 
-    FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx,
+                                bool force);
 
     FrameTableSectionBox* sectionBox()
     {
@@ -77,12 +81,12 @@ public:
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
 private:
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
 
     unsigned m_rowIndex;
     LayoutUnit m_baseline;
 };
-
 }
 
 #endif

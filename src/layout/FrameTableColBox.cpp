@@ -23,16 +23,17 @@ namespace StarFish {
 FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-
 }
 
-FrameTableColBox* FrameTableColBox::buildFrameTableColBox(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableColBox* FrameTableColBox::buildFrameTableColBox(
+    Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableBox());
 
     FrameTableColBox* colGroupBox = nullptr;
     FrameBlockBox* parentWrapperBox = ctx.currentBlockContainer();
-    bool isColGroup = current->style()->display() == DisplayValue::TableColumnGroupDisplayValue;
+    bool isColGroup = current->style()->display() ==
+                      DisplayValue::TableColumnGroupDisplayValue;
 
     if (isColGroup) {
         colGroupBox = new FrameTableColBox(current, nullptr);
@@ -40,14 +41,17 @@ FrameTableColBox* FrameTableColBox::buildFrameTableColBox(Node* current, FrameTr
     } else {
         // If the current node is not a colGroup node, make either
         // * an anonymous table colGroup box, or
-        // * use the last anonymous table colGroup box if it has already been created
+        // * use the last anonymous table colGroup box if it has already been
+        // created
         //   by a previous (and continuous) sibling of the current node.
         Frame* last = parentWrapperBox->lastChild();
-        // Always treat as colgroupbox, if the box is anonymous and FrameTableColBox
+        // Always treat as colgroupbox, if the box is anonymous and
+        // FrameTableColBox
         if (last && last->isAnonymous() && last->isFrameTableColBox()) {
             colGroupBox = last->asFrameTableColBox();
         } else {
-            colGroupBox = FrameTableColBox::createAnonymousWithParent(parentWrapperBox, current);
+            colGroupBox = FrameTableColBox::createAnonymousWithParent(
+                parentWrapperBox, current);
         }
     }
 
@@ -70,7 +74,8 @@ FrameTableColBox* FrameTableColBox::buildFrameTableColBox(Node* current, FrameTr
     return colGroupBox;
 }
 
-FrameTableColBox* FrameTableColBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableColBox* FrameTableColBox::createAnonymousWithParent(
+    FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableColumnGroupDisplayValue);
@@ -80,7 +85,8 @@ FrameTableColBox* FrameTableColBox::createAnonymousWithParent(FrameBlockBox* par
     return new FrameTableColBox(nullptr, style);
 }
 
-void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
+                                bool force)
 {
     if (child->style()->display() == DisplayValue::TableColumnDisplayValue) {
         // column must have no children, so don't build the sub frame-tree
@@ -90,18 +96,26 @@ void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool 
         STARFISH_ASSERT(childFrame->parent());
         return;
     }
-    // Ignore the other child node which display value is not 'TableColumnDisplayValue'.
+    // Ignore the other child node which display value is not
+    // 'TableColumnDisplayValue'.
     return;
 }
 
 unsigned FrameTableColBox::span()
 {
     int ret = 0;
-    if (node() && node()->asElement()->asHTMLElement()->isHTMLColGroupElement()) {
-        String* span = node()->asElement()->asHTMLElement()->asHTMLColGroupElement()->span();
+    if (node() &&
+        node()->asElement()->asHTMLElement()->isHTMLColGroupElement()) {
+        String* span = node()
+                           ->asElement()
+                           ->asHTMLElement()
+                           ->asHTMLColGroupElement()
+                           ->span();
         ret = String::parseInt(span);
-    } else if (node() && node()->asElement()->asHTMLElement()->isHTMLColElement()) {
-        String* span = node()->asElement()->asHTMLElement()->asHTMLColElement()->span();
+    } else if (node() &&
+               node()->asElement()->asHTMLElement()->isHTMLColElement()) {
+        String* span =
+            node()->asElement()->asHTMLElement()->asHTMLColElement()->span();
         ret = String::parseInt(span);
     }
     // span is only accepted when HTML element is either <col> or <colGroup>,
@@ -113,8 +127,8 @@ unsigned FrameTableColBox::span()
     return ret <= 0 ? 1 : ret;
 }
 
-
-void FrameTableColBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableColBox::layout(LayoutContext& ctx,
+                              Frame::LayoutWantToResolve resolveWhat)
 {
     STARFISH_ASSERT_NOT_REACHED();
 }
@@ -123,5 +137,4 @@ void FrameTableColBox::paint(PaintingContext& ctx)
 {
     // FrameTableCol should only exist logically and ignore paint.
 }
-
 }

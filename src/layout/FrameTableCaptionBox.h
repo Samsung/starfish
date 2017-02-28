@@ -27,10 +27,11 @@ class FrameTableCaptionBox : public FrameTableObjectBox {
 public:
     FrameTableCaptionBox(Node* node, ComputedStyle* style);
 
-    static FrameTableCaptionBox* buildFrameTableCaptionBox(Node* captionNode,
-        FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableCaptionBox* buildFrameTableCaptionBox(
+        Node* captionNode, FrameTreeBuilderContext& ctx, bool force = false);
 
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
 
     virtual const char* name()
     {
@@ -43,9 +44,7 @@ public:
     }
 
 private:
-
 };
-
 }
 
 #endif

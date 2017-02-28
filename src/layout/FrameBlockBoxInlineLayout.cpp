@@ -155,8 +155,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                 LayoutUnit halfHeight = boxHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
-                     parentStyle->font()->size()) /
-                    2;
+                     parentStyle->font()->size()) / 2;
                 box->setY(halfHeight + halfXHeight);
                 maxAscenderSoFar =
                     std::max(halfHeight + halfXHeight, maxAscenderSoFar);
@@ -221,8 +220,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                 LayoutUnit halfHeight = boxHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
-                     parentStyle->font()->size()) /
-                    2;
+                     parentStyle->font()->size()) / 2;
                 box->setY(halfHeight + halfXHeight);
                 maxAscenderSoFar =
                     std::max(halfHeight + halfXHeight, maxAscenderSoFar);
@@ -324,13 +322,15 @@ FontHeights LineFormattingContext::computeVerticalProperties(
         VerticalAlignValue va = box->style()->verticalAlign();
 
         // Ignore non normalFlow
-        if (!box->isNormalFlow())
+        if (!box->isNormalFlow()) {
             continue;
+        }
 
         // Ignore inlineBox's marginHeight
         LayoutUnit marginHeight;
-        if (!box->isInlineBox())
+        if (!box->isInlineBox()) {
             marginHeight = box->marginHeight();
+        }
 
         // Update maxAsc & maxDes
         if (!(box->isInlineBox() && box->asInlineBox()->isInlineTextBox())) {
@@ -350,24 +350,20 @@ FontHeights LineFormattingContext::computeVerticalProperties(
 
         if (f->isNormalFlow()) {
             if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
-                // InlineBox* ib = f->asFrameBox()->asInlineBox();
-                // if (UNLIKELY(descenderInOut == 0)) {
-                //     if (height <
-                //     ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight)
-                //         ib->setY((height -
-                //         ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
-                //         +
-                //         ib->asInlineTextBox()->style()->font()->metrics().m_descender)
-                //         / 2);
-                //     else
-                //         ib->setY(height -
-                //         ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
-                //         -
-                //         ib->asInlineTextBox()->style()->font()->metrics().m_descender);
-                // } else {
-                //     ib->setY(height + maxDescender - ib->height() -
-                //     ib->asInlineTextBox()->style()->font()->metrics().m_descender);
-                // }
+                /*
+                InlineBox* ib = f->asFrameBox()->asInlineBox();
+                if (UNLIKELY(descenderInOut == 0)) {
+                    if (height < ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight) {
+                        ib->setY((height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
+                        + ib->asInlineTextBox()->style()->font()->metrics().m_descender) / 2);
+                    } else {
+                        ib->setY(height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight
+                        - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                    }
+                } else {
+                    ib->setY(height + maxDescender - ib->height() -
+                    ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                } */
                 InlineTextBox* ib =
                     f->asFrameBox()->asInlineBox()->asInlineTextBox();
                 ib->setY(maxAscender -
@@ -392,15 +388,14 @@ FontHeights LineFormattingContext::computeVerticalProperties(
                         // TODO use this code for when replaced content does not
                         // have content
                         /*
-                           LayoutUnit asc = ib->marginTop() +
-                           ib->asInlineReplacedBox()->replacedBox()->borderTop()
-                           +
-                           ib->asInlineReplacedBox()->replacedBox()->paddingTop()
-                           +
-                           ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-                           ib->setY(height + maxDescender - asc +
-                           ib->marginTop());
-                       */
+                        LayoutUnit asc = ib->marginTop() +
+                        ib->asInlineReplacedBox()->replacedBox()->borderTop()
+                        +
+                        ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+                        +
+                        ib->asInlineReplacedBox()->replacedBox()->contentHeight();
+                        ib->setY(height + maxDescender - asc +
+                        ib->marginTop()); */
                         f->setY(maxAscender - f->height() - marginBottom);
                     } else {
                         STARFISH_ASSERT(f->isFrameBlockBox() &&
@@ -1460,8 +1455,8 @@ void LineFormattingContext::computeHorizontalProperties()
         }
         /*
          * justify: No supported value
-        } else if (m_block.style()->textAlign() == SideValue::JustifySideValue)
-        {
+        } else if (m_block.style()->textAlign() ==
+                   SideValue::JustifySideValue) {
             // issue #145
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
             if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
@@ -1822,8 +1817,11 @@ void LineFormattingContext::breakLineForLineBox(FrameLineBreak* br,
                                                 bool isLastLine,
                                                 bool skipFinishLine)
 {
-    /* if (dueToBr == false)
-        m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1); */
+    /*
+    if (dueToBr == false) {
+        m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
+    }
+    */
 
     if (!skipFinishLine) {
         finishLineForLineBox(br, isLastLine);
@@ -2380,8 +2378,8 @@ static void textBidiResolver(FrameText* frameText,
                 (const UChar*)str.data() + start, end - start);
             size_t utf32Len = 0;
 
-            for (size_t i = start; i < (size_t)end;
-                 /* U16_NEXT post-increments */) {
+            /* U16_NEXT post-increments */
+            for (size_t i = start; i < (size_t)end;) {
                 char32_t c;
                 U16_NEXT((const UChar*)str.data(), i, (size_t)end, c);
                 utf32Len++;
@@ -3162,8 +3160,9 @@ Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,
                 LayoutUnit cx = x - f->asFrameBox()->x();
                 LayoutUnit cy = y - f->asFrameBox()->y();
                 result = f->hitTest(cx, cy, s);
-                if (result)
+                if (result) {
                     return result;
+                }
                 iter++;
             }
             s = (HitTestStage)(s + 1);

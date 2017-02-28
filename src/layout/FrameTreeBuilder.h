@@ -53,7 +53,9 @@ protected:
     bool m_isInFrameInlineFlow;
     FrameBlockBox* m_currentBlockContainer;
     FrameTextTextDecorationData* m_currentDecorationData;
-    std::unordered_map<Node*, FrameInline*, std::hash<Node*>, std::equal_to<Node*>> m_frameInlineItem;
+    std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
+                       std::equal_to<Node*>>
+        m_frameInlineItem;
 };
 
 class FrameTreeBuilder {
@@ -71,18 +73,25 @@ public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
 
-    static void createPseudoElementIfNeeded(Node* parent, StyleResolver::PseudoElementType pseudoId, FrameTreeBuilderContext& ctx);
-    static ComputedStyle* pseudoStyleForElementInternal(Node* node, StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
+    static void createPseudoElementIfNeeded(
+        Node* parent, StyleResolver::PseudoElementType pseudoId,
+        FrameTreeBuilderContext& ctx);
+    static ComputedStyle* pseudoStyleForElementInternal(
+        Node* node, StyleResolver::PseudoElementType pseudoId,
+        ComputedStyle* parentStyle);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document);
 #endif
 
 private:
-    static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force);
-    static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
+    static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
+                            bool force);
+    static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
+                                           Frame* currentFrame,
+                                           Node* currentNode,
+                                           FrameTreeBuilderContext& ctx);
 };
-
 }
 
 #endif

@@ -622,15 +622,17 @@ public:
             if (firstChild() && firstChild()->isFrameInline()) {
                 FrameInline* fi = firstChild()->asFrameInline();
                 if (fi->isLeftMBPCleared() && fi->isRightMBPCleared()) {
-                    if (!fi->firstChild())
+                    if (!fi->firstChild()) {
                         return false;
+                    }
                     if (fi->firstChild() == fi->lastChild() &&
                         fi->firstChild()->isFrameText()) {
                         if (fi->firstChild()
                                 ->asFrameText()
                                 ->text()
-                                ->containsOnlyWhitespace())
+                                ->containsOnlyWhitespace()) {
                             return false;
+                        }
                     }
                 }
             }
@@ -682,25 +684,29 @@ public:
             return;
         }
 
-        if (!fn(this))
+        if (!fn(this)) {
             return;
+        }
 
-        if (beforeIterateChild)
+        if (beforeIterateChild) {
             beforeIterateChild(this);
+        }
 
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
             m_lineBoxes[i]->iterateChildBoxes(fn, beforeIterateChild,
                                               afterIterateChild);
         }
 
-        if (afterIterateChild)
+        if (afterIterateChild) {
             afterIterateChild(this);
+        }
     }
 
     virtual bool hasBlockFlow()
     {
-        if (!firstChild())
+        if (!firstChild()) {
             return true;
+        }
 
         Frame* child = firstChild();
         return (child->style()->originalDisplay() == BlockDisplayValue) &&
@@ -709,14 +715,17 @@ public:
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
-        if (isEstablishesBlockFormattingContext())
+        if (isEstablishesBlockFormattingContext()) {
             return false;
+        }
 
-        if (!isNecessaryBlockBox())
+        if (!isNecessaryBlockBox()) {
             return true;
+        }
 
-        if (heightComputed())
+        if (heightComputed()) {
             return false;
+        }
 
         if (paddingHeight() || borderHeight()) {
             return false;
@@ -738,8 +747,9 @@ public:
                     child = child->next();
                     continue;
                 }
-                if (!child->isSelfCollapsingBlock(ctx))
+                if (!child->isSelfCollapsingBlock(ctx)) {
                     return false;
+                }
                 child = child->next();
             }
             return true;

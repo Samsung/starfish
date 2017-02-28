@@ -28,14 +28,15 @@ class Canvas;
 class CanvasSurface;
 class Frame;
 
-class StackingContextChild : public GCVector<StackingContext*> , public gc {
+class StackingContextChild : public GCVector<StackingContext*>, public gc {
 };
 
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
 
-    const GCMap<int32_t, StackingContextChild*, std::less<int32_t>>& childContexts()
+    const GCMap<int32_t, StackingContextChild*, std::less<int32_t>>&
+    childContexts()
     {
         return m_childContexts;
     }
@@ -53,8 +54,9 @@ public:
     void clearOwnBuffer(bool needsDetachNative = true)
     {
         if (m_buffer) {
-            if (needsDetachNative)
+            if (needsDetachNative) {
                 m_buffer->detachNativeBuffer();
+            }
             m_buffer = nullptr;
         }
     }
@@ -74,8 +76,9 @@ public:
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
+
 protected:
-    bool m_needsOwnBuffer: 1;
+    bool m_needsOwnBuffer : 1;
 
     FrameBox* m_owner;
     LayoutRect m_visibleRect;
@@ -84,7 +87,7 @@ protected:
 
     SkMatrix m_matrix;
 
-    GCMap<int32_t, StackingContextChild*, std::less<int32_t>>  m_childContexts;
+    GCMap<int32_t, StackingContextChild*, std::less<int32_t>> m_childContexts;
 };
 }
 

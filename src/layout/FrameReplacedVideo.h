@@ -24,8 +24,7 @@ namespace StarFish {
 
 class FrameReplacedVideo : public FrameReplaced {
 public:
-    FrameReplacedVideo(Node* node)
-        : FrameReplaced(node, nullptr)
+    FrameReplacedVideo(Node* node) : FrameReplaced(node, nullptr)
     {
         computeStyleFlags();
     }
@@ -37,7 +36,8 @@ public:
 #ifndef STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER
 #define STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER true
 #endif
-        m_flags.m_needsGraphicsBuffer = STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER;
+        m_flags.m_needsGraphicsBuffer =
+            STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER;
     }
 
     virtual bool isFrameReplacedVideo()
@@ -52,8 +52,9 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        if (!m_flags.m_needsGraphicsBuffer)
+        if (!m_flags.m_needsGraphicsBuffer) {
             didCompsiteStackingContext(canvas);
+        }
     }
 
     virtual IntrinsicSize intrinsicSize()
@@ -75,19 +76,24 @@ public:
     {
         STARFISH_ASSERT(node()->isElement());
         STARFISH_ASSERT(node()->asElement()->isHTMLElement());
-        STARFISH_ASSERT(node()->asElement()->asHTMLElement()->isHTMLVideoElement());
+        STARFISH_ASSERT(
+            node()->asElement()->asHTMLElement()->isHTMLVideoElement());
         auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
-        LayoutRect videoRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
+        LayoutRect videoRect(borderLeft() + paddingLeft(),
+                             borderTop() + paddingTop(), contentWidth(),
+                             contentHeight());
         LayoutRect absVideoRect(videoRect);
         c->applyMatrixTo(absVideoRect);
-        if (v->mediaPlayer())
+        if (v->mediaPlayer()) {
             v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+        }
     }
 
     virtual void compsitingStackingContext(Canvas* c)
     {
-        if (!m_flags.m_needsGraphicsBuffer)
+        if (!m_flags.m_needsGraphicsBuffer) {
             didCompsiteStackingContext(c);
+        }
     }
 
 protected:

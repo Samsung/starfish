@@ -32,9 +32,10 @@ public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 
     static FrameTableColBox* buildFrameTableColBox(Node* current,
-        FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableColBox* createAnonymousWithParent(
-        FrameBlockBox* parent, Node* node);
+                                                   FrameTreeBuilderContext& ctx,
+                                                   bool force = false);
+    static FrameTableColBox* createAnonymousWithParent(FrameBlockBox* parent,
+                                                       Node* node);
 
     virtual const char* name()
     {
@@ -49,11 +50,11 @@ public:
     unsigned span();
 
 private:
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat);
     virtual void paint(PaintingContext& ctx);
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 };
-
 }
 
 #endif

@@ -28,14 +28,15 @@ namespace StarFish {
 FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-
 }
 
-FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
+    Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameBlockBox* parent = ctx.currentBlockContainer();
     FrameTableCellBox* tableCell;
-    bool isTableCell = current->style()->display() == DisplayValue::TableCellDisplayValue;
+    bool isTableCell =
+        current->style()->display() == DisplayValue::TableCellDisplayValue;
 
     if (isTableCell) {
         tableCell = new FrameTableCellBox(current, nullptr);
@@ -49,7 +50,8 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
         if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
             tableCell = before->asFrameTableCellBox();
         } else {
-            tableCell = FrameTableCellBox::createAnonymousWithParent(parent, current);
+            tableCell =
+                FrameTableCellBox::createAnonymousWithParent(parent, current);
         }
     }
     ctx.setCurrentBlockContainer(tableCell);
@@ -70,7 +72,8 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTr
     return tableCell->parent() ? nullptr : tableCell;
 }
 
-FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(
+    FrameBlockBox* parent, Node* parentNode)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
@@ -80,7 +83,8 @@ FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(FrameBlockBox* p
     return new FrameTableCellBox(nullptr, style);
 }
 
-void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
+                                     Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
@@ -88,13 +92,13 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
     // If "table-layout: fixed", and the top cell in the first row has
     // values other than "width: auto", we use the fixed value from the cell.
     FrameTableBox* table = rowBox()->sectionBox()->tableBox();
-    if (table->style()->tableLayout() == TableLayoutValue::AutoTableLayoutValue) {
+    if (table->style()->tableLayout() ==
+        TableLayoutValue::AutoTableLayoutValue) {
         if (style()->width().isAuto()) {
             m_minCellWidth = calMinCellWidth(ctx);
             m_maxCellWidth = calMaxCellWidth(ctx);
         } else if (style()->width().isFixed()) {
-            LayoutUnit width =
-                LayoutUnit::fromPixel(style()->width().fixed());
+            LayoutUnit width = LayoutUnit::fromPixel(style()->width().fixed());
             m_minCellWidth = std::max(width, calMinCellWidth(ctx));
             m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
         } else if (style()->width().isPercent()) {
@@ -103,7 +107,8 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
             // Should not be here
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    } else if (table->style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue) {
+    } else if (table->style()->tableLayout() ==
+               TableLayoutValue::FixedTableLayoutValue) {
         std::vector<FrameTableCellBox*>& cellsInTheFirstRow =
             rowBox()->sectionBox()->tableBox()->cellsInTheFirstRow();
 
@@ -117,16 +122,19 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos, Frame::La
             matchingCellInTheFirstRow = cellsInTheFirstRow[pos];
         }
 
-        if (!matchingCellInTheFirstRow || matchingCellInTheFirstRow->style()->width().isAuto()) {
+        if (!matchingCellInTheFirstRow ||
+            matchingCellInTheFirstRow->style()->width().isAuto()) {
             m_minCellWidth = calMinCellWidth(ctx);
             m_maxCellWidth = calMaxCellWidth(ctx);
         } else {
             if (matchingCellInTheFirstRow->style()->width().isFixed()) {
-                LayoutUnit width =
-                    LayoutUnit::fromPixel(matchingCellInTheFirstRow->style()->width().fixed());
+                LayoutUnit width = LayoutUnit::fromPixel(
+                    matchingCellInTheFirstRow->style()->width().fixed());
                 m_minCellWidth = std::max(width, calMinCellWidth(ctx));
                 m_maxCellWidth = width;
-            } else if (matchingCellInTheFirstRow->style()->width().isPercent()) {
+            } else if (matchingCellInTheFirstRow->style()
+                           ->width()
+                           .isPercent()) {
                 // TODO
             } else {
                 // Should not be here
@@ -153,7 +161,8 @@ void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
 }
 
-void FrameTableCellBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::layout(LayoutContext& ctx,
+                               Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -187,7 +196,8 @@ LayoutUnit FrameTableCellBox::calMaxCellWidth(LayoutContext& ctx)
     return calPreferredFrameWidth(ctx, this);
 }
 
-LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBlockBox* b)
+LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx,
+                                                     FrameBlockBox* b)
 {
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = b->firstChild(); c; c = c->next()) {
@@ -220,7 +230,8 @@ void FrameTableCellBox::applyVerticalAlign()
         FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
         FrameBlockBox* lastBox = lastChild()->asFrameBlockBox();
         LayoutUnit yStart = firstBox->y() - firstBox->marginTop();
-        LayoutUnit yEnd = lastBox->y() + lastBox->height() + lastBox->marginBottom();
+        LayoutUnit yEnd =
+            lastBox->y() + lastBox->height() + lastBox->marginBottom();
         childContentHeight = yEnd - yStart;
         if (!firstBox->lineBoxes().empty()) {
             ascenderOfTheFirstLineBox = firstBox->lineBoxes()[0]->ascender();
@@ -228,7 +239,7 @@ void FrameTableCellBox::applyVerticalAlign()
     } else {
         if (!m_lineBoxes.empty()) {
             LineBox* firstBox = m_lineBoxes[0];
-            LineBox* lastBox = m_lineBoxes[m_lineBoxes.size()-1];
+            LineBox* lastBox = m_lineBoxes[m_lineBoxes.size() - 1];
             LayoutUnit yStart = firstBox->y();
             LayoutUnit yEnd = lastBox->y() + lastBox->height();
             childContentHeight = yEnd - yStart;
@@ -246,8 +257,10 @@ void FrameTableCellBox::applyVerticalAlign()
         yPosOffset = contentHeight() - childContentHeight;
         break;
     case VerticalAlignValue::MiddleVAlignValue: {
-        LayoutUnit halfCellContentHeight = LayoutUnit(contentHeight().toDouble() / 2);
-        yPosOffset = halfCellContentHeight.toDouble() - (childContentHeight.toDouble() / 2);
+        LayoutUnit halfCellContentHeight =
+            LayoutUnit(contentHeight().toDouble() / 2);
+        yPosOffset = halfCellContentHeight.toDouble() -
+                     (childContentHeight.toDouble() / 2);
         break;
     }
     case VerticalAlignValue::BaselineVAlignValue:
@@ -306,9 +319,11 @@ int FrameTableCellBox::colspan()
         // FIX ME
         return 1;
     } else if (node()->asElement()->asHTMLElement()->isHTMLTDElement()) {
-        colspan = node()->asElement()->asHTMLElement()->asHTMLTDElement()->colspan();
+        colspan =
+            node()->asElement()->asHTMLElement()->asHTMLTDElement()->colspan();
     } else if (node()->asElement()->asHTMLElement()->isHTMLTHElement()) {
-        colspan = node()->asElement()->asHTMLElement()->asHTMLTHElement()->colspan();
+        colspan =
+            node()->asElement()->asHTMLElement()->asHTMLTHElement()->colspan();
     } else {
         // colspan is only accepted when HTML element is either <td> or <th>,
         // hence it is not applied when used in other elements.
@@ -318,7 +333,6 @@ int FrameTableCellBox::colspan()
 
     int num = String::parseInt(colspan);
     // If colspan is not defined, use 1 as the default value
-    return num == 0? 1: num;
+    return num == 0 ? 1 : num;
 }
-
 }

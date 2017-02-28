@@ -29,23 +29,22 @@ struct TextToken {
     WordType m_type;
 
     TextToken(FrameText* ft, size_t start, size_t end, WordType type)
-        : m_frameText(ft)
-        , m_start(start)
-        , m_end(end)
-        , m_type(type)
+        : m_frameText(ft), m_start(start), m_end(end), m_type(type)
     {
         switch (m_type) {
         case CollapsibleWhiteSpace:
             m_width = m_frameText->style()->font()->spaceWidth();
             break;
         case NonCollapsibleWhiteSpace:
-            m_width = m_frameText->style()->font()->spaceWidth() * (m_end - m_start);
+            m_width =
+                m_frameText->style()->font()->spaceWidth() * (m_end - m_start);
             break;
         case ForcedNewline:
             m_width = 0;
             break;
         case General:
-            m_width = m_frameText->style()->font()->measureText(StringView(m_frameText->text(), m_start, m_end));
+            m_width = m_frameText->style()->font()->measureText(
+                StringView(m_frameText->text(), m_start, m_end));
             break;
         }
     }
@@ -63,11 +62,15 @@ struct TextToken {
 #ifndef NDEBUG
     void dump()
     {
-        std::string str = m_frameText->text()->substring(m_start, m_end - m_start)->utf8Data();
+        std::string str = m_frameText->text()
+                              ->substring(m_start, m_end - m_start)
+                              ->utf8Data();
         str = FrameText::replaceAll(str, "\n", "\\n");
         printf("%s (", str.data());
         printf("width:%d, ", width().toInt());
-        printf("type:%s)\n", m_type == General ? "GN" : m_type == ForcedNewline ? "NL" : "WS");
+        printf("type:%s)\n", m_type == General ? "GN" : m_type == ForcedNewline
+                                                            ? "NL"
+                                                            : "WS");
     }
 #endif
 };
@@ -85,7 +88,8 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
     unsigned offset = 0;
     while (offset < len) {
         if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
-            TextToken token = TextToken(f, offset, offset + 1, WordType::ForcedNewline);
+            TextToken token =
+                TextToken(f, offset, offset + 1, WordType::ForcedNewline);
             offset++;
             ctx->handleTextToken(token);
             continue;
@@ -98,7 +102,8 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
         // find next space
         unsigned nextOffset = offset + 1;
         if (isWhiteSpace) {
-            while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
+            while (nextOffset < txt->length() &&
+                   String::isSpaceOrNewline((*txt)[nextOffset])) {
                 if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
                     break;
                 }
@@ -116,7 +121,8 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
             ctx->handleTextToken(token);
         } else {
             size_t start = offset;
-            while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
+            while (nextOffset < txt->length() &&
+                   !String::isSpaceOrNewline((*txt)[nextOffset])) {
                 nextOffset++;
             }
 
@@ -124,8 +130,10 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
             breaker->setText(txt->toUnicodeString(start, nextOffset));
             int32_t c, prev = 0;
             size_t txtLen = txt->length();
-            while (((c = breaker->next()) != icu::BreakIterator::DONE) && (c + start <= txtLen)) {
-                TextToken token = TextToken(f, prev + start, c + start, WordType::General);
+            while (((c = breaker->next()) != icu::BreakIterator::DONE) &&
+                   (c + start <= txtLen)) {
+                TextToken token =
+                    TextToken(f, prev + start, c + start, WordType::General);
                 ctx->handleTextToken(token);
                 prev = c;
             }
@@ -133,7 +141,6 @@ void tokenizeText(StarFish* sf, FrameText* f, Context* ctx)
         offset = nextOffset;
     }
 }
-
 }
 
 #endif

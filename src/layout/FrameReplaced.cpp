@@ -24,82 +24,126 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 {
     IntrinsicSize siz = intrinsicSize();
     IntrinsicSizeUsedInLayout result;
-    String* widthString = node()->asElement()->getAttribute(node()->document()->window()->starFish()->staticStrings()->m_width);
-    String* heightString = node()->asElement()->getAttribute(node()->document()->window()->starFish()->staticStrings()->m_height);
+    String* widthString = node()->asElement()->getAttribute(
+        node()->document()->window()->starFish()->staticStrings()->m_width);
+    String* heightString = node()->asElement()->getAttribute(
+        node()->document()->window()->starFish()->staticStrings()->m_height);
     if (siz.m_isContentExists) {
-        result.m_intrinsicContentSize = LayoutSize(siz.m_intrinsicContentSize.width(), siz.m_intrinsicContentSize.height());
+        result.m_intrinsicContentSize =
+            LayoutSize(siz.m_intrinsicContentSize.width(),
+                       siz.m_intrinsicContentSize.height());
         bool widthIsEmpty = widthString->equals(String::emptyString);
         bool heightIsEmpty = heightString->equals(String::emptyString);
         if (widthIsEmpty && heightIsEmpty) {
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), Length());
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                std::make_pair(Length(), Length());
         } else if (widthIsEmpty) {
             float h = String::parseFloat(heightString);
-            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), height);
+            bool heightIsPercent =
+                heightString->lastIndexOf('%') == heightString->length() - 1;
+            Length height = heightIsPercent
+                                ? Length(Length::Percent, (float)h / 100)
+                                : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                std::make_pair(Length(), height);
         } else if (heightIsEmpty) {
             float w = String::parseFloat(widthString);
-            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length());
+            bool widthIsPercent =
+                widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent
+                               ? Length(Length::Percent, (float)w / 100)
+                               : Length(Length::Fixed, w);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                std::make_pair(width, Length());
         } else {
             float w = String::parseFloat(widthString);
             float h = String::parseFloat(heightString);
-            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+            bool heightIsPercent =
+                heightString->lastIndexOf('%') == heightString->length() - 1;
+            bool widthIsPercent =
+                widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent
+                               ? Length(Length::Percent, (float)w / 100)
+                               : Length(Length::Fixed, w);
+            Length height = heightIsPercent
+                                ? Length(Length::Percent, (float)h / 100)
+                                : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                std::make_pair(width, height);
         }
     } else {
-        result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
+        result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+            std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
         bool widthIsEmpty = widthString->equals(String::emptyString);
         bool heightIsEmpty = heightString->equals(String::emptyString);
         if (widthIsEmpty && heightIsEmpty) {
         } else if (widthIsEmpty) {
             float h = String::parseFloat(heightString);
-            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-            if (!heightIsPercent)
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), height);
+            bool heightIsPercent =
+                heightString->lastIndexOf('%') == heightString->length() - 1;
+            Length height = heightIsPercent
+                                ? Length(Length::Percent, (float)h / 100)
+                                : Length(Length::Fixed, h);
+            if (!heightIsPercent) {
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                    std::make_pair(Length(Length::Fixed, 0), height);
+            }
         } else if (heightIsEmpty) {
             float w = String::parseFloat(widthString);
-            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-            if (!widthIsPercent)
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length(Length::Fixed, 0));
+            bool widthIsPercent =
+                widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent
+                               ? Length(Length::Percent, (float)w / 100)
+                               : Length(Length::Fixed, w);
+            if (!widthIsPercent) {
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                    std::make_pair(width, Length(Length::Fixed, 0));
+            }
         } else {
             float w = String::parseFloat(widthString);
             float h = String::parseFloat(heightString);
-            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-            Length width = widthIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, w);
-            Length height = heightIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, h);
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+            bool heightIsPercent =
+                heightString->lastIndexOf('%') == heightString->length() - 1;
+            bool widthIsPercent =
+                widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent ? Length(Length::Fixed, 0)
+                                          : Length(Length::Fixed, w);
+            Length height = heightIsPercent ? Length(Length::Fixed, 0)
+                                            : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
+                std::make_pair(width, height);
         }
     }
 
-    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
-        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositiveOrZero()) {
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first = Length();
+    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first
+            .isSpecified()) {
+        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first
+                 .isPositiveOrZero()) {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first =
+                Length();
         }
     }
 
-    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isSpecified()) {
-        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositiveOrZero()) {
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second = Length();
+    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second
+            .isSpecified()) {
+        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second
+                 .isPositiveOrZero()) {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second =
+                Length();
         }
     }
 
     return result;
 }
 
-void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameReplaced::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        LayoutUnit parentContentWidth = ctx.containingFrameBlockBox(this)->asFrameBox()->contentWidth();
+        LayoutUnit parentContentWidth =
+            ctx.containingFrameBlockBox(this)->asFrameBox()->contentWidth();
         LayoutUnit intrinsicWidth, intrinsicHeight;
         computeBorderMarginPadding(parentContentWidth);
 
@@ -109,11 +153,13 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             Length parentContentHeight;
             parentContentHeight = Length(Length::Fixed, parentHeight);
-            computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
+            computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
+                                 parentContentWidth, parentContentHeight);
 
             computeBorderMarginPadding(cb->contentWidth());
 
-            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
+            DirectionValue direction =
+                ctx.blockContainer(this)->style()->direction();
 
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
 
@@ -127,64 +173,91 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
 
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
-            auto setAbsX = [&](LayoutUnit x)
-            {
-                setX(x - absX);
-            };
+            auto setAbsX = [&](LayoutUnit x) { setX(x - absX); };
 
             // 10.3.8 Absolutely positioned, replaced elements
-            // 'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' + 'right' = width of containing block
+            // 'left' + 'margin-left' + 'border-left-width' + 'padding-left' +
+            // 'width' + 'padding-right' + 'border-right-width' + 'margin-right'
+            // + 'right' = width of containing block
 
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
 
-            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
+            if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
+                (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
                 setContentHeight(0);
-            } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight);
-            } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(cb->contentWidth());
+            } else if (style()->width().isAuto() &&
+                       style()->height().isAuto()) {
+                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
+                                        parentContentWidth, parentHeight);
+            } else if (style()->width().isSpecified() &&
+                       style()->height().isAuto()) {
+                LayoutUnit w =
+                    style()->width().specifiedValue(cb->contentWidth());
                 LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
-            } else if (style()->width().isAuto() && style()->height().isSpecified()) {
-                LayoutUnit h = style()->height().specifiedValue(cb->contentHeight());
+            } else if (style()->width().isAuto() &&
+                       style()->height().isSpecified()) {
+                LayoutUnit h =
+                    style()->height().specifiedValue(cb->contentHeight());
                 LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
             } else {
-                STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
+                STARFISH_ASSERT(style()->width().isSpecified() &&
+                                style()->height().isSpecified());
                 if (style()->height().isFixed()) {
-                    applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), style()->height().fixed(), parentContentWidth, parentHeight);
+                    applyMinMaxValueIfNeeds(
+                        style()->width().specifiedValue(cb->contentWidth()),
+                        style()->height().fixed(), parentContentWidth,
+                        parentHeight);
                 } else {
                     if (ctx.parentHasFixedHeight(this)) {
-                        applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), style()->height().specifiedValue(cb->contentHeight()), parentContentWidth, parentHeight);
+                        applyMinMaxValueIfNeeds(
+                            style()->width().specifiedValue(cb->contentWidth()),
+                            style()->height().specifiedValue(
+                                cb->contentHeight()),
+                            parentContentWidth, parentHeight);
                     } else {
-                        applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), intrinsicHeight,  parentContentWidth, parentHeight, true, false);
+                        applyMinMaxValueIfNeeds(
+                            style()->width().specifiedValue(cb->contentWidth()),
+                            intrinsicHeight, parentContentWidth, parentHeight,
+                            true, false);
                     }
                 }
             }
 
-            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+            LayoutUnit containgBlockContentWidth =
+                cb->contentWidth() + cb->paddingWidth();
             bool needOppositeMargin = false;
 
-            // If 'margin-left' or 'margin-right' is specified as 'auto' its used value is determined by the rules below.
+            // If 'margin-left' or 'margin-right' is specified as 'auto' its
+            // used value is determined by the rules below.
             // If both 'left' and 'right' have the value 'auto'
-            // then if the 'direction' property of the element establishing the static-position containing block is 'ltr', set 'left' to the static position;
+            // then if the 'direction' property of the element establishing the
+            // static-position containing block is 'ltr', set 'left' to the
+            // static position;
             // else if 'direction' is 'rtl', set 'right' to the static position.
             if (style()->left().isAuto() && style()->right().isAuto()) {
                 // static location computed in normal flow processing
             } else if (!style()->left().isAuto() && style()->right().isAuto()) {
-                if (style()->direction() == RtlDirectionValue)
+                if (style()->direction() == RtlDirectionValue) {
                     needOppositeMargin = true;
-                setAbsX(style()->left().specifiedValue(containgBlockContentWidth));
+                }
+                setAbsX(
+                    style()->left().specifiedValue(containgBlockContentWidth));
             } else if (style()->left().isAuto() && !style()->right().isAuto()) {
-                if (style()->direction() == LtrDirectionValue)
+                if (style()->direction() == LtrDirectionValue) {
                     needOppositeMargin = true;
-                LayoutUnit r = style()->right().specifiedValue(containgBlockContentWidth);
+                }
+                LayoutUnit r =
+                    style()->right().specifiedValue(containgBlockContentWidth);
                 setAbsX(containgBlockContentWidth - r - width());
             } else {
-                LayoutUnit computedLeft = style()->left().specifiedValue(containgBlockContentWidth);
-                LayoutUnit computedRight = style()->right().specifiedValue(containgBlockContentWidth);
+                LayoutUnit computedLeft =
+                    style()->left().specifiedValue(containgBlockContentWidth);
+                LayoutUnit computedRight =
+                    style()->right().specifiedValue(containgBlockContentWidth);
                 if (marginLeft.isAuto() && marginRight.isAuto()) {
                     LayoutUnit remain = containgBlockContentWidth;
                     remain -= contentWidth();
@@ -195,27 +268,35 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         setMarginLeft(remain / 2);
                         setMarginRight(remain / 2);
                     }
-                } else if (marginRight.isAuto() && style()->direction() == RtlDirectionValue) {
+                } else if (marginRight.isAuto() &&
+                           style()->direction() == RtlDirectionValue) {
                     needOppositeMargin = true;
-                } else if (marginLeft.isAuto() && style()->direction() == LtrDirectionValue) {
+                } else if (marginLeft.isAuto() &&
+                           style()->direction() == LtrDirectionValue) {
                     needOppositeMargin = true;
                 }
-                if ((style()->direction() == LtrDirectionValue && !needOppositeMargin)
-                    || (style()->direction() == RtlDirectionValue && needOppositeMargin)) {
+                if ((style()->direction() == LtrDirectionValue &&
+                     !needOppositeMargin) ||
+                    (style()->direction() == RtlDirectionValue &&
+                     needOppositeMargin)) {
                     setAbsX(computedLeft);
                 } else {
-                    setAbsX(containgBlockContentWidth - FrameBox::width() - computedRight);
+                    setAbsX(containgBlockContentWidth - FrameBox::width() -
+                            computedRight);
                 }
             }
 
-            if ((style()->direction() == LtrDirectionValue && !needOppositeMargin)
-                || (style()->direction() == RtlDirectionValue && needOppositeMargin)) {
+            if ((style()->direction() == LtrDirectionValue &&
+                 !needOppositeMargin) ||
+                (style()->direction() == RtlDirectionValue &&
+                 needOppositeMargin)) {
                 moveX(asFrameBox()->marginLeft());
             } else {
                 moveX(-asFrameBox()->marginRight());
             }
 
-            if (style()->left().isAuto() && style()->right().isAuto() && direction == DirectionValue::RtlDirectionValue) {
+            if (style()->left().isAuto() && style()->right().isAuto() &&
+                direction == DirectionValue::RtlDirectionValue) {
                 moveX(-this->width());
             }
         } else {
@@ -223,56 +304,81 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length parentContentHeight;
             bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
             if (parentHasFixedHeight) {
-                parentContentHeight = Length(Length::Fixed, ctx.parentFixedHeight(this));
+                parentContentHeight =
+                    Length(Length::Fixed, ctx.parentFixedHeight(this));
                 parentHasFixedHeight = true;
                 parentHeight = ctx.parentFixedHeight(this);
             } else {
                 parentContentHeight = Length(Length::Auto);
                 parentHasFixedHeight = false;
             }
-            computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
+            computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
+                                 parentContentWidth, parentContentHeight);
 
-            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
+            if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
+                (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
                 setContentHeight(0);
-            } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight, true, parentHasFixedHeight);
-            } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+            } else if (style()->width().isAuto() &&
+                       style()->height().isAuto()) {
+                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
+                                        parentContentWidth, parentHeight, true,
+                                        parentHasFixedHeight);
+            } else if (style()->width().isSpecified() &&
+                       style()->height().isAuto()) {
+                LayoutUnit w = style()->width().specifiedValue(
+                    ctx.parentContentWidth(this));
                 LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, parentHasFixedHeight);
-            } else if (style()->width().isAuto() && style()->height().isSpecified()) {
+                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight,
+                                        true, parentHasFixedHeight);
+            } else if (style()->width().isAuto() &&
+                       style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
                     LayoutUnit h = style()->height().fixed();
                     LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                    applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, parentHasFixedHeight);
+                    applyMinMaxValueIfNeeds(w, h, parentContentWidth,
+                                            parentHeight, true,
+                                            parentHasFixedHeight);
                 } else {
                     STARFISH_ASSERT(style()->height().isPercent());
                     if (ctx.parentHasFixedHeight(this)) {
-                        LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
+                        LayoutUnit h = style()->height().percent() *
+                                       ctx.parentFixedHeight(this);
                         LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                        applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
+                        applyMinMaxValueIfNeeds(w, h, parentContentWidth,
+                                                parentHeight);
                     } else {
-                        applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight, true, false);
+                        applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
+                                                parentContentWidth,
+                                                parentHeight, true, false);
                     }
                 }
             } else {
-                STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
-                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                STARFISH_ASSERT(style()->width().isSpecified() &&
+                                style()->height().isSpecified());
+                LayoutUnit w = style()->width().specifiedValue(
+                    ctx.parentContentWidth(this));
                 if (style()->height().isFixed()) {
-                    applyMinMaxValueIfNeeds(w, style()->height().fixed(), parentContentWidth, parentHeight, true, parentHasFixedHeight);
+                    applyMinMaxValueIfNeeds(w, style()->height().fixed(),
+                                            parentContentWidth, parentHeight,
+                                            true, parentHasFixedHeight);
                 } else {
                     if (ctx.parentHasFixedHeight(this)) {
-                        applyMinMaxValueIfNeeds(w, style()->height().percent() * ctx.parentFixedHeight(this), parentContentWidth, parentHeight);
+                        applyMinMaxValueIfNeeds(
+                            w, style()->height().percent() *
+                                   ctx.parentFixedHeight(this),
+                            parentContentWidth, parentHeight);
                     } else {
                         LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                        applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, false);
+                        applyMinMaxValueIfNeeds(w, h, parentContentWidth,
+                                                parentHeight, true, false);
                     }
                 }
             }
 
-            if (!isFloating() && style()->display() == BlockDisplayValue
-                && style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+            if (!isFloating() && style()->display() == BlockDisplayValue &&
+                style()->marginLeft().isAuto() &&
+                style()->marginRight().isAuto()) {
                 LayoutUnit remain = parentContentWidth;
                 remain -= contentWidth();
                 remain -= borderWidth();
@@ -284,7 +390,8 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             }
 
             if (!isFloating() && style()->display() == BlockDisplayValue) {
-                if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                if (style()->marginLeft().isAuto() &&
+                    style()->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -293,7 +400,8 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         setMarginLeft(remain / 2);
                         setMarginRight(remain / 2);
                     }
-                } else if (style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
+                } else if (style()->marginLeft().isAuto() &&
+                           !style()->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -302,7 +410,8 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (remain > 0) {
                         setMarginLeft(remain);
                     }
-                } else if (!style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                } else if (!style()->marginLeft().isAuto() &&
+                           style()->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -334,10 +443,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length marginBottom = style()->marginBottom();
 
             LayoutUnit absY = absLoc.y() - cb->borderTop();
-            auto setAbsY = [&](LayoutUnit y)
-            {
-                setY(y - absY);
-            };
+            auto setAbsY = [&](LayoutUnit y) { setY(y - absY); };
 
             if (style()->top().isAuto() && style()->bottom().isAuto()) {
                 // static location computed in normal flow processing
@@ -364,15 +470,18 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
 void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    LayoutUnit parentContentWidth = ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
+    LayoutUnit parentContentWidth =
+        ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
     LayoutUnit intrinsicWidth, intrinsicHeight;
     Length parentContentHeight;
     if (ctx.layoutContext().parentHasFixedHeight(this)) {
-        parentContentHeight = Length(Length::Fixed, ctx.layoutContext().parentFixedHeight(this));
+        parentContentHeight =
+            Length(Length::Fixed, ctx.layoutContext().parentFixedHeight(this));
     } else {
         parentContentHeight = Length(Length::Auto);
     }
-    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
+    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth,
+                         parentContentHeight);
 
     if (style()->width().isAuto() && style()->height().isAuto()) {
         ctx.updatePreferredWidth(intrinsicWidth);
@@ -400,7 +509,10 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     }
 }
 
-void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight, LayoutUnit parentContentWidth, Length parentContentHeight)
+void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
+                                         LayoutUnit& intrinsicHeight,
+                                         LayoutUnit parentContentWidth,
+                                         Length parentContentHeight)
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
     auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
@@ -417,7 +529,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit&
     } else if (a.first.isSpecified() && a.second.isPercent()) {
         if (parentContentHeight.isFixed()) {
             intrinsicWidth = a.first.specifiedValue(parentContentWidth);
-            intrinsicHeight = a.second.specifiedValue(parentContentHeight.fixed());
+            intrinsicHeight =
+                a.second.specifiedValue(parentContentHeight.fixed());
         } else {
             intrinsicWidth = a.first.specifiedValue(parentContentWidth);
             intrinsicHeight = intrinsicWidth * (b.height() / b.width());
@@ -428,7 +541,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit&
     } else {
         STARFISH_ASSERT(a.first.isAuto() && a.second.isPercent());
         if (parentContentHeight.isFixed()) {
-            intrinsicHeight = a.second.specifiedValue(parentContentHeight.fixed());
+            intrinsicHeight =
+                a.second.specifiedValue(parentContentHeight.fixed());
             intrinsicWidth = intrinsicHeight * (b.width() / b.height());
         } else {
             intrinsicWidth = s.m_intrinsicContentSize.width();
@@ -438,5 +552,4 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit&
         intrinsicWidth = intrinsicHeight * (b.width() / b.height());
     }
 }
-
 }

@@ -28,17 +28,20 @@ class FrameTableCellBox;
 class ColSizeStruct;
 
 struct CellStruct {
-    CellStruct()
-        : cell(nullptr) { }
-    CellStruct(FrameTableCellBox* cell_)
-        : cell(cell_) { }
+    CellStruct() : cell(nullptr)
+    {
+    }
+    CellStruct(FrameTableCellBox* cell_) : cell(cell_)
+    {
+    }
 
     FrameTableCellBox* cell;
 };
 
 struct RowStruct {
-    RowStruct()
-        : tableRow(nullptr) { }
+    RowStruct() : tableRow(nullptr)
+    {
+    }
     RowStruct(FrameTableRowBox* tableRow);
 
     FrameTableRowBox* tableRow;
@@ -49,9 +52,10 @@ class FrameTableSectionBox : public FrameTableObjectBox {
 public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 
-    static FrameTableSectionBox* buildFrameTableSectionBox(Node* current,
-        FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableSectionBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableSectionBox* buildFrameTableSectionBox(
+        Node* current, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableSectionBox* createAnonymousWithParent(
+        FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
@@ -59,7 +63,8 @@ public:
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
-    FrameTableRowBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableRowBox* addChild(Node* child, FrameTreeBuilderContext& ctx,
+                               bool force);
 
     virtual const char* name()
     {
@@ -99,7 +104,6 @@ private:
     GCVector<RowStruct> m_grid;
     GCVector<ColSizeStruct> m_columnWidths;
 };
-
 }
 
 #endif

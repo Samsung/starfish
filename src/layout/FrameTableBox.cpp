@@ -29,8 +29,7 @@ namespace StarFish {
 class TableFormattingContextBlock {
 public:
     TableFormattingContextBlock(Frame* frm, LayoutContext& ctx)
-        : m_ctx(ctx)
-        , m_needs(false)
+        : m_ctx(ctx), m_needs(false)
     {
         if (frm->isEstablishesBlockFormattingContext()) {
             m_needs = true;
@@ -50,23 +49,26 @@ public:
 };
 
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
-    : FrameTableObjectBox(node, style)
-    , m_tableRect(0, 0, 0, 0)
-    , m_thead(nullptr)
-    , m_tfoot(nullptr)
+    : FrameTableObjectBox(node, style),
+      m_tableRect(0, 0, 0, 0),
+      m_thead(nullptr),
+      m_tfoot(nullptr)
 {
-
 }
 
-FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
+                                              FrameTreeBuilderContext& ctx,
+                                              bool force)
 {
     FrameTableBox* tableWrapper;
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    bool isTable = (current->style()->display() == DisplayValue::TableDisplayValue)
-        || (current->style()->display() == DisplayValue::InlineTableDisplayValue);
+    bool isTable =
+        (current->style()->display() == DisplayValue::TableDisplayValue) ||
+        (current->style()->display() == DisplayValue::InlineTableDisplayValue);
 
     if (isTable) {
-        // if current node is table then make wrapper and current node owns this wrapper
+        // if current node is table then make wrapper and current node owns this
+        // wrapper
         tableWrapper = new FrameTableBox(current, nullptr);
         current->setFrame(tableWrapper);
     } else {
@@ -76,17 +78,23 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
         //   by a previous (and continuous) sibling of the current node.
         Frame* before = parent->lastChild();
 
-        // NEED TO DISCUSSION : StarFish generate anonymous block box which has only whitespace,
+        // NEED TO DISCUSSION : StarFish generate anonymous block box which has
+        // only whitespace,
         // below code treat above situation
-        while (before && before->isAnonymous() && before->firstChild()->isFrameText()
-            && before->firstChild()->asFrameText()->text()->containsOnlyWhitespace()) {
+        while (before && before->isAnonymous() &&
+               before->firstChild()->isFrameText() &&
+               before->firstChild()
+                   ->asFrameText()
+                   ->text()
+                   ->containsOnlyWhitespace()) {
             before = before->previous();
         }
 
         if (before && before->isAnonymous() && before->isFrameTableBox()) {
             tableWrapper = before->asFrameTableBox();
         } else {
-            tableWrapper = FrameTableBox::createAnonymousWithParent(parent, current);
+            tableWrapper =
+                FrameTableBox::createAnonymousWithParent(parent, current);
         }
     }
 
@@ -105,10 +113,11 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderCon
     }
 
     ctx.setCurrentBlockContainer(parent);
-    return tableWrapper->parent()? nullptr : tableWrapper;
+    return tableWrapper->parent() ? nullptr : tableWrapper;
 }
 
-FrameTableBox* FrameTableBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableBox* FrameTableBox::createAnonymousWithParent(FrameBlockBox* parent,
+                                                        Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
@@ -118,7 +127,8 @@ FrameTableBox* FrameTableBox::createAnonymousWithParent(FrameBlockBox* parent, N
     return new FrameTableBox(nullptr, style);
 }
 
-void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
+                             bool force)
 {
     bool wrapInAnnoymousSection = false;
     Frame* childFrame;
@@ -126,7 +136,8 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
 
     switch (display) {
     case DisplayValue::TableCaptionDisplayValue:
-        childFrame = FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
+        childFrame =
+            FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
         m_captions.push_back(childFrame->asFrameTableCaptionBox());
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
@@ -143,19 +154,23 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
     case DisplayValue::TableHeaderGroupDisplayValue:
     case DisplayValue::TableFooterGroupDisplayValue:
     case DisplayValue::TableRowGroupDisplayValue:
-        childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
+        childFrame =
+            FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
         break;
     default:
         wrapInAnnoymousSection = true;
     }
 
     if (!wrapInAnnoymousSection) {
-        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
+        FrameTreeBuilder::frameBlockBoxChildInserter(
+            ctx.currentBlockContainer(), childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
-        if (!m_thead && (display == DisplayValue::TableHeaderGroupDisplayValue)) {
+        if (!m_thead &&
+            (display == DisplayValue::TableHeaderGroupDisplayValue)) {
             m_thead = childFrame->asFrameTableSectionBox();
         }
-        if (!m_tfoot && (display == DisplayValue::TableFooterGroupDisplayValue)) {
+        if (!m_tfoot &&
+            (display == DisplayValue::TableFooterGroupDisplayValue)) {
             m_tfoot = childFrame->asFrameTableSectionBox();
         }
         return;
@@ -165,16 +180,25 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
         // TODO
         return;
     } else if (wrapInAnnoymousSection) {
-        // If there are 2 continuous node which becomes internal table box without any proper parent,
-        // we have a problem, because parser doesn't form a group these with one parent.
-        // so we handle this at buileFrameTableXXX. The first node's frame box will be returned with a
-        // hierarchical anonymous table box, the point is the second one. If the second one does the same
-        // with the first one, then we might have duplication processing about reused anonymous box
-        // so that currentBlockContainer has 2 children which referencing the same thing.
-        // To prevent this situation, we separate two cases with which returned pointer is nullptr.
+        // If there are 2 continuous node which becomes internal table box
+        // without any proper parent,
+        // we have a problem, because parser doesn't form a group these with one
+        // parent.
+        // so we handle this at buileFrameTableXXX. The first node's frame box
+        // will be returned with a
+        // hierarchical anonymous table box, the point is the second one. If the
+        // second one does the same
+        // with the first one, then we might have duplication processing about
+        // reused anonymous box
+        // so that currentBlockContainer has 2 children which referencing the
+        // same thing.
+        // To prevent this situation, we separate two cases with which returned
+        // pointer is nullptr.
 
-        // TODO: but this behavior seems a bit confusing. So I am thinking of a better design.
-        childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
+        // TODO: but this behavior seems a bit confusing. So I am thinking of a
+        // better design.
+        childFrame =
+            FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
         if (childFrame != nullptr) {
             ctx.currentBlockContainer()->appendChild(childFrame);
             STARFISH_ASSERT(childFrame->parent());
@@ -185,7 +209,8 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
     }
 }
 
-void FrameTableBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableBox::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
 {
     // This method is called by FrameBlockBox::layout() to do table layout.
     // Table starts its own layout algorithm that has minimum interaction with
@@ -229,7 +254,8 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
             c->asFrameTableSectionBox()->calCellWidth(ctx);
-            collectColumnWidths(m_columnWidths, c->asFrameTableSectionBox()->columnWidths());
+            collectColumnWidths(m_columnWidths,
+                                c->asFrameTableSectionBox()->columnWidths());
         }
     }
 
@@ -241,7 +267,8 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
     //    max table width is used
 
     // 2.1 calculate the table width
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
     LayoutUnit tableWidth = 0;
     tableWidth += marginWidth() + borderWidth() + paddingWidth();
     tableWidth += borderSpacing;
@@ -253,7 +280,8 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
     if (tableWidth > parentContentWidth) {
         LayoutUnit availableWidth = parentContentWidth;
         availableWidth -= marginWidth() + borderWidth() + paddingWidth();
-        availableWidth -= borderSpacing + (borderSpacing * m_columnWidths.size());
+        availableWidth -=
+            borderSpacing + (borderSpacing * m_columnWidths.size());
 
         // 2.2 Calculate the ratio of which each column is to be reduced.
         //     The cell width is:
@@ -267,8 +295,10 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
             // FIXME: LayoutUnit has a rounding error bug when division is
             // performed. To workaround, we convert LayoutUnit to double,
             // do calculation, and convert back to LayoutUnit.
-            // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
-            LayoutUnit newCellWidth(availableWidth.toDouble() *
+            // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth /
+            // totalCellWidths);
+            LayoutUnit newCellWidth(
+                availableWidth.toDouble() *
                 (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
 
             if (newCellWidth.round() < col.minCellWidth) {
@@ -281,10 +311,13 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
         for (auto& col : m_columnWidths) {
             if (col.cellWidth != col.minCellWidth) {
                 // To workaround the rounding error in LayoutUnit
-                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
-                LayoutUnit newCellWidth(availableWidth.toDouble() *
+                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth
+                // / totalCellWidths);
+                LayoutUnit newCellWidth(
+                    availableWidth.toDouble() *
                     (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.round());
+                col.cellWidth =
+                    std::max(col.minCellWidth.toInt(), newCellWidth.round());
             }
         }
     }
@@ -299,7 +332,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         if (s->isFrameTableSectionBox()) {
             FrameTableSectionBox* section = s->asFrameTableSectionBox();
             if (section && section->firstChild()) {
-                FrameTableRowBox* row = section->firstChild()->asFrameTableRowBox();
+                FrameTableRowBox* row =
+                    section->firstChild()->asFrameTableRowBox();
                 if (row) {
                     for (Frame* c = row->firstChild(); c; c = c->next()) {
                         FrameTableCellBox* cell = c->asFrameTableCellBox();
@@ -320,7 +354,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
             c->asFrameTableSectionBox()->calCellWidth(ctx);
-            collectColumnWidths(m_columnWidths, c->asFrameTableSectionBox()->columnWidths());
+            collectColumnWidths(m_columnWidths,
+                                c->asFrameTableSectionBox()->columnWidths());
         }
     }
 
@@ -331,7 +366,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     // https://www.w3.org/TR/2016/WD-css-tables-3-20161025/#width-distribution
     // except when table width is given, we simple use the width (following how
     // blink works)
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
     LayoutUnit maxTableWidth = 0;
     LayoutUnit minTableWidth = 0;
     maxTableWidth += marginWidth() + borderWidth() + paddingWidth();
@@ -353,7 +389,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         hasTableWidth = true;
         if (style()->width().isFixed()) {
             // Following Blinks behaviour here
-            // tableWidth = std::max(minTableWidth, LayoutUnit::fromPixel(style()->width().fixed()));
+            // tableWidth = std::max(minTableWidth,
+            // LayoutUnit::fromPixel(style()->width().fixed()));
             tableWidth = LayoutUnit::fromPixel(style()->width().fixed());
         } else if (style()->width().isPercent()) {
             // Not implemented yet
@@ -378,7 +415,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         // to all cells with "width: auto". Else, the remaining spaces are
         // distributed to among these cells.
         //
-        // When tableWidth is not given, reduce the cells that have "width: auto".
+        // When tableWidth is not given, reduce the cells that have "width:
+        // auto".
         // Each width of these cells is reduced in proportion to the ratio of
         // the width of the cell over the total table width.
         // Cells with "width: auto" are not affected here, but adjusted later
@@ -396,7 +434,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
 
                 if (!isCellWidthAuto(i)) {
                     STARFISH_ASSERT(i < m_cellsInTheFirstRow.size());
-                    totalFixedCellWidths += m_cellsInTheFirstRow[i]->style()->width().fixed();
+                    totalFixedCellWidths +=
+                        m_cellsInTheFirstRow[i]->style()->width().fixed();
                 } else {
                     cellsWithAutoWidths.push_back(&col);
                 }
@@ -412,8 +451,10 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 // Distribute available spaces among cells width "width: auto"
                 LayoutUnit availableWidth = tableWidth - totalFixedCellWidths;
                 availableWidth -= borderWidth() + paddingWidth();
-                availableWidth -= (borderSpacing * m_columnWidths.size()) - borderSpacing;
-                LayoutUnit newCellWidth(availableWidth.toDouble() / cellsWithAutoWidths.size());
+                availableWidth -=
+                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                LayoutUnit newCellWidth(availableWidth.toDouble() /
+                                        cellsWithAutoWidths.size());
 
                 for (auto& c : cellsWithAutoWidths) {
                     ColSizeStruct& col = *c;
@@ -423,7 +464,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         } else {
             LayoutUnit availableWidth = tableWidth;
             availableWidth -= marginWidth() + borderWidth() + paddingWidth();
-            availableWidth -= borderSpacing + (borderSpacing * m_columnWidths.size());
+            availableWidth -=
+                borderSpacing + (borderSpacing * m_columnWidths.size());
 
             // 3.1.1 Calculate the ratio of which each column is to be reduced.
             //     The cell width is:
@@ -441,7 +483,8 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
             std::vector<ColSizeStruct*> columnsToAdjustWidths;
             for (unsigned i = 0; i < m_columnWidths.size(); i++) {
                 ColSizeStruct& col = m_columnWidths[i];
-                LayoutUnit newCellWidth(availableWidth.toDouble() *
+                LayoutUnit newCellWidth(
+                    availableWidth.toDouble() *
                     (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
 
                 if (!isCellWidthAuto(i)) {
@@ -469,10 +512,13 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
             for (auto& c : columnsToAdjustWidths) {
                 ColSizeStruct& col = *c;
                 // To workaround the rounding error in LayoutUnit
-                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
-                LayoutUnit newCellWidth(availableWidth.toDouble() *
+                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth
+                // / totalCellWidths);
+                LayoutUnit newCellWidth(
+                    availableWidth.toDouble() *
                     (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.round());
+                col.cellWidth =
+                    std::max(col.minCellWidth.toInt(), newCellWidth.round());
 
                 if (col.cellWidth == col.minCellWidth) {
                     columnsAdjustedToMinWidths.push_back(&col);
@@ -483,7 +529,9 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
             // "width: auto" are reduced to their min preferred widths and
             // the columns other than "width: auto" still have rooms to reduce.
             // The spec does not say anything about this behaviour.
-            if (columnsWithUserDefinedWidths.size() + columnsAdjustedToMinWidths.size() == m_columnWidths.size()) {
+            if (columnsWithUserDefinedWidths.size() +
+                    columnsAdjustedToMinWidths.size() ==
+                m_columnWidths.size()) {
                 for (auto& col : m_columnWidths) {
                     availableWidth += col.cellWidth;
                     totalCellWidths += col.cellWidth;
@@ -491,8 +539,10 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 for (auto& c : columnsWithUserDefinedWidths) {
                     ColSizeStruct& col = *c;
                     LayoutUnit newCellWidth(availableWidth.toDouble() *
-                        (col.cellWidth.toDouble() / totalCellWidths.toDouble()));
-                    col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.round());
+                                            (col.cellWidth.toDouble() /
+                                             totalCellWidths.toDouble()));
+                    col.cellWidth = std::max(col.minCellWidth.toInt(),
+                                             newCellWidth.round());
                 }
             }
         }
@@ -510,7 +560,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
             c->asFrameTableSectionBox()->layoutWidth(ctx);
             maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
-            c->asFrameTableCaptionBox()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+            c->asFrameTableCaptionBox()->layout(
+                ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else if (c->isFrameTableColBox()) {
             // The FrameTableColBox must not be laid out.
         } else {
@@ -538,7 +589,8 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {
-        if (caption->style()->captionSide() == CaptionSideValue::TopCaptionSideValue) {
+        if (caption->style()->captionSide() ==
+            CaptionSideValue::TopCaptionSideValue) {
             caption->setWidth(paddingLeft() + width() + paddingRight());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
@@ -592,7 +644,8 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
-        if (caption->style()->captionSide() == CaptionSideValue::BottomCaptionSideValue) {
+        if (caption->style()->captionSide() ==
+            CaptionSideValue::BottomCaptionSideValue) {
             caption->setWidth(paddingLeft() + width() + paddingRight());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
@@ -604,7 +657,9 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
-void FrameTableBox::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths)
+void FrameTableBox::collectColumnWidths(
+    GCVector<ColSizeStruct>& columnWidthsSoFar,
+    GCVector<ColSizeStruct>& columnWidths)
 {
     // FIXME: absolute at this stage
     // Need to consider absolute and logical columns
@@ -618,8 +673,10 @@ void FrameTableBox::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoF
                 columnWidthsSoFar.push_back(ColSizeStruct());
             }
             ColSizeStruct& colSoFar = columnWidthsSoFar[i];
-            colSoFar.maxCellWidth = std::max(colSoFar.maxCellWidth, col.maxCellWidth);
-            colSoFar.minCellWidth = std::max(colSoFar.minCellWidth, col.minCellWidth);
+            colSoFar.maxCellWidth =
+                std::max(colSoFar.maxCellWidth, col.maxCellWidth);
+            colSoFar.minCellWidth =
+                std::max(colSoFar.minCellWidth, col.minCellWidth);
             colSoFar.cellWidth = colSoFar.maxCellWidth;
         }
     }
@@ -628,7 +685,8 @@ void FrameTableBox::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoF
 bool FrameTableBox::isCellWidthAuto(unsigned i)
 {
     if (i < m_cellsInTheFirstRow.size()) {
-        return m_cellsInTheFirstRow[i]->style()->width().isAuto()? true: false;
+        return m_cellsInTheFirstRow[i]->style()->width().isAuto() ? true
+                                                                  : false;
     } else {
         return true;
     }
@@ -638,8 +696,10 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
 void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     // Fill in the table with background color
-    LayoutRect bgRect(m_tableRect.x() + borderLeft(), m_tableRect.y() + borderTop(),
-        m_tableRect.width() - borderWidth(), m_tableRect.height() - borderHeight());
+    LayoutRect bgRect(m_tableRect.x() + borderLeft(),
+                      m_tableRect.y() + borderTop(),
+                      m_tableRect.width() - borderWidth(),
+                      m_tableRect.height() - borderHeight());
     paintBackground(canvas, style(), bgRect, m_tableRect, false);
 
     paintBorders(canvas, m_tableRect);
@@ -655,7 +715,8 @@ FrameTableSectionBox* FrameTableBox::firstNonEmptySectionBoxInVisualOrder()
     }
 
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c != m_tfoot && c->isFrameTableSectionBox() && c->asFrameTableSectionBox()->grid().size()) {
+        if (c != m_tfoot && c->isFrameTableSectionBox() &&
+            c->asFrameTableSectionBox()->grid().size()) {
             return c->asFrameTableSectionBox();
         }
     }
@@ -688,7 +749,8 @@ FrameTableSectionBox* FrameTableBox::firstNonEmptySectionBoxInVisualOrder()
 
 LayoutUnit FrameTableBox::calBaseline()
 {
-    STARFISH_ASSERT(style()->display() == DisplayValue::InlineTableDisplayValue);
+    STARFISH_ASSERT(style()->display() ==
+                    DisplayValue::InlineTableDisplayValue);
 
     FrameTableSectionBox* firstSection = firstNonEmptySectionBoxInVisualOrder();
     if (!firstSection) {
@@ -699,7 +761,7 @@ LayoutUnit FrameTableBox::calBaseline()
     LineBox* tallestLineBox = nullptr;
     LayoutUnit maxLineBoxHeight = 0;
 
-    for (size_t i = 0 ; i < firstRS.cells.size(); ++i) {
+    for (size_t i = 0; i < firstRS.cells.size(); ++i) {
         FrameTableCellBox* c = firstRS.cells[i].cell;
         LineBox* firstLineBox = nullptr;
 
@@ -722,13 +784,15 @@ LayoutUnit FrameTableBox::calBaseline()
 
     if (tallestLineBox) {
         ySoFar += firstRS.tableRow->y() + firstRS.cells[0].cell->y();
-        if (firstRS.tableRow->style()->verticalAlign() == VerticalAlignValue::BaselineVAlignValue) {
+        if (firstRS.tableRow->style()->verticalAlign() ==
+            VerticalAlignValue::BaselineVAlignValue) {
             return ySoFar + firstRS.tableRow->baseline();
         }
         return ySoFar + tallestLineBox->y() + tallestLineBox->height();
     } else if (firstRS.cells.size()) {
         // Empty cell
-        return ySoFar + firstRS.tableRow->y() + firstRS.cells[0].cell->y() + (firstRS.cells[0].cell->height().toDouble() / 2);
+        return ySoFar + firstRS.tableRow->y() + firstRS.cells[0].cell->y() +
+               (firstRS.cells[0].cell->height().toDouble() / 2);
     }
     // Empty first row
     return ySoFar;
@@ -762,5 +826,4 @@ FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
     }
     return nullptr;
 }
-
 }

@@ -35,9 +35,7 @@ public:
 
 protected:
     void paintBorders(Canvas* canvas, LayoutRect& rect);
-
 };
-
 }
 
 #endif

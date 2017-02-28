@@ -27,8 +27,7 @@ namespace StarFish {
 class BlockFormattingContextBlock {
 public:
     BlockFormattingContextBlock(Frame* frm, LayoutContext& ctx)
-        : m_ctx(ctx)
-        , m_needs(false)
+        : m_ctx(ctx), m_needs(false)
     {
         if (frm->isEstablishesBlockFormattingContext()) {
             m_needs = true;
@@ -37,15 +36,17 @@ public:
     }
     ~BlockFormattingContextBlock()
     {
-        if (m_needs)
+        if (m_needs) {
             m_ctx.removeBlockFormattingContext();
+        }
     }
 
     LayoutContext& m_ctx;
     bool m_needs;
 };
 
-void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameBlockBox::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
 {
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
 
@@ -57,36 +58,47 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             computeBorderMarginPadding(parentContentWidth);
 
             // width of containing block =
-            //     'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+            //     'margin-left' + 'border-left-width' + 'padding-left' +
+            //     'width' +
             //     'padding-right' + 'border-right-width' + 'margin-right'
             ComputedStyle* style = Frame::style();
             if (style->width().isAuto()) {
                 if (m_flags.m_shouldComputePreferredWidth) {
-                    LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(style);
+                    LayoutUnit mbp =
+                        PreferredWidthContext::computeMinimumWidthDueToMBP(
+                            style);
                     PreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
                     computePreferredWidth(p);
-                    applyMinMaxWidthIfNeeds(p.preferredWidth(), parentContentWidth);
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(),
+                                            parentContentWidth);
                 } else {
                     LayoutUnit remainWidth = parentContentWidth;
                     remainWidth -= marginWidth();
                     remainWidth -= borderWidth();
                     remainWidth -= paddingWidth();
-                    if (remainWidth < 0)
+                    if (remainWidth < 0) {
                         remainWidth = 0;
+                    }
                     applyMinMaxWidthIfNeeds(remainWidth, parentContentWidth);
                 }
             } else if (style->width().isFixed()) {
-                if (ctx.blockContainer(this)->style()->width().isFixed())
-                    applyMinMaxWidthIfNeeds(style->width().fixed(), parentContentWidth);
-                else
-                    applyMinMaxWidthIfNeeds(style->width().fixed(), style->width().fixed());
+                if (ctx.blockContainer(this)->style()->width().isFixed()) {
+                    applyMinMaxWidthIfNeeds(style->width().fixed(),
+                                            parentContentWidth);
+                } else {
+                    applyMinMaxWidthIfNeeds(style->width().fixed(),
+                                            style->width().fixed());
+                }
             } else {
                 STARFISH_ASSERT(style->width().isPercent());
-                applyMinMaxWidthIfNeeds(parentContentWidth * style->width().percent(), parentContentWidth);
+                applyMinMaxWidthIfNeeds(parentContentWidth *
+                                            style->width().percent(),
+                                        parentContentWidth);
             }
 
             if (style->display() == BlockDisplayValue) {
-                if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
+                if (style->marginLeft().isAuto() &&
+                    style->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -95,7 +107,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         setMarginLeft(remain / 2);
                         setMarginRight(remain / 2);
                     }
-                } else if (style->marginLeft().isAuto() && !style->marginRight().isAuto()) {
+                } else if (style->marginLeft().isAuto() &&
+                           !style->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -104,7 +117,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (remain > 0) {
                         setMarginLeft(remain);
                     }
-                } else if (!style->marginLeft().isAuto() && style->marginRight().isAuto()) {
+                } else if (!style->marginLeft().isAuto() &&
+                           style->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -117,13 +131,16 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             } else {
                 // NOTE: only "display: block" is supported
             }
-        } else if (style() && style()->position() == PositionValue::AbsolutePositionValue) {
+        } else if (style() &&
+                   style()->position() ==
+                       PositionValue::AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             computeBorderMarginPadding(cb->contentWidth());
 
             STARFISH_ASSERT(!isAnonymous());
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
-            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
+            DirectionValue direction =
+                ctx.blockContainer(this)->style()->direction();
 
             LayoutLocation l1, l2;
             if (cb->isAncestorOf(parent)) {
@@ -135,27 +152,27 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
 
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
-            auto setAbsX = [&](LayoutUnit x)
-            {
-                setX(x - absX);
-            };
-
+            auto setAbsX = [&](LayoutUnit x) { setX(x - absX); };
 
             // 10.3.7 Absolutely positioned, non-replaced elements
-            // The constraint that determines the used values for these elements is:
+            // The constraint that determines the used values for these elements
+            // is:
             // width of containing block =
-            //     'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
-            //     'padding-right' + 'border-right-width' + 'margin-right' + 'right' =
+            //     'left' + 'margin-left' + 'border-left-width' + 'padding-left'
+            //     + 'width' +
+            //     'padding-right' + 'border-right-width' + 'margin-right' +
+            //     'right' =
 
             // Then, if the 'direction' property of the element establishing
             // the static-position containing block is 'ltr' set 'left' to
             // the static position and apply rule number three below;
-            // otherwise, set 'right' to the static position and apply rule number one below.
+            // otherwise, set 'right' to the static position and apply rule
+            // number one below.
 
-            auto applyMargin = [&](bool isOpposite = false)
-            {
-                if ((style()->direction() == LtrDirectionValue && !isOpposite)
-                    || (style()->direction() == RtlDirectionValue && isOpposite)) {
+            auto applyMargin = [&](bool isOpposite = false) {
+                if ((style()->direction() == LtrDirectionValue &&
+                     !isOpposite) ||
+                    (style()->direction() == RtlDirectionValue && isOpposite)) {
                     moveX(marginLeft());
                 } else {
                     moveX(-marginRight());
@@ -168,41 +185,56 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length right = style()->right();
             Length width = style()->width();
 
-            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+            LayoutUnit containgBlockContentWidth =
+                cb->contentWidth() + cb->paddingWidth();
 
-            auto computeContentWidth = [&](bool shouldUseParentWidthForComputePreferredWidthFromOutside = false, LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0)
-            {
+            auto computeContentWidth = [&](
+                bool shouldUseParentWidthForComputePreferredWidthFromOutside =
+                    false,
+                LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0) {
                 if (width.isAuto()) {
                     LayoutUnit parentWidthForComputePreferredWidth;
                     if (shouldUseParentWidthForComputePreferredWidthFromOutside) {
-                        parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidthFromOutside;
+                        parentWidthForComputePreferredWidth =
+                            parentWidthForComputePreferredWidthFromOutside;
                     } else {
-                        parentWidthForComputePreferredWidth = containgBlockContentWidth;
+                        parentWidthForComputePreferredWidth =
+                            containgBlockContentWidth;
                         if (direction == LtrDirectionValue) {
-                            parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth - absX - x();
+                            parentWidthForComputePreferredWidth =
+                                parentWidthForComputePreferredWidth - absX -
+                                x();
                         } else {
                             parentWidthForComputePreferredWidth = x() + absX;
                         }
                     }
 
-                    parentWidthForComputePreferredWidth -= marginWidth() + borderWidth() + paddingWidth();
+                    parentWidthForComputePreferredWidth -=
+                        marginWidth() + borderWidth() + paddingWidth();
 
-                    if (parentWidthForComputePreferredWidth < 0)
+                    if (parentWidthForComputePreferredWidth < 0) {
                         parentWidthForComputePreferredWidth = 0;
+                    }
 
-                    PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
+                    PreferredWidthContext p(
+                        ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    applyMinMaxWidthIfNeeds(p.preferredWidth(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(),
+                                            containgBlockContentWidth);
                 } else if (width.isFixed()) {
-                    applyMinMaxWidthIfNeeds(width.fixed(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(width.fixed(),
+                                            containgBlockContentWidth);
                 } else if (width.isPercent()) {
-                    applyMinMaxWidthIfNeeds(containgBlockContentWidth * width.percent(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(containgBlockContentWidth *
+                                                width.percent(),
+                                            containgBlockContentWidth);
                 }
             };
 
             if (left.isAuto() && width.isAuto() && right.isAuto()) {
                 // If all three of 'left', 'width', and 'right' are 'auto':
-                // First set any 'auto' values for 'margin-left' and 'margin-right' to 0
+                // First set any 'auto' values for 'margin-left' and
+                // 'margin-right' to 0
                 if (marginLeft.isAuto()) {
                     setMarginLeft(0);
                 }
@@ -215,25 +247,38 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             } else if (!left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // If none of the three is 'auto':
                 // If both 'margin-left' and 'margin-right' are 'auto',
-                // solve the equation under the extra constraint that the two margins get equal values,
-                // unless this would make them negative, in which case when direction of the containing block is 'ltr' ('rtl'),
-                // set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left').
-                // If one of 'margin-left' or 'margin-right' is 'auto', solve the equation for that value.
-                // If the values are over-constrained, ignore the value for 'left'
-                // (in case the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
+                // solve the equation under the extra constraint that the two
+                // margins get equal values,
+                // unless this would make them negative, in which case when
+                // direction of the containing block is 'ltr' ('rtl'),
+                // set 'margin-left' ('margin-right') to zero and solve for
+                // 'margin-right' ('margin-left').
+                // If one of 'margin-left' or 'margin-right' is 'auto', solve
+                // the equation for that value.
+                // If the values are over-constrained, ignore the value for
+                // 'left'
+                // (in case the 'direction' property of the containing block is
+                // 'rtl') or 'right' (in case 'direction' is 'ltr') and solve
+                // for that value.
 
                 if (style()->direction() == DirectionValue::LtrDirectionValue) {
-                    LayoutUnit computedLeft = left.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit computedLeft =
+                        left.specifiedValue(containgBlockContentWidth);
                     setAbsX(computedLeft);
                 } else {
-                    LayoutUnit computedRight = right.specifiedValue(containgBlockContentWidth);
-                    setAbsX(containgBlockContentWidth - width.specifiedValue(containgBlockContentWidth) - computedRight);
+                    LayoutUnit computedRight =
+                        right.specifiedValue(containgBlockContentWidth);
+                    setAbsX(containgBlockContentWidth -
+                            width.specifiedValue(containgBlockContentWidth) -
+                            computedRight);
                 }
 
                 applyMargin();
                 computeContentWidth();
             } else {
-                // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
+                // Otherwise, set 'auto' values for 'margin-left' and
+                // 'margin-right' to 0, and pick the one of the following six
+                // rules that applies.
                 if (marginLeft.isAuto()) {
                     setMarginLeft(0);
                 }
@@ -241,9 +286,15 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     setMarginRight(0);
                 }
                 if (left.isAuto() && width.isAuto() && !right.isAuto()) {
-                    // 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
-                    computeContentWidth(true, containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth));
-                    setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
+                    // 'left' and 'width' are 'auto' and 'right' is not 'auto',
+                    // then the width is shrink-to-fit. Then solve for 'left'
+                    computeContentWidth(
+                        true,
+                        containgBlockContentWidth -
+                            right.specifiedValue(containgBlockContentWidth));
+                    setAbsX(containgBlockContentWidth -
+                            right.specifiedValue(containgBlockContentWidth) -
+                            this->width());
                     if (direction == LtrDirectionValue) {
                         applyMargin(true);
                     } else {
@@ -251,33 +302,52 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     }
                 } else if (left.isAuto() && right.isAuto() && !width.isAuto()) {
                     // 'left' and 'right' are 'auto' and 'width' is not 'auto',
-                    // then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position,
-                    // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
+                    // then if the 'direction' property of the element
+                    // establishing the static-position containing block is
+                    // 'ltr' set 'left' to the static position,
+                    // otherwise set 'right' to the static position. Then solve
+                    // for 'left' (if 'direction is 'rtl') or 'right' (if
+                    // 'direction' is 'ltr').
                     applyMargin();
                     computeContentWidth();
                 } else if (width.isAuto() && right.isAuto() && !left.isAuto()) {
-                    // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
+                    // 'width' and 'right' are 'auto' and 'left' is not 'auto',
+                    // then the width is shrink-to-fit . Then solve for 'right'
                     if (direction == LtrDirectionValue) {
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                         computeContentWidth();
                         applyMargin();
                     } else {
-                        computeContentWidth(true, containgBlockContentWidth - left.specifiedValue(containgBlockContentWidth));
+                        computeContentWidth(
+                            true,
+                            containgBlockContentWidth -
+                                left.specifiedValue(containgBlockContentWidth));
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                         applyMargin(true);
                     }
-                } else if (left.isAuto() && !width.isAuto() && !right.isAuto()) {
-                    // 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
+                } else if (left.isAuto() && !width.isAuto() &&
+                           !right.isAuto()) {
+                    // 'left' is 'auto', 'width' and 'right' are not 'auto',
+                    // then solve for 'left'
                     applyMargin();
                     computeContentWidth();
-                    setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
-                } else if (width.isAuto() && !left.isAuto() && !right.isAuto()) {
-                    // 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-                    LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
-                    LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
-                    LayoutUnit w = containgBlockContentWidth  - l - r - marginWidth() - paddingWidth() - borderWidth();
-                    if (w < 0)
+                    setAbsX(containgBlockContentWidth -
+                            right.specifiedValue(containgBlockContentWidth) -
+                            this->width());
+                } else if (width.isAuto() && !left.isAuto() &&
+                           !right.isAuto()) {
+                    // 'width' is 'auto', 'left' and 'right' are not 'auto',
+                    // then solve for 'width'
+                    LayoutUnit l =
+                        left.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit r =
+                        right.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit w = containgBlockContentWidth - l - r -
+                                   marginWidth() - paddingWidth() -
+                                   borderWidth();
+                    if (w < 0) {
                         w = 0;
+                    }
                     width = Length(Length::Fixed, w);
                     setAbsX(l);
                     if (direction == LtrDirectionValue) {
@@ -287,21 +357,27 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     }
                     computeContentWidth();
                 } else {
-                    // 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
-                    STARFISH_ASSERT(right.isAuto() && !left.isAuto() && !width.isAuto());
+                    // 'right' is 'auto', 'left' and 'width' are not 'auto',
+                    // then solve for 'right'
+                    STARFISH_ASSERT(right.isAuto() && !left.isAuto() &&
+                                    !width.isAuto());
                     if (direction == LtrDirectionValue) {
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                         applyMargin();
                         computeContentWidth();
                     } else {
                         applyMargin();
-                        computeContentWidth(true, containgBlockContentWidth - left.specifiedValue(containgBlockContentWidth));
+                        computeContentWidth(
+                            true,
+                            containgBlockContentWidth -
+                                left.specifiedValue(containgBlockContentWidth));
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                     }
                 }
             }
 
-            if (left.isAuto() && right.isAuto() && direction == DirectionValue::RtlDirectionValue) {
+            if (left.isAuto() && right.isAuto() &&
+                direction == DirectionValue::RtlDirectionValue) {
                 moveX(-this->width());
             }
         } else {
@@ -309,7 +385,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             computeBorderMarginPadding(cb->contentWidth());
 
-            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
+            DirectionValue direction =
+                ctx.blockContainer(this)->style()->direction();
 
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
@@ -317,21 +394,28 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             LayoutUnit containgBlockContentWidth = cb->contentWidth();
 
-            auto computeContentWidth = [&]()
-            {
+            auto computeContentWidth = [&]() {
                 if (width.isAuto()) {
-                    LayoutUnit parentWidthForComputePreferredWidth = containgBlockContentWidth - marginWidth() - borderWidth() - paddingWidth();
+                    LayoutUnit parentWidthForComputePreferredWidth =
+                        containgBlockContentWidth - marginWidth() -
+                        borderWidth() - paddingWidth();
 
-                    if (parentWidthForComputePreferredWidth < 0)
+                    if (parentWidthForComputePreferredWidth < 0) {
                         parentWidthForComputePreferredWidth = 0;
+                    }
 
-                    PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
+                    PreferredWidthContext p(
+                        ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    applyMinMaxWidthIfNeeds(p.preferredWidth(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(),
+                                            containgBlockContentWidth);
                 } else if (width.isFixed()) {
-                    applyMinMaxWidthIfNeeds(width.fixed(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(width.fixed(),
+                                            containgBlockContentWidth);
                 } else if (width.isPercent()) {
-                    applyMinMaxWidthIfNeeds(containgBlockContentWidth * width.percent(), containgBlockContentWidth);
+                    applyMinMaxWidthIfNeeds(containgBlockContentWidth *
+                                                width.percent(),
+                                            containgBlockContentWidth);
                 }
             };
 
@@ -359,10 +443,12 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         contentHeight = layoutInline(ctx);
     }
 
-    // Now the intrinsic height of the object is known because the children are placed
+    // Now the intrinsic height of the object is known because the children are
+    // placed
 
     // Determine the final height
-    if (style() && style()->position() == PositionValue::AbsolutePositionValue) {
+    if (style() &&
+        style()->position() == PositionValue::AbsolutePositionValue) {
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
         FrameBox* parent = Frame::layoutParent()->asFrameBox();
 
@@ -376,10 +462,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
 
         LayoutUnit absY = absLoc.y() - cb->borderTop();
-        auto setAbsY = [&](LayoutUnit y)
-        {
-            setY(y - absY);
-        };
+        auto setAbsY = [&](LayoutUnit y) { setY(y - absY); };
         LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
 
         Length marginTop = style()->marginTop();
@@ -390,34 +473,56 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
         // 10.6.4 Absolutely positioned, non-replaced elements
 
-        // For absolutely positioned elements, the used values of the vertical dimensions must satisfy this constraint:
-        // 'top' + 'margin-top' + 'border-top-width' + 'padding-top' + 'height' + 'padding-bottom' + 'border-bottom-width' + 'margin-bottom' + 'bottom' = height of containing block
+        // For absolutely positioned elements, the used values of the vertical
+        // dimensions must satisfy this constraint:
+        // 'top' + 'margin-top' + 'border-top-width' + 'padding-top' + 'height'
+        // + 'padding-bottom' + 'border-bottom-width' + 'margin-bottom' +
+        // 'bottom' = height of containing block
 
         if (top.isAuto() && height.isAuto() && bottom.isAuto()) {
-            // If all three of 'top', 'height', and 'bottom' are auto, set 'top' to the static position and apply rule number three below.
+            // If all three of 'top', 'height', and 'bottom' are auto, set 'top'
+            // to the static position and apply rule number three below.
         } else if (!top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
-            // If none of the three are 'auto': If both 'margin-top' and 'margin-bottom' are 'auto',
-            // solve the equation under the extra constraint that the two margins get equal values.
-            // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value.
-            // If the values are over-constrained, ignore the value for 'bottom' and solve for that value.
+            // If none of the three are 'auto': If both 'margin-top' and
+            // 'margin-bottom' are 'auto',
+            // solve the equation under the extra constraint that the two
+            // margins get equal values.
+            // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the
+            // equation for that value.
+            // If the values are over-constrained, ignore the value for 'bottom'
+            // and solve for that value.
             setAbsY(top.specifiedValue(parentHeight));
         } else if (top.isAuto() && height.isAuto() && !bottom.isAuto()) {
-            // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then the height is based on the content per 10.6.7
-            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
+            // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then
+            // the height is based on the content per 10.6.7
+            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
+            // solve for 'top'
             applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
-            setAbsY(parentHeight - asFrameBox()->contentHeight() - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
+            setAbsY(parentHeight - asFrameBox()->contentHeight() -
+                    paddingHeight() - borderHeight() -
+                    bottom.specifiedValue(parentHeight));
         } else if (top.isAuto() && bottom.isAuto() && !height.isAuto()) {
-            // 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then set 'top' to the static position
-            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
+            // 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then
+            // set 'top' to the static position
+            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
+            // solve for 'bottom'
         } else if (height.isAuto() && bottom.isAuto() && !top.isAuto()) {
-            // 'height' and 'bottom' are 'auto' and 'top' is not 'auto', then the height is based on the content per 10.6.7,
-            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
+            // 'height' and 'bottom' are 'auto' and 'top' is not 'auto', then
+            // the height is based on the content per 10.6.7,
+            // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
+            // solve for 'bottom'
             setAbsY(top.specifiedValue(parentHeight));
         } else if (top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
-            // 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
-            setAbsY(parentHeight - height.specifiedValue(parentHeight) - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
+            // 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set
+            // 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
+            // solve for 'top'
+            setAbsY(parentHeight - height.specifiedValue(parentHeight) -
+                    paddingHeight() - borderHeight() -
+                    bottom.specifiedValue(parentHeight));
         } else if (height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
-            // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then 'auto' values for 'margin-top' and 'margin-bottom' are set to 0 and solve for 'height'
+            // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then
+            // 'auto' values for 'margin-top' and 'margin-bottom' are set to 0
+            // and solve for 'height'
             LayoutUnit t = top.specifiedValue(parentHeight);
             LayoutUnit b = bottom.specifiedValue(parentHeight);
             LayoutUnit h = -t - b + parentHeight;
@@ -425,15 +530,19 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             height = Length(Length::Fixed, h);
             setAbsY(t);
         } else {
-            // 'bottom' is 'auto', 'top' and 'height' are not 'auto', then set 'auto' values for 'margin-top' and 'margin-bottom' to 0 and solve for 'bottom'
-            STARFISH_ASSERT(bottom.isAuto() && !top.isAuto() && !height.isAuto());
+            // 'bottom' is 'auto', 'top' and 'height' are not 'auto', then set
+            // 'auto' values for 'margin-top' and 'margin-bottom' to 0 and solve
+            // for 'bottom'
+            STARFISH_ASSERT(bottom.isAuto() && !top.isAuto() &&
+                            !height.isAuto());
             setAbsY(top.specifiedValue(parentHeight));
         }
 
         if (height.isAuto()) {
             applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
         } else {
-            applyMinMaxHeightIfNeeds(height.specifiedValue(parentHeight), parentHeight);
+            applyMinMaxHeightIfNeeds(height.specifiedValue(parentHeight),
+                                     parentHeight);
         }
 
         if (!marginTop.isAuto() && !marginBottom.isAuto()) {
@@ -450,100 +559,109 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         LayoutUnit newHeight;
         if (style()->height().isAuto()) {
             if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(contentHeight, ctx.parentFixedHeight(this));
+                applyMinMaxHeightIfNeeds(contentHeight,
+                                         ctx.parentFixedHeight(this));
             } else {
                 applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
             }
         } else if (style()->height().isFixed()) {
             if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(style()->height().fixed(), ctx.parentFixedHeight(this));
+                applyMinMaxHeightIfNeeds(style()->height().fixed(),
+                                         ctx.parentFixedHeight(this));
             } else {
-                applyMinMaxHeightIfNeeds(style()->height().fixed(), contentHeight, false);
+                applyMinMaxHeightIfNeeds(style()->height().fixed(),
+                                         contentHeight, false);
             }
         } else {
             if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(style()->height().percent() * ctx.parentFixedHeight(this), ctx.parentFixedHeight(this));
+                applyMinMaxHeightIfNeeds(style()->height().percent() *
+                                             ctx.parentFixedHeight(this),
+                                         ctx.parentFixedHeight(this));
             } else {
                 applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
             }
         }
     }
 
-    if (style()->position() == PositionValue::RelativePositionValue)
+    if (style()->position() == PositionValue::RelativePositionValue) {
         ctx.registerRelativePositionedBox(this, true);
+    }
 
     // layout absolute positioned blocks
-    ctx.layoutRegisteredAbsolutePositionedBoxes(this, [&](const std::vector<FrameBox*>& boxes) {
-        for (size_t i = 0; i < boxes.size(); i ++) {
-            FrameBox* f = boxes[i];
-            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
-        }
-    });
+    ctx.layoutRegisteredAbsolutePositionedBoxes(
+        this, [&](const std::vector<FrameBox*>& boxes) {
+            for (size_t i = 0; i < boxes.size(); i++) {
+                FrameBox* f = boxes[i];
+                f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            }
+        });
 
-    auto applyRelativePosition = [&](FrameBox* f, Length left, Length right, Length top, Length bottom, LayoutUnit parentWidth, LayoutUnit parentHeight)
-    {
-        LayoutUnit mX = 0;
-        LayoutUnit mY = 0;
-        // left, right
-        if (!left.isAuto() && !right.isAuto()) {
-            if (f->style()->direction() == LtrDirectionValue) {
+    auto applyRelativePosition =
+        [&](FrameBox* f, Length left, Length right, Length top, Length bottom,
+            LayoutUnit parentWidth, LayoutUnit parentHeight) {
+            LayoutUnit mX = 0;
+            LayoutUnit mY = 0;
+            // left, right
+            if (!left.isAuto() && !right.isAuto()) {
+                if (f->style()->direction() == LtrDirectionValue) {
+                    mX = left.specifiedValue(parentWidth);
+                } else {
+                    mX = -right.specifiedValue(parentWidth);
+                }
+            } else if (!left.isAuto() && right.isAuto()) {
                 mX = left.specifiedValue(parentWidth);
-            } else {
+            } else if (left.isAuto() && !right.isAuto()) {
                 mX = -right.specifiedValue(parentWidth);
             }
-        } else if (!left.isAuto() && right.isAuto()) {
-            mX = left.specifiedValue(parentWidth);
-        } else if (left.isAuto() && !right.isAuto()) {
-            mX = -right.specifiedValue(parentWidth);
-        }
 
-        // NOTE //
-        // In latest css spec, relative position is decided after
-        // the size of containing block is fixed with recursive calculation,
-        // while the position is decided "before" the containing block's size is fixed in nodewebkit or Chrome.
-        // we can compute percentage of top, bottom offset correctly
-        // but, modern browsers(webkit, blink, gecko..) are not compute position correctly yet
-        // we change implementations follow modern browsers
+            // NOTE //
+            // In latest css spec, relative position is decided after
+            // the size of containing block is fixed with recursive calculation,
+            // while the position is decided "before" the containing block's
+            // size is fixed in nodewebkit or Chrome.
+            // we can compute percentage of top, bottom offset correctly
+            // but, modern browsers(webkit, blink, gecko..) are not compute
+            // position correctly yet
+            // we change implementations follow modern browsers
 
-        // top, bottom
-        /*
-        // original code
-        if (!top.isAuto() && !bottom.isAuto()) {
-            mY = top.specifiedValue(parentHeight);
-        } else if (!top.isAuto() && bottom.isAuto()) {
-            mY = top.specifiedValue(parentHeight);
-        } else if (top.isAuto() && !bottom.isAuto()) {
-            mY = -bottom.specifiedValue(parentHeight);
-        }*/
+            // top, bottom
+            /*
+            // original code
+            if (!top.isAuto() && !bottom.isAuto()) {
+                mY = top.specifiedValue(parentHeight);
+            } else if (!top.isAuto() && bottom.isAuto()) {
+                mY = top.specifiedValue(parentHeight);
+            } else if (top.isAuto() && !bottom.isAuto()) {
+                mY = -bottom.specifiedValue(parentHeight);
+            }*/
 
-        auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit
-        {
-            STARFISH_ASSERT(!l.isAuto());
-            if (l.isFixed()) {
-                return l.fixed();
-            } else {
-                STARFISH_ASSERT(l.isPercent());
-                if (ctx.parentHasFixedHeight(f)) {
-                    return l.specifiedValue(ctx.parentFixedHeight(f));
+            auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit {
+                STARFISH_ASSERT(!l.isAuto());
+                if (l.isFixed()) {
+                    return l.fixed();
+                } else {
+                    STARFISH_ASSERT(l.isPercent());
+                    if (ctx.parentHasFixedHeight(f)) {
+                        return l.specifiedValue(ctx.parentFixedHeight(f));
+                    }
+                    return 0;
                 }
-                return 0;
+            };
+
+            if (!top.isAuto() && !bottom.isAuto()) {
+                mY = computeVerticalPosition(top);
+            } else if (!top.isAuto() && bottom.isAuto()) {
+                mY = computeVerticalPosition(top);
+            } else if (top.isAuto() && !bottom.isAuto()) {
+                mY = -computeVerticalPosition(bottom);
             }
+
+            f->moveX(mX);
+            f->moveY(mY);
         };
 
-        if (!top.isAuto() && !bottom.isAuto()) {
-            mY = computeVerticalPosition(top);
-        } else if (!top.isAuto() && bottom.isAuto()) {
-            mY = computeVerticalPosition(top);
-        } else if (top.isAuto() && !bottom.isAuto()) {
-            mY = -computeVerticalPosition(bottom);
-        }
-
-        f->moveX(mX);
-        f->moveY(mY);
-    };
-
-    auto applyRelativePositionInlineCase = [&](Frame* ref_f, FrameBox* f, LayoutUnit parentWidth)
-    {
+    auto applyRelativePositionInlineCase = [&](Frame* ref_f, FrameBox* f,
+                                               LayoutUnit parentWidth) {
         LayoutUnit mX = 0;
         LayoutUnit mY = 0;
 
@@ -565,8 +683,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             mX = -right.specifiedValue(parentWidth);
         }
 
-        auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit
-        {
+        auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit {
             STARFISH_ASSERT(!l.isAuto());
             if (l.isFixed()) {
                 return l.fixed();
@@ -596,34 +713,43 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     };
 
     // layout relative positioned blocks
-    ctx.layoutRegisteredRelativePositionedBoxes(this, [&](const std::vector<std::pair<FrameBox*, bool> >& boxes) {
-        for (size_t i = 0; i < boxes.size(); i ++) {
-            FrameBox* f = boxes[i].first;
+    ctx.layoutRegisteredRelativePositionedBoxes(
+        this, [&](const std::vector<std::pair<FrameBox*, bool>>& boxes) {
+            for (size_t i = 0; i < boxes.size(); i++) {
+                FrameBox* f = boxes[i].first;
 
-            if (boxes[i].second) {
-                Frame* cb = ctx.containingFrameBlockBox(f);
-                applyRelativePosition(f->asFrameBox(), f->style()->left(), f->style()->right(), f->style()->top(), f->style()->bottom(), cb->asFrameBox()->contentWidth(), cb->asFrameBox()->contentHeight());
-            } else {
-                Node* nd = f->node()->parentElement();
-                while (nd && nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
-                    Frame* cb = ctx.containingBlock(nd->frame());
-                    applyRelativePositionInlineCase(nd->frame(), f->asFrameBox(),
-                        cb->asFrameBox()->contentWidth());
-                    nd = nd->parentElement();
+                if (boxes[i].second) {
+                    Frame* cb = ctx.containingFrameBlockBox(f);
+                    applyRelativePosition(
+                        f->asFrameBox(), f->style()->left(),
+                        f->style()->right(), f->style()->top(),
+                        f->style()->bottom(), cb->asFrameBox()->contentWidth(),
+                        cb->asFrameBox()->contentHeight());
+                } else {
+                    Node* nd = f->node()->parentElement();
+                    while (nd && nd->frame()->isFrameInline() &&
+                           nd->style()->position() == RelativePositionValue) {
+                        Frame* cb = ctx.containingBlock(nd->frame());
+                        applyRelativePositionInlineCase(
+                            nd->frame(), f->asFrameBox(),
+                            cb->asFrameBox()->contentWidth());
+                        nd = nd->parentElement();
+                    }
                 }
             }
-        }
-    });
+        });
 
     if (node() && node()->parentElement()) {
         Node* nd = node()->parentElement();
-        if (nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
+        if (nd->frame()->isFrameInline() &&
+            nd->style()->position() == RelativePositionValue) {
             ctx.registerRelativePositionedBox(this, false);
         }
     }
 }
 
-Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage s)
+Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
+                                          HitTestStage s)
 {
     Frame* result = nullptr;
     if (hasBlockFlow()) {
@@ -632,8 +758,9 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestSta
             LayoutUnit cx = x - child->asFrameBox()->x();
             LayoutUnit cy = y - child->asFrameBox()->y();
             result = child->hitTest(cx, cy, s);
-            if (result)
+            if (result) {
                 return result;
+            }
             child = child->previous();
         }
     } else {
@@ -647,9 +774,10 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestSta
                 FrameBox* childBox = *iter;
                 LayoutUnit cx2 = cx - childBox->x();
                 LayoutUnit cy2 = cy - childBox->y();
-                result = childBox->hitTest(cx2, cy2,  s);
-                if (result)
+                result = childBox->hitTest(cx2, cy2, s);
+                if (result) {
                     return result;
+                }
                 iter++;
             }
             iterL++;
@@ -671,8 +799,9 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
                 result = hitTestChildrenWith(x, y, s);
-                if (result)
+                if (result) {
                     return result;
+                }
                 s = (HitTestStage)(s + 1);
             }
             return FrameBox::hitTest(x, y, stage);
@@ -682,8 +811,9 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
                 result = hitTestChildrenWith(x, y, s);
-                if (result)
+                if (result) {
                     return result;
+                }
                 s = (HitTestStage)(s + 1);
             }
             return FrameBox::hitTest(x, y, stage);
@@ -693,8 +823,9 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
                 result = hitTestChildrenWith(x, y, s);
-                if (result)
+                if (result) {
                     return result;
+                }
                 s = (HitTestStage)(s + 1);
             }
             return FrameBox::hitTest(x, y, stage);
@@ -708,8 +839,9 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
                     result = child->hitTest(cx, cy, stage);
-                    if (result)
+                    if (result) {
                         return result;
+                    }
                     child = child->previous();
                 }
 
@@ -747,7 +879,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Rect(
+                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                    contentWidth(), contentHeight() + paddingBottom()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -757,11 +891,15 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             }
             ctx.m_paintingStage = PaintingPositionedElements;
         }
-    } else if ((style()->display() == InlineBlockDisplayValue) || (style()->display() == InlineTableDisplayValue)) {
-        if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineBlock) {
+    } else if ((style()->display() == InlineBlockDisplayValue) ||
+               (style()->display() == InlineTableDisplayValue)) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline &&
+            ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Rect(
+                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                    contentWidth(), contentHeight() + paddingBottom()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -772,10 +910,13 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingStage = PaintingNormalFlowInline;
         }
     } else if (isFloating()) {
-        if (ctx.m_paintingStage == PaintingNonPositionedFloats && ctx.m_paintingInlineStage == PaintingInlineBlock) {
+        if (ctx.m_paintingStage == PaintingNonPositionedFloats &&
+            ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Rect(
+                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                    contentWidth(), contentHeight() + paddingBottom()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -789,7 +930,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Rect(
+                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                    contentWidth(), contentHeight() + paddingBottom()));
             }
             paintChildrenWith(ctx);
         } else {
@@ -810,7 +953,11 @@ void FrameBlockBox::dump(int depth)
                 for (int k = 0; k < depth + 1; k++) {
                     printf("  ");
                 }
-                printf("LineBox (%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y(), (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
+                printf("LineBox (%g,%g,%g,%g)\n",
+                       (float)m_lineBoxes[i]->m_frameRect.x(),
+                       (float)m_lineBoxes[i]->m_frameRect.y(),
+                       (float)m_lineBoxes[i]->m_frameRect.width(),
+                       (float)m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
                 for (size_t k = 0; k < lb.m_boxes.size(); k++) {

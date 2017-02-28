@@ -22,8 +22,9 @@
 namespace StarFish {
 
 struct PreferedMinWidthComputer {
-    PreferedMinWidthComputer()
-        : m_maxWidthSoFar(0) { }
+    PreferedMinWidthComputer() : m_maxWidthSoFar(0)
+    {
+    }
 
     void handleTextToken(TextToken& token)
     {
@@ -43,8 +44,9 @@ LayoutUnit FrameText::preferredMinWidth(LayoutContext& ctx)
 }
 
 struct PreferedWidthComputer {
-    PreferedWidthComputer()
-        : m_widthSoFar(0) { }
+    PreferedWidthComputer() : m_widthSoFar(0)
+    {
+    }
 
     void handleTextToken(TextToken& token)
     {
@@ -62,5 +64,4 @@ LayoutUnit FrameText::preferredWidth(LayoutContext& ctx)
     tokenizeText(ctx.starFish(), this, &c);
     return c.m_widthSoFar;
 }
-
 }
