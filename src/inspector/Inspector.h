@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_INSPECTOR) && !defined (__StarFishInspector__)
+#if defined(STARFISH_ENABLE_INSPECTOR) && !defined(__StarFishInspector__)
 #define __StarFishInspector__
 
 #include <zmq.hpp>
@@ -30,13 +30,13 @@ public:
     void sendInfoMessage(String* m);
     void sendErrorMessage(String* m);
     void sendWarnMessage(String* m);
+
 protected:
     StarFish* m_starFish;
     zmq::context_t m_zmqContext;
     zmq::socket_t m_zmqSocket;
     Thread* m_ioThread;
 };
-
 }
 
 #endif
