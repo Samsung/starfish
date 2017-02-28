@@ -1666,6 +1666,12 @@ void LineFormattingContext::insertPendingInlineBoxes()
             iter = m_pendingInlineBoxes.erase(iter);
             continue;
         } else if (dontBreakLine(this, box, box->boxWidth())) {
+            if (!box->shouldPreserveWhiteSpaces() && containOnlyWhiteSpace(box)) {
+                setIsWhiteSpaceAtLast(true);
+            } else {
+                setIsWhiteSpaceAtLast(false);
+            }
+
             m_currentLineWidth += box->boxWidth();
 
             currentLine()->insertInlineBox(box);
@@ -1688,8 +1694,8 @@ void LineFormattingContext::resetLineBox()
         m_pendingFloatingBoxNumsBeforeCurrentLine =
             m_pendingFloatingBoxes.size();
     }
-    m_shouldLineBreakForBr = true;
     m_isPendingBreakLine = false;
+    m_isWhiteSpaceAtLast = true;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
 }
 
@@ -1972,6 +1978,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
             new InlineTextBox(f, TextRun(f, source, start, end, dir));
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+        setIsWhiteSpaceAtLast(true);
         generateInlineBox(ib);
     } else {
         size_t startPos = offset;
@@ -2012,6 +2019,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 ib->setWidth(f->style()->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                setIsWhiteSpaceAtLast(false);
                 generateInlineBox(ib);
                 start = end;
                 iter++;
@@ -2031,6 +2039,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 ib->setWidth(f->style()->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                setIsWhiteSpaceAtLast(false);
                 generateInlineBox(ib);
             }
         } else {
@@ -2046,6 +2055,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 f, TextRun(f, srcTxt, offset, nextOffset, dir));
             ib->setWidth(textWidth);
             ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+            setIsWhiteSpaceAtLast(false);
             generateInlineBox(ib);
         }
     }
@@ -2080,20 +2090,10 @@ void LineFormattingContext::generateInlineNonReplacedBox(FrameInline* f)
     }
 }
 
-bool LineFormattingContext::isWhiteSpaceAtLast()
-{
-    // TODO: It seems this function can be replaced with the same way as
-    // PreferredWidthContext does.
-    FrameBox* last = currentLine()->lastInlineBox();
-
-    return containOnlyWhiteSpace(last);
-}
-
 void LineFormattingContext::handleTextToken(TextToken& token)
 {
     if (m_isPendingBreakLine) {
         breakLine(nullptr);
-        m_isPendingBreakLine = false;
     }
 
     FrameText* f = token.m_frameText;
@@ -2116,14 +2116,12 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         !dontBreakLine(this, f, textWidth)) {
         if (token.isWhiteSpace()) {
             m_isPendingBreakLine = true;
-            m_shouldLineBreakForBr = false;
         } else {
             breakLine(nullptr);
             handleTextToken(token);
         }
         return;
     }
-    m_shouldLineBreakForBr = true;
     generateInlineTextBox(token);
 }
 
@@ -2138,7 +2136,6 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
             f->style()->position() == PositionValue::AbsolutePositionValue) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
-                m_isPendingBreakLine = false;
             }
             registerAbsolutePositionedBox(f->asFrameBox());
             f = f->next();
@@ -2152,7 +2149,6 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
         } else if (f->isFrameReplaced()) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
-                m_isPendingBreakLine = false;
             }
 
             FrameReplaced* r = f->asFrameReplaced();
@@ -2170,6 +2166,7 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
             insertReplacedBox:
                 if (dontBreakLine(this, r, r->boxWidth())) {
                     m_currentLineWidth += (r->boxWidth());
+                    setIsWhiteSpaceAtLast(false);
                     generateInlineBox(r);
                 } else {
                     breakLine(nullptr);
@@ -2179,7 +2176,6 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
         } else if (f->isFrameBlockBox() || f->isFrameTableBox()) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
-                m_isPendingBreakLine = false;
             }
 
             FrameBlockBox* r = f->asFrameBlockBox();
@@ -2215,6 +2211,7 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
             insertInlineBlockBox:
                 if (dontBreakLine(this, r, r->boxWidth())) {
                     m_currentLineWidth += (r->boxWidth());
+                    setIsWhiteSpaceAtLast(false);
                     generateInlineBox(r);
                 } else {
                     breakLine(nullptr);
@@ -2235,13 +2232,12 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
                 }
             }
         } else if (f->isFrameLineBreak()) {
-            if (!m_shouldLineBreakForBr) {
+            if (m_isPendingBreakLine) {
                 FloatingBoxLayoutContext& fbCtx =
                     *m_floatingBoxLayoutContexts.begin();
                 if (dontClear(fbCtx.m_hasFloat, f)) {
                     breakLine(f->asFrameLineBreak());
                 }
-                m_shouldLineBreakForBr = true;
             } else {
                 breakLine(f->asFrameLineBreak());
             }
