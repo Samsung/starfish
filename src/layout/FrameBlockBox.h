@@ -873,7 +873,15 @@ public:
 
     void handleTextToken(TextToken& token);
 
-    bool isWhiteSpaceAtLast();
+    bool isWhiteSpaceAtLast()
+    {
+        return m_isWhiteSpaceAtLast;
+    }
+
+    void setIsWhiteSpaceAtLast(bool isWhiteSpaceAtLast)
+    {
+        m_isWhiteSpaceAtLast = isWhiteSpaceAtLast;
+    }
 
     LayoutUnit currentLineWidth()
     {
@@ -913,8 +921,8 @@ public:
     // This layout parent should be either LineBox or InlineNonReplacedBox
     FrameBox* m_currentLayoutParent;
     FrameText* m_lastFrameText;
-    bool m_shouldLineBreakForBr;
     bool m_isPendingBreakLine;
+    bool m_isWhiteSpaceAtLast;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
