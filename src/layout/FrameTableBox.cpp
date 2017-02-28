@@ -60,17 +60,21 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
                                               FrameTreeBuilderContext& ctx,
                                               bool force)
 {
-    FrameTableBox* tableWrapper;
+    FrameTableBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     bool isTable =
         (current->style()->display() == DisplayValue::TableDisplayValue) ||
         (current->style()->display() == DisplayValue::InlineTableDisplayValue);
 
     if (isTable) {
-        // if current node is table then make wrapper and current node owns this
-        // wrapper
-        tableWrapper = new FrameTableBox(current, nullptr);
-        current->setFrame(tableWrapper);
+        currentFrame = new FrameTableBox(current, nullptr);
+        current->setFrame(currentFrame);
+        // Table establishes a new block context
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            currentFrame->addChild(c, ctx, force);
+        }
     } else {
         // If the current node is not a table wrapper node, make either
         // * an anonymous table wrapper box, or
@@ -79,8 +83,7 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
         Frame* before = parent->lastChild();
 
         // NEED TO DISCUSSION : StarFish generate anonymous block box which has
-        // only whitespace,
-        // below code treat above situation
+        // only whitespace, below code treat above situation
         while (before && before->isAnonymous() &&
                before->firstChild()->isFrameText() &&
                before->firstChild()
@@ -91,36 +94,25 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
         }
 
         if (before && before->isAnonymous() && before->isFrameTableBox()) {
-            tableWrapper = before->asFrameTableBox();
+            currentFrame = before->asFrameTableBox();
         } else {
-            tableWrapper =
+            currentFrame =
                 FrameTableBox::createAnonymousWithParent(parent, current);
         }
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
+        currentFrame->addChild(current, ctx, force);
     }
-
-    // Table establishes a new block context
-    ctx.setCurrentBlockContainer(tableWrapper);
-    ctx.mergeTextDecorationData(tableWrapper->style());
-
-    if (isTable) {
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            tableWrapper->addChild(c, ctx, force);
-        }
-    } else if (tableWrapper->isAnonymous()) {
-        tableWrapper->addChild(current, ctx, force);
-    } else {
-        STARFISH_ASSERT_NOT_REACHED();
-    }
-
     ctx.setCurrentBlockContainer(parent);
-    return tableWrapper->parent() ? nullptr : tableWrapper;
+    STARFISH_ASSERT(currentFrame);
+    return currentFrame;
 }
 
 FrameTableBox* FrameTableBox::createAnonymousWithParent(FrameBlockBox* parent,
                                                         Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
-    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->setDisplay(DisplayValue::TableDisplayValue);
     style->loadResources(node);
     style->arrangeStyleValues(parent->style(), node);
 
@@ -139,6 +131,7 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         childFrame =
             FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
         m_captions.push_back(childFrame->asFrameTableCaptionBox());
+        STARFISH_ASSERT(!childFrame->parent());
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
     case DisplayValue::TableColumnDisplayValue:
@@ -156,14 +149,14 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
     case DisplayValue::TableRowGroupDisplayValue:
         childFrame =
             FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
+        STARFISH_ASSERT(!childFrame->parent());
         break;
     default:
         wrapInAnnoymousSection = true;
     }
 
-    if (!wrapInAnnoymousSection) {
-        FrameTreeBuilder::frameBlockBoxChildInserter(
-            ctx.currentBlockContainer(), childFrame, child, ctx);
+    if (!wrapInAnnoymousSection && !childFrame->parent()) {
+        ctx.currentBlockContainer()->appendChild(childFrame);
         STARFISH_ASSERT(childFrame->parent());
         if (!m_thead &&
             (display == DisplayValue::TableHeaderGroupDisplayValue)) {
@@ -181,25 +174,20 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         return;
     } else if (wrapInAnnoymousSection) {
         // If there are 2 continuous node which becomes internal table box
-        // without any proper parent,
-        // we have a problem, because parser doesn't form a group these with one
-        // parent.
+        // without any proper parent, we have a problem, because parser doesn't
+        // form a group these with one parent.
         // so we handle this at buileFrameTableXXX. The first node's frame box
-        // will be returned with a
-        // hierarchical anonymous table box, the point is the second one. If the
-        // second one does the same
-        // with the first one, then we might have duplication processing about
-        // reused anonymous box
-        // so that currentBlockContainer has 2 children which referencing the
-        // same thing.
+        // will be returned with a hierarchical anonymous table box,
+        // the point is the second one. If the second one does the same with
+        // the first one, then we might have duplication processing about
+        // reused anonymous box so that currentBlockContainer has 2 children
+        // which referencing the same thing.
         // To prevent this situation, we separate two cases with which returned
-        // pointer is nullptr.
+        // pointer has a parent or not.
 
-        // TODO: but this behavior seems a bit confusing. So I am thinking of a
-        // better design.
         childFrame =
             FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
-        if (childFrame != nullptr) {
+        if (!childFrame->parent()) {
             ctx.currentBlockContainer()->appendChild(childFrame);
             STARFISH_ASSERT(childFrame->parent());
         }
@@ -215,7 +203,6 @@ void FrameTableBox::layout(LayoutContext& ctx,
     // This method is called by FrameBlockBox::layout() to do table layout.
     // Table starts its own layout algorithm that has minimum interaction with
     // the existing layout algorithm.
-    //
     // In brief,
     // after establishes a table context, we calculate the width of the table,
     // and place cells in rows and columns. To do so, we calculate x positions

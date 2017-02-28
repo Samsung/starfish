@@ -93,7 +93,7 @@ public:
         return m_columnWidths;
     }
 
-    std::vector<FrameTableCellBox*>& cellsInTheFirstRow()
+    GCVector<FrameTableCellBox*>& cellsInTheFirstRow()
     {
         return m_cellsInTheFirstRow;
     }
@@ -130,7 +130,7 @@ private:
 
     // We use vector here because "FrameTableCellBox"es are already stored
     // in GCVector, and it is used only to the duration of layoutWidth().
-    std::vector<FrameTableCellBox*> m_cellsInTheFirstRow;
+    GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
 
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background

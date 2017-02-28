@@ -33,50 +33,43 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
 FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
     Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
+    FrameTableCellBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    FrameTableCellBox* tableCell;
     bool isTableCell =
         current->style()->display() == DisplayValue::TableCellDisplayValue;
 
     if (isTableCell) {
-        tableCell = new FrameTableCellBox(current, nullptr);
-        current->setFrame(tableCell);
-    } else {
-        // If the current node is not a table cell node, make either
-        // * an anonymous table cell box, or
-        // * use the last anonymous cell box if it has already been created
-        //   by a previous (and continuous) sibling of the current node.
-        Frame* before = parent->lastChild();
-        if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
-            tableCell = before->asFrameTableCellBox();
-        } else {
-            tableCell =
-                FrameTableCellBox::createAnonymousWithParent(parent, current);
-        }
-    }
-    ctx.setCurrentBlockContainer(tableCell);
-    ctx.mergeTextDecorationData(tableCell->style());
-
-    if (isTableCell) {
+        currentFrame = new FrameTableCellBox(current, nullptr);
+        current->setFrame(currentFrame);
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTreeBuilder::buildTree(c, ctx, force);
         }
-    } else if (tableCell->isAnonymous()) {
-        FrameTreeBuilder::buildTree(current, ctx, force);
     } else {
-        STARFISH_ASSERT_NOT_REACHED();
+        // please read comment in FrameTableBox::buildFrameTable
+        Frame* before = parent->lastChild();
+        if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
+            currentFrame = before->asFrameTableCellBox();
+        } else {
+            currentFrame =
+                FrameTableCellBox::createAnonymousWithParent(parent, current);
+        }
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
+        FrameTreeBuilder::buildTree(current, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(parent);
-
-    return tableCell->parent() ? nullptr : tableCell;
+    STARFISH_ASSERT(currentFrame);
+    return currentFrame;
 }
 
 FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(
     FrameBlockBox* parent, Node* parentNode)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
-    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->setDisplay(DisplayValue::TableCellDisplayValue);
     style->loadResources(parentNode);
     style->arrangeStyleValues(parent->style(), parentNode);
 
@@ -109,7 +102,7 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
         }
     } else if (table->style()->tableLayout() ==
                TableLayoutValue::FixedTableLayoutValue) {
-        std::vector<FrameTableCellBox*>& cellsInTheFirstRow =
+        GCVector<FrameTableCellBox*>& cellsInTheFirstRow =
             rowBox()->sectionBox()->tableBox()->cellsInTheFirstRow();
 
         // This row may contain more columns than the first row in the table.
