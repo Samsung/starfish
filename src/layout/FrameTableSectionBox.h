@@ -63,8 +63,7 @@ public:
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
-    FrameTableRowBox* addChild(Node* child, FrameTreeBuilderContext& ctx,
-                               bool force);
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {

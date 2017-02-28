@@ -42,65 +42,42 @@ FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
 FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(
     Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableSectionBox* tableSection;
+    FrameTableSectionBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    bool isTableSection = current->style()->display() ==
-                              DisplayValue::TableRowGroupDisplayValue ||
-                          current->style()->display() ==
-                              DisplayValue::TableHeaderGroupDisplayValue ||
-                          current->style()->display() ==
-                              DisplayValue::TableFooterGroupDisplayValue;
+    bool isTableSection = (current->style()->display() ==
+                              DisplayValue::TableRowGroupDisplayValue) ||
+                          (current->style()->display() ==
+                              DisplayValue::TableHeaderGroupDisplayValue) ||
+                          (current->style()->display() ==
+                              DisplayValue::TableFooterGroupDisplayValue);
 
     if (isTableSection) {
-        tableSection = new FrameTableSectionBox(current, nullptr);
-        current->setFrame(tableSection);
+        currentFrame = new FrameTableSectionBox(current, nullptr);
+        current->setFrame(currentFrame);
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            currentFrame->addChild(c, ctx, force);
+        }
     } else {
-        // If the current node is not a table row-group node, make either
-        // * an anonymous table row-group box, or
-        // * use the last anonymous row-group box if it has already been created
-        //   by a previous (and continuous) sibling of the current node.
+        // please read comment in FrameTableBox::buildFrameTable
         Frame* before = parent->lastChild();
 
         if (before && before->isAnonymous() &&
             before->isFrameTableSectionBox()) {
-            tableSection = before->asFrameTableSectionBox();
+            currentFrame = before->asFrameTableSectionBox();
         } else {
-            tableSection = FrameTableSectionBox::createAnonymousWithParent(
+            currentFrame = FrameTableSectionBox::createAnonymousWithParent(
                 parent, current);
         }
-    }
-
-    ctx.setCurrentBlockContainer(tableSection);
-    ctx.mergeTextDecorationData(tableSection->style());
-
-    if (isTableSection) {
-        unsigned i = 0;
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            FrameTableRowBox* tableRow = tableSection->addChild(c, ctx, force);
-            // TODO: After implementing anonymous boxes, replace the null check
-            // with assert()
-            if (tableRow) {
-                tableRow->setRowIndex(i);
-                i++;
-                RowStruct row(tableRow);
-                tableSection->grid().push_back(row);
-            }
-        }
-    } else if (tableSection->isAnonymous()) {
-        FrameTableRowBox* tableRow;
-        tableRow = tableSection->addChild(current, ctx, force);
-        if (tableRow != nullptr) {
-            tableRow->setRowIndex(tableSection->grid().size());
-            RowStruct row(tableRow);
-            tableSection->grid().push_back(row);
-            STARFISH_ASSERT(tableRow->parent());
-        }
-    } else {
-        STARFISH_ASSERT_NOT_REACHED();
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
+        currentFrame->addChild(current, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(parent);
-    return tableSection->parent() ? nullptr : tableSection;
+    STARFISH_ASSERT(currentFrame);
+    return currentFrame;
 }
 
 FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(
@@ -140,36 +117,29 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
     return;
 }
 
-FrameTableRowBox* FrameTableSectionBox::addChild(Node* child,
-                                                 FrameTreeBuilderContext& ctx,
-                                                 bool force)
+void FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
+                                    bool force)
 {
-    FrameTableRowBox* childFrame;
+    STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableSectionBox());
+    if ((child->style()->display() == DisplayValue::TableRowDisplayValue) ||
+        (child->style()->display() == DisplayValue::TableCellDisplayValue)) {
+        FrameTableSectionBox* parentSection =
+            ctx.currentBlockContainer()->asFrameTableSectionBox();
+        FrameTableRowBox* childFrame =
+            FrameTableRowBox::buildFrameTableRow(child, ctx, force);
 
-    if (child->style()->display() == DisplayValue::TableRowDisplayValue) {
-        childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-        FrameTreeBuilder::frameBlockBoxChildInserter(
-            ctx.currentBlockContainer(), childFrame, child, ctx);
-        STARFISH_ASSERT(childFrame->parent());
-        return childFrame;
-    }
-
-    // TODO
-    if (child->isCharacterData() || child->isComment()) {
-        return nullptr;
-    } else {
-        // please read comment in FrameTableBox::addChild
-        childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-        if (childFrame != nullptr) {
-            FrameTableSectionBox* tableSection =
-                ctx.currentBlockContainer()->asFrameTableSectionBox();
-            tableSection->appendChild(childFrame);
-            childFrame->setRowIndex(tableSection->grid().size());
+        if (!childFrame->parent()) {
+            childFrame->setRowIndex(parentSection->grid().size());
             RowStruct row(childFrame);
-            tableSection->grid().push_back(row);
-            STARFISH_ASSERT(childFrame->parent());
+            parentSection->grid().push_back(row);
+            ctx.currentBlockContainer()->appendChild(childFrame);
         }
-        return childFrame;
+        STARFISH_ASSERT(childFrame->parent());
+    } else if (child->isCharacterData() || child->isComment()) {
+        // TODO, do not use assert!
+    } else {
+        // TODO
+        STARFISH_ASSERT_NOT_REACHED();
     }
 }
 

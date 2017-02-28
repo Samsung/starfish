@@ -384,14 +384,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             // wrapper
             FrameTableBox* table =
                 FrameTableBox::buildFrameTable(current, ctx, force);
-            if (table && ((display == DisplayValue::TableDisplayValue) ||
-                          (display == DisplayValue::InlineTableDisplayValue))) {
+            if (!table->parent()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(
                     ctx.currentBlockContainer(), table, current, ctx);
-            } else if (table && table->isAnonymous()) {
-                ctx.currentBlockContainer()->appendChild(table);
             }
-            return table;
+            return nullptr;
         } else {
             if (display == DisplayValue::BlockDisplayValue ||
                 display == DisplayValue::InlineBlockDisplayValue) {

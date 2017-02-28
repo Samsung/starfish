@@ -54,8 +54,7 @@ public:
         return m_baseline;
     }
 
-    FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx,
-                                bool force);
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     FrameTableSectionBox* sectionBox()
     {
@@ -85,6 +84,7 @@ private:
                         Frame::LayoutWantToResolve resolveWhat);
 
     unsigned m_rowIndex;
+    unsigned m_lastAbsoluteColumnIndex;
     LayoutUnit m_baseline;
 };
 }
