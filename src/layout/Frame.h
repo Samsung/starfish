@@ -1118,6 +1118,13 @@ public:
         return m_node == nullptr;
     }
 
+    bool isBlockLevel()
+    {
+        // block, table, list-item
+        return (style()->display() == DisplayValue::BlockDisplayValue) ||
+               (style()->display() == DisplayValue::TableDisplayValue);
+    }
+
     Element* offsetParent();
 
     bool shouldWrapLines()
