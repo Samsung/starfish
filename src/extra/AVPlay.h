@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #ifndef __StarFishAVPLAY__
 #define __StarFishAVPLAY__
 
@@ -55,7 +55,8 @@ public:
 
     void open(String* url);
     void prepare();
-    void setDisplayRect(double offsetLeft, double offsetTop, double offsetWidth, double offsetHeight);
+    void setDisplayRect(double offsetLeft, double offsetTop, double offsetWidth,
+                        double offsetHeight);
     void play();
     void close();
     void pause();
@@ -82,6 +83,7 @@ public:
     {
         m_bufferingPercent = percent;
     }
+
 protected:
     StarFish* m_starFish;
     double m_offsetLeft;
@@ -96,7 +98,6 @@ protected:
     ScriptValue m_prepare_async;
     ScriptValue m_listener;
 };
-
 }
 
 #endif

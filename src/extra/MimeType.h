@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMimeType__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMimeType__)
 #define __StarFishMimeType__
 
 namespace StarFish {
@@ -54,7 +54,7 @@ public:
     {
         m_parameter = param;
     }
-    
+
     String* string();
     void clear();
 
@@ -64,7 +64,6 @@ protected:
     // TODO : store parameter as dictionary
     String* m_parameter;
 };
-
 }
 
 #endif

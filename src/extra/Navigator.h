@@ -87,7 +87,6 @@ protected:
     StarFish* m_starFish;
     Geolocation* m_geoLocation;
 };
-
 }
 
 #endif

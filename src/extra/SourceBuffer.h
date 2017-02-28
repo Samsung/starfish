@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishSourceBuffer__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishSourceBuffer__)
 #define __StarFishSourceBuffer__
 
 #include "dom/binding/ScriptWrappable.h"
@@ -42,12 +42,13 @@ struct SourceBufferData : public gc {
     const uint8_t* m_data;
     unsigned long m_length;
     std::vector<uint8_t> m_headerBuffer;
-    SourceBufferData(SourceBuffer* buf, const uint8_t* data, unsigned long length)
-        : m_sourceBuffer(buf)
-        , m_isProcessed(false)
-        , m_foundInitSegmentHere(false)
-        , m_data(data)
-        , m_length(length)
+    SourceBufferData(SourceBuffer* buf, const uint8_t* data,
+                     unsigned long length)
+        : m_sourceBuffer(buf),
+          m_isProcessed(false),
+          m_foundInitSegmentHere(false),
+          m_data(data),
+          m_length(length)
     {
     }
 };
@@ -60,20 +61,24 @@ struct MediaPacketGroup {
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
-    MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
-        : m_streamIndex(idx)
-        , m_initSegmentIndex(initSegmentIdx)
-        , m_streamInfo(streamInfo)
-        , m_maxFrameDuration(duration)
-        , m_groupTimestampStart(start)
-        , m_groupTimestampEnd(end)
+    MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo,
+                     uint64_t duration = 0,
+                     uint64_t start = std::numeric_limits<uint64_t>::max(),
+                     uint64_t end = 0)
+        : m_streamIndex(idx),
+          m_initSegmentIndex(initSegmentIdx),
+          m_streamInfo(streamInfo),
+          m_maxFrameDuration(duration),
+          m_groupTimestampStart(start),
+          m_groupTimestampEnd(end)
     {
     }
 
     void updateMaxDurationIfNeeded(uint64_t newDuration)
     {
-        if (m_maxFrameDuration < newDuration)
+        if (m_maxFrameDuration < newDuration) {
             m_maxFrameDuration = newDuration;
+        }
     }
 
     void pushMediaPacket(MediaPacket* packet)
@@ -123,7 +128,10 @@ public:
     void abort();
     void remove(double start, double end);
 
-    MediaSource* parentMediaSource() { return m_parentMediaSource; }
+    MediaSource* parentMediaSource()
+    {
+        return m_parentMediaSource;
+    }
 
     void setMode(AppendMode mode);
 
@@ -143,7 +151,8 @@ public:
     }
 
     // these methods are thread-safe
-    std::pair<MediaPacket*, size_t> findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
+    std::pair<MediaPacket*, size_t> findProperMediaPacket(
+        size_t streamIdx, uint64_t startPositionInPTSWantToFind);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();
 
@@ -189,7 +198,11 @@ public:
 
 protected:
     // this method needs packet group lock
-    void rangeRemoval(uint64_t start, uint64_t end, StreamInfo::Type type = (StreamInfo::Type)((int)StreamInfo::Type::Video | (int)StreamInfo::Type::Audio | (int)StreamInfo::Type::Subtitle));
+    void rangeRemoval(uint64_t start, uint64_t end,
+                      StreamInfo::Type type =
+                          (StreamInfo::Type)((int)StreamInfo::Type::Video |
+                                             (int)StreamInfo::Type::Audio |
+                                             (int)StreamInfo::Type::Subtitle));
     void setUpdating(bool flag, UpdateState state);
 
     void attachedToParent(MediaSource* ms)
@@ -239,9 +252,7 @@ protected:
 class SourceBufferList : public EventTarget {
 public:
     SourceBufferList(StarFish* starFish, MediaSource* sb)
-        : EventTarget()
-        , m_starFish(starFish)
-        , m_parentMediaSource(sb)
+        : EventTarget(), m_starFish(starFish), m_parentMediaSource(sb)
     {
     }
 
@@ -269,7 +280,8 @@ public:
     {
         m_list.push_back(buffer);
         buffer->attachedToParent(ms);
-        scheduleEvent(m_starFish->staticStrings()->m_addsourcebuffer.localName());
+        scheduleEvent(
+            m_starFish->staticStrings()->m_addsourcebuffer.localName());
     }
 
     void remove(unsigned long index)
@@ -277,7 +289,8 @@ public:
         SourceBuffer* buf = m_list[index];
         m_list.erase(m_list.begin() + index);
         buf->detachFromParent();
-        scheduleEvent(m_starFish->staticStrings()->m_removesourcebuffer.localName());
+        scheduleEvent(
+            m_starFish->staticStrings()->m_removesourcebuffer.localName());
     }
 
     void remove(SourceBuffer* buffer)
@@ -285,8 +298,9 @@ public:
         unsigned long size = m_list.size();
         unsigned long targetIdx = 0;
         for (targetIdx = 0; targetIdx < size; targetIdx++) {
-            if (m_list[targetIdx] == buffer)
+            if (m_list[targetIdx] == buffer) {
                 break;
+            }
         }
         if (targetIdx < size) {
             remove(targetIdx);
@@ -297,7 +311,8 @@ public:
     {
         m_list.clear();
         m_list.shrink_to_fit();
-        scheduleEvent(m_starFish->staticStrings()->m_removesourcebuffer.localName());
+        scheduleEvent(
+            m_starFish->staticStrings()->m_removesourcebuffer.localName());
     }
 
     void detachFromParent()
@@ -317,7 +332,6 @@ protected:
     StarFish* m_starFish;
     MediaSource* m_parentMediaSource;
 };
-
 }
 
 #endif

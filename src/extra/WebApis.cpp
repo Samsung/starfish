@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
 #include "WebApis.h"
 #include "AVPlay.h"
@@ -21,8 +21,7 @@
 namespace StarFish {
 
 webapis::webapis(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
+    : ScriptWrappable(this), m_starFish(starFish)
 {
     m_avplay = new avplay(m_starFish);
 }

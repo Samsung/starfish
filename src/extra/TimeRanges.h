@@ -1,4 +1,4 @@
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishTimeRanges__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTimeRanges__)
 #define __StarFishTimeRanges__
 
 #include "dom/EventTarget.h"
@@ -8,9 +8,9 @@ namespace StarFish {
 
 class TimeRanges : public ScriptWrappable {
 public:
-    TimeRanges()
-        : ScriptWrappable(this)
-    { }
+    TimeRanges() : ScriptWrappable(this)
+    {
+    }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -24,15 +24,17 @@ public:
 
     double start(unsigned long idx)
     {
-        if (idx < m_list.size())
+        if (idx < m_list.size()) {
             return m_list[idx].start();
+        }
         return DBL_MAX;
     }
 
     double end(unsigned long idx)
     {
-        if (idx < m_list.size())
+        if (idx < m_list.size()) {
             return m_list[idx].end();
+        }
         return DBL_MAX;
     }
 
@@ -60,7 +62,6 @@ public:
 private:
     GCVector<TimeRange> m_list;
 };
-
 }
 
 #endif

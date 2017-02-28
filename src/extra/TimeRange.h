@@ -1,14 +1,13 @@
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishTimeRange__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTimeRange__)
 #define __StarFishTimeRange__
 
 namespace StarFish {
 
 class TimeRange {
 public:
-    TimeRange(double start = 0, double end = 0)
-        : m_start(start)
-        , m_end(end)
-    { }
+    TimeRange(double start = 0, double end = 0) : m_start(start), m_end(end)
+    {
+    }
 
     bool operator==(const TimeRange& c) const
     {
@@ -55,7 +54,6 @@ private:
     double m_start;
     double m_end;
 };
-
 }
 
 #endif

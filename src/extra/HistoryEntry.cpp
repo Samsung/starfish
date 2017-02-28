@@ -18,5 +18,4 @@
 #include "HistoryEntry.h"
 
 namespace StarFish {
-
 }

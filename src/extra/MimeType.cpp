@@ -22,9 +22,9 @@
 namespace StarFish {
 
 MimeType::MimeType()
-    : m_type(String::emptyString)
-    , m_subtype(String::emptyString)
-    , m_parameter(String::emptyString)
+    : m_type(String::emptyString),
+      m_subtype(String::emptyString),
+      m_parameter(String::emptyString)
 
 {
 }
@@ -49,9 +49,11 @@ void MimeType::clear()
 String* MimeType::string()
 {
     if (isValid()) {
-        String* result = m_type->concat(String::createASCIIString("/"))->concat(m_subtype);
+        String* result =
+            m_type->concat(String::createASCIIString("/"))->concat(m_subtype);
         if (hasParameter()) {
-            return result->concat(String::createASCIIString(";"))->concat(parameter());
+            return result->concat(String::createASCIIString(";"))
+                ->concat(parameter());
         } else {
             return result;
         }
@@ -65,19 +67,22 @@ MimeType MimeType::parseFromString(String* str)
 
     // Parsing a MIME type
     // https://mimesniff.spec.whatwg.org/#parse-a-mime-type
-    if (str->length() < 1)
+    if (str->length() < 1) {
         return invalid;
+    }
 
     String* seq1 = str->toLower()->trim();
     size_t size1 = seq1->length();
     size_t s1 = seq1->indexOf('/');
-    
+
     // Check "type" part
-    if (size1 < 1 || s1 == SIZE_MAX || !(s1 > 0 && s1 < size1 - 1))
+    if (size1 < 1 || s1 == SIZE_MAX || !(s1 > 0 && s1 < size1 - 1)) {
         return invalid;
+    }
     for (size_t p = 0; p < s1; p++) {
-        if ((int)(seq1->charAt(p)) > 127)
+        if ((int)(seq1->charAt(p)) > 127) {
             return invalid;
+        }
     }
     result.setType(seq1->substring(0, s1));
 
@@ -93,8 +98,9 @@ MimeType MimeType::parseFromString(String* str)
         seq3 = seq2->substring(s2 + 1, size2 - s2 - 1);
     }
     for (size_t p = 0; p < s2; p++) {
-        if ((int)(seq2->charAt(p)) > 127)
+        if ((int)(seq2->charAt(p)) > 127) {
             return invalid;
+        }
         if (String::isSpaceOrNewline(seq2->charAt(p))) {
             s2 = p;
             break;
@@ -106,13 +112,13 @@ MimeType MimeType::parseFromString(String* str)
     // TODO
     size_t size3 = seq3->length();
     for (size_t p = 0; p < size3; p++) {
-        if ((int)(seq3->charAt(p)) > 127)
+        if ((int)(seq3->charAt(p)) > 127) {
             return invalid;
+        }
     }
     result.setParameter(seq3);
     return result;
 }
-
 }
 
 #endif

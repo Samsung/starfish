@@ -22,8 +22,7 @@
 namespace StarFish {
 
 History::History(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
+    : ScriptWrappable(this), m_starFish(starFish)
 {
 }
 
@@ -37,10 +36,13 @@ void History::forward()
 }
 void History::go(int delta)
 {
-    if (delta)
-        navigateBackForward(delta); // navigate according to history
-    else
-        starFish()->window()->navigateAsyncWithoutSetHistory(getURL(0)); // refresh: delta is 0 or empty
+    if (delta) {
+        // navigate according to history
+        navigateBackForward(delta);
+    } else {
+        // refresh: delta is 0 or empty
+        starFish()->window()->navigateAsyncWithoutSetHistory(getURL(0));
+    }
 }
 
 int& History::offset()
@@ -70,10 +72,12 @@ int History::historyBackListCount()
 
 bool History::navigateBackForward(int delta)
 {
-    if (delta > historyForwardListCount())
+    if (delta > historyForwardListCount()) {
         return false;
-    if (delta < -historyBackListCount())
+    }
+    if (delta < -historyBackListCount()) {
         return false;
+    }
 
     offset() += delta;
     if (!isPushState()) {
@@ -102,22 +106,28 @@ bool History::isPushState()
 
 void History::pushState(String* state, String* title, String* url)
 {
-    URL* newURL = URL::createURL(starFish()->window()->document()->documentURI()->urlString(), url);
+    URL* newURL = URL::createURL(
+        starFish()->window()->document()->documentURI()->urlString(), url);
     setHistory(state, title, newURL, true);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
 void History::replaceState(String* state, String* title, String* url)
 {
-    URL* newURL = URL::createURL(starFish()->window()->document()->documentURI()->urlString(), url);
+    URL* newURL = URL::createURL(
+        starFish()->window()->document()->documentURI()->urlString(), url);
     history()[offset()]->replaceState(state, title, newURL);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
-void History::setHistory(String* state, String* title, URL* url, bool isPushState)
+void History::setHistory(String* state, String* title, URL* url,
+                         bool isPushState)
 {
-    if (starFish()->window()->document() && starFish()->window()->document()->documentURI()->urlString()->equals(url->urlString()))
+    if (starFish()->window()->document() &&
+        starFish()->window()->document()->documentURI()->urlString()->equals(
+            url->urlString())) {
         return;
+    }
 
     if (offset() != length() - 1) {
         auto it = history().begin() + (offset() + 1);
@@ -127,7 +137,6 @@ void History::setHistory(String* state, String* title, URL* url, bool isPushStat
     }
     offset()++;
     history().push_back(new HistoryEntry(state, title, url, isPushState));
-
 }
 
 } /* namespace StarFish */

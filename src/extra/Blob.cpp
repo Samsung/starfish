@@ -52,7 +52,7 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     }
 
     String* newType = contentType;
-    for (size_t i = 0; i < newType->length(); i ++) {
+    for (size_t i = 0; i < newType->length(); i++) {
         char32_t c = newType->charAt(i);
         if (c < 0x20 || c > 0x7E) {
             newType = String::emptyString;
@@ -65,5 +65,4 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     void* newStart = ((char*)m_data) + relativeStart;
     return new Blob(m_starFish, span, newType, newStart, m_isClosed, false);
 }
-
 }
