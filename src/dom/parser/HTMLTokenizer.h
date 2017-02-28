@@ -127,7 +127,8 @@ public:
         AfterDOCTYPESystemIdentifierState,
         BogusDOCTYPEState,
         CDATASectionState,
-        // These CDATA states are not in the HTML5 spec, but we use them internally.
+        // These CDATA states are not in the HTML5 spec, but we use them
+        // internally.
         CDATASectionRightSquareBracketState,
         CDATASectionDoubleRightSquareBracketState,
     };
@@ -139,10 +140,10 @@ public:
         bool shouldAllowCDATA;
 
         Checkpoint()
-            : state()
-            , additionalAllowedCharacter('\0')
-            , skipNextNewLine(false)
-            , shouldAllowCDATA(false)
+            : state(),
+              additionalAllowedCharacter('\0'),
+              skipNextNewLine(false),
+              shouldAllowCDATA(false)
         {
         }
     };
@@ -185,25 +186,42 @@ public:
     //
     void updateStateFor(String* tagName);
 
-    bool forceNullCharacterReplacement() const { return m_forceNullCharacterReplacement; }
-    void setForceNullCharacterReplacement(bool value) { m_forceNullCharacterReplacement = value; }
+    bool forceNullCharacterReplacement() const
+    {
+        return m_forceNullCharacterReplacement;
+    }
+    void setForceNullCharacterReplacement(bool value)
+    {
+        m_forceNullCharacterReplacement = value;
+    }
 
-    bool shouldAllowCDATA() const { return m_shouldAllowCDATA; }
-    void setShouldAllowCDATA(bool value) { m_shouldAllowCDATA = value; }
+    bool shouldAllowCDATA() const
+    {
+        return m_shouldAllowCDATA;
+    }
+    void setShouldAllowCDATA(bool value)
+    {
+        m_shouldAllowCDATA = value;
+    }
 
-    State state() const { return m_state; }
-    void setState(State state) { m_state = state; }
+    State state() const
+    {
+        return m_state;
+    }
+    void setState(State state)
+    {
+        m_state = state;
+    }
 
     inline bool shouldSkipNullCharacters() const
     {
-        return !m_forceNullCharacterReplacement
-            && (m_state == HTMLTokenizer::DataState
-                || m_state == HTMLTokenizer::RCDATAState
-                || m_state == HTMLTokenizer::RAWTEXTState);
+        return !m_forceNullCharacterReplacement &&
+               (m_state == HTMLTokenizer::DataState ||
+                m_state == HTMLTokenizer::RCDATAState ||
+                m_state == HTMLTokenizer::RAWTEXTState);
     }
 
 private:
-
     inline bool processEntity(SegmentedString&);
 
     inline void parseError();
@@ -232,8 +250,9 @@ private:
 
     inline bool emitEndOfFile(SegmentedString& source)
     {
-        if (haveBufferedCharacterToken())
+        if (haveBufferedCharacterToken()) {
             return true;
+        }
         m_state = HTMLTokenizer::DataState;
         source.advanceAndUpdateLineNumber();
         m_token->clear();
@@ -257,11 +276,11 @@ private:
     inline void saveEndTagNameIfNeeded()
     {
         STARFISH_ASSERT(m_token->type() != HTMLToken::Uninitialized);
-        if (m_token->type() == HTMLToken::StartTag)
+        if (m_token->type() == HTMLToken::StartTag) {
             m_appropriateEndTagName = m_token->name();
+        }
     }
     inline bool isAppropriateEndTag();
-
 
     inline bool haveBufferedCharacterToken()
     {
@@ -292,7 +311,6 @@ private:
     // token here so we remember it next time we re-enter the tokenizer.
     GCVector<char> m_bufferedEndTagName;
 };
-
 }
 
 #endif

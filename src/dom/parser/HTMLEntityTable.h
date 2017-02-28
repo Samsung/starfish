@@ -46,7 +46,10 @@
 namespace StarFish {
 
 struct HTMLEntityTableEntry {
-    char lastCharacter() const { return entity[length - 1]; }
+    char lastCharacter() const
+    {
+        return entity[length - 1];
+    }
 
     const char* entity;
     int length;
@@ -62,7 +65,6 @@ public:
     static const HTMLEntityTableEntry* firstEntryStartingWith(char32_t);
     static const HTMLEntityTableEntry* lastEntryStartingWith(char32_t);
 };
-
 }
 
 #endif

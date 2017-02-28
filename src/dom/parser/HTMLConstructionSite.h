@@ -51,18 +51,18 @@ namespace StarFish {
 struct HTMLConstructionSiteTask {
     enum Operation {
         Insert,
-        InsertText, // Handles possible merging of text nodes.
+        InsertText,               // Handles possible merging of text nodes.
         InsertAlreadyParsedChild, // Insert w/o calling begin/end parsing.
         Reparent,
         TakeAllChildren,
     };
 
     explicit HTMLConstructionSiteTask(Operation op)
-        : operation(op)
-        , parent(nullptr)
-        , nextChild(nullptr)
-        , child(nullptr)
-        , selfClosing(false)
+        : operation(op),
+          parent(nullptr),
+          nextChild(nullptr),
+          child(nullptr),
+          selfClosing(false)
     {
     }
 
@@ -106,16 +106,19 @@ public:
     // NOTE: Possible reentrancy via JavaScript execution.
     void executeQueuedTasks();
 
-    // flushPendingText turns pending text into queued Text insertions, but does not execute them.
+    // flushPendingText turns pending text into queued Text insertions, but does
+    // not execute them.
     void flushPendingText();
 
     // Called before every token in HTMLTreeBuilder::processToken, thus inlined:
     void flush()
     {
-        if (!hasPendingTasks())
+        if (!hasPendingTasks()) {
             return;
+        }
         flushPendingText();
-        executeQueuedTasks(); // NOTE: Possible reentrancy via JavaScript execution.
+        executeQueuedTasks(); // NOTE: Possible reentrancy via JavaScript
+                              // execution.
         ASSERT(!hasPendingTasks());
     }
 
@@ -140,26 +143,34 @@ public:
     void insertHTMLFormElement(AtomicHTMLToken*, bool isDemoted = false);
     void insertScriptElement(AtomicHTMLToken*);
     void insertTextNode(String*, WhitespaceMode = WhitespaceUnknown);
-    void insertForeignElement(AtomicHTMLToken* token, const AtomicString& namespaceURI);
+    void insertForeignElement(AtomicHTMLToken* token,
+                              const AtomicString& namespaceURI);
 
     void insertHTMLHtmlStartTagBeforeHTML(AtomicHTMLToken*);
     void insertHTMLHtmlStartTagInBody(AtomicHTMLToken*);
     void insertHTMLBodyStartTagInBody(AtomicHTMLToken*);
 
-    void reparent(HTMLElementStack::ElementRecord* newParent, HTMLElementStack::ElementRecord* child);
-    void reparent(HTMLElementStack::ElementRecord* newParent, HTMLStackItem* child);
-    // insertAlreadyParsedChild assumes that |child| has already been parsed (i.e., we're just
-    // moving it around in the tree rather than parsing it for the first time). That means
+    void reparent(HTMLElementStack::ElementRecord* newParent,
+                  HTMLElementStack::ElementRecord* child);
+    void reparent(HTMLElementStack::ElementRecord* newParent,
+                  HTMLStackItem* child);
+    // insertAlreadyParsedChild assumes that |child| has already been parsed
+    // (i.e., we're just
+    // moving it around in the tree rather than parsing it for the first time).
+    // That means
     // this function doesn't call beginParsingChildren / finishParsingChildren.
-    void insertAlreadyParsedChild(HTMLStackItem* newParent, HTMLElementStack::ElementRecord* child);
-    void takeAllChildren(HTMLStackItem* newParent, HTMLElementStack::ElementRecord* oldParent);
+    void insertAlreadyParsedChild(HTMLStackItem* newParent,
+                                  HTMLElementStack::ElementRecord* child);
+    void takeAllChildren(HTMLStackItem* newParent,
+                         HTMLElementStack::ElementRecord* oldParent);
 
     HTMLStackItem* createElementFromSavedToken(HTMLStackItem*);
 
     bool shouldFosterParent() const;
     void fosterParent(Node*);
 
-    bool indexOfFirstUnopenFormattingElement(unsigned& firstUnopenElementIndex) const;
+    bool indexOfFirstUnopenFormattingElement(
+        unsigned& firstUnopenElementIndex) const;
     void reconstructTheActiveFormattingElements();
 
     void generateImpliedEndTags();
@@ -167,22 +178,58 @@ public:
 
     bool inQuirksMode();
 
-    bool isEmpty() const { return !m_openElements.stackDepth(); }
-    HTMLElementStack::ElementRecord* currentElementRecord() const { return m_openElements.topRecord(); }
-    Element* currentElement() const { return m_openElements.top(); }
-    Node* currentNode() const { return m_openElements.topNode(); }
-    HTMLStackItem* currentStackItem() const { return m_openElements.topStackItem(); }
-    HTMLStackItem* oneBelowTop() const { return m_openElements.oneBelowTop(); }
+    bool isEmpty() const
+    {
+        return !m_openElements.stackDepth();
+    }
+    HTMLElementStack::ElementRecord* currentElementRecord() const
+    {
+        return m_openElements.topRecord();
+    }
+    Element* currentElement() const
+    {
+        return m_openElements.top();
+    }
+    Node* currentNode() const
+    {
+        return m_openElements.topNode();
+    }
+    HTMLStackItem* currentStackItem() const
+    {
+        return m_openElements.topStackItem();
+    }
+    HTMLStackItem* oneBelowTop() const
+    {
+        return m_openElements.oneBelowTop();
+    }
     Document& ownerDocumentForCurrentNode();
-    HTMLElementStack* openElements() const { return &m_openElements; }
-    HTMLFormattingElementList* activeFormattingElements() const { return &m_activeFormattingElements; }
-    bool currentIsRootNode() { return m_openElements.topNode() == m_openElements.rootNode(); }
+    HTMLElementStack* openElements() const
+    {
+        return &m_openElements;
+    }
+    HTMLFormattingElementList* activeFormattingElements() const
+    {
+        return &m_activeFormattingElements;
+    }
+    bool currentIsRootNode()
+    {
+        return m_openElements.topNode() == m_openElements.rootNode();
+    }
 
-    Element* head() const { return m_head->element(); }
-    HTMLStackItem* headStackItem() const { return m_head; }
+    Element* head() const
+    {
+        return m_head->element();
+    }
+    HTMLStackItem* headStackItem() const
+    {
+        return m_head;
+    }
 
     void setForm(HTMLFormElement*);
-    HTMLFormElement* form() const { return m_form; }
+    HTMLFormElement* form() const
+    {
+        return m_form;
+    }
     HTMLFormElement* takeForm();
 
     Document* document()
@@ -193,8 +240,8 @@ public:
     class RedirectToFosterParentGuard : public gc {
     public:
         RedirectToFosterParentGuard(HTMLConstructionSite& tree)
-            : m_tree(tree)
-            , m_wasRedirectingBefore(tree.m_redirectAttachToFosterParent)
+            : m_tree(tree),
+              m_wasRedirectingBefore(tree.m_redirectAttachToFosterParent)
         {
             m_tree.m_redirectAttachToFosterParent = true;
         }
@@ -215,14 +262,16 @@ private:
     typedef GCVector<HTMLConstructionSiteTask> TaskQueue;
 
     void setCompatibilityMode(Document::CompatibilityMode);
-    void setCompatibilityModeFromDoctype(String* name, String* publicId, String* systemId);
+    void setCompatibilityModeFromDoctype(String* name, String* publicId,
+                                         String* systemId);
 
     void attachLater(Node* parent, Node* child, bool selfClosing = false);
 
     void findFosterSite(HTMLConstructionSiteTask&);
 
     Element* createHTMLElement(AtomicHTMLToken*);
-    Element* createElement(AtomicHTMLToken* token, const AtomicString& namespaceURI);
+    Element* createElement(AtomicHTMLToken* token,
+                           const AtomicString& namespaceURI);
 
     void mergeAttributesFromTokenIntoElement(AtomicHTMLToken*, Element*);
     void dispatchDocumentElementAvailableIfNeeded();
@@ -246,13 +295,14 @@ private:
 
     struct PendingText {
         PendingText()
-            : parent(nullptr)
-            , nextChild(nullptr)
-            , whitespaceMode(WhitespaceUnknown)
+            : parent(nullptr),
+              nextChild(nullptr),
+              whitespaceMode(WhitespaceUnknown)
         {
         }
 
-        void append(Node* newParent, Node* newNextChild, String* newString, WhitespaceMode newWhitespaceMode)
+        void append(Node* newParent, Node* newNextChild, String* newString,
+                    WhitespaceMode newWhitespaceMode)
         {
             STARFISH_ASSERT(!parent || parent == newParent);
             parent = newParent;
@@ -278,10 +328,12 @@ private:
 
         bool isEmpty()
         {
-            // When the stringbuilder is empty, the parent and whitespace should also be "empty".
+            // When the stringbuilder is empty, the parent and whitespace should
+            // also be "empty".
             STARFISH_ASSERT((stringBuilder.length() == 0) == !parent);
             STARFISH_ASSERT(!(stringBuilder.length() == 0) || !nextChild);
-            STARFISH_ASSERT(!(stringBuilder.length() == 0) || (whitespaceMode == WhitespaceUnknown));
+            STARFISH_ASSERT(!(stringBuilder.length() == 0) ||
+                            (whitespaceMode == WhitespaceUnknown));
             return (stringBuilder.length() == 0);
         }
 
@@ -304,7 +356,6 @@ private:
 
     bool m_inQuirksMode;
 };
-
 }
 
 #endif

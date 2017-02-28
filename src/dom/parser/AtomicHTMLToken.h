@@ -56,9 +56,15 @@ public:
         return m_doctypeData->m_forceQuirks;
     }
 
-    StarFish* starFish() { return m_starFish; }
+    StarFish* starFish()
+    {
+        return m_starFish;
+    }
 
-    HTMLToken::Type type() const { return m_type; }
+    HTMLToken::Type type() const
+    {
+        return m_type;
+    }
 
     const AtomicString& name() const
     {
@@ -74,7 +80,8 @@ public:
 
     bool selfClosing() const
     {
-        STARFISH_ASSERT(m_type == HTMLToken::StartTag || m_type == HTMLToken::EndTag);
+        STARFISH_ASSERT(m_type == HTMLToken::StartTag ||
+                        m_type == HTMLToken::EndTag);
         return m_selfClosing;
     }
 
@@ -123,9 +130,9 @@ public:
     }
 
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken& token)
-        : m_starFish(sf)
-        , m_type(token.type())
-        , m_name(AtomicString::emptyAtomicString())
+        : m_starFish(sf),
+          m_type(token.type()),
+          m_name(AtomicString::emptyAtomicString())
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
@@ -134,7 +141,9 @@ public:
             STARFISH_ASSERT_NOT_REACHED();
             break;
         case HTMLToken::DOCTYPE:
-            m_name = AtomicString::createAttrAtomicString(m_starFish, new StringDataUTF32(UTF32String(token.name().begin(), token.name().end())));
+            m_name = AtomicString::createAttrAtomicString(
+                m_starFish, new StringDataUTF32(UTF32String(
+                                token.name().begin(), token.name().end())));
             m_doctypeData = token.releaseDoctypeData();
             break;
         case HTMLToken::EndOfFile:
@@ -142,24 +151,31 @@ public:
         case HTMLToken::StartTag:
         case HTMLToken::EndTag: {
             m_selfClosing = token.selfClosing();
-            QualifiedName tagName = lookupHTMLTag(*sf->staticStrings(), token.name().data(), token.name().size());
-            if (tagName.localName()->length())
+            QualifiedName tagName = lookupHTMLTag(
+                *sf->staticStrings(), token.name().data(), token.name().size());
+            if (tagName.localName()->length()) {
                 m_name = tagName.localNameAtomic();
-            else
-                m_name = AtomicString::createAttrAtomicString(m_starFish, new StringDataUTF32(UTF32String(token.name().begin(), token.name().end())));
+            } else {
+                m_name = AtomicString::createAttrAtomicString(
+                    m_starFish, new StringDataUTF32(UTF32String(
+                                    token.name().begin(), token.name().end())));
+            }
             initializeAttributes(token.attributes());
             break;
         }
         case HTMLToken::Character:
         case HTMLToken::Comment:
-            if (token.isAll7BitData())
-                m_data = String::createASCIIStringFromUTF32Source(UTF32String(token.data().begin(), token.data().end()));
-            else
-                m_data = String::createASCIIStringFromUTF32SourceIfPossible(UTF32String(token.data().begin(), token.data().end()));
+            if (token.isAll7BitData()) {
+                m_data = String::createASCIIStringFromUTF32Source(
+                    UTF32String(token.data().begin(), token.data().end()));
+            } else {
+                m_data = String::createASCIIStringFromUTF32SourceIfPossible(
+                    UTF32String(token.data().begin(), token.data().end()));
+            }
             break;
         }
     }
-/*
+    /*
     explicit AtomicHTMLToken(const CompactHTMLToken& token)
         : m_type(token.type())
     {
@@ -173,20 +189,27 @@ public:
             m_name = AtomicString(token.data());
             m_doctypeData = adoptPtr(new DoctypeData());
             m_doctypeData->m_hasPublicIdentifier = true;
-            append(m_doctypeData->m_publicIdentifier, token.publicIdentifier());
+            append(m_doctypeData->m_publicIdentifier,
+                   token.publicIdentifier());
             m_doctypeData->m_hasSystemIdentifier = true;
-            append(m_doctypeData->m_systemIdentifier, token.systemIdentifier());
+            append(m_doctypeData->m_systemIdentifier,
+                   token.systemIdentifier());
             m_doctypeData->m_forceQuirks = token.doctypeForcesQuirks();
             break;
         case HTMLToken::EndOfFile:
             break;
         case HTMLToken::StartTag:
             m_attributes.reserveInitialCapacity(token.attributes().size());
-            for (Vector<CompactHTMLToken::Attribute>::const_iterator it = token.attributes().begin(); it != token.attributes().end(); ++it) {
-                QualifiedName name(nullAtom, AtomicString(it->name), nullAtom);
+            for (Vector<CompactHTMLToken::Attribute>::const_iterator it =
+                 token.attributes().begin(); it != token.attributes().end();
+                 ++it) {
+                QualifiedName name(nullAtom, AtomicString(it->name),
+                                   nullAtom);
                 // FIXME: This is N^2 for the number of attributes.
-                if (!findAttributeInVector(m_attributes, name))
-                    m_attributes.append(Attribute(name, AtomicString(it->value)));
+                if (!findAttributeInVector(m_attributes, name)) {
+                    m_attributes.append(Attribute(name,
+                    AtomicString(it->value)));
+                }
             }
             // Fall through!
         case HTMLToken::EndTag:
@@ -198,24 +221,25 @@ public:
             m_data = token.data();
             break;
         }
-    }
-*/
+    }*/
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken::Type type)
-        : m_starFish(sf)
-        , m_type(type)
-        , m_name(AtomicString::emptyAtomicString())
-        , m_selfClosing(false)
+        : m_starFish(sf),
+          m_type(type),
+          m_name(AtomicString::emptyAtomicString()),
+          m_selfClosing(false)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
     }
 
-    AtomicHTMLToken(StarFish* sf, HTMLToken::Type type, AtomicString name, const GCVector<Attribute>& attributes = GCVector<Attribute>())
-        : m_starFish(sf)
-        , m_type(type)
-        , m_name(name)
-        , m_selfClosing(false)
-        , m_attributes(attributes)
+    AtomicHTMLToken(
+        StarFish* sf, HTMLToken::Type type, AtomicString name,
+        const GCVector<Attribute>& attributes = GCVector<Attribute>())
+        : m_starFish(sf),
+          m_type(type),
+          m_name(name),
+          m_selfClosing(false),
+          m_attributes(attributes)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
@@ -248,18 +272,21 @@ private:
     GCVector<Attribute> m_attributes;
 };
 
-inline void AtomicHTMLToken::initializeAttributes(const GCVector<HTMLToken::Attribute>& attributes)
+inline void AtomicHTMLToken::initializeAttributes(
+    const GCVector<HTMLToken::Attribute>& attributes)
 {
     size_t size = attributes.size();
-    if (!size)
+    if (!size) {
         return;
+    }
 
     m_attributes.clear();
     // m_attributes.reserveInitialCapacity(size);
     for (size_t i = 0; i < size; ++i) {
         const HTMLToken::Attribute& attribute = attributes[i];
-        if (attribute.name.size() == 0)
+        if (attribute.name.size() == 0) {
             continue;
+        }
 
         // FIXME: We should be able to add the following ASSERT once we fix
         // https://bugs.webkit.org/show_bug.cgi?id=62971
@@ -271,11 +298,13 @@ inline void AtomicHTMLToken::initializeAttributes(const GCVector<HTMLToken::Attr
         // AtomicString value(attribute.value);
         const QualifiedName& name = nameForAttribute(attribute);
         // FIXME: This is N^2 for the number of attributes.
-        if (!findAttributeInVector(m_attributes, name))
-            m_attributes.push_back(Attribute(name, String::createASCIIStringFromUTF32SourceIfPossible(attribute.value)));
+        if (!findAttributeInVector(m_attributes, name)) {
+            m_attributes.push_back(Attribute(
+                name, String::createASCIIStringFromUTF32SourceIfPossible(
+                          attribute.value)));
+        }
     }
 }
-
 }
 
 #endif

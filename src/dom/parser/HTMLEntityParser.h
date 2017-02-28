@@ -52,11 +52,14 @@ private:
     static const unsigned kMaxLength = 4;
 
 public:
-    DecodedHTMLEntity()
-        : length(0)
-    { }
+    DecodedHTMLEntity() : length(0)
+    {
+    }
 
-    bool isEmpty() const { return !length; }
+    bool isEmpty() const
+    {
+        return !length;
+    }
 
     void append(char32_t c)
     {
@@ -68,8 +71,9 @@ public:
     char32_t data[kMaxLength];
 };
 
-bool consumeHTMLEntity(SegmentedString&, DecodedHTMLEntity& decodedEntity, bool& notEnoughCharacters, char32_t additionalAllowedCharacter = '\0');
-
+bool consumeHTMLEntity(SegmentedString&, DecodedHTMLEntity& decodedEntity,
+                       bool& notEnoughCharacters,
+                       char32_t additionalAllowedCharacter = '\0');
 }
 
 #endif

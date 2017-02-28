@@ -65,8 +65,7 @@ namespace StarFish {
 // them to the "last" string.
 class HTMLInputStream : public gc {
 public:
-    HTMLInputStream()
-        : m_last(&m_first)
+    HTMLInputStream() : m_last(&m_first)
     {
     }
 
@@ -101,8 +100,14 @@ public:
         return m_last->isClosed();
     }
 
-    SegmentedString& current() { return m_first; }
-    const SegmentedString& current() const { return m_first; }
+    SegmentedString& current()
+    {
+        return m_first;
+    }
+    const SegmentedString& current() const
+    {
+        return m_first;
+    }
 
     void splitInto(SegmentedString& next)
     {
@@ -146,18 +151,23 @@ public:
         m_column = m_inputStream->current().currentColumn();
         m_inputStream->splitInto(m_next);
         // We 'fork' current position and use it for the generated script part.
-        // This is a bit weird, because generated part does not have positions within an HTML document.
+        // This is a bit weird, because generated part does not have positions
+        // within an HTML document.
         m_inputStream->current().setCurrentPosition(m_line, m_column, 0);
     }
 
     ~InsertionPointRecord()
     {
-        // Some inserted text may have remained in input stream. E.g. if script has written "&amp" or "<table",
-        // it stays in buffer because it cannot be properly tokenized before we see next part.
+        // Some inserted text may have remained in input stream. E.g. if script
+        // has written "&amp" or "<table",
+        // it stays in buffer because it cannot be properly tokenized before we
+        // see next part.
         int unparsedRemainderLength = m_inputStream->current().length();
         m_inputStream->mergeFrom(m_next);
-        // We restore position for the character that goes right after unparsed remainder.
-        m_inputStream->current().setCurrentPosition(m_line, m_column, unparsedRemainderLength);
+        // We restore position for the character that goes right after unparsed
+        // remainder.
+        m_inputStream->current().setCurrentPosition(m_line, m_column,
+                                                    unparsedRemainderLength);
     }
 
 private:
@@ -166,7 +176,6 @@ private:
     OrdinalNumber m_line;
     OrdinalNumber m_column;
 };
-
 }
 
 #endif

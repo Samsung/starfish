@@ -10,13 +10,16 @@
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND
+ * ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE FOR
+ * ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -48,7 +51,8 @@ namespace StarFish {
 //
 // FIXME: Once all C++ compiler support decimal type, we should replace this
 // class to compiler supported one. See below URI for current status of decimal
-// type for C++: // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1977.html
+// type for C++: //
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1977.html
 class Decimal : public gc {
 public:
     enum Sign {
@@ -65,18 +69,48 @@ public:
         EncodedData(Sign, int exponent, uint64_t coefficient);
 
         bool operator==(const EncodedData&) const;
-        bool operator!=(const EncodedData& another) const { return !operator==(another); }
+        bool operator!=(const EncodedData& another) const
+        {
+            return !operator==(another);
+        }
 
-        uint64_t coefficient() const { return m_coefficient; }
+        uint64_t coefficient() const
+        {
+            return m_coefficient;
+        }
         int countDigits() const;
-        int exponent() const { return m_exponent; }
-        bool isFinite() const { return !isSpecial(); }
-        bool isInfinity() const { return m_formatClass == ClassInfinity; }
-        bool isNaN() const { return m_formatClass == ClassNaN; }
-        bool isSpecial() const { return m_formatClass == ClassInfinity || m_formatClass == ClassNaN; }
-        bool isZero() const { return m_formatClass == ClassZero; }
-        Sign sign() const { return m_sign; }
-        void setSign(Sign sign) { m_sign = sign; }
+        int exponent() const
+        {
+            return m_exponent;
+        }
+        bool isFinite() const
+        {
+            return !isSpecial();
+        }
+        bool isInfinity() const
+        {
+            return m_formatClass == ClassInfinity;
+        }
+        bool isNaN() const
+        {
+            return m_formatClass == ClassNaN;
+        }
+        bool isSpecial() const
+        {
+            return m_formatClass == ClassInfinity || m_formatClass == ClassNaN;
+        }
+        bool isZero() const
+        {
+            return m_formatClass == ClassZero;
+        }
+        Sign sign() const
+        {
+            return m_sign;
+        }
+        void setSign(Sign sign)
+        {
+            m_sign = sign;
+        }
 
     private:
         enum FormatClass {
@@ -87,7 +121,10 @@ public:
         };
 
         EncodedData(Sign, FormatClass);
-        FormatClass formatClass() const { return m_formatClass; }
+        FormatClass formatClass() const
+        {
+            return m_formatClass;
+        }
 
         uint64_t m_coefficient;
         int16_t m_exponent;
@@ -116,7 +153,7 @@ public:
 
     Decimal operator+(const Decimal&) const;
     Decimal operator-(const Decimal&) const;
-    Decimal operator*(const Decimal&) const;
+    Decimal operator*(const Decimal&)const;
     Decimal operator/(const Decimal&) const;
 
     int exponent() const
@@ -125,13 +162,34 @@ public:
         return m_data.exponent();
     }
 
-    bool isFinite() const { return m_data.isFinite(); }
-    bool isInfinity() const { return m_data.isInfinity(); }
-    bool isNaN() const { return m_data.isNaN(); }
-    bool isNegative() const { return sign() == Negative; }
-    bool isPositive() const { return sign() == Positive; }
-    bool isSpecial() const { return m_data.isSpecial(); }
-    bool isZero() const { return m_data.isZero(); }
+    bool isFinite() const
+    {
+        return m_data.isFinite();
+    }
+    bool isInfinity() const
+    {
+        return m_data.isInfinity();
+    }
+    bool isNaN() const
+    {
+        return m_data.isNaN();
+    }
+    bool isNegative() const
+    {
+        return sign() == Negative;
+    }
+    bool isPositive() const
+    {
+        return sign() == Positive;
+    }
+    bool isSpecial() const
+    {
+        return m_data.isSpecial();
+    }
+    bool isZero() const
+    {
+        return m_data.isZero();
+    }
 
     Decimal abs() const;
     Decimal ceiling() const;
@@ -158,7 +216,10 @@ public:
 
     // You should not use below methods. We expose them for unit testing.
     explicit Decimal(const EncodedData&);
-    const EncodedData& value() const { return m_data; }
+    const EncodedData& value() const
+    {
+        return m_data;
+    }
 
 private:
     struct AlignedOperands {
@@ -170,10 +231,17 @@ private:
     Decimal(double);
     Decimal compareTo(const Decimal&) const;
 
-    static AlignedOperands alignOperands(const Decimal& lhs, const Decimal& rhs);
-    static inline Sign invertSign(Sign sign) { return sign == Negative ? Positive : Negative; }
+    static AlignedOperands alignOperands(const Decimal& lhs,
+                                         const Decimal& rhs);
+    static inline Sign invertSign(Sign sign)
+    {
+        return sign == Negative ? Positive : Negative;
+    }
 
-    Sign sign() const { return m_data.sign(); }
+    Sign sign() const
+    {
+        return m_data.sign();
+    }
 
     EncodedData m_data;
 };
@@ -187,23 +255,31 @@ bool isNotHTMLSpace(char32_t);
 String* stripLeadingAndTrailingHTMLSpaces(String*);
 inline String* stripLeadingAndTrailingHTMLSpaces(const UTF32String& vector)
 {
-    return stripLeadingAndTrailingHTMLSpaces(String::createASCIIStringFromUTF32SourceIfPossible(vector.data()));
+    return stripLeadingAndTrailingHTMLSpaces(
+        String::createASCIIStringFromUTF32SourceIfPossible(vector.data()));
 }
 
-// An implementation of the HTML specification's algorithm to convert a number to a string for number and range types.
+// An implementation of the HTML specification's algorithm to convert a number
+// to a string for number and range types.
 String serializeForNumberType(const Decimal&);
 String serializeForNumberType(double);
 
-// Convert the specified string to a decimal/double. If the conversion fails, the return value is fallback value or NaN if not specified.
-// Leading or trailing illegal characters cause failure, as does passing an empty string.
-// The double* parameter may be 0 to check if the string can be parsed without getting the result.
-Decimal parseToDecimalForNumberType(String*, const Decimal& fallbackValue = Decimal::nan());
-double parseToDoubleForNumberType(String*, double fallbackValue = std::numeric_limits<double>::quiet_NaN());
+// Convert the specified string to a decimal/double. If the conversion fails,
+// the return value is fallback value or NaN if not specified.
+// Leading or trailing illegal characters cause failure, as does passing an
+// empty string.
+// The double* parameter may be 0 to check if the string can be parsed without
+// getting the result.
+Decimal parseToDecimalForNumberType(
+    String*, const Decimal& fallbackValue = Decimal::nan());
+double parseToDoubleForNumberType(
+    String*, double fallbackValue = std::numeric_limits<double>::quiet_NaN());
 
 // http://www.whatwg.org/specs/web-apps/current-work/#rules-for-parsing-integers
 bool parseHTMLInteger(String*, int&);
 
-// http://www.whatwg.org/specs/web-apps/current-work/#rules-for-parsing-non-negative-integers
+// http://www.whatwg.org/specs/web-apps/current-work/
+//        #rules-for-parsing-non-negative-integers
 bool parseHTMLNonNegativeInteger(String*, unsigned int&);
 
 typedef GCVector<std::pair<String*, String*>> HTMLAttributeList;
@@ -212,23 +288,28 @@ typedef GCVector<std::pair<String*, String*>> HTMLAttributeList;
 
 // Inline implementations of some of the functions declared above.
 
-template<typename CharType = char32_t>
+template <typename CharType = char32_t>
 inline bool isHTMLSpace(CharType character)
 {
-    // Histogram from Apple's page load test combined with some ad hoc browsing some other test suites.
+    // Histogram from Apple's page load test combined with some ad hoc browsing
+    // some other test suites.
     //
     // 82%: 216330 non-space characters, all > U+0020
     // 11%: 30017 plain space characters, U+0020
     // 5%: 12099 newline characters, U+000A
     // 2%: 5346 tab characters, U+0009
     //
-    // No other characters seen. No U+000C or U+000D, and no other control characters.
-    // Accordingly, we check for non-spaces first, then space, then newline, then tab, then the other characters.
+    // No other characters seen. No U+000C or U+000D, and no other control
+    // characters.
+    // Accordingly, we check for non-spaces first, then space, then newline,
+    // then tab, then the other characters.
 
-    return character <= ' ' && (character == ' ' || character == '\n' || character == '\t' || character == '\r' || character == '\f');
+    return character <= ' ' &&
+           (character == ' ' || character == '\n' || character == '\t' ||
+            character == '\r' || character == '\f');
 }
 
-template<typename CharType>
+template <typename CharType>
 inline bool isHTMLSpaceOrComma(CharType character)
 {
     return isHTMLSpace<CharType>(character) || character == ',';
@@ -239,7 +320,7 @@ inline bool isHTMLLineBreak(UChar character)
     return character <= '\r' && (character == '\n' || character == '\r');
 }
 
-template<typename CharType>
+template <typename CharType>
 inline bool isNotHTMLSpace(CharType character)
 {
     return !isHTMLSpace<CharType>(character);
@@ -250,34 +331,33 @@ bool threadSafeMatch(const String&, const QualifiedName&);
 
 // StringImpl* findStringIfStatic(const char32_t* characters, unsigned length);
 
-enum CharacterWidth {
-    Likely8Bit,
-    Force8Bit,
-    Force16Bit
-};
+enum CharacterWidth { Likely8Bit, Force8Bit, Force16Bit };
 
-inline String* attemptStaticStringCreation(const UTF32String& vector, CharacterWidth width)
+inline String* attemptStaticStringCreation(const UTF32String& vector,
+                                           CharacterWidth width)
 {
     /*
     String string(findStringIfStatic(vector.data(), vector.size()));
-    if (string.impl())
+    if (string.impl()) {
         return string;
-    if (width == Likely8Bit)
+    }
+    if (width == Likely8Bit) {
         string = StringImpl::create8BitIfPossible(vector);
-    else if (width == Force8Bit)
+    } else if (width == Force8Bit) {
         string = String::make8BitFrom16BitSource(vector);
-    else
+    } else {
         string = String(vector);
-     */
+    }*/
     String* string;
-    if (width == Likely8Bit)
-        string = String::createASCIIStringFromUTF32SourceIfPossible(vector.data());
-    else if (width == Force8Bit)
+    if (width == Likely8Bit) {
+        string =
+            String::createASCIIStringFromUTF32SourceIfPossible(vector.data());
+    } else if (width == Force8Bit) {
         string = String::createASCIIStringFromUTF32Source(vector.data());
-    else
+    } else {
         string = new StringDataUTF32(vector);
+    }
     return string;
 }
-
 }
 #endif
