@@ -27,11 +27,10 @@ class HTMLParser;
 
 class HTMLDocumentBuilder : public DocumentBuilder {
     friend class HTMLResourceClient;
+
 public:
     HTMLDocumentBuilder(Document* document)
-        : DocumentBuilder(document)
-        , m_parser(nullptr)
-        , m_resource(nullptr)
+        : DocumentBuilder(document), m_parser(nullptr), m_resource(nullptr)
     {
     }
 
@@ -42,12 +41,11 @@ public:
     {
         return m_parser;
     }
+
 protected:
     HTMLParser* m_parser;
     Resource* m_resource;
 };
-
-
 }
 
 #endif

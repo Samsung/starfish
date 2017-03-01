@@ -23,20 +23,21 @@
 
 namespace StarFish {
 
-int strcicmp(char const *a, size_t len1, char const *b, size_t len2)
+int strcicmp(char const* a, size_t len1, char const* b, size_t len2)
 {
     char const* aEnd = a + len1;
     char const* bEnd = b + len2;
     for (; a < aEnd && b < bEnd; a++, b++) {
         int d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
+        if (d != 0 || !*a) {
             return d;
+        }
     }
     return 0;
 }
 
-
-const char* sstrstr(const char *haystack, size_t length, const char *needle, size_t needleLength)
+const char* sstrstr(const char* haystack, size_t length, const char* needle,
+                    size_t needleLength)
 {
     for (size_t i = 0; i < length; i++) {
         if (i + needleLength > length) {
@@ -52,19 +53,22 @@ const char* sstrstr(const char *haystack, size_t length, const char *needle, siz
 class HTMLResourceClient : public ResourceClient {
 public:
     HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
-        : ResourceClient(res)
-        , m_builder(builder)
-        , m_parser(nullptr)
-        , m_htmlSource(String::emptyString)
+        : ResourceClient(res),
+          m_builder(builder),
+          m_parser(nullptr),
+          m_htmlSource(String::emptyString)
     {
     }
 
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        m_htmlSource = String::createASCIIString("<div style='text-align:center;margin-top:50px;'>Cannot open page ");
+        m_htmlSource = String::createASCIIString(
+            "<div style='text-align:center;margin-top:50px;'>Cannot open "
+            "page ");
         m_htmlSource = m_htmlSource->concat(m_resource->url()->urlString());
-        m_htmlSource = m_htmlSource->concat(String::createASCIIString("</div>"));
+        m_htmlSource =
+            m_htmlSource->concat(String::createASCIIString("</div>"));
         load();
     }
 
@@ -82,12 +86,12 @@ public:
             // TODO check BOM
             size_t bufferLen = m_buffer.size();
             std::string charSetInMeta;
-            for (size_t i = 0; i < bufferLen; i ++) {
+            for (size_t i = 0; i < bufferLen; i++) {
                 if (m_buffer[i] == '<') {
                     char tagName[12];
                     size_t tagNameLength = 0;
                     bool gotChar = false;
-                    for (size_t j = i + 1; j < bufferLen; j ++) {
+                    for (size_t j = i + 1; j < bufferLen; j++) {
                         if (!gotChar) {
                             if (!String::isSpaceOrNewline(m_buffer[j])) {
                                 if (!std::isalpha(m_buffer[j])) {
@@ -103,7 +107,7 @@ public:
                                     i = j;
                                     bool closeFinded = false;
                                     size_t attributeStart = j + 1;
-                                    for (size_t k = j + 1; k < bufferLen; k ++) {
+                                    for (size_t k = j + 1; k < bufferLen; k++) {
                                         if (m_buffer[k] == '>') {
                                             i = k;
                                             closeFinded = true;
@@ -112,7 +116,8 @@ public:
                                     }
 
                                     std::string attr;
-                                    for (size_t k = attributeStart; k < i ; k ++) {
+                                    for (size_t k = attributeStart; k < i;
+                                         k++) {
                                         char c = m_buffer[k];
                                         if (String::isSpaceOrNewline(c))
                                             continue;
@@ -132,7 +137,9 @@ public:
                                     }
 
                                     if (closeFinded) {
-                                        const char* result = sstrstr(attr.c_str(), attr.length(), "charset=", 8);
+                                        const char* result =
+                                            sstrstr(attr.c_str(), attr.length(),
+                                                    "charset=", 8);
                                         if (result) {
                                             charSetInMeta = result;
                                         }
@@ -160,8 +167,11 @@ public:
             }
         }
 
-        TextConverter* converter = new TextConverter(m, String::createASCIIString("UTF-8"), m_buffer.data(), m_buffer.size());
-        m_htmlSource = converter->convert(m_buffer.data(), m_buffer.size(), true);
+        TextConverter* converter =
+            new TextConverter(m, String::createASCIIString("UTF-8"),
+                              m_buffer.data(), m_buffer.size());
+        m_htmlSource =
+            converter->convert(m_buffer.data(), m_buffer.size(), true);
         m_builder.document()->setCharset(converter->encoding());
         load();
     }
@@ -169,7 +179,8 @@ public:
     void load()
     {
         Document* document = m_builder.document();
-        m_builder.m_parser = m_parser = new HTMLParser(document->window()->starFish(), document, m_htmlSource);
+        m_builder.m_parser = m_parser = new HTMLParser(
+            document->window()->starFish(), document, m_htmlSource);
         m_parser->startParse();
         m_parser->parseStep();
     }
@@ -204,5 +215,4 @@ void HTMLDocumentBuilder::resume()
 {
     m_parser->parseStep();
 }
-
 }

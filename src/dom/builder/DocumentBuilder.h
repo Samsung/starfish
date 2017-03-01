@@ -23,14 +23,12 @@ namespace StarFish {
 
 class DocumentBuilder : public gc {
 public:
-    DocumentBuilder(Document* document)
-        : m_document(document)
+    DocumentBuilder(Document* document) : m_document(document)
     {
     }
 
     virtual ~DocumentBuilder()
     {
-
     }
 
     virtual void build(URL* url) = 0;
@@ -41,11 +39,10 @@ public:
     {
         return m_document;
     }
+
 protected:
     Document* m_document;
 };
-
-
 }
 
 #endif
