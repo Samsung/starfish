@@ -278,9 +278,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     if (pseudoElement->isFirstLetterPseudoElement()) {
         if (Frame* nextFrame =
                 FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
-            pseudoParentFrame =
-                nextFrame->parent(); // parentFrameForPseudoElement: frame for
-                                     // span, nextFrame: frameText
+            pseudoParentFrame = nextFrame->parent();
         }
     } else if (pseudoElement->parentNode()) {
         pseudoParentFrame = pseudoElement->parentNode()->frame();
@@ -290,35 +288,43 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         return;
     }
 
-    Frame* pseudoFrame = new FrameInline(pseudoElement);
-    Frame* originalFrame =
-        FirstLetterPseudoElement::firstLetterFrameText(pseudoElement);
-    pseudoParentFrame->insertBefore(originalFrame, pseudoFrame);
+    Frame* pseudoFrame;
+    if (pseudoStyle->floating() != FloatValue::NoneFloatValue) {
+        pseudoFrame = new FrameBlockBox(pseudoElement, nullptr);
+    } else {
+        pseudoFrame = new FrameInline(pseudoElement);
+    }
 
-    STARFISH_ASSERT(originalFrame->isFrameText());
-    String* originalText = originalFrame->asFrameText()->text();
+    Frame* originalFrameText =
+        FirstLetterPseudoElement::firstLetterFrameText(pseudoElement);
+    pseudoParentFrame->insertBefore(originalFrameText, pseudoFrame);
+
+    STARFISH_ASSERT(originalFrameText->isFrameText());
+    String* originalText = originalFrameText->asFrameText()->text();
     size_t length = FirstLetterPseudoElement::firstLetterLength(originalText);
 
-    Text* firstLetter = new Text(originalFrame->node()->document(),
-                                 originalText->substring(0, length));
-    firstLetter->setStyle(pseudoStyle);
+    Text* letter = new Text(originalFrameText->node()->document(),
+                            originalText->substring(0, length));
+    ComputedStyle* letterStyle= new ComputedStyle(pseudoStyle);
+    letterStyle->loadResources(pseudoElement);
+    letterStyle->arrangeStyleValues(pseudoStyle);
+    letter->setStyle(letterStyle);
+    letter->clearNeedsStyleRecalc();
     FrameText* letterFrameText =
-        new FrameText(firstLetter, pseudoStyle, ctx.currentDecorationData());
-    firstLetter->setFrame(letterFrameText);
+        new FrameText(letter, letterStyle, ctx.currentDecorationData());
+    letter->setFrame(letterFrameText);
     pseudoFrame->appendChild(letterFrameText);
 
     Text* remainingText = new Text(
-        originalFrame->node()->document(),
+        originalFrameText->node()->document(),
         originalText->substring(length, originalText->length() - length));
-    remainingText->setStyle(originalFrame->style());
+    remainingText->setStyle(originalFrameText->style());
     FrameText* remainingFrameText = new FrameText(
-        remainingText, originalFrame->style(), ctx.currentDecorationData());
+        remainingText, originalFrameText->style(), ctx.currentDecorationData());
     remainingText->setFrame(remainingFrameText);
-    pseudoFrame->appendChild(remainingFrameText);
 
-    pseudoParentFrame->removeChild(originalFrame);
-    parent->asElement()->setPseudoElement(
-        StyleResolver::PseudoElementType::PseudoElementNone);
+    pseudoParentFrame->appendChild(remainingFrameText);
+    pseudoParentFrame->removeChild(originalFrameText);
 }
 
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
