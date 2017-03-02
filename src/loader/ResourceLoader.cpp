@@ -39,11 +39,11 @@ extern bool g_fireOnloadEvent;
 namespace StarFish {
 
 ResourceLoader::ResourceLoader(Document& document)
-    : m_isDocumentInOpenState(false),
-      m_pendingResourceCountWhileDocumentOpening(0),
-      m_document(&document),
-      m_resourceCacheSize(0),
-      m_lastCachePruneTime(0)
+    : m_isDocumentInOpenState(false)
+    , m_pendingResourceCountWhileDocumentOpening(0)
+    , m_document(&document)
+    , m_resourceCacheSize(0)
+    , m_lastCachePruneTime(0)
 {
 }
 

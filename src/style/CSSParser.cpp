@@ -1243,11 +1243,11 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     if (!b->isNumber() || b->m_value->contains(".")) {
         return false;
     }
-/*
-    if ((b.numericSign() == NoSign) == (sign == NoSign)) {
-        return false;
-    }
-*/
+    /*
+        if ((b.numericSign() == NoSign) == (sign == NoSign)) {
+            return false;
+        }
+    */
     result.second = String::parseInt(b->m_value);
     if (sign == MinusSign) {
         result.second = -result.second;
@@ -1520,11 +1520,11 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
     if (simpleSelector->type() != CSSSelector::PseudoElement) {
         return 0;
     }
-/*
-    if (simpleSelector->pseudoType() == CSSSelector::PseudoContent) {
-        return HasContentPseudoElement;
-    }
-*/
+    /*
+        if (simpleSelector->pseudoType() == CSSSelector::PseudoContent) {
+            return HasContentPseudoElement;
+        }
+    */
 
     return HasPseudoElementForRightmostCompound;
 }

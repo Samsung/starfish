@@ -28,17 +28,17 @@
 namespace StarFish {
 
 MediaSource::MediaSource(StarFish* starFish)
-    : EventTarget(),
-      m_readyState(Closed),
-      m_isActiveBufferComputed(false),
-      m_attachedMediaElement(nullptr),
-      m_activeVideoSourceBuffer(nullptr),
-      m_activeVideoStreamIndex(SIZE_MAX),
-      m_activeAudioSourceBuffer(nullptr),
-      m_activeAudioStreamIndex(SIZE_MAX),
-      m_starFish(starFish),
-      m_duration(std::numeric_limits<double>::quiet_NaN()),
-      m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
+    : EventTarget()
+    , m_readyState(Closed)
+    , m_isActiveBufferComputed(false)
+    , m_attachedMediaElement(nullptr)
+    , m_activeVideoSourceBuffer(nullptr)
+    , m_activeVideoStreamIndex(SIZE_MAX)
+    , m_activeAudioSourceBuffer(nullptr)
+    , m_activeAudioStreamIndex(SIZE_MAX)
+    , m_starFish(starFish)
+    , m_duration(std::numeric_limits<double>::quiet_NaN())
+    , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {
 #ifndef NDEBUG
     STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::MediaSource (%p)\n", this);

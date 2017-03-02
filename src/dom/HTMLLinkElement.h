@@ -27,9 +27,9 @@ class HTMLLinkElement : public HTMLElement {
 
 public:
     HTMLLinkElement(Document* document)
-        : HTMLElement(document),
-          m_generatedSheet(nullptr),
-          m_styleSheetTextResource(nullptr)
+        : HTMLElement(document)
+        , m_generatedSheet(nullptr)
+        , m_styleSheetTextResource(nullptr)
     {
     }
 

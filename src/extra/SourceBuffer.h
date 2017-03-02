@@ -44,11 +44,11 @@ struct SourceBufferData : public gc {
     std::vector<uint8_t> m_headerBuffer;
     SourceBufferData(SourceBuffer* buf, const uint8_t* data,
                      unsigned long length)
-        : m_sourceBuffer(buf),
-          m_isProcessed(false),
-          m_foundInitSegmentHere(false),
-          m_data(data),
-          m_length(length)
+        : m_sourceBuffer(buf)
+        , m_isProcessed(false)
+        , m_foundInitSegmentHere(false)
+        , m_data(data)
+        , m_length(length)
     {
     }
 };
@@ -65,12 +65,12 @@ struct MediaPacketGroup {
                      uint64_t duration = 0,
                      uint64_t start = std::numeric_limits<uint64_t>::max(),
                      uint64_t end = 0)
-        : m_streamIndex(idx),
-          m_initSegmentIndex(initSegmentIdx),
-          m_streamInfo(streamInfo),
-          m_maxFrameDuration(duration),
-          m_groupTimestampStart(start),
-          m_groupTimestampEnd(end)
+        : m_streamIndex(idx)
+        , m_initSegmentIndex(initSegmentIdx)
+        , m_streamInfo(streamInfo)
+        , m_maxFrameDuration(duration)
+        , m_groupTimestampStart(start)
+        , m_groupTimestampEnd(end)
     {
     }
 

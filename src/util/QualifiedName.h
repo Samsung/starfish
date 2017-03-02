@@ -24,8 +24,8 @@ namespace StarFish {
 class QualifiedName : public gc {
     friend class StaticStrings;
     QualifiedName()
-        : m_namespaceURI(AtomicString::emptyAtomicString()),
-          m_localName(AtomicString::emptyAtomicString())
+        : m_namespaceURI(AtomicString::emptyAtomicString())
+        , m_localName(AtomicString::emptyAtomicString())
     {
     }
 

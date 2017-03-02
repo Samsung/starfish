@@ -27,10 +27,10 @@ class HTMLScriptElement : public HTMLElement {
 
 public:
     HTMLScriptElement(Document* document)
-        : HTMLElement(document),
-          m_isAlreadyStarted(false),
-          m_isParserInserted(false),
-          m_didScriptExecuted(false)
+        : HTMLElement(document)
+        , m_isAlreadyStarted(false)
+        , m_isParserInserted(false)
+        , m_didScriptExecuted(false)
     {
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("+++tag:script\n");

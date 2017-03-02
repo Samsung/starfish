@@ -381,11 +381,11 @@ void HTMLConstructionSite::executeQueuedTasks()
 }
 
 HTMLConstructionSite::HTMLConstructionSite(Document* document)
-    : m_document(document),
-      m_attachmentRoot(document),
-      m_isParsingFragment(false),
-      m_redirectAttachToFosterParent(false),
-      m_inQuirksMode(document->inQuirksMode())
+    : m_document(document)
+    , m_attachmentRoot(document)
+    , m_isParsingFragment(false)
+    , m_redirectAttachToFosterParent(false)
+    , m_inQuirksMode(document->inQuirksMode())
 {
     m_form = nullptr;
     m_head = nullptr;
@@ -393,11 +393,11 @@ HTMLConstructionSite::HTMLConstructionSite(Document* document)
 }
 
 HTMLConstructionSite::HTMLConstructionSite(DocumentFragment* fragment)
-    : m_document(fragment->document()),
-      m_attachmentRoot(fragment),
-      m_isParsingFragment(true),
-      m_redirectAttachToFosterParent(false),
-      m_inQuirksMode(fragment->document()->inQuirksMode())
+    : m_document(fragment->document())
+    , m_attachmentRoot(fragment)
+    , m_isParsingFragment(true)
+    , m_redirectAttachToFosterParent(false)
+    , m_inQuirksMode(fragment->document()->inQuirksMode())
 {
     m_form = nullptr;
     m_head = nullptr;

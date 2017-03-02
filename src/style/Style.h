@@ -1545,29 +1545,29 @@ public:
     };
 
     CSSSelector()
-        : m_type(UnKnown),
-          m_relation(None),
-          m_pseudotype(PseudoNone),
-          m_selectorText(String::emptyString),
-          m_attributeMatch(CaseInsensitive),
-          m_relationIsAffectedByPseudoContent(false),
-          m_argument(String::emptyString),
-          m_value(String::emptyString),
-          m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
+        : m_type(UnKnown)
+        , m_relation(None)
+        , m_pseudotype(PseudoNone)
+        , m_selectorText(String::emptyString)
+        , m_attributeMatch(CaseInsensitive)
+        , m_relationIsAffectedByPseudoContent(false)
+        , m_argument(String::emptyString)
+        , m_value(String::emptyString)
+        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
                                     AtomicString::emptyAtomicString()))
     {
     }
 
     CSSSelector(Type type, RelationType relation, String* text)
-        : m_type(type),
-          m_relation(relation),
-          m_pseudotype(PseudoNone),
-          m_selectorText(text),
-          m_attributeMatch(CaseInsensitive),
-          m_relationIsAffectedByPseudoContent(false),
-          m_argument(String::emptyString),
-          m_value(String::emptyString),
-          m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
+        : m_type(type)
+        , m_relation(relation)
+        , m_pseudotype(PseudoNone)
+        , m_selectorText(text)
+        , m_attributeMatch(CaseInsensitive)
+        , m_relationIsAffectedByPseudoContent(false)
+        , m_argument(String::emptyString)
+        , m_value(String::emptyString)
+        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
                                     AtomicString::emptyAtomicString()))
     {
     }
@@ -1742,10 +1742,10 @@ public:
 
     CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document,
                  CSSStyleDeclaration* decl)
-        : ScriptWrappable(this),
-          m_selectorList(selectorList),
-          m_styleDeclaration(decl),
-          m_document(document)
+        : ScriptWrappable(this)
+        , m_selectorList(selectorList)
+        , m_styleDeclaration(decl)
+        , m_document(document)
     {
     }
 

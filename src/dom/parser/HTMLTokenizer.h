@@ -140,10 +140,10 @@ public:
         bool shouldAllowCDATA;
 
         Checkpoint()
-            : state(),
-              additionalAllowedCharacter('\0'),
-              skipNextNewLine(false),
-              shouldAllowCDATA(false)
+            : state()
+            , additionalAllowedCharacter('\0')
+            , skipNextNewLine(false)
+            , shouldAllowCDATA(false)
         {
         }
     };

@@ -24,9 +24,9 @@ namespace StarFish {
 class TransformOriginData : public gc {
 public:
     TransformOriginData()
-        : m_xaxis(Length(Length::Percent, 0.5f)),
-          m_yaxis(Length(Length::Percent, 0.5f)),
-          m_zaxis(Length())
+        : m_xaxis(Length(Length::Percent, 0.5f))
+        , m_yaxis(Length(Length::Percent, 0.5f))
+        , m_zaxis(Length())
     {
     }
 

@@ -22,10 +22,10 @@ namespace StarFish {
 class LengthData {
 public:
     LengthData()
-        : m_top(Length(Length::Fixed, 0)),
-          m_right(Length(Length::Fixed, 0)),
-          m_bottom(Length(Length::Fixed, 0)),
-          m_left(Length(Length::Fixed, 0))
+        : m_top(Length(Length::Fixed, 0))
+        , m_right(Length(Length::Fixed, 0))
+        , m_bottom(Length(Length::Fixed, 0))
+        , m_left(Length(Length::Fixed, 0))
     {
     }
 

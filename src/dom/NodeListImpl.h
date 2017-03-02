@@ -27,20 +27,20 @@ class NodeListImpl : public gc {
 public:
     NodeListImpl(Node* root, NodeListFilterFunction filter, void* data,
                  bool canCache = false)
-        : m_canCache(canCache),
-          m_isCacheValid(false),
-          m_root(root),
-          m_filter(filter),
-          m_data(data)
+        : m_canCache(canCache)
+        , m_isCacheValid(false)
+        , m_root(root)
+        , m_filter(filter)
+        , m_data(data)
     {
     }
 
     NodeListImpl(Node* root, bool canCache = true)
-        : m_canCache(canCache),
-          m_isCacheValid(true),
-          m_root(root),
-          m_filter(nullptr),
-          m_data(nullptr)
+        : m_canCache(canCache)
+        , m_isCacheValid(true)
+        , m_root(root)
+        , m_filter(nullptr)
+        , m_data(nullptr)
     {
     }
 

@@ -668,18 +668,18 @@ bool CSSSelector::isSimple(GCDeque<CSSSelector*>* selectorList)
     if (selectorList->size() == 1) {
         return true;
     }
-/*
-    if (m_selector->match() == CSSSelector::Tag) {
-        // We can't check against anyQName() here because namespace may
-        // not be nullAtom.
-        // Example:
-        //     @namespace "http://www.w3.org/2000/svg";
-        //     svg:not(:root) { ...
-        if (m_selector->tagQName().localName() == starAtom) {
-                return m_tagHistory->isSimple();
+    /*
+        if (m_selector->match() == CSSSelector::Tag) {
+            // We can't check against anyQName() here because namespace may
+            // not be nullAtom.
+            // Example:
+            //     @namespace "http://www.w3.org/2000/svg";
+            //     svg:not(:root) { ...
+            if (m_selector->tagQName().localName() == starAtom) {
+                    return m_tagHistory->isSimple();
+            }
         }
-    }
-*/
+    */
 
     return false;
 }
@@ -794,83 +794,83 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
         if (type() == PseudoClass) {
             setType(PseudoElement);
         }
-/*
-// fallthrough
-    case PseudoBackdrop:
-    case PseudoCue:
-    case PseudoResizer:
-    case PseudoScrollbar:
-    case PseudoScrollbarCorner:
-    case PseudoScrollbarButton:
-    case PseudoScrollbarThumb:
-    case PseudoScrollbarTrack:
-    case PseudoScrollbarTrackPiece:
-*/
+    /*
+    // fallthrough
+        case PseudoBackdrop:
+        case PseudoCue:
+        case PseudoResizer:
+        case PseudoScrollbar:
+        case PseudoScrollbarCorner:
+        case PseudoScrollbarButton:
+        case PseudoScrollbarThumb:
+        case PseudoScrollbarTrack:
+        case PseudoScrollbarTrackPiece:
+    */
     case PseudoSelection:
-/*
-    case PseudoWebKitCustomElement:
-    case PseudoContent:
-    case PseudoShadow:
-    case PseudoSlotted:
-*/
+        /*
+            case PseudoWebKitCustomElement:
+            case PseudoContent:
+            case PseudoShadow:
+            case PseudoSlotted:
+        */
         if (type() != PseudoElement) {
             setPseudoType(PseudoNone);
         }
         break;
-/*
-    case PseudoFirstPage:
-    case PseudoLeftPage:
-    case PseudoRightPage:
-        if (type() != PagePseudoClass) {
-            setPseudoType(PseudoUnknown);
-        }
-        break;
-*/
+    /*
+        case PseudoFirstPage:
+        case PseudoLeftPage:
+        case PseudoRightPage:
+            if (type() != PagePseudoClass) {
+                setPseudoType(PseudoUnknown);
+            }
+            break;
+    */
     case PseudoActive:
-/*
-    case PseudoAny:
-    case PseudoAnyLink:
-    case PseudoAutofill:
-    case PseudoChecked:
-    case PseudoCornerPresent:
-    case PseudoDecrement:
-    case PseudoDefault:
-*/
+    /*
+        case PseudoAny:
+        case PseudoAnyLink:
+        case PseudoAutofill:
+        case PseudoChecked:
+        case PseudoCornerPresent:
+        case PseudoDecrement:
+        case PseudoDefault:
+    */
     case PseudoDisabled:
-/*
-    case PseudoDoubleButton:
-    case PseudoDrag:
-*/
+    /*
+        case PseudoDoubleButton:
+        case PseudoDrag:
+    */
     case PseudoEmpty:
     case PseudoEnabled:
-//  case PseudoEnd:
+    //  case PseudoEnd:
     case PseudoFirstChild:
     case PseudoFirstOfType:
     case PseudoFocus:
-/*
-    case PseudoFullPageMedia:
-    case PseudoFullScreen:
-    case PseudoFullScreenAncestor:
-    case PseudoFutureCue:
-    case PseudoHorizontal:
-    case PseudoHost:
-    case PseudoHostContext:
-*/
+    /*
+        case PseudoFullPageMedia:
+        case PseudoFullScreen:
+        case PseudoFullScreenAncestor:
+        case PseudoFutureCue:
+        case PseudoHorizontal:
+        case PseudoHost:
+        case PseudoHostContext:
+    */
     case PseudoHover:
-/*
-    case PseudoInRange:
-    case PseudoIncrement:
-    case PseudoIndeterminate:
-    case PseudoInvalid:
-*/
+    /*
+        case PseudoInRange:
+        case PseudoIncrement:
+        case PseudoIndeterminate:
+        case PseudoInvalid:
+    */
     case PseudoLang:
     case PseudoLastChild:
     case PseudoLastOfType:
     case PseudoLink:
-/*
-    case PseudoListBox:
-    case PseudoNoButton:
-*/
+    /*
+        case PseudoListBox:
+        case PseudoNoButton:
+    */
     case PseudoNot:
     case PseudoNthChild:
     case PseudoNthLastChild:
@@ -878,31 +878,31 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
     case PseudoNthOfType:
     case PseudoOnlyChild:
     case PseudoOnlyOfType:
-/*
-    case PseudoOptional:
-    case PseudoPlaceholderShown:
-    case PseudoOutOfRange:
-    case PseudoPastCue:
-    case PseudoReadOnly:
-    case PseudoReadWrite:
-    case PseudoRequired:
-*/
+    /*
+        case PseudoOptional:
+        case PseudoPlaceholderShown:
+        case PseudoOutOfRange:
+        case PseudoPastCue:
+        case PseudoReadOnly:
+        case PseudoReadWrite:
+        case PseudoRequired:
+    */
     case PseudoRoot:
-/*
-    case PseudoScope:
-    case PseudoSingleButton:
-    case PseudoSpatialNavigationFocus:
-    case PseudoStart:
-*/
+    /*
+        case PseudoScope:
+        case PseudoSingleButton:
+        case PseudoSpatialNavigationFocus:
+        case PseudoStart:
+    */
     case PseudoTarget:
     case PseudoNone:
-/*
-    case PseudoUnresolved:
-    case PseudoValid:
-    case PseudoVertical:
-    case PseudoVisited:
-    case PseudoWindowInactive:
-*/
+        /*
+            case PseudoUnresolved:
+            case PseudoValid:
+            case PseudoVertical:
+            case PseudoVisited:
+            case PseudoWindowInactive:
+        */
         if (type() != PseudoClass) {
             setPseudoType(PseudoNone);
         }
@@ -2168,8 +2168,8 @@ void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 }
 
 StyleResolver::StyleResolver(Document& document)
-    : m_document(document),
-      m_mediumFontSize(
+    : m_document(document)
+    , m_mediumFontSize(
           document.window()->starFish()->defaultFontSizeMultiplier() *
           DEFAULT_FONT_SIZE)
 {

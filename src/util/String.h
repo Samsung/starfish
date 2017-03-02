@@ -530,18 +530,18 @@ class SegmentedString;
 class SegmentedSubstring {
 public:
     SegmentedSubstring()
-        : m_length(0),
-          m_doNotExcludeLineNumbers(true),
-          m_is8Bit(false),
-          m_string(String::emptyString)
+        : m_length(0)
+        , m_doNotExcludeLineNumbers(true)
+        , m_is8Bit(false)
+        , m_string(String::emptyString)
     {
         m_data.string32Ptr = 0;
     }
 
     SegmentedSubstring(String* str)
-        : m_length(str->length()),
-          m_doNotExcludeLineNumbers(true),
-          m_string(str)
+        : m_length(str->length())
+        , m_doNotExcludeLineNumbers(true)
+        , m_string(str)
     {
         if (m_length) {
             if (m_string->isASCIIString()) {
@@ -760,31 +760,31 @@ private:
 class SegmentedString {
 public:
     SegmentedString()
-        : m_pushedChar1(0),
-          m_pushedChar2(0),
-          m_currentChar(0),
-          m_numberOfCharactersConsumedPriorToCurrentString(0),
-          m_numberOfCharactersConsumedPriorToCurrentLine(0),
-          m_currentLine(0),
-          m_closed(false),
-          m_empty(true),
-          m_fastPathFlags(NoFastPath),
-          m_advanceFunc(&SegmentedString::advanceEmpty),
-          m_advanceAndUpdateLineNumberFunc(&SegmentedString::advanceEmpty)
+        : m_pushedChar1(0)
+        , m_pushedChar2(0)
+        , m_currentChar(0)
+        , m_numberOfCharactersConsumedPriorToCurrentString(0)
+        , m_numberOfCharactersConsumedPriorToCurrentLine(0)
+        , m_currentLine(0)
+        , m_closed(false)
+        , m_empty(true)
+        , m_fastPathFlags(NoFastPath)
+        , m_advanceFunc(&SegmentedString::advanceEmpty)
+        , m_advanceAndUpdateLineNumberFunc(&SegmentedString::advanceEmpty)
     {
     }
 
     SegmentedString(String* str)
-        : m_pushedChar1(0),
-          m_pushedChar2(0),
-          m_currentString(str),
-          m_currentChar(0),
-          m_numberOfCharactersConsumedPriorToCurrentString(0),
-          m_numberOfCharactersConsumedPriorToCurrentLine(0),
-          m_currentLine(0),
-          m_closed(false),
-          m_empty(!str->length()),
-          m_fastPathFlags(NoFastPath)
+        : m_pushedChar1(0)
+        , m_pushedChar2(0)
+        , m_currentString(str)
+        , m_currentChar(0)
+        , m_numberOfCharactersConsumedPriorToCurrentString(0)
+        , m_numberOfCharactersConsumedPriorToCurrentLine(0)
+        , m_currentLine(0)
+        , m_closed(false)
+        , m_empty(!str->length())
+        , m_fastPathFlags(NoFastPath)
     {
         if (m_currentString.m_length) {
             m_currentChar = m_currentString.getCurrentChar();

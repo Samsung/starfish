@@ -25,10 +25,10 @@ class DocumentType : public Node {
 public:
     DocumentType(Document* document, String* name, String* publicId,
                  String* systemId)
-        : Node(document),
-          m_name(name),
-          m_publicId(publicId),
-          m_systemId(systemId)
+        : Node(document)
+        , m_name(name)
+        , m_publicId(publicId)
+        , m_systemId(systemId)
     {
 #ifdef STARFISH_TC_COVERAGE
         if (name->equals("html")) {

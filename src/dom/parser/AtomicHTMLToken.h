@@ -130,9 +130,9 @@ public:
     }
 
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken& token)
-        : m_starFish(sf),
-          m_type(token.type()),
-          m_name(AtomicString::emptyAtomicString())
+        : m_starFish(sf)
+        , m_type(token.type())
+        , m_name(AtomicString::emptyAtomicString())
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
@@ -223,10 +223,10 @@ public:
         }
     }*/
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken::Type type)
-        : m_starFish(sf),
-          m_type(type),
-          m_name(AtomicString::emptyAtomicString()),
-          m_selfClosing(false)
+        : m_starFish(sf)
+        , m_type(type)
+        , m_name(AtomicString::emptyAtomicString())
+        , m_selfClosing(false)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
@@ -235,11 +235,11 @@ public:
     AtomicHTMLToken(
         StarFish* sf, HTMLToken::Type type, AtomicString name,
         const GCVector<Attribute>& attributes = GCVector<Attribute>())
-        : m_starFish(sf),
-          m_type(type),
-          m_name(name),
-          m_selfClosing(false),
-          m_attributes(attributes)
+        : m_starFish(sf)
+        , m_type(type)
+        , m_name(name)
+        , m_selfClosing(false)
+        , m_attributes(attributes)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;

@@ -30,10 +30,10 @@ static const int g_ioBufferSize = 4096;
 class DemuxerFFmpeg : public Demuxer {
 public:
     DemuxerFFmpeg()
-        : Demuxer(),
-          m_isStreamFinded(false),
-          m_formatContext(nullptr),
-          m_ioContext(nullptr)
+        : Demuxer()
+        , m_isStreamFinded(false)
+        , m_formatContext(nullptr)
+        , m_ioContext(nullptr)
     {
         init();
     }
@@ -159,7 +159,8 @@ public:
         if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
             char error[128];
             av_strerror(ret, error, 128);
-            STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: Error(%s)\n", error);
+            STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo
+        avformat_find_stream_info: Error(%s)\n", error);
             return false;
         }
         */

@@ -24,10 +24,10 @@ namespace StarFish {
 class PseudoElementData : public gc {
 public:
     PseudoElementData()
-        : m_hasFirstLine(false),
-          m_hasFirstLetter(false),
-          m_hasBefore(false),
-          m_hasAfter(false)
+        : m_hasFirstLine(false)
+        , m_hasFirstLetter(false)
+        , m_hasBefore(false)
+        , m_hasAfter(false)
     {
     }
 

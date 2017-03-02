@@ -48,13 +48,13 @@ public:
     };
 
     Resource(URL* url, ResourceLoader* loader)
-        : m_isIncludedInComputingWindowOnLoadEvent(true),
-          m_isReferencedByAnoterResource(false),
-          m_isCanceledButContinueLoadingDueToCache(false),
-          m_state(BeforeSend),
-          m_url(url),
-          m_loader(loader),
-          m_networkRequest(nullptr)
+        : m_isIncludedInComputingWindowOnLoadEvent(true)
+        , m_isReferencedByAnoterResource(false)
+        , m_isCanceledButContinueLoadingDueToCache(false)
+        , m_state(BeforeSend)
+        , m_url(url)
+        , m_loader(loader)
+        , m_networkRequest(nullptr)
     {
     }
 

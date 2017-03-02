@@ -159,19 +159,17 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* win, int w, int h,
                    float defaultFontSizeMultiplier)
-    : m_locale(icu::Locale::createFromName(locale)),
-      m_lineBreaker(nullptr),
-      m_timezoneID(String::fromUTF8(timezoneID)),
-      m_defaultFontSizeMultiplier(defaultFontSizeMultiplier),
-      m_console(new Console(this))
+    : m_locale(icu::Locale::createFromName(locale))
+    , m_lineBreaker(nullptr)
+    , m_timezoneID(String::fromUTF8(timezoneID))
+    , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_console(new Console(this))
 #if defined(STARFISH_ENABLE_INSPECTOR)
-      ,
-      m_inspector(nullptr)
+    , m_inspector(nullptr)
 #endif
-      ,
-      m_enterCount(0),
-      m_seed((unsigned int)time(NULL)),
-      m_offset(-1)
+    , m_enterCount(0)
+    , m_seed((unsigned int)time(NULL))
+    , m_offset(-1)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -722,16 +720,16 @@ void StarFish::setupInspector(uint32_t portNumber)
 }
 #endif
 StaticStrings::StaticStrings(StarFish* sf)
-    : m_starFish(sf),
-      m_xhtmlNamespaceURI(
-          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml")),
-      m_documentLocalName(AtomicString::createAtomicString(sf, "#document")),
-      m_documentFragmentLocalName(
-          AtomicString::createAtomicString(sf, "#document-fragment")),
-      m_textLocalName(AtomicString::createAtomicString(sf, "#text")),
-      m_cDataSectionLocalName(
-          AtomicString::createAtomicString(sf, "#cdata-section")),
-      m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
+    : m_starFish(sf)
+    , m_xhtmlNamespaceURI(
+          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
+    , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
+    , m_documentFragmentLocalName(
+          AtomicString::createAtomicString(sf, "#document-fragment"))
+    , m_textLocalName(AtomicString::createAtomicString(sf, "#text"))
+    , m_cDataSectionLocalName(
+          AtomicString::createAtomicString(sf, "#cdata-section"))
+    , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
 {
 #define DEFINE_HTML_LOCAL_NAMES(name)  \
     m_##name##TagName = QualifiedName( \

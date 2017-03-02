@@ -33,23 +33,22 @@ namespace StarFish {
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    URL* uri, String* charSet, bool isXMLDocument,
                    bool doesParticipateInRendering)
-    : Node(this, scriptBindingInstance),
-      m_inParsing(false),
-      m_didLoadBrokenImage(false),
-      m_isXMLDocument(isXMLDocument),
-      m_doesParticipateInRendering(doesParticipateInRendering),
-      m_compatibilityMode(Document::NoQuirksMode),
-      m_window(window),
-      m_documentURI(uri),
-      m_charset(charSet),
-      m_resourceLoader(*this),
-      m_styleResolver(*this),
-      m_documentBuilder(nullptr),
-      m_pageVisibilityState(PageVisibilityStateVisible),
-      m_domVersion(0)
+    : Node(this, scriptBindingInstance)
+    , m_inParsing(false)
+    , m_didLoadBrokenImage(false)
+    , m_isXMLDocument(isXMLDocument)
+    , m_doesParticipateInRendering(doesParticipateInRendering)
+    , m_compatibilityMode(Document::NoQuirksMode)
+    , m_window(window)
+    , m_documentURI(uri)
+    , m_charset(charSet)
+    , m_resourceLoader(*this)
+    , m_styleResolver(*this)
+    , m_documentBuilder(nullptr)
+    , m_pageVisibilityState(PageVisibilityStateVisible)
+    , m_domVersion(0)
 #ifdef STARFISH_TIZEN
-      ,
-      m_tizenWidgetTransparentBackground(0)
+    , m_tizenWidgetTransparentBackground(0)
 #endif
 {
     m_scriptBindingInstance = scriptBindingInstance;

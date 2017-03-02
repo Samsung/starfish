@@ -64,9 +64,9 @@ template <ClassElementListBehavior onlyRoots>
 class ClassElementList : public gc {
 public:
     ClassElementList(Node& rootNode, String* className)
-        : m_className(className),
-          m_rootNode(&rootNode),
-          m_currentElement(nextInternal(
+        : m_className(className)
+        , m_rootNode(&rootNode)
+        , m_currentElement(nextInternal(
               (Element*)Traverse::firstChild(&rootNode, [&](Node* child) {
                   if (child->isElement()) {
                       return true;

@@ -29,12 +29,12 @@ class TimeRange;
 class TextTrackCue : public EventTarget {
 public:
     TextTrackCue(double start, double end, String* payload)
-        : EventTarget(),
-          m_textTrack(nullptr),
-          m_id(String::emptyString),
-          m_timeRange(TimeRange(start, end)),
-          m_payload(String::emptyString),
-          m_payloadAsHTML(nullptr)
+        : EventTarget()
+        , m_textTrack(nullptr)
+        , m_id(String::emptyString)
+        , m_timeRange(TimeRange(start, end))
+        , m_payload(String::emptyString)
+        , m_payloadAsHTML(nullptr)
     {
         setPayload(payload);
     }

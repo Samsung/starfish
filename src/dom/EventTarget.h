@@ -41,19 +41,19 @@ class EventListener : public gc {
 public:
     EventListener(ScriptValue fn, bool isAttribute = false,
                   bool useCapture = false)
-        : m_isAttribute(isAttribute),
-          m_capture(useCapture),
-          m_isNeedToParse(false),
-          m_listener(fn)
+        : m_isAttribute(isAttribute)
+        , m_capture(useCapture)
+        , m_isNeedToParse(false)
+        , m_listener(fn)
     {
     }
 
     EventListener(String* scriptString, Element* target,
                   bool isAttribute = false, bool useCapture = false)
-        : m_isAttribute(isAttribute),
-          m_capture(useCapture),
-          m_isNeedToParse(true),
-          m_scriptStringNeedToParse(
+        : m_isAttribute(isAttribute)
+        , m_capture(useCapture)
+        , m_isNeedToParse(true)
+        , m_scriptStringNeedToParse(
               new AttributeStringEventFunctionData(target, scriptString))
     {
     }

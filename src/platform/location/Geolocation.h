@@ -29,15 +29,15 @@ public:
     Coordinates(StarFish* starFish, double latitude, double longitude,
                 double* altitude, double accuracy, double* altitudeAccuracy,
                 double* heading, double* speed)
-        : ScriptWrappable(this),
-          m_starFish(starFish),
-          m_latitude(latitude),
-          m_longitude(longitude),
-          m_altitude(altitude),
-          m_accuracy(accuracy),
-          m_altitudeAccuracy(altitudeAccuracy),
-          m_heading(heading),
-          m_speed(speed)
+        : ScriptWrappable(this)
+        , m_starFish(starFish)
+        , m_latitude(latitude)
+        , m_longitude(longitude)
+        , m_altitude(altitude)
+        , m_accuracy(accuracy)
+        , m_altitudeAccuracy(altitudeAccuracy)
+        , m_heading(heading)
+        , m_speed(speed)
     {
     }
 
@@ -105,10 +105,10 @@ protected:
 class Geoposition : public ScriptWrappable {
 public:
     Geoposition(StarFish* starFish, Coordinates* c, DOMTimeStamp timestamp)
-        : ScriptWrappable(this),
-          m_starFish(starFish),
-          m_coords(c),
-          m_timestamp(timestamp)
+        : ScriptWrappable(this)
+        , m_starFish(starFish)
+        , m_coords(c)
+        , m_timestamp(timestamp)
     {
     }
 

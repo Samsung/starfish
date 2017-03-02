@@ -52,10 +52,10 @@ class ScriptDownloadClient : public ResourceClient {
 public:
     ScriptDownloadClient(HTMLScriptElement* script, Resource* res,
                          bool forceSync, bool inParser)
-        : ResourceClient(res),
-          m_element(script),
-          m_forceSync(forceSync),
-          m_inParser(inParser)
+        : ResourceClient(res)
+        , m_element(script)
+        , m_forceSync(forceSync)
+        , m_inParser(inParser)
     {
     }
 

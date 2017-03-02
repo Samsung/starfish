@@ -127,19 +127,19 @@ public:
 };
 
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
-    : MediaPlayer(element),
-      m_inPrepare(false),
-      m_alive(true),
-      m_isVideoBufferUnderrunState(false),
-      m_isAudioBufferUnderrunState(false),
-      m_needsPlayAfterPrepare(false),
-      m_isEnded(false),
-      m_seekingTimer(SIZE_MAX),
-      m_mseClient(nullptr),
-      m_videoBufferMutex(new Mutex()),
-      m_audioBufferMutex(new Mutex()),
-      m_preparedCallback(nullptr),
-      m_canvasSurface(nullptr)
+    : MediaPlayer(element)
+    , m_inPrepare(false)
+    , m_alive(true)
+    , m_isVideoBufferUnderrunState(false)
+    , m_isAudioBufferUnderrunState(false)
+    , m_needsPlayAfterPrepare(false)
+    , m_isEnded(false)
+    , m_seekingTimer(SIZE_MAX)
+    , m_mseClient(nullptr)
+    , m_videoBufferMutex(new Mutex())
+    , m_audioBufferMutex(new Mutex())
+    , m_preparedCallback(nullptr)
+    , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
     initDisplay();

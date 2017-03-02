@@ -33,26 +33,26 @@
 namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
-    : HTMLElement(document),
-      m_autoplayingFlag(true),
-      m_isPaused(true),
-      m_isSeeking(false),
-      m_isEnded(false),
-      m_delayingTheLoadEvent(false),
-      m_officialPlaybackPosition(0),
-      m_defaultPlaybackStartPosition(0),
-      m_muted(false),
-      m_volume(1.0),
-      m_pendingSeek(std::numeric_limits<double>::quiet_NaN()),
-      m_mediaPlayer(nullptr),
-      m_currentSrc(String::emptyString),
-      m_textTracks(new TextTrackList()),
-      m_readyState(HTMLMediaElement::HAVE_NOTHING),
-      m_networkState(NetworkState::NETWORK_EMPTY),
-      m_currentOperation(nullptr),
-      m_currentPendingOperationCount(0),
-      m_currentPendingOperationHandle(SIZE_MAX),
-      m_resourceSelectionContext(nullptr)
+    : HTMLElement(document)
+    , m_autoplayingFlag(true)
+    , m_isPaused(true)
+    , m_isSeeking(false)
+    , m_isEnded(false)
+    , m_delayingTheLoadEvent(false)
+    , m_officialPlaybackPosition(0)
+    , m_defaultPlaybackStartPosition(0)
+    , m_muted(false)
+    , m_volume(1.0)
+    , m_pendingSeek(std::numeric_limits<double>::quiet_NaN())
+    , m_mediaPlayer(nullptr)
+    , m_currentSrc(String::emptyString)
+    , m_textTracks(new TextTrackList())
+    , m_readyState(HTMLMediaElement::HAVE_NOTHING)
+    , m_networkState(NetworkState::NETWORK_EMPTY)
+    , m_currentOperation(nullptr)
+    , m_currentPendingOperationCount(0)
+    , m_currentPendingOperationHandle(SIZE_MAX)
+    , m_resourceSelectionContext(nullptr)
 {
 }
 

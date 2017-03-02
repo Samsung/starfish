@@ -34,9 +34,9 @@
 namespace StarFish {
 
 Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
-    : m_starFish(starFish),
-      m_zmqContext(1),
-      m_zmqSocket(m_zmqContext, ZMQ_DEALER)
+    : m_starFish(starFish)
+    , m_zmqContext(1)
+    , m_zmqSocket(m_zmqContext, ZMQ_DEALER)
 {
     m_ioThread = new Thread();
     std::string addr;

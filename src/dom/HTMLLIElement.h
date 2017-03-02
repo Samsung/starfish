@@ -24,8 +24,8 @@ namespace StarFish {
 class HTMLLIElement : public HTMLElement {
 public:
     HTMLLIElement(Document* document, AtomicString name)
-        : HTMLElement(document),
-          m_name(document->window()
+        : HTMLElement(document)
+        , m_name(document->window()
                      ->starFish()
                      ->staticStrings()
                      ->m_xhtmlNamespaceURI,
