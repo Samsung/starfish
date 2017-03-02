@@ -29,9 +29,7 @@ class Window;
 class DOMImplementation : public ScriptWrappable {
 public:
     DOMImplementation(Window* window, ScriptBindingInstance* instance)
-        : ScriptWrappable(this)
-        , m_window(window)
-        , m_instance(instance)
+        : ScriptWrappable(this), m_window(window), m_instance(instance)
     {
     }
 
@@ -45,10 +43,14 @@ public:
         return ScriptWrappable::Type::DOMImplementationObject;
     }
 
-    DocumentType* createDocumentType(String* qualifiedName, String* publicId, String* systemId);
+    DocumentType* createDocumentType(String* qualifiedName, String* publicId,
+                                     String* systemId);
     Document* createHTMLDocument(String* title = String::spaceString);
 
-    bool hasFeature() { return true; } // useless; always returns true
+    bool hasFeature()
+    {
+        return true;
+    } // useless; always returns true
 private:
     Window* m_window;
     ScriptBindingInstance* m_instance;

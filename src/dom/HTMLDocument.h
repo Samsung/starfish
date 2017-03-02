@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-
 #ifndef __StarFishHTMLDocument__
 #define __StarFishHTMLDocument__
 
@@ -26,8 +25,10 @@ class Window;
 
 class HTMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool doesParticipateInRendering)
-        : Document(window, scriptBindingInstance, url, charSet, false, doesParticipateInRendering)
+    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
+                 URL* url, String* charSet, bool doesParticipateInRendering)
+        : Document(window, scriptBindingInstance, url, charSet, false,
+                   doesParticipateInRendering)
     {
     }
 
@@ -36,13 +37,16 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Element* createElement(AtomicString localName, bool shouldCheckName);
-    static Element* createHTMLElement(Document* document, AtomicString localName);
+    virtual Element* createElement(AtomicString localName,
+                                   bool shouldCheckName);
+    static Element* createHTMLElement(Document* document,
+                                      AtomicString localName);
 
-    static bool isCaseSensitiveAttribute(Document& document, const QualifiedName& attributeName);
+    static bool isCaseSensitiveAttribute(Document& document,
+                                         const QualifiedName& attributeName);
+
 protected:
 };
-
 }
 
 #endif

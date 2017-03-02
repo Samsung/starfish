@@ -79,11 +79,13 @@ void HTMLStyleElement::generateStyleSheet()
 {
     STARFISH_ASSERT(isInDocumentScopeAndDocumentParticipateInRendering());
 
-    if (m_inParsing)
+    if (m_inParsing) {
         return;
+    }
 
-    if (m_generatedSheet)
+    if (m_generatedSheet) {
         removeStyleSheet();
+    }
 
     CSSParser parser(document());
 
@@ -114,15 +116,20 @@ void HTMLStyleElement::removeStyleSheet()
 
 void HTMLStyleElement::dispatchLoadEvent()
 {
-    document()->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-        HTMLStyleElement* element = (HTMLStyleElement*)data;
-        if (!element->hasLoaded()) {
-            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
-            Event* e = new Event(eventType, EventInit(false, false));
-            element->dispatchEvent(e);
-            element->setLoaded();
-        }
-    }, this);
+    document()->window()->starFish()->messageLoop()->addIdler(
+        [](size_t handle, void* data) {
+            HTMLStyleElement* element = (HTMLStyleElement*)data;
+            if (!element->hasLoaded()) {
+                String* eventType = element->document()
+                                        ->window()
+                                        ->starFish()
+                                        ->staticStrings()
+                                        ->m_load.localName();
+                Event* e = new Event(eventType, EventInit(false, false));
+                element->dispatchEvent(e);
+                element->setLoaded();
+            }
+        },
+        this);
 }
-
 }

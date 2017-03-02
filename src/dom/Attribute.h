@@ -23,7 +23,8 @@
 namespace StarFish {
 
 class Attribute;
-typedef String* (*AttributeValueGetter)(Element* element, const Attribute * const attr);
+typedef String* (*AttributeValueGetter)(Element* element,
+                                        const Attribute* const attr);
 
 class AttributeRareData : public gc {
 public:
@@ -38,8 +39,7 @@ public:
 
 class Attribute {
 public:
-    Attribute(QualifiedName name, String* value)
-        : m_name(name)
+    Attribute(QualifiedName name, String* value) : m_name(name)
     {
         m_value = value;
         m_rareData = nullptr;
@@ -55,8 +55,9 @@ public:
     {
         STARFISH_ASSERT(m_name.localName()->length());
 
-        if (UNLIKELY(m_rareData && m_rareData->m_getter))
+        if (UNLIKELY(m_rareData && m_rareData->m_getter)) {
             return m_rareData->m_getter(m_rareData->m_element, this);
+        }
         return m_value;
     }
 
@@ -71,11 +72,13 @@ public:
         m_value = v;
     }
 
-    void registerGetterCallback(Element* element, AttributeValueGetter getter) const
+    void registerGetterCallback(Element* element,
+                                AttributeValueGetter getter) const
     {
         setupAttributeRareData(element);
         m_rareData->m_getter = getter;
     }
+
 private:
     void setupAttributeRareData(Element* element) const
     {
@@ -86,8 +89,8 @@ private:
     mutable AttributeRareData* m_rareData;
 };
 
-Attribute* findAttributeInVector(GCVector<Attribute>& attr, const QualifiedName& attributeName);
+Attribute* findAttributeInVector(GCVector<Attribute>& attr,
+                                 const QualifiedName& attributeName);
 }
-
 
 #endif

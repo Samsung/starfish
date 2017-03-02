@@ -24,12 +24,13 @@ namespace StarFish {
 
 class HTMLScriptElement : public HTMLElement {
     friend class ScriptDownloadClient;
+
 public:
     HTMLScriptElement(Document* document)
-        : HTMLElement(document)
-        , m_isAlreadyStarted(false)
-        , m_isParserInserted(false)
-        , m_didScriptExecuted(false)
+        : HTMLElement(document),
+          m_isAlreadyStarted(false),
+          m_isParserInserted(false),
+          m_didScriptExecuted(false)
     {
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("+++tag:script\n");
@@ -45,12 +46,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_scriptTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_scriptTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_scriptTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_scriptTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -64,7 +73,9 @@ public:
 
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
 
     virtual void didNodeInsertedToDocumenTree();
     virtual Node* clone();
@@ -92,7 +103,6 @@ protected:
     bool m_isParserInserted;
     bool m_didScriptExecuted;
 };
-
 }
 
 #endif

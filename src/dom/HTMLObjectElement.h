@@ -28,8 +28,7 @@ class HTMLObjectElementContent;
 
 class HTMLObjectElement : public HTMLElement {
 public:
-    HTMLObjectElement(Document* document)
-        : HTMLElement(document)
+    HTMLObjectElement(Document* document) : HTMLElement(document)
     {
         m_content = nullptr;
     }
@@ -43,12 +42,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_objectTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_objectTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_objectTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_objectTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -63,15 +70,17 @@ public:
         return m_content;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
 protected:
     HTMLObjectElementContent* m_content;
 };
 
 class HTMLObjectElementContent : public gc {
 public:
-    HTMLObjectElementContent(HTMLObjectElement* element)
-        : m_element(element)
+    HTMLObjectElementContent(HTMLObjectElement* element) : m_element(element)
     {
     }
 
@@ -82,12 +91,10 @@ public:
 
     virtual void load()
     {
-
     }
 
     virtual void unload()
     {
-
     }
 
     virtual LayoutUnit width()
@@ -100,7 +107,9 @@ public:
         return STARFISH_OBJECT_ELEMENT_DEFAULT_WIDTH;
     }
 
-    virtual void drawContent(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect) = 0;
+    virtual void drawContent(Canvas* canvas, const LayoutRect& videoRect,
+                             const LayoutRect& absVideoRect) = 0;
+
 protected:
     HTMLObjectElement* m_element;
 };
@@ -112,14 +121,15 @@ public:
     {
     }
 
-    virtual void drawContent(Canvas* canvas, const LayoutRect& contentRect, const LayoutRect& absContentRect)
+    virtual void drawContent(Canvas* canvas, const LayoutRect& contentRect,
+                             const LayoutRect& absContentRect)
     {
-        canvas->punchHole(Rect(contentRect.x(), contentRect.y(), contentRect.width(), contentRect.height()));
+        canvas->punchHole(Rect(contentRect.x(), contentRect.y(),
+                               contentRect.width(), contentRect.height()));
     }
 
 protected:
 };
-
 }
 
 #endif

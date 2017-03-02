@@ -22,16 +22,17 @@
 
 namespace StarFish {
 
-DOMRectList::DOMRectList()
-    : ScriptWrappable(this)
-{ }
+DOMRectList::DOMRectList() : ScriptWrappable(this)
+{
+}
 
 DOMRectList::DOMRectList(const std::vector<DOMQuad>& quads)
     : ScriptWrappable(this)
 {
     m_list.reserve(quads.size());
-    for (size_t i = 0 ; i < quads.size(); ++i)
+    for (size_t i = 0; i < quads.size(); ++i) {
         m_list.push_back(DOMRect::create(quads[i].bounds()));
+    }
 }
 
 unsigned long DOMRectList::length() const
@@ -41,10 +42,10 @@ unsigned long DOMRectList::length() const
 
 DOMRect* DOMRectList::item(unsigned long index)
 {
-    if (index >= m_list.size())
+    if (index >= m_list.size()) {
         return nullptr;
+    }
 
     return m_list[index];
 }
-
 }

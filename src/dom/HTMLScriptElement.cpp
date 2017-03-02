@@ -50,11 +50,12 @@ static bool isJavaScriptType(const char* type)
 
 class ScriptDownloadClient : public ResourceClient {
 public:
-    ScriptDownloadClient(HTMLScriptElement* script, Resource* res, bool forceSync, bool inParser)
-        : ResourceClient(res)
-        , m_element(script)
-        , m_forceSync(forceSync)
-        , m_inParser(inParser)
+    ScriptDownloadClient(HTMLScriptElement* script, Resource* res,
+                         bool forceSync, bool inParser)
+        : ResourceClient(res),
+          m_element(script),
+          m_forceSync(forceSync),
+          m_inParser(inParser)
     {
     }
 
@@ -67,10 +68,19 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        if (isJavaScriptType(m_resource->networkRequest()->mimeType()->toLower()->utf8Data()) || m_resource->networkRequest()->mimeType()->toLower()->equals("text/plain")
-            || m_resource->networkRequest()->mimeType()->toLower()->equals("text/html") || m_resource->networkRequest()->mimeType()->toLower()->equals("application/json")) {
+        if (isJavaScriptType(m_resource->networkRequest()
+                                 ->mimeType()
+                                 ->toLower()
+                                 ->utf8Data()) ||
+            m_resource->networkRequest()->mimeType()->toLower()->equals(
+                "text/plain") ||
+            m_resource->networkRequest()->mimeType()->toLower()->equals(
+                "text/html") ||
+            m_resource->networkRequest()->mimeType()->toLower()->equals(
+                "application/json")) {
             String* text = m_resource->asTextResource()->text();
-            m_element->document()->window()->scriptBindingInstance()->evaluate(text);
+            m_element->document()->window()->scriptBindingInstance()->evaluate(
+                text);
         }
         didScriptLoaded();
     }
@@ -78,9 +88,11 @@ public:
     void didScriptLoaded()
     {
         m_element->m_didScriptExecuted = true;
-        if (m_inParser && !m_forceSync)
+        if (m_inParser && !m_forceSync) {
             m_element->document()->resumeDocumentParsing();
+        }
     }
+
 protected:
     HTMLScriptElement* m_element;
     bool m_forceSync;
@@ -89,14 +101,20 @@ protected:
 
 bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 {
-    if (m_isParserInserted)
+    if (m_isParserInserted) {
         return false;
+    }
 
-    if (!m_isAlreadyStarted && isInDocumentScopeAndDocumentParticipateInRendering()) {
-        String* typeAttr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
-        if (!typeAttr->equals(String::emptyString) && !isJavaScriptType(typeAttr->toLower()->utf8Data()))
+    if (!m_isAlreadyStarted &&
+        isInDocumentScopeAndDocumentParticipateInRendering()) {
+        String* typeAttr = getAttribute(
+            document()->window()->starFish()->staticStrings()->m_type);
+        if (!typeAttr->equals(String::emptyString) &&
+            !isJavaScriptType(typeAttr->toLower()->utf8Data())) {
             return false;
-        size_t idx = hasAttribute(document()->window()->starFish()->staticStrings()->m_src);
+        }
+        size_t idx = hasAttribute(
+            document()->window()->starFish()->staticStrings()->m_src);
         if (idx == SIZE_MAX) {
             if (!firstChild()) {
                 return false;
@@ -110,23 +128,38 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             String* url = getAttribute(idx);
             m_isAlreadyStarted = true;
 
-            if (!url->length())
+            if (!url->length()) {
                 return false;
+            }
 
-            String* charset = getAttribute(document()->window()->starFish()->staticStrings()->m_charset)->trim();
-            TextResource* res = document()->resourceLoader()->fetchText(URL::createURL(document()->documentURI()->baseURI(), url), charset);
-            res->addResourceClient(new ScriptDownloadClient(this, res, forceSync, inParser));
+            String* charset = getAttribute(document()
+                                               ->window()
+                                               ->starFish()
+                                               ->staticStrings()
+                                               ->m_charset)
+                                  ->trim();
+            TextResource* res = document()->resourceLoader()->fetchText(
+                URL::createURL(document()->documentURI()->baseURI(), url),
+                charset);
+            res->addResourceClient(
+                new ScriptDownloadClient(this, res, forceSync, inParser));
             res->addResourceClient(new ElementResourceClient(this, res, true));
-            res->request(forceSync ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::NeverSync);
+            res->request(forceSync
+                             ? Resource::ResourceRequestSyncLevel::AlwaysSync
+                             : Resource::ResourceRequestSyncLevel::NeverSync);
             return true;
         }
     }
     return false;
 }
 
-void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         executeScript();
     }
@@ -153,7 +186,8 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
 String* HTMLScriptElement::text()
 {
     String* str = String::createASCIIString("");
-    for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
+    for (Node* child = firstChild(); child != nullptr;
+         child = child->nextSibling()) {
         if (child->nodeType() == TEXT_NODE) {
             str = str->concat(child->textContent());
         }
@@ -172,10 +206,12 @@ void HTMLScriptElement::setText(String* s)
 
 Node* HTMLScriptElement::clone()
 {
-    HTMLScriptElement* n = HTMLElement::clone()->asElement()->asHTMLElement()->asHTMLScriptElement();
+    HTMLScriptElement* n = HTMLElement::clone()
+                               ->asElement()
+                               ->asHTMLElement()
+                               ->asHTMLScriptElement();
     n->m_isAlreadyStarted = m_isAlreadyStarted;
     n->m_didScriptExecuted = m_didScriptExecuted;
     return n;
 }
-
 }

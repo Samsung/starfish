@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLMediaElement__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishHTMLMediaElement__)
 #define __StarFishHTMLMediaElement__
 
 #include "dom/Document.h"
@@ -31,18 +32,19 @@ class HTMLMediaElement;
 class ResourceSelectionContext : public gc {
 public:
     enum Mode {
-        MODE_NONE,      /* INITIAL */
-        MODE_OBJECT,    /* NOT SUPPORT */
+        MODE_NONE,   /* INITIAL */
+        MODE_OBJECT, /* NOT SUPPORT */
         MODE_ATTRIBUTE,
         MODE_CHILDREN,
     };
 
     ResourceSelectionContext(HTMLMediaElement* element)
-        : m_mediaElement(element)
-        , m_nodeBeforePointer(nullptr)
-        , m_mode(MODE_NONE)
-        , m_waiting(false)
-    { }
+        : m_mediaElement(element),
+          m_nodeBeforePointer(nullptr),
+          m_mode(MODE_NONE),
+          m_waiting(false)
+    {
+    }
 
     Node* nodeBeforePointer()
     {
@@ -72,9 +74,13 @@ public:
 class MediaOperationQueueData : public gc {
 public:
     MediaOperationQueueData(HTMLMediaElement* p);
-    virtual void cancelOperation() { }
+    virtual void cancelOperation()
+    {
+    }
     virtual void processOperationQueue() = 0;
-    virtual ~MediaOperationQueueData() { }
+    virtual ~MediaOperationQueueData()
+    {
+    }
     virtual bool isPlayRequest()
     {
         return false;
@@ -84,7 +90,8 @@ public:
     HTMLMediaElement* m_mediaElement;
 };
 
-class MediaOperationQueueDataRequestResourceSelection : public MediaOperationQueueData {
+class MediaOperationQueueDataRequestResourceSelection
+    : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestResourceSelection(HTMLMediaElement* p)
         : MediaOperationQueueData(p)
@@ -97,8 +104,7 @@ public:
 class MediaOperationQueueDataRequestPrepare : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, URL* u)
-        : MediaOperationQueueData(p)
-        , m_url(u)
+        : MediaOperationQueueData(p), m_url(u)
     {
     }
 
@@ -111,7 +117,8 @@ public:
 class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
 public:
 #ifdef USE_ES6_FEATURE
-    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p, Promise* pm = nullptr)
+    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p,
+                                       Promise* pm = nullptr)
 #else
     MediaOperationQueueDataRequestPlay(HTMLMediaElement* p)
 #endif
@@ -150,8 +157,7 @@ public:
 class MediaOperationQueueDataRequestSeek : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestSeek(HTMLMediaElement* p, double position)
-        : MediaOperationQueueData(p)
-        , m_seekPosition(position)
+        : MediaOperationQueueData(p), m_seekPosition(position)
     {
     }
 
@@ -160,7 +166,8 @@ public:
     double m_seekPosition;
 };
 
-class MediaOperationQueueDataRequestSeekToDefault: public MediaOperationQueueDataRequestSeek {
+class MediaOperationQueueDataRequestSeekToDefault
+    : public MediaOperationQueueDataRequestSeek {
 public:
     MediaOperationQueueDataRequestSeekToDefault(HTMLMediaElement* p)
         : MediaOperationQueueDataRequestSeek(p, 0)
@@ -170,12 +177,12 @@ public:
     virtual void processOperationQueue();
 };
 
-class MediaOperationQueueDataRequestDispatchEvent : public MediaOperationQueueData {
+class MediaOperationQueueDataRequestDispatchEvent
+    : public MediaOperationQueueData {
 public:
-    MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p, EventTarget* target, Event* e)
-        : MediaOperationQueueData(p)
-        , m_target(target)
-        , m_event(e)
+    MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p,
+                                                EventTarget* target, Event* e)
+        : MediaOperationQueueData(p), m_target(target), m_event(e)
     {
     }
 
@@ -184,7 +191,9 @@ public:
     Event* m_event;
 };
 
-typedef std::list<MediaOperationQueueData*, gc_allocator_ignore_off_page<MediaOperationQueueData*>> MediaOperationQueue;
+typedef std::list<MediaOperationQueueData*,
+                  gc_allocator_ignore_off_page<MediaOperationQueueData*>>
+    MediaOperationQueue;
 
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
@@ -194,6 +203,7 @@ class HTMLMediaElement : public HTMLElement {
     friend class MediaOperationQueueDataRequestResourceSelection;
     friend class MediaOperationQueueDataRequestPrepare;
     friend class MediaOperationQueueDataRequestDispatchEvent;
+
 public:
     enum NetworkState {
         NETWORK_EMPTY,
@@ -230,7 +240,9 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
     virtual void onDOMContentLoaded();
@@ -246,12 +258,14 @@ public:
 
     void setSrc(String* src)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
+                     src);
     }
 
     String* src()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_src);
     }
 
     String* currentSrc();
@@ -308,7 +322,8 @@ public:
         case PRELOAD_NONE:
             return AtomicString::createAtomicString(starfish, "none").string();
         case PRELOAD_METADATA:
-            return AtomicString::createAtomicString(starfish, "metadata").string();
+            return AtomicString::createAtomicString(starfish, "metadata")
+                .string();
         case PRELOAD_AUTOMATIC:
             return AtomicString::createAtomicString(starfish, "auto").string();
         }
@@ -328,7 +343,7 @@ public:
     void processNextOperationQueue();
 
 #define ADD_DISPATCH_EVENT_DECL(Name) \
-    void dispatch##Name##EventNow(); \
+    void dispatch##Name##EventNow();  \
     void dispatch##Name##Event();
     ADD_DISPATCH_EVENT_DECL(Progress)
     ADD_DISPATCH_EVENT_DECL(Suspend)
@@ -356,6 +371,7 @@ public:
 
     void giveupFetchingResource(bool shouldSetError = true);
     void setNetworkStateAsHaveNothing();
+
 protected:
     bool m_autoplayingFlag;
     bool m_isPaused;
@@ -388,7 +404,8 @@ protected:
 
     void startOperationQueueIfNeeded()
     {
-        if (m_currentPendingOperationCount == 0 && m_currentOperation == nullptr) {
+        if (m_currentPendingOperationCount == 0 &&
+            m_currentOperation == nullptr) {
             processNextOperationQueue();
         }
     }
@@ -418,7 +435,8 @@ protected:
         // https://html.spec.whatwg.org/multipage/embedded-content.html#eligible-for-autoplay
 
         // TODO Check the element's node document's active sandboxing flag set
-        //      does not have the sandboxed automatic features browsing context flag set.
+        //      does not have the sandboxed automatic features browsing context
+        //      flag set.
         return (m_autoplayingFlag && m_isPaused && autoplay());
     }
 
@@ -426,14 +444,15 @@ protected:
     {
         Node* child = firstChild();
         while (child) {
-            if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->isHTMLSourceElement())
+            if (child->isElement() && child->asElement()->isHTMLElement() &&
+                child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
                 return true;
+            }
             child = child->nextSibling();
         }
         return false;
     }
 };
-
 }
 
 #endif

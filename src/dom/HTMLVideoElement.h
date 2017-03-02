@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLVideoElement__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishHTMLVideoElement__)
 #define __StarFishHTMLVideoElement__
 
 #include "dom/HTMLMediaElement.h"
@@ -23,8 +24,7 @@ namespace StarFish {
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:
-    HTMLVideoElement(Document* document)
-        : HTMLMediaElement(document)
+    HTMLVideoElement(Document* document) : HTMLMediaElement(document)
     {
     }
 
@@ -35,12 +35,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_videoTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_videoTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_videoTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_videoTagName;
     }
 
     virtual bool isHTMLVideoElement() const
@@ -48,26 +56,33 @@ public:
         return true;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
 
     String* width()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_width);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_width);
     }
 
     void setWidth(int width)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
+        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
+                     String::fromInt(width));
     }
 
     String* height()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_height);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_height);
     }
 
     void setHeight(int height)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_height,
+            String::fromInt(height));
     }
 
     unsigned long videoWidth();

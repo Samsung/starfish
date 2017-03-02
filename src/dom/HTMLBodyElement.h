@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLBodyElement : public HTMLElement {
 public:
-    HTMLBodyElement(Document* document)
-        : HTMLElement(document)
+    HTMLBodyElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_bodyTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_bodyTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -57,10 +60,12 @@ public:
         return true;
     }
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle)
     {
         HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->backgroundColor().isTransparent() || !newStyle->backgroundImage()->equals(String::emptyString)) {
+        if (!newStyle->backgroundColor().isTransparent() ||
+            !newStyle->backgroundImage()->equals(String::emptyString)) {
             document()->window()->m_hasBodyElementBackground = true;
         } else {
             document()->window()->m_hasBodyElementBackground = false;
@@ -71,10 +76,12 @@ public:
         }
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
 protected:
 };
-
 }
 
 #endif

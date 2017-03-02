@@ -29,7 +29,8 @@ bool isCSSType(const char* type);
 
 URL* HTMLLinkElement::href()
 {
-    size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    size_t href =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
     if (href != SIZE_MAX) {
         String* url = getAttribute(href);
         return URL::createURL(document()->documentURI()->baseURI(), url);
@@ -56,13 +57,18 @@ void HTMLLinkElement::checkLoadStyleSheet()
         return;
     }
 
-    size_t type = hasAttribute(document()->window()->starFish()->staticStrings()->m_type);
-    size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
-    size_t rel = hasAttribute(document()->window()->starFish()->staticStrings()->m_rel);
+    size_t type =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_type);
+    size_t href =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    size_t rel =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_rel);
 
-    if (((type != SIZE_MAX && isCSSType(getAttribute(type)->toLower()->utf8Data())) || type == SIZE_MAX)
-        && href != SIZE_MAX
-        && rel != SIZE_MAX && getAttribute(rel)->toLower()->equals("stylesheet")) {
+    if (((type != SIZE_MAX &&
+          isCSSType(getAttribute(type)->toLower()->utf8Data())) ||
+         type == SIZE_MAX) &&
+        href != SIZE_MAX && rel != SIZE_MAX &&
+        getAttribute(rel)->toLower()->equals("stylesheet")) {
         loadStyleSheet();
     } else {
         unloadStyleSheetIfExists();
@@ -72,8 +78,7 @@ void HTMLLinkElement::checkLoadStyleSheet()
 class StyleSheetDownloadClient : public ResourceClient {
 public:
     StyleSheetDownloadClient(HTMLLinkElement* element, Resource* res)
-        : ResourceClient(res)
-        , m_element(element)
+        : ResourceClient(res), m_element(element)
     {
     }
 
@@ -100,6 +105,7 @@ public:
         m_element->m_styleSheetTextResource = nullptr;
         m_element->didStyleSheetLoadComplete();
     }
+
 protected:
     HTMLLinkElement* m_element;
 };
@@ -107,7 +113,8 @@ protected:
 void HTMLLinkElement::loadStyleSheet()
 {
     unloadStyleSheetIfExists();
-    size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    size_t href =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
 
     String* urlString = getAttribute(href);
     URL* url = URL::createURL(document()->documentURI()->baseURI(), urlString);
@@ -116,8 +123,10 @@ void HTMLLinkElement::loadStyleSheet()
         m_styleSheetTextResource->cancel();
     }
     m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
-    m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
-    m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));
+    m_styleSheetTextResource->addResourceClient(
+        new StyleSheetDownloadClient(this, m_styleSheetTextResource));
+    m_styleSheetTextResource->addResourceClient(
+        new ElementResourceClient(this, m_styleSheetTextResource));
     willStyleSheetLoad();
     m_styleSheetTextResource->request();
 }
@@ -135,15 +144,21 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
 }
 
-void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
+                                          String* value, bool attributeCreated,
+                                          bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_href) {
-        if (!old->equals(value))
+        if (!old->equals(value)) {
             checkLoadStyleSheet();
-    } else if (name == document()->window()->starFish()->staticStrings()->m_type) {
+        }
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_type) {
         checkLoadStyleSheet();
-    } else if (name == document()->window()->starFish()->staticStrings()->m_rel) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
     }
 }
@@ -158,5 +173,4 @@ void HTMLLinkElement::didStyleSheetLoadComplete()
 {
     document()->window()->unmarkHasPendingStyleSheet();
 }
-
 }

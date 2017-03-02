@@ -31,9 +31,10 @@
 
 namespace StarFish {
 
-HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query)
+HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
+    ActiveHTMLCollectionList* list, String* query)
 {
-    for (size_t i = 0; i < list->size(); i ++) {
+    for (size_t i = 0; i < list->size(); i++) {
         if ((*list)[i].first->equals(query)) {
             return (*list)[i].second;
         }
@@ -41,7 +42,8 @@ HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(ActiveHTMLCo
     return nullptr;
 }
 
-void RareNodeMembers::putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll)
+void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
+    ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll)
 {
     STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
     STARFISH_ASSERT(query);
@@ -56,14 +58,20 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
     }
 
     if (m_activeHtmlCollectionListsForTagName) {
-        for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size(); i ++) {
-            (*m_activeHtmlCollectionListsForTagName)[i].second->getNodeListImpl().invalidateCache();
+        for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size();
+             i++) {
+            (*m_activeHtmlCollectionListsForTagName)[i]
+                .second->getNodeListImpl()
+                .invalidateCache();
         }
     }
 
     if (m_activeHtmlCollectionListsForClassName) {
-        for (size_t i = 0; i < m_activeHtmlCollectionListsForClassName->size(); i ++) {
-            (*m_activeHtmlCollectionListsForClassName)[i].second->getNodeListImpl().invalidateCache();
+        for (size_t i = 0; i < m_activeHtmlCollectionListsForClassName->size();
+             i++) {
+            (*m_activeHtmlCollectionListsForClassName)[i]
+                .second->getNodeListImpl()
+                .invalidateCache();
         }
     }
 
@@ -72,8 +80,7 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
     }
 }
 
-Node::Node(Document* document)
-    : EventTarget()
+Node::Node(Document* document) : EventTarget()
 {
     m_document = document;
     initNode();
@@ -84,9 +91,12 @@ NodeList* Node::childNodes()
     STARFISH_ASSERT(m_document);
     auto rareData = ensureRareMembers();
     if (rareData->m_childNodeList == nullptr) {
-        rareData->m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [](Node* node, void* data) {
-            return node->parentNode() == (Node *)data? true: false;
-        }, this, true);
+        rareData->m_childNodeList = new NodeList(
+            m_document->scriptBindingInstance(), this,
+            [](Node* node, void* data) {
+                return node->parentNode() == (Node*)data ? true : false;
+            },
+            this, true);
     }
     return rareData->m_childNodeList;
 }
@@ -122,9 +132,9 @@ bool Node::isEqualNode(Node* other)
     case DOCUMENT_TYPE_NODE: {
         DocumentType* thisNode = asDocumentType();
         DocumentType* otherNode = other->asDocumentType();
-        if (!(thisNode->nodeName()->equals(otherNode->nodeName())
-            && thisNode->publicId()->equals(otherNode->publicId())
-            && thisNode->systemId()->equals(otherNode->systemId()))) {
+        if (!(thisNode->nodeName()->equals(otherNode->nodeName()) &&
+              thisNode->publicId()->equals(otherNode->publicId()) &&
+              thisNode->systemId()->equals(otherNode->systemId()))) {
             return false;
         }
         break;
@@ -167,14 +177,16 @@ bool Node::isEqualNode(Node* other)
     return true;
 }
 
-bool Node::isDescendantOf(const Node *other)
+bool Node::isDescendantOf(const Node* other)
 {
     // Return true if other is an ancestor of this, otherwise false
-    if (!other || !other->hasChildNodes())
+    if (!other || !other->hasChildNodes()) {
         return false;
+    }
     for (const Node* n = parentNode(); n; n = n->parentNode()) {
-        if (n == other)
+        if (n == other) {
             return true;
+        }
     }
     return false;
 }
@@ -182,17 +194,19 @@ bool Node::isDescendantOf(const Node *other)
 Element* Node::firstElementChild()
 {
     Node* ret = Traverse::firstChild(this, [](Node* child) {
-        if (child->isElement())
+        if (child->isElement()) {
             return true;
-        else
+        } else {
             return false;
+        }
     });
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret)
+    if (ret) {
         return ret->asElement();
-    else
+    } else {
         return nullptr;
+    }
 #else
     return ret->asElement();
 #endif
@@ -201,17 +215,19 @@ Element* Node::firstElementChild()
 Element* Node::lastElementChild()
 {
     Node* ret = Traverse::lastChild(this, [](Node* child) {
-        if (child->isElement())
+        if (child->isElement()) {
             return true;
-        else
+        } else {
             return false;
+        }
     });
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret)
+    if (ret) {
         return ret->asElement();
-    else
+    } else {
         return nullptr;
+    }
 #else
     return ret->asElement();
 #endif
@@ -220,17 +236,19 @@ Element* Node::lastElementChild()
 Element* Node::nextElementSibling()
 {
     Node* ret = Traverse::nextSibling(this, [](Node* sibling) {
-        if (sibling->isElement())
+        if (sibling->isElement()) {
             return true;
-        else
+        } else {
             return false;
+        }
     });
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret)
+    if (ret) {
         return ret->asElement();
-    else
+    } else {
         return nullptr;
+    }
 #else
     return ret->asElement();
 #endif
@@ -239,17 +257,19 @@ Element* Node::nextElementSibling()
 Element* Node::previousElementSibling()
 {
     Node* ret = Traverse::previousSibling(this, [](Node* sibling) {
-        if (sibling->isElement())
+        if (sibling->isElement()) {
             return true;
-        else
+        } else {
             return false;
+        }
     });
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret)
+    if (ret) {
         return ret->asElement();
-    else
+    } else {
         return nullptr;
+    }
 #else
     return ret->asElement();
 #endif
@@ -258,14 +278,16 @@ Element* Node::previousElementSibling()
 unsigned long Node::childElementCount()
 {
     return Traverse::childCount(this, [](Node* child) {
-        if (child->isElement())
+        if (child->isElement()) {
             return true;
-        else
+        } else {
             return false;
+        }
     });
 }
 
-unsigned short isPreceding(const Node* node, const Node* isPrec, const Node* refNode)
+unsigned short isPreceding(const Node* node, const Node* isPrec,
+                           const Node* refNode)
 {
     if (node == isPrec) {
         return Node::DOCUMENT_POSITION_PRECEDING;
@@ -273,7 +295,8 @@ unsigned short isPreceding(const Node* node, const Node* isPrec, const Node* ref
         return Node::DOCUMENT_POSITION_FOLLOWING;
     }
 
-    for (Node* child = node->firstChild(); child != nullptr; child = child->nextSibling()) {
+    for (Node* child = node->firstChild(); child != nullptr;
+         child = child->nextSibling()) {
         unsigned short result = isPreceding(child, isPrec, refNode);
         if (result != 0) {
             return result;
@@ -301,7 +324,9 @@ unsigned short Node::compareDocumentPosition(const Node* other)
         root = ownerDocument();
         if (ownerDocument() != other->ownerDocument()) {
             STARFISH_ASSERT_NOT_REACHED();
-            return DOCUMENT_POSITION_DISCONNECTED + DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DOCUMENT_POSITION_PRECEDING;
+            return DOCUMENT_POSITION_DISCONNECTED +
+                   DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
+                   DOCUMENT_POSITION_PRECEDING;
         }
     }
 
@@ -375,16 +400,18 @@ HTMLCollection* Node::children()
 {
     if (!hasRareMembers()) {
         ensureRareMembers();
-    } else if (m_rareNodeMembers->m_children)
+    } else if (m_rareNodeMembers->m_children) {
         return m_rareNodeMembers->m_children;
+    }
 
-    auto filter = [](Node* node, void* data) -> bool
-    {
-        if (node->parentNode() == ((Node*)data) && node->isElement())
+    auto filter = [](Node* node, void* data) -> bool {
+        if (node->parentNode() == ((Node*)data) && node->isElement()) {
             return true;
+        }
         return false;
     };
-    m_rareNodeMembers->m_children = new HTMLCollection(m_document->scriptBindingInstance(), this, filter, this, true);
+    m_rareNodeMembers->m_children = new HTMLCollection(
+        m_document->scriptBindingInstance(), this, filter, this, true);
     return m_rareNodeMembers->m_children;
 }
 
@@ -397,7 +424,8 @@ DOMTokenList* Node::classList()
             return m_rareNodeMembers->m_domTokenList;
         }
 
-        m_rareNodeMembers->m_domTokenList = new DOMTokenList(m_document->scriptBindingInstance(), asElement(),
+        m_rareNodeMembers->m_domTokenList = new DOMTokenList(
+            m_document->scriptBindingInstance(), asElement(),
             document()->window()->starFish()->staticStrings()->m_class);
         return m_rareNodeMembers->m_domTokenList;
     }
@@ -423,36 +451,73 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
 {
     // 4.2.1 pre-insertion validity
     if (!(isDocument() || isElement() || isDocumentFragment())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::HIERARCHY_REQUEST_ERR,
+            "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     if (node == this) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::HIERARCHY_REQUEST_ERR,
+            "Node is a host-including inclusive ancestor of parent.");
     } else {
         for (Node* p = this; p != nullptr; p = p->parentNode()) {
             if (p == node) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+                throw new DOMException(
+                    m_document->scriptBindingInstance(),
+                    DOMException::HIERARCHY_REQUEST_ERR,
+                    "Node is a host-including inclusive ancestor of parent.");
             }
         }
     }
 
     if (child != nullptr && child->parentNode() != this) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::Code::NOT_FOUND_ERR,
+            "Child is not null and its parent is not parent.");
     }
-    if (!(node->isDocumentType() || node->isElement() || node->isText() || node->isComment() || node->isDocumentFragment())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
+    if (!(node->isDocumentType() || node->isElement() || node->isText() ||
+          node->isComment() || node->isDocumentFragment())) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Node is not a DocumentFragment, DocumentType, "
+                               "Element, Text, ProcessingInstruction, or "
+                               "Comment.");
     }
-    if ((node->isText() && isDocument()) || (node->isDocumentType() && !isDocument())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
+    if ((node->isText() && isDocument()) ||
+        (node->isDocumentType() && !isDocument())) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Either node is a Text node and parent is a "
+                               "document, or node is a doctype and parent is "
+                               "not a document.");
     }
     if (isDocument()) {
         if (node->isElement()) {
-            if ((firstElementChild() != nullptr) || (child != nullptr && child->isElement()) || (child != nullptr && child->nextSibling() != nullptr && child->nextSibling()->isDocumentType())) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child, child is a doctype, or child is not null and a doctype is following child.");
+            if ((firstElementChild() != nullptr) ||
+                (child != nullptr && child->isElement()) ||
+                (child != nullptr && child->nextSibling() != nullptr &&
+                 child->nextSibling()->isDocumentType())) {
+                throw new DOMException(m_document->scriptBindingInstance(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has an element child, child is "
+                                       "a doctype, or child is not null and a "
+                                       "doctype is following child.");
             }
         } else if (node->isDocumentType()) {
-            if (getDocTypeChild() || (child != nullptr && child->previousSibling() != nullptr && child->previousSibling()->isElement()) || (child == nullptr && firstElementChild() != nullptr)) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.");
+            if (getDocTypeChild() ||
+                (child != nullptr && child->previousSibling() != nullptr &&
+                 child->previousSibling()->isElement()) ||
+                (child == nullptr && firstElementChild() != nullptr)) {
+                throw new DOMException(m_document->scriptBindingInstance(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has a doctype child, child is "
+                                       "non-null and an element is preceding "
+                                       "child, or child is null and parent has "
+                                       "an element child.");
             }
         }
     }
@@ -462,8 +527,9 @@ bool Node::isInDocumentScope()
 {
     Node* t = this;
     while (t) {
-        if (t->isDocument())
+        if (t->isDocument()) {
             return true;
+        }
         t = t->parentNode();
     }
     return false;
@@ -473,8 +539,9 @@ bool Node::isInDocumentScopeAndDocumentParticipateInRendering()
 {
     Node* t = this;
     while (t) {
-        if (t->isDocument())
+        if (t->isDocument()) {
             return t->asDocument()->doesParticipateInRendering();
+        }
         t = t->parentNode();
     }
     return false;
@@ -504,7 +571,8 @@ static void didInsertNode(Node* self, Node* child)
         parent->didNodeInserted(self, child);
     });
 
-    if (self->isInDocumentScope() && self->document()->doesParticipateInRendering()) {
+    if (self->isInDocumentScope() &&
+        self->document()->doesParticipateInRendering()) {
         notifyNodeInsertedToDocumentTree(self, child);
         self->setNeedsStyleRecalc();
         self->setChildrenNeedsStyleRecalc();
@@ -553,7 +621,9 @@ Node* Node::insertBefore(Node* child, Node* childRef)
 {
     // Spec does not say what to do when node is null
     if (child == nullptr) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is null.");
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Node is null.");
     }
 
     validatePreinsert(child, childRef);
@@ -596,36 +666,73 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
     Node* childRef = childToRemove;
     // 4.2.1 replace validity
     if (!(isDocument() || isElement())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::HIERARCHY_REQUEST_ERR,
+            "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     if (child == this) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::HIERARCHY_REQUEST_ERR,
+            "Node is a host-including inclusive ancestor of parent.");
     } else {
         for (Node* p = this; p != nullptr; p = p->parentNode()) {
             if (p == child) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+                throw new DOMException(
+                    m_document->scriptBindingInstance(),
+                    DOMException::HIERARCHY_REQUEST_ERR,
+                    "Node is a host-including inclusive ancestor of parent.");
             }
         }
     }
 
     if (childRef != nullptr && childRef->parentNode() != this) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
+        throw new DOMException(
+            m_document->scriptBindingInstance(),
+            DOMException::Code::NOT_FOUND_ERR,
+            "Child is not null and its parent is not parent.");
     }
-    if (!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
+    if (!(child->isDocumentType() || child->isElement() || child->isText() ||
+          child->isComment())) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Node is not a DocumentFragment, DocumentType, "
+                               "Element, Text, ProcessingInstruction, or "
+                               "Comment.");
     }
-    if ((child->isText() && isDocument()) || (child->isDocumentType() && !isDocument())) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
+    if ((child->isText() && isDocument()) ||
+        (child->isDocumentType() && !isDocument())) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Either node is a Text node and parent is a "
+                               "document, or node is a doctype and parent is "
+                               "not a document.");
     }
     if (isDocument()) {
         if (child->isElement()) {
-            if ((firstElementChild() != nullptr) || (childRef != nullptr && childRef->isElement()) || (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child that is not child or a doctype is following child.");
+            if ((firstElementChild() != nullptr) ||
+                (childRef != nullptr && childRef->isElement()) ||
+                (childRef != nullptr && childRef->nextSibling() != nullptr &&
+                 childRef->nextSibling()->isDocumentType())) {
+                throw new DOMException(m_document->scriptBindingInstance(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has an element child that is "
+                                       "not child or a doctype is following "
+                                       "child.");
             }
         } else if (child->isDocumentType()) {
-            if ((getDocTypeChild() != nullptr && getDocTypeChild() != childRef) || (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement())) {
-                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child that is not child, or an element is preceding child.");
+            if ((getDocTypeChild() != nullptr &&
+                 getDocTypeChild() != childRef) ||
+                (childRef != nullptr &&
+                 childRef->previousSibling() != nullptr &&
+                 childRef->previousSibling()->isElement())) {
+                throw new DOMException(m_document->scriptBindingInstance(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has a doctype child that is not "
+                                       "child, or an element is preceding "
+                                       "child.");
             }
         }
     }
@@ -666,7 +773,9 @@ Node* Node::removeChild(Node* child)
     STARFISH_ASSERT(child);
 
     if (child->parentNode() != this) {
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::NOT_FOUND_ERR, "Child's parent is not parent.");
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::NOT_FOUND_ERR,
+                               "Child's parent is not parent.");
     }
 
     Node* prevChild = child->previousSibling();
@@ -772,8 +881,10 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     }
 
     ASSERT(childRef->parentNode() == this);
-    if (childRef->previousSibling() == child || childRef == child) // nothing to do
+    if (childRef->previousSibling() == child || childRef == child) {
+        // nothing to do
         return;
+    }
 
     if (child == childRef) {
         return;
@@ -812,7 +923,6 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     }
 }
 
-
 void Node::parserTakeAllChildrenFrom(Node* oldParent)
 {
     while (Node* child = oldParent->firstChild()) {
@@ -824,24 +934,31 @@ void Node::parserTakeAllChildrenFrom(Node* oldParent)
 HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
 {
     RareNodeMembers* rareData = ensureRareMembers();
-    ActiveHTMLCollectionList* activeLists = rareData->ensureActiveHtmlCollectionListForTagName();
-    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, qualifiedName.localName());
-    if (list)
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagName();
+    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(
+        activeLists, qualifiedName.localName());
+    if (list) {
         return list;
+    }
 
-    auto filter = [](Node* node, void* data)
-    {
+    auto filter = [](Node* node, void* data) {
         QualifiedName* qualifiedName = (QualifiedName*)data;
         if (node->isElement()) {
-            if (node->asElement()->name().localNameAtomic() == qualifiedName->localNameAtomic())
+            if (node->asElement()->name().localNameAtomic() ==
+                qualifiedName->localNameAtomic()) {
                 return true;
-            if (qualifiedName->localName()->equals("*"))
+            }
+            if (qualifiedName->localName()->equals("*")) {
                 return true;
+            }
         }
         return false;
     };
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, new QualifiedName(qualifiedName), true);
-    rareData->putActiveHtmlCollectionListWithQuery(activeLists, qualifiedName.localName(), list);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter,
+                              new QualifiedName(qualifiedName), true);
+    rareData->putActiveHtmlCollectionListWithQuery(
+        activeLists, qualifiedName.localName(), list);
     return list;
 }
 
@@ -849,34 +966,39 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
 {
     auto rareData = ensureRareMembers();
     auto activeLists = rareData->ensureActiveHtmlCollectionListForClassName();
-    auto list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
-    if (list)
+    auto list =
+        rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
+    if (list) {
         return list;
+    }
 
-    auto filter = [](Node* node, void* data) -> bool
-    {
+    auto filter = [](Node* node, void* data) -> bool {
         String* classNames = (String*)data;
-        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->classNames().size() > 0) {
-
+        if (node->isElement() && node->asElement()->isHTMLElement() &&
+            node->asElement()->asHTMLElement()->classNames().size() > 0) {
             size_t length = classNames->length();
             bool isWhiteSpaceState = true;
 
             UTF32String str;
-            for (size_t i = 0; i < length; i ++) {
+            for (size_t i = 0; i < length; i++) {
                 char32_t ch = classNames->charAt(i);
                 if (isWhiteSpaceState) {
-                    if (ch != ' ' && ch != '\n' && ch != '\t' && ch != '\f' && ch != '\r') {
+                    if (ch != ' ' && ch != '\n' && ch != '\t' && ch != '\f' &&
+                        ch != '\r') {
                         isWhiteSpaceState = false;
                         str += ch;
                     }
                 } else {
-                    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r') {
+                    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' ||
+                        ch == '\r') {
                         isWhiteSpaceState = true;
 
                         String* tok = new StringDataUTF32(std::move(str));
 
-                        if (!node->asElement()->asHTMLElement()->hasClassName(tok))
-                        return false;
+                        if (!node->asElement()->asHTMLElement()->hasClassName(
+                                tok)) {
+                            return false;
+                        }
 
                         str.clear();
                     } else {
@@ -887,8 +1009,9 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
 
             if (str.length()) {
                 String* tok = new StringDataUTF32(std::move(str));
-                if (!node->asElement()->asHTMLElement()->hasClassName(tok))
-                return false;
+                if (!node->asElement()->asHTMLElement()->hasClassName(tok)) {
+                    return false;
+                }
             }
 
             return true;
@@ -896,23 +1019,34 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
         return false;
     };
 
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames, true);
-    rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames, list);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter,
+                              classNames, true);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames,
+                                                   list);
     return list;
 }
 
-void Node::parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors)
+void Node::parseSelector(
+    GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors)
 {
-    if (selectors->equals(String::emptyString))
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::SYNTAX_ERR, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
+    if (selectors->equals(String::emptyString)) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::SYNTAX_ERR,
+                               "Failed to execute 'querySelector' on "
+                               "'Document': The provided selector is empty.");
+    }
 
     CSSParser parser(document());
     CSSToken* token = parser.makeToken(selectors);
 
     parser.parseStyleRule(token, nullptr, false, &selectorListContainer, true);
 
-    if (selectorListContainer.size() < 1)
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is invalid.");
+    if (selectorListContainer.size() < 1) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION,
+                               "Failed to execute 'querySelector' on "
+                               "'Document': The provided selector is invalid.");
+    }
 }
 
 Element* Node::querySelector(String* selectors)
@@ -935,8 +1069,9 @@ NodeList* Node::querySelectorAll(String* selectors)
 
 void Node::setNeedsFrameTreeBuild()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     Frame* old = frame();
     if (old) {
@@ -984,7 +1119,8 @@ void Node::setNeedsFrameTreeBuild()
     m_document->window()->setNeedsFrameTreeBuild();
 }
 
-void Node::didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
+                                   ComputedStyle* newStyle)
 {
     if (frame()) {
         frame()->computeStyleFlags();
@@ -1008,8 +1144,9 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
 RareNodeMembers* Node::ensureRareMembers()
 {
     STARFISH_ASSERT(!isElement());
-    if (m_rareNodeMembers == nullptr)
+    if (m_rareNodeMembers == nullptr) {
         m_rareNodeMembers = new RareNodeMembers();
+    }
     STARFISH_ASSERT(!m_rareNodeMembers->isRareElementMembers());
     return m_rareNodeMembers;
 }
@@ -1018,8 +1155,13 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
 {
     if (hasRareMembers()) {
         if (m_rareNodeMembers->m_activeHtmlCollectionListsForClassName) {
-            for (size_t i = 0; i < m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->size(); i ++) {
-                (*m_rareNodeMembers->m_activeHtmlCollectionListsForClassName)[i].second->getNodeListImpl().invalidateCache();
+            for (size_t i = 0;
+                 i < m_rareNodeMembers->m_activeHtmlCollectionListsForClassName
+                         ->size();
+                 i++) {
+                (*m_rareNodeMembers->m_activeHtmlCollectionListsForClassName)[i]
+                    .second->getNodeListImpl()
+                    .invalidateCache();
             }
         }
     }
@@ -1039,7 +1181,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         style = new ComputedStyle();
     }
 
-    // general properties
+// general properties
 #define ADD_VALUE_PAIR(keyKind, valueKind, getter)               \
     {                                                            \
         CSSStyleValuePair p;                                     \
@@ -1055,8 +1197,10 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
     ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
-    ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)
-    ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)
+    ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind,
+                   backgroundRepeatX)
+    ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind,
+                   backgroundRepeatY)
     ADD_VALUE_PAIR(BorderTopStyle, BorderStyleValueKind, borderTopStyle)
     ADD_VALUE_PAIR(BorderRightStyle, BorderStyleValueKind, borderRightStyle)
     ADD_VALUE_PAIR(BorderBottomStyle, BorderStyleValueKind, borderBottomStyle)
@@ -1070,7 +1214,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(ZIndex, Int32, zIndex)
 #undef ADD_VALUE_PAIR
 
-    // length properties
+// length properties
 #define ADD_LENGTH_PAIR(keyKind, getter)                              \
     {                                                                 \
         CSSStyleValuePair p;                                          \
@@ -1110,7 +1254,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_LENGTH_PAIR(PaddingLeft, paddingLeft)
 #undef ADD_LENGTH_PAIR
 
-    // color properties
+// color properties
 #define ADD_COLOR_PAIR(keyKind, getter)                                \
     {                                                                  \
         CSSStyleValuePair p;                                           \
@@ -1128,8 +1272,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_COLOR_PAIR(BorderLeftColor, borderLeftColor)
 #undef ADD_COLOR_PAIR
 
-    // fontSize
-    // border-width
+// fontSize
+// border-width
 #define LENGTH_RELATED(keyKind, getter)                       \
     {                                                         \
         CSSStyleValuePair p;                                  \
@@ -1149,8 +1293,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     // other properties that cannot be generated by macros
 
     // helper function to convert Length to CSSStyleValuePair format
-    auto lengthToCSSStyleValue = [](Length len)
-    {
+    auto lengthToCSSStyleValue = [](Length len) {
         CSSStyleValuePair p;
         if (len.isFixed()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::Length);
@@ -1215,10 +1358,12 @@ CSSStyleDeclaration* Node::getComputedStyle()
                 item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* vals = new ValueList();
 
-                CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue(i).width());
+                CSSStyleValuePair w =
+                    lengthToCSSStyleValue(style->bgSizeValue(i).width());
                 vals->append(w.valueKind(), w.value());
 
-                CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue(i).height());
+                CSSStyleValuePair h =
+                    lengthToCSSStyleValue(style->bgSizeValue(i).height());
                 vals->append(h.valueKind(), h.value());
 
                 item.setValue(vals);
@@ -1236,7 +1381,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item = lengthToCSSStyleValue(style->backgroundPositionX(i));
+            CSSStyleValuePair item =
+                lengthToCSSStyleValue(style->backgroundPositionX(i));
             values->append(item);
         }
         p.setValueList(values);
@@ -1250,7 +1396,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item = lengthToCSSStyleValue(style->backgroundPositionY(i));
+            CSSStyleValuePair item =
+                lengthToCSSStyleValue(style->backgroundPositionY(i));
             values->append(item);
         }
         p.setValueList(values);
@@ -1307,25 +1454,29 @@ CSSStyleDeclaration* Node::getComputedStyle()
             CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
             vals->append(t.valueKind(), t.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number, (float)box.top().number());
+            vals->append(CSSStyleValuePair::ValueKind::Number,
+                         (float)box.top().number());
         }
         if (box.right().isLength()) {
             CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
             vals->append(r.valueKind(), r.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number, (float)box.right().number());
+            vals->append(CSSStyleValuePair::ValueKind::Number,
+                         (float)box.right().number());
         }
         if (box.bottom().isLength()) {
             CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
             vals->append(b.valueKind(), b.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number, (float)box.bottom().number());
+            vals->append(CSSStyleValuePair::ValueKind::Number,
+                         (float)box.bottom().number());
         }
         if (box.left().isLength()) {
             CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
             vals->append(l.valueKind(), l.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number, (float)box.bottom().number());
+            vals->append(CSSStyleValuePair::ValueKind::Number,
+                         (float)box.bottom().number());
         }
 
         p.setValue(vals);
@@ -1343,10 +1494,12 @@ CSSStyleDeclaration* Node::getComputedStyle()
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             ValueList* vals = new ValueList();
 
-            CSSStyleValuePair x = lengthToCSSStyleValue(style->transformOrigin()->originValue()->getXAxis());
+            CSSStyleValuePair x = lengthToCSSStyleValue(
+                style->transformOrigin()->originValue()->getXAxis());
             vals->append(x.valueKind(), x.value());
 
-            CSSStyleValuePair y = lengthToCSSStyleValue(style->transformOrigin()->originValue()->getYAxis());
+            CSSStyleValuePair y = lengthToCSSStyleValue(
+                style->transformOrigin()->originValue()->getYAxis());
             vals->append(y.valueKind(), y.value());
 
             p.setValue(vals);
@@ -1427,20 +1580,26 @@ void Node::dumpStyle()
         printf("vertical-align: baseline, ");
     } else if (m_style->verticalAlign() == VerticalAlignValue::SubVAlignValue) {
         printf("vertical-align: sub, ");
-    } else if (m_style->verticalAlign() == VerticalAlignValue::SuperVAlignValue) {
+    } else if (m_style->verticalAlign() ==
+               VerticalAlignValue::SuperVAlignValue) {
         printf("vertical-align: super, ");
     } else if (m_style->verticalAlign() == VerticalAlignValue::TopVAlignValue) {
         printf("vertical-align: top, ");
-    } else if (m_style->verticalAlign() == VerticalAlignValue::TextTopVAlignValue) {
+    } else if (m_style->verticalAlign() ==
+               VerticalAlignValue::TextTopVAlignValue) {
         printf("vertical-align: text-top, ");
-    } else if (m_style->verticalAlign() == VerticalAlignValue::MiddleVAlignValue) {
+    } else if (m_style->verticalAlign() ==
+               VerticalAlignValue::MiddleVAlignValue) {
         printf("vertical-align: middle, ");
-    } else if (m_style->verticalAlign() == VerticalAlignValue::BottomVAlignValue) {
+    } else if (m_style->verticalAlign() ==
+               VerticalAlignValue::BottomVAlignValue) {
         printf("vertical-align: bottom, ");
-    } else if (m_style->verticalAlign() == VerticalAlignValue::TextBottomVAlignValue) {
+    } else if (m_style->verticalAlign() ==
+               VerticalAlignValue::TextBottomVAlignValue) {
         printf("vertical-align: text-bottom, ");
     } else if (m_style->verticalAlignLength().isFixed()) {
-        printf("vertical-align: %.2f, ", m_style->verticalAlignLength().fixed());
+        printf("vertical-align: %.2f, ",
+               m_style->verticalAlignLength().fixed());
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1457,91 +1616,118 @@ void Node::dumpStyle()
     }
 
     // text-decoration
-    if (m_style->textDecoration() == TextDecorationValue::UnderLineTextDecorationValue) {
+    if (m_style->textDecoration() ==
+        TextDecorationValue::UnderLineTextDecorationValue) {
         printf("text-decoration: underline, ");
-    } else if (m_style->textDecoration() == TextDecorationValue::OverLineTextDecorationValue) {
+    } else if (m_style->textDecoration() ==
+               TextDecorationValue::OverLineTextDecorationValue) {
         printf("text-decoration: overline, ");
-    } else if (m_style->textDecoration() == TextDecorationValue::LineThroughTextDecorationValue) {
+    } else if (m_style->textDecoration() ==
+               TextDecorationValue::LineThroughTextDecorationValue) {
         printf("text-decoration: line-through, ");
-    } else if (m_style->textDecoration() == TextDecorationValue::BlinkTextDecorationValue) {
+    } else if (m_style->textDecoration() ==
+               TextDecorationValue::BlinkTextDecorationValue) {
         printf("text-decoration: blink, ");
-    } else if (m_style->textDecoration() == TextDecorationValue::NoneTextDecorationValue) {
+    } else if (m_style->textDecoration() ==
+               TextDecorationValue::NoneTextDecorationValue) {
         printf("text-decoration: none, ");
     }
 
     // direction
-    if (m_style->direction() == DirectionValue::LtrDirectionValue)
+    if (m_style->direction() == DirectionValue::LtrDirectionValue) {
         printf("direction: ltr, ");
-    else
+    } else {
         printf("direction: rtl, ");
+    }
 
-    if (m_style->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue)
+    if (m_style->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue) {
         printf("white-space: normal, ");
-    else
+    } else {
         printf("white-space: nowrap, ");
+    }
 
     // unicode-bidi
-    if (m_style->unicodeBidi() == UnicodeBidiValue::NormalUnicodeBidiValue)
+    if (m_style->unicodeBidi() == UnicodeBidiValue::NormalUnicodeBidiValue) {
         printf("unicode-bidi: normal, ");
-    else
+    } else {
         printf("unicode-bidi: embed, ");
+    }
 
     // font-size
     printf("font-size: %.1f, ", m_style->fontSize().fixed());
 
     // font-style
     printf("font-style: ");
-    if (m_style->fontStyle() == FontStyleValue::NormalFontStyleValue)
+    if (m_style->fontStyle() == FontStyleValue::NormalFontStyleValue) {
         printf("normal, ");
-    else if (m_style->fontStyle() == FontStyleValue::ItalicFontStyleValue)
+    } else if (m_style->fontStyle() == FontStyleValue::ItalicFontStyleValue) {
         printf("italic, ");
-    else if (m_style->fontStyle() == FontStyleValue::ObliqueFontStyleValue)
+    } else if (m_style->fontStyle() == FontStyleValue::ObliqueFontStyleValue) {
         printf("oblique, ");
+    }
 
     printf("font-weight: ");
-    if (m_style->fontWeight() == FontWeightValue::OneHundredFontWeightValue)
+    if (m_style->fontWeight() == FontWeightValue::OneHundredFontWeightValue) {
         printf("100, ");
-    if (m_style->fontWeight() == FontWeightValue::TwoHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::TwoHundredsFontWeightValue) {
         printf("200, ");
-    if (m_style->fontWeight() == FontWeightValue::ThreeHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() ==
+        FontWeightValue::ThreeHundredsFontWeightValue) {
         printf("300, ");
-    if (m_style->fontWeight() == FontWeightValue::NormalFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::NormalFontWeightValue) {
         printf("normal, ");
-    if (m_style->fontWeight() == FontWeightValue::FiveHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::FiveHundredsFontWeightValue) {
         printf("500, ");
-    if (m_style->fontWeight() == FontWeightValue::SixHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::SixHundredsFontWeightValue) {
         printf("600, ");
-    if (m_style->fontWeight() == FontWeightValue::BoldFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::BoldFontWeightValue) {
         printf("bold, ");
-    if (m_style->fontWeight() == FontWeightValue::EightHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() ==
+        FontWeightValue::EightHundredsFontWeightValue) {
         printf("800, ");
-    if (m_style->fontWeight() == FontWeightValue::NineHundredsFontWeightValue)
+    }
+    if (m_style->fontWeight() == FontWeightValue::NineHundredsFontWeightValue) {
         printf("900, ");
+    }
 
     // letter-spacing
     printf("letter-spacing: %f, ", m_style->letterSpacing().fixed());
 
     // line-height
-    if (m_style->lineHeight().isFixed())
+    if (m_style->lineHeight().isFixed()) {
         printf("line-height: %.1f, ", m_style->lineHeight().fixed());
-    else
+    } else {
         printf("line-height: normal, ");
+    }
 
     // color
-    printf("color: (%d,%d,%d,%d), ", m_style->color().r(), m_style->color().g(), m_style->color().b(), m_style->color().a());
+    printf("color: (%d,%d,%d,%d), ", m_style->color().r(), m_style->color().g(),
+           m_style->color().b(), m_style->color().a());
 
     // background-color
-    printf("background-color: (%d,%d,%d,%d), ", m_style->backgroundColor().r(), m_style->backgroundColor().g(), m_style->backgroundColor().b(), m_style->backgroundColor().a());
+    printf("background-color: (%d,%d,%d,%d), ", m_style->backgroundColor().r(),
+           m_style->backgroundColor().g(), m_style->backgroundColor().b(),
+           m_style->backgroundColor().a());
 
     // background-image
     if (m_style->backgroundImage()->length() == 0) {
         printf("background-image: none, ");
     } else {
-        printf("background-image: %s, ", m_style->backgroundImage()->utf8Data());
+        printf("background-image: %s, ",
+               m_style->backgroundImage()->utf8Data());
     }
 
     // background-position
-    printf("background-position: (%s, %s),", m_style->backgroundPositionX().dumpString()->utf8Data(), m_style->backgroundPositionY().dumpString()->utf8Data());
+    printf("background-position: (%s, %s),",
+           m_style->backgroundPositionX().dumpString()->utf8Data(),
+           m_style->backgroundPositionY().dumpString()->utf8Data());
 
     // background-size
     if (m_style->bgSizeType() == BackgroundSizeType::Cover) {
@@ -1549,8 +1735,9 @@ void Node::dumpStyle()
     } else if (m_style->bgSizeType() == BackgroundSizeType::Contain) {
         printf("background-size: contain, ");
     } else if (m_style->bgSizeType() == BackgroundSizeType::SizeValue) {
-        printf("background-size: (%s, %s),", m_style->bgSizeValue().width().dumpString()->utf8Data(),
-            m_style->bgSizeValue().height().dumpString()->utf8Data());
+        printf("background-size: (%s, %s),",
+               m_style->bgSizeValue().width().dumpString()->utf8Data(),
+               m_style->bgSizeValue().height().dumpString()->utf8Data());
     }
 
     // box offsets: top
@@ -1590,76 +1777,106 @@ void Node::dumpStyle()
     }
 
     // border-color
-    printf("border-top-color: (%d,%d,%d,%d), ", m_style->borderTopColor().r(), m_style->borderTopColor().g(), m_style->borderTopColor().b(), m_style->borderTopColor().a());
-    printf("border-right-color: (%d,%d,%d,%d), ", m_style->borderRightColor().r(), m_style->borderRightColor().g(), m_style->borderRightColor().b(), m_style->borderRightColor().a());
-    printf("border-bottom-color: (%d,%d,%d,%d), ", m_style->borderBottomColor().r(), m_style->borderBottomColor().g(), m_style->borderBottomColor().b(), m_style->borderBottomColor().a());
-    printf("border-left-color: (%d,%d,%d,%d), ", m_style->borderLeftColor().r(), m_style->borderLeftColor().g(), m_style->borderLeftColor().b(), m_style->borderLeftColor().a());
+    printf("border-top-color: (%d,%d,%d,%d), ", m_style->borderTopColor().r(),
+           m_style->borderTopColor().g(), m_style->borderTopColor().b(),
+           m_style->borderTopColor().a());
+    printf("border-right-color: (%d,%d,%d,%d), ",
+           m_style->borderRightColor().r(), m_style->borderRightColor().g(),
+           m_style->borderRightColor().b(), m_style->borderRightColor().a());
+    printf("border-bottom-color: (%d,%d,%d,%d), ",
+           m_style->borderBottomColor().r(), m_style->borderBottomColor().g(),
+           m_style->borderBottomColor().b(), m_style->borderBottomColor().a());
+    printf("border-left-color: (%d,%d,%d,%d), ", m_style->borderLeftColor().r(),
+           m_style->borderLeftColor().g(), m_style->borderLeftColor().b(),
+           m_style->borderLeftColor().a());
 
     // border-image-slice
     LengthBox l = m_style->borderImageSlices();
-    if (l.top().isPercent())
+    if (l.top().isPercent()) {
         printf("border-image-slice: (%.2fp, ", l.top().percent());
-    else
+    } else {
         printf("border-image-slice: (%.2f, ", l.top().fixed());
-    if (l.right().isPercent())
+    }
+    if (l.right().isPercent()) {
         printf("%.2fp, ", l.right().percent());
-    else
+    } else {
         printf("%.1f, ", l.right().fixed());
-    if (l.bottom().isPercent())
+    }
+    if (l.bottom().isPercent()) {
         printf("%.2fp, ", l.bottom().percent());
-    else
+    } else {
         printf("%.1f, ", l.bottom().fixed());
-    if (l.left().isPercent())
+    }
+    if (l.left().isPercent()) {
         printf("%.2fp, ", l.left().percent());
-    else
+    } else {
         printf("%.1f, ", l.left().fixed());
+    }
     printf("%d), ", m_style->borderImageSliceFill());
 
     // border-image-source
-    if (!m_style->borderImageSource()->equals(String::emptyString))
-        printf("border-image-source: %s, ", m_style->borderImageSource()->utf8Data());
+    if (!m_style->borderImageSource()->equals(String::emptyString)) {
+        printf("border-image-source: %s, ",
+               m_style->borderImageSource()->utf8Data());
+    }
 
     // border-image-width
     BorderImageLengthBox b = m_style->borderImageWidths();
-    printf("border-image-width: (%s, %s, %s, %s), ", b.top().dumpString()->utf8Data(), b.right().dumpString()->utf8Data(), b.bottom().dumpString()->utf8Data(), b.left().dumpString()->utf8Data());
+    printf("border-image-width: (%s, %s, %s, %s), ",
+           b.top().dumpString()->utf8Data(), b.right().dumpString()->utf8Data(),
+           b.bottom().dumpString()->utf8Data(),
+           b.left().dumpString()->utf8Data());
 
     // border-style
     printf("border-style(t, r, b, l): (");
     if (m_style->borderTopStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderTopStyle() == BorderStyleValue::SolidBorderStyleValue) {
+    } else if (m_style->borderTopStyle() ==
+               BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
     if (m_style->borderRightStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderRightStyle() == BorderStyleValue::SolidBorderStyleValue) {
+    } else if (m_style->borderRightStyle() ==
+               BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
-    if (m_style->borderBottomStyle() == BorderStyleValue::NoneBorderStyleValue) {
+    if (m_style->borderBottomStyle() ==
+        BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderBottomStyle() == BorderStyleValue::SolidBorderStyleValue) {
+    } else if (m_style->borderBottomStyle() ==
+               BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
     if (m_style->borderLeftStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none), ");
-    } else if (m_style->borderLeftStyle() == BorderStyleValue::SolidBorderStyleValue) {
+    } else if (m_style->borderLeftStyle() ==
+               BorderStyleValue::SolidBorderStyleValue) {
         printf("solid), ");
     }
 
     // border-width
-    printf("border-width(t, r, b, l): (%.0f, %.0f, %.0f, %.0f), ", m_style->borderTopWidth().fixed(), m_style->borderRightWidth().fixed(), m_style->borderBottomWidth().fixed(), m_style->borderLeftWidth().fixed());
+    printf("border-width(t, r, b, l): (%.0f, %.0f, %.0f, %.0f), ",
+           m_style->borderTopWidth().fixed(),
+           m_style->borderRightWidth().fixed(),
+           m_style->borderBottomWidth().fixed(),
+           m_style->borderLeftWidth().fixed());
 
     // background-repeat-x
-    if (m_style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue)
+    if (m_style->backgroundRepeatX() ==
+        BackgroundRepeatValue::RepeatRepeatValue) {
         printf("background-repeat-x: repeat, ");
-    else
+    } else {
         printf("background-repeat-x: no-repeat, ");
+    }
 
     // background-repeat-y
-    if (m_style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue)
+    if (m_style->backgroundRepeatY() ==
+        BackgroundRepeatValue::RepeatRepeatValue) {
         printf("background-repeat-y: repeat, ");
-    else
+    } else {
         printf("background-repeat-y: no-repeat, ");
+    }
 
     // margin-top
     if (m_style->marginTop().isFixed()) {
@@ -1737,16 +1954,18 @@ void Node::dumpStyle()
     printf("opacity: %.1f, ", m_style->opacity());
 
     // overflow-x
-    if (m_style->overflow() == OverflowValue::VisibleOverflow)
+    if (m_style->overflow() == OverflowValue::VisibleOverflow) {
         printf("overflow: visible, ");
-    else
+    } else {
         printf("overflow: hidden, ");
+    }
 
     // visibility
-    if (m_style->visibility() == VisibilityValue::VisibleVisibilityValue)
+    if (m_style->visibility() == VisibilityValue::VisibleVisibilityValue) {
         printf("visibility: visible, ");
-    else
+    } else {
         printf("visibility: hidden, ");
+    }
 
     printf("z-index : %d, ", (int)m_style->zIndex());
 
@@ -1754,13 +1973,15 @@ void Node::dumpStyle()
     if (m_style->uncheckedTransforms() == NULL) {
         printf("transform : none, ");
     } else {
-        printf("transform : %s, ", m_style->uncheckedTransforms()->dumpString()->utf8Data());
+        printf("transform : %s, ",
+               m_style->uncheckedTransforms()->dumpString()->utf8Data());
     }
 
     if (m_style->transformOrigin() == NULL) {
         printf("transform-origin : '', ");
     } else {
-        printf("transform-origin : %s", m_style->transformOrigin()->dumpString()->utf8Data());
+        printf("transform-origin : %s",
+               m_style->transformOrigin()->dumpString()->utf8Data());
     }
 
     printf("}");

@@ -33,53 +33,65 @@
 namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
-    : HTMLElement(document)
-    , m_autoplayingFlag(true)
-    , m_isPaused(true)
-    , m_isSeeking(false)
-    , m_isEnded(false)
-    , m_delayingTheLoadEvent(false)
-    , m_officialPlaybackPosition(0)
-    , m_defaultPlaybackStartPosition(0)
-    , m_muted(false)
-    , m_volume(1.0)
-    , m_pendingSeek(std::numeric_limits<double>::quiet_NaN())
-    , m_mediaPlayer(nullptr)
-    , m_currentSrc(String::emptyString)
-    , m_textTracks(new TextTrackList())
-    , m_readyState(HTMLMediaElement::HAVE_NOTHING)
-    , m_networkState(NetworkState::NETWORK_EMPTY)
-    , m_currentOperation(nullptr)
-    , m_currentPendingOperationCount(0)
-    , m_currentPendingOperationHandle(SIZE_MAX)
-    , m_resourceSelectionContext(nullptr)
+    : HTMLElement(document),
+      m_autoplayingFlag(true),
+      m_isPaused(true),
+      m_isSeeking(false),
+      m_isEnded(false),
+      m_delayingTheLoadEvent(false),
+      m_officialPlaybackPosition(0),
+      m_defaultPlaybackStartPosition(0),
+      m_muted(false),
+      m_volume(1.0),
+      m_pendingSeek(std::numeric_limits<double>::quiet_NaN()),
+      m_mediaPlayer(nullptr),
+      m_currentSrc(String::emptyString),
+      m_textTracks(new TextTrackList()),
+      m_readyState(HTMLMediaElement::HAVE_NOTHING),
+      m_networkState(NetworkState::NETWORK_EMPTY),
+      m_currentOperation(nullptr),
+      m_currentPendingOperationCount(0),
+      m_currentPendingOperationHandle(SIZE_MAX),
+      m_resourceSelectionContext(nullptr)
 {
 }
 
 void HTMLMediaElement::onDOMContentLoaded()
 {
-    if (!document()->inParsing() && (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
-        // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" : "false", preload()->utf8Data());
+    if (!document()->inParsing() &&
+        (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+        // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes
+        // content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" :
+        // "false", preload()->utf8Data());
         load();
         if (autoplay()) {
-            appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+            appendToPlayOperationQueue(
+                new MediaOperationQueueDataRequestPlay(this));
         }
     }
 }
 
-void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
 
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (!document()->inParsing() && (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
-            // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute causes content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" : "false", preload()->utf8Data());
+        if (!document()->inParsing() &&
+            (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+            // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute
+            // causes content load (autoplay:%s, preload:%s)\n", autoplay() ?
+            // "true" : "false", preload()->utf8Data());
             load();
             if (autoplay()) {
-                appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+                appendToPlayOperationQueue(
+                    new MediaOperationQueueDataRequestPlay(this));
             }
         }
-    } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_loop) {
         if (m_mediaPlayer) {
             m_mediaPlayer->setLoop(!attributeRemoved);
         }
@@ -101,26 +113,40 @@ void HTMLMediaElement::load()
 {
     STARFISH_LOG_INFO("HTMLMediaElement::load()\n");
     // 4.8.12.5 Loading the media resource
-    // While the delaying-the-load-event flag is true, the element must delay the load event of its document.
-    // Abort any already-running instance of the resource selection algorithm for this element.
+    // While the delaying-the-load-event flag is true, the element must delay
+    // the load event of its document.
+    // Abort any already-running instance of the resource selection algorithm
+    // for this element.
 
-    // Let pending tasks be a list of all tasks from the media element's media element event task source in one of the task queues.
-    // For each task in pending tasks that would resolve pending play promises or reject pending play promises, immediately resolve or reject those promises in the order the corresponding tasks were queued.
+    // Let pending tasks be a list of all tasks from the media element's media
+    // element event task source in one of the task queues.
+    // For each task in pending tasks that would resolve pending play promises
+    // or reject pending play promises, immediately resolve or reject those
+    // promises in the order the corresponding tasks were queued.
     // Remove each task in pending tasks from its task queue
-    abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::DOM_EXCEPTION, "The play() request was interrupted by a new load request."));
+    abortEveryPendingOperation(new DOMException(
+        document()->window()->scriptBindingInstance(),
+        DOMException::DOM_EXCEPTION,
+        "The play() request was interrupted by a new load request."));
 
-    // If the media element's networkState is set to NETWORK_LOADING or NETWORK_IDLE, queue a task to fire a simple event named abort at the media element.
+    // If the media element's networkState is set to NETWORK_LOADING or
+    // NETWORK_IDLE, queue a task to fire a simple event named abort at the
+    // media element.
     if (networkState() == NETWORK_LOADING || networkState() == NETWORK_IDLE) {
         dispatchAbortEvent();
     }
 
-    // If the media element's networkState is not set to NETWORK_EMPTY, then run these substeps:
+    // If the media element's networkState is not set to NETWORK_EMPTY, then run
+    // these substeps:
     if (networkState() != NETWORK_EMPTY) {
-        // Queue a task to fire a simple event named emptied at the media element.
+        // Queue a task to fire a simple event named emptied at the media
+        // element.
         dispatchEmptiedEvent();
 
-        // If a fetching process is in progress for the media element, the user agent should stop it.
-        // If the media element's assigned media provider object is a MediaSource object, then detach it.
+        // If a fetching process is in progress for the media element, the user
+        // agent should stop it.
+        // If the media element's assigned media provider object is a
+        // MediaSource object, then detach it.
         // NOTE: MediaSource object be detached in closeMediaPlayer()
         closeMediaPlayer();
 
@@ -134,12 +160,17 @@ void HTMLMediaElement::load()
             // Set the paused attribute to true.
             m_isPaused = true;
 
-            // Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+            // Take pending play promises and reject pending play promises with
+            // the result and an "AbortError" DOMException.
             auto iter = m_playOperationQueue.begin();
             while (iter != m_playOperationQueue.end()) {
 #ifdef USE_ES6_FEATURE
-                DOMException* exception = new DOMException(document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by load operation");
-                ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
+                DOMException* exception = new DOMException(
+                    document()->window()->scriptBindingInstance(),
+                    DOMException::ABORT_ERR,
+                    "play request is aborted by load operation");
+                ((MediaOperationQueueDataRequestPlay*)(*iter))
+                    ->m_promise->reject(exception->scriptValue());
 #endif
                 m_playOperationQueue.erase(iter++);
             }
@@ -158,10 +189,12 @@ void HTMLMediaElement::load()
 
         // TODO Set the timeline offset to Not-a-Number (NaN).
         // TODO Update the duration attribute to Not-a-Number (NaN).
-        // NOTE The user agent will not fire a durationchange event for this particular change of the duration.
+        // NOTE The user agent will not fire a durationchange event for this
+        // particular change of the duration.
     }
 
-    // TODO Set the playbackRate attribute to the value of the defaultPlaybackRate attribute.
+    // TODO Set the playbackRate attribute to the value of the
+    // defaultPlaybackRate attribute.
 
     // Set the error attribute to null and the autoplaying flag to true.
     m_autoplayingFlag = true;
@@ -193,16 +226,19 @@ void HTMLMediaElement::resourceSelection()
     closeMediaPlayer();
     m_networkState = NETWORK_NO_SOURCE;
     // Set the element's show poster flag to true.
-    // Set the media element's delaying-the-load-event flag to true (this delays the load event).
+    // Set the media element's delaying-the-load-event flag to true (this delays
+    // the load event).
     m_delayingTheLoadEvent = true;
 
     m_resourceSelectionContext = new ResourceSelectionContext(this);
-    appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(this));
+    appendToOperationQueue(
+        new MediaOperationQueueDataRequestResourceSelection(this));
 }
 
 void HTMLMediaElement::dedicatedMediaSourceFailure()
 {
-    // TODO Set the error attribute to a new MediaError object whose code attribute is set to MEDIA_ERR_SRC_NOT_SUPPORTED.
+    // TODO Set the error attribute to a new MediaError object whose code
+    // attribute is set to MEDIA_ERR_SRC_NOT_SUPPORTED.
     // TODO Forget the media element's media-resource-specific tracks.
     // Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_networkState = NETWORK_NO_SOURCE;
@@ -211,10 +247,14 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     // Fire a simple event named error at the media element.
     dispatchErrorEventNow();
 
-    // Reject pending play promises with promises and a "NotSupportedError" DOMException.
-    abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    // Reject pending play promises with promises and a "NotSupportedError"
+    // DOMException.
+    abortEveryPendingOperation(
+        new DOMException(document()->window()->scriptBindingInstance(),
+                         DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 
-    // Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+    // Set the element's delaying-the-load-event flag to false. This stops
+    // delaying the load event.
     m_delayingTheLoadEvent = false;
 }
 
@@ -222,12 +262,14 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 {
     if (shouldSetError) {
         // STARFISH_ASSERT(m_readyState > HAVE_NOTHING);
-        // TODO Set the error attribute to a new MediaError object whose code attribute is set to MEDIA_ERR_NETWORK / MEDIA_ERROR_DECODE
+        // TODO Set the error attribute to a new MediaError object whose code
+        // attribute is set to MEDIA_ERR_NETWORK / MEDIA_ERROR_DECODE
 
         // Set the element's networkState attribute to the NETWORK_IDLE value.
         m_networkState = NETWORK_IDLE;
 
-        // Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+        // Set the element's delaying-the-load-event flag to false. This stops
+        // delaying the load event.
         m_delayingTheLoadEvent = false;
 
         // Fire a simple event named error at the media element.
@@ -236,7 +278,9 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 
     m_resourceSelectionContext = nullptr;
     // Abort the overall resource selection algorithm
-    abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    abortEveryPendingOperation(
+        new DOMException(document()->window()->scriptBindingInstance(),
+                         DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 }
 
 #ifdef USE_ES6_FEATURE
@@ -245,42 +289,60 @@ Promise* HTMLMediaElement::play()
 void HTMLMediaElement::play()
 #endif
 {
-    // TODO If the media element is not allowed to play, return a promise rejected with a "NotAllowedError" DOMException and abort these steps.
-    // TODO If the media element's error attribute is not null and its code attribute has the value MEDIA_ERR_SRC_NOT_SUPPORTED, return a promise rejected with a "NotSupportedError" DOMException and abort these steps.
+    // TODO If the media element is not allowed to play, return a promise
+    // rejected with a "NotAllowedError" DOMException and abort these steps.
+    // TODO If the media element's error attribute is not null and its code
+    // attribute has the value MEDIA_ERR_SRC_NOT_SUPPORTED, return a promise
+    // rejected with a "NotSupportedError" DOMException and abort these steps.
 
-    // Let promise be a new promise and append promise to the list of pending play promises.
+    // Let promise be a new promise and append promise to the list of pending
+    // play promises.
     auto playRequest = new MediaOperationQueueDataRequestPlay(this);
     appendToPlayOperationQueue(playRequest);
 
-    // If the media element's networkState attribute has the value NETWORK_EMPTY, invoke the media element's resource selection algorithm.
+    // If the media element's networkState attribute has the value
+    // NETWORK_EMPTY, invoke the media element's resource selection algorithm.
     if (m_networkState == NETWORK_EMPTY) {
         resourceSelection();
     }
 
-    // TODO If the playback has ended and the direction of playback is forwards, seek to the earliest possible position of the media resource.
+    // TODO If the playback has ended and the direction of playback is forwards,
+    // seek to the earliest possible position of the media resource.
 
-    // If the media element's paused attribute is true, run the following substeps:
+    // If the media element's paused attribute is true, run the following
+    // substeps:
     if (m_isPaused == true) {
         // Change the value of paused to false.
         m_isPaused = false;
-        // TODO If the show poster flag is true, set the element's show poster flag to false and run the time marches on steps.
+        // TODO If the show poster flag is true, set the element's show poster
+        // flag to false and run the time marches on steps.
 
         // Queue a task to fire a simple event named play at the element.
         dispatchPlayEvent();
 
-        // If the media element's readyState attribute has the value HAVE_NOTHING, HAVE_METADATA, or HAVE_CURRENT_DATA, queue a task to fire a simple event named waiting at the element.
-        if (m_readyState == HAVE_NOTHING || m_readyState == HAVE_METADATA || m_readyState == HAVE_CURRENT_DATA) {
+        // If the media element's readyState attribute has the value
+        // HAVE_NOTHING, HAVE_METADATA, or HAVE_CURRENT_DATA, queue a task to
+        // fire a simple event named waiting at the element.
+        if (m_readyState == HAVE_NOTHING || m_readyState == HAVE_METADATA ||
+            m_readyState == HAVE_CURRENT_DATA) {
             dispatchWaitingEvent();
-        } else if  (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
-            // Otherwise, the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the element.
+        } else if (m_readyState == HAVE_FUTURE_DATA ||
+                   m_readyState == HAVE_ENOUGH_DATA) {
+            // Otherwise, the media element's readyState attribute has the value
+            // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for
+            // the element.
             notifyAboutPlaying();
         }
-    } else if (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
-        // Otherwise, if the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA,
-        // take pending play promises and queue a task to resolve pending play promises with the result.
+    } else if (m_readyState == HAVE_FUTURE_DATA ||
+               m_readyState == HAVE_ENOUGH_DATA) {
+        // Otherwise, if the media element's readyState attribute has the value
+        // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA,
+        // take pending play promises and queue a task to resolve pending play
+        // promises with the result.
         auto iter = m_playOperationQueue.begin();
         while (iter != m_playOperationQueue.end()) {
-            ((MediaOperationQueueDataRequestPlay*)(*iter))->processOperationQueue();
+            ((MediaOperationQueueDataRequestPlay*)(*iter))
+                ->processOperationQueue();
             m_playOperationQueue.erase(iter++);
         }
     }
@@ -288,7 +350,7 @@ void HTMLMediaElement::play()
     // Set the media element's autoplaying flag to false.
     m_autoplayingFlag = false;
 
-    // Return promise.
+// Return promise.
 #ifdef USE_ES6_FEATURE
     return playRequest->m_promise;
 #endif
@@ -296,14 +358,16 @@ void HTMLMediaElement::play()
 
 void HTMLMediaElement::pause()
 {
-    // If the media element's networkState attribute has the value NETWORK_EMPTY, invoke the media element's resource selection algorithm.
+    // If the media element's networkState attribute has the value
+    // NETWORK_EMPTY, invoke the media element's resource selection algorithm.
     if (networkState() == NETWORK_EMPTY) {
         resourceSelection();
     }
     // Set the media element's autoplaying flag to false.
     m_autoplayingFlag = false;
 
-    // If the media element's paused attribute is false, run the following steps:
+    // If the media element's paused attribute is false, run the following
+    // steps:
     if (m_isPaused == false) {
         // Change the value of paused to true.
         m_isPaused = true;
@@ -326,7 +390,8 @@ void HTMLMediaElement::removeTextTrack(TextTrack* track)
     }
 }
 
-TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label, String* language)
+TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
+                                          String* language)
 {
     TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
     if (kindEnum == TextTrack::Kind::InvalidKind) {
@@ -340,12 +405,16 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label, String* l
 void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
 {
     HTMLElement::didNodeInserted(parent, newChild);
-    if (parent == this && newChild->isElement() && newChild->asElement()->isHTMLElement() && newChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-        HTMLTrackElement* trackElement = newChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+    if (parent == this && newChild->isElement() &&
+        newChild->asElement()->isHTMLElement() &&
+        newChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement =
+            newChild->asElement()->asHTMLElement()->asHTMLTrackElement();
         STARFISH_ASSERT(trackElement->track());
         addTextTrack(trackElement->track());
     }
-    if (m_resourceSelectionContext && m_resourceSelectionContext->waitingChildren()) {
+    if (m_resourceSelectionContext &&
+        m_resourceSelectionContext->waitingChildren()) {
         // TODO Release waiting?
     }
 }
@@ -353,12 +422,16 @@ void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
 void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     HTMLElement::didNodeRemoved(parent, oldChild);
-    if (parent == this && oldChild->isElement() && oldChild->asElement()->isHTMLElement() && oldChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-        HTMLTrackElement* trackElement = oldChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+    if (parent == this && oldChild->isElement() &&
+        oldChild->asElement()->isHTMLElement() &&
+        oldChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement =
+            oldChild->asElement()->asHTMLElement()->asHTMLTrackElement();
         STARFISH_ASSERT(trackElement->track());
         removeTextTrack(trackElement->track());
     }
-    if (m_resourceSelectionContext && m_resourceSelectionContext->hasPointer()) {
+    if (m_resourceSelectionContext &&
+        m_resourceSelectionContext->hasPointer()) {
         if (oldChild == m_resourceSelectionContext->nodeBeforePointer()) {
             m_resourceSelectionContext->updatePointer(previousSibling());
         }
@@ -367,16 +440,31 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
 
 HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
 {
-    QualifiedName preload = document()->window()->starFish()->staticStrings()->m_preload;
+    QualifiedName preload =
+        document()->window()->starFish()->staticStrings()->m_preload;
     size_t siz = hasAttribute(preload);
     if (siz != SIZE_MAX) {
         String* value = getAttribute(preload);
-        if (value->length() == 0 || (value->length() == 4 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "auto").string()))) {
-            // The empty string is also a valid keyword, and maps to the Automatic state
+        if (value->length() == 0 ||
+            (value->length() == 4 &&
+             value->equalsWithoutCase(
+                 AtomicString::createAtomicString(
+                     document()->window()->starFish(), "auto")
+                     .string()))) {
+            // The empty string is also a valid keyword, and maps to the
+            // Automatic state
             return HTMLMediaElement::PRELOAD_AUTOMATIC;
-        } else if (value->length() == 8 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "metadata").string())) {
+        } else if (value->length() == 8 &&
+                   value->equalsWithoutCase(
+                       AtomicString::createAtomicString(
+                           document()->window()->starFish(), "metadata")
+                           .string())) {
             return HTMLMediaElement::PRELOAD_METADATA;
-        } else if (value->length() == 4 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "none").string())) {
+        } else if (value->length() == 4 &&
+                   value->equalsWithoutCase(
+                       AtomicString::createAtomicString(
+                           document()->window()->starFish(), "none")
+                           .string())) {
             return HTMLMediaElement::PRELOAD_NONE;
         }
     }
@@ -386,7 +474,8 @@ HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
 
 String* HTMLMediaElement::preload()
 {
-    return HTMLMediaElement::preloadToString(document()->window()->starFish(), preloadEnum());
+    return HTMLMediaElement::preloadToString(document()->window()->starFish(),
+                                             preloadEnum());
 }
 
 TimeRanges* HTMLMediaElement::buffered()
@@ -407,13 +496,16 @@ bool HTMLMediaElement::seeking()
 
 double HTMLMediaElement::currentTime()
 {
-    // Note : https://www.w3.org/TR/html51/semantics-embedded-content.html#dom-htmlmediaelement-currenttime
+    // Note :
+    // https://www.w3.org/TR/html51/semantics-embedded-content.html
+    //         #dom-htmlmediaelement-currenttime
     return m_mediaPlayer ? m_officialPlaybackPosition : 0;
 }
 
 double HTMLMediaElement::duration()
 {
-    return m_mediaPlayer ? m_mediaPlayer->duration() : std::numeric_limits<double>::quiet_NaN();
+    return m_mediaPlayer ? m_mediaPlayer->duration()
+                         : std::numeric_limits<double>::quiet_NaN();
 }
 
 bool HTMLMediaElement::paused()
@@ -445,7 +537,8 @@ TimeRanges* HTMLMediaElement::seekable()
         return new TimeRanges();
     }
     if (m_mediaPlayer->activeMediaSource()) {
-        SourceBufferList* bufferList = m_mediaPlayer->activeMediaSource()->activeSourceBuffers();
+        SourceBufferList* bufferList =
+            m_mediaPlayer->activeMediaSource()->activeSourceBuffers();
         STARFISH_ASSERT(bufferList);
         unsigned nbuffer = bufferList->length();
 
@@ -467,10 +560,14 @@ TimeRanges* HTMLMediaElement::seekable()
                 } else if (buffered->start(t) > result->end(j)) {
                     j++;
                 } else {
-                    newResult->push_back(std::max(buffered->start(t), result->start(j)), std::min(buffered->end(t), result->end(j)));
-                    if (buffered->start(t) >= result->start(j) && buffered->end(t) <= result->end(j)) {
+                    newResult->push_back(
+                        std::max(buffered->start(t), result->start(j)),
+                        std::min(buffered->end(t), result->end(j)));
+                    if (buffered->start(t) >= result->start(j) &&
+                        buffered->end(t) <= result->end(j)) {
                         t++;
-                    } else if (buffered->start(t) <= result->start(j) && buffered->end(t) >= result->end(j)) {
+                    } else if (buffered->start(t) <= result->start(j) &&
+                               buffered->end(t) >= result->end(j)) {
                         j++;
                     } else if (buffered->start(t) < result->start(j)) {
                         t++;
@@ -496,25 +593,31 @@ bool HTMLMediaElement::ended()
 
 bool HTMLMediaElement::autoplay()
 {
-    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_autoplay);
-    if (siz == SIZE_MAX)
+    size_t siz = hasAttribute(
+        document()->window()->starFish()->staticStrings()->m_autoplay);
+    if (siz == SIZE_MAX) {
         return false;
+    }
     return true;
 }
 
 bool HTMLMediaElement::loop()
 {
-    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_loop);
-    if (siz == SIZE_MAX)
+    size_t siz =
+        hasAttribute(document()->window()->starFish()->staticStrings()->m_loop);
+    if (siz == SIZE_MAX) {
         return false;
+    }
     return true;
 }
 
 bool HTMLMediaElement::controls()
 {
-    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_controls);
-    if (siz == SIZE_MAX)
+    size_t siz = hasAttribute(
+        document()->window()->starFish()->staticStrings()->m_controls);
+    if (siz == SIZE_MAX) {
         return false;
+    }
     return true;
 }
 
@@ -535,7 +638,8 @@ String* HTMLMediaElement::currentSrc()
 
 void HTMLMediaElement::setPreload(String* preload)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_preload, preload);
+    setAttribute(document()->window()->starFish()->staticStrings()->m_preload,
+                 preload);
 }
 
 double HTMLMediaElement::defaultPlaybackStartPosition()
@@ -557,24 +661,34 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
     STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() %lf \n", currentTime);
     if (m_readyState == HAVE_NOTHING) {
         m_defaultPlaybackStartPosition = currentTime;
-        STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
+        STARFISH_LOG_INFO(
+            "HTMLMediaElement::setCurrentTime() readyState is "
+            "HAVE_NOTHING..\n");
     } else {
         m_isEnded = false;
         if (m_isSeeking) {
             // https://www.w3.org/TR/html51/semantics-embedded-content.html#seek
-            // If the element's seeking IDL attribute is true, (...) algorithm is already running.
-            // Abort that other instance of the algorithm without waiting for the step that it is running to complete.
-            // Note : But there is no way of aborting player_set_position_async, we have to wait.
-            STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() Seek pending..\n");
+            // If the element's seeking IDL attribute is true, (...) algorithm
+            // is already running.
+            // Abort that other instance of the algorithm without waiting for
+            // the step that it is running to complete.
+            // Note : But there is no way of aborting player_set_position_async,
+            // we have to wait.
+            STARFISH_LOG_INFO(
+                "HTMLMediaElement::setCurrentTime() Seek pending..\n");
             m_pendingSeek = currentTime;
         } else {
-            // Note: Set seeking flag to true here to prevent MediaPlayer's timer updating officialPlaybackPosition
+            // Note: Set seeking flag to true here to prevent MediaPlayer's
+            // timer updating officialPlaybackPosition
             //       while "seek" is in the operation queue.
             m_isSeeking = true;
-            // Note: Update officialPlaybackPosition here but not dispatch timeupdate event.
-            // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked -> timeupdate
+            // Note: Update officialPlaybackPosition here but not dispatch
+            // timeupdate event.
+            // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked ->
+            // timeupdate
             m_officialPlaybackPosition = currentTime;
-            appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
+            appendToOperationQueue(
+                new MediaOperationQueueDataRequestSeek(this, currentTime));
         }
     }
 }
@@ -600,7 +714,8 @@ void HTMLMediaElement::setPlaybackRate(double playbackRate)
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
 {
-    QualifiedName name = document()->window()->starFish()->staticStrings()->m_autoplay;
+    QualifiedName name =
+        document()->window()->starFish()->staticStrings()->m_autoplay;
     if (autoplay) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -613,7 +728,8 @@ void HTMLMediaElement::setAutoplay(bool autoplay)
 
 void HTMLMediaElement::setLoop(bool loop)
 {
-    QualifiedName name = document()->window()->starFish()->staticStrings()->m_loop;
+    QualifiedName name =
+        document()->window()->starFish()->staticStrings()->m_loop;
     if (loop) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -626,7 +742,8 @@ void HTMLMediaElement::setLoop(bool loop)
 
 void HTMLMediaElement::setControls(bool controls)
 {
-    QualifiedName name = document()->window()->starFish()->staticStrings()->m_controls;
+    QualifiedName name =
+        document()->window()->starFish()->staticStrings()->m_controls;
     if (controls) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -639,13 +756,17 @@ void HTMLMediaElement::setControls(bool controls)
 
 void HTMLMediaElement::setVolume(double volume)
 {
-    if (volume < 0.0f || volume > 1.0f)
-        throw new DOMException(document()->scriptBindingInstance(), DOMException::INDEX_SIZE_ERR, "volume should be in the range 0.0 to 1.0");
+    if (volume < 0.0f || volume > 1.0f) {
+        throw new DOMException(document()->scriptBindingInstance(),
+                               DOMException::INDEX_SIZE_ERR,
+                               "volume should be in the range 0.0 to 1.0");
+    }
 
     if (m_volume != volume) {
         m_volume = volume;
-        if (m_mediaPlayer)
+        if (m_mediaPlayer) {
             m_mediaPlayer->setVolume(volume);
+        }
         dispatchVolumechangeEvent();
     }
 }
@@ -653,8 +774,9 @@ void HTMLMediaElement::setVolume(double volume)
 void HTMLMediaElement::setMuted(bool muted)
 {
     if (m_muted != muted) {
-        if (m_mediaPlayer)
+        if (m_mediaPlayer) {
             m_mediaPlayer->setMuted(muted);
+        }
         dispatchVolumechangeEvent();
     }
 }
@@ -669,12 +791,14 @@ void HTMLMediaElement::notifyAboutPlaying()
     // https://html.spec.whatwg.org/multipage/embedded-content.html#notify-about-playing
     dispatchPlayingEvent();
     while (m_playOperationQueue.size()) {
-        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->processOperationQueue();
+        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())
+            ->processOperationQueue();
         m_playOperationQueue.pop_front();
     }
 }
 
-void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::ReadyState state)
+void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
+    HTMLMediaElement::ReadyState state)
 {
     if (state == m_readyState) {
         return;
@@ -684,34 +808,49 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
     m_readyState = state;
 
     if (networkState() != HTMLMediaElement::NETWORK_EMPTY) {
-        // If the previous ready state was HAVE_NOTHING, and the new ready state is HAVE_METADATA
-        if (prevState == HTMLMediaElement::HAVE_NOTHING && state == HTMLMediaElement::HAVE_METADATA) {
-            // NOTE : Before this task is run, as part of the event loop mechanism,
-            //        the rendering will have been updated to resize the video element if appropriate.
+        // If the previous ready state was HAVE_NOTHING, and the new ready state
+        // is HAVE_METADATA
+        if (prevState == HTMLMediaElement::HAVE_NOTHING &&
+            state == HTMLMediaElement::HAVE_METADATA) {
+            // NOTE : Before this task is run, as part of the event loop
+            // mechanism,
+            //        the rendering will have been updated to resize the video
+            //        element if appropriate.
             if (isHTMLVideoElement() && frame()) {
                 setNeedsLayout();
             }
-            // Queue a task to fire an event named loadedmetadata at the element.
+            // Queue a task to fire an event named loadedmetadata at the
+            // element.
             dispatchLoadedmetadataEvent();
         }
 
-        // If the previous ready state was HAVE_METADATA and the new ready state is HAVE_CURRENT_DATA or greater
-        if (prevState == HTMLMediaElement::HAVE_METADATA && state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
+        // If the previous ready state was HAVE_METADATA and the new ready state
+        // is HAVE_CURRENT_DATA or greater
+        if (prevState == HTMLMediaElement::HAVE_METADATA &&
+            state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
             dispatchLoadeddataEvent();
         }
-        // If the previous ready state was HAVE_FUTURE_DATA or more, and the new ready state is HAVE_CURRENT_DATA or less
-        if (prevState >= HTMLMediaElement::HAVE_FUTURE_DATA && state <= HTMLMediaElement::HAVE_CURRENT_DATA) {
-            if (m_mediaPlayer && m_mediaPlayer->playbackState() == MediaPlayer::PLAYBACK_STATE_PLAYING) {
+        // If the previous ready state was HAVE_FUTURE_DATA or more, and the new
+        // ready state is HAVE_CURRENT_DATA or less
+        if (prevState >= HTMLMediaElement::HAVE_FUTURE_DATA &&
+            state <= HTMLMediaElement::HAVE_CURRENT_DATA) {
+            if (m_mediaPlayer &&
+                m_mediaPlayer->playbackState() ==
+                    MediaPlayer::PLAYBACK_STATE_PLAYING) {
                 dispatchTimeupdateEvent();
                 dispatchWaitingEvent();
             }
         }
-        // If the previous ready state was HAVE_CURRENT_DATA or less, and the new ready state is HAVE_FUTURE_DATA,
-        if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA && state == HTMLMediaElement::HAVE_FUTURE_DATA) {
-            // The user agent must queue a task to fire an event named canplay at the element.
+        // If the previous ready state was HAVE_CURRENT_DATA or less, and the
+        // new ready state is HAVE_FUTURE_DATA,
+        if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA &&
+            state == HTMLMediaElement::HAVE_FUTURE_DATA) {
+            // The user agent must queue a task to fire an event named canplay
+            // at the element.
             dispatchCanplayEvent();
 
-            // If the element's paused attribute is false, the user agent must notify about playing for the element.
+            // If the element's paused attribute is false, the user agent must
+            // notify about playing for the element.
             if (!m_isPaused) {
                 notifyAboutPlaying();
             }
@@ -719,8 +858,10 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
         // If the new ready state is HAVE_ENOUGH_DATA,
         if (state == HTMLMediaElement::HAVE_ENOUGH_DATA) {
             // If the previous ready state was HAVE_CURRENT_DATA or lesss,
-            // the user agent must queue a task to fire an event named canplay at the element, and,
-            // if the element's paused attribute is false, notify about playing for the element.
+            // the user agent must queue a task to fire an event named canplay
+            // at the element, and,
+            // if the element's paused attribute is false, notify about playing
+            // for the element.
             if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA) {
                 dispatchCanplayEvent();
                 if (!m_isPaused) {
@@ -731,7 +872,8 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
             if (eligibleForAutoplay()) {
                 // 1. Set the paused attribute to false.
                 m_isPaused = false;
-                // 2. If the element's show poster flag is true, set it to false and run the time marches on steps.
+                // 2. If the element's show poster flag is true, set it to false
+                // and run the time marches on steps.
                 // TODO
                 // 3. Queue a task to fire an event named play at the element.
                 dispatchPlayEvent();
@@ -741,7 +883,8 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
                 m_autoplayingFlag = false;
             }
 
-            // The user agent must queue a task to fire an event named canplaythrough at the element.
+            // The user agent must queue a task to fire an event named
+            // canplaythrough at the element.
             dispatchCanplaythroughEvent();
         }
     } else {
@@ -750,16 +893,23 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
 
 void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n", currentTime);
-    // Note : Set officialPlaybackPosition manually instead of calling setOfficialPlaybackPosition()
+    STARFISH_LOG_INFO(
+        "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n",
+        currentTime);
+    // Note : Set officialPlaybackPosition manually instead of calling
+    // setOfficialPlaybackPosition()
     //        Because m_isSeeking effects setOfficialPlaybackPosition()
     m_officialPlaybackPosition = currentTime;
 
     if (!std::isnan(m_pendingSeek) && m_pendingSeek != currentTime) {
-        STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found pending seek operation (%lf)\n", m_pendingSeek);
+        STARFISH_LOG_INFO(
+            "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found "
+            "pending seek operation (%lf)\n",
+            m_pendingSeek);
         double pendingSeek = m_pendingSeek;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
-        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, pendingSeek));
+        appendToOperationQueue(
+            new MediaOperationQueueDataRequestSeek(this, pendingSeek));
     } else {
         // Finish "seek"
         m_isSeeking = false;
@@ -769,10 +919,10 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     }
 }
 
-
 void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
+    STARFISH_LOG_INFO(
+        "HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
     m_isSeeking = false;
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
     // TODO
@@ -798,22 +948,31 @@ HTMLMediaElement::NetworkState HTMLMediaElement::networkState()
 
 void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
 {
-    appendToOperationQueue(new MediaOperationQueueDataRequestDispatchEvent(this, t, e));
+    appendToOperationQueue(
+        new MediaOperationQueueDataRequestDispatchEvent(this, t, e));
 }
 
-#define ADD_DISPATCH_EVENT_DEF(name, Name) \
-void HTMLMediaElement::dispatch##Name##EventNow() \
-{ \
-    String* eventType = document()->window()->starFish()->staticStrings()->m_##name.localName(); \
-    Event* e = new Event(eventType, EventInit(false, false)); \
-    dispatchEvent(e); \
-} \
-void HTMLMediaElement::dispatch##Name##Event() \
-{ \
-    String* eventType = document()->window()->starFish()->staticStrings()->m_##name.localName(); \
-    Event* e = new Event(eventType, EventInit(false, false)); \
-    addEventToOperationQueue(this, e); \
-}
+#define ADD_DISPATCH_EVENT_DEF(name, Name)                        \
+    void HTMLMediaElement::dispatch##Name##EventNow()             \
+    {                                                             \
+        String* eventType = document()                            \
+                                ->window()                        \
+                                ->starFish()                      \
+                                ->staticStrings()                 \
+                                ->m_##name.localName();           \
+        Event* e = new Event(eventType, EventInit(false, false)); \
+        dispatchEvent(e);                                         \
+    }                                                             \
+    void HTMLMediaElement::dispatch##Name##Event()                \
+    {                                                             \
+        String* eventType = document()                            \
+                                ->window()                        \
+                                ->starFish()                      \
+                                ->staticStrings()                 \
+                                ->m_##name.localName();           \
+        Event* e = new Event(eventType, EventInit(false, false)); \
+        addEventToOperationQueue(this, e);                        \
+    }
 
 ADD_DISPATCH_EVENT_DEF(progress, Progress);
 ADD_DISPATCH_EVENT_DEF(suspend, Suspend);
@@ -839,7 +998,8 @@ ADD_DISPATCH_EVENT_DEF(ratechange, Ratechange);
 ADD_DISPATCH_EVENT_DEF(volumechange, Volumechange);
 #undef ADD_DISPATCH_EVENT_DEF
 
-void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlayPromise)
+void HTMLMediaElement::abortEveryPendingOperation(
+    DOMException* exceptionForPlayPromise)
 {
     STARFISH_LOG_INFO("HTMLMediaElement::abortEveryPendingOperation()\n");
     if (m_currentOperation) {
@@ -853,12 +1013,14 @@ void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlay
     }
 
     while (m_playOperationQueue.size()) {
-        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->cancelOperation(exceptionForPlayPromise);
+        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())
+            ->cancelOperation(exceptionForPlayPromise);
         m_playOperationQueue.pop_front();
     }
 
     if (m_currentPendingOperationHandle != SIZE_MAX) {
-        document()->window()->starFish()->messageLoop()->removeIdler(m_currentPendingOperationHandle);
+        document()->window()->starFish()->messageLoop()->removeIdler(
+            m_currentPendingOperationHandle);
         m_currentPendingOperationHandle = SIZE_MAX;
         m_currentPendingOperationCount = 0;
     }
@@ -883,17 +1045,23 @@ void HTMLMediaElement::processNextOperationQueue()
         STARFISH_ASSERT(!next->isPlayRequest());
         m_operationQueue.pop_front();
 
-        m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
-            MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
-            // Clear pending data
-            queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
-            queueData->m_mediaElement->m_currentPendingOperationCount--;
-            STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 0);
+        m_currentPendingOperationHandle =
+            document()->window()->starFish()->messageLoop()->addIdler(
+                [](size_t, void* data) {
+                    MediaOperationQueueData* queueData =
+                        (MediaOperationQueueData*)data;
+                    // Clear pending data
+                    queueData->m_mediaElement->m_currentPendingOperationHandle =
+                        SIZE_MAX;
+                    queueData->m_mediaElement->m_currentPendingOperationCount--;
+                    STARFISH_ASSERT(queueData->m_mediaElement
+                                        ->m_currentPendingOperationCount == 0);
 
-            // Register and execute current processing operation
-            queueData->m_mediaElement->m_currentOperation = queueData;
-            queueData->processOperationQueue();
-        }, next);
+                    // Register and execute current processing operation
+                    queueData->m_mediaElement->m_currentOperation = queueData;
+                    queueData->processOperationQueue();
+                },
+                next);
     }
 }
 
@@ -919,7 +1087,8 @@ HTMLSourceElement* ResourceSelectionContext::getNextCandidate()
     updatePointer(child);
 
     while (child) {
-        if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
+        if (child->isElement() && child->asElement()->isHTMLElement() &&
+            child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
             return child->asElement()->asHTMLElement()->asHTMLSourceElement();
         }
         child = child->nextSibling();
@@ -934,90 +1103,133 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
 {
     // Failed with elements:
     // Queue a task to fire an event named error at the candidate element.
-    String* eventType = m_mediaElement->document()->window()->starFish()->staticStrings()->m_error.localName();
+    String* eventType = m_mediaElement->document()
+                            ->window()
+                            ->starFish()
+                            ->staticStrings()
+                            ->m_error.localName();
     Event* e = new Event(eventType, EventInit(false, false));
     m_mediaElement->addEventToOperationQueue(candidate, e);
 }
 
 void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestResourceSelection::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestResourceSelection::"
+        "processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
     self->processNextOperationQueue();
 
     STARFISH_ASSERT(self->m_resourceSelectionContext);
     ResourceSelectionContext* context = self->m_resourceSelectionContext;
 
-    // TODO If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
-    // TODO If the media element has an assigned media provider object, then let mode be object.
+    // TODO If the media element's blocked-on-parser flag is false, then
+    // populate the list of pending text tracks.
+    // TODO If the media element has an assigned media provider object, then let
+    // mode be object.
 
-    // Otherwise, if the media element has no assigned media provider object but has a src attribute, then let mode be attribute.
-    // Otherwise, if the media element does not have an assigned media provider object and does not have a src attribute,
-    // but does have a source element child, then let mode be children and let candidate be the first such source element child in tree order.
+    // Otherwise, if the media element has no assigned media provider object but
+    // has a src attribute, then let mode be attribute.
+    // Otherwise, if the media element does not have an assigned media provider
+    // object and does not have a src attribute,
+    // but does have a source element child, then let mode be children and let
+    // candidate be the first such source element child in tree order.
     if (context->m_mode == ResourceSelectionContext::MODE_NONE) {
-        if (self->hasAttribute(self->document()->window()->starFish()->staticStrings()->m_src) != SIZE_MAX) {
+        if (self->hasAttribute(self->document()
+                                   ->window()
+                                   ->starFish()
+                                   ->staticStrings()
+                                   ->m_src) != SIZE_MAX) {
             context->m_mode = ResourceSelectionContext::MODE_ATTRIBUTE;
         } else if (self->hasSourceElementChild()) {
             context->m_mode = ResourceSelectionContext::MODE_CHILDREN;
         } else {
-            // Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child: set the networkState to NETWORK_EMPTY, and abort these steps; the synchronous section ends.
+            // Otherwise the media element has no assigned media provider object
+            // and has neither a src attribute nor a source element child: set
+            // the networkState to NETWORK_EMPTY, and abort these steps; the
+            // synchronous section ends.
             self->m_networkState = HTMLMediaElement::NETWORK_EMPTY;
-            // NOTE: Firing emptied event and Detaching MediaSource must have done in "load()"
-            //       (or does not have to consider if m_networkState were already NETWORK_EMPTY)
+            // NOTE: Firing emptied event and Detaching MediaSource must have
+            // done in "load()"
+            //       (or does not have to consider if m_networkState were
+            //       already NETWORK_EMPTY)
             return;
         }
 
         // Set the media element's networkState to NETWORK_LOADING.
         self->m_networkState = HTMLMediaElement::NETWORK_LOADING;
-        // Queue a task to fire a simple event named loadstart at the media element.
+        // Queue a task to fire a simple event named loadstart at the media
+        // element.
         self->dispatchLoadstartEvent();
     }
 
     if (context->m_mode == ResourceSelectionContext::MODE_ATTRIBUTE) {
-        // If the src attribute's value is the empty string, then end the synchronous section, and jump down to the failed with attribute step below.
+        // If the src attribute's value is the empty string, then end the
+        // synchronous section, and jump down to the failed with attribute step
+        // below.
         if (self->src()->containsOnlyWhitespace()) {
             self->dedicatedMediaSourceFailure();
             return;
         }
 
-        // If urlString was obtained successfully, set the currentSrc attribute to urlString.
-        URL* url = URL::createURL(self->document()->documentURI()->urlString(), self->src());
+        // If urlString was obtained successfully, set the currentSrc attribute
+        // to urlString.
+        URL* url = URL::createURL(self->document()->documentURI()->urlString(),
+                                  self->src());
         self->m_currentSrc = url->urlString();
-        // End the synchronous section, continuing the remaining steps in parallel.
+        // End the synchronous section, continuing the remaining steps in
+        // parallel.
         self->initMediaPlayer();
-        self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
-        self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
+        self->appendToOperationQueue(
+            new MediaOperationQueueDataRequestPrepare(self, url));
+        self->appendToOperationQueue(
+            new MediaOperationQueueDataRequestSeekToDefault(self));
         return;
     } else if (context->m_mode == ResourceSelectionContext::MODE_CHILDREN) {
         HTMLSourceElement* candidate = context->getNextCandidate();
         if (!candidate) {
-            // Wait until the node after pointer is a node other than the end of the list. (This step might wait forever.)
+            // Wait until the node after pointer is a node other than the end of
+            // the list. (This step might wait forever.)
             self->m_networkState = HTMLMediaElement::NETWORK_NO_SOURCE;
             return;
         }
         // Process candidate:
-        if (candidate->src()->length() == 0 || candidate->src()->containsOnlyWhitespace()) {
-            // If candidate does not have a src attribute, or if its src attribute's value is the empty string,
-            // then end the synchronous section, and jump down to the failed with elements step below.
+        if (candidate->src()->length() == 0 ||
+            candidate->src()->containsOnlyWhitespace()) {
+            // If candidate does not have a src attribute, or if its src
+            // attribute's value is the empty string,
+            // then end the synchronous section, and jump down to the failed
+            // with elements step below.
             context->failedWithElements(candidate);
-            self->appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(self));
+            self->appendToOperationQueue(
+                new MediaOperationQueueDataRequestResourceSelection(self));
             return;
-        } else if (candidate->typeAttr()->length() > 0 && MimeType::parseFromString(candidate->typeAttr()).isValid() && !MediaSource::isTypeSupported(candidate->typeAttr())) {
-            // FIXME : MediaSource::isTypeSupported() -> replaced method to proper one.
+        } else if (candidate->typeAttr()->length() > 0 &&
+                   MimeType::parseFromString(candidate->typeAttr()).isValid() &&
+                   !MediaSource::isTypeSupported(candidate->typeAttr())) {
+            // FIXME : MediaSource::isTypeSupported() -> replaced method to
+            // proper one.
 
-            // If candidate has a type attribute whose value, when parsed as a MIME type,
-            // represents a type that the user agent knows it cannot render, then end the synchronous section,
+            // If candidate has a type attribute whose value, when parsed as a
+            // MIME type,
+            // represents a type that the user agent knows it cannot render,
+            // then end the synchronous section,
             // and jump down to the failed with elements step below.
             context->failedWithElements(candidate);
-            self->appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(self));
+            self->appendToOperationQueue(
+                new MediaOperationQueueDataRequestResourceSelection(self));
             return;
         }
-        URL* url = URL::createURL(self->document()->documentURI()->urlString(), candidate->src());
+        URL* url = URL::createURL(self->document()->documentURI()->urlString(),
+                                  candidate->src());
         self->m_currentSrc = url->urlString();
-        // End the synchronous section, continuing the remaining steps in parallel.
+        // End the synchronous section, continuing the remaining steps in
+        // parallel.
         self->initMediaPlayer();
-        self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
-        self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
+        self->appendToOperationQueue(
+            new MediaOperationQueueDataRequestPrepare(self, url));
+        self->appendToOperationQueue(
+            new MediaOperationQueueDataRequestSeekToDefault(self));
         return;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1026,10 +1238,10 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 
 void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestPrepare::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestPrepare::processOperationQueue()\n");
     mediaPlayer()->prepare(m_url);
 }
-
 
 void MediaOperationQueueDataRequestPrepare::cancelOperation()
 {
@@ -1038,11 +1250,13 @@ void MediaOperationQueueDataRequestPrepare::cancelOperation()
 
 void MediaOperationQueueDataRequestSeek::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestSeek::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestSeek::processOperationQueue()\n");
     // TODO Set the media element’s show poster flag to false.
     // If the media element’s readyState is HAVE_NOTHING, abort these steps.
-    if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
+    if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING) {
         return;
+    }
 
     m_mediaElement->m_isEnded = false;
     m_mediaElement->m_isSeeking = true;
@@ -1069,7 +1283,9 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
 
 void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()"
+        "\n");
     if (m_mediaElement->m_defaultPlaybackStartPosition != 0) {
         m_seekPosition = m_mediaElement->m_defaultPlaybackStartPosition;
         m_mediaElement->m_defaultPlaybackStartPosition = 0;
@@ -1081,19 +1297,24 @@ void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
 
 void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestPause::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestPause::processOperationQueue()\n");
     mediaPlayer()->pause();
     m_mediaElement->processNextOperationQueue();
     // Fire a simple event named timeupdate at the element.
     m_mediaElement->dispatchTimeupdateEventNow();
     // Fire a simple event named pause at the element.
     m_mediaElement->dispatchPauseEventNow();
-    // Reject pending play promises with promises and an "AbortError" DOMException.
+    // Reject pending play promises with promises and an "AbortError"
+    // DOMException.
     auto iter = m_mediaElement->m_playOperationQueue.begin();
     while (iter != m_mediaElement->m_playOperationQueue.end()) {
 #ifdef USE_ES6_FEATURE
-        DOMException* exception = new DOMException(m_mediaElement->document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by pause()");
-        ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
+        DOMException* exception = new DOMException(
+            m_mediaElement->document()->window()->scriptBindingInstance(),
+            DOMException::ABORT_ERR, "play request is aborted by pause()");
+        ((MediaOperationQueueDataRequestPlay*)(*iter))
+            ->m_promise->reject(exception->scriptValue());
 #endif
         m_mediaElement->m_playOperationQueue.erase(iter++);
     }
@@ -1103,27 +1324,31 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() -> %s\n", m_event->eventType()->utf8Data());
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() "
+        "-> %s\n",
+        m_event->eventType()->utf8Data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEvent(m_event);
 }
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {
-    STARFISH_LOG_INFO("MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
+    STARFISH_LOG_INFO(
+        "MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
     mediaPlayer()->play();
 #ifdef USE_ES6_FEATURE
     m_promise->fulfill(ScriptValueUndefined);
 #endif
 }
 
-void MediaOperationQueueDataRequestPlay::cancelOperation(DOMException* exception)
+void MediaOperationQueueDataRequestPlay::cancelOperation(
+    DOMException* exception)
 {
 #ifdef USE_ES6_FEATURE
     m_promise->reject(exception->scriptValue());
 #endif
 }
-
 }
 
 #endif

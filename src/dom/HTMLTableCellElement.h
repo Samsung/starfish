@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLTableCellElement : public HTMLElement {
 public:
-    HTMLTableCellElement(Document* document)
-        : HTMLElement(document)
+    HTMLTableCellElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -42,22 +41,28 @@ public:
 
     virtual void setColspan(int colspan)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_colspan, String::fromInt(colspan));
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_colspan,
+            String::fromInt(colspan));
     }
 
     virtual String* colspan()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_colspan);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_colspan);
     }
 
     virtual void setRowspan(int rowspan)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_colspan, String::fromInt(rowspan));
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_colspan,
+            String::fromInt(rowspan));
     }
 
     virtual String* rowspan()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_rowspan);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_rowspan);
     }
 
 protected:
@@ -65,8 +70,7 @@ protected:
 
 class HTMLTDElement : public HTMLTableCellElement {
 public:
-    HTMLTDElement(Document* document)
-        : HTMLTableCellElement(document)
+    HTMLTDElement(Document* document) : HTMLTableCellElement(document)
     {
     }
 
@@ -79,7 +83,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_tdTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_tdTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -99,8 +107,7 @@ protected:
 
 class HTMLTHElement : public HTMLTableCellElement {
 public:
-    HTMLTHElement(Document* document)
-        : HTMLTableCellElement(document)
+    HTMLTHElement(Document* document) : HTMLTableCellElement(document)
     {
     }
 
@@ -113,7 +120,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_thTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_thTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -130,7 +141,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

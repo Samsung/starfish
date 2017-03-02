@@ -23,8 +23,7 @@ namespace StarFish {
 
 class DocumentFragment : public Node {
 public:
-    DocumentFragment(Document* document)
-        : Node(document)
+    DocumentFragment(Document* document) : Node(document)
     {
     }
 
@@ -44,8 +43,10 @@ public:
     virtual String* textContent()
     {
         String* str = String::createASCIIString("");
-        for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
-            if (child->nodeType() == TEXT_NODE || child->nodeType() == ELEMENT_NODE) {
+        for (Node* child = firstChild(); child != nullptr;
+             child = child->nextSibling()) {
+            if (child->nodeType() == TEXT_NODE ||
+                child->nodeType() == ELEMENT_NODE) {
                 str = str->concat(child->textContent());
             }
         }

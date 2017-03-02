@@ -24,8 +24,12 @@ namespace StarFish {
 class HTMLStrongElement : public HTMLElement {
 public:
     HTMLStrongElement(Document* document, AtomicString name)
-        : HTMLElement(document)
-        , m_name(document->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
+        : HTMLElement(document),
+          m_name(document->window()
+                     ->starFish()
+                     ->staticStrings()
+                     ->m_xhtmlNamespaceURI,
+                 name)
     {
     }
 
@@ -56,7 +60,6 @@ public:
 protected:
     QualifiedName m_name;
 };
-
 }
 
 #endif

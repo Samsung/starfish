@@ -26,15 +26,14 @@ class Node;
 
 class NodeList : public ScriptWrappable {
 public:
-    NodeList(ScriptBindingInstance* instance, Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
-        : ScriptWrappable(this)
-        , m_nodeListImpl(root, filter, data, canCache)
+    NodeList(ScriptBindingInstance* instance, Node* root,
+             NodeListFilterFunction filter, void* data, bool canCache = false)
+        : ScriptWrappable(this), m_nodeListImpl(root, filter, data, canCache)
     {
     }
 
     NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true)
-        : ScriptWrappable(this)
-        , m_nodeListImpl(root, canCache)
+        : ScriptWrappable(this), m_nodeListImpl(root, canCache)
     {
     }
 
@@ -54,6 +53,7 @@ public:
     {
         return m_nodeListImpl;
     }
+
 private:
     NodeListImpl m_nodeListImpl;
 };

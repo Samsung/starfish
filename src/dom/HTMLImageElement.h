@@ -24,11 +24,10 @@ namespace StarFish {
 
 class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;
+
 public:
     HTMLImageElement(Document* document)
-        : HTMLElement(document)
-        , m_imageResource(nullptr)
-        , m_imageData(nullptr)
+        : HTMLElement(document), m_imageResource(nullptr), m_imageData(nullptr)
     {
     }
 
@@ -41,7 +40,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_imgTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_imgTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -53,32 +56,39 @@ public:
 
     void setSrc(String* src)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
+                     src);
     }
 
     String* src()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_src);
     }
 
     String* width()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_width);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_width);
     }
 
     void setWidth(int width)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
+        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
+                     String::fromInt(width));
     }
 
     String* height()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_height);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_height);
     }
 
     void setHeight(int height)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_height,
+            String::fromInt(height));
     }
 
     ImageData* imageData()
@@ -93,7 +103,9 @@ public:
         return true;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
     virtual void didNodeAdopted();
 
 private:
@@ -102,7 +114,6 @@ private:
     ImageResource* m_imageResource;
     ImageData* m_imageData;
 };
-
 }
 
 #endif

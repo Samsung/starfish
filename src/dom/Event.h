@@ -30,7 +30,8 @@ struct EventInit {
 };
 
 struct FocusEventInit : EventInit {
-    FocusEventInit(bool bubbles, bool cancelable, Node* relatedTarget = nullptr);
+    FocusEventInit(bool bubbles, bool cancelable,
+                   Node* relatedTarget = nullptr);
 
     bool bubbles;
     bool cancelable;
@@ -39,19 +40,20 @@ struct FocusEventInit : EventInit {
 
 class Event : public ScriptWrappable {
 protected:
-
 public:
     enum PhaseType {
-        NONE                = 0,
-        CAPTURING_PHASE     = 1,
-        AT_TARGET           = 2,
-        BUBBLING_PHASE      = 3
+        NONE = 0,
+        CAPTURING_PHASE = 1,
+        AT_TARGET = 2,
+        BUBBLING_PHASE = 3
     };
 
     Event();
     Event(String* eventType, const EventInit& init = EventInit(false, false));
 
-    virtual ~Event() { }
+    virtual ~Event()
+    {
+    }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -74,41 +76,106 @@ public:
         return (UIEvent*)this;
     }
 
-    String* eventType() const { return m_type; }
-    EventTarget* target() const { return m_target; }
-    void setTarget(EventTarget* target) { m_target = target; }
+    String* eventType() const
+    {
+        return m_type;
+    }
+    EventTarget* target() const
+    {
+        return m_target;
+    }
+    void setTarget(EventTarget* target)
+    {
+        m_target = target;
+    }
 
-    EventTarget* currentTarget() const { return m_currentTarget; }
-    void setCurrentTarget(EventTarget* currentTarget) { m_currentTarget = currentTarget; }
+    EventTarget* currentTarget() const
+    {
+        return m_currentTarget;
+    }
+    void setCurrentTarget(EventTarget* currentTarget)
+    {
+        m_currentTarget = currentTarget;
+    }
 
-    unsigned short eventPhase() const { return m_eventPhase; }
-    void setEventPhase(unsigned short phase) { m_eventPhase = phase; }
+    unsigned short eventPhase() const
+    {
+        return m_eventPhase;
+    }
+    void setEventPhase(unsigned short phase)
+    {
+        m_eventPhase = phase;
+    }
 
-    bool stopPropagation() { return m_propagationStopped || m_immediatePropagationStopped; }
-    void setStopPropagation() { m_propagationStopped = true; }
-    bool stopImmediatePropagation() { return m_immediatePropagationStopped; }
-    void setStopImmediatePropagation() { m_propagationStopped = true; m_immediatePropagationStopped = true; }
+    bool stopPropagation()
+    {
+        return m_propagationStopped || m_immediatePropagationStopped;
+    }
+    void setStopPropagation()
+    {
+        m_propagationStopped = true;
+    }
+    bool stopImmediatePropagation()
+    {
+        return m_immediatePropagationStopped;
+    }
+    void setStopImmediatePropagation()
+    {
+        m_propagationStopped = true;
+        m_immediatePropagationStopped = true;
+    }
 
-    bool bubbles() const { return m_bubbles; }
-    bool cancelable() const { return m_cancelable; }
+    bool bubbles() const
+    {
+        return m_bubbles;
+    }
+    bool cancelable() const
+    {
+        return m_cancelable;
+    }
 
     void preventDefault()
     {
-        if (m_cancelable)
+        if (m_cancelable) {
             m_defaultPrevented = true; // canceled flag
+        }
     }
-    bool defaultPrevented() const { return m_defaultPrevented; }
-    void setDefaultPrevented(bool defaultPrevented) { m_defaultPrevented = defaultPrevented; }
+    bool defaultPrevented() const
+    {
+        return m_defaultPrevented;
+    }
+    void setDefaultPrevented(bool defaultPrevented)
+    {
+        m_defaultPrevented = defaultPrevented;
+    }
 
-    DOMTimeStamp timeStamp() const { return m_timeStamp; }
+    DOMTimeStamp timeStamp() const
+    {
+        return m_timeStamp;
+    }
 
-    bool isInitialized() const { return m_isInitialized; }
-    void setIsInitialized(bool isInitialized) { m_isInitialized = isInitialized; }
-    bool isDispatched() const { return m_isDispatched; }
-    void setIsDispatched(bool isDispatched) { m_isDispatched = isDispatched; }
+    bool isInitialized() const
+    {
+        return m_isInitialized;
+    }
+    void setIsInitialized(bool isInitialized)
+    {
+        m_isInitialized = isInitialized;
+    }
+    bool isDispatched() const
+    {
+        return m_isDispatched;
+    }
+    void setIsDispatched(bool isDispatched)
+    {
+        m_isDispatched = isDispatched;
+    }
 
     /* Other methods (not in Event interface) */
-    virtual bool isProgressEvent() const { return false; }
+    virtual bool isProgressEvent() const
+    {
+        return false;
+    }
 
     ProgressEvent* asProgressEvent()
     {
@@ -125,7 +192,7 @@ private:
 
     unsigned short m_eventPhase;
 
-    bool m_propagationStopped; // stop propagation flag
+    bool m_propagationStopped;          // stop propagation flag
     bool m_immediatePropagationStopped; // stop immediate propagation flag
 
     bool m_bubbles;
@@ -145,6 +212,7 @@ protected:
         : Event(eventType, init)
     {
     }
+
 public:
     virtual bool isUIEvent()
     {
@@ -198,7 +266,8 @@ public:
 
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(String* eventType, const EventInit& init = EventInit(false, false))
+    MouseEvent(String* eventType,
+               const EventInit& init = EventInit(false, false))
         : UIEvent(eventType, init)
     {
     }
@@ -211,7 +280,8 @@ public:
 
 class TouchEvent : public UIEvent {
 public:
-    TouchEvent(String* eventType, const EventInit& init = EventInit(false, false))
+    TouchEvent(String* eventType,
+               const EventInit& init = EventInit(false, false))
         : UIEvent(eventType, init)
     {
     }
@@ -224,7 +294,8 @@ public:
 
 class FocusEvent : public UIEvent {
 public:
-    FocusEvent(String* eventType, const EventInit& init = EventInit(false, false))
+    FocusEvent(String* eventType,
+               const EventInit& init = EventInit(false, false))
         : UIEvent(eventType, init)
     {
     }
@@ -259,14 +330,16 @@ public:
 
 class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(String* eventType, String* key, const EventInit& init = EventInit(false, false))
-        : UIEvent(eventType, init)
-        , m_metaKey(false)
+    KeyboardEvent(String* eventType, String* key,
+                  const EventInit& init = EventInit(false, false))
+        : UIEvent(eventType, init), m_metaKey(false)
     {
         m_keyCode = convertKeyCodeFromEcore(key);
-        m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) || (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
+        m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||
+                     (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
         m_shiftKey = (m_keyCode == KEYBOARD_KEYCODE_SHIFT);
-        m_altKey = ((m_keyCode == KEYBOARD_KEYCODE_ALT_L) || (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
+        m_altKey = ((m_keyCode == KEYBOARD_KEYCODE_ALT_L) ||
+                    (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -317,6 +390,7 @@ public:
     }
 
     static unsigned long convertKeyCodeFromEcore(String* key);
+
 private:
     // String* m_key;
     // String* m_code;
@@ -329,7 +403,8 @@ private:
 
 struct ProgressEventInit : public EventInit {
     ProgressEventInit();
-    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable, unsigned long long loaded, unsigned long long total);
+    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable,
+                      unsigned long long loaded, unsigned long long total);
 
     bool lengthComputable;
     unsigned long long loaded;
@@ -338,21 +413,34 @@ struct ProgressEventInit : public EventInit {
 
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(String* eventType, const ProgressEventInit& init = ProgressEventInit(false, false, false, 0, 0));
+    ProgressEvent(String* eventType,
+                  const ProgressEventInit& init =
+                      ProgressEventInit(false, false, false, 0, 0));
 
-    bool lengthComputable() const { return m_lengthComputable; }
-    unsigned long long loaded() const { return m_loaded; }
-    unsigned long long total() const { return m_total; }
+    bool lengthComputable() const
+    {
+        return m_lengthComputable;
+    }
+    unsigned long long loaded() const
+    {
+        return m_loaded;
+    }
+    unsigned long long total() const
+    {
+        return m_total;
+    }
 
     /* Other methods (not in ProgressEvent interface) */
-    virtual bool isProgressEvent() const { return true; }
+    virtual bool isProgressEvent() const
+    {
+        return true;
+    }
 
 private:
     bool m_lengthComputable;
     unsigned long long m_loaded;
     unsigned long long m_total;
 };
-
 }
 
 #endif

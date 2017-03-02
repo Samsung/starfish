@@ -24,20 +24,31 @@ namespace StarFish {
 class Element;
 class Attr : public Node {
 public:
-    Attr(Document* document, ScriptBindingInstance* instance, Element* element, QualifiedName name)
-        : Node(document), m_element(element), m_name(name), m_standAloneValue(String::emptyString)
+    Attr(Document* document, ScriptBindingInstance* instance, Element* element,
+         QualifiedName name)
+        : Node(document),
+          m_element(element),
+          m_name(name),
+          m_standAloneValue(String::emptyString)
     {
     }
 
-    Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name)
-        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(String::emptyString)
+    Attr(Document* document, ScriptBindingInstance* instance,
+         QualifiedName name)
+        : Node(document),
+          m_element(nullptr),
+          m_name(name),
+          m_standAloneValue(String::emptyString)
     {
     }
 
-    Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name, String* value)
-        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(value)
+    Attr(Document* document, ScriptBindingInstance* instance,
+         QualifiedName name, String* value)
+        : Node(document),
+          m_element(nullptr),
+          m_name(name),
+          m_standAloneValue(value)
     {
-
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -52,20 +63,25 @@ public:
 
     String* value()
     {
-        if (m_element)
+        if (m_element) {
             return m_element->getAttribute(m_name);
+        }
         return m_standAloneValue;
     }
 
     void setValue(String* value)
     {
-        if (m_element)
+        if (m_element) {
             m_element->setAttribute(m_name, value);
-        else
+        } else {
             m_standAloneValue = value;
+        }
     }
 
-    Element* ownerElement() { return m_element; }
+    Element* ownerElement()
+    {
+        return m_element;
+    }
 
     /* 4.4 Interface Node */
 
@@ -85,7 +101,9 @@ public:
         return nullptr;
     }
 
-    virtual void setNodeValue(String* val) { }
+    virtual void setNodeValue(String* val)
+    {
+    }
 
     virtual String* textContent()
     {
@@ -93,11 +111,14 @@ public:
         return nullptr;
     }
 
-    virtual void setTextContent(String* val) { }
+    virtual void setTextContent(String* val)
+    {
+    }
 
     virtual Node* clone()
     {
-        return (Node*)(new Attr(document(), document()->scriptBindingInstance(), m_name, value()));
+        return (Node*)(new Attr(document(), document()->scriptBindingInstance(),
+                                m_name, value()));
     }
 
     virtual bool isAttr() const
@@ -116,7 +137,6 @@ private:
     QualifiedName m_name;
     String* m_standAloneValue;
 };
-
 }
 
 #endif

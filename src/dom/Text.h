@@ -23,8 +23,7 @@ namespace StarFish {
 
 class Text : public CharacterData {
 public:
-    Text(Document* document, String* data)
-        : CharacterData(document, data)
+    Text(Document* document, String* data) : CharacterData(document, data)
     {
     }
 
@@ -69,7 +68,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

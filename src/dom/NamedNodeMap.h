@@ -45,13 +45,19 @@ public:
     Attr* getNamedItem(QualifiedName name);
     Attr* setNamedItem(Attr* attr);
     void removeNamedItem(QualifiedName name);
-    ScriptBindingInstance* striptBindingInstance() { return m_instance; }
-    Element* element() { return m_element; }
+    ScriptBindingInstance* striptBindingInstance()
+    {
+        return m_instance;
+    }
+    Element* element()
+    {
+        return m_element;
+    }
+
 private:
     Element* m_element;
     ScriptBindingInstance* m_instance;
 };
-
 }
 
 #endif

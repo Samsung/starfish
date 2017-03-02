@@ -19,17 +19,15 @@
 
 namespace StarFish {
 
-DOMRectReadOnly* DOMRectReadOnly::create(double x, double y, double width, double height)
+DOMRectReadOnly* DOMRectReadOnly::create(double x, double y, double width,
+                                         double height)
 {
     return new DOMRectReadOnly(x, y, width, height);
 }
 
-DOMRectReadOnly::DOMRectReadOnly(double x, double y, double width, double height)
-    : ScriptWrappable(this)
-    , m_x(x)
-    , m_y(y)
-    , m_width(width)
-    , m_height(height)
-{ }
-
+DOMRectReadOnly::DOMRectReadOnly(double x, double y, double width,
+                                 double height)
+    : ScriptWrappable(this), m_x(x), m_y(y), m_width(width), m_height(height)
+{
+}
 }

@@ -27,7 +27,8 @@ class Element;
 // https://dom.spec.whatwg.org/#interface-domtokenlist
 class DOMTokenList : public ScriptWrappable {
 public:
-    DOMTokenList(ScriptBindingInstance* instance, Element* element, QualifiedName localName)
+    DOMTokenList(ScriptBindingInstance* instance, Element* element,
+                 QualifiedName localName)
         : ScriptWrappable(this), m_element(element), m_localName(localName)
     {
     }
@@ -47,9 +48,11 @@ public:
     unsigned long length();
     String* item(unsigned long index);
     bool contains(String* token);
-    String* addSingleToken(String* src, GCVector<String*>* tokens, String* token);
+    String* addSingleToken(String* src, GCVector<String*>* tokens,
+                           String* token);
     void add(GCVector<String*>* tokens);
-    int checkMatchedTokens(bool* flags, GCVector<String*>* tokens, String* token);
+    int checkMatchedTokens(bool* flags, GCVector<String*>* tokens,
+                           String* token);
     void remove(String* token);
     void remove(GCVector<String*>* tokens);
     bool toggle(String* token, bool isForced, bool forceValue);
@@ -59,7 +62,6 @@ private:
     Element* m_element;
     QualifiedName m_localName;
 };
-
 }
 
 #endif

@@ -23,8 +23,7 @@ namespace StarFish {
 
 class CDataSection : public Text {
 public:
-    CDataSection(Document* document, String* data)
-        : Text(document, data)
+    CDataSection(Document* document, String* data) : Text(document, data)
     {
     }
 
@@ -43,7 +42,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

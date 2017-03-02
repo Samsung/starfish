@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishTextTrackCue__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTextTrackCue__)
 #define __StarFishTextTrackCue__
 
 #include "dom/EventTarget.h"
@@ -29,12 +29,12 @@ class TimeRange;
 class TextTrackCue : public EventTarget {
 public:
     TextTrackCue(double start, double end, String* payload)
-        : EventTarget()
-        , m_textTrack(nullptr)
-        , m_id(String::emptyString)
-        , m_timeRange(TimeRange(start, end))
-        , m_payload(String::emptyString)
-        , m_payloadAsHTML(nullptr)
+        : EventTarget(),
+          m_textTrack(nullptr),
+          m_id(String::emptyString),
+          m_timeRange(TimeRange(start, end)),
+          m_payload(String::emptyString),
+          m_payloadAsHTML(nullptr)
     {
         setPayload(payload);
     }
@@ -135,8 +135,7 @@ protected:
 
 class TextTrackCueList : public ScriptWrappable {
 public:
-    TextTrackCueList()
-        : ScriptWrappable(this)
+    TextTrackCueList() : ScriptWrappable(this)
     {
     }
 
@@ -167,8 +166,10 @@ public:
 
     void remove(unsigned long startIdx, unsigned long endIdx)
     {
-        if (startIdx > endIdx || startIdx >= m_list.size() || endIdx >= m_list.size())
+        if (startIdx > endIdx || startIdx >= m_list.size() ||
+            endIdx >= m_list.size()) {
             return;
+        }
         m_list.erase(m_list.begin() + startIdx, m_list.begin() + endIdx + 1);
     }
 
@@ -192,8 +193,9 @@ public:
 
     TextTrackCue* at(unsigned int index) const
     {
-        if (index >= m_list.size())
+        if (index >= m_list.size()) {
             return nullptr;
+        }
         return m_list[index];
     }
 
@@ -211,7 +213,6 @@ public:
 protected:
     GCVector<TextTrackCue*> m_list;
 };
-
 }
 
 #endif

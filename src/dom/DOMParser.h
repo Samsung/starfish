@@ -25,11 +25,8 @@ class Document;
 
 class DOMParser : public ScriptWrappable {
 public:
-    DOMParser(StarFish* sf)
-        : ScriptWrappable(this)
-        , m_starFish(sf)
+    DOMParser(StarFish* sf) : ScriptWrappable(this), m_starFish(sf)
     {
-
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -48,10 +45,10 @@ public:
     }
 
     Document* parseFromString(String* str, String* type);
+
 private:
     StarFish* m_starFish;
 };
-
 }
 
 #endif

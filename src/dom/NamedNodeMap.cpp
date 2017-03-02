@@ -33,8 +33,9 @@ Attr* NamedNodeMap::item(unsigned long index)
     // The localName is considered
     if (index < m_element->attributeCount()) {
         return m_element->ensureAttr(m_element->getAttributeName(index));
-    } else
+    } else {
         return nullptr;
+    }
 }
 
 Attr* NamedNodeMap::getNamedItem(QualifiedName name)
@@ -42,8 +43,9 @@ Attr* NamedNodeMap::getNamedItem(QualifiedName name)
     size_t index = m_element->hasAttribute(name);
     if (index < m_element->attributeCount()) {
         return m_element->ensureAttr(name);
-    } else
+    } else {
         return nullptr;
+    }
 }
 
 Attr* NamedNodeMap::setNamedItem(Attr* attr)
@@ -59,5 +61,4 @@ void NamedNodeMap::removeNamedItem(QualifiedName name)
 {
     m_element->removeAttribute(name);
 }
-
 }

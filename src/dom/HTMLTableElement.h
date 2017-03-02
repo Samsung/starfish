@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLTableElement : public HTMLElement {
 public:
-    HTMLTableElement(Document* document)
-        : HTMLElement(document)
+    HTMLTableElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,12 +36,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_tableTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_tableTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_tableTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_tableTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -54,7 +61,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

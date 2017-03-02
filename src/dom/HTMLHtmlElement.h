@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLHtmlElement : public HTMLElement {
 public:
-    HTMLHtmlElement(Document* document)
-        : HTMLElement(document)
+    HTMLHtmlElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_htmlTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_htmlTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -52,10 +55,12 @@ public:
         return true;
     }
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle)
     {
         HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->backgroundColor().isTransparent() || !newStyle->backgroundImage()->equals(String::emptyString)) {
+        if (!newStyle->backgroundColor().isTransparent() ||
+            !newStyle->backgroundImage()->equals(String::emptyString)) {
             document()->window()->m_hasRootElementBackground = true;
         } else {
             document()->window()->m_hasRootElementBackground = false;
@@ -72,7 +77,9 @@ public:
         // https://www.w3.org/TR/html-markup/html.html
         Node* n = firstChild();
         while (n) {
-            if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            if (n->isElement() && n->asElement() &&
+                n->asElement()->isHTMLElement() &&
+                n->asElement()->asHTMLElement()->isHTMLBodyElement()) {
                 return n->asElement()->asHTMLElement()->asHTMLBodyElement();
             }
             n = n->nextSibling();
@@ -83,7 +90,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

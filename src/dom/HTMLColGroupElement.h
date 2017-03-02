@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLColGroupElement : public HTMLElement {
 public:
-    HTMLColGroupElement(Document* document)
-        : HTMLElement(document)
+    HTMLColGroupElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,12 +36,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_colgroupTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_colgroupTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_colgroupTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_colgroupTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -54,17 +61,18 @@ public:
 
     void setSpan(int span)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_span, String::fromInt(span));
+        setAttribute(document()->window()->starFish()->staticStrings()->m_span,
+                     String::fromInt(span));
     }
 
     String* span()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_span);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_span);
     }
 
 protected:
 };
-
 }
 
 #endif

@@ -27,7 +27,9 @@ class Element;
 
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
+    HTMLCollection(ScriptBindingInstance* instance, Node* root,
+                   NodeListFilterFunction filter, void* data,
+                   bool canCache = false)
         : ScriptWrappable(this), m_nodeListImpl(root, filter, data, canCache)
     {
     }
@@ -49,10 +51,10 @@ public:
     {
         return m_nodeListImpl;
     }
+
 private:
     NodeListImpl m_nodeListImpl;
 };
-
 }
 
 #endif

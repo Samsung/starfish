@@ -30,5 +30,4 @@ Node* NodeList::item(unsigned long index)
 {
     return m_nodeListImpl.item(index);
 }
-
 }

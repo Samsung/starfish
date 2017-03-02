@@ -24,11 +24,12 @@ namespace StarFish {
 
 class HTMLLinkElement : public HTMLElement {
     friend class StyleSheetDownloadClient;
+
 public:
     HTMLLinkElement(Document* document)
-        : HTMLElement(document)
-        , m_generatedSheet(nullptr)
-        , m_styleSheetTextResource(nullptr)
+        : HTMLElement(document),
+          m_generatedSheet(nullptr),
+          m_styleSheetTextResource(nullptr)
     {
     }
 
@@ -41,7 +42,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_linkTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_linkTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -58,7 +63,9 @@ public:
 
     URL* href();
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
     void checkLoadStyleSheet();
@@ -68,13 +75,13 @@ public:
     {
         return m_generatedSheet;
     }
+
 protected:
     void willStyleSheetLoad();
     void didStyleSheetLoadComplete();
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
 };
-
 }
 
 #endif

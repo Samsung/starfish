@@ -23,9 +23,9 @@
 namespace StarFish {
 
 class DOMRectReadOnly : public ScriptWrappable {
-
 public:
-    static DOMRectReadOnly* create(double x, double y, double width, double height);
+    static DOMRectReadOnly* create(double x, double y, double width,
+                                   double height);
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this, instance);
@@ -36,15 +36,39 @@ public:
         return ScriptWrappable::Type::DOMRectReadOnlyObject;
     }
 
-    double x() const { return m_x; }
-    double y() const { return m_y; }
-    double width() const { return m_width; }
-    double height() const { return m_height; }
+    double x() const
+    {
+        return m_x;
+    }
+    double y() const
+    {
+        return m_y;
+    }
+    double width() const
+    {
+        return m_width;
+    }
+    double height() const
+    {
+        return m_height;
+    }
 
-    double top() const { return std::min(m_y, m_y + m_height); }
-    double right() const { return std::max(m_x, m_x + m_width); }
-    double bottom() const { return std::max(m_y, m_y + m_height); }
-    double left() const { return std::min(m_x, m_x + m_width); }
+    double top() const
+    {
+        return std::min(m_y, m_y + m_height);
+    }
+    double right() const
+    {
+        return std::max(m_x, m_x + m_width);
+    }
+    double bottom() const
+    {
+        return std::max(m_y, m_y + m_height);
+    }
+    double left() const
+    {
+        return std::min(m_x, m_x + m_width);
+    }
 
 protected:
     DOMRectReadOnly(double x, double y, double width, double height);
@@ -54,7 +78,6 @@ protected:
     double m_width;
     double m_height;
 };
-
 }
 
 #endif

@@ -47,11 +47,11 @@ typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
-        : m_children(nullptr)
-        , m_childNodeList(nullptr)
-        , m_domTokenList(nullptr)
-        , m_activeHtmlCollectionListsForTagName(nullptr)
-        , m_activeHtmlCollectionListsForClassName(nullptr)
+        : m_children(nullptr),
+          m_childNodeList(nullptr),
+          m_domTokenList(nullptr),
+          m_activeHtmlCollectionListsForTagName(nullptr),
+          m_activeHtmlCollectionListsForClassName(nullptr)
     {
     }
 
@@ -69,7 +69,8 @@ public:
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName()
     {
         if (m_activeHtmlCollectionListsForTagName == nullptr) {
-            m_activeHtmlCollectionListsForTagName = new(GC) ActiveHTMLCollectionList;
+            m_activeHtmlCollectionListsForTagName =
+                new (GC) ActiveHTMLCollectionList;
         }
         return m_activeHtmlCollectionListsForTagName;
     }
@@ -77,13 +78,17 @@ public:
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName()
     {
         if (m_activeHtmlCollectionListsForClassName == nullptr) {
-            m_activeHtmlCollectionListsForClassName = new(GC) ActiveHTMLCollectionList;
+            m_activeHtmlCollectionListsForClassName =
+                new (GC) ActiveHTMLCollectionList;
         }
         return m_activeHtmlCollectionListsForClassName;
     }
 
-    HTMLCollection* hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query);
-    void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll);
+    HTMLCollection* hasQueryInActiveHtmlCollectionList(
+        ActiveHTMLCollectionList* list, String* query);
+    void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list,
+                                              String* query,
+                                              HTMLCollection* coll);
     void invalidateActiveActiveNodeListCacheIfNeeded();
 
     HTMLCollection* m_children;
@@ -96,8 +101,7 @@ public:
 
 class Node : public EventTarget {
 protected:
-    Node(Document* document, ScriptBindingInstance* instance)
-        : EventTarget()
+    Node(Document* document, ScriptBindingInstance* instance) : EventTarget()
     {
         m_document = document;
         initNode();
@@ -144,9 +148,9 @@ public:
         ELEMENT_NODE = 1,
         ATTRIBUTE_NODE = 2, // historical
         TEXT_NODE = 3,
-        CDATA_SECTION_NODE = 4, // historical
+        CDATA_SECTION_NODE = 4,    // historical
         ENTITY_REFERENCE_NODE = 5, // historical
-        ENTITY_NODE = 6, // historical
+        ENTITY_NODE = 6,           // historical
         PROCESSING_INSTRUCTION_NODE = 7,
         COMMENT_NODE = 8,
         DOCUMENT_NODE = 9,
@@ -259,15 +263,15 @@ public:
         return nullptr;
     }
 
-    virtual void setNodeValue(String* val) { };
+    virtual void setNodeValue(String* val){};
 
     virtual String* textContent() = 0;
 
-    virtual void setTextContent(String* val) { };
+    virtual void setTextContent(String* val){};
 
     bool isEqualNode(Node* other);
 
-    bool isDescendantOf(const Node *other);
+    bool isDescendantOf(const Node* other);
 
     virtual Node* cloneNode(bool deep = false);
 
@@ -281,7 +285,8 @@ public:
         if (this == other) {
             return true;
         }
-        for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
+        for (Node* child = firstChild(); child != nullptr;
+             child = child->nextSibling()) {
             if (child->contains(other)) {
                 return true;
             }
@@ -325,7 +330,8 @@ public:
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
-    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors);
+    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer,
+                       String* selectors);
     Element* querySelector(String* selector);
     NodeList* querySelectorAll(String* selector);
 
@@ -453,8 +459,9 @@ public:
                 return child;
             }
             Node* matchedDescendant = childMatchedBy(child, fn);
-            if (matchedDescendant)
+            if (matchedDescendant) {
                 return matchedDescendant;
+            }
             child = child->nextSibling();
         }
         return nullptr;
@@ -467,7 +474,8 @@ public:
 
     virtual Node* clone() = 0;
 
-    bool childrenOrSiblingsAffectedByDynamicEvent(DynamicRestyleFlags mask) const
+    bool childrenOrSiblingsAffectedByDynamicEvent(
+        DynamicRestyleFlags mask) const
     {
         return m_restyleFlags & mask;
     }
@@ -617,7 +625,8 @@ public:
     Element* nextElementSibling();
     Element* previousElementSibling();
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle);
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle);
 
     template <typename F>
     void notifyDOMEventToParentTree(Node* parent, const F& fn)
@@ -628,15 +637,23 @@ public:
         }
     }
 
-    virtual void didCharacterDataModified(String* before, String* after) { }
+    virtual void didCharacterDataModified(String* before, String* after)
+    {
+    }
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
 
     // These two callbacks are fired only document participate in rendering
-    virtual void didNodeInsertedToDocumenTree() { }
-    virtual void didNodeRemovedFromDocumenTree() { }
+    virtual void didNodeInsertedToDocumenTree()
+    {
+    }
+    virtual void didNodeRemovedFromDocumenTree()
+    {
+    }
 
-    virtual void didNodeAdopted() { }
+    virtual void didNodeAdopted()
+    {
+    }
 
     bool hasRareMembers()
     {
@@ -652,22 +669,26 @@ public:
 
     bool isPseudoElement() const
     {
-        return getPseudoId() != StyleResolver::PseudoElementType::PseudoElementNone;
+        return getPseudoId() !=
+               StyleResolver::PseudoElementType::PseudoElementNone;
     }
 
     bool isBeforePseudoElement() const
     {
-        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementBefore;
+        return getPseudoId() ==
+               StyleResolver::PseudoElementType::PseudoElementBefore;
     }
 
     bool isAfterPseudoElement() const
     {
-        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementAfter;
+        return getPseudoId() ==
+               StyleResolver::PseudoElementType::PseudoElementAfter;
     }
 
     bool isFirstLetterPseudoElement() const
     {
-        return getPseudoId() == StyleResolver::PseudoElementType::PseudoElementFirstLetter;
+        return getPseudoId() ==
+               StyleResolver::PseudoElementType::PseudoElementFirstLetter;
     }
 
     virtual StyleResolver::PseudoElementType getPseudoId() const
@@ -679,7 +700,8 @@ private:
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()
     {
-        // For nodes other than elements and attributes, the prefix is always null
+        // For nodes other than elements and attributes, the prefix is always
+        // null
         return nullptr;
     }
 
@@ -702,6 +724,7 @@ protected:
     int m_restyleFlags;
 
     RareNodeMembers* m_rareNodeMembers;
+
 private:
     Document* m_document;
     Node* m_nextSibling;

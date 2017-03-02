@@ -24,13 +24,17 @@ namespace StarFish {
 extern bool g_enablePixelTest;
 #endif
 
-void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
+                                          String* value, bool attributeCreated,
+                                          bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_name) {
         m_name = value;
         checkPlatformFlags();
-    } else if (name == document()->window()->starFish()->staticStrings()->m_content) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_content) {
         m_content = value;
         checkPlatformFlags();
     }
@@ -52,12 +56,14 @@ void HTMLMetaElement::checkPlatformFlags()
 #ifdef STARFISH_ENABLE_TEST
         if (m_name->equalsWithoutCase("pixel-test")) {
             g_enablePixelTest = true;
-            document()->setStyle(document()->styleResolver()->resolveDocumentStyle(document()));
+            document()->setStyle(
+                document()->styleResolver()->resolveDocumentStyle(document()));
             document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif
 #ifdef STARFISH_TIZEN
-        if (m_name->equalsWithoutCase("tizen-widget-transparent-background") && m_content->equalsWithoutCase("yes")) {
+        if (m_name->equalsWithoutCase("tizen-widget-transparent-background") &&
+            m_content->equalsWithoutCase("yes")) {
             if (!m_tizenWidgetTransparentBackground) {
                 document()->m_tizenWidgetTransparentBackground++;
                 setNeedsPainting();
@@ -73,8 +79,6 @@ void HTMLMetaElement::checkPlatformFlags()
 #endif
 
     } else {
-
     }
 }
-
 }

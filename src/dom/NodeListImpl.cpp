@@ -22,12 +22,14 @@
 namespace StarFish {
 
 template <typename Func>
-static void getherDescendant(GCVector<Node*>* collection, Node* root, Func filter)
+static void getherDescendant(GCVector<Node*>* collection, Node* root,
+                             Func filter)
 {
     Node* child = root->firstChild();
     while (child) {
-        if (filter(child))
+        if (filter(child)) {
             collection->push_back(child);
+        }
 
         getherDescendant(collection, child, filter);
         child = child->nextSibling();
@@ -67,12 +69,12 @@ void NodeListImpl::fillCacheIfNeed() const
 {
     STARFISH_ASSERT(m_canCache);
     if (!m_isCacheValid) {
-        getherDescendant(&m_cachedNodeList, m_root, [this](Node* child) -> bool {
-            return m_filter(child, this->m_data);
-        });
+        getherDescendant(&m_cachedNodeList, m_root,
+                         [this](Node* child) -> bool {
+                             return m_filter(child, this->m_data);
+                         });
         m_isCacheValid = true;
     }
-
 }
 
 void NodeListImpl::setItems(GCVector<Element*>& elements)
@@ -81,5 +83,4 @@ void NodeListImpl::setItems(GCVector<Element*>& elements)
         m_cachedNodeList.push_back(element);
     }
 }
-
 }

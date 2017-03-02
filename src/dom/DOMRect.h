@@ -23,7 +23,8 @@
 namespace StarFish {
 
 struct DOMRectInit {
-    DOMRectInit(double inX = 0 , double inY = 0, double inWidth = 0, double inHeight = 0);
+    DOMRectInit(double inX = 0, double inY = 0, double inWidth = 0,
+                double inHeight = 0);
 
     double x;
     double y;
@@ -32,15 +33,27 @@ struct DOMRectInit {
 };
 
 class DOMRect : public DOMRectReadOnly {
-
 public:
-    static DOMRect* create(double x = 0 , double y = 0, double width = 0, double height = 0);
+    static DOMRect* create(double x = 0, double y = 0, double width = 0,
+                           double height = 0);
     static DOMRect* create(const DOMRectReadOnly*);
 
-    void setX(double x) { m_x = x; }
-    void setY(double y) { m_y = y; }
-    void setWidth(double width) { m_width = width; }
-    void setHeight(double height) { m_height = height; }
+    void setX(double x)
+    {
+        m_x = x;
+    }
+    void setY(double y)
+    {
+        m_y = y;
+    }
+    void setWidth(double width)
+    {
+        m_width = width;
+    }
+    void setHeight(double height)
+    {
+        m_height = height;
+    }
     void unite(const DOMRectReadOnly*);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -56,7 +69,6 @@ public:
 protected:
     DOMRect(double x, double y, double width, double height);
 };
-
 }
 
 #endif

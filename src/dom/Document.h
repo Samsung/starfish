@@ -49,8 +49,12 @@ class Document : public Node {
     friend class ActiveNetworkRequestTracker;
     friend class HTMLMetaElement;
     friend class DOMParser;
+
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool isXMLDocument, bool doesParticipateInRendering);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
+             URL* url, String* charSet, bool isXMLDocument,
+             bool doesParticipateInRendering);
+
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m)
@@ -63,11 +67,26 @@ public:
         initScriptWrappable(this);
     }
 
-    CompatibilityMode compatibilityMode() const { return m_compatibilityMode; }
-    bool inQuirksMode() const { return m_compatibilityMode == QuirksMode; }
-    bool inLimitedQuirksMode() const { return m_compatibilityMode == LimitedQuirksMode; }
-    bool inNoQuirksMode() const { return m_compatibilityMode == NoQuirksMode; }
-    bool doesParticipateInRendering() { return m_doesParticipateInRendering; }
+    CompatibilityMode compatibilityMode() const
+    {
+        return m_compatibilityMode;
+    }
+    bool inQuirksMode() const
+    {
+        return m_compatibilityMode == QuirksMode;
+    }
+    bool inLimitedQuirksMode() const
+    {
+        return m_compatibilityMode == LimitedQuirksMode;
+    }
+    bool inNoQuirksMode() const
+    {
+        return m_compatibilityMode == NoQuirksMode;
+    }
+    bool doesParticipateInRendering()
+    {
+        return m_doesParticipateInRendering;
+    }
 
     String* compatMode()
     {
@@ -92,7 +111,8 @@ public:
     }
 
     DocumentFragment* createDocumentFragment();
-    virtual Element* createElement(AtomicString localName, bool shouldCheckName);
+    virtual Element* createElement(AtomicString localName,
+                                   bool shouldCheckName);
     Text* createTextNode(String* data);
     CDataSection* createCDataSectionNode(String* data);
     Comment* createComment(String* data);
@@ -209,7 +229,8 @@ public:
     HTMLCollection* namedAccess(String* name);
     void invalidNamedAccessCacheIfNeeded();
 
-    GCVector<Element*>& elementExecutionStackForAttributeStringEventFunctionObject()
+    GCVector<Element*>&
+    elementExecutionStackForAttributeStringEventFunctionObject()
     {
         return m_elementExecutionStackForAttributeStringEventFunctionObject;
     }
@@ -259,7 +280,8 @@ protected:
     size_t m_domVersion;
     GCVector<NetworkRequest*> m_activeNetworkRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
-    GCVector<Element*> m_elementExecutionStackForAttributeStringEventFunctionObject;
+    GCVector<Element*>
+        m_elementExecutionStackForAttributeStringEventFunctionObject;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
@@ -271,8 +293,9 @@ private:
 
 void Node::setNeedsStyleRecalc()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     if (!m_needsStyleRecalc) {
         m_needsStyleRecalc = true;
@@ -288,8 +311,9 @@ void Node::setNeedsStyleRecalc()
 
 void Node::setChildrenNeedsStyleRecalc()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     Node* child = firstChild();
     while (child) {
@@ -301,8 +325,9 @@ void Node::setChildrenNeedsStyleRecalc()
 
 void Node::setSiblingsNeedsStyleRecalc()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     Node* node = nextSibling();
     while (node) {
@@ -313,29 +338,30 @@ void Node::setSiblingsNeedsStyleRecalc()
 
 void Node::setNeedsLayout()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     m_document->window()->setNeedsLayout();
 }
 
 void Node::setNeedsPainting()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     m_document->window()->setNeedsPainting();
 }
 
 void Node::setNeedsComposite()
 {
-    if (!document()->doesParticipateInRendering())
+    if (!document()->doesParticipateInRendering()) {
         return;
+    }
 
     m_document->window()->setNeedsComposite();
 }
-
-
 }
 
 #endif

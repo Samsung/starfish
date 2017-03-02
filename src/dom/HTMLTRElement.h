@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLTRElement : public HTMLElement {
 public:
-    HTMLTRElement(Document* document)
-        : HTMLElement(document)
+    HTMLTRElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_trTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_trTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -54,7 +57,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

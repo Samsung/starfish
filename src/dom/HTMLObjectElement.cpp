@@ -20,9 +20,13 @@
 
 namespace StarFish {
 
-void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_type) {
         if (m_content) {
             m_content->unload();
@@ -32,5 +36,4 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old, Str
         setNeedsFrameTreeBuild();
     }
 }
-
 }
