@@ -43,7 +43,7 @@ class VTTCue;
 class MediaSource;
 class SourceBuffer;
 class SourceBufferList;
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class webapis;
 class avplay;
 #endif
@@ -164,7 +164,7 @@ public:
         DOMPointObject = 82,
         DOMQuadObject = 84,
         DOMRectListObject = 86,
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
         webapisObject = 88,
         avplayObject = 90,
 #endif
@@ -190,7 +190,6 @@ public:
     {
         return scriptObject();
     }
-
 
     virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
     virtual Type type() = 0;
@@ -245,7 +244,7 @@ public:
     void initScriptWrappable(MediaSource* ptr);
     void initScriptWrappable(SourceBuffer* ptr);
     void initScriptWrappable(SourceBufferList* ptr);
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     void initScriptWrappable(webapis* ptr);
     void initScriptWrappable(avplay* ptr);
 #endif
@@ -268,7 +267,8 @@ public:
     void initScriptWrappable(XMLHttpRequest* ptr);
     void initScriptWrappable(Blob* ptr);
     void initScriptWrappable(URL* ptr, ScriptBindingInstance*);
-    void initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance);
+    void initScriptWrappable(DOMException* exception,
+                             ScriptBindingInstance* instance);
     void initScriptWrappable(LocationObj* ptr);
     void initScriptWrappable(History* ptr);
     void initScriptWrappable(Navigator* ptr);
@@ -290,7 +290,6 @@ private:
     escargot::ESObject* m_object;
 };
 
-
 #ifdef USE_ES6_FEATURE
 class Promise : public gc {
 public:
@@ -301,21 +300,25 @@ public:
     {
         return m_scriptValue;
     }
+
 protected:
     ScriptValue m_scriptValue;
 };
 #endif
 
 ScriptValue createScriptString(String* str);
-ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody, bool& error);
-ScriptValue createAttributeStringEventFunction(Element* target, String* functionBody, bool& result);
-ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
+ScriptValue createScriptFunction(String** argNames, size_t argc,
+                                 String* functionBody, bool& error);
+ScriptValue createAttributeStringEventFunction(Element* target,
+                                               String* functionBody,
+                                               bool& result);
+ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
+                               ScriptValue thisValue);
 ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
 ScriptValue parseJSON(String* jsonData);
 String* jsonStringify(escargot::ESValue);
 
 bool isCallableScriptValue(ScriptValue v);
-
 }
 
 #endif

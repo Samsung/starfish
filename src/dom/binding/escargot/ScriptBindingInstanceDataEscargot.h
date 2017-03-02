@@ -21,82 +21,80 @@ namespace StarFish {
 
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
-    F(node, Node) \
-    F(element, Element) \
-    F(document, Document) \
-    F(documentType, DocumentType) \
-    F(documentFragment, DocumentFragment) \
-    F(htmlDocument, HTMLDocument) \
-    F(characterData, CharacterData) \
-    F(text, Text) \
-    F(cDataSection, CDataSection) \
-    F(comment, Comment) \
-    F(htmlElement, HTMLElement) \
-    F(htmlHtmlElement, HTMLHtmlElement) \
-    F(htmlHeadElement, HTMLHeadElement) \
-    F(htmlScriptElement, HTMLScriptElement) \
-    F(htmlStyleElement, HTMLStyleElement) \
-    F(htmlLinkElement, HTMLLinkElement) \
-    F(htmlBodyElement, HTMLBodyElement) \
-    F(htmlDivElement, HTMLDivElement) \
-    F(htmlImageElement, HTMLImageElement) \
-    F(htmlBrElement, HTMLBRElement) \
-    F(htmlObjectElement, HTMLObjectElement) \
-    F(htmlMetaElement, HTMLMetaElement) \
-    F(htmlParagraphElement, HTMLParagraphElement) \
-    F(htmlSpanElement, HTMLSpanElement) \
-    F(htmlUnknownElement, HTMLUnknownElement) \
-    F(pseudoElement, PseudoElement) \
-    F(htmlCollection, HTMLCollection) \
-    F(event, Event) \
-    F(uiEvent, UIEvent) \
-    F(mouseEvent, MouseEvent) \
-    F(touchEvent, TouchEvent) \
-    F(keyboardEvent, KeyboardEvent) \
-    F(focusEvent, FocusEvent) \
-    F(progressEvent, ProgressEvent) \
-    F(nodeList, NodeList) \
-    F(domTokenList, DOMTokenList) \
-    F(domSettableTokenList, DOMSettableTokenList) \
-    F(namedNodeMap, NamedNodeMap) \
-    F(attr, Attr) \
-    F(cssStyleDeclaration, CSSStyleDeclaration) \
-    F(cssStyleRule, CSSStyleRule) \
-    F(xhrElement, XMLHttpRequest) \
-    F(blobElement, Blob) \
-    F(url, URL) \
-    F(domRectReadOnly, DOMRectReadOnly) \
-    F(domRect, DOMRect) \
-    F(domPointReadOnly, DOMPointReadOnly) \
-    F(domPoint, DOMPoint) \
-    F(domQuad, DOMQuad) \
-    F(domRectList, DOMRectList) \
-    F(location, Location) \
-    F(domException, DOMException) \
-    F(history, History) \
-    F(navigator, Navigator) \
-    F(geolocation, Geolocation) \
-    F(geoposition, Geoposition) \
-    F(coordinates, Coordinates) \
-    F(positionError, PositionError) \
-
-
+    F(node, Node)                                   \
+    F(element, Element)                             \
+    F(document, Document)                           \
+    F(documentType, DocumentType)                   \
+    F(documentFragment, DocumentFragment)           \
+    F(htmlDocument, HTMLDocument)                   \
+    F(characterData, CharacterData)                 \
+    F(text, Text)                                   \
+    F(cDataSection, CDataSection)                   \
+    F(comment, Comment)                             \
+    F(htmlElement, HTMLElement)                     \
+    F(htmlHtmlElement, HTMLHtmlElement)             \
+    F(htmlHeadElement, HTMLHeadElement)             \
+    F(htmlScriptElement, HTMLScriptElement)         \
+    F(htmlStyleElement, HTMLStyleElement)           \
+    F(htmlLinkElement, HTMLLinkElement)             \
+    F(htmlBodyElement, HTMLBodyElement)             \
+    F(htmlDivElement, HTMLDivElement)               \
+    F(htmlImageElement, HTMLImageElement)           \
+    F(htmlBrElement, HTMLBRElement)                 \
+    F(htmlObjectElement, HTMLObjectElement)         \
+    F(htmlMetaElement, HTMLMetaElement)             \
+    F(htmlParagraphElement, HTMLParagraphElement)   \
+    F(htmlSpanElement, HTMLSpanElement)             \
+    F(htmlUnknownElement, HTMLUnknownElement)       \
+    F(pseudoElement, PseudoElement)                 \
+    F(htmlCollection, HTMLCollection)               \
+    F(event, Event)                                 \
+    F(uiEvent, UIEvent)                             \
+    F(mouseEvent, MouseEvent)                       \
+    F(touchEvent, TouchEvent)                       \
+    F(keyboardEvent, KeyboardEvent)                 \
+    F(focusEvent, FocusEvent)                       \
+    F(progressEvent, ProgressEvent)                 \
+    F(nodeList, NodeList)                           \
+    F(domTokenList, DOMTokenList)                   \
+    F(domSettableTokenList, DOMSettableTokenList)   \
+    F(namedNodeMap, NamedNodeMap)                   \
+    F(attr, Attr)                                   \
+    F(cssStyleDeclaration, CSSStyleDeclaration)     \
+    F(cssStyleRule, CSSStyleRule)                   \
+    F(xhrElement, XMLHttpRequest)                   \
+    F(blobElement, Blob)                            \
+    F(url, URL)                                     \
+    F(domRectReadOnly, DOMRectReadOnly)             \
+    F(domRect, DOMRect)                             \
+    F(domPointReadOnly, DOMPointReadOnly)           \
+    F(domPoint, DOMPoint)                           \
+    F(domQuad, DOMQuad)                             \
+    F(domRectList, DOMRectList)                     \
+    F(location, Location)                           \
+    F(domException, DOMException)                   \
+    F(history, History)                             \
+    F(navigator, Navigator)                         \
+    F(geolocation, Geolocation)                     \
+    F(geoposition, Geoposition)                     \
+    F(coordinates, Coordinates)                     \
+    F(positionError, PositionError)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
-    F(htmlMediaElement, HTMLMediaElement) \
-    F(htmlVideoElement, HTMLVideoElement) \
-    F(htmlAudioElement, HTMLAudioElement) \
-    F(htmlTrackElement, HTMLTrackElement) \
-    F(htmlSourceElement, HTMLSourceElement) \
-    F(textTrack, TextTrack) \
-    F(textTrackList, TextTrackList) \
-    F(textTrackCue, TextTrackCue) \
-    F(textTrackCueList, TextTrackCueList) \
-    F(VTTCue, VTTCue) \
-    F(timeRanges, TimeRanges) \
-    F(mediaSource, MediaSource) \
-    F(sourceBuffer, SourceBuffer) \
+    F(htmlMediaElement, HTMLMediaElement)         \
+    F(htmlVideoElement, HTMLVideoElement)         \
+    F(htmlAudioElement, HTMLAudioElement)         \
+    F(htmlTrackElement, HTMLTrackElement)         \
+    F(htmlSourceElement, HTMLSourceElement)       \
+    F(textTrack, TextTrack)                       \
+    F(textTrackList, TextTrackList)               \
+    F(textTrackCue, TextTrackCue)                 \
+    F(textTrackCueList, TextTrackCueList)         \
+    F(VTTCue, VTTCue)                             \
+    F(timeRanges, TimeRanges)                     \
+    F(mediaSource, MediaSource)                   \
+    F(sourceBuffer, SourceBuffer)                 \
     F(sourceBufferList, SourceBufferList)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
@@ -110,29 +108,29 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 #endif
 
 #ifdef STARFISH_ENABLE_DOMPARSER
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) \
-    F(domParser, DOMParser)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(domParser, DOMParser)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
 #endif
 
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
-F(webApis, webapis) \
-F(avPlay, avplay)
+    F(webApis, webapis)                            \
+    F(avPlay, avplay)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 #endif
 
-#define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
-    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
-    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
+#define STARFISH_ENUM_LAZY_BINDING_NAMES(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F)    \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)      \
     STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
-    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)  \
     STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
-#define FOR_EACH_DECLARE_FN(codeName, exportName) \
-    escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance);
+#define FOR_EACH_DECLARE_FN(codeName, exportName)    \
+    escargot::ESFunctionObject* binding##exportName( \
+        ScriptBindingInstance* scriptBindingInstance);
 
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_DECLARE_FN);
 
@@ -140,6 +138,7 @@ class ScriptBindingInstance;
 
 class ScriptBindingInstanceDataEscargot : public gc {
     friend void ScriptBindingInstance::initBinding(StarFish* sf);
+
 public:
     ScriptBindingInstance* m_bindingInstance;
     escargot::ESVMInstance* m_instance;
@@ -156,26 +155,26 @@ public:
         m_bindingInstance = bindingInstance;
     }
 
-#define FOR_EACH_GETTER_FN(codeName, exportName) \
-    escargot::ESFunctionObject* codeName() \
-    { \
-        if (UNLIKELY(m_##codeName == nullptr)) { \
+#define FOR_EACH_GETTER_FN(codeName, exportName)                   \
+    escargot::ESFunctionObject* codeName()                         \
+    {                                                              \
+        if (UNLIKELY(m_##codeName == nullptr)) {                   \
             m_##codeName = binding##exportName(m_bindingInstance); \
-            m_value##codeName = m_##codeName; \
-        } \
-        return m_##codeName; \
+            m_value##codeName = m_##codeName;                      \
+        }                                                          \
+        return m_##codeName;                                       \
     }
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_FN)
 
-#define FOR_EACH_GETTER_VALUE_FN(codeName, exportName) \
-    escargot::ESValue codeName##Value() \
-    { \
-        if (UNLIKELY(m_##codeName == nullptr)) { \
+#define FOR_EACH_GETTER_VALUE_FN(codeName, exportName)             \
+    escargot::ESValue codeName##Value()                            \
+    {                                                              \
+        if (UNLIKELY(m_##codeName == nullptr)) {                   \
             m_##codeName = binding##exportName(m_bindingInstance); \
-            m_value##codeName = m_##codeName; \
-        } \
-        return m_value##codeName; \
+            m_value##codeName = m_##codeName;                      \
+        }                                                          \
+        return m_value##codeName;                                  \
     }
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
@@ -206,7 +205,7 @@ private:
     escargot::ESFunctionObject* m_mediaSource;
     escargot::ESFunctionObject* m_sourceBuffer;
     escargot::ESFunctionObject* m_sourceBufferList;
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     escargot::ESFunctionObject* m_webApis;
     escargot::ESFunctionObject* m_avPlay;
 #endif
@@ -269,11 +268,9 @@ public:
     escargot::ESValue m_value##codeName;
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
-
 };
 
 String* toBrowserString(const escargot::ESValue& v);
-
 }
 
 #endif
