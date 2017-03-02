@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishVTTCue__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishVTTCue__)
 #define __StarFishVTTCue__
 
 #include "dom/TextTrackCue.h"
@@ -29,7 +29,6 @@ public:
     VTTCue(double start, double end, String* payload)
         : TextTrackCue(start, end, payload)
     {
-
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -62,7 +61,6 @@ public:
     }
 #endif
 };
-
 }
 
 #endif

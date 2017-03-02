@@ -83,7 +83,7 @@ String* Element::tagName()
 
 size_t Element::hasAttribute(QualifiedName name)
 {
-    for (size_t i = 0; i < m_attributes.size(); i ++) {
+    for (size_t i = 0; i < m_attributes.size(); i++) {
         if (m_attributes[i].name() == name) {
             return i;
         }
@@ -134,7 +134,9 @@ void Element::removeAttribute(QualifiedName name)
     }
 }
 
-void Element::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void Element::didAttributeChanged(QualifiedName name, String* old,
+                                  String* value, bool attributeCreated,
+                                  bool attributeRemoved)
 {
 #ifdef STARFISH_TC_COVERAGE
     if (name.localName()->equals("style")) {
@@ -156,7 +158,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         // Style should be recalculated from root node because of combinators.
         document()->window()->setWholeDocumentNeedsStyleRecalc();
 
-        // propagate invalidate nodeList cache(getElementsByClassName) damage to parent tree
+        // propagate invalidate nodeList cache(getElementsByClassName) damage to
+        // parent tree
         Node* parent = parentNode();
         while (parent) {
             parent->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
@@ -164,14 +167,16 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         }
     } else if (name == ss->m_style) {
         if (old->equals(String::emptyString)) {
-            attributeData(name).registerGetterCallback(this, [](Element* element, const Attribute * const attr) -> String* {
-                if (element->m_didInlineStyleModifiedAfterAttributeSet) {
-                    return element->inlineStyle()->generateCSSText();
-                } else {
-                    return attr->valueWithoutCheckGetter();
-                }
-                return String::emptyString;
-            });
+            attributeData(name).registerGetterCallback(
+                this,
+                [](Element* element, const Attribute* const attr) -> String* {
+                    if (element->m_didInlineStyleModifiedAfterAttributeSet) {
+                        return element->inlineStyle()->generateCSSText();
+                    } else {
+                        return attr->valueWithoutCheckGetter();
+                    }
+                    return String::emptyString;
+                });
         }
         inlineStyle()->clear();
         CSSParser parser(document());
@@ -179,7 +184,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         m_didInlineStyleModifiedAfterAttributeSet = false;
     } else if (name == ss->m_name) {
         // TODO we should not always invalidate cache
-        // according spec, https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+        // according spec,
+        // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
         // only few html elements are affected by name attribute changing
         document()->invalidNamedAccessCacheIfNeeded();
     }
@@ -191,7 +197,9 @@ LayoutRect Element::clientRect()
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();
-            return LayoutRect(box->borderLeft(), box->borderTop(), box->contentWidth() + box->paddingWidth(), box->contentHeight() + box->paddingHeight());
+            return LayoutRect(box->borderLeft(), box->borderTop(),
+                              box->contentWidth() + box->paddingWidth(),
+                              box->contentHeight() + box->paddingHeight());
         }
     }
     return LayoutRect(0, 0, 0, 0);
@@ -226,25 +234,34 @@ Element* Element::offsetParent()
 void Element::getClientQuads(std::vector<DOMQuad>& quads)
 {
     Frame* frameObject = this->frame();
-    if (!frameObject)
+    if (!frameObject) {
         return;
+    }
     // todo : support SVG model
-    // there is Getting bounding rectangle from the SVG model in the spec, but SVG model is not supported
+    // there is Getting bounding rectangle from the SVG model in the spec, but
+    // SVG model is not supported
 
     // initial version : implement for display:block
-    if (frameObject->isFrameBox() && frameObject->style()->display() == DisplayValue::BlockDisplayValue) {
-        LayoutRect rect = ((FrameBox*)frameObject)->absoluteRect((FrameBox*)document()->rootElement()->frame());
+    if (frameObject->isFrameBox() &&
+        frameObject->style()->display() == DisplayValue::BlockDisplayValue) {
+        LayoutRect rect =
+            ((FrameBox*)frameObject)
+                ->absoluteRect((FrameBox*)document()->rootElement()->frame());
 
-        DOMQuad* q = DOMQuad::create
-        (DOMPointInit(rect.location().x(), rect.location().y())
-        , DOMPointInit(rect.location().x() + rect.size().width(), rect.location().y())
-        , DOMPointInit(rect.location().x() + rect.size().width(), rect.location().y() + rect.size().height())
-        , DOMPointInit(rect.location().x() , rect.location().y()+ rect.size().height()));
+        DOMQuad* q = DOMQuad::create(
+            DOMPointInit(rect.location().x(), rect.location().y()),
+            DOMPointInit(rect.location().x() + rect.size().width(),
+                         rect.location().y()),
+            DOMPointInit(rect.location().x() + rect.size().width(),
+                         rect.location().y() + rect.size().height()),
+            DOMPointInit(rect.location().x(),
+                         rect.location().y() + rect.size().height()));
 
         quads.push_back(*q);
     } else {
         // todo assert
-        STARFISH_LOG_ERROR("%s %d\n : implement not yet", __FUNCTION__, __LINE__);
+        STARFISH_LOG_ERROR("%s %d\n : implement not yet", __FUNCTION__,
+                           __LINE__);
         STARFISH_ASSERT(false);
     }
     return;
@@ -255,8 +272,9 @@ DOMRectList* Element::getClientRects()
     std::vector<DOMQuad> quads;
     getClientQuads(quads);
 
-    if (quads.empty())
+    if (quads.empty()) {
         return DOMRectList::create();
+    }
 
     // todo : Apply the transforms
     return DOMRectList::create(quads);
@@ -266,13 +284,15 @@ DOMRect* Element::getBoundingClientRect()
 {
     std::vector<DOMQuad> quads;
     getClientQuads(quads);
-    if (quads.empty())
+    if (quads.empty()) {
         return DOMRect::create();
+    }
 
     DOMRect* rect = DOMRect::create(quads[0].bounds());
 
-    for (size_t i= 1; i < quads.size(); ++i)
+    for (size_t i = 1; i < quads.size(); ++i) {
         rect->unite(quads[i].bounds());
+    }
 
     // todo : Apply the transforms
     return rect;
@@ -309,7 +329,6 @@ void Element::setInnerHTML(String* html)
     parser.parseStep();
     parser.endParse();
     appendChild(df);
-
 }
 #endif
 
@@ -317,7 +336,8 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        newNode = HTMLDocument::createHTMLElement(document(), name().localNameAtomic());
+        newNode = HTMLDocument::createHTMLElement(document(),
+                                                  name().localNameAtomic());
     } else {
         newNode = new NamedElement(document(), name());
     }
@@ -335,15 +355,18 @@ Node* Element::clone()
 NamedNodeMap* Element::attributes()
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
-    if (!rareMembers->m_namedNodeMap)
-        rareMembers->m_namedNodeMap = new NamedNodeMap(document()->scriptBindingInstance(), this);
+    if (!rareMembers->m_namedNodeMap) {
+        rareMembers->m_namedNodeMap =
+            new NamedNodeMap(document()->scriptBindingInstance(), this);
+    }
     return rareMembers->m_namedNodeMap;
 }
 
 RareNodeMembers* Element::ensureRareMembers()
 {
-    if (!hasRareMembers())
+    if (!hasRareMembers()) {
         m_rareNodeMembers = new RareElementMembers();
+    }
     STARFISH_ASSERT(m_rareNodeMembers->isRareElementMembers());
     return m_rareNodeMembers;
 }
@@ -359,15 +382,18 @@ void Element::addAttr(Attr* attr)
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
-    if (!rareMembers->m_attrList)
+    if (!rareMembers->m_attrList) {
         rareMembers->m_attrList = new (GC) GCVector<Attr*>();
+    }
     STARFISH_ASSERT(this->attr(attr->name()) == nullptr);
     rareMembers->m_attrList->push_back(attr);
 }
 
 Attr* Element::attr(QualifiedName name)
 {
-    STARFISH_ASSERT((hasRareMembers() && rareMembers()->isRareElementMembers()) || !hasRareMembers());
+    STARFISH_ASSERT(
+        (hasRareMembers() && rareMembers()->isRareElementMembers()) ||
+        !hasRareMembers());
     if (hasRareMembers() && rareMembers()->asRareElementMembers()->m_attrList) {
         auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
         for (Attr* item : *attrList) {
@@ -387,9 +413,11 @@ Attr* Element::ensureAttr(QualifiedName name)
     if (!returnAttr) {
         RareElementMembers* rareMembers = ensureRareElementMembers();
         STARFISH_ASSERT(rareMembers->isRareElementMembers());
-        if (!rareMembers->m_attrList)
+        if (!rareMembers->m_attrList) {
             rareMembers->m_attrList = new (GC) GCVector<Attr*>();
-        returnAttr = new Attr(document(), document()->scriptBindingInstance(), this, name);
+        }
+        returnAttr = new Attr(document(), document()->scriptBindingInstance(),
+                              this, name);
         rareMembers->m_attrList->push_back(returnAttr);
     }
     return returnAttr;
@@ -398,13 +426,15 @@ Attr* Element::ensureAttr(QualifiedName name)
 bool Element::hasPseudoElements()
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
-    return (rareMembers->m_pseudoElementData && rareMembers->m_pseudoElementData->hasPseudoElements());
+    return (rareMembers->m_pseudoElementData &&
+            rareMembers->m_pseudoElementData->hasPseudoElements());
 }
 
 bool Element::hasPseudoElement(StyleResolver::PseudoElementType type)
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
-    return (rareMembers->m_pseudoElementData && rareMembers->m_pseudoElementData->hasPseudoElement(type));
+    return (rareMembers->m_pseudoElementData &&
+            rareMembers->m_pseudoElementData->hasPseudoElement(type));
 }
 
 void Element::setPseudoElement(StyleResolver::PseudoElementType type)
@@ -423,7 +453,8 @@ String* Element::getLaunguage()
 
     do {
         if (n->isElement()) {
-            value = n->asElement()->getAttribute(n->document()->window()->starFish()->staticStrings()->m_lang);
+            value = n->asElement()->getAttribute(
+                n->document()->window()->starFish()->staticStrings()->m_lang);
         } else if (n->isDocument()) {
             // TODO: checking the MIME content-language
             // value = document()->contentLanguage();
@@ -437,26 +468,30 @@ String* Element::getLaunguage()
 
 void Element::setFocus(bool flag)
 {
-    if (flag == focused())
+    if (flag == focused()) {
         return;
+    }
 
     setFocused(flag);
-    // TODO: Style should be recalculated when we implement :focus selector or apply visual effects for focusable elements.
+    // TODO: Style should be recalculated when we implement :focus selector or
+    // apply visual effects for focusable elements.
     // setNeedsStyleRecalc();
 }
 
 bool Element::supportsFocus()
 {
-    if (!tabIndexSetExplicitly())
+    if (!tabIndexSetExplicitly()) {
         return false;
+    }
     return true;
 }
 
 bool Element::isFocusable()
 {
     // TODO: https://www.w3.org/TR/html5/editing.html#focus-management
-    if (!supportsFocus())
+    if (!supportsFocus()) {
         return false;
+    }
     return true;
 }
 
@@ -469,5 +504,4 @@ void Element::blur()
 {
     // TODO
 }
-
 }

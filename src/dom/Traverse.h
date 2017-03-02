@@ -24,64 +24,74 @@ class Traverse {
     }
 
 public:
-    template<typename Func>
+    template <typename Func>
     static Node* findDescendant(Node* parent, Func matchingRule)
     {
         Node* child = parent->firstChild();
         while (child) {
-            if (matchingRule(child))
+            if (matchingRule(child)) {
                 return child;
-            else {
+            } else {
                 Node* matchedDescendant = findDescendant(child, matchingRule);
-                if (matchedDescendant)
+                if (matchedDescendant) {
                     return matchedDescendant;
+                }
             }
             child = child->nextSibling();
         }
         return nullptr;
     }
 
-    template<typename Func>
-    static void getherDescendant(GCVector<Node*>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    template <typename Func>
+    static void getherDescendant(GCVector<Node*>& collection, Node* root,
+                                 Func filter,
+                                 bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
             if (filter(child)) {
                 collection.push_back(child);
-                if (shouldOnlyMatchFirstElement)
+                if (shouldOnlyMatchFirstElement) {
                     return;
+                }
             }
 
-            getherDescendant(collection, child, filter, shouldOnlyMatchFirstElement);
+            getherDescendant(collection, child, filter,
+                             shouldOnlyMatchFirstElement);
             child = child->nextSibling();
         }
     }
 
-    template<typename Func>
-    static void getherDescendant(GCVector<Element*>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    template <typename Func>
+    static void getherDescendant(GCVector<Element*>& collection, Node* root,
+                                 Func filter,
+                                 bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
             if (filter(child)) {
                 collection.push_back(child->asElement());
-                if (shouldOnlyMatchFirstElement)
+                if (shouldOnlyMatchFirstElement) {
                     return;
+                }
             }
 
-            getherDescendant(collection, child, filter, shouldOnlyMatchFirstElement);
+            getherDescendant(collection, child, filter,
+                             shouldOnlyMatchFirstElement);
             child = child->nextSibling();
         }
     }
 
-    template<typename Func>
+    template <typename Func>
     static Node* firstChild(Node* parent, Func matchingRule)
     {
         Node* child = parent->firstChild();
         while (child) {
-            if (matchingRule(child))
+            if (matchingRule(child)) {
                 return child;
-            else
+            } else {
                 child = child->nextSibling();
+            }
         }
         return nullptr;
     }
@@ -90,58 +100,63 @@ public:
     {
         Node* child = parent->firstChild();
         while (child) {
-            if (!child && child->isElement())
+            if (!child && child->isElement()) {
                 return child;
-            else
+            } else {
                 child = child->nextSibling();
+            }
         }
         return nullptr;
     }
 
-    template<typename Func>
+    template <typename Func>
     static Node* lastChild(Node* parent, Func matchingRule)
     {
         Node* child = parent->lastChild();
         while (child) {
-            if (matchingRule(child))
+            if (matchingRule(child)) {
                 return child;
-            else
+            } else {
                 child = child->previousSibling();
+            }
         }
         return nullptr;
     }
 
-    template<typename Func>
+    template <typename Func>
     static Node* nextSibling(Node* start, Func matchingRule)
     {
         Node* sibling = start->nextSibling();
         while (sibling) {
-            if (matchingRule(sibling))
+            if (matchingRule(sibling)) {
                 return sibling;
-            else
+            } else {
                 sibling = sibling->nextSibling();
+            }
         }
         return nullptr;
     }
 
-    template<typename Func>
+    template <typename Func>
     static Node* previousSibling(Node* start, Func matchingRule)
     {
         Node* sibling = start->previousSibling();
         while (sibling) {
-            if (matchingRule(sibling))
+            if (matchingRule(sibling)) {
                 return sibling;
-            else
+            } else {
                 sibling = sibling->previousSibling();
+            }
         }
         return nullptr;
     }
 
-    template<typename Func>
+    template <typename Func>
     static GCVector<Node*>* nextSiblings(Node* start, Func matchingRule)
     {
         auto siblings = new GCVector<Node*>();
-        for (Node* sibling = start->nextSibling(); sibling; sibling = sibling -> nextSibling()) {
+        for (Node* sibling = start->nextSibling(); sibling;
+             sibling = sibling->nextSibling()) {
             if (matchingRule(sibling)) {
                 siblings->push_back(sibling);
             }
@@ -149,11 +164,12 @@ public:
         return siblings;
     }
 
-    template<typename Func>
+    template <typename Func>
     static GCVector<Node*>* previousSiblings(Node* start, Func matchingRule)
     {
         auto siblings = new GCVector<Node*>();
-        for (Node* sibling = start->previousSibling(); sibling; sibling = sibling -> previousSibling()) {
+        for (Node* sibling = start->previousSibling(); sibling;
+             sibling = sibling->previousSibling()) {
             if (matchingRule(sibling)) {
                 siblings->push_back(sibling);
             }
@@ -162,40 +178,48 @@ public:
         return siblings;
     }
 
-    template<typename Func>
+    template <typename Func>
     static unsigned long childCount(Node* parent, Func matchingRule)
     {
         unsigned long count = 0;
         Node* child = parent->firstChild();
         while (child) {
-            if (matchingRule(child))
+            if (matchingRule(child)) {
                 count++;
+            }
             child = child->nextSibling();
         }
         return count;
     }
 
-    static Node* nextAncestorSibling(const Node* current, const Node* stayWithin)
+    static Node* nextAncestorSibling(const Node* current,
+                                     const Node* stayWithin)
     {
         STARFISH_ASSERT(!current->nextSibling());
         STARFISH_ASSERT(current != stayWithin);
-        for (Node* parent = current->parentNode(); parent; parent = parent->parentNode()) {
-            if (parent == stayWithin)
+        for (Node* parent = current->parentNode(); parent;
+             parent = parent->parentNode()) {
+            if (parent == stayWithin) {
                 return 0;
-            if (parent->nextSibling())
+            }
+            if (parent->nextSibling()) {
                 return parent->nextSibling();
+            }
         }
         return 0;
     }
 
     static Node* next(Node* current, const Node* stayWithin)
     {
-        if (current->hasChildNodes())
+        if (current->hasChildNodes()) {
             return current->firstChild();
-        if (current == stayWithin)
+        }
+        if (current == stayWithin) {
             return 0;
-        if (current->nextSibling())
+        }
+        if (current->nextSibling()) {
             return current->nextSibling();
+        }
         return nextAncestorSibling(current, stayWithin);
     }
 
@@ -204,31 +228,36 @@ public:
         Node* node = next(current, stayWithin);
         while (node && !node->isElement())
             node = next(node, stayWithin);
-        if (node)
+        if (node) {
             return node->asElement();
+        }
         return nullptr;
     }
 
     static Node* nextSkippingChildren(Node* current, const Node* stayWithin)
     {
-        if (current == stayWithin)
+        if (current == stayWithin) {
             return 0;
-        if (current->nextSibling())
+        }
+        if (current->nextSibling()) {
             return current->nextSibling();
+        }
         return nextAncestorSibling(current, stayWithin);
     }
 
-    static Element* nextSkippingChildrenElement(Node* current, const Node* stayWithin)
+    static Element* nextSkippingChildrenElement(Node* current,
+                                                const Node* stayWithin)
     {
         Node* node = nextSkippingChildren(current, stayWithin);
-        while (node && !node->isElement())
+        while (node && !node->isElement()) {
             node = nextSkippingChildren(node, stayWithin);
-        if (node)
+        }
+        if (node) {
             return node->asElement();
+        }
         return nullptr;
     }
 };
-
 }
 
 #endif

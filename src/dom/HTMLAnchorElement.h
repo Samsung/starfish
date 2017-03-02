@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
-    HTMLAnchorElement(Document* document)
-        : HTMLElement(document)
+    HTMLAnchorElement(Document* document) : HTMLElement(document)
     {
         setTabIndex(0);
     }
@@ -38,7 +37,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_aTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_aTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -57,18 +60,29 @@ public:
     {
         if (event->isUIEvent() && event->asUIEvent()->isMouseEvent()) {
             if (event->eventType()->equals("click")) {
-                auto href = document()->window()->starFish()->staticStrings()->m_href;
+                auto href =
+                    document()->window()->starFish()->staticStrings()->m_href;
                 size_t s = hasAttribute(href);
                 if (s != SIZE_MAX) {
                     String* h = getAttribute(s)->trim();
                     if (h->length()) {
                         if (h->startsWith("#")) {
-                            document()->window()->navigateAsync(URL::createURL(document()->documentURI()->urlString()->substring(0, document()->documentURI()->urlString()->indexOf('#')), h));
+                            document()->window()->navigateAsync(URL::createURL(
+                                document()
+                                    ->documentURI()
+                                    ->urlString()
+                                    ->substring(0, document()
+                                                       ->documentURI()
+                                                       ->urlString()
+                                                       ->indexOf('#')),
+                                h));
                         } else {
-                            document()->window()->navigateAsync(URL::createURL(document()->documentURI()->urlString(), h));
+                            document()->window()->navigateAsync(URL::createURL(
+                                document()->documentURI()->urlString(), h));
                         }
                     } else {
-                        document()->window()->navigateAsync(document()->documentURI());
+                        document()->window()->navigateAsync(
+                            document()->documentURI());
                     }
                 }
             }
@@ -88,7 +102,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

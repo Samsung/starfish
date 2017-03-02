@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishTextTrack__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTextTrack__)
 #define __StarFishTextTrack__
 
 #include "dom/VTTCue.h"
@@ -41,19 +41,19 @@ public:
         Metadata,
     };
 
-    TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString, String* language = String::emptyString)
-        : EventTarget()
-        , m_mode(Mode::Off)
-        , m_kind(kind)
-        , m_label(label)
-        , m_language(language)
-        , m_cues(new TextTrackCueList())
-        , m_activeCues(new TextTrackCueList())
-        , m_trackElement(nullptr)
-        , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
-        , m_cachedIdx(0)
+    TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString,
+              String* language = String::emptyString)
+        : EventTarget(),
+          m_mode(Mode::Off),
+          m_kind(kind),
+          m_label(label),
+          m_language(language),
+          m_cues(new TextTrackCueList()),
+          m_activeCues(new TextTrackCueList()),
+          m_trackElement(nullptr),
+          m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE),
+          m_cachedIdx(0)
     {
-
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -99,16 +99,18 @@ public:
     TextTrackCueList* cues()
     {
         STARFISH_ASSERT(m_cues);
-        if (m_mode == Mode::Off)
+        if (m_mode == Mode::Off) {
             return nullptr;
+        }
         return m_cues;
     }
 
     TextTrackCueList* activeCues()
     {
         STARFISH_ASSERT(m_activeCues);
-        if (m_mode == Mode::Off)
+        if (m_mode == Mode::Off) {
             return nullptr;
+        }
         return m_activeCues;
     }
 
@@ -187,24 +189,30 @@ public:
             switch (kindStr->charAt(2)) {
             case 'a':
             case 'A':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("chapters")))
+                if (kindStr->equalsWithoutCase(String::fromUTF8("chapters"))) {
                     return Kind::Chapters;
+                }
             case 'b':
             case 'B':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("subtitles")))
+                if (kindStr->equalsWithoutCase(String::fromUTF8("subtitles"))) {
                     return Kind::Subtitles;
+                }
             case 'p':
             case 'P':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("captions")))
+                if (kindStr->equalsWithoutCase(String::fromUTF8("captions"))) {
                     return Kind::Captions;
+                }
             case 's':
             case 'S':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("descriptions")))
+                if (kindStr->equalsWithoutCase(
+                        String::fromUTF8("descriptions"))) {
                     return Kind::Descriptions;
+                }
             case 't':
             case 'T':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("metadata")))
+                if (kindStr->equalsWithoutCase(String::fromUTF8("metadata"))) {
                     return Kind::Metadata;
+                }
             default:
                 return Kind::InvalidKind;
             }
@@ -276,8 +284,7 @@ protected:
 
 class TextTrackList : public EventTarget {
 public:
-    TextTrackList()
-        : EventTarget()
+    TextTrackList() : EventTarget()
     {
     }
 
@@ -311,8 +318,9 @@ public:
         unsigned long size = m_list.size();
         unsigned long targetIdx = 0;
         for (targetIdx = 0; targetIdx < size; targetIdx++) {
-            if (m_list[targetIdx] == track)
+            if (m_list[targetIdx] == track) {
                 break;
+            }
         }
         if (targetIdx < size) {
             remove(targetIdx);
@@ -321,8 +329,9 @@ public:
 
     TextTrack* at(unsigned long index)
     {
-        if (index >= m_list.size())
+        if (index >= m_list.size()) {
             return nullptr;
+        }
         return m_list[index];
     }
 
@@ -331,8 +340,9 @@ public:
         unsigned long size = m_list.size();
         unsigned long targetIdx = 0;
         for (targetIdx = 0; targetIdx < size; targetIdx++) {
-            if (m_list[targetIdx]->id()->equals(id))
+            if (m_list[targetIdx]->id()->equals(id)) {
                 break;
+            }
         }
         if (targetIdx < size) {
             return m_list[targetIdx];
@@ -343,7 +353,6 @@ public:
 protected:
     GCVector<TextTrack*> m_list;
 };
-
 }
 
 #endif

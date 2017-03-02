@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLBRElement : public HTMLElement {
 public:
-    HTMLBRElement(Document* document)
-        : HTMLElement(document)
+    HTMLBRElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_brTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_brTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -54,7 +57,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

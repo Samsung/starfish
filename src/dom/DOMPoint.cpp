@@ -19,11 +19,9 @@
 
 namespace StarFish {
 DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
-    : x(inX)
-    , y(inY)
-    , z(inZ)
-    , w(inW)
-{ }
+    : x(inX), y(inY), z(inZ), w(inW)
+{
+}
 
 DOMPoint* DOMPoint::create(const DOMPointInit& pi)
 {
@@ -37,6 +35,6 @@ DOMPoint* DOMPoint::create(double x, double y, double z, double w)
 
 DOMPoint::DOMPoint(double x, double y, double z, double w)
     : DOMPointReadOnly(x, y, z, w)
-{ }
-
+{
+}
 }

@@ -27,8 +27,7 @@ namespace StarFish {
 class ImageDownloadClient : public ResourceClient {
 public:
     ImageDownloadClient(HTMLImageElement* element, Resource* res)
-        : ResourceClient(res)
-        , m_element(element)
+        : ResourceClient(res), m_element(element)
     {
     }
 
@@ -53,7 +52,8 @@ public:
         LayoutSize sizeNow(imageData->width(), imageData->height());
 
         if (imageDataBefore) {
-            sizeBefore = LayoutSize(imageDataBefore->width(), imageDataBefore->height());
+            sizeBefore =
+                LayoutSize(imageDataBefore->width(), imageDataBefore->height());
         }
 
         m_element->m_imageData = imageData;
@@ -69,13 +69,17 @@ public:
             m_element->setNeedsFrameTreeBuild();
         }
     }
+
 protected:
     HTMLImageElement* m_element;
 };
 
-void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         if (value->length() && document()->doesParticipateInRendering()) {
             // TODO convert src into url string
@@ -83,8 +87,14 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
         } else {
             unloadImage();
         }
-    } else if (name == document()->window()->starFish()->staticStrings()->m_width
-        || name == document()->window()->starFish()->staticStrings()->m_height) {
+    } else if (name ==
+                   document()->window()->starFish()->staticStrings()->m_width ||
+               name ==
+                   document()
+                       ->window()
+                       ->starFish()
+                       ->staticStrings()
+                       ->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -95,8 +105,11 @@ void HTMLImageElement::didNodeAdopted()
 {
     HTMLElement::didNodeAdopted();
     if (document()->doesParticipateInRendering()) {
-        if (getAttribute(document()->window()->starFish()->staticStrings()->m_src)->length()) {
-            loadImage(getAttribute(document()->window()->starFish()->staticStrings()->m_src));
+        if (getAttribute(
+                document()->window()->starFish()->staticStrings()->m_src)
+                ->length()) {
+            loadImage(getAttribute(
+                document()->window()->starFish()->staticStrings()->m_src));
         }
     } else {
         unloadImage();
@@ -110,17 +123,21 @@ void HTMLImageElement::unloadImage()
         m_imageResource = nullptr;
     }
     m_imageData = nullptr;
-    if (frame())
+    if (frame()) {
         setNeedsLayout();
+    }
 }
 
 void HTMLImageElement::loadImage(String* src)
 {
     unloadImage();
-    m_imageResource = document()->resourceLoader()->fetchImage(URL::createURL(document()->documentURI()->baseURI(), src));
-    m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));
-    m_imageResource->addResourceClient(new ElementResourceClient(this, m_imageResource));
-    m_imageResource->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+    m_imageResource = document()->resourceLoader()->fetchImage(
+        URL::createURL(document()->documentURI()->baseURI(), src));
+    m_imageResource->addResourceClient(
+        new ImageDownloadClient(this, m_imageResource));
+    m_imageResource->addResourceClient(
+        new ElementResourceClient(this, m_imageResource));
+    m_imageResource->request(
+        Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 }
-
 }

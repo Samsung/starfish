@@ -23,14 +23,25 @@
 namespace StarFish {
 
 class DOMPointReadOnly : public ScriptWrappable {
-
 public:
     static DOMPointReadOnly* create(double x, double y, double z, double w);
 
-    double x() const { return m_x; }
-    double y() const { return m_y; }
-    double z() const { return m_z; }
-    double w() const { return m_w; }
+    double x() const
+    {
+        return m_x;
+    }
+    double y() const
+    {
+        return m_y;
+    }
+    double z() const
+    {
+        return m_z;
+    }
+    double w() const
+    {
+        return m_w;
+    }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -53,7 +64,6 @@ protected:
     double m_z;
     double m_w;
 };
-
 }
 
 #endif

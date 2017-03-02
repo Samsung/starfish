@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLCaptionElement : public HTMLElement {
 public:
-    HTMLCaptionElement(Document* document)
-        : HTMLElement(document)
+    HTMLCaptionElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,12 +36,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_captionTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_captionTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_captionTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_captionTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -54,7 +61,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

@@ -22,70 +22,71 @@
 namespace StarFish {
 
 #define FOR_EACH_HTML_ELEMENT_OP_DEFAULT(F) \
-        F(Html) \
-        F(Head) \
-        F(Script) \
-        F(Style) \
-        F(Link) \
-        F(Meta) \
-        F(Body) \
-        F(Div) \
-        F(Paragraph) \
-        F(Image) \
-        F(Span) \
-        F(BR) \
-        F(Object) \
-        F(Table) \
-        F(Caption) \
-        F(TBody) \
-        F(TD) \
-        F(TFoot) \
-        F(THead) \
-        F(TH) \
-        F(TR) \
-        F(Col) \
-        F(ColGroup) \
-        F(Unknown)
+    F(Html)                                 \
+    F(Head)                                 \
+    F(Script)                               \
+    F(Style)                                \
+    F(Link)                                 \
+    F(Meta)                                 \
+    F(Body)                                 \
+    F(Div)                                  \
+    F(Paragraph)                            \
+    F(Image)                                \
+    F(Span)                                 \
+    F(BR)                                   \
+    F(Object)                               \
+    F(Table)                                \
+    F(Caption)                              \
+    F(TBody)                                \
+    F(TD)                                   \
+    F(TFoot)                                \
+    F(THead)                                \
+    F(TH)                                   \
+    F(TR)                                   \
+    F(Col)                                  \
+    F(ColGroup)                             \
+    F(Unknown)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define FOR_EACH_HTML_ELEMENT_OP_MEDIA(F) \
-        F(Media) \
-        F(Video) \
-        F(Audio) \
-        F(Track) \
-        F(Source)
+    F(Media)                              \
+    F(Video)                              \
+    F(Audio)                              \
+    F(Track)                              \
+    F(Source)
 #else
 #define FOR_EACH_HTML_ELEMENT_OP_MEDIA(F)
 #endif
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
-#define FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F) \
-        F(Anchor)
+#define FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F) F(Anchor)
 #else
 #define FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F)
 #endif
 
-#define FOR_EACH_HTML_ELEMENT_OP(F) \
-        FOR_EACH_HTML_ELEMENT_OP_DEFAULT(F) \
-        FOR_EACH_HTML_ELEMENT_OP_MEDIA(F) \
-        FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F)
+#define FOR_EACH_HTML_ELEMENT_OP(F)     \
+    FOR_EACH_HTML_ELEMENT_OP_DEFAULT(F) \
+    FOR_EACH_HTML_ELEMENT_OP_MEDIA(F)   \
+    FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F)
 
 #define FORWRAD_DECLARE_NAME(kind) class HTML##kind##Element;
 
-#define IS_KIND_ELEMENT(kind) \
-    virtual bool isHTML##kind##Element() const { return false; } \
+#define IS_KIND_ELEMENT(kind)                            \
+    virtual bool isHTML##kind##Element() const           \
+    {                                                    \
+        return false;                                    \
+    }                                                    \
     virtual HTML##kind##Element* asHTML##kind##Element() \
-    { \
-        STARFISH_ASSERT(isHTML##kind##Element()); \
-        return (HTML##kind##Element*)this; \
+    {                                                    \
+        STARFISH_ASSERT(isHTML##kind##Element());        \
+        return (HTML##kind##Element*)this;               \
     }
 
 FOR_EACH_HTML_ELEMENT_OP(FORWRAD_DECLARE_NAME)
 
 class HTMLElement : public Element {
 public:
-    HTMLElement(Document* document)
-        : Element(document)
+    HTMLElement(Document* document) : Element(document)
     {
     }
 
@@ -105,7 +106,9 @@ public:
 
     FOR_EACH_HTML_ELEMENT_OP(IS_KIND_ELEMENT);
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
 
     bool hasDirAttribute()
     {
@@ -124,12 +127,8 @@ public:
         return (float)offsetRect().height() + .5f;
     }
 
-
-
 protected:
-
 };
-
 }
 
 #endif

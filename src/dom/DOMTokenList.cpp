@@ -35,10 +35,11 @@ void DOMTokenList::tokenize(GCVector<String*>* tokens, String* src)
     bool inParenthesis = false;
     for (size_t i = 0; i < length; i++) {
         if (data[i] == '"' || data[i] == '\'') {
-            if (inQuotationMarks)
+            if (inQuotationMarks) {
                 inQuotationMarks = false;
-            else
+            } else {
                 inQuotationMarks = true;
+            }
         }
         if (data[i] == '(') {
             inParenthesis = true;
@@ -49,13 +50,15 @@ void DOMTokenList::tokenize(GCVector<String*>* tokens, String* src)
             if (!String::isSpaceOrNewline(data[i])) {
                 isWhiteSpaceState = false;
                 str += data[i];
-            } else
+            } else {
                 continue;
+            }
         } else {
             if (String::isSpaceOrNewline(data[i]) && !inQuotationMarks) {
                 if (!inParenthesis) {
                     isWhiteSpaceState = true;
-                    tokens->push_back(String::fromUTF8(str.data(), str.length()));
+                    tokens->push_back(
+                        String::fromUTF8(str.data(), str.length()));
                     str.clear();
                 }
             } else {
@@ -93,7 +96,8 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
         }
     }
     if (combinedCount) {
-        newTokens.insert(newTokens.end(), tokens->end() - combinedCount, tokens->end());
+        newTokens.insert(newTokens.end(), tokens->end() - combinedCount,
+                         tokens->end());
     }
     if (newTokens.size() != tokens->size()) {
         tokens->clear();
@@ -135,7 +139,8 @@ bool DOMTokenList::contains(String* token)
     return false;
 }
 
-String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens, String* token)
+String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens,
+                                     String* token)
 {
     bool matched = false;
     for (unsigned j = 0; j < tokens->size(); j++) {
@@ -146,12 +151,14 @@ String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens, Str
     }
     if (!matched) {
         if (src->length() > 0) {
-            if (src->charAt(src->length() - 1) == ' ')
+            if (src->charAt(src->length() - 1) == ' ') {
                 return src->concat(token);
-            else
+            } else {
                 return src->concat(String::spaceString)->concat(token);
-        } else
+            }
+        } else {
             return src->concat(token);
+        }
     }
     return src;
 }
@@ -168,7 +175,8 @@ void DOMTokenList::add(GCVector<String*>* tokensToAdd)
     m_element->setAttribute(m_localName, str);
 }
 
-int DOMTokenList::checkMatchedTokens(bool* matchFlags, GCVector<String*>* tokens, String* token)
+int DOMTokenList::checkMatchedTokens(bool* matchFlags,
+                                     GCVector<String*>* tokens, String* token)
 {
     int count = 0;
     for (unsigned i = 0; i < tokens->size(); i++) {
@@ -206,7 +214,7 @@ void DOMTokenList::remove(String* token)
         }
         m_element->setAttribute(m_localName, dst);
     }
-    delete [] matchFlags;
+    delete[] matchFlags;
 }
 
 void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
@@ -219,7 +227,8 @@ void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
     int matchCount = 0;
     for (unsigned i = 0; i < tokensToRemove->size(); i++) {
         validateToken((*tokensToRemove)[i]);
-        matchCount += checkMatchedTokens(matchFlags, &tokens, (*tokensToRemove)[i]);
+        matchCount +=
+            checkMatchedTokens(matchFlags, &tokens, (*tokensToRemove)[i]);
     }
     if (matchCount > 0) {
         bool isEmpty = true;
@@ -235,7 +244,7 @@ void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
         }
         m_element->setAttribute(m_localName, dst);
     }
-    delete [] matchFlags;
+    delete[] matchFlags;
 }
 
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
@@ -255,13 +264,14 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
         if (matchCount == 0) {
             needAdd = true;
         }
-        delete [] matchFlags;
+        delete[] matchFlags;
     }
     if (needAdd) {
         str = addSingleToken(str, &tokens, token);
         m_element->setAttribute(m_localName, str);
-    } else
+    } else {
         remove(token);
+    }
     return needAdd;
 }
 
@@ -274,13 +284,14 @@ String* DOMTokenList::toString()
 void DOMTokenList::validateToken(String* token)
 {
     std::string stdToken = token->utf8Data();
-    if (stdToken.length() == 0)
-        throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::SYNTAX_ERR);
-    auto f = [] (char c)
-    {
-        return std::isspace(static_cast<unsigned char>(c));
-    };
-    if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end())
-        throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR);
+    if (stdToken.length() == 0) {
+        throw new DOMException(m_element->document()->scriptBindingInstance(),
+                               DOMException::Code::SYNTAX_ERR);
+    }
+    auto f = [](char c) { return std::isspace(static_cast<unsigned char>(c)); };
+    if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
+        throw new DOMException(m_element->document()->scriptBindingInstance(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
+    }
 }
 }

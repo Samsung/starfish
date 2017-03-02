@@ -24,20 +24,25 @@ namespace StarFish {
 
 unsigned long HTMLVideoElement::videoWidth()
 {
-    return m_mediaPlayer ? m_mediaPlayer->videoWidth() : STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+    return m_mediaPlayer ? m_mediaPlayer->videoWidth()
+                         : STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
 }
 
 unsigned long HTMLVideoElement::videoHeight()
 {
-    return m_mediaPlayer ? m_mediaPlayer->videoHeight() : STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+    return m_mediaPlayer ? m_mediaPlayer->videoHeight()
+                         : STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
 }
 
-void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
 {
-    HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated,
+                                          attributeRemoved);
 
-    if (name == document()->window()->starFish()->staticStrings()->m_width
-        || name == document()->window()->starFish()->staticStrings()->m_height) {
+    if (name == document()->window()->starFish()->staticStrings()->m_width ||
+        name == document()->window()->starFish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -54,7 +59,6 @@ void HTMLVideoElement::setPoster(String* poster)
 {
     // TODO
 }
-
 }
 
 #endif

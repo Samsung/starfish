@@ -28,10 +28,10 @@ class CSSStyleDeclaration;
 class RareElementMembers : public RareNodeMembers {
 public:
     RareElementMembers()
-        : RareNodeMembers()
-        , m_namedNodeMap(nullptr)
-        , m_attrList(nullptr)
-        , m_pseudoElementData(nullptr)
+        : RareNodeMembers(),
+          m_namedNodeMap(nullptr),
+          m_attrList(nullptr),
+          m_pseudoElementData(nullptr)
     {
     }
     bool isRareElementMembers()
@@ -46,22 +46,22 @@ public:
 class Element : public Node {
 public:
     Element(Document* document, ScriptBindingInstance* instance)
-        : Node(document, instance)
-        , m_inlineStyle(nullptr)
-        , m_focused(false)
-        , m_tabIndex(0)
-        , m_tabIndexWasSetExplicitly(false)
+        : Node(document, instance),
+          m_inlineStyle(nullptr),
+          m_focused(false),
+          m_tabIndex(0),
+          m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
     }
 
     Element(Document* document)
-        : Node(document)
-        , m_inlineStyle(nullptr)
-        , m_focused(false)
-        , m_tabIndex(0)
-        , m_tabIndexWasSetExplicitly(false)
+        : Node(document),
+          m_inlineStyle(nullptr),
+          m_focused(false),
+          m_tabIndex(0),
+          m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
@@ -85,12 +85,15 @@ public:
 
     virtual String* textContent()
     {
-        if ((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
+        if ((nodeType() == TEXT_NODE) ||
+            (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
             return textContent();
         }
         String* str = String::createASCIIString("");
-        for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
-            if (child->nodeType() == TEXT_NODE || child->nodeType() == ELEMENT_NODE) {
+        for (Node* child = firstChild(); child != nullptr;
+             child = child->nextSibling()) {
+            if (child->nodeType() == TEXT_NODE ||
+                child->nodeType() == ELEMENT_NODE) {
                 str = str->concat(child->textContent());
             }
         }
@@ -138,8 +141,9 @@ public:
     String* getAttribute(QualifiedName name)
     {
         size_t siz = hasAttribute(name);
-        if (siz == SIZE_MAX)
+        if (siz == SIZE_MAX) {
             return String::emptyString;
+        }
         return getAttribute(siz);
     }
     String* getAttribute(size_t pos);
@@ -152,7 +156,9 @@ public:
         return m_attributes[hasAttribute(name)];
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
@@ -224,8 +230,9 @@ public:
     bool hasClassName(String* className)
     {
         for (unsigned i = 0; i < m_classNames.size(); i++) {
-            if (className->equals(m_classNames[i]))
+            if (className->equals(m_classNames[i])) {
                 return true;
+            }
         }
         return false;
     }
@@ -238,7 +245,8 @@ public:
     CSSStyleDeclaration* inlineStyle()
     {
         if (m_inlineStyle == nullptr) {
-            m_inlineStyle = new CSSStyleDeclaration(document(), this, CSSStyleDeclaration::InlineStyle);
+            m_inlineStyle = new CSSStyleDeclaration(
+                document(), this, CSSStyleDeclaration::InlineStyle);
         }
         return m_inlineStyle;
     }
@@ -250,24 +258,49 @@ public:
     }
 
     // FIXME: Use NodeState instead of this flag.
-    bool focused() const { return m_focused; }
-    void setFocused(bool flag) { m_focused = flag; }
+    bool focused() const
+    {
+        return m_focused;
+    }
+    void setFocused(bool flag)
+    {
+        m_focused = flag;
+    }
     virtual void setFocus(bool flag);
 
     virtual bool supportsFocus();
     virtual bool isFocusable();
 
-    virtual int tabIndex() { return m_tabIndex; }
-    void setTabIndex(int index) { m_tabIndex = index; }
-    bool tabIndexSetExplicitly() const { return m_tabIndexWasSetExplicitly; };
-    void setTabIndexExplicitly(int index) { m_tabIndex = index; m_tabIndexWasSetExplicitly = true; }
+    virtual int tabIndex()
+    {
+        return m_tabIndex;
+    }
+    void setTabIndex(int index)
+    {
+        m_tabIndex = index;
+    }
+    bool tabIndexSetExplicitly() const
+    {
+        return m_tabIndexWasSetExplicitly;
+    };
+    void setTabIndexExplicitly(int index)
+    {
+        m_tabIndex = index;
+        m_tabIndexWasSetExplicitly = true;
+    }
 
     /* Element-level focus APIs */
     virtual void focus();
     virtual void blur();
 
-    inline bool hasClass() { return m_classNames.size() > 0; }
-    inline bool hasId() { return !m_id->equals(String::emptyString); }
+    inline bool hasClass()
+    {
+        return m_classNames.size() > 0;
+    }
+    inline bool hasId()
+    {
+        return !m_id->equals(String::emptyString);
+    }
 
     String* getLaunguage();
 
@@ -279,7 +312,10 @@ protected:
     void getClientQuads(std::vector<DOMQuad>& quads);
 
     // DO NOT MODIFY ATTRIBUTES.
-    const GCVector<Attribute>* getAttributes() { return (GCVector<Attribute>*)&m_attributes; }
+    const GCVector<Attribute>* getAttributes()
+    {
+        return (GCVector<Attribute>*)&m_attributes;
+    }
     virtual Node* clone();
 
     CSSStyleDeclaration* m_inlineStyle;
@@ -299,8 +335,7 @@ private:
 class NamedElement : public Element {
 public:
     NamedElement(Document* document, const QualifiedName& name)
-        : Element(document)
-        , m_name(name)
+        : Element(document), m_name(name)
     {
     }
 
@@ -322,7 +357,6 @@ public:
 protected:
     QualifiedName m_name;
 };
-
 }
 
 #endif

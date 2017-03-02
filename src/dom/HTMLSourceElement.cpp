@@ -25,14 +25,17 @@ namespace StarFish {
 
 String* HTMLSourceElement::localName()
 {
-    return document()->window()->starFish()->staticStrings()->m_sourceTagName.localName();
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_sourceTagName.localName();
 }
 
 QualifiedName HTMLSourceElement::name()
 {
     return document()->window()->starFish()->staticStrings()->m_sourceTagName;
 }
-
 }
 
 #endif

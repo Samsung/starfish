@@ -37,16 +37,21 @@ Element* HTMLCollection::namedItem(String* key)
     if (key->length()) {
         for (unsigned i = 0; i < m_nodeListImpl.length(); i++) {
             Element* elem = m_nodeListImpl.item(i)->asElement();
-            if (elem->asElement()->asHTMLElement()->id()->equals(key))
+            if (elem->asElement()->asHTMLElement()->id()->equals(key)) {
                 return elem;
-            size_t idx = elem->hasAttribute(elem->document()->window()->starFish()->staticStrings()->m_name);
+            }
+            size_t idx = elem->hasAttribute(elem->document()
+                                                ->window()
+                                                ->starFish()
+                                                ->staticStrings()
+                                                ->m_name);
             if (idx != SIZE_MAX) {
-                if (elem->getAttribute(idx)->equals(key))
+                if (elem->getAttribute(idx)->equals(key)) {
                     return elem;
+                }
             }
         }
     }
     return nullptr;
 }
-
 }

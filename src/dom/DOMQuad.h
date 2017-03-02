@@ -28,9 +28,9 @@ class DOMPoint;
 class DOMRectReadOnly;
 
 class DOMQuad : public ScriptWrappable {
-
 public:
-    static DOMQuad* create(const DOMPointInit& , const DOMPointInit& , const DOMPointInit&, const DOMPointInit&);
+    static DOMQuad* create(const DOMPointInit&, const DOMPointInit&,
+                           const DOMPointInit&, const DOMPointInit&);
     static DOMQuad* create(const DOMRectInit&);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -43,21 +43,33 @@ public:
         return ScriptWrappable::Type::DOMQuadObject;
     }
 
-    DOMPoint* p1() const { return m_p1; }
-    DOMPoint* p2() const { return m_p2; }
-    DOMPoint* p3() const { return m_p3; }
-    DOMPoint* p4() const { return m_p4; }
+    DOMPoint* p1() const
+    {
+        return m_p1;
+    }
+    DOMPoint* p2() const
+    {
+        return m_p2;
+    }
+    DOMPoint* p3() const
+    {
+        return m_p3;
+    }
+    DOMPoint* p4() const
+    {
+        return m_p4;
+    }
     DOMRectReadOnly* bounds() const;
 
 protected:
-    DOMQuad(const DOMPointInit&, const DOMPointInit& , const DOMPointInit&, const DOMPointInit&);
+    DOMQuad(const DOMPointInit&, const DOMPointInit&, const DOMPointInit&,
+            const DOMPointInit&);
     DOMPoint* m_p1;
     DOMPoint* m_p2;
     DOMPoint* m_p3;
     DOMPoint* m_p4;
     mutable DOMRectReadOnly* m_bounds; // allocated lazily
 };
-
 }
 
 #endif

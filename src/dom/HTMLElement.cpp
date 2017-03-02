@@ -21,12 +21,14 @@
 
 #include "layout/FrameBox.h"
 
-
 namespace StarFish {
 
-void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
+                                      String* value, bool attributeCreated,
+                                      bool attributeRemoved)
 {
-    Element::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    Element::didAttributeChanged(name, old, value, attributeCreated,
+                                 attributeRemoved);
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_onclick) {
         setAttributeEventListener(ss->m_click, value, this);
@@ -39,18 +41,21 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     } else if (name == ss->m_onerror) {
         setAttributeEventListener(ss->m_error, value, this);
     } else if (name == ss->m_dir) {
-        if (attributeCreated)
+        if (attributeCreated) {
             m_hasDirAttribute = true;
-        if (attributeRemoved)
+        }
+        if (attributeRemoved) {
             m_hasDirAttribute = false;
+        }
         setNeedsStyleRecalc();
         String* orgValue = value;
         value = value->toLower();
         if (value->equals("")) {
             return;
         } else if (value->equals("ltr") || value->equals("rtl")) {
-            if (!orgValue->equals(value))
+            if (!orgValue->equals(value)) {
                 setAttribute(ss->m_dir, value);
+            }
         } else {
             setAttribute(ss->m_dir, String::emptyString);
         }
@@ -69,8 +74,9 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
 
 int HTMLElement::tabIndex()
 {
-    if (supportsFocus())
+    if (supportsFocus()) {
         return Element::tabIndex();
+    }
     return -1;
 }
 
@@ -86,11 +92,12 @@ LayoutRect HTMLElement::offsetRect()
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();
             return LayoutRect(box->marginLeft(), box->marginTop(),
-                box->contentWidth() + box->paddingWidth() + box->borderWidth(),
-                box->contentHeight() + box->paddingHeight() + box->borderHeight());
+                              box->contentWidth() + box->paddingWidth() +
+                                  box->borderWidth(),
+                              box->contentHeight() + box->paddingHeight() +
+                                  box->borderHeight());
         }
     }
     return LayoutRect(0, 0, 0, 0);
 }
-
 }

@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLTrackElement__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishHTMLTrackElement__)
 #define __StarFishHTMLTrackElement__
 
 #include "dom/HTMLElement.h"
@@ -27,13 +28,9 @@ class TextTrack;
 class HTMLTrackElement : public HTMLElement {
     friend class VTTFileDownloadClient;
     friend class VttResourceReader;
+
 public:
-    enum ReadyState {
-        NONE,
-        LOADING,
-        LOADED,
-        ERROR
-    };
+    enum ReadyState { NONE, LOADING, LOADED, ERROR };
 
     HTMLTrackElement(Document* document);
 
@@ -44,12 +41,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_trackTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_trackTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_trackTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_trackTagName;
     }
 
     virtual bool isHTMLTrackElement() const
@@ -57,7 +62,9 @@ public:
         return true;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
 
@@ -71,16 +78,28 @@ public:
     String* srclang();
     String* label();
     bool defaultAttr();
-    ReadyState readyState() { return m_readyState; }
-    TextTrack* track() { return m_track; }
+    ReadyState readyState()
+    {
+        return m_readyState;
+    }
+    TextTrack* track()
+    {
+        return m_track;
+    }
 
     void setKind(String* kind);
     void setSrc(String* src);
     void setSrclang(String* srclang);
     void setLabel(String* label); // not public
     void setDefaultAttr(bool value);
-    bool isReadyState(ReadyState state) { return m_readyState == state; } // not public
-    void setReadyState(ReadyState readyState) { m_readyState = readyState;} // not public
+    bool isReadyState(ReadyState state)
+    {
+        return m_readyState == state;
+    } // not public
+    void setReadyState(ReadyState readyState)
+    {
+        m_readyState = readyState;
+    } // not public
 
 protected:
     void generateCues();

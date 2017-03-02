@@ -22,12 +22,15 @@ namespace StarFish {
 
 String* CDataSection::nodeName()
 {
-    return document()->window()->starFish()->staticStrings()->m_cDataSectionLocalName;
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_cDataSectionLocalName;
 }
 
 String* CDataSection::localName()
 {
     return String::emptyString;
 }
-
 }

@@ -27,7 +27,10 @@ class DOMRect;
 
 class DOMRectList : public ScriptWrappable {
 public:
-    static DOMRectList* create() { return new DOMRectList;}
+    static DOMRectList* create()
+    {
+        return new DOMRectList;
+    }
     static DOMRectList* create(const std::vector<DOMQuad>& quads)
     {
         return new DOMRectList(quads);
@@ -51,7 +54,6 @@ private:
 
     GCVector<DOMRect*> m_list;
 };
-
 }
 
 #endif

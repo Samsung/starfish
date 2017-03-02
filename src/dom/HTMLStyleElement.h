@@ -24,9 +24,7 @@ namespace StarFish {
 class HTMLStyleElement : public HTMLElement {
 public:
     HTMLStyleElement(Document* document)
-        : HTMLElement(document)
-        , m_generatedSheet(nullptr)
-        , m_loaded(false)
+        : HTMLElement(document), m_generatedSheet(nullptr), m_loaded(false)
     {
     }
 
@@ -39,12 +37,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_styleTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_styleTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_styleTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_styleTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -62,8 +68,9 @@ public:
     virtual void finishParsing()
     {
         HTMLElement::finishParsing();
-        if (isInDocumentScopeAndDocumentParticipateInRendering())
+        if (isInDocumentScopeAndDocumentParticipateInRendering()) {
             generateStyleSheet();
+        }
     }
 
     void generateStyleSheet();
@@ -90,7 +97,6 @@ protected:
     CSSStyleSheet* m_generatedSheet;
     bool m_loaded;
 };
-
 }
 
 #endif

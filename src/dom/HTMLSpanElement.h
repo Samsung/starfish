@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLSpanElement : public HTMLElement {
 public:
-    HTMLSpanElement(Document* document)
-        : HTMLElement(document)
+    HTMLSpanElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_spanTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_spanTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -54,7 +57,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLSourceElement__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
+    !defined(__StarFishHTMLSourceElement__)
 #define __StarFishHTMLSourceElement__
 
 #include "dom/HTMLElement.h"
@@ -23,8 +24,7 @@ namespace StarFish {
 
 class HTMLSourceElement : public HTMLElement {
 public:
-    HTMLSourceElement(Document* document)
-        : HTMLElement(document)
+    HTMLSourceElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -46,32 +46,37 @@ public:
 
     // https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element
     // Attributes
-    // NOTE : Current version of HTMLSourceElement considers only media element related case.
+    // NOTE : Current version of HTMLSourceElement considers only media element
+    // related case.
     //        (picture element related case has not been considered.
-    //         Hence attribute "media", "srcset", "sizes" are not currently supported)
+    //         Hence attribute "media", "srcset", "sizes" are not currently
+    //         supported)
     String* src()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_src);
     }
 
     String* typeAttr()
     {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_type);
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_type);
     }
 
     void setSrc(String* src)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
+                     src);
     }
 
     void setTypeAttr(String* type)
     {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_type, type);
+        setAttribute(document()->window()->starFish()->staticStrings()->m_type,
+                     type);
     }
     // TODO
 protected:
 };
-
 }
 
 #endif

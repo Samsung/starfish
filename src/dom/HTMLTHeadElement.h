@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLTHeadElement : public HTMLElement {
 public:
-    HTMLTHeadElement(Document* document)
-        : HTMLElement(document)
+    HTMLTHeadElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,12 +36,20 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_theadTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_theadTagName.localName();
     }
 
     virtual QualifiedName name()
     {
-        return document()->window()->starFish()->staticStrings()->m_theadTagName;
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_theadTagName;
     }
 
     /* Other methods (not in DOM API) */
@@ -54,7 +61,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

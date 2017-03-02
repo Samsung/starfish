@@ -27,7 +27,9 @@
 
 namespace StarFish {
 
-DocumentType* DOMImplementation::createDocumentType(String* qualifiedName, String* publicId, String* systemId)
+DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
+                                                    String* publicId,
+                                                    String* systemId)
 {
     return new DocumentType(nullptr, qualifiedName, publicId, systemId);
 }
@@ -48,7 +50,6 @@ Document* DOMImplementation::createHTMLDocument(String* title)
     html->appendChild(new HTMLBodyElement(doc));
     return doc;
 }
-
 }
 
 #endif

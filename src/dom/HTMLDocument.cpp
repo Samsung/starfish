@@ -50,9 +50,12 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLObjectElement(document);
     } else if (name == str->m_imgTagName.localNameAtomic()) {
         return new HTMLImageElement(document);
-    } else if (name == str->m_h1TagName.localNameAtomic() || name == str->m_h2TagName.localNameAtomic()
-        || name == str->m_h3TagName.localNameAtomic() || name == str->m_h4TagName.localNameAtomic()
-        || name == str->m_h5TagName.localNameAtomic() || name == str->m_h6TagName.localNameAtomic()) {
+    } else if (name == str->m_h1TagName.localNameAtomic() ||
+               name == str->m_h2TagName.localNameAtomic() ||
+               name == str->m_h3TagName.localNameAtomic() ||
+               name == str->m_h4TagName.localNameAtomic() ||
+               name == str->m_h5TagName.localNameAtomic() ||
+               name == str->m_h6TagName.localNameAtomic()) {
         return new HTMLHeadingElement(document, name);
     } else if (name == str->m_liTagName.localNameAtomic()) {
         return new HTMLLIElement(document, name);
@@ -81,7 +84,6 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     } else if (name == str->m_tfootTagName.localNameAtomic()) {
         return new HTMLTFootElement(document);
     }
-
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
         return new HTMLVideoElement(document);
@@ -99,14 +101,21 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     }
 #endif
 
-    STARFISH_LOG_INFO("got unknown html element - %s\n", name.string()->utf8Data());
+    STARFISH_LOG_INFO("got unknown html element - %s\n",
+                      name.string()->utf8Data());
     return new HTMLUnknownElement(document, name);
 }
 
-Element* HTMLDocument::createElement(AtomicString localName, bool shouldCheckName)
+Element* HTMLDocument::createElement(AtomicString localName,
+                                     bool shouldCheckName)
 {
-    if (shouldCheckName && !QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
-        throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+    if (shouldCheckName &&
+        !QualifiedName::checkNameProductionRule(localName.string(),
+                                                localName.string()->length())) {
+        throw new DOMException(document()->scriptBindingInstance(),
+                               DOMException::Code::INVALID_CHARACTER_ERR,
+                               nullptr);
+    }
 
 #ifdef STARFISH_TC_COVERAGE
     if (localName.localName()->equals("style")) {
@@ -119,24 +128,31 @@ Element* HTMLDocument::createElement(AtomicString localName, bool shouldCheckNam
     return HTMLDocument::createHTMLElement(this, localName);
 }
 
-static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(Document& document)
+static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(
+    Document& document)
 {
-    // This is the list of attributes in HTML 4.01 with values marked as "[CI]" or case-insensitive
-    GCUnorderedMap<String*, size_t>* attrSet = new GCUnorderedMap<String*, size_t>();
+    // This is the list of attributes in HTML 4.01 with values marked as "[CI]"
+    // or case-insensitive
+    GCUnorderedMap<String*, size_t>* attrSet =
+        new GCUnorderedMap<String*, size_t>();
     StaticStrings* str = document.window()->starFish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
         /* &accept_charsetAttr, &acceptAttr, &alignAttr, &alinkAttr, &axisAttr,
         &bgcolorAttr, */
-        &str->m_charset, /* &checkedAttr, &clearAttr, &codetypeAttr, */ &str->m_color, /* &compactAttr,
-        &declareAttr, &deferAttr, */ &str->m_dir, /* &directionAttr, */ &str->m_disabled,
+        &str->m_charset,
+        /* &checkedAttr, &clearAttr, &codetypeAttr, */ &str->m_color,
+        /* &compactAttr,
+        &declareAttr, &deferAttr, */ &str->m_dir, /* &directionAttr, */
+        &str->m_disabled,
         /* &enctypeAttr, */
         &str->m_face, /* &frameAttr,
         &hreflangAttr, &http_equivAttr, */
         &str->m_lang, /* &languageAttr, &linkAttr,
         &mediaAttr, &methodAttr, &multipleAttr,
         &nohrefAttr, &noresizeAttr, &noshadeAttr, &nowrapAttr,
-        &readonlyAttr, */ &str->m_rel, /* &revAttr, &rulesAttr,
+        &readonlyAttr, */ &str->m_rel,
+        /* &revAttr, &rulesAttr,
         &scopeAttr, &scrollingAttr, &selectedAttr, &shapeAttr,
         &targetAttr, &textAttr, */ &str->m_type,
         /* &valignAttr, &valuetypeAttr, &vlinkAttr */
@@ -149,10 +165,12 @@ static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(D
     return attrSet;
 }
 
-bool HTMLDocument::isCaseSensitiveAttribute(Document& document, const QualifiedName& attributeName)
+bool HTMLDocument::isCaseSensitiveAttribute(Document& document,
+                                            const QualifiedName& attributeName)
 {
-    static GCUnorderedMap<String*, size_t>* caseInsensitiveAttrSet = createHtmlCaseInsensitiveAttributesSet(document);
-    return caseInsensitiveAttrSet->find(attributeName.localName()) == caseInsensitiveAttrSet->end();
+    static GCUnorderedMap<String*, size_t>* caseInsensitiveAttrSet =
+        createHtmlCaseInsensitiveAttributesSet(document);
+    return caseInsensitiveAttrSet->find(attributeName.localName()) ==
+           caseInsensitiveAttrSet->end();
 }
-
 }

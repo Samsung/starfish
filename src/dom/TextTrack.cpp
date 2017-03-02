@@ -28,7 +28,11 @@ void TextTrack::dispatchCueChangeEvent()
 {
     String* eventType = String::emptyString;
     if (m_trackElement) {
-        eventType = m_trackElement->document()->window()->starFish()->staticStrings()->m_cuechange.localName();
+        eventType = m_trackElement->document()
+                        ->window()
+                        ->starFish()
+                        ->staticStrings()
+                        ->m_cuechange.localName();
     } else {
         eventType = String::fromUTF8("cuechange");
     }
@@ -56,8 +60,9 @@ void TextTrack::setMode(String* mode)
 
 String* TextTrack::id()
 {
-    if (m_trackElement)
+    if (m_trackElement) {
         return m_trackElement->id();
+    }
     return String::emptyString;
 }
 
@@ -68,11 +73,13 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
     // 1) m_cues has been sorted in order of start_time.
     // 2) Every cue's end_time never exceed next cue's end_time. -> FIFO
 
-    if (m_cues->length() < 1)
+    if (m_cues->length() < 1) {
         return activeCues();
+    }
 
-    if (m_cachedTime != TEXTTRACK_INVALID_TIMEVALUE && m_cachedTime == time)
+    if (m_cachedTime != TEXTTRACK_INVALID_TIMEVALUE && m_cachedTime == time) {
         return activeCues();
+    }
 
     if (m_cachedTime > time || m_cachedTime == TEXTTRACK_INVALID_TIMEVALUE) {
         m_cachedIdx = 0;
@@ -85,10 +92,11 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
     unsigned long activesSize = m_activeCues->length();
     for (endIdx = 0; endIdx < activesSize; endIdx++) {
         TextTrackCue* cue = m_activeCues->at(endIdx);
-        if (cue->isActiveWhen(time))
+        if (cue->isActiveWhen(time)) {
             break;
-        else
+        } else {
             cue->dispatchExitEvent();
+        }
     }
     endIdx--;
     if (startIdx <= endIdx) {
@@ -108,12 +116,12 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
         }
     }
 
-    if (cueListChanged)
+    if (cueListChanged) {
         dispatchCueChangeEvent();
+    }
 
     return activeCues();
 }
-
 }
 
 #endif

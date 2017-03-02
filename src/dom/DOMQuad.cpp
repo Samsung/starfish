@@ -35,46 +35,52 @@ static inline double max4(double a, double b, double c, double d)
 static inline double saturateInf(double value)
 {
     if (std::isinf(value)) {
-        return std::signbit(value) ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
+        return std::signbit(value) ? std::numeric_limits<int>::min()
+                                   : std::numeric_limits<int>::max();
     }
     return value;
 }
 
-DOMQuad* DOMQuad::create(const DOMPointInit& p1, const DOMPointInit& p2, const DOMPointInit& p3, const DOMPointInit& p4)
+DOMQuad* DOMQuad::create(const DOMPointInit& p1, const DOMPointInit& p2,
+                         const DOMPointInit& p3, const DOMPointInit& p4)
 {
     return new DOMQuad(p1, p2, p3, p4);
 }
 
 DOMQuad* DOMQuad::create(const DOMRectInit& rect)
 {
-    return new DOMQuad
-        (DOMPointInit(rect.x, rect.y)
-        , DOMPointInit(rect.x + rect.width, rect.y)
-        , DOMPointInit(rect.x + rect.width, rect.y + rect.height)
-        , DOMPointInit(rect.x, rect.y + rect.height));
+    return new DOMQuad(DOMPointInit(rect.x, rect.y),
+                       DOMPointInit(rect.x + rect.width, rect.y),
+                       DOMPointInit(rect.x + rect.width, rect.y + rect.height),
+                       DOMPointInit(rect.x, rect.y + rect.height));
 }
 
 DOMRectReadOnly* DOMQuad::bounds() const
 {
     if (m_bounds == nullptr) {
-        double left = saturateInf(min4(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x()));
-        double top = saturateInf(min4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
-        double right = saturateInf(max4(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x()));
-        double bottom = saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
+        double left =
+            saturateInf(min4(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x()));
+        double top =
+            saturateInf(min4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
+        double right =
+            saturateInf(max4(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x()));
+        double bottom =
+            saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
 
-        m_bounds = DOMRectReadOnly::create(left, top, right - left, bottom - top);
+        m_bounds =
+            DOMRectReadOnly::create(left, top, right - left, bottom - top);
     }
     return m_bounds;
 }
 
-DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2, const DOMPointInit& p3, const DOMPointInit& p4)
-    : ScriptWrappable(this)
-    , m_p1(DOMPoint::create(p1))
-    , m_p2(DOMPoint::create(p2))
-    , m_p3(DOMPoint::create(p3))
-    , m_p4(DOMPoint::create(p4))
+DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2,
+                 const DOMPointInit& p3, const DOMPointInit& p4)
+    : ScriptWrappable(this),
+      m_p1(DOMPoint::create(p1)),
+      m_p2(DOMPoint::create(p2)),
+      m_p3(DOMPoint::create(p3)),
+      m_p4(DOMPoint::create(p4))
 {
     m_bounds = nullptr;
 }
-
 }

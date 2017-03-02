@@ -57,7 +57,8 @@ public:
         URI_ERR = 106,
     };
 
-    DOMException(ScriptBindingInstance* instance, Code code, const char* message = nullptr);
+    DOMException(ScriptBindingInstance* instance, Code code,
+                 const char* message = nullptr);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -69,9 +70,18 @@ public:
         return ScriptWrappable::Type::DOMExceptionObject;
     }
 
-    String* message() { return m_message; }
-    const char* name() { return s_names[m_code]; }
-    int code() { return m_code; }
+    String* message()
+    {
+        return m_message;
+    }
+    const char* name()
+    {
+        return s_names[m_code];
+    }
+    int code()
+    {
+        return m_code;
+    }
 
 private:
     ScriptBindingInstance* m_instance;
@@ -80,7 +90,6 @@ private:
     static const char* s_names[];
     static const char* s_descriptions[];
 };
-
 }
 
 #endif

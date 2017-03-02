@@ -28,13 +28,13 @@ namespace StarFish {
 
 class VttResourceReader : public libwebvtt::Reader {
 public:
-    VttResourceReader()
-        : m_resource(nullptr)
-        , m_pointer(-1)
+    VttResourceReader() : m_resource(nullptr), m_pointer(-1)
     {
     }
 
-    virtual ~VttResourceReader() { }
+    virtual ~VttResourceReader()
+    {
+    }
 
     void setResource(Resource* resource)
     {
@@ -49,7 +49,8 @@ public:
     // ERROR:negative / SUCCESS:0 / EOS:positive
     virtual int GetChar(char* c)
     {
-        if (c == NULL || m_resource == nullptr || m_resource->networkRequest() == nullptr) {
+        if (c == NULL || m_resource == nullptr ||
+            m_resource->networkRequest() == nullptr) {
             return -1;
         }
 
@@ -74,8 +75,7 @@ private:
 class VTTFileDownloadClient : public ResourceClient {
 public:
     VTTFileDownloadClient(HTMLTrackElement* element, Resource* res)
-        : ResourceClient(res)
-        , m_element(element)
+        : ResourceClient(res), m_element(element)
     {
         STARFISH_ASSERT(m_element);
         m_element->setReadyState(HTMLTrackElement::LOADING);
@@ -107,30 +107,36 @@ protected:
 };
 
 HTMLTrackElement::HTMLTrackElement(Document* document)
-    : HTMLElement(document)
-    , m_track(new TextTrack())
-    , m_VTTFileResource(nullptr)
-    , m_hasPendingRequest(false)
-    , m_live(false)
-    , m_readyState(HTMLTrackElement::NONE)
+    : HTMLElement(document),
+      m_track(new TextTrack()),
+      m_VTTFileResource(nullptr),
+      m_hasPendingRequest(false),
+      m_live(false),
+      m_readyState(HTMLTrackElement::NONE)
 {
     m_track->setTrackElement(this);
 }
 
-void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_kind) {
         m_track->setKind(value);
-    } else if (name == document()->window()->starFish()->staticStrings()->m_src) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_src) {
         // TODO : FIX HERE
         m_track->clear();
         if (!value->equals(String::emptyString)) {
             load(value);
         }
-    } else if (name == document()->window()->starFish()->staticStrings()->m_srclang) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_srclang) {
         m_track->setLanguage(value);
-    } else if (name == document()->window()->starFish()->staticStrings()->m_label) {
+    } else if (name ==
+               document()->window()->starFish()->staticStrings()->m_label) {
         m_track->setLabel(value);
     }
 }
@@ -185,8 +191,10 @@ void HTMLTrackElement::load(String* srcURL)
     clearResource();
 
     m_VTTFileResource = document()->resourceLoader()->fetch(url);
-    m_VTTFileResource->addResourceClient(new VTTFileDownloadClient(this, m_VTTFileResource));
-    m_VTTFileResource->addResourceClient(new ElementResourceClient(this, m_VTTFileResource));
+    m_VTTFileResource->addResourceClient(
+        new VTTFileDownloadClient(this, m_VTTFileResource));
+    m_VTTFileResource->addResourceClient(
+        new ElementResourceClient(this, m_VTTFileResource));
     m_VTTFileResource->request();
 
     m_hasPendingRequest = false;
@@ -211,8 +219,10 @@ void HTMLTrackElement::generateCues()
     for (libwebvtt::Cue cue;;) {
         const int e = parser.Parse(&cue);
 
-        if (e < 0 || e > 0) // error or EOF
+        // error or EOF
+        if (e < 0 || e > 0) {
             return;
+        }
 
         String* id = String::fromUTF8(cue.identifier.c_str());
         double startTime = (cue.start_time.presentation()) / 1000.f;
@@ -225,7 +235,8 @@ void HTMLTrackElement::generateCues()
         iter_t i = cue.payload.begin();
         const iter_t j = cue.payload.end();
         while (i != j) {
-            payload = payload->concat(String::fromUTF8((*i++).c_str()))->concat(newline);
+            payload = payload->concat(String::fromUTF8((*i++).c_str()))
+                          ->concat(newline);
         }
 
         VTTCue* newcue = new VTTCue(startTime, endTime, payload);
@@ -243,7 +254,8 @@ String* HTMLTrackElement::kind()
 
 String* HTMLTrackElement::src()
 {
-    return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_src);
 }
 
 String* HTMLTrackElement::srclang()
@@ -258,15 +270,18 @@ String* HTMLTrackElement::label()
 
 bool HTMLTrackElement::defaultAttr()
 {
-    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_default);
-    if (siz == SIZE_MAX)
+    size_t siz = hasAttribute(
+        document()->window()->starFish()->staticStrings()->m_default);
+    if (siz == SIZE_MAX) {
         return false;
+    }
     return true;
 }
 
 void HTMLTrackElement::setKind(String* kind)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_kind, kind);
+    setAttribute(document()->window()->starFish()->staticStrings()->m_kind,
+                 kind);
 }
 
 void HTMLTrackElement::setSrc(String* src)
@@ -276,17 +291,20 @@ void HTMLTrackElement::setSrc(String* src)
 
 void HTMLTrackElement::setSrclang(String* srclang)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_srclang, srclang);
+    setAttribute(document()->window()->starFish()->staticStrings()->m_srclang,
+                 srclang);
 }
 
 void HTMLTrackElement::setLabel(String* label)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_label, label);
+    setAttribute(document()->window()->starFish()->staticStrings()->m_label,
+                 label);
 }
 
 void HTMLTrackElement::setDefaultAttr(bool value)
 {
-    QualifiedName name = document()->window()->starFish()->staticStrings()->m_default;
+    QualifiedName name =
+        document()->window()->starFish()->staticStrings()->m_default;
     if (value) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -296,7 +314,6 @@ void HTMLTrackElement::setDefaultAttr(bool value)
         removeAttribute(name);
     }
 }
-
 }
 
 #endif

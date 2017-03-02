@@ -23,8 +23,7 @@ namespace StarFish {
 
 class HTMLDivElement : public HTMLElement {
 public:
-    HTMLDivElement(Document* document)
-        : HTMLElement(document)
+    HTMLDivElement(Document* document) : HTMLElement(document)
     {
     }
 
@@ -37,7 +36,11 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_divTagName.localName();
+        return document()
+            ->window()
+            ->starFish()
+            ->staticStrings()
+            ->m_divTagName.localName();
     }
 
     virtual QualifiedName name()
@@ -54,7 +57,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

@@ -17,12 +17,11 @@
 #include "dom/DOMRect.h"
 
 namespace StarFish {
-DOMRectInit::DOMRectInit(double inX, double inY, double inWidth, double inHeight)
-    : x(inX)
-    , y(inY)
-    , width(inWidth)
-    , height(inHeight)
-{ }
+DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
+                         double inHeight)
+    : x(inX), y(inY), width(inWidth), height(inHeight)
+{
+}
 
 DOMRect* DOMRect::create(double x, double y, double width, double height)
 {
@@ -36,22 +35,23 @@ DOMRect* DOMRect::create(const DOMRectReadOnly* rect)
 
 DOMRect::DOMRect(double x, double y, double width, double height)
     : DOMRectReadOnly(x, y, width, height)
-{ }
+{
+}
 
 void DOMRect::unite(const DOMRectReadOnly* other)
 {
-    if (other->width() <= 0 || other->height() <= 0)
+    if (other->width() <= 0 || other->height() <= 0) {
         return;
+    }
 
     double left = std::min(x(), other->x());
     double top = std::min(y(), other->y());
-    double right = std::max(x()+width(), other->x() + other->width());
-    double bottom = std::max(y()+height(), other->y() + other->height());
+    double right = std::max(x() + width(), other->x() + other->width());
+    double bottom = std::max(y() + height(), other->y() + other->height());
 
     setX(left);
     setY(top);
     setWidth(right - left);
     setHeight(bottom - top);
 }
-
 }

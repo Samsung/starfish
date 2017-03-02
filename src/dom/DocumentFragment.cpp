@@ -36,7 +36,11 @@ void DocumentFragment::setTextContent(String* text)
 
 String* DocumentFragment::nodeName()
 {
-    return document()->window()->starFish()->staticStrings()->m_documentFragmentLocalName.string();
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_documentFragmentLocalName.string();
 }
 
 Node* DocumentFragment::clone()
@@ -44,5 +48,4 @@ Node* DocumentFragment::clone()
     DocumentFragment* newNode = new DocumentFragment(document());
     return newNode;
 }
-
 }

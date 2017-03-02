@@ -39,23 +39,18 @@ String* Text::localName()
 
 String* Text::wholeText()
 {
-    auto filter = [&](Node* node)
-    {
-        return node->isText();
-    };
+    auto filter = [&](Node* node) { return node->isText(); };
     GCVector<Node*>* pSiblings = Traverse::previousSiblings(this, filter);
     GCVector<Node*>* nSiblings = Traverse::nextSiblings(this, filter);
 
     String* str = String::createASCIIString("");
-    std::for_each(pSiblings->begin(), pSiblings->end(), [&](Node* n) {
-        str = str->concat(n->asText()->data());
-    });
+    std::for_each(pSiblings->begin(), pSiblings->end(),
+                  [&](Node* n) { str = str->concat(n->asText()->data()); });
 
     str = str->concat(data());
 
-    std::for_each(nSiblings->begin(), nSiblings->end(), [&](Node* n) {
-        str = str->concat(n->asText()->data());
-    });
+    std::for_each(nSiblings->begin(), nSiblings->end(),
+                  [&](Node* n) { str = str->concat(n->asText()->data()); });
 
     return str;
 }

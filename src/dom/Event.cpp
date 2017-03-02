@@ -20,68 +20,64 @@
 
 namespace StarFish {
 
-EventInit::EventInit()
-    : bubbles(false)
-    , cancelable(false)
+EventInit::EventInit() : bubbles(false), cancelable(false)
 {
 }
 
-EventInit::EventInit(bool b, bool c)
-    : bubbles(b)
-    , cancelable(c)
+EventInit::EventInit(bool b, bool c) : bubbles(b), cancelable(c)
 {
 }
 
 Event::Event()
-    : ScriptWrappable(this)
-    , m_isInitialized(true)
-    , m_type(String::emptyString)
-    , m_eventPhase(0)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_bubbles(false)
-    , m_cancelable(false)
-    , m_defaultPrevented(false)
-    , m_isDispatched(false)
+    : ScriptWrappable(this),
+      m_isInitialized(true),
+      m_type(String::emptyString),
+      m_eventPhase(0),
+      m_propagationStopped(false),
+      m_immediatePropagationStopped(false),
+      m_bubbles(false),
+      m_cancelable(false),
+      m_defaultPrevented(false),
+      m_isDispatched(false)
 {
     m_timeStamp = timestamp();
 }
 
 Event::Event(String* eventType, const EventInit& init)
-    : ScriptWrappable(this)
-    , m_isInitialized(true)
-    , m_type(eventType)
-    , m_eventPhase(0)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_bubbles(init.bubbles)
-    , m_cancelable(init.cancelable)
-    , m_defaultPrevented(false)
-    , m_isDispatched(false)
+    : ScriptWrappable(this),
+      m_isInitialized(true),
+      m_type(eventType),
+      m_eventPhase(0),
+      m_propagationStopped(false),
+      m_immediatePropagationStopped(false),
+      m_bubbles(init.bubbles),
+      m_cancelable(init.cancelable),
+      m_defaultPrevented(false),
+      m_isDispatched(false)
 {
     m_timeStamp = timestamp();
 }
 
 ProgressEventInit::ProgressEventInit()
-    : lengthComputable(false)
-    , loaded(0)
-    , total(0)
+    : lengthComputable(false), loaded(0), total(0)
 {
 }
 
-ProgressEventInit::ProgressEventInit(bool b, bool c, bool lengthComputable, unsigned long long loaded, unsigned long long total)
-    : EventInit(b, c)
-    , lengthComputable(lengthComputable)
-    , loaded(loaded)
-    , total(total)
+ProgressEventInit::ProgressEventInit(bool b, bool c, bool lengthComputable,
+                                     unsigned long long loaded,
+                                     unsigned long long total)
+    : EventInit(b, c),
+      lengthComputable(lengthComputable),
+      loaded(loaded),
+      total(total)
 {
 }
 
 ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
-    : Event(eventType, init)
-    , m_lengthComputable(init.lengthComputable)
-    , m_loaded(init.loaded)
-    , m_total(init.total)
+    : Event(eventType, init),
+      m_lengthComputable(init.lengthComputable),
+      m_loaded(init.loaded),
+      m_total(init.total)
 {
     initScriptWrappable(this);
 }
@@ -121,5 +117,4 @@ unsigned long KeyboardEvent::convertKeyCodeFromEcore(String* key)
     }
     return KEYBOARD_KEYCODE_NONE;
 }
-
 }

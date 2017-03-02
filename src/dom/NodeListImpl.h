@@ -25,21 +25,22 @@ typedef bool (*NodeListFilterFunction)(Node*, void*);
 
 class NodeListImpl : public gc {
 public:
-    NodeListImpl(Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
-        : m_canCache(canCache)
-        , m_isCacheValid(false)
-        , m_root(root)
-        , m_filter(filter)
-        , m_data(data)
+    NodeListImpl(Node* root, NodeListFilterFunction filter, void* data,
+                 bool canCache = false)
+        : m_canCache(canCache),
+          m_isCacheValid(false),
+          m_root(root),
+          m_filter(filter),
+          m_data(data)
     {
     }
 
     NodeListImpl(Node* root, bool canCache = true)
-        : m_canCache(canCache)
-        , m_isCacheValid(true)
-        , m_root(root)
-        , m_filter(nullptr)
-        , m_data(nullptr)
+        : m_canCache(canCache),
+          m_isCacheValid(true),
+          m_root(root),
+          m_filter(nullptr),
+          m_data(nullptr)
     {
     }
 
@@ -53,6 +54,7 @@ public:
     }
 
     void setItems(GCVector<Element*>& elements);
+
 private:
     void fillCacheIfNeed() const;
     bool m_canCache;
@@ -63,8 +65,6 @@ private:
     void* m_data;
     mutable GCVector<Node*> m_cachedNodeList;
 };
-
 }
-
 
 #endif

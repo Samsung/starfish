@@ -29,26 +29,30 @@ class CSSSelector;
 class SelectorQuery : public gc {
 public:
     enum VisitedMatchType { VisitedMatchDisabled, VisitedMatchEnabled };
-    enum MatchTraverseRootState { DoesNotMatchTraverseRoots, MatchesTraverseRoots };
+    enum MatchTraverseRootState {
+        DoesNotMatchTraverseRoots,
+        MatchesTraverseRoots
+    };
 
     SelectorQuery(GCVector<GCDeque<CSSSelector*>*>& selector)
         : m_selectorListContainer(selector)
-    { }
+    {
+    }
     Element* queryFirst(Node& rootNode);
     NodeList* queryAll(Node& rootNode);
 
     struct SelectorCheckingContext {
         // Initial selector constructor
         SelectorCheckingContext(Element* e, VisitedMatchType v)
-            : element(e)
-            , previousElement(nullptr)
-            , scope(nullptr)
-            , visitedMatchType(v)
-            , isSubSelector(false)
-            , inRightmostCompound(true)
-            , hasScrollbarPseudo(false)
-            , hasSelectionPseudo(false)
-            , treatShadowHostAsNormalScope(false)
+            : element(e),
+              previousElement(nullptr),
+              scope(nullptr),
+              visitedMatchType(v),
+              isSubSelector(false),
+              inRightmostCompound(true),
+              hasScrollbarPseudo(false),
+              hasSelectionPseudo(false),
+              treatShadowHostAsNormalScope(false)
 
         {
         }
@@ -66,8 +70,9 @@ public:
     };
 
     struct MatchResult {
-        MatchResult()
-            : specificity(0) { }
+        MatchResult() : specificity(0)
+        {
+        }
         unsigned specificity;
     };
 
@@ -75,29 +80,57 @@ public:
     bool match(const SelectorCheckingContext& context);
 
 private:
-    enum Match { SelectorMatches, SelectorFailsLocally, SelectorFailsAllSiblings, SelectorFailsCompletely };
+    enum Match {
+        SelectorMatches,
+        SelectorFailsLocally,
+        SelectorFailsAllSiblings,
+        SelectorFailsCompletely
+    };
 
     bool canUseFastQuery(const Node& rootNode);
-    bool checkPseudoClass(const SelectorCheckingContext& context, MatchResult& result);
+    bool checkPseudoClass(const SelectorCheckingContext& context,
+                          MatchResult& result);
     bool checkOne(const SelectorCheckingContext& context, MatchResult& result);
-    Match matchForRelation(const SelectorCheckingContext& context, MatchResult& result);
-    Match matchForSubSelector(const SelectorCheckingContext& context, MatchResult& result);
+    Match matchForRelation(const SelectorCheckingContext& context,
+                           MatchResult& result);
+    Match matchForSubSelector(const SelectorCheckingContext& context,
+                              MatchResult& result);
     Match matchSelector(const SelectorCheckingContext&, MatchResult&);
-    void traverseDescendants(GCDeque<CSSSelector*>& selectors, Node* traverseRoot, Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
-    void executeForTraverseRoot(GCDeque<CSSSelector*>& selector, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
+    void traverseDescendants(GCDeque<CSSSelector*>& selectors,
+                             Node* traverseRoot, Node& rootNode,
+                             GCVector<Element*>& collection,
+                             bool shouldOnlyMatchFirstElement);
+    void executeForTraverseRoot(GCDeque<CSSSelector*>& selector,
+                                Node* traverseRoot,
+                                MatchTraverseRootState matchTraverseRoot,
+                                Node& rootNode, GCVector<Element*>& output,
+                                bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
-    void executeForTraverseRoots(GCDeque<CSSSelector*>& selector, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
-    void findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output, bool shouldOnlyMatchFirstElement);
-    bool selectorListMatches(Node& rootNode, Element* element, GCVector<Element*>& output);
-    void executeSlow(Node& rootNode, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
-    void execute(Node& rootNode, GCVector<Element*>& matchedElement, bool shouldOnlyMatchFirstElement);
-    void collectElementsById(Node& rootNode, String* id, GCVector<Element*>& collection);
-    void collectElementsByClassName(Node& rootNode, const String* className,  GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
-    void collectElementsByTagName(Node& rootNode, const String* tagName, GCVector<Element*>& collection, bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(GCDeque<CSSSelector*>& selector, Element* element, Node& rootNode);
+    void executeForTraverseRoots(GCDeque<CSSSelector*>& selector,
+                                 SimpleElementListType& traverseRoots,
+                                 MatchTraverseRootState matchTraverseRoots,
+                                 Node& rootNode, GCVector<Element*>& output,
+                                 bool shouldOnlyMatchFirstElement);
+    void findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output,
+                                     bool shouldOnlyMatchFirstElement);
+    bool selectorListMatches(Node& rootNode, Element* element,
+                             GCVector<Element*>& output);
+    void executeSlow(Node& rootNode, GCVector<Element*>& collection,
+                     bool shouldOnlyMatchFirstElement);
+    void execute(Node& rootNode, GCVector<Element*>& matchedElement,
+                 bool shouldOnlyMatchFirstElement);
+    void collectElementsById(Node& rootNode, String* id,
+                             GCVector<Element*>& collection);
+    void collectElementsByClassName(Node& rootNode, const String* className,
+                                    GCVector<Element*>& collection,
+                                    bool shouldOnlyMatchFirstElement);
+    void collectElementsByTagName(Node& rootNode, const String* tagName,
+                                  GCVector<Element*>& collection,
+                                  bool shouldOnlyMatchFirstElement);
+    bool selectorMatches(GCDeque<CSSSelector*>& selector, Element* element,
+                         Node& rootNode);
     CSSSelector* selectorForIdLookup(GCDeque<CSSSelector*>& firstSelector);
     GCVector<GCDeque<CSSSelector*>*>& m_selectorListContainer;
 };
-
 }
 #endif
