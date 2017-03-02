@@ -44,15 +44,15 @@ public:
     struct SelectorCheckingContext {
         // Initial selector constructor
         SelectorCheckingContext(Element* e, VisitedMatchType v)
-            : element(e),
-              previousElement(nullptr),
-              scope(nullptr),
-              visitedMatchType(v),
-              isSubSelector(false),
-              inRightmostCompound(true),
-              hasScrollbarPseudo(false),
-              hasSelectionPseudo(false),
-              treatShadowHostAsNormalScope(false)
+            : element(e)
+            , previousElement(nullptr)
+            , scope(nullptr)
+            , visitedMatchType(v)
+            , isSubSelector(false)
+            , inRightmostCompound(true)
+            , hasScrollbarPseudo(false)
+            , hasSelectionPseudo(false)
+            , treatShadowHostAsNormalScope(false)
 
         {
         }

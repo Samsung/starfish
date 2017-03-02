@@ -58,11 +58,11 @@ struct HTMLConstructionSiteTask {
     };
 
     explicit HTMLConstructionSiteTask(Operation op)
-        : operation(op),
-          parent(nullptr),
-          nextChild(nullptr),
-          child(nullptr),
-          selfClosing(false)
+        : operation(op)
+        , parent(nullptr)
+        , nextChild(nullptr)
+        , child(nullptr)
+        , selfClosing(false)
     {
     }
 
@@ -240,8 +240,8 @@ public:
     class RedirectToFosterParentGuard : public gc {
     public:
         RedirectToFosterParentGuard(HTMLConstructionSite& tree)
-            : m_tree(tree),
-              m_wasRedirectingBefore(tree.m_redirectAttachToFosterParent)
+            : m_tree(tree)
+            , m_wasRedirectingBefore(tree.m_redirectAttachToFosterParent)
         {
             m_tree.m_redirectAttachToFosterParent = true;
         }
@@ -295,9 +295,9 @@ private:
 
     struct PendingText {
         PendingText()
-            : parent(nullptr),
-              nextChild(nullptr),
-              whitespaceMode(WhitespaceUnknown)
+            : parent(nullptr)
+            , nextChild(nullptr)
+            , whitespaceMode(WhitespaceUnknown)
         {
         }
 

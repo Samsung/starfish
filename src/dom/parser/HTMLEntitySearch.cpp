@@ -51,10 +51,10 @@ static const HTMLEntityTableEntry* halfway(const HTMLEntityTableEntry* left,
 }
 
 HTMLEntitySearch::HTMLEntitySearch()
-    : m_currentLength(0),
-      m_mostRecentMatch(0),
-      m_first(HTMLEntityTable::firstEntry()),
-      m_last(HTMLEntityTable::lastEntry())
+    : m_currentLength(0)
+    , m_mostRecentMatch(0)
+    , m_first(HTMLEntityTable::firstEntry())
+    , m_last(HTMLEntityTable::lastEntry())
 {
 }
 

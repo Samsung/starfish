@@ -22,9 +22,9 @@
 namespace StarFish {
 
 MimeType::MimeType()
-    : m_type(String::emptyString),
-      m_subtype(String::emptyString),
-      m_parameter(String::emptyString)
+    : m_type(String::emptyString)
+    , m_subtype(String::emptyString)
+    , m_parameter(String::emptyString)
 
 {
 }

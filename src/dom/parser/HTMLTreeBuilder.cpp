@@ -158,9 +158,9 @@ static HTMLFormElement* closestFormAncestor(StaticStrings* s, Element* element)
 class HTMLTreeBuilder::CharacterTokenBuffer : public gc {
 public:
     explicit CharacterTokenBuffer(AtomicHTMLToken* token)
-        : m_characters(token->characters()),
-          m_current(0),
-          m_end(token->characters()->length())
+        : m_characters(token->characters())
+        , m_current(0)
+        , m_end(token->characters()->length())
     {
         ASSERT(!isEmpty());
     }
@@ -290,16 +290,14 @@ private:
 HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, Document* document, bool)
     : m_framesetOk(true)
 #ifndef NDEBUG
-      ,
-      m_isAttached(true)
+    , m_isAttached(true)
 #endif
-      ,
-      m_tree(document),
-      m_insertionMode(InitialMode),
-      m_originalInsertionMode(InitialMode),
-      m_shouldSkipLeadingNewline(false),
-      m_parser(parser),
-      m_scriptToProcessStartPosition(uninitializedPositionValue1())
+    , m_tree(document)
+    , m_insertionMode(InitialMode)
+    , m_originalInsertionMode(InitialMode)
+    , m_shouldSkipLeadingNewline(false)
+    , m_parser(parser)
+    , m_scriptToProcessStartPosition(uninitializedPositionValue1())
 {
     m_scriptToProcess = nullptr;
 }
@@ -310,17 +308,15 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, DocumentFragment* fragment,
                                  Element* contextElement)
     : m_framesetOk(true)
 #ifndef NDEBUG
-      ,
-      m_isAttached(true)
+    , m_isAttached(true)
 #endif
-      ,
-      m_fragmentContext(fragment, contextElement),
-      m_tree(fragment),
-      m_insertionMode(InitialMode),
-      m_originalInsertionMode(InitialMode),
-      m_shouldSkipLeadingNewline(false),
-      m_parser(parser),
-      m_scriptToProcessStartPosition(uninitializedPositionValue1())
+    , m_fragmentContext(fragment, contextElement)
+    , m_tree(fragment)
+    , m_insertionMode(InitialMode)
+    , m_originalInsertionMode(InitialMode)
+    , m_shouldSkipLeadingNewline(false)
+    , m_parser(parser)
+    , m_scriptToProcessStartPosition(uninitializedPositionValue1())
 {
     m_scriptToProcess = nullptr;
     // FIXME: This assertion will become invalid if <http://webkit.org/b/60316>

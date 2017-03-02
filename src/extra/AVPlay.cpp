@@ -120,16 +120,16 @@ void printNativePlayerError(int errorCode)
 }
 
 avplay::avplay(StarFish* starFish)
-    : ScriptWrappable(this),
-      m_starFish(starFish),
-      m_offsetLeft(0),
-      m_offsetTop(0),
-      m_offsetWidth(0),
-      m_offsetHeight(0),
-      m_bufferingPercent(0),
-      m_nativePlayer(nullptr),
-      m_prepare_async(ScriptValueNull),
-      m_listener(ScriptValueNull)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
+    , m_offsetLeft(0)
+    , m_offsetTop(0)
+    , m_offsetWidth(0)
+    , m_offsetHeight(0)
+    , m_bufferingPercent(0)
+    , m_nativePlayer(nullptr)
+    , m_prepare_async(ScriptValueNull)
+    , m_listener(ScriptValueNull)
 {
 }
 

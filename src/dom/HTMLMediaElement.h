@@ -39,10 +39,10 @@ public:
     };
 
     ResourceSelectionContext(HTMLMediaElement* element)
-        : m_mediaElement(element),
-          m_nodeBeforePointer(nullptr),
-          m_mode(MODE_NONE),
-          m_waiting(false)
+        : m_mediaElement(element)
+        , m_nodeBeforePointer(nullptr)
+        , m_mode(MODE_NONE)
+        , m_waiting(false)
     {
     }
 

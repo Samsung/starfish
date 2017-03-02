@@ -25,9 +25,9 @@ namespace StarFish {
 class StyleSurroundData : public gc {
 public:
     StyleSurroundData()
-        : margin(Length(Length::Fixed, 0)),
-          padding(Length(Length::Fixed, 0)),
-          offset(Length())
+        : margin(Length(Length::Fixed, 0))
+        , padding(Length(Length::Fixed, 0))
+        , offset(Length())
     {
     }
 

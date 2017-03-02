@@ -32,13 +32,13 @@ class ImageResource;
 class BorderImageImpl : public gc {
 public:
     BorderImageImpl()
-        : m_repeatX(DEFAULT_VALUE_IMAGE_REPEAT()),
-          m_repeatY(DEFAULT_VALUE_IMAGE_REPEAT()),
-          m_url(String::emptyString),
-          m_sliceFill(false),
-          m_slices(DEFAULT_VALUE_IMAGE_SLICE()),
-          m_widths(DEFAULT_VALUE_IMAGE_WIDTH()),
-          m_imageResource(NULL)
+        : m_repeatX(DEFAULT_VALUE_IMAGE_REPEAT())
+        , m_repeatY(DEFAULT_VALUE_IMAGE_REPEAT())
+        , m_url(String::emptyString)
+        , m_sliceFill(false)
+        , m_slices(DEFAULT_VALUE_IMAGE_SLICE())
+        , m_widths(DEFAULT_VALUE_IMAGE_WIDTH())
+        , m_imageResource(NULL)
     {
     }
 

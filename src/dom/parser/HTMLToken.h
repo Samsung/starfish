@@ -48,11 +48,11 @@ namespace StarFish {
 class DoctypeData : public gc {
 public:
     DoctypeData()
-        : m_hasPublicIdentifier(false),
-          m_hasSystemIdentifier(false),
-          m_publicIdentifier(String::emptyString),
-          m_systemIdentifier(String::emptyString),
-          m_forceQuirks(false)
+        : m_hasPublicIdentifier(false)
+        , m_hasSystemIdentifier(false)
+        , m_publicIdentifier(String::emptyString)
+        , m_systemIdentifier(String::emptyString)
+        , m_forceQuirks(false)
     {
     }
 

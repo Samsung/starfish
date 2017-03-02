@@ -171,11 +171,11 @@ bool HTMLElementStack::ElementRecord::isAbove(ElementRecord* other) const
 }
 
 HTMLElementStack::HTMLElementStack()
-    : m_top(0),
-      m_rootNode(0),
-      m_headElement(0),
-      m_bodyElement(0),
-      m_stackDepth(0)
+    : m_top(0)
+    , m_rootNode(0)
+    , m_headElement(0)
+    , m_bodyElement(0)
+    , m_stackDepth(0)
 {
 }
 

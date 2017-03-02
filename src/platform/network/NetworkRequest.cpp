@@ -147,22 +147,22 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(
 }
 
 NetworkRequest::NetworkRequest(Document* document)
-    : m_starFish(document->window()->starFish()),
-      m_document(document),
-      m_url(nullptr),
-      m_readyState(UNSENT),
-      m_progressState(NONE),
-      m_method(UNKNOWN_METHOD),
-      m_responseType(DEFAULT_RESPONSE),
-      m_status(0),
-      m_timeout(0),
-      m_activeNetworkWorkerData(nullptr),
-      m_mutex(new Mutex()),
-      m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX),
-      m_pendingOnProgressEventIdlerHandle(SIZE_MAX),
-      m_loaded(0),
-      m_total(0),
-      m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
+    : m_starFish(document->window()->starFish())
+    , m_document(document)
+    , m_url(nullptr)
+    , m_readyState(UNSENT)
+    , m_progressState(NONE)
+    , m_method(UNKNOWN_METHOD)
+    , m_responseType(DEFAULT_RESPONSE)
+    , m_status(0)
+    , m_timeout(0)
+    , m_activeNetworkWorkerData(nullptr)
+    , m_mutex(new Mutex())
+    , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
+    , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
+    , m_loaded(0)
+    , m_total(0)
+    , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,

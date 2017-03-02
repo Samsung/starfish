@@ -24,9 +24,9 @@ namespace StarFish {
 class PseudoElement : public Element {
 public:
     PseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
-        : Element(document),
-          m_name(pseudoElementTagName(pseudoId)),
-          m_pseudoId(pseudoId)
+        : Element(document)
+        , m_name(pseudoElementTagName(pseudoId))
+        , m_pseudoId(pseudoId)
     {
     }
 

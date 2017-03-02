@@ -47,11 +47,11 @@ typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
-        : m_children(nullptr),
-          m_childNodeList(nullptr),
-          m_domTokenList(nullptr),
-          m_activeHtmlCollectionListsForTagName(nullptr),
-          m_activeHtmlCollectionListsForClassName(nullptr)
+        : m_children(nullptr)
+        , m_childNodeList(nullptr)
+        , m_domTokenList(nullptr)
+        , m_activeHtmlCollectionListsForTagName(nullptr)
+        , m_activeHtmlCollectionListsForClassName(nullptr)
     {
     }
 

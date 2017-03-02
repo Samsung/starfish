@@ -27,14 +27,14 @@ class ImageResource;
 class BackgroundLayer : public gc {
 public:
     BackgroundLayer()
-        : m_image(String::emptyString),
-          m_imageResource(NULL),
-          m_repeatX(BackgroundRepeatValue::RepeatRepeatValue),
-          m_repeatY(BackgroundRepeatValue::RepeatRepeatValue),
-          m_sizeType(BackgroundSizeType::SizeValue),
-          m_positionX(Length(Length::Percent, 0.0f)),
-          m_positionY(Length(Length::Percent, 0.0f)),
-          m_sizeValue(nullptr)
+        : m_image(String::emptyString)
+        , m_imageResource(NULL)
+        , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_sizeType(BackgroundSizeType::SizeValue)
+        , m_positionX(Length(Length::Percent, 0.0f))
+        , m_positionY(Length(Length::Percent, 0.0f))
+        , m_sizeValue(nullptr)
     {
     }
 
@@ -177,11 +177,11 @@ private:
 class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
-        : m_bgColorNeedToUpdate(false),
-          m_maxLayerImages(0),
-          m_maxLayerRepeats(0),
-          m_maxLayerSizes(0),
-          m_maxLayerPositions(0)
+        : m_bgColorNeedToUpdate(false)
+        , m_maxLayerImages(0)
+        , m_maxLayerRepeats(0)
+        , m_maxLayerSizes(0)
+        , m_maxLayerPositions(0)
     {
     }
 

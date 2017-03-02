@@ -26,9 +26,9 @@ class ElementResourceClient : public ResourceClient {
 public:
     ElementResourceClient(Element* element, Resource* resource,
                           bool needsSyncEventDispatch = false)
-        : ResourceClient(resource),
-          m_needsSyncEventDispatch(needsSyncEventDispatch),
-          m_element(element)
+        : ResourceClient(resource)
+        , m_needsSyncEventDispatch(needsSyncEventDispatch)
+        , m_element(element)
     {
     }
     virtual void didLoadFinished();

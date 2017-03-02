@@ -66,19 +66,19 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
     const char* bestCharset = ucsdet_getName(m1, &err);
     STARFISH_ASSERT(!U_FAILURE(err));
 
-/*
-#ifndef NDEBUG
-    STARFISH_LOG_INFO("encoding detector verbose info start\n");
-    for (int i = 0; i < num; i++) {
-        const char* charset = nullptr;
-        confidence = ucsdet_getConfidence(match[i], &err);
-        charset = ucsdet_getName(match[i], &err);
-        STARFISH_LOG_INFO("encoding detector verbose info.. %s[%d]\n",
-            charset, confidence);
-    }
-    STARFISH_LOG_INFO("encoding detector verbose info end\n");
-#endif
-*/
+    /*
+    #ifndef NDEBUG
+        STARFISH_LOG_INFO("encoding detector verbose info start\n");
+        for (int i = 0; i < num; i++) {
+            const char* charset = nullptr;
+            confidence = ucsdet_getConfidence(match[i], &err);
+            charset = ucsdet_getName(match[i], &err);
+            STARFISH_LOG_INFO("encoding detector verbose info.. %s[%d]\n",
+                charset, confidence);
+        }
+        STARFISH_LOG_INFO("encoding detector verbose info end\n");
+    #endif
+    */
     for (int i = 0; i < num; i++) {
         const char* charset = nullptr;
         confidence = ucsdet_getConfidence(match[i], &err);

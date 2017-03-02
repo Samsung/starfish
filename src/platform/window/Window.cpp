@@ -450,23 +450,21 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
 }
 
 Window::Window(StarFish* starFish)
-    : m_starFish(starFish),
-      m_scriptBindingInstance(nullptr),
-      m_history(nullptr),
-      m_navigator(nullptr),
-      m_location(nullptr),
-      m_document(nullptr)
+    : m_starFish(starFish)
+    , m_scriptBindingInstance(nullptr)
+    , m_history(nullptr)
+    , m_navigator(nullptr)
+    , m_location(nullptr)
+    , m_document(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-      ,
-      m_webapis(nullptr)
+    , m_webapis(nullptr)
 #endif
-      ,
-      m_rootStackingContext(nullptr),
-      m_touchDownPoint(0, 0),
-      m_ctrlKeyDown(0),
-      m_shiftKeyDown(0),
-      m_altKeyDown(0),
-      m_metaKeyDown(0)
+    , m_rootStackingContext(nullptr)
+    , m_touchDownPoint(0, 0)
+    , m_ctrlKeyDown(0)
+    , m_shiftKeyDown(0)
+    , m_altKeyDown(0)
+    , m_metaKeyDown(0)
 {
     initFlags();
 }
@@ -723,7 +721,7 @@ void Window::layoutIfNeeds()
             document()->styleResolver()->allRules()->sortRulesBySpecificity();
         }
 
-        // resolve style
+// resolve style
 #ifdef STARFISH_ENABLE_TIMER
         Timer t("resolve style");
 #endif
@@ -745,7 +743,7 @@ void Window::layoutIfNeeds()
         if (m_document->frame()) {
             clearStackingContext(true);
 
-            // create frame tree
+// create frame tree
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("create frame tree");
 #endif
@@ -755,7 +753,7 @@ void Window::layoutIfNeeds()
     }
 
     if (m_needsLayout) {
-        // lay out frame tree
+// lay out frame tree
 #ifdef STARFISH_ENABLE_TIMER
         Timer t("lay out frame tree");
 #endif

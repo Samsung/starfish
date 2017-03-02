@@ -53,9 +53,9 @@ public:
     enum ItemType { ItemForContextElement, ItemForDocumentFragmentNode };
 
     HTMLStackItem(Node* node, ItemType type)
-        : m_node(node),
-          m_tokenLocalName(AtomicString::emptyAtomicString()),
-          m_namespaceURI(AtomicString::emptyAtomicString())
+        : m_node(node)
+        , m_tokenLocalName(AtomicString::emptyAtomicString())
+        , m_namespaceURI(AtomicString::emptyAtomicString())
     {
         switch (type) {
         case ItemForDocumentFragmentNode:
@@ -72,11 +72,11 @@ public:
 
     HTMLStackItem(Node* node, AtomicHTMLToken* token,
                   const AtomicString& namespaceURI)
-        : m_node(node),
-          m_tokenLocalName(token->name()),
-          m_tokenAttributes(token->attributes()),
-          m_namespaceURI(namespaceURI),
-          m_isDocumentFragmentNode(false)
+        : m_node(node)
+        , m_tokenLocalName(token->name())
+        , m_tokenAttributes(token->attributes())
+        , m_namespaceURI(namespaceURI)
+        , m_isDocumentFragmentNode(false)
     {
     }
 

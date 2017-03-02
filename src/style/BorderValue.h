@@ -24,10 +24,10 @@ namespace StarFish {
 class BorderValue {
 public:
     BorderValue()
-        : m_style(BorderStyleValue::NoneBorderStyleValue),
-          m_hasBorderColor(false),
-          m_width(Length(Length::Fixed, 3)),
-          m_color(Color(0, 0, 0, 255))
+        : m_style(BorderStyleValue::NoneBorderStyleValue)
+        , m_hasBorderColor(false)
+        , m_width(Length(Length::Fixed, 3))
+        , m_color(Color(0, 0, 0, 255))
     {
     }
 

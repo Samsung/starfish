@@ -43,16 +43,16 @@ public:
 
     TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString,
               String* language = String::emptyString)
-        : EventTarget(),
-          m_mode(Mode::Off),
-          m_kind(kind),
-          m_label(label),
-          m_language(language),
-          m_cues(new TextTrackCueList()),
-          m_activeCues(new TextTrackCueList()),
-          m_trackElement(nullptr),
-          m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE),
-          m_cachedIdx(0)
+        : EventTarget()
+        , m_mode(Mode::Off)
+        , m_kind(kind)
+        , m_label(label)
+        , m_language(language)
+        , m_cues(new TextTrackCueList())
+        , m_activeCues(new TextTrackCueList())
+        , m_trackElement(nullptr)
+        , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
+        , m_cachedIdx(0)
     {
     }
 

@@ -27,15 +27,15 @@
 namespace StarFish {
 
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
-    : m_isLooping(false),
-      m_hasVideo(false),
-      m_inPlaying(false),
-      m_seekState(SEEKSTATE_NO_SEEK),
-      m_playbackState(PLAYBACK_STATE_NONE),
-      m_container(element),
-      m_activeMediaSource(nullptr),
-      m_starFish(element->document()->window()->starFish()),
-      m_currentTimeUpdateTimer(SIZE_MAX)
+    : m_isLooping(false)
+    , m_hasVideo(false)
+    , m_inPlaying(false)
+    , m_seekState(SEEKSTATE_NO_SEEK)
+    , m_playbackState(PLAYBACK_STATE_NONE)
+    , m_container(element)
+    , m_activeMediaSource(nullptr)
+    , m_starFish(element->document()->window()->starFish())
+    , m_currentTimeUpdateTimer(SIZE_MAX)
 {
 }
 

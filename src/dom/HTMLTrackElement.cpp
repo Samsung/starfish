@@ -107,12 +107,12 @@ protected:
 };
 
 HTMLTrackElement::HTMLTrackElement(Document* document)
-    : HTMLElement(document),
-      m_track(new TextTrack()),
-      m_VTTFileResource(nullptr),
-      m_hasPendingRequest(false),
-      m_live(false),
-      m_readyState(HTMLTrackElement::NONE)
+    : HTMLElement(document)
+    , m_track(new TextTrack())
+    , m_VTTFileResource(nullptr)
+    , m_hasPendingRequest(false)
+    , m_live(false)
+    , m_readyState(HTMLTrackElement::NONE)
 {
     m_track->setTrackElement(this);
 }

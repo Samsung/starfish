@@ -279,10 +279,10 @@ public:
     }
 
     LengthBox(float v)
-        : m_left(Length(Length::Fixed, v)),
-          m_right(Length(Length::Fixed, v)),
-          m_top(Length(Length::Fixed, v)),
-          m_bottom(Length(Length::Fixed, v))
+        : m_left(Length(Length::Fixed, v))
+        , m_right(Length(Length::Fixed, v))
+        , m_top(Length(Length::Fixed, v))
+        , m_bottom(Length(Length::Fixed, v))
     {
     }
 
@@ -293,10 +293,10 @@ public:
     }
 
     LengthBox(float t, float r, float b, float l)
-        : m_left(Length(Length::Fixed, l)),
-          m_right(Length(Length::Fixed, r)),
-          m_top(Length(Length::Fixed, t)),
-          m_bottom(Length(Length::Fixed, b))
+        : m_left(Length(Length::Fixed, l))
+        , m_right(Length(Length::Fixed, r))
+        , m_top(Length(Length::Fixed, t))
+        , m_bottom(Length(Length::Fixed, b))
     {
     }
 

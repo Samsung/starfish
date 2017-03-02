@@ -28,10 +28,10 @@ class CSSStyleDeclaration;
 class RareElementMembers : public RareNodeMembers {
 public:
     RareElementMembers()
-        : RareNodeMembers(),
-          m_namedNodeMap(nullptr),
-          m_attrList(nullptr),
-          m_pseudoElementData(nullptr)
+        : RareNodeMembers()
+        , m_namedNodeMap(nullptr)
+        , m_attrList(nullptr)
+        , m_pseudoElementData(nullptr)
     {
     }
     bool isRareElementMembers()
@@ -46,22 +46,22 @@ public:
 class Element : public Node {
 public:
     Element(Document* document, ScriptBindingInstance* instance)
-        : Node(document, instance),
-          m_inlineStyle(nullptr),
-          m_focused(false),
-          m_tabIndex(0),
-          m_tabIndexWasSetExplicitly(false)
+        : Node(document, instance)
+        , m_inlineStyle(nullptr)
+        , m_focused(false)
+        , m_tabIndex(0)
+        , m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
     }
 
     Element(Document* document)
-        : Node(document),
-          m_inlineStyle(nullptr),
-          m_focused(false),
-          m_tabIndex(0),
-          m_tabIndexWasSetExplicitly(false)
+        : Node(document)
+        , m_inlineStyle(nullptr)
+        , m_focused(false)
+        , m_tabIndex(0)
+        , m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;

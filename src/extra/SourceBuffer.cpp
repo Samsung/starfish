@@ -129,11 +129,11 @@ struct StreamProcessInfo {
 class DemuxerClientSourceBuffer : public DemuxerClient {
 public:
     DemuxerClientSourceBuffer()
-        : m_isAborted(false),
-          m_currentGroupLastTimestamp(-1),
-          m_timestampOffset(0),
-          m_appendWindowStart(0),
-          m_appendWindowEnd(std::numeric_limits<double>::infinity())
+        : m_isAborted(false)
+        , m_currentGroupLastTimestamp(-1)
+        , m_timestampOffset(0)
+        , m_appendWindowStart(0)
+        , m_appendWindowEnd(std::numeric_limits<double>::infinity())
     {
     }
 
@@ -348,13 +348,13 @@ public:
 };
 
 SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
-    : EventTarget(),
-      m_isAttachedToParent(false),
-      m_starFish(starFish),
-      m_demuxer(nullptr),
-      m_type(type),
-      m_parentMediaSource(nullptr),
-      m_packetGroupMutex(new Mutex())
+    : EventTarget()
+    , m_isAttachedToParent(false)
+    , m_starFish(starFish)
+    , m_demuxer(nullptr)
+    , m_type(type)
+    , m_parentMediaSource(nullptr)
+    , m_packetGroupMutex(new Mutex())
 {
     m_mode = AppendMode::Segments;
     m_updating = false;
