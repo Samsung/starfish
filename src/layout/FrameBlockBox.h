@@ -703,10 +703,8 @@ public:
         if (!firstChild()) {
             return true;
         }
-
         Frame* child = firstChild();
-        return (child->style()->originalDisplay() == BlockDisplayValue) &&
-               child->isNormalFlow();
+        return (child->isBlockLevel() && child->isNormalFlow());
     }
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
