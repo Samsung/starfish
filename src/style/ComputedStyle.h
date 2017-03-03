@@ -92,6 +92,11 @@ public:
         return m_position;
     }
 
+    void setPosition(PositionValue p)
+    {
+        m_position = p;
+    }
+
     FloatValue floating()
     {
         return m_float;
