@@ -42,6 +42,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLDivElement(document);
     } else if (name == str->m_pTagName.localNameAtomic()) {
         return new HTMLParagraphElement(document);
+    } else if (name == str->m_preTagName.localNameAtomic()) {
+        return new HTMLPreElement(document);
     } else if (name == str->m_spanTagName.localNameAtomic()) {
         return new HTMLSpanElement(document);
     } else if (name == str->m_brTagName.localNameAtomic()) {

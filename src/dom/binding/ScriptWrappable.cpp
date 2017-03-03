@@ -1854,6 +1854,13 @@ void ScriptWrappable::initScriptWrappable(HTMLParagraphElement* ptr)
     scriptObject()->set__proto__(data->htmlParagraphElement()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLPreElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlPreElement()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(HTMLSpanElement* ptr)
 {
     Node* node = (Node*)this;
