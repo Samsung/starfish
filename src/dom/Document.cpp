@@ -204,6 +204,34 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     {
         CSSStyleRule* rule =
             new CSSStyleRule(CSSSelector::Type::Tag,
+                             String::createASCIIString("pre"), document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        pair.setValue(DisplayValue::BlockDisplayValue);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::WhiteSpace);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
+        pair.setValue(WhiteSpaceValue::PreWhiteSpaceValue);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule =
+            new CSSStyleRule(CSSSelector::Type::Tag,
                              String::createASCIIString("span"), document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);

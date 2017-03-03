@@ -43,6 +43,7 @@
 #include "dom/HTMLBodyElement.h"
 #include "dom/HTMLDivElement.h"
 #include "dom/HTMLParagraphElement.h"
+#include "dom/HTMLPreElement.h"
 #include "dom/HTMLImageElement.h"
 #include "dom/HTMLSpanElement.h"
 #include "dom/HTMLBRElement.h"

@@ -45,6 +45,7 @@ namespace StarFish {
     F(TR)                                   \
     F(Col)                                  \
     F(ColGroup)                             \
+    F(Pre)                                  \
     F(Unknown)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA

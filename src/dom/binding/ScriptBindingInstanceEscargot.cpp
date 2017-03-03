@@ -813,7 +813,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 #endif
 }
 
-#define IMPL_EMPTY_BINDING(codeName, exportName, fromCodeName)             \
+#define IMPL_EMPTY_BINDING(exportName, fromCodeName)                       \
     escargot::ESFunctionObject* binding##exportName(                       \
         ScriptBindingInstance* scriptBindingInstance)                      \
     {                                                                      \
@@ -822,17 +822,18 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return exportName##Function;                                       \
     }
 
-IMPL_EMPTY_BINDING(htmlDocument, HTMLDocument, document);
-IMPL_EMPTY_BINDING(htmlHtmlElement, HTMLHtmlElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlHeadElement, HTMLHeadElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlDivElement, HTMLDivElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlParagraphElement, HTMLMetaElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlParagraphElement, HTMLParagraphElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlSpanElement, HTMLSpanElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlBrElement, HTMLBRElement, htmlElement);
-IMPL_EMPTY_BINDING(htmlUnknownElement, HTMLUnknownElement, htmlElement);
-IMPL_EMPTY_BINDING(pseudoElement, PseudoElement, element);
-IMPL_EMPTY_BINDING(cDataSection, CDataSection, text);
+IMPL_EMPTY_BINDING(HTMLDocument, document);
+IMPL_EMPTY_BINDING(HTMLHtmlElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLHeadElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLDivElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLMetaElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLParagraphElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLPreElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLSpanElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLBRElement, htmlElement);
+IMPL_EMPTY_BINDING(HTMLUnknownElement, htmlElement);
+IMPL_EMPTY_BINDING(PseudoElement, element);
+IMPL_EMPTY_BINDING(CDataSection, text);
 
 escargot::ESFunctionObject* bindingNode(
     ScriptBindingInstance* scriptBindingInstance)

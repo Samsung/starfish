@@ -45,6 +45,7 @@
 #include "HTMLLinkElement.h"
 #include "HTMLMetaElement.h"
 #include "HTMLParagraphElement.h"
+#include "HTMLPreElement.h"
 #include "HTMLSpanElement.h"
 
 #include "HTMLTableElement.h"

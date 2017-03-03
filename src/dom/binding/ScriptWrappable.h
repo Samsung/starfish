@@ -61,6 +61,7 @@ class HTMLBRElement;
 class HTMLObjectElement;
 class HTMLMetaElement;
 class HTMLParagraphElement;
+class HTMLPreElement;
 class HTMLSpanElement;
 #ifdef STARFISH_ENABLE_MULTI_PAGE
 class HTMLAnchorElement;
@@ -223,6 +224,7 @@ public:
     void initScriptWrappable(HTMLDivElement* ptr);
     void initScriptWrappable(HTMLMetaElement* ptr);
     void initScriptWrappable(HTMLParagraphElement* ptr);
+    void initScriptWrappable(HTMLPreElement* ptr);
     void initScriptWrappable(HTMLSpanElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
     void initScriptWrappable(PseudoElement* ptr);
