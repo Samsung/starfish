@@ -94,70 +94,16 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
-    // If "table-layout: auto", calculate min/max cell widths.
-    // If "table-layout: fixed", and the top cell in the first row has
-    // values other than "width: auto", we use the fixed value from the cell.
-    FrameTableBox* table = rowBox()->sectionBox()->tableBox();
-    if (table->style()->tableLayout() ==
-        TableLayoutValue::AutoTableLayoutValue) {
-        if (style()->width().isAuto()) {
-            m_minCellWidth =
-                calMinCellWidth(ctx) + borderWidth() + paddingWidth();
-            m_maxCellWidth =
-                calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
-        } else if (style()->width().isFixed()) {
-            // TODO: consider specified cell width
-            m_minCellWidth =
-                calMinCellWidth(ctx) + borderWidth() + paddingWidth();
-            m_maxCellWidth =
-                calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
-        } else if (style()->width().isPercent()) {
-            // TODO
-        } else {
-            // Should not be here
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (table->style()->tableLayout() ==
-               TableLayoutValue::FixedTableLayoutValue) {
-        GCVector<FrameTableCellBox*>& cellsInTheFirstRow =
-            rowBox()
-                ->sectionBox()
-                ->tableBox()
-                ->cellsInTheFirstRow();
-
-        // This row may contain more columns than the first row in the table.
-        // In this case, the spec,
-        // https://www.w3.org/TR/CSS21/tables.html#fixed-table-layout,
-        // says we can stop rendering additional cells. But, we continue to
-        // layout these additional cells, following blink's behaviour.
-        FrameTableCellBox* matchingCellInTheFirstRow = nullptr;
-        if (pos < cellsInTheFirstRow.size()) {
-            matchingCellInTheFirstRow = cellsInTheFirstRow[pos];
-        }
-
-        if (!matchingCellInTheFirstRow ||
-            matchingCellInTheFirstRow->style()->width().isAuto()) {
-            m_minCellWidth =
-                calMinCellWidth(ctx) + borderWidth() + paddingWidth();
-            m_maxCellWidth =
-                calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
-        } else {
-            if (matchingCellInTheFirstRow->style()->width().isFixed()) {
-                // TODO: specified cell width is considered when
-                // following Blink
-                m_minCellWidth =
-                    calMinCellWidth(ctx) + borderWidth() + paddingWidth();
-                m_maxCellWidth =
-                    calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
-            } else if (matchingCellInTheFirstRow->style()
-                           ->width()
-                           .isPercent()) {
-                // TODO
-            } else {
-                // Should not be here
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        }
+    if (style()->width().isAuto() || style()->width().isFixed()) {
+        m_minCellWidth =
+            calMinCellWidth(ctx) + borderWidth() + paddingWidth();
+        m_maxCellWidth =
+            calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
+    } else if (style()->width().isPercent()) {
+        // TODO
+    } else {
+        // Should not be here
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 
@@ -194,13 +140,10 @@ LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
             width = c->asFrameText()->preferredMinWidth(ctx);
         } else if (c->isFrameBlockBox()) {
             FrameBlockBox* b = c->asFrameBlockBox();
-            LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
             PreferredWidthContext p(ctx, 0, 0);
             b->computePreferredWidth(p);
             width = p.preferredMinWidth();
             width += b->marginWidth() + b->borderWidth() + b->paddingWidth();
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
@@ -222,10 +165,10 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx,
         if (c->isFrameText()) {
             width = c->asFrameText()->preferredWidth(ctx);
         } else if (c->isFrameBlockBox()) {
-            width = calPreferredFrameWidth(ctx, c->asFrameBlockBox());
+            FrameBlockBox* box = c->asFrameBlockBox();
+            width = calPreferredFrameWidth(ctx, box);
+            width += box->marginWidth() + box->borderWidth() + box->paddingWidth();
         }
-
-        width += b->marginWidth() + b->borderWidth() + b->paddingWidth();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 
