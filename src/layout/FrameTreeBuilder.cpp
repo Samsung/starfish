@@ -229,6 +229,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
         parent->asElement(), style, parentStyle, true);
 
     style->setDisplay(DisplayValue::InlineDisplayValue);
+    style->setPosition(PositionValue::StaticPositionValue);
     style->loadResources(parent);
     style->arrangeStyleValues(parentStyle, parent);
 
@@ -323,7 +324,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         remainingText, originalFrameText->style(), ctx.currentDecorationData());
     remainingText->setFrame(remainingFrameText);
 
-    pseudoParentFrame->appendChild(remainingFrameText);
+    pseudoParentFrame->insertBefore(originalFrameText, remainingFrameText);
     pseudoParentFrame->removeChild(originalFrameText);
 }
 

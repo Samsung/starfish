@@ -3506,19 +3506,21 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     Declarations authorDeclarations;
 
     StyleResolver::PseudoElementType pseudoId = PseudoElementNone;
+    CSSStyleSheet* sheet = m_sheets[0];
+
     if (isForPseudoElement &&
         element->hasPseudoElement(PseudoElementFirstLetter)) {
         pseudoId = PseudoElementFirstLetter;
-    }
-
-    CSSStyleSheet* sheet = m_sheets[0];
-    for (unsigned j = 0; j < sheet->rules().size(); j++) {
-        GCDeque<CSSSelector*>* selectorList = sheet->rules()[j]->selectorList();
-        MatchResult result;
-        if (matchSelector(element, selectorList, 0, result) ==
-            Match::SelectorMatches) {
-            userAgentDeclarations.addDeclaration(
-                sheet->rules()[j]->styleDeclaration());
+    } else {
+        for (unsigned j = 0; j < sheet->rules().size(); j++) {
+            GCDeque<CSSSelector*>* selectorList =
+                sheet->rules()[j]->selectorList();
+            MatchResult result;
+            if (matchSelector(element, selectorList, 0, result) ==
+                Match::SelectorMatches) {
+                userAgentDeclarations.addDeclaration(
+                    sheet->rules()[j]->styleDeclaration());
+            }
         }
     }
 
