@@ -316,9 +316,12 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     // * the width of each cell, and
     // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
-    FrameTableSectionBox* firstSection = firstNonEmptySectionBoxInVisualOrder();
-    STARFISH_ASSERT(firstSection);
-    STARFISH_ASSERT(firstSection->firstChild());
+    FrameTableSectionBox* firstSection = firstSectionBoxInVisualOrder();
+    if (!firstSection || !firstSection->firstChild()) {
+        // We stop layout for an empty table
+        return;
+    }
+
     FrameTableRowBox* row = firstSection->firstChild()->asFrameTableRowBox();
     for (Frame* c = row->firstChild(); c; c = c->next()) {
         m_cellsInTheFirstRow.push_back(c->asFrameTableCellBox());
@@ -341,17 +344,11 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     }
 
     // We iterate columns and calculate the following:
-    //
-    // If the width of a cell is specified, use the specified width.
-    // But, if the min width of a cell for a column is greater than the
-    // specified width, use the min width as the column width
-    //
-    // * sum of all cells with specified widths.
-    // * calculate initial column width for cells with specified width
-    // * min/max table width
-    //   - TODO: Need to consider caption widths too
-    // * collect auto and specified width cells for later calculation
-
+    //   * sum of all cells with specified widths.
+    //   * calculate initial column width for cells with specified width
+    //   * min/max table width
+    //     - TODO: Need to consider caption widths too
+    //   * collect auto and specified width cells for later calculation
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->borderSpacing().fixed());
     LayoutUnit minTableWidth = 0;
@@ -483,9 +480,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 col.cellWidth = col.maxCellWidth;
                 sumOfAutoCellPreferredWidths += col.cellWidth;
             } else {
-                LayoutUnit cellWidth = cell->style()->width().fixed();
-                cellWidth += cell->borderWidth() + cell->paddingWidth();
-
+                LayoutUnit cellWidth = col.maxSpecifiedWidth;
                 if (cellWidth.toDouble() <= col.minCellWidth.toDouble()) {
                     col.cellWidth = col.minCellWidth;
                     columnsAdjustedToMinWidths.push_back(&col);
@@ -561,7 +556,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         } else {
             // Decrease the width of each cell in proportion to their
             // preferred widths if the parent width is smaller than
-            // the sum of specified width
+            // the sum of specified width.
             //
             // NOTE: We do not increase the width of a cell to its preferred
             // width if the parent width is larger than the sum of specified
@@ -733,7 +728,9 @@ void FrameTableBox::collectColumnWidths(
 
 bool FrameTableBox::isCellWidthAuto(unsigned i)
 {
-    if (i < m_cellsInTheFirstRow.size()) {
+    if (m_columnWidths[i].hasSpecifiedWidth()) {
+        return false;
+    } else if (i < m_cellsInTheFirstRow.size()) {
         return m_cellsInTheFirstRow[i]->style()->width().isAuto() ? true
                                                                   : false;
     } else {
@@ -773,6 +770,25 @@ FrameTableSectionBox* FrameTableBox::firstNonEmptySectionBoxInVisualOrder()
     if (m_tfoot && m_tfoot->grid().size()) {
         return m_tfoot;
     }
+    return nullptr;
+}
+
+FrameTableSectionBox* FrameTableBox::firstSectionBoxInVisualOrder()
+{
+    if (m_thead) {
+        return m_thead;
+    }
+
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c != m_tfoot && c->isFrameTableSectionBox()) {
+            return c->asFrameTableSectionBox();
+        }
+    }
+
+    if (m_tfoot) {
+        return m_tfoot;
+    }
+
     return nullptr;
 }
 

@@ -44,16 +44,24 @@ class FrameTableColBox;
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
 
-struct ColSizeStruct {
+class ColSizeStruct {
+public:
     ColSizeStruct()
         : id(0)
+        , maxSpecifiedWidth(LayoutUnit())
         , minCellWidth(LayoutUnit())
         , maxCellWidth(LayoutUnit())
         , cellWidth(LayoutUnit())
     {
     }
 
+    bool hasSpecifiedWidth()
+    {
+        return maxSpecifiedWidth == 0 ? false : true;
+    }
+
     size_t id;
+    LayoutUnit maxSpecifiedWidth;
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
     LayoutUnit cellWidth;
@@ -123,6 +131,7 @@ private:
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
+    FrameTableSectionBox* firstSectionBoxInVisualOrder();
 
     bool isCellWidthAuto(unsigned i);
 

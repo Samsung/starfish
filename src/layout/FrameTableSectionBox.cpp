@@ -156,18 +156,19 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
     }
 
     // 1. get max logical column size
-    unsigned logicalColSize = 0;
-    for (unsigned i = 0; i < m_grid.size(); i++) {
+    size_t logicalColSize = 0;
+    for (size_t i = 0; i < m_grid.size(); i++) {
         RowStruct& row = m_grid[i];
-        logicalColSize = std::max<unsigned>(logicalColSize, row.cells.size());
+        logicalColSize = std::max<size_t>(logicalColSize, row.cells.size());
     }
 
     // 2. get min/max column width for each column that does not have a colspan
     m_columnWidths.clear();
-    for (unsigned c = 0; c < logicalColSize; c++) {
+    for (size_t c = 0; c < logicalColSize; c++) {
         LayoutUnit minCellWidthSoFar = 0;
         LayoutUnit maxCellWidthSoFar = 0;
-        for (unsigned r = 0; r < m_grid.size(); r++) {
+        LayoutUnit maxSpecifiedWidth = 0;
+        for (size_t r = 0; r < m_grid.size(); r++) {
             RowStruct& row = m_grid[r];
             if (c < row.cells.size()) {
                 FrameTableCellBox* cell = row.cells[c].cell;
@@ -175,10 +176,19 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
                     std::max(minCellWidthSoFar, cell->minCellWidth());
                 maxCellWidthSoFar =
                     std::max(maxCellWidthSoFar, cell->maxCellWidth());
+                if (cell->style()->width().isFixed()) {
+                    LayoutUnit width = cell->style()->width().fixed();
+                    width += cell->borderWidth() + cell->paddingWidth();
+                    maxSpecifiedWidth = std::max(maxSpecifiedWidth, width);
+                } else if (cell->style()->width().isPercent()) {
+                    // TODO
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
             }
         }
         ColSizeStruct col;
         col.id = c;
+        col.maxSpecifiedWidth = maxSpecifiedWidth;
         col.minCellWidth = minCellWidthSoFar;
         col.maxCellWidth = maxCellWidthSoFar;
         col.cellWidth = maxCellWidthSoFar;
