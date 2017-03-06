@@ -77,14 +77,13 @@ public:
 
     void applyVerticalAlign();
     LayoutUnit calBaseline();
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
 
-    LayoutUnit calMinCellWidth(LayoutContext& ctx);
-    LayoutUnit calMaxCellWidth(LayoutContext& ctx);
-    LayoutUnit calPreferredFrameWidth(LayoutContext& ctx, FrameBlockBox* b);
+    void computePreferredWidthTableCell(PreferredWidthContext& ctx, Frame* f);
 
     unsigned m_absoluteColumnIndex; // starts with 0
     LayoutUnit m_minCellWidth;
