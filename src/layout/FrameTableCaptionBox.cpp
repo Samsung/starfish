@@ -44,6 +44,10 @@ FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(
 
     ctx.setCurrentBlockContainer(lastContext);
 
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        captionNode, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
+        ctx);
+
     return tableCaption;
 }
 
