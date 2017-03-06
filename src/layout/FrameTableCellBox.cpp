@@ -95,10 +95,8 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
     if (style()->width().isAuto() || style()->width().isFixed()) {
-        m_minCellWidth =
-            calMinCellWidth(ctx) + borderWidth() + paddingWidth();
-        m_maxCellWidth =
-            calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
+        m_minCellWidth = calMinCellWidth(ctx) + borderWidth() + paddingWidth();
+        m_maxCellWidth = calMaxCellWidth(ctx) + borderWidth() + paddingWidth();
     } else if (style()->width().isPercent()) {
         // TODO
     } else {
@@ -167,7 +165,8 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx,
         } else if (c->isFrameBlockBox()) {
             FrameBlockBox* box = c->asFrameBlockBox();
             width = calPreferredFrameWidth(ctx, box);
-            width += box->marginWidth() + box->borderWidth() + box->paddingWidth();
+            width +=
+                box->marginWidth() + box->borderWidth() + box->paddingWidth();
         }
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }

@@ -28,13 +28,11 @@ class FrameTableCellBox;
 class ColSizeStruct;
 
 struct CellStruct {
-    CellStruct()
-        : cell(nullptr)
+    CellStruct() : cell(nullptr)
     {
     }
 
-    CellStruct(FrameTableCellBox* cell_)
-        : cell(cell_)
+    CellStruct(FrameTableCellBox* cell_) : cell(cell_)
     {
     }
 

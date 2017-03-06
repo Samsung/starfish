@@ -306,7 +306,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
 
     Text* letter = new Text(originalFrameText->node()->document(),
                             originalText->substring(0, length));
-    ComputedStyle* letterStyle= new ComputedStyle(pseudoStyle);
+    ComputedStyle* letterStyle = new ComputedStyle(pseudoStyle);
     letterStyle->loadResources(pseudoElement);
     letterStyle->arrangeStyleValues(pseudoStyle);
     letter->setStyle(letterStyle);

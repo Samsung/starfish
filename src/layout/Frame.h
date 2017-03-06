@@ -44,15 +44,15 @@ class FrameTableColBox;
 class LineBox;
 
 enum PaintingStage {
-    PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned
-                             // descendants.
+    PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
+                                 // non-positioned descendants.
     PaintingNonPositionedFloats, // the non-positioned float
     PaintingNormalFlowInline,    // the in-flow, inline-level, non-positioned
-                              // descendants, including inline tables and inline
-                              // blocks.
-    PaintingPositionedElements, // the child stacking contexts with stack level
-                                // 0 and the positioned descendants with stack
-                                // level 0.
+                                 // descendants, including inline tables and
+                                 // inline blocks.
+    PaintingPositionedElements,  // the child stacking contexts with stack level
+                                 // 0 and the positioned descendants with stack
+                                 // level 0.
     PaintingStageEnd
 };
 
@@ -398,16 +398,16 @@ class PreferredWidthContext {
 public:
     PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth,
                           LayoutUnit minimumWidth)
-        : m_layoutContext(lc),
-          m_preferredWidthSoFar(0),
-          m_preferredMinWidthSoFar(minimumWidth),
-          m_currentLineWidth(0),
-          m_unprocessedStartingMBPWidth(0),
-          m_candidateLineWidth(0),
-          m_remainedWidth(lastKnownWidth),
-          m_hasFloat(HasNone),
-          m_isWhiteSpaceAtLast(true),
-          m_breakedLineStatus(Never)
+        : m_layoutContext(lc)
+        , m_preferredWidthSoFar(0)
+        , m_preferredMinWidthSoFar(minimumWidth)
+        , m_currentLineWidth(0)
+        , m_unprocessedStartingMBPWidth(0)
+        , m_candidateLineWidth(0)
+        , m_remainedWidth(lastKnownWidth)
+        , m_hasFloat(HasNone)
+        , m_isWhiteSpaceAtLast(true)
+        , m_breakedLineStatus(Never)
     {
     }
 
@@ -515,9 +515,9 @@ private:
 class PaintingContext {
 public:
     PaintingContext(Canvas* canvas)
-        : m_canvas(canvas),
-          m_paintingStage(PaintingNormalFlowBlock),
-          m_paintingInlineStage(PaintingInlineLevelElements)
+        : m_canvas(canvas)
+        , m_paintingStage(PaintingNormalFlowBlock)
+        , m_paintingInlineStage(PaintingInlineLevelElements)
     {
     }
 

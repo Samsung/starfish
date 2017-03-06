@@ -45,11 +45,11 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(
     FrameTableSectionBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     bool isTableSection = (current->style()->display() ==
-                              DisplayValue::TableRowGroupDisplayValue) ||
+                           DisplayValue::TableRowGroupDisplayValue) ||
                           (current->style()->display() ==
-                              DisplayValue::TableHeaderGroupDisplayValue) ||
+                           DisplayValue::TableHeaderGroupDisplayValue) ||
                           (current->style()->display() ==
-                              DisplayValue::TableFooterGroupDisplayValue);
+                           DisplayValue::TableFooterGroupDisplayValue);
 
     if (isTableSection) {
         currentFrame = new FrameTableSectionBox(current, nullptr);

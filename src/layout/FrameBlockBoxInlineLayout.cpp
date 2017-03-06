@@ -1002,11 +1002,11 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block,
                                              const LayoutUnit& lineBoxX,
                                              const LayoutUnit& lineBoxY,
                                              const LayoutUnit& lineBoxWidth)
-    : m_lineBoxY(lineBoxY),
-      m_unprocessedStartingMBPWidth(0),
-      m_block(block),
-      m_layoutContext(ctx),
-      m_inlineBoxIndex(0)
+    : m_lineBoxY(lineBoxY)
+    , m_unprocessedStartingMBPWidth(0)
+    , m_block(block)
+    , m_layoutContext(ctx)
+    , m_inlineBoxIndex(0)
 {
     m_absPosition =
         block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
@@ -1666,7 +1666,8 @@ void LineFormattingContext::insertPendingInlineBoxes()
             iter = m_pendingInlineBoxes.erase(iter);
             continue;
         } else if (dontBreakLine(this, box, box->boxWidth())) {
-            if (!box->shouldPreserveWhiteSpaces() && containOnlyWhiteSpace(box)) {
+            if (!box->shouldPreserveWhiteSpaces() &&
+                containOnlyWhiteSpace(box)) {
                 setIsWhiteSpaceAtLast(true);
             } else {
                 setIsWhiteSpaceAtLast(false);
