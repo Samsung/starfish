@@ -61,6 +61,11 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
     }
 
     ctx.setCurrentBlockContainer(parent);
+
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
+        ctx);
+
     STARFISH_ASSERT(currentFrame);
     return currentFrame;
 }
