@@ -2,6 +2,7 @@
 import os
 import subprocess
 import utils
+from urlparse import urlparse
 
 try:
   FNULL
@@ -19,6 +20,7 @@ HIDE_WINDOW_OPT = "--hide-window"
 DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_FONT_OPT = AHEM_OPT
+REMOTE_EXP_DIR = "test/remote-test"
 
 class __PixelTestOpts():
     def __init__(self):
@@ -120,6 +122,13 @@ def default_tc_handler(tc_file, diff_result, show_progress=True):
 
 
 def default_expected_namer(tc_file):
+    if tc_file.startswith("http"):
+        # Remote test
+        # Ex) http://52.79.162.207/some/directory/tc_some_name.html
+        #  => test/remote-test/some/directory/tc_some_name_expected.png
+        expected = os.path.splitext(tc_file)[0] + "_expected.png"
+        path = urlparse(expected).path
+        return REMOTE_EXP_DIR + path
     return os.path.splitext(tc_file)[0] + "_expected.png"
 
 # standalone version

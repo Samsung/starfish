@@ -53,6 +53,11 @@ def run_default_basic_test(list, font_dep):
     result = basictest.run_parallel(list, regression=font_dep)
     return handle_result(result)
 
+def run_default_pixel_test(list, font_dep):
+    import basics.starfish_pixel_test as pixeltest
+    result = pixeltest.run_parallel(list, ahem_font=(not font_dep))
+    return handle_result(result)
+
 
 tests = {}
 tests["dom_conformance"] = run_dom_conformance_test
@@ -61,6 +66,7 @@ tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
 tests["internal"] = run_default_basic_test
+tests["pixel"] = run_default_pixel_test
 
 
 if __name__ == "__main__":
@@ -82,4 +88,4 @@ if __name__ == "__main__":
         print "Elapsed time " + str(elapsed_time) + " ms"
         sys.exit(0 if result else 1)
     except KeyError:
-        print "No such test named '" + args.test_title + "'"
+        print "No such test named '" + args.test_kind + "'"
