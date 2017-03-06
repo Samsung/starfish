@@ -708,7 +708,6 @@ install_git_prepush:
 
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
-	javac StarFishTester.java
 	mkdir -p ~/.fonts
 	cp test/tool/fonts/AHEM____.TTF ~/.fonts/
 	cp test/tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
@@ -830,8 +829,8 @@ vendor_test_webkit_fast_etc:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc.res
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc_manual.res --font-dep
 
-regression_test_bidi:
-	./tool/reftest/reftest.sh tool/reftest/bidi.res true
+bidi_test:
+	./tool/drivers/run_test.py bidi tool/reftest/bidi.res --font-dep
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp

@@ -47,6 +47,12 @@ def run_csswg_test(list, font_dep):
     result = pixeltest.run_parallel(list, tc_handler=tc_handler, ahem_font=(not font_dep), expected_namer=get_exp_img_namer(font_dep))
     return handle_result(result)
 
+# Bidi Tests
+def run_bidi_test(list, font_dep):
+    import basics.starfish_pixel_test as pixeltest
+    result = pixeltest.run_parallel(list, ahem_font=(not font_dep), width=900, height=900)
+    return handle_result(result)
+
 # Internal Tests
 def run_default_basic_test(list, font_dep):
     import basics.starfish_basic_test as basictest
@@ -67,6 +73,7 @@ tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
 tests["internal"] = run_default_basic_test
 tests["pixel"] = run_default_pixel_test
+tests["bidi"] = run_bidi_test
 
 
 if __name__ == "__main__":
