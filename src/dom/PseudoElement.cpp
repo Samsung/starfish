@@ -108,7 +108,7 @@ size_t FirstLetterPseudoElement::firstLetterLength(String* text)
 
 // Once we see any of these frames we can stop looking for first-letter as
 // they signal the end of the first line of text.
-static bool isInvalidFirstLetterLayoutObject(Frame* obj)
+static bool isInvalidFirstLetterFrame(Frame* obj)
 {
     STARFISH_ASSERT(obj);
     return obj->isFrameLineBreak();
@@ -135,33 +135,52 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
         return nullptr;
     }
 
-    Frame* firstLetterFrameText = parentFrame->firstChild();
+    Frame* firstLetterFrame = parentFrame->firstChild();
 
     // TODO: find proper position to insert frame of first-letter pseudo element
-    while (firstLetterFrameText) {
-        if (firstLetterFrameText->node()->isElement() &&
-            firstLetterFrameText->node()->asElement()->hasPseudoElement(
-                StyleResolver::PseudoElementType::PseudoElementFirstLetter)) {
-            firstLetterFrameText = firstLetterFrameText->next();
-        } else if (firstLetterFrameText->isFrameText()) {
-            String* str = firstLetterFrameText->asFrameText()->text();
+    while (firstLetterFrame) {
+        if (firstLetterFrame->isAnonymous()) {
+            if (Frame* c = firstLetterFrame->firstChild()) {
+                if (c->isFrameText() &&
+                    c->asFrameText()->text()->containsOnlyWhitespace()) {
+                    firstLetterFrame = firstLetterFrame->next();
+                    continue;
+                }
+            }
+            firstLetterFrame = firstLetterFrame->firstChild();
+        } else if (firstLetterFrame->node()->isElement() &&
+                   firstLetterFrame->node()->asElement()->hasPseudoElement(
+                       StyleResolver::PseudoElementType::
+                           PseudoElementFirstLetter)) {
+            firstLetterFrame = firstLetterFrame->next();
+        } else if (firstLetterFrame->isFrameText()) {
+            String* str = firstLetterFrame->asFrameText()->text();
             if (firstLetterLength(str) ||
-                isInvalidFirstLetterLayoutObject(firstLetterFrameText)) {
+                isInvalidFirstLetterFrame(firstLetterFrame)) {
                 break;
             }
-            firstLetterFrameText = firstLetterFrameText->next();
-        } else if (firstLetterFrameText->isFrameReplaced()) {
+            firstLetterFrame = firstLetterFrame->next();
+        } else if (!firstLetterFrame->isNormalFlow()) { // float or out-of-flow
+            if (firstLetterFrame->node()->isElement() &&
+                firstLetterFrame->node()->asElement()->hasPseudoElement(
+                    StyleResolver::PseudoElementType::
+                        PseudoElementFirstLetter)) {
+                firstLetterFrame = firstLetterFrame->firstChild();
+                break;
+            }
+            firstLetterFrame = firstLetterFrame->next();
+        } else if (firstLetterFrame->isFrameReplaced()) {
             return nullptr;
         } else {
-            firstLetterFrameText = firstLetterFrameText->firstChild();
+            firstLetterFrame = firstLetterFrame->firstChild();
         }
     }
 
-    if (!firstLetterFrameText || !firstLetterFrameText->asFrameText()->text() ||
-        isInvalidFirstLetterLayoutObject(firstLetterFrameText)) {
+    if (!firstLetterFrame || !firstLetterFrame->asFrameText()->text() ||
+        isInvalidFirstLetterFrame(firstLetterFrame)) {
         return nullptr;
     }
 
-    return firstLetterFrameText;
+    return firstLetterFrame;
 }
 }
