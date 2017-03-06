@@ -282,13 +282,11 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
             // FIXME: LayoutUnit has a rounding error bug when division is
             // performed. To workaround, we convert LayoutUnit to double,
             // do calculation, and convert back to LayoutUnit.
-            // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth /
-            // totalCellWidths);
             LayoutUnit newCellWidth(
                 availableWidth.toDouble() *
                 (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
 
-            if (newCellWidth.round() < col.minCellWidth) {
+            if (newCellWidth < col.minCellWidth) {
                 col.cellWidth = col.minCellWidth;
                 availableWidth -= col.minCellWidth;
                 totalCellWidths -= col.maxCellWidth;
@@ -298,13 +296,10 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
         for (auto& col : m_columnWidths) {
             if (col.cellWidth != col.minCellWidth) {
                 // To workaround the rounding error in LayoutUnit
-                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth
-                // / totalCellWidths);
                 LayoutUnit newCellWidth(
                     availableWidth.toDouble() *
                     (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth =
-                    std::max(col.minCellWidth.toInt(), newCellWidth.round());
+                col.cellWidth = std::max(col.minCellWidth, newCellWidth);
             }
         }
     }
