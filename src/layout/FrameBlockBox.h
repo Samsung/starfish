@@ -392,10 +392,10 @@ protected:
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin)
-        : InlineBox(frame->node(), frame->style()),
-          m_isCollapsed(false),
-          m_origin(origin),
-          m_mbpStatus(nullptr)
+        : InlineBox(frame->node(), frame->style())
+        , m_isCollapsed(false)
+        , m_origin(origin)
+        , m_mbpStatus(nullptr)
     {
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
@@ -776,10 +776,10 @@ struct FloatingBoxLayoutContext {
     FloatingBoxLayoutContext(int hasFloat, LayoutUnit y,
                              LayoutUnit originalLineBoxX,
                              LayoutUnit originalLineBoxWidth)
-        : m_hasFloat(hasFloat),
-          m_y(y),
-          m_originalLineBoxX(originalLineBoxX),
-          m_originalLineBoxWidth(originalLineBoxWidth)
+        : m_hasFloat(hasFloat)
+        , m_y(y)
+        , m_originalLineBoxX(originalLineBoxX)
+        , m_originalLineBoxWidth(originalLineBoxWidth)
     {
     }
 };

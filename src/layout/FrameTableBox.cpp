@@ -49,10 +49,10 @@ public:
 };
 
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
-    : FrameTableObjectBox(node, style),
-      m_tableRect(0, 0, 0, 0),
-      m_thead(nullptr),
-      m_tfoot(nullptr)
+    : FrameTableObjectBox(node, style)
+    , m_tableRect(0, 0, 0, 0)
+    , m_thead(nullptr)
+    , m_tfoot(nullptr)
 {
 }
 

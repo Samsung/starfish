@@ -34,14 +34,14 @@ class FrameBox : public Frame {
 
 public:
     FrameBox(Node* node, ComputedStyle* style)
-        : Frame(node, style),
-          m_frameRect(0, 0, 0, 0),
-          m_padding(),
-          m_border(),
-          m_margin(),
-          m_marginCollapseResult(),
-          m_stackingContext(nullptr),
-          m_inlineBoxIndex(SIZE_MAX)
+        : Frame(node, style)
+        , m_frameRect(0, 0, 0, 0)
+        , m_padding()
+        , m_border()
+        , m_margin()
+        , m_marginCollapseResult()
+        , m_stackingContext(nullptr)
+        , m_inlineBoxIndex(SIZE_MAX)
     {
     }
 
