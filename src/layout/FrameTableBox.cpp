@@ -255,7 +255,7 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
 
     // 2.1 calculate the table width
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
     LayoutUnit tableWidth = 0;
     tableWidth += marginWidth() + borderWidth() + paddingWidth();
     tableWidth += borderSpacing;
@@ -350,7 +350,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
     //     - TODO: Need to consider caption widths too
     //   * collect auto and specified width cells for later calculation
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
     LayoutUnit minTableWidth = 0;
     LayoutUnit maxTableWidth = 0;
     minTableWidth += marginWidth() + borderWidth() + paddingWidth();
