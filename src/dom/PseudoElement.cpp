@@ -169,7 +169,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
                 break;
             }
             firstLetterFrame = firstLetterFrame->next();
-        } else if (firstLetterFrame->isFrameReplaced()) {
+        } else if (firstLetterFrame->isAtomicInlineLevel()) {
             return nullptr;
         } else {
             firstLetterFrame = firstLetterFrame->firstChild();

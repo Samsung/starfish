@@ -1151,6 +1151,13 @@ public:
                (style()->display() == DisplayValue::TableDisplayValue);
     }
 
+    bool isAtomicInlineLevel()
+    {
+        return (isFrameReplaced()) ||
+               (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
+               (style()->display() == DisplayValue::InlineTableDisplayValue);
+    }
+
     Element* offsetParent();
 
     bool shouldWrapLines()
