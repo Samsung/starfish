@@ -60,8 +60,8 @@ public:
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
-        m_inheritedStyles.m_borderSpacing = Length(Length::Fixed, 2);
-
+        m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
+        m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
         initNonInheritedStyles();
     }
 
@@ -906,9 +906,14 @@ public:
         return m_unicodeBidi;
     }
 
-    Length borderSpacing()
+    Length horizontalBorderSpacing()
     {
-        return m_inheritedStyles.m_borderSpacing;
+        return m_inheritedStyles.m_horizontalBorderSpacing;
+    }
+
+    Length verticalBorderSpacing()
+    {
+        return m_inheritedStyles.m_verticalBorderSpacing;
     }
 
     BorderCollapseValue borderCollapse()
@@ -992,7 +997,8 @@ protected:
         WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;
         BorderCollapseValue m_borderCollapse : 1; // table
-        Length m_borderSpacing;                   // table
+        Length m_horizontalBorderSpacing;         // table
+        Length m_verticalBorderSpacing;           // table
         CaptionSideValue m_captionSide : 1;       // table
     } m_inheritedStyles;
 

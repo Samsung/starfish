@@ -3059,19 +3059,35 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
 
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
-                style->m_inheritedStyles.m_borderSpacing =
-                    parentStyle->m_inheritedStyles.m_borderSpacing;
+                style->m_inheritedStyles.m_horizontalBorderSpacing =
+                    parentStyle->m_inheritedStyles.m_horizontalBorderSpacing;
+                style->m_inheritedStyles.m_verticalBorderSpacing =
+                    parentStyle->m_inheritedStyles.m_verticalBorderSpacing;
                 break;
             case CSSStyleValuePair::ValueKind::Initial:
-                // TODO: need to get the value from the default style sheet
-                style->m_inheritedStyles.m_borderSpacing =
-                    Length(Length::Fixed, 2);
+                style->m_inheritedStyles.m_horizontalBorderSpacing =
+                    Length(Length::Fixed, 0);
+                style->m_inheritedStyles.m_verticalBorderSpacing =
+                    Length(Length::Fixed, 0);
+                break;
+            case CSSStyleValuePair::ValueKind::Length:
+                style->m_inheritedStyles.m_horizontalBorderSpacing =
+                    convertValueToLength(cssValues[k].valueKind(),
+                                         cssValues[k].value());
+                style->m_inheritedStyles.m_verticalBorderSpacing =
+                    convertValueToLength(cssValues[k].valueKind(),
+                                         cssValues[k].value());
                 break;
             default:
-                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::Length ==
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
                                 cssValues[k].valueKind());
-                style->m_inheritedStyles.m_borderSpacing = convertValueToLength(
-                    cssValues[k].valueKind(), cssValues[k].value());
+                ValueList* list = cssValues[k].multiValue();
+                style->m_inheritedStyles.m_horizontalBorderSpacing =
+                    convertValueToLength(list->atIndex(0).valueKind(),
+                                         list->atIndex(0).value());
+                style->m_inheritedStyles.m_verticalBorderSpacing =
+                    convertValueToLength(list->atIndex(1).valueKind(),
+                                         list->atIndex(1).value());
             }
             break;
         case CSSStyleValuePair::KeyKind::CaptionSide:
@@ -5290,11 +5306,36 @@ bool CSSStyleValuePair::updateValueBorderCollapse(GCVector<String*>* tokens)
 
 bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
 {
-    if (tokens->size() != 1 && tokens->size() != 2) {
-        return false;
+    // <length> <length>? | inherit,
+    // Initial : 0, Percentages: N/A, lengths may not be negative.
+    if (tokens->size() == 1) {
+        String* first = (*tokens)[0];
+        ValueData data = { 0 };
+        if (CSSPropertyParser::parseLength(first->utf8Data(), false,
+                                           &(data.m_length))) {
+            setLengthValue(data.m_length);
+            return true;
+        }
+    } else if (tokens->size() == 2){
+        String* first = (*tokens)[0];
+        String* second = (*tokens)[1];
+        ValueData firstData = { 0 };
+        ValueData secondData = { 0 };
+        if (CSSPropertyParser::parseLength(first->utf8Data(), false,
+                                           &(firstData.m_length)) &&
+            CSSPropertyParser::parseLength(second->utf8Data(), false,
+                                           &(secondData.m_length))) {
+            m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+            m_value.m_multiValue =
+                new ValueList(ValueList::Separator::SpaceSeparator);
+            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Length,
+                                         firstData);
+            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Length,
+                                         secondData);
+            return true;
+        }
     }
-    String* value = (*tokens)[0];
-    return updateValueLengthOrPercentOrAuto(value, false);
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueCaptionSide(GCVector<String*>* tokens)
