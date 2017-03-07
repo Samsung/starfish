@@ -114,6 +114,7 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
     }
 }
 
+// A callback function to handle text tokens
 struct PreferredWidthTextHandler
 {
     PreferredWidthTextHandler() : m_minWidthSoFar(0)
@@ -145,30 +146,38 @@ struct PreferredWidthTextHandler
 
 void FrameTableCellBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
+    return computePreferredWidthTableCell(ctx, this);
+}
+
+void FrameTableCellBox::computePreferredWidthTableCell(PreferredWidthContext& ctx, Frame* f)
+{
     LayoutUnit minWidthSoFar = 0;
     LayoutUnit maxWidthSoFar = 0;
     LayoutUnit sumOfTokenWidthSoFar = 0;
 
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameBlockBox()) {
+    for (Frame* c = f->firstChild(); c; c = c->next()) {
+        PreferredWidthContext p(ctx.layoutContext(), LayoutUnit::max());
+
+        if (c->isFrameText()) {
+            PreferredWidthTextHandler h;
+            tokenizeText(ctx.layoutContext().starFish(), c->asFrameText(), &h);
+            minWidthSoFar = std::max(minWidthSoFar, h.m_minWidthSoFar);
+            sumOfTokenWidthSoFar += h.m_maxWidthSoFar;
+            maxWidthSoFar = std::max(maxWidthSoFar, sumOfTokenWidthSoFar);
+        } else if (c->isFrameInline()) {
+            computePreferredWidthTableCell(p, c);
+            minWidthSoFar = std::max(minWidthSoFar, p.preferredMinWidth());
+            sumOfTokenWidthSoFar += p.preferredWidth();
+            maxWidthSoFar = std::max(maxWidthSoFar, sumOfTokenWidthSoFar);
+        } else if (c->isFrameBlockBox()) {
             sumOfTokenWidthSoFar = 0;
-            PreferredWidthContext p(ctx.layoutContext(), LayoutUnit::max());
             c->computePreferredWidth(p);
             minWidthSoFar = std::max(minWidthSoFar, p.preferredMinWidth());
             maxWidthSoFar = std::max(maxWidthSoFar, p.preferredWidth());
         } else {
-            if (c->isFrameText()) {
-                PreferredWidthTextHandler h;
-                tokenizeText(ctx.layoutContext().starFish(), c->asFrameText(), &h);
-                minWidthSoFar = std::max(minWidthSoFar, h.m_minWidthSoFar);
-                sumOfTokenWidthSoFar += h.m_maxWidthSoFar;
-            } else if (c->isFrameInline()) {
-                PreferredWidthContext p(ctx.layoutContext(), LayoutUnit::max());
-                c->computePreferredWidth(p);
-                minWidthSoFar = std::max(minWidthSoFar, p.preferredMinWidth());
-                sumOfTokenWidthSoFar += p.preferredWidth();
-            }
-            maxWidthSoFar = std::max(maxWidthSoFar, sumOfTokenWidthSoFar);
+            c->computePreferredWidth(p);
+            minWidthSoFar = std::max(minWidthSoFar, p.preferredMinWidth());
+            maxWidthSoFar = std::max(maxWidthSoFar, p.preferredWidth());
         }
     }
     ctx.updatePreferredMinWidth(minWidthSoFar);
