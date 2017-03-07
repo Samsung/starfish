@@ -501,9 +501,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
-    if (newStyle->m_background == NULL && oldStyle->m_background == NULL) {
-    } else if (newStyle->m_background == NULL ||
-               oldStyle->m_background == NULL) {
+    if (newStyle->m_background == nullptr && oldStyle->m_background == nullptr) {
+    } else if (newStyle->m_background == nullptr ||
+               oldStyle->m_background == nullptr) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else if (*newStyle->m_background != *oldStyle->m_background) {
@@ -511,8 +511,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->m_surround == NULL && oldStyle->m_surround == NULL) {
-    } else if (newStyle->m_surround == NULL || oldStyle->m_surround == NULL) {
+    if (newStyle->m_surround == nullptr && oldStyle->m_surround == nullptr) {
+    } else if (newStyle->m_surround == nullptr || oldStyle->m_surround == nullptr) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     } else if (*newStyle->m_surround != *oldStyle->m_surround) {
@@ -520,9 +520,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_transforms == NULL && oldStyle->m_transforms == NULL) {
-    } else if (newStyle->m_transforms == NULL ||
-               oldStyle->m_transforms == NULL) {
+    if (newStyle->m_transforms == nullptr && oldStyle->m_transforms == nullptr) {
+    } else if (newStyle->m_transforms == nullptr ||
+               oldStyle->m_transforms == nullptr) {
         // if element has transform, we should re-layout for building
         // stacking-context
         damage = (ComputedStyleDamage)(
@@ -536,10 +536,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
-    if (newStyle->m_transformOrigin == NULL &&
-        oldStyle->m_transformOrigin == NULL) {
-    } else if (newStyle->m_transformOrigin == NULL ||
-               oldStyle->m_transformOrigin == NULL) {
+    if (newStyle->m_transformOrigin == nullptr &&
+        oldStyle->m_transformOrigin == nullptr) {
+    } else if (newStyle->m_transformOrigin == nullptr ||
+               oldStyle->m_transformOrigin == nullptr) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageComposite | damage);
     } else {
@@ -547,6 +547,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageComposite | damage);
         }
+    }
+
+    // The style for the 'content' property is computed when we build the frame
+    // tree if it is needed.
+    if (newStyle->m_content != oldStyle->m_content) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     return damage;
