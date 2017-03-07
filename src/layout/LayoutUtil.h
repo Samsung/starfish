@@ -956,21 +956,21 @@ inline int floorToInt(LayoutUnit value)
     return value.floor();
 }
 
+static float roundInternal(const float value, const float pixelSnappingFactor)
+{
+    return roundf((value * pixelSnappingFactor) / kFixedPointDenominator) /
+           pixelSnappingFactor;
+}
+
 inline float roundToDevicePixel(LayoutUnit value,
                                 const float pixelSnappingFactor,
                                 bool needsDirectionalRounding = false)
 {
-    auto roundInternal = [&](float valueToRound) {
-        return roundf((valueToRound * pixelSnappingFactor) /
-                      kFixedPointDenominator) /
-               pixelSnappingFactor;
-    };
-
     float adjustedValue =
         value.rawValue() -
         (needsDirectionalRounding ? LayoutUnit::epsilon() / 2.0f : 0);
     if (adjustedValue >= 0) {
-        return roundInternal(adjustedValue);
+        return roundInternal(adjustedValue, pixelSnappingFactor);
     }
 
     // This adjusts directional rounding on negative halfway values. It produces
@@ -979,7 +979,8 @@ inline float roundToDevicePixel(LayoutUnit value,
     // if they were positive absolute coordinates.
     float translateOrigin = fabsf(adjustedValue - LayoutUnit::fromPixel(1));
     return roundInternal(adjustedValue +
-                         (translateOrigin * kFixedPointDenominator)) -
+                             (translateOrigin * kFixedPointDenominator),
+                         pixelSnappingFactor) -
            translateOrigin;
 }
 

@@ -257,7 +257,7 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
     LayoutUnit tableWidth = 0;
-    tableWidth += marginWidth() + borderWidth() + paddingWidth();
+    tableWidth += mbpWidth();
     tableWidth += borderSpacing;
     for (auto& colSize : m_columnWidths) {
         tableWidth += colSize.maxCellWidth + borderSpacing;
@@ -266,7 +266,7 @@ void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
     LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
     if (tableWidth > parentContentWidth) {
         LayoutUnit availableWidth = parentContentWidth;
-        availableWidth -= marginWidth() + borderWidth() + paddingWidth();
+        availableWidth -= mbpWidth();
         availableWidth -=
             borderSpacing + (borderSpacing * m_columnWidths.size());
 
@@ -348,7 +348,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
     LayoutUnit minTableWidth = 0;
     LayoutUnit maxTableWidth = 0;
-    minTableWidth += marginWidth() + borderWidth() + paddingWidth();
+    minTableWidth += mbpWidth();
     minTableWidth += borderSpacing;
     maxTableWidth = minTableWidth;
 
