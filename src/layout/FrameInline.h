@@ -36,6 +36,9 @@ public:
     {
         return "FrameInline";
     }
+
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {

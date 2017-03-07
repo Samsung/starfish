@@ -63,11 +63,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             //     'padding-right' + 'border-right-width' + 'margin-right'
             ComputedStyle* style = Frame::style();
             if (style->width().isAuto()) {
-                if (m_flags.m_shouldComputePreferredWidth) {
+                if (style->display() == InlineBlockDisplayValue) {
                     LayoutUnit mbp =
-                        PreferredWidthContext::computeMinimumWidthDueToMBP(
-                            style);
-                    PreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
+                        marginWidth() + borderWidth() + paddingWidth();
+                    PreferredWidthContext p(ctx, parentContentWidth - mbp);
                     computePreferredWidth(p);
                     applyMinMaxWidthIfNeeds(p.preferredWidth(),
                                             parentContentWidth);
@@ -188,48 +187,38 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             LayoutUnit containgBlockContentWidth =
                 cb->contentWidth() + cb->paddingWidth();
 
-            auto computeContentWidth = [&](
-                bool shouldUseParentWidthForComputePreferredWidthFromOutside =
-                    false,
-                LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0) {
-                if (width.isAuto()) {
-                    LayoutUnit parentWidthForComputePreferredWidth;
-                    if (shouldUseParentWidthForComputePreferredWidthFromOutside) {
-                        parentWidthForComputePreferredWidth =
-                            parentWidthForComputePreferredWidthFromOutside;
-                    } else {
-                        parentWidthForComputePreferredWidth =
-                            containgBlockContentWidth;
-                        if (direction == LtrDirectionValue) {
-                            parentWidthForComputePreferredWidth =
-                                parentWidthForComputePreferredWidth - absX -
-                                x();
+            auto computeContentWidth =
+                [&](bool shouldUseParentWidthFromOutside = false,
+                    LayoutUnit parentWidthFromOutside = 0) {
+                    if (width.isAuto()) {
+                        LayoutUnit parentWidth;
+                        if (shouldUseParentWidthFromOutside) {
+                            parentWidth = parentWidthFromOutside;
                         } else {
-                            parentWidthForComputePreferredWidth = x() + absX;
+                            parentWidth = containgBlockContentWidth;
+                            if (direction == LtrDirectionValue) {
+                                parentWidth = parentWidth - absX - x();
+                            } else {
+                                parentWidth = x() + absX;
+                            }
                         }
+
+                        LayoutUnit mbp =
+                            marginWidth() + borderWidth() + paddingWidth();
+
+                        PreferredWidthContext p(ctx, parentWidth - mbp);
+                        computePreferredWidth(p);
+                        applyMinMaxWidthIfNeeds(p.preferredWidth(),
+                                                containgBlockContentWidth);
+                    } else if (width.isFixed()) {
+                        applyMinMaxWidthIfNeeds(width.fixed(),
+                                                containgBlockContentWidth);
+                    } else if (width.isPercent()) {
+                        applyMinMaxWidthIfNeeds(containgBlockContentWidth *
+                                                    width.percent(),
+                                                containgBlockContentWidth);
                     }
-
-                    parentWidthForComputePreferredWidth -=
-                        marginWidth() + borderWidth() + paddingWidth();
-
-                    if (parentWidthForComputePreferredWidth < 0) {
-                        parentWidthForComputePreferredWidth = 0;
-                    }
-
-                    PreferredWidthContext p(
-                        ctx, parentWidthForComputePreferredWidth, 0);
-                    computePreferredWidth(p);
-                    applyMinMaxWidthIfNeeds(p.preferredWidth(),
-                                            containgBlockContentWidth);
-                } else if (width.isFixed()) {
-                    applyMinMaxWidthIfNeeds(width.fixed(),
-                                            containgBlockContentWidth);
-                } else if (width.isPercent()) {
-                    applyMinMaxWidthIfNeeds(containgBlockContentWidth *
-                                                width.percent(),
-                                            containgBlockContentWidth);
-                }
-            };
+                };
 
             if (left.isAuto() && width.isAuto() && right.isAuto()) {
                 // If all three of 'left', 'width', and 'right' are 'auto':
@@ -396,16 +385,11 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
             auto computeContentWidth = [&]() {
                 if (width.isAuto()) {
-                    LayoutUnit parentWidthForComputePreferredWidth =
-                        containgBlockContentWidth - marginWidth() -
-                        borderWidth() - paddingWidth();
+                    LayoutUnit mbp =
+                        marginWidth() + borderWidth() + paddingWidth();
 
-                    if (parentWidthForComputePreferredWidth < 0) {
-                        parentWidthForComputePreferredWidth = 0;
-                    }
-
-                    PreferredWidthContext p(
-                        ctx, parentWidthForComputePreferredWidth, 0);
+                    PreferredWidthContext p(ctx,
+                                            containgBlockContentWidth - mbp);
                     computePreferredWidth(p);
                     applyMinMaxWidthIfNeeds(p.preferredWidth(),
                                             containgBlockContentWidth);

@@ -1888,7 +1888,7 @@ test/reftest/csswg-test/css21_original/text/white-space-collapsing-breaks-001.ht
 # test/reftest/csswg-test/css21_original/text/word-spacing-remove-space-006.htm
 # test/reftest/csswg-test/css21_original/text/white-space-mixed-001.htm
 # test/reftest/csswg-test/css21_original/text/white-space-mixed-002.htm
-test/reftest/csswg-test/css21_original/text/white-space-mixed-003.htm
+# test/reftest/csswg-test/css21_original/text/white-space-mixed-003.htm
 # test/reftest/csswg-test/css21_original/text/white-space-mixed-004.htm
 test/reftest/csswg-test/css21_original/text/white-space-p-element-001.htm
 # test/reftest/csswg-test/css21_original/text/white-space-pre-element-001.htm

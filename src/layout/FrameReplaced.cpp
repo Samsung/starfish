@@ -468,47 +468,6 @@ void FrameReplaced::layout(LayoutContext& ctx,
     }
 }
 
-void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
-{
-    LayoutUnit parentContentWidth =
-        ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
-    LayoutUnit intrinsicWidth, intrinsicHeight;
-    Length parentContentHeight;
-    if (ctx.layoutContext().parentHasFixedHeight(this)) {
-        parentContentHeight =
-            Length(Length::Fixed, ctx.layoutContext().parentFixedHeight(this));
-    } else {
-        parentContentHeight = Length(Length::Auto);
-    }
-    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth,
-                         parentContentHeight);
-
-    if (style()->width().isAuto() && style()->height().isAuto()) {
-        ctx.updatePreferredWidth(intrinsicWidth);
-        ctx.updatePreferredMinWidth(intrinsicWidth);
-    } else if (style()->width().isSpecified()) {
-        if (style()->width().isFixed()) {
-            ctx.updatePreferredWidth(style()->width().fixed());
-            ctx.updatePreferredMinWidth(style()->width().fixed());
-        } else {
-            ctx.updatePreferredWidth(intrinsicWidth);
-            ctx.updatePreferredMinWidth(intrinsicWidth);
-        }
-    } else if (style()->height().isSpecified()) {
-        if (style()->height().isFixed()) {
-            LayoutUnit h = style()->height().fixed();
-            LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-            ctx.updatePreferredWidth(w);
-            ctx.updatePreferredMinWidth(w);
-        } else {
-            ctx.updatePreferredWidth(intrinsicWidth);
-            ctx.updatePreferredMinWidth(intrinsicWidth);
-        }
-    } else {
-        ctx.updatePreferredWidth(intrinsicWidth);
-    }
-}
-
 void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
                                          LayoutUnit& intrinsicHeight,
                                          LayoutUnit parentContentWidth,

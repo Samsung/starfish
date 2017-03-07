@@ -840,15 +840,17 @@ private:
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 
-public:
-    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx,
-                          const LayoutUnit& lineBoxX,
-                          const LayoutUnit& lineBoxY,
-                          const LayoutUnit& lineBoxWidth);
+    bool canInsertToLineBox(Frame* f, LayoutUnit width);
+    bool hasFloatingBoxAlreadyInLineBox(Frame* f);
+    bool canInsertFloatingBox(FrameBox* f, bool allowPendingFloatingBox);
 
-    FontHeights computeVerticalProperties(FrameBox* parentBox,
-                                          ComputedStyle* parentStyle,
-                                          bool dueToBr);
+    void collectComputeDirectionsCandidate(Frame* parent,
+                                           std::vector<Frame*>& frames);
+
+public:
+    LineFormattingContext(FrameBlockBox* block, LayoutContext& ctx);
+
+    FontHeights computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
 
     void generateInlineBoxes(Frame* origin);
 
@@ -866,7 +868,7 @@ public:
 
     LineBox* currentLine()
     {
-        return m_block.m_lineBoxes.back();
+        return m_block->m_lineBoxes.back();
     }
 
     void handleTextToken(TextToken& token);
@@ -891,19 +893,9 @@ public:
         m_inlineBlockAscender[box] = ascender;
     }
 
-    bool hasFloatingBoxAlreadyInLineBox(Frame* f)
-    {
-        if (f->isFloating()) {
-            STARFISH_ASSERT(f->style()->position() != AbsolutePositionValue);
-            FloatingBoxLayoutContext& fbCtx =
-                (*m_floatingBoxLayoutContexts.rbegin());
-            return fbCtx.m_hasFloat != HasNone;
-        } else {
-            FloatingBoxLayoutContext& fbCtx =
-                (*m_floatingBoxLayoutContexts.begin());
-            return fbCtx.m_hasFloat != HasNone;
-        }
-    }
+    bool dontBreakLine(Frame* f, LayoutUnit width);
+
+    void computeDirection(Frame* parent, DirectionValue direction);
 
     LayoutUnit m_leftBoundary;
     LayoutUnit m_rightBoundary;
@@ -914,7 +906,7 @@ public:
     LayoutUnit m_lineBoxWidth;
     LayoutUnit m_unprocessedStartingMBPWidth;
     size_t m_currentLine;
-    FrameBlockBox& m_block;
+    FrameBlockBox* m_block;
     LayoutContext& m_layoutContext;
     // This layout parent should be either LineBox or InlineNonReplacedBox
     FrameBox* m_currentLayoutParent;
