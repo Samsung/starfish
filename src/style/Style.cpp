@@ -3492,7 +3492,35 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
             }
             break;
         case CSSStyleValuePair::KeyKind::Content:
-            // TODO: Set ComputedStyle for the content property.
+            // Initial value is normal and it computes to 'none' for the
+            // :before and :after pseudo-elements.
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial ||
+                cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                return;
+            } else {
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* list = cssValues[k].multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    CSSStyleValuePair& item = list->atIndex(i);
+                    if (item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::None ||
+                        item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Normal) {
+                        return;
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::UrlValueKind) {
+                        style->setContentImage(item.urlValue(origin));
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::StringValueKind) {
+                        style->setContentText(item.stringValue());
+                    } else {
+                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    }
+                }
+            }
             break;
         }
     }

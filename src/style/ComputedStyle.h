@@ -23,6 +23,7 @@
 #include "style/StyleTransformData.h"
 #include "style/StyleTransformOrigin.h"
 #include "style/DefaultStyle.h"
+#include "style/ContentData.h"
 
 namespace StarFish {
 
@@ -930,6 +931,24 @@ public:
         return m_tableLayout;
     }
 
+    ContentDataGroup& content() {
+        return m_content;
+    }
+
+    void setContentText(String* text)
+    {
+        ContentData content(ContentData::ContentType::Text);
+        content.setText(text);
+        m_content.push_back(content);
+    }
+
+    void setContentImage(String* image)
+    {
+        ContentData content(ContentData::ContentType::Image);
+        content.setImage(image);
+        m_content.push_back(content);
+    }
+
     void setPseudoType(StyleResolver::PseudoElementType id)
     {
         m_pseudoId = id;
@@ -1006,6 +1025,7 @@ protected:
     StyleSurroundData* m_surround;
     StyleTransformDataGroup* m_transforms;
     StyleTransformOrigin* m_transformOrigin;
+    ContentDataGroup m_content;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
