@@ -16,8 +16,40 @@ e.g. `make x64.exe.debug -j`
 Use `./run.sh [html_file_path]` to run StarFish
 
 ## Testing
+#### Summary
+``` sh
+# Run all test at once
+make test_all
+```
+``` sh
+# Sub tests
+# A. Dom Conformance Test (4)
+make dom_conformance_test
+make dom_conformance_test_[webkit|blink|gecko]
 
-### CSSWG Test (compare with node-WebKit/previous version of StarFish)
+# B. Web Platfrom Test (6)
+make web_platform_test_[dom|dom_events|html|page_visibility|progress_events|xhr]
+
+# C. Vendor Test (9)
+make vendor_test_[webkit|blink]_fast_[dom|html|css|etc]
+make vendor_test_gecko_layout
+
+# D. Bidi Test (1)
+make bidi_test
+
+# E. CSSWG Test (8)
+make csswg_test_css[1|21|3_color|3_backgrounds|3_transforms|3_selectors]
+make csswg_test_[rtl|manual]
+
+# F. Internal Test (1)
+make internal_test
+```
+``` sh
+# Specify pool size for multiprocessing
+make [test_name] TEST_NPROCS=5
+```
+
+#### CSSWG Test (compare with node-WebKit/previous version of StarFish)
 
 We use the W3C's CSS conformance test suites.
 (W3C CSS WG Test Suites Repository: https://hg.csswg.org/test)
@@ -27,33 +59,28 @@ You can find these in `test/reftest/csswg-test/*`
 To run the pixel tests, use:
 
 ``` sh
-// compare node-webkit
-make pixel_test_css_all                        // all csswg test suite
-make pixel_test_css*                           // specific test suite
-make pixel_test [tc=unittest.html] [screen=pc] // only one file
+# (1) Compare with node-webkit
+make csswg_test_[name]
 
-// compare the prev ver. of StarFish
-make font_dependent_test_css                   // files in tool/reftest/tclist/csswg_manual.res
+# (2) Compare with our previous version of Startfish
+make csswg_test_manual
+
+# Run (1) + (2) at once
+make csswg_test_all
 ```
-
-After the pixel test, the result image files are saved in `out/x64/exe/debug/reftest/`
-
-- `test_expected.png` - captured file of node-WebKit
-- `test_result.png` - captured file of StarFish
-- `test_diff.png` - diff file
 
 If you want to capture the screenshot on the command line, use:
 
 ``` sh
-// StarFish
+# StarFish
 ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --width=800 --height=600
 
-// node-WebKit
+# node-WebKit
 test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -l [filepath=**.res] pc
 test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f [filepath=**.html] pc
 ```
 
-### Web Platform Tests
+#### Web Platform Tests
 
 We use the [Web Platform Tests](https://github.com/w3c/web-platform-tests). The Web Platform Tests Project is a W3C-coordinated attempt to build a cross-browser testsuite for the Web-platform stack.
 
@@ -62,10 +89,10 @@ You can find these in `test/reftest/web-platform-tests/*`
 To run the Web Platform Tests, use:
 
 ``` sh
-make regression_test_wpt_*[dom | etc.]             // specific test suite
+make web_platform_test_[name]
 ```
 
-### Bidi Tests
+#### Bidi Tests
 Bidi tests perform pixel tests on a device. To run the tests,
 - Connect your device
 - run the following

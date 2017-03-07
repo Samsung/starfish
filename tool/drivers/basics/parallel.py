@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import signal
+import sys
+import types
+import multiprocessing
 
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def run_test_pool(case_runner, in_path, out_path=None, result_handler=None):
-    import sys
-    import types
-    import multiprocessing
-
+def run_test_pool(case_runner, in_path, nproc,
+                  out_path=None, result_handler=None):
     if type(result_handler) is not types.FunctionType:
         result_handler = default_result_handler
 
@@ -28,7 +28,13 @@ def run_test_pool(case_runner, in_path, out_path=None, result_handler=None):
         sys.exit(1)
 
     # Note : http://xcodest.me/interrupt-the-python-multiprocessing-pool-in-graceful-way.html
-    nproc = multiprocessing.cpu_count()
+    max_nproc = multiprocessing.cpu_count();
+    if type(nproc) is types.IntType:
+        nproc = max(1, min(nproc, max_nproc))
+    else:
+        nproc = max_nproc
+    print "Running " + str(nproc) + " jobs in parallel"
+
     p = multiprocessing.Pool(nproc, init_worker)
     try:
         itr = p.map_async(case_runner, tcs, chunksize=1).get(0xfff)

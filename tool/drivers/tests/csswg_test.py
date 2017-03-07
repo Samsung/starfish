@@ -19,14 +19,3 @@ def get_exp_img_namer(font_dep):
     if font_dep:
         return font_dep_exp_img_namer
     return font_indep_exp_img_namer
-
-def tc_handler(tc_file, diff_result, show_progress=True):
-    is_passed = False
-    if "passed" in diff_result:
-        is_passed = True
-        if show_progress:
-            print Strings.PASS_SIGN + tc_file + " " + diff_result
-    else:
-        if show_progress:
-            print Strings.FAIL_SIGN + tc_file + " " + diff_result
-    return is_passed
