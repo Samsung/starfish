@@ -138,7 +138,7 @@ LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
             width = c->asFrameText()->preferredMinWidth(ctx);
         } else if (c->isFrameBlockBox()) {
             FrameBlockBox* b = c->asFrameBlockBox();
-            PreferredWidthContext p(ctx, 0, 0);
+            PreferredWidthContext p(ctx, 0);
             b->computePreferredWidth(p);
             width = p.preferredMinWidth();
             width += b->marginWidth() + b->borderWidth() + b->paddingWidth();

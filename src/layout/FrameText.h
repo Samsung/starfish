@@ -81,6 +81,7 @@ public:
 
     LayoutUnit preferredMinWidth(LayoutContext& ctx);
     LayoutUnit preferredWidth(LayoutContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
@@ -90,10 +91,6 @@ public:
         printf("text-> %s", str.data());
     }
 #endif
-    virtual void layout(LayoutContext& ctx)
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
 
 protected:
     FrameTextTextDecorationData* m_textDecorationData;

@@ -392,22 +392,18 @@ enum WordType {
 };
 
 class PreferredWidthContext {
-    friend bool canInsertToCurrentLine(PreferredWidthContext* ctx,
-                                       LayoutUnit width);
-
 public:
-    PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth,
-                          LayoutUnit minimumWidth)
+    PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
         , m_preferredWidthSoFar(0)
-        , m_preferredMinWidthSoFar(minimumWidth)
+        , m_preferredMinWidthSoFar(0)
         , m_currentLineWidth(0)
         , m_unprocessedStartingMBPWidth(0)
-        , m_candidateLineWidth(0)
+        , m_lastWhiteSpaceWidth(0)
         , m_remainedWidth(lastKnownWidth)
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
-        , m_breakedLineStatus(Never)
+        , m_isPendingBreakLine(false)
     {
     }
 
@@ -436,9 +432,9 @@ public:
         return m_currentLineWidth;
     }
 
-    LayoutUnit candidateLineWidth() const
+    void setCurrentLineWidth(LayoutUnit w)
     {
-        return m_candidateLineWidth;
+        m_currentLineWidth = w;
     }
 
     LayoutUnit remainedWidth() const
@@ -446,9 +442,19 @@ public:
         return m_remainedWidth;
     }
 
+    void setRemainedWidth(LayoutUnit w)
+    {
+        m_remainedWidth = w;
+    }
+
     LayoutUnit preferredMinWidth() const
     {
         return m_preferredMinWidthSoFar;
+    }
+
+    LayoutUnit unprocessedStartingMBPWidth() const
+    {
+        return m_unprocessedStartingMBPWidth;
     }
 
     static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style)
@@ -475,9 +481,22 @@ public:
         return minWidth;
     }
 
-    void setIsWhiteSpaceAtLast(bool isWhiteSpaceAtLast)
+    static LayoutUnit preferredWidthWidthNewContext(PreferredWidthContext& ctx,
+                                                    Frame* f);
+
+    int hasFloat() const
+    {
+        return m_hasFloat;
+    }
+
+    void setIsWhiteSpaceAtLast(bool isWhiteSpaceAtLast, LayoutUnit width)
     {
         m_isWhiteSpaceAtLast = isWhiteSpaceAtLast;
+        if (isWhiteSpaceAtLast) {
+            m_lastWhiteSpaceWidth = width;
+        } else {
+            m_lastWhiteSpaceWidth = 0;
+        }
     }
 
     bool isWhiteSpaceAtLast() const
@@ -485,13 +504,30 @@ public:
         return m_isWhiteSpaceAtLast;
     }
 
-    bool isNeverBreaked() const
+    bool isPendingBreakLine() const
     {
-        return m_breakedLineStatus == Never;
+        return m_isPendingBreakLine;
+    }
+
+    void breakLine(bool wrapped)
+    {
+        finishLine(wrapped);
+        setIsWhiteSpaceAtLast(true, 0);
+        m_currentLineWidth = 0;
+        m_isPendingBreakLine = false;
+    }
+
+    void finishLine(bool wrapped)
+    {
+        if (wrapped) {
+            updatePreferredWidth(m_remainedWidth);
+        } else {
+            removeDanglingSpace();
+            updatePreferredWidth(m_currentLineWidth);
+        }
     }
 
     void handleTextToken(TextToken& token);
-    void computePreferredWidth(Frame* origin);
 
     void handleFloatingBox(Frame* f, LayoutUnit w);
     void updateCurrentLineWidth(Frame* f, LayoutUnit w,
@@ -504,12 +540,25 @@ private:
     LayoutUnit m_preferredMinWidthSoFar;
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_unprocessedStartingMBPWidth;
-    LayoutUnit m_candidateLineWidth;
+    LayoutUnit m_lastWhiteSpaceWidth;
     LayoutUnit m_remainedWidth;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
-    enum BreakedLineStatus { Never, MaybeBreaked, AbsolutelyBreaked };
-    BreakedLineStatus m_breakedLineStatus;
+    bool m_isPendingBreakLine;
+
+    bool canInsertToLineBox(LayoutUnit width);
+    bool hasFloatingBoxAlreadyInLineBox(Frame* f) const
+    {
+        return m_hasFloat != HasNone;
+    }
+
+    bool canInsertFloatingBox(Frame* f);
+    bool dontBreakLine(Frame* f, LayoutUnit width);
+
+    void removeDanglingSpace()
+    {
+        m_currentLineWidth -= m_lastWhiteSpaceWidth;
+    }
 };
 
 class PaintingContext {
@@ -541,8 +590,6 @@ public:
             node->asElement()->asHTMLElement()->isHTMLHtmlElement();
         m_flags.m_isRootElement = isRootElement;
 
-        m_flags.m_isInFrameInlineScope = true;
-
         m_flags.m_isLeftMBPCleared = false;
         m_flags.m_isRightMBPCleared = false;
 
@@ -550,7 +597,6 @@ public:
         m_flags.m_isPositioned = false;
         m_flags.m_isEstablishesStackingContext = isRootElement;
         m_flags.m_needsGraphicsBuffer = false;
-        m_flags.m_shouldComputePreferredWidth = false;
         m_flags.m_isNormalFlow = true;
         m_flags.m_isFloating = false;
 
@@ -633,11 +679,6 @@ public:
         // TODO add condition
         m_flags.m_needsGraphicsBuffer |= (style->opacity() != 1);
         m_flags.m_needsGraphicsBuffer |= (style->hasTransforms(this));
-
-        m_flags.m_shouldComputePreferredWidth |=
-            (style->display() == InlineBlockDisplayValue);
-        m_flags.m_shouldComputePreferredWidth |=
-            (style->position() == AbsolutePositionValue);
 
         if ((style->position() == PositionValue::AbsolutePositionValue) ||
             (style->floating() != FloatValue::NoneFloatValue)) {
@@ -1057,11 +1098,6 @@ public:
         return m_flags.m_isRootElement;
     }
 
-    bool shouldComputePreferredWidth() const
-    {
-        return m_flags.m_shouldComputePreferredWidth;
-    }
-
     bool isLeftMBPCleared() const
     {
         return m_flags.m_isLeftMBPCleared;
@@ -1080,16 +1116,6 @@ public:
     void setRightMBPCleared()
     {
         m_flags.m_isRightMBPCleared = true;
-    }
-
-    void setInFrameInlineScope()
-    {
-        m_flags.m_isInFrameInlineScope = true;
-    }
-
-    bool isInFrameInlineScope() const
-    {
-        return m_flags.m_isInFrameInlineScope;
     }
 
     bool needsGraphicsBuffer() const
@@ -1174,10 +1200,8 @@ protected:
         // boxes, laid out according to four properties:
         bool m_isPositioned : 1;
 
-        bool m_shouldComputePreferredWidth : 1;
         bool m_isNormalFlow : 1;
         bool m_isRootElement : 1;
-        bool m_isInFrameInlineScope : 1;
 
         bool m_isLeftMBPCleared : 1;
         bool m_isRightMBPCleared : 1;

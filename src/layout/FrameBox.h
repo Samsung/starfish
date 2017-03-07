@@ -30,8 +30,6 @@ struct MarginCollapseResult {
 };
 
 class FrameBox : public Frame {
-    friend struct MBPStore;
-
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
@@ -104,14 +102,17 @@ public:
     {
         return m_frameRect.x();
     }
+
     LayoutUnit y() const
     {
         return m_frameRect.y();
     }
+
     LayoutUnit width() const
     {
         return m_frameRect.width();
     }
+
     LayoutUnit height() const
     {
         return m_frameRect.height();
@@ -121,22 +122,27 @@ public:
     {
         m_frameRect.setX(x);
     }
+
     void setY(LayoutUnit y)
     {
         m_frameRect.setY(y);
     }
+
     void moveX(LayoutUnit t)
     {
         setX(x() + t);
     }
+
     void moveY(LayoutUnit t)
     {
         setY(y() + t);
     }
+
     void setWidth(LayoutUnit width)
     {
         m_frameRect.setWidth(width);
     }
+
     void setHeight(LayoutUnit height)
     {
         m_frameRect.setHeight(height);
@@ -160,6 +166,7 @@ public:
     {
         m_frameRect.setWidth(width + paddingWidth() + borderWidth());
     }
+
     void setContentHeight(LayoutUnit height)
     {
         m_frameRect.setHeight(height + paddingHeight() + borderHeight());
@@ -169,14 +176,17 @@ public:
     {
         m_padding.setTop(t);
     }
+
     void setPaddingRight(LayoutUnit t)
     {
         m_padding.setRight(t);
     }
+
     void setPaddingBottom(LayoutUnit t)
     {
         m_padding.setBottom(t);
     }
+
     void setPaddingLeft(LayoutUnit t)
     {
         m_padding.setLeft(t);
@@ -186,14 +196,17 @@ public:
     {
         return m_padding.top();
     }
+
     LayoutUnit paddingRight() const
     {
         return m_padding.right();
     }
+
     LayoutUnit paddingBottom() const
     {
         return m_padding.bottom();
     }
+
     LayoutUnit paddingLeft() const
     {
         return m_padding.left();
@@ -203,14 +216,17 @@ public:
     {
         m_border.setTop(t);
     }
+
     void setBorderRight(LayoutUnit t)
     {
         m_border.setRight(t);
     }
+
     void setBorderBottom(LayoutUnit t)
     {
         m_border.setBottom(t);
     }
+
     void setBorderLeft(LayoutUnit t)
     {
         m_border.setLeft(t);
@@ -220,14 +236,17 @@ public:
     {
         return m_border.top();
     }
+
     LayoutUnit borderRight() const
     {
         return m_border.right();
     }
+
     LayoutUnit borderBottom() const
     {
         return m_border.bottom();
     }
+
     LayoutUnit borderLeft() const
     {
         return m_border.left();
@@ -237,14 +256,17 @@ public:
     {
         m_margin.setTop(t);
     }
+
     void setMarginRight(LayoutUnit t)
     {
         m_margin.setRight(t);
     }
+
     void setMarginBottom(LayoutUnit t)
     {
         m_margin.setBottom(t);
     }
+
     void setMarginLeft(LayoutUnit t)
     {
         m_margin.setLeft(t);
@@ -254,14 +276,17 @@ public:
     {
         return m_margin.top();
     }
+
     LayoutUnit marginRight() const
     {
         return m_margin.right();
     }
+
     LayoutUnit marginBottom() const
     {
         return m_margin.bottom();
     }
+
     LayoutUnit marginLeft() const
     {
         return m_margin.left();
@@ -334,6 +359,8 @@ public:
         }
         return boxHeight;
     }
+
+    LayoutUnit lineHeight();
 
     void setMarginCollapseResult(const MarginCollapseResult& r)
     {

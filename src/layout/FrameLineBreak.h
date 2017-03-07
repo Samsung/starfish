@@ -37,10 +37,8 @@ public:
         return "FrameLineBreak";
     }
 
-    virtual void layout(LayoutContext& ctx)
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
