@@ -3,6 +3,8 @@ import os
 import sys
 import argparse
 
+nproc = None
+
 def handle_result(result):
     from basics.utils import PColors
     (pass_cnt, fail_cnt) = result
@@ -17,51 +19,54 @@ def handle_result(result):
 def run_dom_conformance_test(list, font_dep):
     import basics.starfish_basic_test as basictest
     from tests.dom_conformance_test import tc_handler
-    result = basictest.run_parallel(list, tc_handler=tc_handler)
+    result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
     return handle_result(result)
 
 # Vendor Tests
 def run_vendor_basic_test(list, font_dep):
     import basics.starfish_basic_test as basictest
     from tests.vendor_test import tc_handler
-    result = basictest.run_parallel(list, tc_handler=tc_handler)
+    result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
     return handle_result(result)
 
 def run_vendor_pixel_test(list, font_dep):
     import basics.starfish_pixel_test as pixeltest
     from tests.vendor_test import exp_img_namer
-    result = pixeltest.run_parallel(list, ahem_font=(not font_dep), expected_namer=exp_img_namer)
+    result = pixeltest.run_parallel(list, nproc, ahem_font=(not font_dep),
+                                    expected_namer=exp_img_namer)
     return handle_result(result)
 
 # Web Platform Tests
 def run_web_platform_test(list, font_dep):
     import basics.starfish_basic_test as basictest
     from tests.wpt_test import tc_handler
-    result = basictest.run_parallel(list, tc_handler=tc_handler)
+    result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
     return handle_result(result)
 
 # CSSWG Tests
 def run_csswg_test(list, font_dep):
     import basics.starfish_pixel_test as pixeltest
-    from tests.csswg_test import get_exp_img_namer, tc_handler
-    result = pixeltest.run_parallel(list, tc_handler=tc_handler, ahem_font=(not font_dep), expected_namer=get_exp_img_namer(font_dep))
+    from tests.csswg_test import get_exp_img_namer
+    result = pixeltest.run_parallel(list, nproc, ahem_font=(not font_dep),
+                                    expected_namer=get_exp_img_namer(font_dep))
     return handle_result(result)
 
 # Bidi Tests
 def run_bidi_test(list, font_dep):
     import basics.starfish_pixel_test as pixeltest
-    result = pixeltest.run_parallel(list, ahem_font=(not font_dep), width=900, height=900)
+    result = pixeltest.run_parallel(list, nproc, ahem_font=(not font_dep),
+                                    width=900, height=900)
     return handle_result(result)
 
 # Internal Tests
 def run_default_basic_test(list, font_dep):
     import basics.starfish_basic_test as basictest
-    result = basictest.run_parallel(list, regression=font_dep)
+    result = basictest.run_parallel(list, nproc, regression=font_dep)
     return handle_result(result)
 
 def run_default_pixel_test(list, font_dep):
     import basics.starfish_pixel_test as pixeltest
-    result = pixeltest.run_parallel(list, ahem_font=(not font_dep))
+    result = pixeltest.run_parallel(list, nproc, ahem_font=(not font_dep))
     return handle_result(result)
 
 
@@ -81,8 +86,10 @@ if __name__ == "__main__":
     parser.add_argument("test_kind")
     parser.add_argument("list_file")
     parser.add_argument("--font-dep", dest="font_dep", action="store_true")
+    parser.add_argument("--proc", "-p", dest="proc", type=int)
     args = parser.parse_args()
 
+    nproc = args.proc
     if not os.path.isfile(args.list_file):
         print "Cannot open " + args.list_file
         sys.exit(1)

@@ -15,7 +15,7 @@ def tc_handler(tc_file, output, show_progress=True):
     word_all = word_pass + word_fail
 
     if word_all == 0:
-        result = PColors.yellow("[CHECK] ") + tc_file + " No results"
+        result = PColors.red("[FAIL] ") + tc_file + " - Wrong result"
     elif word_fail == 0:
         result = PColors.green("[PASS] ") + tc_file
         result += " (" + PColors.green("PASS: " + str(word_pass)) + ")"

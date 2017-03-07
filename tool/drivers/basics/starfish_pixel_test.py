@@ -3,6 +3,7 @@ import os
 import subprocess
 import utils
 from urlparse import urlparse
+from shutil import copyfile
 
 try:
   FNULL
@@ -21,6 +22,7 @@ DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_FONT_OPT = AHEM_OPT
 REMOTE_EXP_DIR = "test/remote-test"
+OUT_DIR = "out"
 
 class __PixelTestOpts():
     def __init__(self):
@@ -83,14 +85,34 @@ def case_runner(tc):
         # Diff
         diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
         diff_result = subprocess.check_output(diff_command).decode("UTF-8").strip()
+        success = __opts.tc_handler(tc_file, diff_result, __opts.show_progress)
+        if not success:
+            # When tc failed, give 3 images to user
+            # _1 Screen-shot from Starfish
+            # _2 Expected image
+            # _3 Diff image
+            base_path = os.path.join(OUT_DIR, tc_file)
+            image_1 = base_path + ".png"
+            image_2 = base_path + "_expected.png"
+            image_3 = base_path + "_diff.png"
+            dir_name = os.path.dirname(image_1)
+            if not os.path.exists(dir_name):
+                os.makedirs(dir_name)
+            copyfile(tc_result_png, image_1)
+            copyfile(tc_expected_png, image_2)
+            gen_cmd = ["test/tool/image_diff", "--diff",
+                                image_1, image_2, image_3]
+            subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            print utils.PColors.red("Check images: " + base_path + "*.png")
+
         os.remove(tc_result_png)
-        return __opts.tc_handler(tc_file, diff_result, __opts.show_progress)
+        return success
 
     except subprocess.CalledProcessError:
         return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
 
 
-def run_parallel(list_file, width=None, height=None,
+def run_parallel(list_file, nproc=None, width=None, height=None,
                  ahem_font=None, show_progress=None,
                  expected_namer=None, tc_handler=None, result_handler=None):
     import parallel
@@ -104,7 +126,8 @@ def run_parallel(list_file, width=None, height=None,
     __opts.set_expected_namer(expected_namer)
     __opts.set_tc_handler(tc_handler)
 
-    return parallel.run_test_pool(case_runner, list_file, result_handler=result_handler)
+    return parallel.run_test_pool(case_runner, list_file, nproc,
+                                  result_handler=result_handler)
 
 
 def default_tc_handler(tc_file, diff_result, show_progress=True):

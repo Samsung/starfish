@@ -66,7 +66,7 @@ def case_runner(tc):
     return __opts.tc_handler(tc_file, result, __opts.show_progress)
 
 
-def run_parallel(list_file, width=None, height=None, regression=None,
+def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
                  show_progress=None, tc_handler=None, result_handler=None):
     import parallel
     global __opts
@@ -78,7 +78,8 @@ def run_parallel(list_file, width=None, height=None, regression=None,
     __opts.set_show_progress(show_progress)
     __opts.set_tc_handler(tc_handler)
 
-    return parallel.run_test_pool(case_runner, list_file, result_handler=result_handler)
+    return parallel.run_test_pool(case_runner, list_file, nproc,
+                                  result_handler=result_handler)
 
 
 def default_tc_handler(tc_file, output, show_progress=True):
