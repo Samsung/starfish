@@ -2839,7 +2839,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
         }
     } else if (type == WordType::ForcedNewline) {
         breakLine(false);
-    } else if (f->shouldWrapLines()) {
+    } else if (f->shouldWrapLines() && !f->isDirectDescendantOfTableCellBox()) {
         if (dontBreakLine(f, w)) {
             m_currentLineWidth += w;
         } else {
@@ -2875,7 +2875,7 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
-LayoutUnit PreferredWidthContext::preferredWidthWidthNewContext(
+LayoutUnit PreferredWidthContext::computePreferredWidthWithNewContext(
     PreferredWidthContext& ctx, Frame* f)
 {
     LayoutUnit mbp =
@@ -2903,7 +2903,8 @@ void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
 
         if (f->isFrameBlockBox()) {
             LayoutUnit w =
-                PreferredWidthContext::preferredWidthWidthNewContext(ctx, f);
+                PreferredWidthContext::computePreferredWidthWithNewContext(ctx,
+                                                                           f);
 
             if (f->isFloating()) {
                 ctx.handleFloatingBox(f, w);
@@ -3000,7 +3001,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     LayoutUnit w;
-    if (style()->width().isSpecified()) {
+    if (style()->width().isSpecified() && !isFrameTableCellBox()) {
         if (style()->width().isFixed()) {
             w = style()->width().fixed();
         } else {
@@ -3011,20 +3012,20 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             w = parentContentWidth * style()->width().percent() - mbp;
         }
 
-        ctx.updatePreferredMinWidth(w);
+        ctx.updatePreferredWidth(w);
     } else {
         if (hasBlockFlow()) {
             Frame* f = firstChild();
             while (f) {
                 STARFISH_ASSERT(f->isNormalFlow());
-                w = std::max(
-                    w, PreferredWidthContext::preferredWidthWidthNewContext(ctx,
-                                                                            f));
+                w = std::max(w,
+                             PreferredWidthContext::computePreferredWidthWithNewContext(
+                                 ctx, f));
 
                 f = f->next();
             }
 
-            ctx.updatePreferredMinWidth(w);
+            ctx.updatePreferredWidth(w);
         } else {
             Frame* f = firstChild();
             while (f) {
@@ -3034,7 +3035,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
                 if (f->isFrameBlockBox()) {
                     LayoutUnit w =
-                        PreferredWidthContext::preferredWidthWidthNewContext(
+                        PreferredWidthContext::computePreferredWidthWithNewContext(
                             ctx, f);
 
                     if (f->isFloating()) {

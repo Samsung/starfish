@@ -79,8 +79,6 @@ public:
         return result;
     }
 
-    LayoutUnit preferredMinWidth(LayoutContext& ctx);
-    LayoutUnit preferredWidth(LayoutContext& ctx);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
