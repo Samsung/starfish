@@ -481,7 +481,7 @@ public:
         return minWidth;
     }
 
-    static LayoutUnit preferredWidthWidthNewContext(PreferredWidthContext& ctx,
+    static LayoutUnit computePreferredWidthWithNewContext(PreferredWidthContext& ctx,
                                                     Frame* f);
 
     int hasFloat() const
@@ -840,6 +840,18 @@ public:
     {
         STARFISH_ASSERT(isFrameTableColBox());
         return (FrameTableColBox*)this;
+    }
+
+    bool isDirectDescendantOfTableCellBox()
+    {
+        for (Frame* p = this; p; p = p->parent()) {
+            if (p->isFrameTableCellBox()) {
+                return true;
+            } else if (p->isFrameBlockBox()) {
+                return false;
+            }
+        }
+        return false;
     }
 
     ComputedStyle* style()
