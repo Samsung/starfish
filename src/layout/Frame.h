@@ -154,16 +154,17 @@ public:
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
-    Frame* blockContainer(Frame* currentFrame);
-    Frame* containingFrameBlockBox(
-        Frame* currentFrame); // this function returns most near blockContainer
-    Frame* containingBlock(
+    FrameBlockBox* blockContainer(Frame* currentFrame);
+    FrameBlockBox* containingFrameBlockBox(
+        Frame* currentFrame); // this function returns the nearest
+                              // blockContainer
+    FrameBox* containingBlock(
         Frame* currentFrame); // this function returns real containing block
 
-    void pushInlineBlockBox(FrameBlockBox* ib)
+    void pushInlineBlockBox(FrameBlockBox* blockBox)
     {
         m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->push_back(
-            ib);
+            blockBox);
     }
 
     void popInlineBlockBox()
@@ -174,33 +175,13 @@ public:
     void registerYPositionPerVAInlineBlock(LineBox* lb);
     std::pair<bool, LayoutUnit> registeredLastLineBoxYPosition(
         FrameBlockBox* box);
-    void registerAbsolutePositionedBox(Frame* frm);
+    void registerAbsolutePositionedBox(FrameBox* box);
 
-    template <typename Fn>
-    void layoutRegisteredAbsolutePositionedBoxes(Frame* containgBlock, Fn f)
-    {
-        auto iter = m_absolutePositionedBoxes.find(containgBlock);
-        if (iter == m_absolutePositionedBoxes.end()) {
-            return;
-        } else {
-            f(iter->second);
-            m_absolutePositionedBoxes.erase(iter);
-        }
-    }
+    void layoutRegisteredAbsolutePositionedBoxes(FrameBlockBox* containgBlock);
 
-    void registerRelativePositionedBox(Frame* frm, bool dueToSelf);
+    void registerRelativePositionedBox(FrameBox* box, bool dueToSelf);
 
-    template <typename Fn>
-    void layoutRegisteredRelativePositionedBoxes(Frame* containingBox, Fn f)
-    {
-        auto iter = m_relativePositionedBoxes.find(containingBox);
-        if (iter == m_relativePositionedBoxes.end()) {
-            return;
-        } else {
-            f(iter->second);
-            m_relativePositionedBoxes.erase(iter);
-        }
-    }
+    void layoutRegisteredRelativePositionedBoxes(FrameBlockBox* containgBlock);
 
     void propagatePositionedBoxes(LayoutContext& to)
     {
@@ -327,42 +308,52 @@ private:
     StarFish* m_starFish;
     FrameDocument* m_frameDocument;
 
-    // NOTE. we dont need gc_allocator here. because, FrameTree already has
-    // referenece for Frames
+    // NOTE. we don't need gc_allocator here. because, FrameTree already has
+    // a reference for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
-    std::map<Frame*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
-    std::map<Frame*, std::vector<std::pair<FrameBox*, bool>>>
+    std::map<FrameBlockBox*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
+    std::map<FrameBlockBox*, std::vector<std::pair<FrameBox*, bool>>>
         m_relativePositionedBoxes;
+
+    void applyRelativePosition(FrameBox* box);
+    void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
 };
 
 class FloatingBoxInfo {
 public:
     FloatingBoxInfo(FrameBox* box, LayoutContext* ctx);
     void reCache(LayoutContext* ctx);
+
     FrameBox* box()
     {
         return m_box;
     }
+
     bool canLayoutParentCollapseWithMarginTop()
     {
         return m_canLayoutParentCollapseWithMarginTop;
     }
+
     bool isLeft()
     {
         return m_isLeft;
     }
+
     LayoutLocation loc()
     {
         return m_loc;
     }
+
     LayoutUnit top()
     {
         return m_top;
     }
+
     LayoutUnit bottom()
     {
         return m_bottom;
     }
+
     LayoutUnit horizontalBoundary()
     {
         return m_horizontalBoundary;
@@ -440,11 +431,6 @@ public:
     LayoutUnit remainedWidth() const
     {
         return m_remainedWidth;
-    }
-
-    void setRemainedWidth(LayoutUnit w)
-    {
-        m_remainedWidth = w;
     }
 
     LayoutUnit preferredMinWidth() const

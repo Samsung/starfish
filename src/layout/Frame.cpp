@@ -22,74 +22,72 @@
 
 namespace StarFish {
 
-Frame* LayoutContext::blockContainer(Frame* currentFrame)
+FrameBlockBox* LayoutContext::blockContainer(Frame* currentFrame)
 {
     Frame* f = currentFrame->layoutParent();
 
     if (!f) {
-        return currentFrame;
+        STARFISH_ASSERT(currentFrame->isFrameDocument());
+        return currentFrame->asFrameBlockBox();
     }
 
     while (true) {
         if (f->isFrameBlockBox() && !f->isAnonymous()) {
-            return f;
+            return f->asFrameBlockBox();
         }
         f = f->layoutParent();
     }
 }
 
-Frame* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
+FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
 {
-    Frame* block = blockContainer(currentFrame);
+    FrameBlockBox* blockBox = blockContainer(currentFrame);
     if (currentFrame->style()->position() == AbsolutePositionValue) {
-        while (!block->isFrameDocument() && !block->isPositioned()) {
-            block = blockContainer(block);
+        while (!blockBox->isFrameDocument() && !blockBox->isPositioned()) {
+            blockBox = blockContainer(blockBox);
         }
-        return block;
+        return blockBox;
     } else {
-        return block;
+        return blockBox;
     }
 }
 
-Frame* LayoutContext::containingBlock(Frame* currentFrame)
+FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
 {
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     if (currentFrame->style()->position() == AbsolutePositionValue) {
-        Frame* block = currentFrame->parent();
-        while (!block->isFrameDocument() && !block->isPositioned()) {
-            block = block->parent();
+        Frame* f = currentFrame->parent();
+        while (!f->isFrameDocument() && !f->isPositioned()) {
+            f = f->parent();
         }
 
-        if (block->isFrameBox()) {
-            return block;
+        if (f->isFrameBlockBox()) {
+            return f->asFrameBlockBox();
         } else {
-            STARFISH_ASSERT(block->isFrameInline());
-            FrameBlockBox* c = blockContainer(block)->asFrameBlockBox();
-            bool finded = false;
+            STARFISH_ASSERT(f->isFrameInline());
+            FrameBlockBox* c = blockContainer(f);
             FrameBox* first = nullptr;
-            FrameInline* in = block->asFrameInline();
-            c->iterateChildBoxes([&finded, &first, &in](FrameBox* box) -> bool {
-                if (!finded) {
+            FrameInline* in = f->asFrameInline();
+            c->iterateChildBoxes([&first, &in](FrameBox* box) -> bool {
+                if (!first) {
                     if (box->isInlineBox() &&
                         box->asInlineBox()->isInlineNonReplacedBox()) {
-                        if (box->asInlineBox()
-                                ->asInlineNonReplacedBox()
-                                ->origin() == in) {
-                            first =
-                                box->asInlineBox()->asInlineNonReplacedBox();
-                            finded = true;
+                        InlineNonReplacedBox* inrb =
+                            box->asInlineBox()->asInlineNonReplacedBox();
+                        if (inrb->origin() == in) {
+                            first = inrb;
                             return false;
                         }
                     }
                 }
                 return true;
             });
-            STARFISH_ASSERT(first && finded);
+            STARFISH_ASSERT(first);
             return first;
         }
     } else {
-        Frame* block = blockContainer(currentFrame);
-        return block;
+        FrameBlockBox* blockBox = blockContainer(currentFrame);
+        return blockBox;
     }
 }
 
@@ -452,12 +450,12 @@ bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
 
 LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 {
-    return blockContainer(currentFrame)->asFrameBox()->contentWidth();
+    return blockContainer(currentFrame)->contentWidth();
 }
 
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 {
-    Frame* container = blockContainer(currentFrame);
+    FrameBlockBox* container = blockContainer(currentFrame);
     if (currentFrame->style()->position() ==
         PositionValue::AbsolutePositionValue) {
         return true;
@@ -481,7 +479,7 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 
 LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 {
-    Frame* container = blockContainer(currentFrame);
+    FrameBlockBox* container = blockContainer(currentFrame);
     std::vector<Length> reverse;
     while (container) {
         if (container->style()->height().isFixed()) {
@@ -493,7 +491,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
             reverse.emplace_back(
                 Length::Fixed,
                 container->style()->height().specifiedValue(
-                    containingBlock(container)->asFrameBox()->contentHeight()));
+                    containingBlock(container)->contentHeight()));
             break;
         } else {
             STARFISH_ASSERT(container->style()->height().isPercent());
@@ -536,22 +534,63 @@ std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(
     return std::pair<bool, LayoutUnit>(true, r);
 }
 
-void LayoutContext::registerAbsolutePositionedBox(Frame* frm)
+void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)
 {
-    Frame* cb = containingFrameBlockBox(frm);
+    FrameBlockBox* cb = containingFrameBlockBox(box);
     m_absolutePositionedBoxes.emplace(cb, std::vector<FrameBox*>());
     auto& vec = m_absolutePositionedBoxes[cb];
-    STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
-    vec.push_back(frm->asFrameBox());
+    STARFISH_ASSERT(std::find(vec.begin(), vec.end(), box) == vec.end());
+    vec.push_back(box);
 }
 
-void LayoutContext::registerRelativePositionedBox(Frame* frm, bool dueToSelf)
+void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
+    FrameBlockBox* containgBlock)
 {
-    Frame* cb = containingFrameBlockBox(frm);
+    auto iter = m_absolutePositionedBoxes.find(containgBlock);
+    if (iter == m_absolutePositionedBoxes.end()) {
+        return;
+    } else {
+        const auto& boxes = iter->second;
+        for (size_t i = 0; i < boxes.size(); i++) {
+            FrameBox* box = boxes[i];
+            box->layout(*this, Frame::LayoutWantToResolve::ResolveAll);
+        }
+        m_absolutePositionedBoxes.erase(iter);
+    }
+}
+
+void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
+{
+    FrameBlockBox* cb = containingFrameBlockBox(box);
     m_relativePositionedBoxes.emplace(
         cb, std::vector<std::pair<FrameBox*, bool>>());
     auto& vec = m_relativePositionedBoxes[cb];
-    vec.emplace_back(frm->asFrameBox(), dueToSelf);
+    vec.emplace_back(box, dueToSelf);
+}
+
+void LayoutContext::layoutRegisteredRelativePositionedBoxes(
+    FrameBlockBox* containgBlock)
+{
+    auto iter = m_relativePositionedBoxes.find(containgBlock);
+    if (iter == m_relativePositionedBoxes.end()) {
+        return;
+    } else {
+        const auto& boxes = iter->second;
+        for (size_t i = 0; i < boxes.size(); i++) {
+            FrameBox* box = boxes[i].first;
+            if (boxes[i].second) {
+                applyRelativePosition(box);
+            } else {
+                Element* elm = box->node()->parentElement();
+                while (elm && elm->frame()->isFrameInline() &&
+                       elm->style()->position() == RelativePositionValue) {
+                    applyRelativePositionInlineCase(elm->frame(), box);
+                    elm = elm->parentElement();
+                }
+            }
+        }
+        m_relativePositionedBoxes.erase(iter);
+    }
 }
 
 Element* Frame::offsetParent()

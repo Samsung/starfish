@@ -42,8 +42,8 @@ LayoutUnit FrameBox::lineHeight()
     return fontSize;
 }
 
-FontHeights LineFormattingContext::computeVerticalProperties(
-    FrameBox* parentBox, bool dueToBr)
+void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
+                                                      bool dueToBr)
 {
     LayoutUnit ascender;
     LayoutUnit descender;
@@ -265,19 +265,22 @@ FontHeights LineFormattingContext::computeVerticalProperties(
     }
 
     if (parentBox->isLineBox()) {
+        LineBox* lineBox = parentBox->asLineBox();
         if (!hasNormalFlowChild) {
             if (dueToBr) {
-                return FontHeights{
+                lineBox->setAscDescender(
                     parentStyle->font()->metrics().m_ascender,
-                    parentStyle->font()->metrics().m_descender
-                };
+                    parentStyle->font()->metrics().m_descender);
+                return;
             }
 
-            return FontHeights{ 0, 0 };
+            lineBox->setAscDescender(0, 0);
+            return;
         }
 
         if (!hasBoxOtherThanCollapsedInlineNonReplacedBox) {
-            return FontHeights{ 0, 0 };
+            lineBox->setAscDescender(0, 0);
+            return;
         }
     }
 
@@ -351,7 +354,8 @@ FontHeights LineFormattingContext::computeVerticalProperties(
             if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
                 inrb->marginRight() == 0) {
                 inrb->markCollapsed();
-                return FontHeights{ maxAscender, maxDescender };
+                inrb->setAscDescender(maxAscender, maxDescender);
+                return;
             }
         }
     }
@@ -465,7 +469,12 @@ FontHeights LineFormattingContext::computeVerticalProperties(
         }
     }
 
-    return FontHeights{ maxAscender, maxDescender };
+    if (parentBox->isLineBox()) {
+        parentBox->asLineBox()->setAscDescender(maxAscender, maxDescender);
+    } else {
+        parentBox->asInlineBox()->asInlineNonReplacedBox()->setAscDescender(
+            maxAscender, maxDescender);
+    }
 }
 
 static char charDirection(char32_t c)
@@ -1770,8 +1779,8 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
         }
     }
 reComputeVerticalProperties:
-    FontHeights fontHeights = computeVerticalProperties(back, br != nullptr);
-    LayoutUnit height = fontHeights.m_ascender - fontHeights.m_descender;
+    computeVerticalProperties(back, br != nullptr);
+    LayoutUnit height = back->height();
 
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.begin();
     if (fbCtx.m_hasFloat != HasNone && m_pendingFloatingBoxes.size() > 0 &&
@@ -1794,9 +1803,6 @@ reComputeVerticalProperties:
         }
     }
 
-    back->m_ascender = fontHeights.m_ascender;
-    back->m_descender = fontHeights.m_descender;
-    back->setHeight(height);
     back->removeDanglingSpace(this);
     // Should check if there has enough space for pending block box due to
     // removing white space from above function `removeDanglingSpaceFromLine`
@@ -2642,12 +2648,7 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
         }
         last = current;
 
-        FontHeights fontHeights = computeVerticalProperties(current, br);
-        current->m_ascender = fontHeights.m_ascender;
-        current->m_descender = fontHeights.m_descender;
-
-        current->setContentHeight(fontHeights.m_ascender -
-                                  fontHeights.m_descender);
+        computeVerticalProperties(current, br);
 
         if (current->layoutParent()->asFrameBox()->isLineBox()) {
             break;
@@ -2934,7 +2935,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     LayoutUnit parentContentWidth =
-        ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
+        ctx.layoutContext().blockContainer(this)->contentWidth();
     LayoutUnit intrinsicWidth, intrinsicHeight;
     Length parentContentHeight;
     if (ctx.layoutContext().parentHasFixedHeight(this)) {

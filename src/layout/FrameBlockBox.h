@@ -156,6 +156,13 @@ public:
         return m_descender;
     }
 
+    void setAscDescender(LayoutUnit ascender, LayoutUnit descender)
+    {
+        m_ascender = ascender;
+        m_descender = descender;
+        ((Box*)this)->setHeight(m_ascender - m_descender);
+    }
+
     GCVector<FrameBox*>& boxes()
     {
         return m_boxes;
@@ -759,6 +766,9 @@ public:
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
+    void computeContentWidth(LayoutContext& ctx,
+                             LayoutUnit containgBlockContentWidth,
+                             LayoutUnit absX = 0);
 
     GCVector<LineBox*> m_lineBoxes;
     MarginInfo* m_marginInfo;
@@ -780,16 +790,6 @@ struct FloatingBoxLayoutContext {
         , m_y(y)
         , m_originalLineBoxX(originalLineBoxX)
         , m_originalLineBoxWidth(originalLineBoxWidth)
-    {
-    }
-};
-
-struct FontHeights {
-    LayoutUnit m_ascender;
-    LayoutUnit m_descender;
-
-    FontHeights(LayoutUnit ascender, LayoutUnit descender)
-        : m_ascender(ascender), m_descender(descender)
     {
     }
 };
@@ -850,7 +850,7 @@ private:
 public:
     LineFormattingContext(FrameBlockBox* block, LayoutContext& ctx);
 
-    FontHeights computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
+    void computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
 
     void generateInlineBoxes(Frame* origin);
 

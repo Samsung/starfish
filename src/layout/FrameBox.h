@@ -128,6 +128,16 @@ public:
         m_frameRect.setY(y);
     }
 
+    void setAbsX(LayoutUnit x, LayoutUnit absX)
+    {
+        m_frameRect.setX(x - absX);
+    }
+
+    void setAbsY(LayoutUnit y, LayoutUnit absY)
+    {
+        m_frameRect.setY(y - absY);
+    }
+
     void moveX(LayoutUnit t)
     {
         setX(x() + t);
@@ -330,6 +340,11 @@ public:
     virtual LayoutUnit rightMBPWidth()
     {
         return m_margin.right() + m_border.right() + m_padding.right();
+    }
+
+    LayoutUnit mbpWidth()
+    {
+        return marginWidth() + borderWidth() + paddingWidth();
     }
 
     LayoutUnit contentWidth() const
@@ -802,6 +817,56 @@ public:
                 style()->marginBottom().specifiedValue(parentContentWidth));
         } else {
             setMarginBottom(0);
+        }
+    }
+
+    void computeHorizontalMargin(LayoutUnit parentContentWidth)
+    {
+        Length marginLeft = style()->marginLeft();
+        Length marginRight = style()->marginRight();
+
+        LayoutUnit remainedWidth = parentContentWidth - FrameBox::width();
+        if (marginLeft.isAuto() && marginRight.isAuto()) {
+            if (remainedWidth > 0) {
+                setMarginLeft(remainedWidth / 2);
+                setMarginRight(remainedWidth / 2);
+            }
+        } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+            remainedWidth -= FrameBox::marginRight();
+            if (remainedWidth > 0) {
+                setMarginLeft(remainedWidth);
+            }
+        } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+            remainedWidth -= FrameBox::marginLeft();
+            if (remainedWidth > 0) {
+                setMarginRight(remainedWidth);
+            }
+        }
+    }
+
+    void applyHorizontalMargin(bool isOpposite = false)
+    {
+        STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
+        if ((style()->direction() == LtrDirectionValue && !isOpposite) ||
+            (style()->direction() == RtlDirectionValue && isOpposite)) {
+            moveX(marginLeft());
+        } else {
+            moveX(-marginRight());
+        }
+    }
+
+    void applyVerticalMargin()
+    {
+        STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
+        Length marginTop = style()->marginTop();
+        Length marginBottom = style()->marginBottom();
+
+        if (!marginTop.isAuto() && !marginBottom.isAuto()) {
+            moveY(FrameBox::marginTop());
+        } else if (!marginTop.isAuto() && marginBottom.isAuto()) {
+            moveY(FrameBox::marginTop());
+        } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
+            moveY(-FrameBox::marginBottom());
         }
     }
 
