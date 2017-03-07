@@ -222,8 +222,7 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(tableBox()->style()->borderSpacing().fixed());
-
+        LayoutUnit::fromPixel(tableBox()->style()->verticalBorderSpacing().fixed());
     if (isFirstTableSection()) {
         ySoFar += borderSpacing;
     }

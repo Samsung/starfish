@@ -128,8 +128,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
     LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        sectionBox()->tableBox()->style()->borderSpacing().fixed());
-
+        sectionBox()->tableBox()->style()->horizontalBorderSpacing().fixed());
     if (firstChild()) {
         xSoFar += borderSpacing;
     }
