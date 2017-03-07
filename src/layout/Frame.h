@@ -1151,6 +1151,18 @@ public:
                (style()->display() == DisplayValue::TableDisplayValue);
     }
 
+    bool canHaveFirstLetterStyle()
+    {
+        if (isFrameBlockBox()) {
+            if (isFrameTableBox() || isFrameTableRowBox() ||
+                isFrameTableSectionBox() || isFrameTableColBox()) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     bool isAtomicInlineLevel()
     {
         return (isFrameReplaced()) ||
