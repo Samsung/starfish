@@ -131,7 +131,8 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
 
     if (!(parentFrame->node()->isElement() &&
           parentFrame->node()->asElement()->hasPseudoElement(
-              StyleResolver::PseudoElementType::PseudoElementFirstLetter))) {
+              StyleResolver::PseudoElementType::PseudoElementFirstLetter)) ||
+        !parentFrame->canHaveFirstLetterStyle()) {
         return nullptr;
     }
 
