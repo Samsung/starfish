@@ -124,12 +124,8 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
         parentFrame = n->frame();
     }
 
-    if (parentFrame->isAnonymous()) {
-        // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    if (!(parentFrame->node()->isElement() &&
+    if (parentFrame->isAnonymous() ||
+        !(parentFrame->node()->isElement() &&
           parentFrame->node()->asElement()->hasPseudoElement(
               StyleResolver::PseudoElementType::PseudoElementFirstLetter)) ||
         !parentFrame->canHaveFirstLetterStyle()) {
