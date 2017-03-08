@@ -1046,6 +1046,12 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, false, style, false, color, false);
 }
 
+String* CSSStyleDeclaration::Transition()
+{
+    //TODO
+    return nullptr;
+}
+
 static bool parseBorderShorthand(GCVector<String*>* tokens,
                                  CSSStyleValuePair* width,
                                  CSSStyleValuePair* style,
@@ -1840,6 +1846,12 @@ bool StyleResolver::anyAttributeMatches(Element* element,
 
     return false;
 }
+
+void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
+{
+    //TODO
+}
+
 
 void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
 {

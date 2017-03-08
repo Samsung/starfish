@@ -214,6 +214,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "text-align", 10) == 0) {
                 return CSSStyleKind::TextAlign;
             }
+            if (memcmp(data, "transition", 10) == 0) {
+                return CSSStyleKind::Transition;
+            }
             break;
         case 'm':
             if (memcmp(data, "margin-top", 10) == 0) {

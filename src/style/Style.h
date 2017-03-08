@@ -503,7 +503,8 @@ class CSSStyleDeclaration;
     F(BackgroundPosition, backgroundPosition, "background-position") \
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
-    F(Font, font, "font")
+    F(Font, font, "font")                                            \
+    F(Transition, transition, "transition")
 
 #define GEN_FOURSIDE(F) \
     F(Top, top)         \
@@ -1314,6 +1315,7 @@ public:
     String* BackgroundRepeat();
     String* BackgroundPosition();
     String* Font();
+    String* Transition();
 #define ATTRIBUTE_GETTER(name, ...)                                           \
     String* name()                                                            \
     {                                                                         \
@@ -1375,6 +1377,7 @@ public:
     void setBorderStyle(String* value, bool isImportant);
     void setBorderColor(String* value, bool isImportant);
     void setFont(String* value, bool isImportant);
+    void setTransition(String* value, bool isImportant);
 
 #define ATTRIBUTE_SETTER(name, ...)                                 \
     void set##name(String* value, bool isImportant)                 \
