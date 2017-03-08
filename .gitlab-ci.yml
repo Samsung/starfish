@@ -4,6 +4,7 @@ build:
   tags:
     - main_build
   before_script:
+    - make tidy; if ! cat error_report | grep 'total suggestion files:\s0' > /dev/null; then exit 1; elif ! cat error_report | grep 'total errors:\s0' > /dev/null; then exit 1; fi
     - rm -f .git/index.lock
     - rm -f .git/modules/test/index.lock
     - rm -f .git/modules/third_party/escargot/index.lock
@@ -15,7 +16,6 @@ build:
     - make x64.exe.debug -j
     - strip StarFish
     - strip out/x64/exe/debug/StarFish
-#   - make tidy; if cat error_report | grep 'ERROR' > /dev/null; then exit 1; fi
   artifacts:
     paths:
       - StarFish

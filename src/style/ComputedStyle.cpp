@@ -260,8 +260,10 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize,
                                                             font());
     m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(baseFontSize, font());
-    m_inheritedStyles.m_horizontalBorderSpacing.changeToFixedIfNeeded(baseFontSize, font());
-    m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(baseFontSize, font());
+    m_inheritedStyles.m_horizontalBorderSpacing.changeToFixedIfNeeded(
+        baseFontSize, font());
+    m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
+        baseFontSize, font());
     m_width.changeToFixedIfNeeded(baseFontSize, font());
     m_minWidth.changeToFixedIfNeeded(baseFontSize, font());
     m_maxWidth.changeToFixedIfNeeded(baseFontSize, font());
@@ -509,7 +511,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
-    if (newStyle->m_background == nullptr && oldStyle->m_background == nullptr) {
+    if (newStyle->m_background == nullptr &&
+        oldStyle->m_background == nullptr) {
     } else if (newStyle->m_background == nullptr ||
                oldStyle->m_background == nullptr) {
         damage = (ComputedStyleDamage)(
@@ -520,7 +523,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->m_surround == nullptr && oldStyle->m_surround == nullptr) {
-    } else if (newStyle->m_surround == nullptr || oldStyle->m_surround == nullptr) {
+    } else if (newStyle->m_surround == nullptr ||
+               oldStyle->m_surround == nullptr) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     } else if (*newStyle->m_surround != *oldStyle->m_surround) {
@@ -528,7 +532,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_transforms == nullptr && oldStyle->m_transforms == nullptr) {
+    if (newStyle->m_transforms == nullptr &&
+        oldStyle->m_transforms == nullptr) {
     } else if (newStyle->m_transforms == nullptr ||
                oldStyle->m_transforms == nullptr) {
         // if element has transform, we should re-layout for building

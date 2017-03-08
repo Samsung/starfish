@@ -1048,7 +1048,7 @@ String* CSSStyleDeclaration::BorderLeft()
 
 String* CSSStyleDeclaration::Transition()
 {
-    //TODO
+    // TODO
     return nullptr;
 }
 
@@ -1849,9 +1849,8 @@ bool StyleResolver::anyAttributeMatches(Element* element,
 
 void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
 {
-    //TODO
+    // TODO
 }
-
 
 void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
 {
@@ -3523,9 +3522,9 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
             // Initial value is normal and it computes to 'none' for the
             // :before and :after pseudo-elements.
             if (cssValues[k].valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial ||
+                    CSSStyleValuePair::ValueKind::Initial ||
                 cssValues[k].valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
+                    CSSStyleValuePair::ValueKind::Inherit) {
                 return;
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
@@ -3534,9 +3533,9 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     CSSStyleValuePair& item = list->atIndex(i);
                     if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::None ||
+                            CSSStyleValuePair::ValueKind::None ||
                         item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Normal) {
+                            CSSStyleValuePair::ValueKind::Normal) {
                         return;
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::UrlValueKind) {
@@ -5328,7 +5327,7 @@ bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
             setLengthValue(data.m_length);
             return true;
         }
-    } else if (tokens->size() == 2){
+    } else if (tokens->size() == 2) {
         String* first = (*tokens)[0];
         String* second = (*tokens)[1];
         ValueData firstData = { 0 };

@@ -21,8 +21,7 @@ namespace StarFish {
 
 class TextContentData {
 public:
-    TextContentData(String* text)
-        : m_text(text)
+    TextContentData(String* text) : m_text(text)
     {
     }
 
@@ -42,8 +41,7 @@ private:
 
 class ImageContentData {
 public:
-    ImageContentData(String* image)
-        : m_image(image)
+    ImageContentData(String* image) : m_image(image)
     {
     }
 
@@ -69,15 +67,11 @@ public:
         Image,
     };
 
-    ContentData()
-        : m_type(None)
-        , m_value(nullptr)
+    ContentData() : m_type(None), m_value(nullptr)
     {
     }
 
-    ContentData(ContentType type)
-        : m_type(type)
-        , m_value(nullptr)
+    ContentData(ContentType type) : m_type(type), m_value(nullptr)
     {
     }
 

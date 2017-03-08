@@ -936,7 +936,8 @@ public:
         return m_tableLayout;
     }
 
-    ContentDataGroup& content() {
+    ContentDataGroup& content()
+    {
         return m_content;
     }
 
