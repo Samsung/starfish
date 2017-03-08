@@ -392,6 +392,21 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         }
     }
 
+#ifndef NDEBUG
+    // This is used only to run w3c test cases.
+    // width attribute has the highest priority when defining the width of
+    // a table.
+    //
+    // NOTE: width="0" is handled differently by Blink and Firefox.
+    // When width="0" is given, Blink tries to set table width to 0.
+    // Firefox ignores width="0". We ignore width="0"
+    LayoutUnit widthAttribute = widthFromAttribute();
+    if (widthAttribute > 0) {
+        hasTableWidth = true;
+        tableWidth = widthAttribute;
+    }
+#endif
+
     // 3. If a width of the table is given, we either increase or decrease the
     // cell widths to fit them into the width of table.
     if (hasTableWidth) {

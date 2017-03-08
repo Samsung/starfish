@@ -135,6 +135,27 @@ private:
 
     bool isCellWidthAuto(unsigned i);
 
+#ifndef NDEBUG
+    // width() is removed from HTML5. But We implement it as it is extensively
+    // used in w3c test cases.
+    LayoutUnit widthFromAttribute()
+    {
+        STARFISH_ASSERT(
+            node()->asElement()->asHTMLElement()->isHTMLTableElement());
+        String* w =
+            node()->asElement()->asHTMLElement()->asHTMLTableElement()->width();
+        // It is ok to use -1 to indicate both "doesn't exist" and
+        // actual negative width, as negative width is invalid.
+        // FYI, Blink and Firefox ignore a negative width for table
+        if (w->equals(String::emptyString)) {
+            return LayoutUnit::fromPixel(-1);
+        } else {
+            int n = String::parseInt(w);
+            return n < 0 ? LayoutUnit::fromPixel(-1) : LayoutUnit::fromPixel(n);
+        }
+    }
+#endif
+
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;
     GCVector<ColSizeStruct> m_columnWidths;
