@@ -3757,54 +3757,56 @@ static bool isLastChild(Element* element)
 
 static bool isFirstOfType(Element* element)
 {
-    Node* ret = Traverse::previousSibling(element, [&element](Node* sibling) {
+    Node* sibling = element->previousSibling();
+    while (sibling) {
         if (sibling->isElement() &&
             sibling->localName()->equalsWithoutCase(element->localName())) {
-            return true;
-        } else {
             return false;
         }
-    });
-    return !ret;
+        sibling = sibling->previousSibling();
+    }
+
+    return true;
 }
 
 static bool isLastOfType(Element* element)
 {
-    Node* ret = Traverse::nextSibling(element, [&element](Node* sibling) {
+    Node* sibling = element->nextSibling();
+    while (sibling) {
         if (sibling->isElement() &&
             sibling->localName()->equalsWithoutCase(element->localName())) {
-            return true;
-        } else {
             return false;
         }
-    });
-    return !ret;
+        sibling = sibling->nextSibling();
+    }
+
+    return true;
 }
 
 static bool isEmpty(Element* element)
 {
-    for (Node* node = element->firstChild(); node; node = node->nextSibling()) {
-        if (node->isElement() ||
-            (node->isText() && node->asText()->textContent()->length() > 0)) {
+    Node* child = element->firstChild();
+    while (child) {
+        if (child->isElement() ||
+            (child->isText() && child->asText()->textContent()->length() > 0)) {
             return false;
         }
+        child = child->nextSibling();
     }
+
     return true;
 }
 
 static unsigned nthChildIndex(Element* element)
 {
-    int index = 1;
-    auto matchingRule = [&element](Node* sibling) {
+    unsigned index = 1;
+
+    Node* sibling = element->previousSibling();
+    while (sibling) {
         if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
+            ++index;
         }
-    };
-    for (Node* sibling = Traverse::previousSibling(element, matchingRule);
-         sibling; sibling = Traverse::previousSibling(sibling, matchingRule)) {
-        ++index;
+        sibling = sibling->previousSibling();
     }
 
     return index;
@@ -3812,20 +3814,16 @@ static unsigned nthChildIndex(Element* element)
 
 static unsigned nthOfTypeIndex(Element* element)
 {
-    int index = 1;
-    auto matchingRule = [&element](Node* sibling) {
-        if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
-        }
-    };
+    unsigned index = 1;
     String* tag = element->tagName();
-    for (Node* sibling = Traverse::previousSibling(element, matchingRule);
-         sibling; sibling = Traverse::previousSibling(sibling, matchingRule)) {
-        if (sibling->asElement()->tagName()->equals(tag)) {
+
+    Node* sibling = element->previousSibling();
+    while (sibling) {
+        if (sibling->isElement() &&
+            sibling->asElement()->tagName()->equals(tag)) {
             ++index;
         }
+        sibling = sibling->previousSibling();
     }
 
     return index;
@@ -3833,17 +3831,14 @@ static unsigned nthOfTypeIndex(Element* element)
 
 static unsigned nthLastChildIndex(Element* element)
 {
-    int index = 1;
-    auto matchingRule = [&element](Node* sibling) {
+    unsigned index = 1;
+
+    Node* sibling = element->nextSibling();
+    while (sibling) {
         if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
+            ++index;
         }
-    };
-    for (Node* sibling = Traverse::nextSibling(element, matchingRule); sibling;
-         sibling = Traverse::nextSibling(sibling, matchingRule)) {
-        ++index;
+        sibling = sibling->nextSibling();
     }
 
     return index;
@@ -3852,19 +3847,15 @@ static unsigned nthLastChildIndex(Element* element)
 static unsigned nthLastOfTypeIndex(Element* element)
 {
     int index = 1;
-    auto matchingRule = [&element](Node* sibling) {
-        if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
-        }
-    };
     String* tag = element->tagName();
-    for (Node* sibling = Traverse::nextSibling(element, matchingRule); sibling;
-         sibling = Traverse::nextSibling(sibling, matchingRule)) {
-        if (sibling->asElement()->tagName()->equals(tag)) {
+
+    Node* sibling = element->nextSibling();
+    while (sibling) {
+        if (sibling->isElement() &&
+            sibling->asElement()->tagName()->equals(tag)) {
             ++index;
         }
+        sibling = sibling->nextSibling();
     }
 
     return index;
@@ -4076,60 +4067,53 @@ void StyleResolver::resolveDOMStyle(Document* document, bool force)
     }
 }
 
-void StyleResolver::addSheet(CSSStyleSheet* sheet)
+bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
 {
-    Node* origin = sheet->origin();
-    bool originFounded = false;
-    bool added = false;
-    Traverse::findDescendant(&m_document, [&](Node* node) -> bool {
-        if (!originFounded && node == origin) {
-            originFounded = true;
-        } else if (originFounded) {
-            if (node->isElement()) {
-                if (node->asElement()->isHTMLElement()) {
-                    if (node->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLStyleElement()) {
-                        if (node->asElement()
-                                ->asHTMLElement()
-                                ->asHTMLStyleElement()
-                                ->generatedSheet()) {
-                            auto sheet2 = node->asElement()
-                                              ->asHTMLElement()
-                                              ->asHTMLStyleElement()
-                                              ->generatedSheet();
-                            auto iter = std::find(m_sheets.begin(),
-                                                  m_sheets.end(), sheet2);
-                            STARFISH_ASSERT(iter != m_sheets.end());
-                            m_sheets.insert(iter, sheet);
-                            added = true;
-                            return true;
-                        }
-                    } else if (node->asElement()
-                                   ->asHTMLElement()
-                                   ->isHTMLLinkElement()) {
-                        if (node->asElement()
-                                ->asHTMLElement()
-                                ->asHTMLLinkElement()
-                                ->generatedSheet()) {
-                            auto sheet2 = node->asElement()
-                                              ->asHTMLElement()
-                                              ->asHTMLLinkElement()
-                                              ->generatedSheet();
-                            auto iter = std::find(m_sheets.begin(),
-                                                  m_sheets.end(), sheet2);
-                            STARFISH_ASSERT(iter != m_sheets.end());
-                            m_sheets.insert(iter, sheet);
-                            added = true;
-                            return true;
-                        }
-                    }
-                }
+    if (node->isElement() && node->asElement()->isHTMLElement()) {
+        HTMLElement* htmlElement = node->asElement()->asHTMLElement();
+        CSSStyleSheet* nSheet = nullptr;
+        if (htmlElement->isHTMLStyleElement()) {
+            nSheet = htmlElement->asHTMLStyleElement()->generatedSheet();
+        } else if (htmlElement->isHTMLLinkElement()) {
+            nSheet = htmlElement->asHTMLLinkElement()->generatedSheet();
+        }
+
+        if (nSheet) {
+            auto iter = std::find(m_sheets.begin(), m_sheets.end(), nSheet);
+            STARFISH_ASSERT(iter != m_sheets.end());
+            m_sheets.insert(iter, sheet);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
+                                           bool& originFound)
+{
+    Node* child = parent->firstChild();
+    while (child) {
+        if (!originFound && child == sheet->origin()) {
+            originFound = true;
+        } else if (originFound) {
+            if (tryAddSheet(child, sheet)) {
+                return true;
+            }
+        } else {
+            if (traverseAndTryAddSheet(child, sheet, originFound)) {
+                return true;
             }
         }
-        return false;
-    });
-    if (!added) {
+        child = child->nextSibling();
+    }
+
+    return false;
+}
+
+void StyleResolver::addSheet(CSSStyleSheet* sheet)
+{
+    bool originFound = false;
+    if (!traverseAndTryAddSheet(&m_document, sheet, originFound)) {
         m_sheets.push_back(sheet);
     }
 }

@@ -1921,6 +1921,9 @@ protected:
                             MatchResult& result);
     bool anyAttributeMatches(Element* element, CSSSelector::Type type,
                              CSSSelector* selector, MatchResult& result);
+    bool tryAddSheet(Node* node, CSSStyleSheet* sheet);
+    bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
+                                bool& originFound);
 
     Document& m_document;
     float m_mediumFontSize;
