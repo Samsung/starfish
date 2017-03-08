@@ -644,6 +644,10 @@ public:
         m_flags.m_isEstablishesBlockFormattingContext |=
             (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
         m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() == DisplayValue::TableDisplayValue);
+        m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
+        m_flags.m_isEstablishesBlockFormattingContext |=
             (style->position() == PositionValue::AbsolutePositionValue);
         m_flags.m_isEstablishesBlockFormattingContext |=
             (style->floating() != FloatValue::NoneFloatValue);
