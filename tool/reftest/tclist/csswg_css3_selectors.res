@@ -28,8 +28,8 @@ test/reftest/csswg-test/selectors3_original/html/css3-modsel-34.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-35.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-36.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-37.html
-test/reftest/csswg-test/selectors3_original/html/css3-modsel-43.html
-test/reftest/csswg-test/selectors3_original/html/css3-modsel-43b.html
+#test/reftest/csswg-test/selectors3_original/html/css3-modsel-43.html
+#test/reftest/csswg-test/selectors3_original/html/css3-modsel-43b.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-44.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-44b.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-44c.html
