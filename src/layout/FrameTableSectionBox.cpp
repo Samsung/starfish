@@ -181,8 +181,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
                     width += cell->borderWidth() + cell->paddingWidth();
                     maxSpecifiedWidth = std::max(maxSpecifiedWidth, width);
                 } else if (cell->style()->width().isPercent()) {
-                    // TODO
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    // Not doing anything at this stage
                 }
             }
         }
@@ -221,8 +220,8 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(tableBox()->style()->verticalBorderSpacing().fixed());
+    LayoutUnit borderSpacing =LayoutUnit::fromPixel(
+        tableBox()->style()->verticalBorderSpacing().fixed());
     if (isFirstTableSection()) {
         ySoFar += borderSpacing;
     }
