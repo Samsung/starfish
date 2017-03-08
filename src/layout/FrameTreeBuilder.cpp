@@ -310,6 +310,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     letterStyle->loadResources(pseudoElement);
     letterStyle->arrangeStyleValues(pseudoStyle);
     letter->setStyle(letterStyle);
+    letter->setParentNode(pseudoElement);
     letter->clearNeedsStyleRecalc();
     FrameText* letterFrameText =
         new FrameText(letter, letterStyle, ctx.currentDecorationData());
@@ -320,6 +321,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         originalFrameText->node()->document(),
         originalText->substring(length, originalText->length() - length));
     remainingText->setStyle(originalFrameText->style());
+    remainingText->setParentNode(parent);
     FrameText* remainingFrameText = new FrameText(
         remainingText, originalFrameText->style(), ctx.currentDecorationData());
     remainingText->setFrame(remainingFrameText);

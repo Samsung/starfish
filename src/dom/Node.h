@@ -495,20 +495,22 @@ public:
         if (state == NodeStateNormal) {
             m_state = 0;
             m_restyleFlags = 0;
-            setNeedsStyleRecalc();
 
+            setNeedsStyleRecalc();
             if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
                 setChildrenNeedsStyleRecalc();
                 setSiblingsNeedsStyleRecalc();
             }
+            setNeedsFrameTreeBuild();
         } else if (!(m_state & state) == enable) {
             m_state ^= state;
-            setNeedsStyleRecalc();
 
+            setNeedsStyleRecalc();
             if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
                 setChildrenNeedsStyleRecalc();
                 setSiblingsNeedsStyleRecalc();
             }
+            setNeedsFrameTreeBuild();
         }
     }
 
