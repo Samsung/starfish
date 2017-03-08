@@ -52,6 +52,20 @@ public:
             ->m_tableTagName;
     }
 
+#ifndef NDEBUG
+    String* width()
+    {
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_width);
+    }
+
+    void setWidth(int width)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
+                     String::fromInt(width));
+    }
+#endif
+
     /* Other methods (not in DOM API) */
 
     virtual bool isHTMLTableElement() const
