@@ -1478,6 +1478,11 @@ void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
     }
 
     while (CSSSelector* simpleSelector = getSimpleSelector()) {
+        if (compoundPseudoElement != CSSSelector::PseudoNone) {
+            m_failedParsing = true;
+            return;
+        }
+
         if (simpleSelector->type() == CSSSelector::PseudoElement) {
             compoundPseudoElement = simpleSelector->pseudoType();
         }

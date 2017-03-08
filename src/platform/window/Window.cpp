@@ -1406,6 +1406,12 @@ void Window::releaseFocusedNode()
 void Window::setActiveNodeWithMouseMove(Node* n)
 {
     Node* t = n;
+
+    while (!(t->isElement() && t->asElement()->isHTMLElement()) &&
+           !t->isDocument()) {
+        t = t->parentNode();
+    }
+
     while (t) {
         t->setState(Node::NodeStateHovered,
                     Node::ChildrenOrSiblingsAffectedByHover, true);
