@@ -30,13 +30,14 @@ TERM_BLUE = "\033[1;34m"
 TERM_EMPTY = "\033[0m"
 
 
+count_suggestion = 0
 count_err = 0
 count_lines = 0
 count_empty_lines = 0
 
 interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
 clang_format_exts = ['.cpp', '.h']
-skip_dirs = ['deps', 'build', 'third_party', 'out', 'tools', '.git', 'test']
+skip_dirs = ['deps', 'build', 'third_party', 'out', 'tool', '.git', 'test', 'packaging']
 skip_files = []
 
 
@@ -58,6 +59,7 @@ def is_checked_by_clang(file):
     return ext in clang_format_exts and file not in skip_files
 
 def check_tidy_at_file(file, update):
+    global count_suggestion
     if update:
         formatted = subprocess.check_output(['clang-format-3.8',
             '-style=file', '-i', file])
@@ -69,6 +71,7 @@ def check_tidy_at_file(file, update):
         f.close()
         if subprocess.call(['diff'] + [file, file + '.formatted']) != 0:
             print(file + '\n')
+            count_suggestion += 1
         os.remove(file + '.formatted')
 
 def check_whitespace_error(files):
@@ -124,6 +127,9 @@ def check_tidy(args):
     print "* total lines of code: %d" % count_lines
     print ("* total non-blank lines of code: %d"
            % (count_lines - count_empty_lines))
+    print "%s* total suggestion files: %d%s" % (TERM_RED if count_suggestion > 0 else TERM_GREEN,
+                                                count_suggestion,
+                                                TERM_EMPTY)
     print "%s* total errors: %d%s" % (TERM_RED if count_err > 0 else TERM_GREEN,
                                       count_err,
                                       TERM_EMPTY)
