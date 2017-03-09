@@ -1323,7 +1323,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
                 item.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
                 item.setValue(style->backgroundImage(i));
             }
-            vals->append(item);
+            vals->push_back(item);
         }
         p.setValueList(vals);
         d->addValuePair(p);
@@ -1360,15 +1360,15 @@ CSSStyleDeclaration* Node::getComputedStyle()
 
                 CSSStyleValuePair w =
                     lengthToCSSStyleValue(style->bgSizeValue(i).width());
-                vals->append(w.valueKind(), w.value());
+                vals->emplace_back(w.valueKind(), w.value());
 
                 CSSStyleValuePair h =
                     lengthToCSSStyleValue(style->bgSizeValue(i).height());
-                vals->append(h.valueKind(), h.value());
+                vals->emplace_back(h.valueKind(), h.value());
 
                 item.setValue(vals);
             }
-            values->append(item);
+            values->push_back(item);
         }
         p.setValueList(values);
         d->addValuePair(p);
@@ -1383,7 +1383,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item =
                 lengthToCSSStyleValue(style->backgroundPositionX(i));
-            values->append(item);
+            values->push_back(item);
         }
         p.setValueList(values);
         d->addValuePair(p);
@@ -1398,7 +1398,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item =
                 lengthToCSSStyleValue(style->backgroundPositionY(i));
-            values->append(item);
+            values->push_back(item);
         }
         p.setValueList(values);
         d->addValuePair(p);
@@ -1426,16 +1426,16 @@ CSSStyleDeclaration* Node::getComputedStyle()
         LengthBox box = style->borderImageSlices();
 
         CSSStyleValuePair t = lengthToCSSStyleValue(box.top());
-        vals->append(t.valueKind(), t.value());
+        vals->emplace_back(t.valueKind(), t.value());
 
         CSSStyleValuePair r = lengthToCSSStyleValue(box.right());
-        vals->append(r.valueKind(), r.value());
+        vals->emplace_back(r.valueKind(), r.value());
 
         CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom());
-        vals->append(b.valueKind(), b.value());
+        vals->emplace_back(b.valueKind(), b.value());
 
         CSSStyleValuePair l = lengthToCSSStyleValue(box.left());
-        vals->append(l.valueKind(), l.value());
+        vals->emplace_back(l.valueKind(), l.value());
 
         p.setValue(vals);
         d->addValuePair(p);
@@ -1452,31 +1452,31 @@ CSSStyleDeclaration* Node::getComputedStyle()
 
         if (box.top().isLength()) {
             CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->append(t.valueKind(), t.value());
+            vals->emplace_back(t.valueKind(), t.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number,
-                         (float)box.top().number());
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.top().number());
         }
         if (box.right().isLength()) {
             CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->append(r.valueKind(), r.value());
+            vals->emplace_back(r.valueKind(), r.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number,
-                         (float)box.right().number());
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.right().number());
         }
         if (box.bottom().isLength()) {
             CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->append(b.valueKind(), b.value());
+            vals->emplace_back(b.valueKind(), b.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number,
-                         (float)box.bottom().number());
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
         }
         if (box.left().isLength()) {
             CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->append(l.valueKind(), l.value());
+            vals->emplace_back(l.valueKind(), l.value());
         } else {
-            vals->append(CSSStyleValuePair::ValueKind::Number,
-                         (float)box.bottom().number());
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
         }
 
         p.setValue(vals);
@@ -1496,11 +1496,11 @@ CSSStyleDeclaration* Node::getComputedStyle()
 
             CSSStyleValuePair x = lengthToCSSStyleValue(
                 style->transformOrigin()->originValue()->getXAxis());
-            vals->append(x.valueKind(), x.value());
+            vals->emplace_back(x.valueKind(), x.value());
 
             CSSStyleValuePair y = lengthToCSSStyleValue(
                 style->transformOrigin()->originValue()->getYAxis());
-            vals->append(y.valueKind(), y.value());
+            vals->emplace_back(y.valueKind(), y.value());
 
             p.setValue(vals);
         }
