@@ -91,12 +91,9 @@ NodeList* Node::childNodes()
     STARFISH_ASSERT(m_document);
     auto rareData = ensureRareMembers();
     if (rareData->m_childNodeList == nullptr) {
-        rareData->m_childNodeList = new NodeList(
-            m_document->scriptBindingInstance(), this,
-            [](Node* node, void* data) {
-                return node->parentNode() == (Node*)data ? true : false;
-            },
-            this, true);
+        rareData->m_childNodeList =
+            new NodeList(m_document->scriptBindingInstance(), this,
+                         NodeListImpl::ChildNodeFilter, this, true);
     }
     return rareData->m_childNodeList;
 }
@@ -193,97 +190,103 @@ bool Node::isDescendantOf(const Node* other)
 
 Element* Node::firstElementChild()
 {
-    Node* ret = Traverse::firstChild(this, [](Node* child) {
+    Node* child = firstChild();
+    while (child) {
         if (child->isElement()) {
-            return true;
-        } else {
-            return false;
+            break;
         }
-    });
+        child = child->nextSibling();
+    }
+
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret) {
-        return ret->asElement();
+    if (child) {
+        return child->asElement();
     } else {
         return nullptr;
     }
 #else
-    return ret->asElement();
+    return child->asElement();
 #endif
 }
 
 Element* Node::lastElementChild()
 {
-    Node* ret = Traverse::lastChild(this, [](Node* child) {
+    Node* child = lastChild();
+    while (child) {
         if (child->isElement()) {
-            return true;
-        } else {
-            return false;
+            break;
         }
-    });
+        child = child->previousSibling();
+    }
+
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret) {
-        return ret->asElement();
+    if (child) {
+        return child->asElement();
     } else {
         return nullptr;
     }
 #else
-    return ret->asElement();
+    return child->asElement();
 #endif
 }
 
 Element* Node::nextElementSibling()
 {
-    Node* ret = Traverse::nextSibling(this, [](Node* sibling) {
+    Node* sibling = nextSibling();
+    while (sibling) {
         if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
+            break;
         }
-    });
+        sibling = sibling->nextSibling();
+    }
+
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret) {
-        return ret->asElement();
+    if (sibling) {
+        return sibling->asElement();
     } else {
         return nullptr;
     }
 #else
-    return ret->asElement();
+    return sibling->asElement();
 #endif
 }
 
 Element* Node::previousElementSibling()
 {
-    Node* ret = Traverse::previousSibling(this, [](Node* sibling) {
+    Node* sibling = previousSibling();
+    while (sibling) {
         if (sibling->isElement()) {
-            return true;
-        } else {
-            return false;
+            break;
         }
-    });
+        sibling = sibling->previousSibling();
+    }
+
 #ifndef NDEBUG
     // if debug mode, we can run-time type check
-    if (ret) {
-        return ret->asElement();
+    if (sibling) {
+        return sibling->asElement();
     } else {
         return nullptr;
     }
 #else
-    return ret->asElement();
+    return sibling->asElement();
 #endif
 }
 
 unsigned long Node::childElementCount()
 {
-    return Traverse::childCount(this, [](Node* child) {
+    unsigned long count = 0;
+    Node* child = firstChild();
+    while (child) {
         if (child->isElement()) {
-            return true;
-        } else {
-            return false;
+            count++;
         }
-    });
+        child = child->nextSibling();
+    }
+    return count;
 }
 
 unsigned short isPreceding(const Node* node, const Node* isPrec,
@@ -404,14 +407,9 @@ HTMLCollection* Node::children()
         return m_rareNodeMembers->m_children;
     }
 
-    auto filter = [](Node* node, void* data) -> bool {
-        if (node->parentNode() == ((Node*)data) && node->isElement()) {
-            return true;
-        }
-        return false;
-    };
-    m_rareNodeMembers->m_children = new HTMLCollection(
-        m_document->scriptBindingInstance(), this, filter, this, true);
+    m_rareNodeMembers->m_children =
+        new HTMLCollection(m_document->scriptBindingInstance(), this,
+                           NodeListImpl::ChildElementFilter, this, true);
     return m_rareNodeMembers->m_children;
 }
 
@@ -567,9 +565,11 @@ static void didInsertNode(Node* self, Node* child)
 {
     child->setParentNode(self);
 
-    self->notifyDOMEventToParentTree(self, [self, child](Node* parent) {
+    Node* parent = self;
+    while (parent) {
         parent->didNodeInserted(self, child);
-    });
+        parent = parent->parentNode();
+    }
 
     if (self->isInDocumentScope() &&
         self->document()->doesParticipateInRendering()) {
@@ -803,9 +803,11 @@ Node* Node::removeChild(Node* child)
         notifyNodeRemoveFromDocumentTree(child);
     }
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+    Node* parent = this;
+    while (parent) {
         parent->didNodeRemoved(this, child);
-    });
+        parent = parent->parentNode();
+    }
 
     return child;
 }
@@ -833,9 +835,11 @@ Node* Node::parserAppendChild(Node* child)
         notifyNodeInsertedToDocumentTree(this, child);
     }
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+    Node* parent = this;
+    while (parent) {
         parent->didNodeInserted(this, child);
-    });
+        parent = parent->parentNode();
+    }
 
     return child;
 }
@@ -866,9 +870,11 @@ void Node::parserRemoveChild(Node* child)
         notifyNodeRemoveFromDocumentTree(child);
     }
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+    Node* parent = this;
+    while (parent) {
         parent->didNodeRemoved(this, child);
-    });
+        parent = parent->parentNode();
+    }
 }
 
 void Node::parserInsertBefore(Node* child, Node* childRef)
@@ -914,9 +920,11 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+    Node* parent = this;
+    while (parent) {
         parent->didNodeInserted(this, child);
-    });
+        parent = parent->parentNode();
+    }
 
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(this, child);
@@ -942,20 +950,8 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
         return list;
     }
 
-    auto filter = [](Node* node, void* data) {
-        QualifiedName* qualifiedName = (QualifiedName*)data;
-        if (node->isElement()) {
-            if (node->asElement()->name().localNameAtomic() ==
-                qualifiedName->localNameAtomic()) {
-                return true;
-            }
-            if (qualifiedName->localName()->equals("*")) {
-                return true;
-            }
-        }
-        return false;
-    };
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter,
+    list = new HTMLCollection(document()->scriptBindingInstance(), this,
+                              NodeListImpl::TagNameFilter,
                               new QualifiedName(qualifiedName), true);
     rareData->putActiveHtmlCollectionListWithQuery(
         activeLists, qualifiedName.localName(), list);
@@ -964,63 +960,17 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
 
 HTMLCollection* Node::getElementsByClassName(String* classNames)
 {
-    auto rareData = ensureRareMembers();
-    auto activeLists = rareData->ensureActiveHtmlCollectionListForClassName();
-    auto list =
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForClassName();
+    HTMLCollection* list =
         rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
     if (list) {
         return list;
     }
 
-    auto filter = [](Node* node, void* data) -> bool {
-        String* classNames = (String*)data;
-        if (node->isElement() && node->asElement()->isHTMLElement() &&
-            node->asElement()->asHTMLElement()->classNames().size() > 0) {
-            size_t length = classNames->length();
-            bool isWhiteSpaceState = true;
-
-            UTF32String str;
-            for (size_t i = 0; i < length; i++) {
-                char32_t ch = classNames->charAt(i);
-                if (isWhiteSpaceState) {
-                    if (ch != ' ' && ch != '\n' && ch != '\t' && ch != '\f' &&
-                        ch != '\r') {
-                        isWhiteSpaceState = false;
-                        str += ch;
-                    }
-                } else {
-                    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' ||
-                        ch == '\r') {
-                        isWhiteSpaceState = true;
-
-                        String* tok = new StringDataUTF32(std::move(str));
-
-                        if (!node->asElement()->asHTMLElement()->hasClassName(
-                                tok)) {
-                            return false;
-                        }
-
-                        str.clear();
-                    } else {
-                        str += ch;
-                    }
-                }
-            }
-
-            if (str.length()) {
-                String* tok = new StringDataUTF32(std::move(str));
-                if (!node->asElement()->asHTMLElement()->hasClassName(tok)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        return false;
-    };
-
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter,
-                              classNames, true);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this,
+                              NodeListImpl::ClassNamesFilter, classNames, true);
     rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames,
                                                    list);
     return list;
@@ -1169,6 +1119,24 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
 
 #ifdef STARFISH_ENABLE_TEST
 
+// helper function to convert Length to CSSStyleValuePair format
+static CSSStyleValuePair lengthToCSSStyleValue(Length len)
+{
+    CSSStyleValuePair p;
+    if (len.isFixed()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        p.setValue(CSSLength(len.fixed()));
+    } else if (len.isPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
+        p.setValue(len.percent());
+    } else if (len.isAuto()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+    } else {
+        STARFISH_ASSERT(false);
+    }
+    return p;
+};
+
 CSSStyleDeclaration* Node::getComputedStyle()
 {
     CSSStyleDeclaration* d = new CSSStyleDeclaration(document());
@@ -1291,23 +1259,6 @@ CSSStyleDeclaration* Node::getComputedStyle()
 #undef LENGTH_RELATED
 
     // other properties that cannot be generated by macros
-
-    // helper function to convert Length to CSSStyleValuePair format
-    auto lengthToCSSStyleValue = [](Length len) {
-        CSSStyleValuePair p;
-        if (len.isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(len.fixed()));
-        } else if (len.isPercent()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
-            p.setValue(len.percent());
-        } else if (len.isAuto()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        } else {
-            STARFISH_ASSERT(false);
-        }
-        return p;
-    };
 
     // backgroundImage
     {
