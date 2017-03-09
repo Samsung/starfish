@@ -71,13 +71,14 @@ public:
     void addCue(TextTrackCue* cue)
     {
         cue->setTrack(this);
-        m_cues->add(cue);
+        m_cues->push_back(cue);
     }
 
     void removeCue(TextTrackCue* cue)
     {
         cue->unsetTrack();
-        m_cues->remove(cue);
+        std::remove_if(m_cues->begin(), m_cues->end(),
+                       [&cue](TextTrackCue* elm) { return cue == elm; });
     }
 
     // void addActiveCue(TextTrackCue* cue)
@@ -177,8 +178,8 @@ public:
     void clear()
     {
         STARFISH_ASSERT(m_cues);
-        m_cues->clearAll();
-        m_activeCues->clearAll();
+        m_cues->clear();
+        m_activeCues->clear();
         m_cachedTime = TEXTTRACK_INVALID_TIMEVALUE;
         m_cachedIdx = 0;
     }

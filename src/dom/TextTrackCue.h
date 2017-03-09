@@ -133,9 +133,10 @@ protected:
     DocumentFragment* m_payloadAsHTML;
 };
 
-class TextTrackCueList : public ScriptWrappable {
+class TextTrackCueList : public ScriptWrappable,
+                         public GCVector<TextTrackCue*> {
 public:
-    TextTrackCueList() : ScriptWrappable(this)
+    TextTrackCueList() : ScriptWrappable(this), GCVector<TextTrackCue*>()
     {
     }
 
@@ -148,70 +149,6 @@ public:
     {
         return ScriptWrappable::Type::TextTrackCueListObject;
     }
-
-    unsigned long length() const
-    {
-        return m_list.size();
-    }
-
-    void add(TextTrackCue* cue)
-    {
-        m_list.push_back(cue);
-    }
-
-    void remove(unsigned long index)
-    {
-        m_list.erase(m_list.begin() + index);
-    }
-
-    void remove(unsigned long startIdx, unsigned long endIdx)
-    {
-        if (startIdx > endIdx || startIdx >= m_list.size() ||
-            endIdx >= m_list.size()) {
-            return;
-        }
-        m_list.erase(m_list.begin() + startIdx, m_list.begin() + endIdx + 1);
-    }
-
-    void remove(TextTrackCue* cue)
-    {
-        unsigned long size = m_list.size();
-        unsigned long targetIdx = 0;
-        for (targetIdx = 0; targetIdx < size; targetIdx++) {
-            if (m_list[targetIdx] == cue)
-                break;
-        }
-        if (targetIdx < size) {
-            remove(targetIdx);
-        }
-    }
-
-    void clearAll()
-    {
-        m_list.clear();
-    }
-
-    TextTrackCue* at(unsigned int index) const
-    {
-        if (index >= m_list.size()) {
-            return nullptr;
-        }
-        return m_list[index];
-    }
-
-    TextTrackCue* operator[](unsigned int index) const
-    {
-        return at(index);
-    }
-
-    TextTrackCue* getCueById(String* id)
-    {
-        // TODO
-        return nullptr;
-    }
-
-protected:
-    GCVector<TextTrackCue*> m_list;
 };
 }
 

@@ -2957,7 +2957,7 @@ escargot::ESFunctionObject* bindingTextTrackCueList(
             GENERATE_THIS_AND_CHECK_TYPE(
                 ScriptWrappable::Type::TextTrackCueListObject,
                 TextTrackCueList);
-            uint32_t len = originalObj->length();
+            uint32_t len = originalObj->size();
             return escargot::ESValue(len);
         },
         nullptr);
