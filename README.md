@@ -3,8 +3,8 @@
 ## Building
 
 ``` sh
-git clone git@10.113.64.74:StarFish/starfish2.git
-cd starfish
+git clone git@10.113.64.74:webtf/starfish2.git
+cd starfish2
 ./build_third_party.sh
 make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
 ```
@@ -105,5 +105,5 @@ cd /home/developer
 ./bidi_test_clean.sh
 ```
 
-[Wiki](http://10.113.64.203/StarFish/starfish/wikis/home)
+[Wiki](http://10.113.64.74/webtf/starfish2/wikis/home)
 
