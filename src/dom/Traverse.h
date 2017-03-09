@@ -137,33 +137,6 @@ public:
         return nullptr;
     }
 
-    template <typename Func>
-    static GCVector<Node*>* nextSiblings(Node* start, Func matchingRule)
-    {
-        auto siblings = new GCVector<Node*>();
-        for (Node* sibling = start->nextSibling(); sibling;
-             sibling = sibling->nextSibling()) {
-            if (matchingRule(sibling)) {
-                siblings->push_back(sibling);
-            }
-        }
-        return siblings;
-    }
-
-    template <typename Func>
-    static GCVector<Node*>* previousSiblings(Node* start, Func matchingRule)
-    {
-        auto siblings = new GCVector<Node*>();
-        for (Node* sibling = start->previousSibling(); sibling;
-             sibling = sibling->previousSibling()) {
-            if (matchingRule(sibling)) {
-                siblings->push_back(sibling);
-            }
-        }
-        std::reverse(siblings->begin(), siblings->end());
-        return siblings;
-    }
-
     static Node* nextAncestorSibling(const Node* current,
                                      const Node* stayWithin)
     {
