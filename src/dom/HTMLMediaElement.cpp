@@ -379,14 +379,16 @@ void HTMLMediaElement::pause()
 void HTMLMediaElement::addTextTrack(TextTrack* track)
 {
     if (track) {
-        m_textTracks->add(track);
+        m_textTracks->push_back(track);
     }
 }
 
 void HTMLMediaElement::removeTextTrack(TextTrack* track)
 {
     if (track) {
-        m_textTracks->remove(track);
+        auto iter =
+            std::find(m_textTracks->begin(), m_textTracks->end(), track);
+        m_textTracks->erase(iter);
     }
 }
 
@@ -398,7 +400,7 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
         return nullptr;
     }
     TextTrack* textTrack = new TextTrack(kindEnum, label, language);
-    m_textTracks->add(textTrack);
+    m_textTracks->push_back(textTrack);
     return textTrack;
 }
 
