@@ -494,7 +494,8 @@ class CSSStyleDeclaration;
     F(Content, content, "content")                                       \
     F(TransitionProperty, transitionProperty, "transitionProperty")      \
     F(TransitionDuration, transitionDuration, "transitionDuration")      \
-    F(TransitionTimingFunction, transitionTimingFunction, "transitionTimingFunction")   \
+    F(TransitionTimingFunction, transitionTimingFunction,                \
+      "transitionTimingFunction")                                        \
     F(TransitionDelay, transitionDelay, "transitionDelay")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
