@@ -21,18 +21,52 @@ namespace StarFish {
 
 class Node;
 class Element;
+
 typedef bool (*NodeListFilterFunction)(Node*, void*);
+bool isChildNode(Node* node, void* data);
+bool isChildElement(Node* node, void* data);
+bool isSameTagName(Node* node, void* data);
+bool hasClassNames(Node* node, void* data);
+bool isSameNamedAccess(Node* node, void* data);
 
 class NodeListImpl : public gc {
 public:
-    NodeListImpl(Node* root, NodeListFilterFunction filter, void* data,
+    enum FilterFunctionType {
+        None,
+        ChildNodeFilter,
+        ChildElementFilter,
+        TagNameFilter,
+        ClassNamesFilter,
+        NamedAccessFilter
+    };
+
+    NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
                  bool canCache = false)
         : m_canCache(canCache)
         , m_isCacheValid(false)
         , m_root(root)
-        , m_filter(filter)
+        , m_filter(nullptr)
         , m_data(data)
     {
+        switch (filterType) {
+        case ChildNodeFilter:
+            m_filter = isChildNode;
+            break;
+        case ChildElementFilter:
+            m_filter = isChildElement;
+            break;
+        case TagNameFilter:
+            m_filter = isSameTagName;
+            break;
+        case ClassNamesFilter:
+            m_filter = hasClassNames;
+            break;
+        case NamedAccessFilter:
+            m_filter = isSameNamedAccess;
+            break;
+        case None:
+            STARFISH_ASSERT_NOT_REACHED();
+        }
     }
 
     NodeListImpl(Node* root, bool canCache = true)
@@ -45,7 +79,7 @@ public:
     }
 
     unsigned long length() const;
-    Node* item(unsigned long index);
+    Node* item(unsigned long index) const;
     void invalidateCache() const
     {
         STARFISH_ASSERT(m_canCache);
@@ -54,6 +88,7 @@ public:
     }
 
     void setItems(GCVector<Element*>& elements);
+    void getherDescendant(GCVector<Node*>* collection, Node* root) const;
 
 private:
     void fillCacheIfNeed() const;

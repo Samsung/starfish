@@ -232,19 +232,19 @@ protected:
     size_t m_absolutePositionedLayoutParentCnt;
 };
 
-enum MBPStatus {
-    None = 0,
-    ProcessedStaringMBP = 1,
-    ProcessedEndingMBP = 2,
-    SetLeftMBP = 4,
-    SetRightMBP = 8,
-};
-
 class InlineNonReplacedBox
     : public InlineBox,
       public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
     friend class FrameBlockBox;
     friend class LineFormattingContext;
+
+    enum MBPStatus {
+        None = 0,
+        ProcessedStaringMBP = 1,
+        ProcessedEndingMBP = 2,
+        SetLeftMBP = 4,
+        SetRightMBP = 8,
+    };
 
 public:
     InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)

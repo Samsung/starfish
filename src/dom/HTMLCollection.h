@@ -28,9 +28,10 @@ class Element;
 class HTMLCollection : public ScriptWrappable {
 public:
     HTMLCollection(ScriptBindingInstance* instance, Node* root,
-                   NodeListFilterFunction filter, void* data,
+                   NodeListImpl::FilterFunctionType filterType, void* data,
                    bool canCache = false)
-        : ScriptWrappable(this), m_nodeListImpl(root, filter, data, canCache)
+        : ScriptWrappable(this)
+        , m_nodeListImpl(root, filterType, data, canCache)
     {
     }
 

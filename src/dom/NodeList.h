@@ -27,8 +27,10 @@ class Node;
 class NodeList : public ScriptWrappable {
 public:
     NodeList(ScriptBindingInstance* instance, Node* root,
-             NodeListFilterFunction filter, void* data, bool canCache = false)
-        : ScriptWrappable(this), m_nodeListImpl(root, filter, data, canCache)
+             NodeListImpl::FilterFunctionType filterType, void* data,
+             bool canCache = false)
+        : ScriptWrappable(this)
+        , m_nodeListImpl(root, filterType, data, canCache)
     {
     }
 
