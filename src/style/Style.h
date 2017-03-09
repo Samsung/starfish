@@ -594,40 +594,9 @@ protected:
     ValueList* m_values;
 };
 
-class CSSTransformFunctions : public gc {
+class CSSTransformFunctions : public GCVector<CSSTransformFunction>, public gc {
 public:
-    CSSTransformFunctions()
-    {
-    }
-
-    ~CSSTransformFunctions()
-    {
-    }
-
-    void append(CSSTransformFunction f)
-    {
-        m_transforms.push_back(f);
-    }
-
-    void clear()
-    {
-        m_transforms.clear();
-    }
-
-    CSSTransformFunction at(int i)
-    {
-        return m_transforms[i];
-    }
-
-    unsigned size()
-    {
-        return m_transforms.size();
-    }
-
     String* toString();
-
-protected:
-    GCVector<CSSTransformFunction> m_transforms;
 };
 
 class CSSStyleValuePair : public gc {
@@ -1811,26 +1780,7 @@ protected:
     Node* m_origin;
 };
 
-class Declarations {
-public:
-    unsigned size()
-    {
-        return m_declarations.size();
-    }
-
-    CSSStyleDeclaration* declaration(unsigned idx)
-    {
-        return m_declarations[idx];
-    }
-
-    void addDeclaration(CSSStyleDeclaration* declaration)
-    {
-        m_declarations.push_back(declaration);
-    }
-
-protected:
-    GCVector<CSSStyleDeclaration*> m_declarations;
-};
+using Declarations = GCVector<CSSStyleDeclaration*>;
 
 class StyleResolver {
 public:
