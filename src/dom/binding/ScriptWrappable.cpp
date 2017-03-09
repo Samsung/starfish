@@ -1633,8 +1633,8 @@ void ScriptWrappable::initScriptWrappable(TextTrackCueList* ptr)
                             ScriptWrappable::Type::TextTrackCueListObject);
             uint32_t idx = key.toIndex();
             if (idx != escargot::ESValue::ESInvalidIndexValue &&
-                idx < self->length()) {
-                TextTrackCue* e = self->at(idx);
+                idx < self->size()) {
+                TextTrackCue* e = (*self)[idx];
                 if (e != nullptr) {
                     return e->scriptValue();
                 }
@@ -1651,7 +1651,7 @@ void ScriptWrappable::initScriptWrappable(TextTrackCueList* ptr)
             TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
             STARFISH_ASSERT(self->type() ==
                             ScriptWrappable::Type::TextTrackCueListObject);
-            size_t len = self->length();
+            size_t len = self->size();
             escargot::ESValueVector v(len);
             for (size_t i = 0; i < len; i++) {
                 v[i] = escargot::ESValue(i);

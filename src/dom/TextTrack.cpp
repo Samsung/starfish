@@ -73,7 +73,7 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
     // 1) m_cues has been sorted in order of start_time.
     // 2) Every cue's end_time never exceed next cue's end_time. -> FIFO
 
-    if (m_cues->length() < 1) {
+    if (m_cues->size() < 1) {
         return activeCues();
     }
 
@@ -83,15 +83,15 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
 
     if (m_cachedTime > time || m_cachedTime == TEXTTRACK_INVALID_TIMEVALUE) {
         m_cachedIdx = 0;
-        m_activeCues->clearAll();
+        m_activeCues->clear();
     }
     m_cachedTime = time;
 
     bool cueListChanged = false;
     unsigned long startIdx = 0, endIdx;
-    unsigned long activesSize = m_activeCues->length();
+    unsigned long activesSize = m_activeCues->size();
     for (endIdx = 0; endIdx < activesSize; endIdx++) {
-        TextTrackCue* cue = m_activeCues->at(endIdx);
+        TextTrackCue* cue = (*m_activeCues)[endIdx];
         if (cue->isActiveWhen(time)) {
             break;
         } else {
@@ -100,15 +100,16 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
     }
     endIdx--;
     if (startIdx <= endIdx) {
-        m_activeCues->remove(startIdx, endIdx);
+        m_activeCues->erase(m_activeCues->begin() + startIdx,
+                            m_activeCues->begin() + endIdx + 1);
         cueListChanged = true;
     }
 
-    unsigned long cuesSize = m_cues->length();
+    unsigned long cuesSize = m_cues->size();
     for (; m_cachedIdx < cuesSize; m_cachedIdx++) {
-        TextTrackCue* cue = m_cues->at(m_cachedIdx);
+        TextTrackCue* cue = (*m_cues)[m_cachedIdx];
         if (cue->isActiveWhen(time)) {
-            m_activeCues->add(cue);
+            m_activeCues->push_back(cue);
             cue->dispatchEnterEvent();
             cueListChanged = true;
         } else {
