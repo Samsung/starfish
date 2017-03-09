@@ -1,5 +1,5 @@
 test/reftest/bidi/International_edited/generate_test=bidi-html5-018_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-html5-020_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-html5-020_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-html5-060_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-001_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-002_format=h5.html
