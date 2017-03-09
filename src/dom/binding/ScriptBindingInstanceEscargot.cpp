@@ -2766,7 +2766,7 @@ escargot::ESFunctionObject* bindingTextTrackList(
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             GENERATE_THIS_AND_CHECK_TYPE(
                 ScriptWrappable::Type::TextTrackListObject, TextTrackList);
-            uint32_t len = originalObj->length();
+            uint32_t len = originalObj->size();
             return escargot::ESValue(len);
         },
         nullptr);
@@ -2782,10 +2782,15 @@ escargot::ESFunctionObject* bindingTextTrackList(
                     GENERATE_THIS_AND_CHECK_TYPE(
                         ScriptWrappable::Type::TextTrackListObject,
                         TextTrackList);
-                    TextTrack* track = originalObj->getTrackById(
-                        toBrowserString(v.toString()));
-                    if (track) {
-                        return track->scriptValue();
+                    String* id = toBrowserString(v.toString());
+                    auto iter =
+                        std::find_if(originalObj->begin(), originalObj->end(),
+                                     [&id](TextTrack* track) {
+                                         return track->id()->equals(id);
+                                     });
+
+                    if (iter != originalObj->end()) {
+                        return (*iter)->scriptValue();
                     }
                     return escargot::ESValue(escargot::ESValue::ESNull);
                 },
