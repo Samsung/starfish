@@ -402,6 +402,11 @@ enum UnicodeBidiValue {
     IsolateUnicodeBidiValue,
 };
 
+enum TransitionPropertyValue {
+    TransitionPropertyWidthValue,
+    TransitionPropertyHeightValue,
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -486,7 +491,11 @@ class CSSStyleDeclaration;
     F(FontWeight, fontWeight, "font-weight")                             \
     F(TableLayout, tableLayout, "table-layout")                          \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")                          \
-    F(Content, content, "content")
+    F(Content, content, "content")                                       \
+    F(TransitionProperty, transitionProperty, "transitionProperty")      \
+    F(TransitionDuration, transitionDuration, "transitionDuration")      \
+    F(TransitionTimingFunction, transitionTimingFunction, "transitionTimingFunction")   \
+    F(TransitionDelay, transitionDelay, "transitionDelay")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
@@ -683,6 +692,9 @@ public:
 
         // transform
         TransformFunctions,
+
+        // transition
+        TransitionPropertyValueKind
     };
 
     CSSStyleValuePair() : m_value(0.0f), m_flagImportant(false)

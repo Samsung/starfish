@@ -2901,6 +2901,18 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::TransitionProperty:
+            //TODO
+            break;
+        case CSSStyleValuePair::KeyKind::TransitionDuration:
+            //TODO
+            break;
+        case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+            //TODO
+            break;
+        case CSSStyleValuePair::KeyKind::TransitionDelay:
+            //TODO
+            break;
         case CSSStyleValuePair::KeyKind::BorderImageSlice:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
@@ -5366,6 +5378,30 @@ bool CSSStyleValuePair::updateValueTableLayout(GCVector<String*>* tokens)
     } else {
         return false;
     }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransitionProperty(GCVector<String*>* tokens)
+{
+    //TODO
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransitionDuration(GCVector<String*>* tokens)
+{
+    //TODO
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransitionTimingFunction(GCVector<String*>* tokens)
+{
+    //TODO
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransitionDelay(GCVector<String*>* tokens)
+{
+    //TODO
     return true;
 }
 
