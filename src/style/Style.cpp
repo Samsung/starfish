@@ -154,7 +154,7 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
                CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
         for (unsigned int i = 0; i < list->size(); i++) {
-            setComputedStyleBackgroundPositionX(style, list->atIndex(i), i);
+            setComputedStyleBackgroundPositionX(style, (*list)[i], i);
         }
     } else {
         style->setBackgroundPositionX(
@@ -183,7 +183,7 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
                CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
         for (unsigned int i = 0; i < list->size(); i++) {
-            setComputedStyleBackgroundPositionY(style, list->atIndex(i), i);
+            setComputedStyleBackgroundPositionY(style, (*list)[i], i);
         }
     } else {
         style->setBackgroundPositionY(
@@ -199,7 +199,7 @@ String* CSSTransformFunctions::toString()
         String* itemStr = item.functionName()->concat(String::fromUTF8("("));
         ValueList* values = item.values();
         for (unsigned int j = 0; j < values->size(); j++) {
-            CSSStyleValuePair& subitem = values->atIndex(j);
+            CSSStyleValuePair& subitem = (*values)[j];
             String* newstr = subitem.toString();
             itemStr = itemStr->concat(newstr);
             if (j != values->size() - 1) {
@@ -334,8 +334,8 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
         if (len == 1) {
             CSSStyleValuePair x, y;
             if (parseBackgroundRepeatShorhand((*tokens)[i - 1], &x, &y)) {
-                retx->multiValue()->append(x);
-                rety->multiValue()->append(y);
+                retx->multiValue()->push_back(x);
+                rety->multiValue()->push_back(y);
             } else {
                 return false;
             }
@@ -343,8 +343,8 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
             CSSStyleValuePair x, y;
             if (x.updateValueUnitBackgroundRepeat((*tokens)[i - 2]) &&
                 y.updateValueUnitBackgroundRepeat((*tokens)[i - 1])) {
-                retx->multiValue()->append(x);
-                rety->multiValue()->append(y);
+                retx->multiValue()->push_back(x);
+                rety->multiValue()->push_back(y);
             } else {
                 return false;
             }
@@ -428,8 +428,8 @@ static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
         } else {
             return false;
         }
-        retx->multiValue()->append(x);
-        rety->multiValue()->append(y);
+        retx->multiValue()->push_back(x);
+        rety->multiValue()->push_back(y);
         len = 0;
     }
 
@@ -1501,7 +1501,7 @@ String* CSSStyleValuePair::toString()
         ValueList* list = multiValue();
         size_t len = list->size();
         for (size_t i = 0; i < len; i++) {
-            str = str->concat(list->atIndex(i).toString());
+            str = str->concat((*list)[i].toString());
             if (i != len - 1)
                 str = str->concat(list->separatorString());
         }
@@ -1865,7 +1865,7 @@ void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
         return;
     }
 
-    // TODO: should check comma-seperated input
+    // TODO: should check comma-separated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY,
         size;
     if (v.updateValueCommon(&tokens)) {
@@ -1877,12 +1877,12 @@ void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
         CSSStyleValuePair tmp = PROP;                                       \
         PROP.setValueList(                                                  \
             new ValueList(ValueList::Separator::CommaSeparator));           \
-        PROP.multiValue()->append(tmp);                                     \
+        PROP.multiValue()->push_back(tmp);                                  \
     }                                                                       \
     if (NEWPROP.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) \
-        PROP.multiValue()->append(NEWPROP.multiValue()->atIndex(0));        \
+        PROP.multiValue()->push_back((*NEWPROP.multiValue())[0]);           \
     else {                                                                  \
-        PROP.multiValue()->append(NEWPROP);                                 \
+        PROP.multiValue()->push_back(NEWPROP);                              \
     }
 
         GCVector<String*> layer;
@@ -2748,7 +2748,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = list->atIndex(i);
+                    CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::None) {
                         style->setBackgroundImage(String::emptyString, i);
@@ -2799,7 +2799,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                        CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* layers = cssValues[k].multiValue();
                 for (unsigned int l = 0; l < layers->size(); l++) {
-                    CSSStyleValuePair& layer = layers->atIndex(l);
+                    CSSStyleValuePair& layer = (*layers)[l];
                     if (layer.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundSizeValue(LengthSize(), l);
@@ -2820,13 +2820,11 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                         LengthSize result;
                         if (list->size() >= 1) {
                             result.m_width = convertValueToLength(
-                                list->atIndex(0).valueKind(),
-                                list->atIndex(0).value());
+                                (*list)[0].valueKind(), (*list)[0].value());
                         }
                         if (list->size() >= 2) {
                             result.m_height = convertValueToLength(
-                                list->atIndex(1).valueKind(),
-                                list->atIndex(1).value());
+                                (*list)[1].valueKind(), (*list)[1].value());
                         }
                         style->setBackgroundSizeValue(result, l);
                     } else {
@@ -2855,7 +2853,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = list->atIndex(i);
+                    CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundRepeatX(
@@ -2887,7 +2885,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = list->atIndex(i);
+                    CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundRepeatY(
@@ -2929,28 +2927,28 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                 Length top, right, bottom, left;
                 ValueList* l = cssValues[k].multiValue();
                 unsigned int size = l->size();
-                if (l->atIndex(size - 1).valueKind() ==
+                if ((*l)[size - 1].valueKind() ==
                     CSSStyleValuePair::ValueKind::StringValueKind) {
                     style->setBorderImageSliceFill(true);
                     size--;
                 }
-                top = convertValueToLength(l->atIndex(0).valueKind(),
-                                           l->atIndex(0).value());
+                top =
+                    convertValueToLength((*l)[0].valueKind(), (*l)[0].value());
                 if (size > 1) {
-                    right = convertValueToLength(l->atIndex(1).valueKind(),
-                                                 l->atIndex(1).value());
+                    right = convertValueToLength((*l)[1].valueKind(),
+                                                 (*l)[1].value());
                 } else {
                     right = top;
                 }
                 if (size > 2) {
-                    bottom = convertValueToLength(l->atIndex(2).valueKind(),
-                                                  l->atIndex(2).value());
+                    bottom = convertValueToLength((*l)[2].valueKind(),
+                                                  (*l)[2].value());
                 } else {
                     bottom = top;
                 }
                 if (size > 3) {
-                    left = convertValueToLength(l->atIndex(3).valueKind(),
-                                                l->atIndex(3).value());
+                    left = convertValueToLength((*l)[3].valueKind(),
+                                                (*l)[3].value());
                 } else {
                     left = right;
                 }
@@ -3008,46 +3006,46 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                 unsigned int size = l->size();
                 if (l->atIndex(0).valueKind() ==
                     CSSStyleValuePair::ValueKind::Number) {
-                    top.setValue(l->atIndex(0).numberValue());
+                    top.setValue((*l)[0].numberValue());
                 } else {
-                    top.setValue(convertValueToLength(l->atIndex(0).valueKind(),
+                    top.setValue(convertValueToLength((*l)[0].valueKind(),
                 }
-                l->atIndex(0).value()));
+                (*l)[0].value()));
                 if (size > 1) {
-                    if (l->atIndex(1).valueKind() ==
+                    if ((*l)[1].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        right.setValue(l->atIndex(1).numberValue());
+                        right.setValue((*l)[1].numberValue());
                     }
                     else {
                         right.setValue(convertValueToLength(
-                                       l->atIndex(1).valueKind(),
-                                       l->atIndex(1).value()));
+                                       (*l)[1].valueKind(),
+                                       (*l)[1].value()));
                     }
                 } else {
                     right = top;
                 }
                 if (size > 2) {
-                    if (l->atIndex(2).valueKind() ==
+                    if ((*l)[2].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        bottom.setValue(l->atIndex(2).numberValue());
+                        bottom.setValue((*l)[2].numberValue());
                     }
                     else {
                         bottom.setValue(convertValueToLength(
-                                        l->atIndex(2).valueKind(),
-                                        l->atIndex(2).value()));
+                                        (*l)[2].valueKind(),
+                                        (*l)[2].value()));
                     }
                 } else {
                     bottom = top;
                 }
                 if (size > 3) {
-                    if (l->atIndex(3).valueKind() ==
+                    if ((*l)[3].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        left.setValue(l->atIndex(3).numberValue());
+                        left.setValue((*l)[3].numberValue());
                     }
                     else {
                         left.setValue(convertValueToLength(
-                                      l->atIndex(3).valueKind(),
-                                      l->atIndex(3).value()));
+                                      (*l)[3].valueKind(),
+                                      (*l)[3].value()));
                     }
                 } else {
                     left = right;
@@ -3106,11 +3104,11 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                                 cssValues[k].valueKind());
                 ValueList* list = cssValues[k].multiValue();
                 style->m_inheritedStyles.m_horizontalBorderSpacing =
-                    convertValueToLength(list->atIndex(0).valueKind(),
-                                         list->atIndex(0).value());
+                    convertValueToLength((*list)[0].valueKind(),
+                                         (*list)[0].value());
                 style->m_inheritedStyles.m_verticalBorderSpacing =
-                    convertValueToLength(list->atIndex(1).valueKind(),
-                                         list->atIndex(1).value());
+                    convertValueToLength((*list)[1].valueKind(),
+                                         (*list)[1].value());
             }
             break;
         case CSSStyleValuePair::KeyKind::CaptionSide:
@@ -3387,7 +3385,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                     int valueSize = f.values()->size();
                     float dValues[valueSize];
                     for (int i = 0; i < valueSize; i++) {
-                        CSSStyleValuePair& item = f.values()->atIndex(i);
+                        CSSStyleValuePair& item = (*f.values())[i];
                         if (item.valueKind() ==
                             CSSStyleValuePair::ValueKind::Number) {
                             dValues[i] = item.numberValue();
@@ -3405,28 +3403,27 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                         break;
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);
-                        a = convertValueToLength(
-                            f.values()->atIndex(0).valueKind(),
-                            f.values()->atIndex(0).value());
+                        a = convertValueToLength((*f.values())[0].valueKind(),
+                                                 (*f.values())[0].value());
                         if (valueSize > 1) {
                             b = convertValueToLength(
-                                f.values()->atIndex(1).valueKind(),
-                                f.values()->atIndex(1).value());
+                                (*f.values())[1].valueKind(),
+                                (*f.values())[1].value());
                         }
                         style->setTransformTranslate(a, b);
                         break;
                     }
                     case CSSTransformFunction::Kind::TranslateX: {
-                        Length a = convertValueToLength(
-                            f.values()->atIndex(0).valueKind(),
-                            f.values()->atIndex(0).value());
+                        Length a =
+                            convertValueToLength((*f.values())[0].valueKind(),
+                                                 (*f.values())[0].value());
                         style->setTransformTranslate(a,
                                                      Length(Length::Fixed, 0));
                     } break;
                     case CSSTransformFunction::Kind::TranslateY: {
-                        Length a = convertValueToLength(
-                            f.values()->atIndex(0).valueKind(),
-                            f.values()->atIndex(0).value());
+                        Length a =
+                            convertValueToLength((*f.values())[0].valueKind(),
+                                                 (*f.values())[0].value());
                         style->setTransformTranslate(Length(Length::Fixed, 0),
                                                      a);
                     } break;
@@ -3482,7 +3479,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                 yAxis = Length(Length::Percent, 0.5f);
 
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = list->atIndex(i);
+                    CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::SideValueKind) {
                         if (item.sideValue() == SideValue::LeftSideValue) {
@@ -3543,7 +3540,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = list->atIndex(i);
+                    CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                             CSSStyleValuePair::ValueKind::None ||
                         item.valueKind() ==
@@ -4416,7 +4413,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(GCVector<String*>* tokens,
             return false;
         }
         shouldBeComma = true;
-        values->append(ret);
+        values->push_back(ret);
     }
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
@@ -4447,7 +4444,7 @@ bool CSSStyleValuePair::updateValueContent(GCVector<String*>* tokens)
                 return false;
             }
         }
-        values->append(ret);
+        values->push_back(ret);
     }
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
@@ -4667,7 +4664,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
                                                         false)) {
                     return false;
                 }
-                ret.multiValue()->append(r);
+                ret.multiValue()->push_back(r);
             }
         } else if (len == 2) {
             ret.setValueList(
@@ -4677,12 +4674,12 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
                 !r2.updateValueLengthOrPercentOrAuto((*tokens)[i - 1], false)) {
                 return false;
             }
-            ret.multiValue()->append(r1);
-            ret.multiValue()->append(r2);
+            ret.multiValue()->push_back(r1);
+            ret.multiValue()->push_back(r2);
         } else {
             return false;
         }
-        multiValue()->append(ret);
+        multiValue()->push_back(ret);
     }
 
     return true;
@@ -4706,14 +4703,14 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(GCVector<String*>* tokens)
             } else {
                 return false;
             }
-            m_value.m_multiValue->append(
+            m_value.m_multiValue->emplace_back(
                 CSSStyleValuePair::ValueKind::StringValueKind,
                 String::fromUTF8("fill"));
         } else if (CSSPropertyParser::parseNumber((*tokens)[i]->utf8Data(),
                                                   false, &result)) {
             isNum = true;
-            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number,
-                                         { (float)result });
+            m_value.m_multiValue->emplace_back(
+                CSSStyleValuePair::ValueKind::Number, (float)result);
         } else {
             return false;
         }
@@ -4941,15 +4938,15 @@ bool CSSStyleValuePair::updateValueTransformOrigin(GCVector<String*>* tokens)
             if (!ret.updateValueLengthOrPercent(value, true)) {
                 return false;
             }
-            values->append(ret);
+            values->push_back(ret);
         }
     }
 
     if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->append(xPair);
+        values->push_back(xPair);
     }
     if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->append(yPair);
+        values->push_back(yPair);
     }
 
     m_value.m_multiValue = values;
@@ -5030,8 +5027,8 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                 float num = parser->parsedNumber();
 
                 if (unit == Number) {
-                    values->append(CSSStyleValuePair::ValueKind::Number,
-                                   { num });
+                    values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                         num);
                 } else if (unit == Angle) {
                     String* str = String::emptyString;
                     if (parser->consumeString()) {
@@ -5046,13 +5043,14 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                         return false;
                     }
                     ValueData data = { CSSAngle(str, num) };
-                    values->append(CSSStyleValuePair::ValueKind::Angle, data);
+                    values->emplace_back(CSSStyleValuePair::ValueKind::Angle,
+                                         data);
                 } else { // TranslationValue
                     if (parser->consumeString()) {
                         String* str = parser->parsedString();
                         if (str->equals("%")) {
                             ValueData data = { num / 100.f };
-                            values->append(
+                            values->emplace_back(
                                 CSSStyleValuePair::ValueKind::Percentage, data);
                         } else {
                             if (!((str->length() == 0 && num == 0) ||
@@ -5060,8 +5058,8 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                                 return false;
                             }
                             ValueData data = { CSSLength(str, num) };
-                            values->append(CSSStyleValuePair::ValueKind::Length,
-                                           data);
+                            values->emplace_back(
+                                CSSStyleValuePair::ValueKind::Length, data);
                         }
                     } else if (num != 0) {
                         // After a zero length, the unit identifier is optional
@@ -5335,10 +5333,10 @@ bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
             m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
             m_value.m_multiValue =
                 new ValueList(ValueList::Separator::SpaceSeparator);
-            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Length,
-                                         firstData);
-            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Length,
-                                         secondData);
+            m_value.m_multiValue->emplace_back(
+                CSSStyleValuePair::ValueKind::Length, firstData);
+            m_value.m_multiValue->emplace_back(
+                CSSStyleValuePair::ValueKind::Length, secondData);
             return true;
         }
     }

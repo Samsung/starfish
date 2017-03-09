@@ -1192,37 +1192,16 @@ protected:
     bool m_flagImportant;
 };
 
-class ValueList : public gc {
+class ValueList : public GCVector<CSSStyleValuePair>, public gc {
 public:
     enum Separator { None, SpaceSeparator, CommaSeparator, SlashSeparator };
 
-    ValueList() : m_separator(None)
+    ValueList() : GCVector<CSSStyleValuePair>(), m_separator(None)
     {
     }
 
-    ValueList(Separator sep) : m_separator(sep)
+    ValueList(Separator sep) : GCVector<CSSStyleValuePair>(), m_separator(sep)
     {
-    }
-
-    void append(CSSStyleValuePair::ValueKind kind,
-                CSSStyleValuePair::ValueData value)
-    {
-        m_values.push_back(CSSStyleValuePair(kind, value));
-    }
-
-    void append(CSSStyleValuePair& pair)
-    {
-        m_values.push_back(pair);
-    }
-
-    CSSStyleValuePair& atIndex(int idx)
-    {
-        return m_values[idx];
-    }
-
-    unsigned int size()
-    {
-        return m_values.size();
     }
 
     String* separatorString()
@@ -1240,7 +1219,6 @@ public:
 
 protected:
     Separator m_separator;
-    GCVector<CSSStyleValuePair> m_values;
 };
 
 class CSSStyleDeclaration : public ScriptWrappable {
