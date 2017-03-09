@@ -127,8 +127,6 @@ test_regression_test_vendor1:
   - build
 
 test_regression_test_vendor2:
-  tags:
-    - shell_executor
   stage: test
   before_script:
     - rm -f .git/index.lock
