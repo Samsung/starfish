@@ -84,6 +84,20 @@ struct TextRun {
         m_frameText = frameText;
         m_direction = dir;
     }
+#ifndef NDEBUG
+    void dump()
+    {
+        std::string str = m_stringView.substring()->utf8Data();
+        str = FrameText::replaceAll(str, "\n", "\\n");
+        printf("%s", m_direction == Ltr
+                         ? "L"
+                         : (m_direction == Rtl
+                                ? "R"
+                                : (m_direction == Neutral ? "N" : "M")));
+        printf("[%s]", str.data());
+        printf(":%lu\n", m_stringView.length());
+    }
+#endif
 };
 
 class InlineTextBox : public InlineBox {

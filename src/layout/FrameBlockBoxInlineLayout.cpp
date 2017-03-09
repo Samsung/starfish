@@ -515,6 +515,11 @@ static UBiDiDirection getTextDir(const StringView& sv, size_t start, size_t end)
     return dir;
 }
 
+static bool startsWithNewlineChar(const StringView& sv)
+{
+    return String::isNewline(sv.originalString()->charAt(sv.start()));
+}
+
 static bool isNumberChar(char32_t d)
 {
     if (('0' <= d && d <= '9') ||
@@ -2418,26 +2423,26 @@ void LineFormattingContext::computeDirection(Frame* parent,
     bool everMeetNonNeutralThing = false;
     std::vector<Frame*> pendingNeutralFrames;
     std::vector<TextRun> pendingTextRuns;
-    DirectionValue directionWhenNeturalMeets = direction;
+    DirectionValue directionWhenNeutralMeets = direction;
 
     auto putOffNeutral = [&](Frame* f) {
         if (pendingNeutralFrames.size() == 0) {
-            directionWhenNeturalMeets = currentDirection;
+            directionWhenNeutralMeets = currentDirection;
         }
         pendingNeutralFrames.push_back(f);
     };
 
-    auto flushNeurtal = [&](DirectionValue dir) {
+    auto flushNeutral = [&](DirectionValue dir) {
         DirectionValue result;
         if (direction == LtrDirectionValue) {
-            if (directionWhenNeturalMeets == RtlDirectionValue &&
+            if (directionWhenNeutralMeets == RtlDirectionValue &&
                 dir == RtlDirectionValue) {
                 result = RtlDirectionValue;
             } else {
                 result = LtrDirectionValue;
             }
         } else {
-            if (directionWhenNeturalMeets == LtrDirectionValue &&
+            if (directionWhenNeutralMeets == LtrDirectionValue &&
                 dir == LtrDirectionValue) {
                 result = LtrDirectionValue;
             } else {
@@ -2477,8 +2482,20 @@ void LineFormattingContext::computeDirection(Frame* parent,
                     if (isNumber(run)) {
                         continue;
                     }
+                    // When shouldIgnoreNewlineChar() is true, ignore
+                    // newline characters, otherwise flush pending neutrals
+                    //
+                    // NOTE: textBidiResolver() guarantees that
+                    // single TextRun with newline-char has length of 1.
+                    if (!run.m_frameText->shouldIgnoreNewlineChar() &&
+                        startsWithNewlineChar(run.m_stringView)) {
+                        STARFISH_ASSERT(run.m_stringView.length() == 1);
+                        everMeetNonNeutralThing = true;
+                        flushNeutral(direction);
+                        continue;
+                    }
                     if (pendingTextRuns.size() == 0) {
-                        directionWhenNeturalMeets = currentDirection;
+                        directionWhenNeutralMeets = currentDirection;
                     }
                     pendingTextRuns.push_back(run);
                 } else {
@@ -2489,7 +2506,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
                         f->asFrameText(), run.m_stringView.originalString(),
                         run.m_stringView.start(), run.m_stringView.end(),
                         run.m_direction);
-                    flushNeurtal(run.m_direction == CharDirection::Ltr
+                    flushNeutral(run.m_direction == CharDirection::Ltr
                                      ? DirectionValue::LtrDirectionValue
                                      : DirectionValue::RtlDirectionValue);
                 }
@@ -2505,7 +2522,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
             if (f->style()->unicodeBidi() ==
                 UnicodeBidiValue::EmbedUnicodeBidiValue) {
                 everMeetNonNeutralThing = true;
-                flushNeurtal(f->style()->direction());
+                flushNeutral(f->style()->direction());
             } else if (f->style()->unicodeBidi() ==
                        UnicodeBidiValue::IsolateUnicodeBidiValue) {
                 if (everMeetNonNeutralThing) {
@@ -2518,11 +2535,11 @@ void LineFormattingContext::computeDirection(Frame* parent,
             }
         } else if (f->isFrameLineBreak()) {
             everMeetNonNeutralThing = true;
-            flushNeurtal(direction);
+            flushNeutral(direction);
         }
     }
 
-    flushNeurtal(direction);
+    flushNeutral(direction);
 }
 
 void InlineNonReplacedBox::setOrgLeftMBP()
