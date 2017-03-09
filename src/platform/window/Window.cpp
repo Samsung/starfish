@@ -22,6 +22,7 @@
 #include "layout/FrameTreeBuilder.h"
 #include "platform/canvas/font/Font.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "animation/Animation.h"
 
 #include "extra/History.h"
 #include "extra/Navigator.h"
@@ -79,6 +80,7 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
+        m_animationExecutor = nullptr;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -161,6 +163,8 @@ public:
     IdlerData* m_renderingIdlerData;
 
     float m_lastMouseX, m_lastMouseY;
+
+    AnimationExecutor* m_animationExecutor;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -446,6 +450,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
 #endif
+    wnd->m_animationExecutor = new AnimationExecutor(wnd);
     return wnd;
 }
 
@@ -534,6 +539,11 @@ Window::~Window()
                                    eflWindow->m_mobileMouseUpEventHandler);
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
                                    eflWindow->m_mobileClickEventHandler);
+
+    if (eflWindow->m_animationExecutor->isAlive()) {
+        eflWindow->m_animationExecutor->stopIfNeeds();
+    }
+    eflWindow->m_animationExecutor = nullptr;
 #endif
 }
 
@@ -1134,6 +1144,8 @@ void Window::setNeedsRenderingSlowCase()
             return ECORE_CALLBACK_CANCEL;
         },
         id);
+
+    ((WindowImplEFL*)this)->m_animationExecutor->startIfNeeds();
 }
 
 void Window::setWholeDocumentNeedsStyleRecalc()

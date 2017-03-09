@@ -378,6 +378,7 @@ SRC += $(foreach dir, src/platform/canvas/font , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/file_io , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/location , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/profiling , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/animation , $(wildcard $(dir)/*.cpp))
 
 SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
 ifeq ($(TYPE), lib)
