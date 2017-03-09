@@ -195,7 +195,7 @@ String* CSSTransformFunctions::toString()
 {
     String* result = String::emptyString;
     for (unsigned i = 0; i < size(); i++) {
-        CSSTransformFunction item = at(i);
+        CSSTransformFunction item = (*this)[i];
         String* itemStr = item.functionName()->concat(String::fromUTF8("("));
         ValueList* values = item.values();
         for (unsigned int j = 0; j < values->size(); j++) {
@@ -3381,7 +3381,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                     CSSStyleValuePair::ValueKind::TransformFunctions);
                 CSSTransformFunctions* funcs = cssValues[k].transformValue();
                 for (unsigned c = 0; c < funcs->size(); c++) {
-                    CSSTransformFunction f = funcs->at(c);
+                    CSSTransformFunction f = (*funcs)[c];
                     int valueSize = f.values()->size();
                     float dValues[valueSize];
                     for (int i = 0; i < valueSize; i++) {
@@ -3582,7 +3582,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
             MatchResult result;
             if (matchSelector(element, selectorList, 0, result) ==
                 Match::SelectorMatches) {
-                userAgentDeclarations.addDeclaration(
+                userAgentDeclarations.push_back(
                     sheet->rules()[j]->styleDeclaration());
             }
         }
@@ -3598,11 +3598,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                 element->setPseudoElement(result.pseudoType);
                 if (pseudoId != PseudoElementNone) {
                     ret->setPseudoType(pseudoId);
-                    authorDeclarations.addDeclaration(
+                    authorDeclarations.push_back(
                         sheet->rules()[j]->styleDeclaration());
                 }
             } else if (pseudoId == PseudoElementNone) {
-                authorDeclarations.addDeclaration(
+                authorDeclarations.push_back(
                     sheet->rules()[j]->styleDeclaration());
             }
         }
@@ -3611,13 +3611,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     URL* url = element->document()->documentURI();
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(url, userAgentDeclarations.declaration(i)->m_cssValues, ret,
-              parent, false);
+        apply(url, userAgentDeclarations[i]->m_cssValues, ret, parent, false);
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(url, authorDeclarations.declaration(i)->m_cssValues, ret, parent,
-              false);
+        apply(url, authorDeclarations[i]->m_cssValues, ret, parent, false);
     }
 
     // inline style
@@ -3627,13 +3625,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(url, authorDeclarations.declaration(i)->m_cssValues, ret, parent,
-              true);
+        apply(url, authorDeclarations[i]->m_cssValues, ret, parent, true);
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(url, userAgentDeclarations.declaration(i)->m_cssValues, ret,
-              parent, true);
+        apply(url, userAgentDeclarations[i]->m_cssValues, ret, parent, true);
     }
 
     // inline style
@@ -4551,7 +4547,7 @@ bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
     if (tokens->size() != 1) {
         return false;
     }
-    return updateValueLengthOrPercentOrAutoOrNone(tokens->at(0), allowNegative);
+    return updateValueLengthOrPercentOrAutoOrNone((*tokens)[0], allowNegative);
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(GCVector<String*>* tokens)
@@ -5075,7 +5071,7 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                 idx + 1 < minArgCnt) {
                 return false;
             }
-            m_value.m_transforms->append(CSSTransformFunction(fkind, values));
+            m_value.m_transforms->emplace_back(fkind, values);
         }
     }
     return true;
