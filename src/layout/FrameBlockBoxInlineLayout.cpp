@@ -1993,8 +1993,8 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
     if (token.isWhiteSpace()) {
         CharDirection dir = CharDirection::Ltr;
         for (size_t i = 0; i < runs.size(); i++) {
-            if (offset <= runs[i].m_stringView.start() &&
-                runs[i].m_stringView.end() <= nextOffset) {
+            if (runs[i].m_stringView.start() <= offset &&
+                offset + 1 <= runs[i].m_stringView.end()) {
                 dir = runs[i].m_direction;
                 break;
             }

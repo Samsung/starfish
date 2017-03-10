@@ -11,9 +11,9 @@ test/reftest/bidi/International_edited/generate_test=bidi-markup-007_format=h5.h
 test/reftest/bidi/International_edited/generate_test=bidi-markup-008_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-009_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-010_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-markup-011_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-markup-012_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-markup-013_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-markup-011_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-markup-012_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-markup-013_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-014_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-015_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-016_format=h5.html
@@ -21,9 +21,9 @@ test/reftest/bidi/International_edited/generate_test=bidi-markup-017_format=h5.h
 test/reftest/bidi/International_edited/generate_test=bidi-markup-018_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-019_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-020_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-markup-021_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-markup-021_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-022_format=h5.html
-# test/reftest/bidi/International_edited/generate_test=bidi-markup-023_format=h5.html
+test/reftest/bidi/International_edited/generate_test=bidi-markup-023_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-024_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-025_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-026_format=h5.html

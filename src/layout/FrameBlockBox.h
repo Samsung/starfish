@@ -85,7 +85,7 @@ struct TextRun {
         m_direction = dir;
     }
 #ifndef NDEBUG
-    void dump()
+    void dump() const
     {
         std::string str = m_stringView.substring()->utf8Data();
         str = FrameText::replaceAll(str, "\n", "\\n");
