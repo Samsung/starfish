@@ -1153,6 +1153,8 @@ public:
     bool updateValueUnitFontStyle(String* token);
     bool updateValueUnitFontWeight(String* token);
     bool updateValueUnitLineHeight(String* token);
+    bool updateValueUnitTransitionProperty(String* value);
+    bool updateValueUnitTransitionDuration(String* value);
 
 protected:
     KeyKind m_keyKind;
