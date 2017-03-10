@@ -18,5 +18,4 @@
 #include "FrameText.h"
 
 namespace StarFish {
-
 }
