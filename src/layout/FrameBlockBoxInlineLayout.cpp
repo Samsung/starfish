@@ -3036,9 +3036,10 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             Frame* f = firstChild();
             while (f) {
                 STARFISH_ASSERT(f->isNormalFlow());
-                w = std::max(w,
-                             PreferredWidthContext::computePreferredWidthWithNewContext(
-                                 ctx, f));
+                w = std::max(
+                    w,
+                    PreferredWidthContext::computePreferredWidthWithNewContext(
+                        ctx, f));
 
                 f = f->next();
             }
@@ -3052,9 +3053,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 }
 
                 if (f->isFrameBlockBox()) {
-                    LayoutUnit w =
-                        PreferredWidthContext::computePreferredWidthWithNewContext(
-                            ctx, f);
+                    LayoutUnit w = PreferredWidthContext::
+                        computePreferredWidthWithNewContext(ctx, f);
 
                     if (f->isFloating()) {
                         ctx.handleFloatingBox(f, w);

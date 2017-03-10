@@ -467,8 +467,8 @@ public:
         return minWidth;
     }
 
-    static LayoutUnit computePreferredWidthWithNewContext(PreferredWidthContext& ctx,
-                                                    Frame* f);
+    static LayoutUnit computePreferredWidthWithNewContext(
+        PreferredWidthContext& ctx, Frame* f);
 
     int hasFloat() const
     {

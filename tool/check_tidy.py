@@ -37,7 +37,7 @@ count_empty_lines = 0
 
 interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
 clang_format_exts = ['.cpp', '.h']
-skip_dirs = ['deps', 'build', 'third_party', 'out', 'tool', '.git', 'test', 'packaging']
+skip_dirs = ['./deps', './build', './third_party', './out', './tool', '.git', './test', './packaging']
 skip_files = []
 
 
@@ -110,7 +110,7 @@ def check_tidy(args):
         check_whitespace_error([args.path])
 
     for (dirpath, _, filenames) in os.walk(args.path):
-        if any(d in fs.relpath(dirpath, args.path) for d in skip_dirs):
+        if any(d in ''.join(('./', fs.relpath(dirpath, args.path))) for d in skip_dirs):
             continue
 
         files = [fs.join(dirpath, name) for name in filenames

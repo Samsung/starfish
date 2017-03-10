@@ -53,10 +53,10 @@ const char* sstrstr(const char* haystack, size_t length, const char* needle,
 class HTMLResourceClient : public ResourceClient {
 public:
     HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
-        : ResourceClient(res),
-          m_builder(builder),
-          m_parser(nullptr),
-          m_htmlSource(String::emptyString)
+        : ResourceClient(res)
+        , m_builder(builder)
+        , m_parser(nullptr)
+        , m_htmlSource(String::emptyString)
     {
     }
 
