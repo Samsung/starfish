@@ -1847,9 +1847,99 @@ bool StyleResolver::anyAttributeMatches(Element* element,
     return false;
 }
 
+static void removeTransitionCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration);
+}
+
+static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
+                                       CSSStyleValuePair property,
+                                       CSSStyleValuePair duration)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty,
+                            property);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration,
+                            duration);
+}
+
+bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
+{
+    // TODO other property types
+    m_valueKind = CSSStyleValuePair::ValueKind::TransitionPropertyValueKind;
+    if (STRING_VALUE_IS_STRING("width")) {
+        m_value = TransitionPropertyValue::TransitionPropertyWidthValue;
+    } else if (STRING_VALUE_IS_STRING("height")) {
+        m_value = TransitionPropertyValue::TransitionPropertyHeightValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitTransitionDuration(String* value)
+{
+    if (value->length() < 1) {
+        return false;
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+        m_value.m_stringValue = value;
+    }
+    return true;
+}
+
+static bool parseTransitionShorthand(GCVector<String*>* tokens,
+                                     CSSStyleValuePair* property,
+                                     CSSStyleValuePair* duration)
+{
+    // TODO other shorthands
+    size_t len = tokens->size();
+    if (len < 1) {
+        return false;
+    }
+
+    property->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    duration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasProperty = false, hasDuration = false;
+    CSSStyleValuePair temp;
+
+    for (size_t i = 0; i < len; i++) {
+        String* tok = (*tokens)[i];
+        if (!hasProperty && temp.updateValueUnitTransitionProperty(tok)) {
+            *property = temp;
+            hasProperty = true;
+        } else if (!hasDuration &&
+                   temp.updateValueUnitTransitionDuration(tok)) {
+            *duration = temp;
+            hasDuration = true;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
 void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
 {
-    // TODO
+    if (value->length() == 0) {
+        removeTransitionCSSValuePairs(this);
+        return;
+    }
+
+    GCVector<String*> tokens;
+    tokenizeCSSValue(&tokens, value);
+
+    // TODO comma separation
+    CSSStyleValuePair v, property, duration;
+    if (v.updateValueCommon(&tokens)) {
+        v.setFlagImportant(isImportant);
+        addTransitionCSSValuePairs(this, v, v);
+    } else if (parseTransitionShorthand(&tokens, &property, &duration)) {
+        property.setFlagImportant(isImportant);
+        duration.setFlagImportant(isImportant);
+        addTransitionCSSValuePairs(this, property, duration);
+    }
 }
 
 void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
