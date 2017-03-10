@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
-    Copyright (c) 2016 Samsung Electronics Co., Ltd
+    Copyright (c) 2015-present Samsung Electronics Co., Ltd
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
