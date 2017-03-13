@@ -77,8 +77,8 @@ public:
     void removeCue(TextTrackCue* cue)
     {
         cue->unsetTrack();
-        std::remove_if(m_cues->begin(), m_cues->end(),
-                       [&cue](TextTrackCue* elm) { return cue == elm; });
+        m_cues->erase(std::remove(m_cues->begin(), m_cues->end(), cue),
+                      m_cues->end());
     }
 
     // void addActiveCue(TextTrackCue* cue)

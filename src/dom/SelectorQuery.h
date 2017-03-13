@@ -113,14 +113,14 @@ private:
                                  bool shouldOnlyMatchFirstElement);
     void findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output,
                                      bool shouldOnlyMatchFirstElement);
-    bool selectorListMatches(Node& rootNode, Element* element,
-                             GCVector<Element*>& output);
+    bool selectorListMatches(Node& rootNode, Element* element);
     void executeSlow(Node& rootNode, GCVector<Element*>& collection,
                      bool shouldOnlyMatchFirstElement);
     void execute(Node& rootNode, GCVector<Element*>& matchedElement,
                  bool shouldOnlyMatchFirstElement);
-    void collectElementsById(Node& rootNode, String* id,
-                             GCVector<Element*>& collection);
+    void collectElementsById(Node& rootNode, const String* id,
+                             GCVector<Element*>& collection,
+                             bool shouldOnlyMatchFirstElement);
     void collectElementsByClassName(Node& rootNode, const String* className,
                                     GCVector<Element*>& collection,
                                     bool shouldOnlyMatchFirstElement);

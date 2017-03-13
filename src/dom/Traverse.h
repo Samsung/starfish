@@ -43,43 +43,29 @@ public:
     }
 
     template <typename Func>
-    static void getherDescendant(GCVector<Node*>& collection, Node* root,
-                                 Func filter,
-                                 bool shouldOnlyMatchFirstElement = false)
+    static bool getherDescendant(GCVector<Element*>& collection, Node* root,
+                                 Func filter, bool shouldOnlyMatchFirstElement)
     {
         Node* child = root->firstChild();
         while (child) {
-            if (filter(child)) {
-                collection.push_back(child);
-                if (shouldOnlyMatchFirstElement) {
-                    return;
+            if (child->isElement()) {
+                Element* elm = child->asElement();
+                if (filter(elm)) {
+                    collection.push_back(child->asElement());
+                    if (shouldOnlyMatchFirstElement) {
+                        return true;
+                    }
                 }
             }
 
-            getherDescendant(collection, child, filter,
-                             shouldOnlyMatchFirstElement);
-            child = child->nextSibling();
-        }
-    }
-
-    template <typename Func>
-    static void getherDescendant(GCVector<Element*>& collection, Node* root,
-                                 Func filter,
-                                 bool shouldOnlyMatchFirstElement = false)
-    {
-        Node* child = root->firstChild();
-        while (child) {
-            if (filter(child)) {
-                collection.push_back(child->asElement());
-                if (shouldOnlyMatchFirstElement) {
-                    return;
-                }
+            if (getherDescendant(collection, child, filter,
+                                 shouldOnlyMatchFirstElement)) {
+                return true;
             }
-
-            getherDescendant(collection, child, filter,
-                             shouldOnlyMatchFirstElement);
             child = child->nextSibling();
         }
+
+        return false;
     }
 
     template <typename Func>
@@ -100,7 +86,7 @@ public:
     {
         Node* child = parent->firstChild();
         while (child) {
-            if (!child && child->isElement()) {
+            if (child->isElement()) {
                 return child;
             } else {
                 child = child->nextSibling();
@@ -118,20 +104,6 @@ public:
                 return child;
             } else {
                 child = child->previousSibling();
-            }
-        }
-        return nullptr;
-    }
-
-    template <typename Func>
-    static Node* previousSibling(Node* start, Func matchingRule)
-    {
-        Node* sibling = start->previousSibling();
-        while (sibling) {
-            if (matchingRule(sibling)) {
-                return sibling;
-            } else {
-                sibling = sibling->previousSibling();
             }
         }
         return nullptr;
