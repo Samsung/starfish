@@ -425,6 +425,26 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::PaddingTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
