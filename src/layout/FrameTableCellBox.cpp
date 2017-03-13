@@ -29,6 +29,9 @@ namespace StarFish {
 
 FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
+    , m_minCellWidth(0)
+    , m_maxCellWidth(0)
+    , m_actualContentHeight(0)
 {
 }
 
@@ -146,27 +149,16 @@ void FrameTableCellBox::applyVerticalAlign()
     //    in "vertical-align: baseline"
     LayoutUnit childContentHeight = 0;
     LayoutUnit ascenderOfTheFirstLineBox = 0;
+
     if (hasBlockFlow() && firstChild()) {
         STARFISH_ASSERT(firstChild()->isFrameBlockBox());
-        STARFISH_ASSERT(lastChild()->isFrameBlockBox());
         FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
-        FrameBlockBox* lastBox = lastChild()->asFrameBlockBox();
-        LayoutUnit yStart = firstBox->y() - firstBox->marginTop();
-        LayoutUnit yEnd =
-            lastBox->y() + lastBox->height() + lastBox->marginBottom();
-        childContentHeight = yEnd - yStart;
         if (!firstBox->lineBoxes().empty()) {
             ascenderOfTheFirstLineBox = firstBox->lineBoxes()[0]->ascender();
         }
-    } else {
-        if (!m_lineBoxes.empty()) {
-            LineBox* firstBox = m_lineBoxes[0];
-            LineBox* lastBox = m_lineBoxes[m_lineBoxes.size() - 1];
-            LayoutUnit yStart = firstBox->y();
-            LayoutUnit yEnd = lastBox->y() + lastBox->height();
-            childContentHeight = yEnd - yStart;
-            ascenderOfTheFirstLineBox = firstBox->ascender();
-        }
+    } else if (!m_lineBoxes.empty()) {
+        LineBox* firstBox = m_lineBoxes[0];
+        ascenderOfTheFirstLineBox = firstBox->ascender();
     }
 
     // 2. Cal y pos where the first child box will be positioned
@@ -176,13 +168,13 @@ void FrameTableCellBox::applyVerticalAlign()
         yPosOffset = 0;
         break;
     case VerticalAlignValue::BottomVAlignValue:
-        yPosOffset = contentHeight() - childContentHeight;
+        yPosOffset = contentHeight() - m_actualContentHeight;
         break;
     case VerticalAlignValue::MiddleVAlignValue: {
         LayoutUnit halfCellContentHeight =
             LayoutUnit(contentHeight().toDouble() / 2);
         yPosOffset = halfCellContentHeight.toDouble() -
-                     (childContentHeight.toDouble() / 2);
+                     (m_actualContentHeight.toDouble() / 2);
         break;
     }
     case VerticalAlignValue::BaselineVAlignValue:
