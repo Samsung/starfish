@@ -35,6 +35,7 @@ class CanvasSurface;
 class History;
 class Navigator;
 class webapis;
+class AnimationExecutor;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -143,6 +144,11 @@ public:
     LocationObj* location()
     {
         return m_location;
+    }
+
+    AnimationExecutor* animationExecutor()
+    {
+        return m_animationExecutor;
     }
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -307,6 +313,7 @@ protected:
     Navigator* m_navigator;
     LocationObj* m_location;
     Document* m_document;
+    AnimationExecutor* m_animationExecutor;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     webapis* m_webapis;
 #endif

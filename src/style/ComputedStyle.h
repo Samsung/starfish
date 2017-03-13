@@ -1074,6 +1074,9 @@ protected:
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle);
+
+void applyTransition(Element* element, ComputedStyle* oldStyle,
+                     ComputedStyle* newStyle);
 }
 
 #endif
