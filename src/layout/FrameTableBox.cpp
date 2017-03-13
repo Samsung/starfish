@@ -626,6 +626,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layout(
                 ctx, Frame::LayoutWantToResolve::ResolveWidth);
+            c->asFrameTableCaptionBox()->setX(
+                c->asFrameTableCaptionBox()->marginLeft());
         } else if (c->isFrameTableColBox()) {
             // The FrameTableColBox must not be laid out.
         } else {
@@ -649,16 +651,17 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     // 3. Captions that have property "caption-side: bottom"
     //    If there are multiple captions, place them in document order
 
-    LayoutUnit ySoFar = marginTop();
+    LayoutUnit ySoFar = 0;
 
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() ==
             CaptionSideValue::TopCaptionSideValue) {
-            caption->setWidth(paddingLeft() + width() + paddingRight());
+            caption->setWidth(paddingLeft() + width() + paddingRight() -
+                              caption->marginWidth());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
-            caption->setY(ySoFar);
-            ySoFar += caption->height();
+            caption->setY(ySoFar + caption->marginTop());
+            ySoFar += caption->height() + caption->marginHeight();
         }
     }
 
@@ -710,14 +713,13 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() ==
             CaptionSideValue::BottomCaptionSideValue) {
-            caption->setWidth(paddingLeft() + width() + paddingRight());
+            caption->setWidth(paddingLeft() + width() + paddingRight() -
+                              caption->marginWidth());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
-            caption->setY(ySoFar);
-            ySoFar += caption->height();
+            caption->setY(ySoFar + caption->marginTop());
+            ySoFar += caption->height() + caption->marginHeight();
         }
     }
-    ySoFar += marginBottom();
-
     setHeight(ySoFar);
 }
 
