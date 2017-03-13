@@ -413,7 +413,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         LayoutUnit availableWidth = tableWidth;
         availableWidth -= borderWidth() + paddingWidth();
         availableWidth -=
-            (borderSpacing * m_columnWidths.size()) - borderSpacing;
+            (borderSpacing * m_columnWidths.size()) + borderSpacing;
         LayoutUnit sumOfSpecifiedCellWidths = 0;
 
         for (auto& c : cellsWithSpecifiedWidths) {
@@ -443,7 +443,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
             LayoutUnit remainingWidth = tableWidth - sumOfSpecifiedCellWidths;
             remainingWidth -= borderWidth() + paddingWidth();
             remainingWidth -=
-                (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
             // Specified table width is bigger than the sum of all specified
             // cell widths, if
@@ -517,7 +517,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
         LayoutUnit tableWidthByAddingColWidths = sumOfColWidths;
         tableWidthByAddingColWidths += borderWidth() + paddingWidth();
         tableWidthByAddingColWidths +=
-            (borderSpacing * m_columnWidths.size()) - borderSpacing;
+            (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
         tableWidth = parentContentWidth - marginWidth();
 
@@ -529,7 +529,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
             LayoutUnit remainingWidth = tableWidth;
             remainingWidth -= borderWidth() + paddingWidth();
             remainingWidth -=
-                (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                (borderSpacing * m_columnWidths.size()) + borderSpacing;
             remainingWidth -= sumOfAdjustedSpecifiedCellWidths;
 
             unsigned reducedToMinWidths = 0;
@@ -561,7 +561,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 remainingWidth = tableWidth;
                 remainingWidth -= borderWidth() + paddingWidth();
                 remainingWidth -=
-                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                    (borderSpacing * m_columnWidths.size()) + borderSpacing;
                 remainingWidth -= sumOfAutoCellMinWidths;
 
                 for (auto& c : columnsMayNeedToAdjustWidths) {
@@ -586,7 +586,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 LayoutUnit availableWidth = tableWidth;
                 availableWidth -= borderWidth() + paddingWidth();
                 availableWidth -=
-                    (borderSpacing * m_columnWidths.size()) - borderSpacing;
+                    (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
                 for (auto& c : columnsAdjustedToMinWidths) {
                     ColSizeStruct& col = *c;
