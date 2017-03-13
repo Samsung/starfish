@@ -449,6 +449,12 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         contentHeight = layoutInline(ctx);
     }
 
+    // The contentHeight is Used when table cell contents are vertically aligned
+    // in the table row.
+    if (style()->display() == TableCellDisplayValue) {
+        this->asFrameTableCellBox()->setActualContentHeight(contentHeight);
+    }
+
     // Now the intrinsic height of the object is known because the children are
     // placed
 
