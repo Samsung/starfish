@@ -110,6 +110,10 @@ def case_runner(tc):
 
     except subprocess.CalledProcessError:
         return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+    except OSError, e:
+        if e.errno != 17:
+            raise
+
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None,
