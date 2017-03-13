@@ -26,6 +26,8 @@
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
 
+#include "animation/Animation.h"
+
 namespace StarFish {
 
 #define TOKEN_IS_STRING(str) \
@@ -4171,6 +4173,14 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             element->setNeedsComposite();
         }
 
+        if (element->style() && !style->transitionDuration().isZero() &&
+            (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
+            applyTransition(element, element->style(), style);
+        } else {
+            // TODO: temporal code
+            element->document()->window()->animationExecutor()->cancelAnimation(
+                element);
+        }
         element->setStyle(style);
         element->clearNeedsStyleRecalc();
     }

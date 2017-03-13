@@ -249,6 +249,11 @@ public:
         return m_kind;
     }
 
+    bool isZero()
+    {
+        return m_value == 0;
+    }
+
     float value()
     {
         return m_value;

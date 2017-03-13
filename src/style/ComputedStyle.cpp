@@ -23,6 +23,7 @@
 #include "platform/window/Window.h"
 #include "layout/Frame.h"
 #include "layout/FrameBlockBox.h"
+#include "animation/Animation.h"
 
 namespace StarFish {
 
@@ -304,6 +305,38 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     if (m_background) {
         m_background->checkComputed(baseFontSize, font(), color());
+    }
+}
+
+void applyTransition(Element* element, ComputedStyle* oldStyle,
+                     ComputedStyle* newStyle)
+{
+    AnimationExecutor* executor =
+        element->document()->window()->animationExecutor();
+    if (newStyle->transitionProperty() ==
+        TransitionPropertyValue::TransitionPropertyWidthValue) {
+        Length from = oldStyle->width();
+        Length to = newStyle->width();
+
+        executor->registerAnimation(new LengthAnimationTask(
+            element, CSSStyleValuePair::KeyKind::Width, AnimatedValue(from),
+            AnimatedValue(to), newStyle->transitionDuration().value(), 0,
+            new CubicBeizer(0.25, 0.1, 0.25, 1)));
+        // keep current computed style
+        newStyle->setWidth(from);
+    } else if (newStyle->transitionProperty() ==
+               TransitionPropertyValue::TransitionPropertyHeightValue) {
+        Length from = oldStyle->height();
+        Length to = newStyle->height();
+
+        executor->registerAnimation(new LengthAnimationTask(
+            element, CSSStyleValuePair::KeyKind::Height, AnimatedValue(from),
+            AnimatedValue(to), newStyle->transitionDuration().value(), 0,
+            new CubicBeizer(0.25, 0.1, 0.25, 1)));
+        // keep current computed style
+        newStyle->setHeight(from);
+    } else if (newStyle->transitionProperty() ==
+               TransitionPropertyValue::TransitionPropertyAllValue) {
     }
 }
 

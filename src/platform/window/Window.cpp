@@ -81,7 +81,6 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
-        m_animationExecutor = nullptr;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -164,8 +163,6 @@ public:
     IdlerData* m_renderingIdlerData;
 
     float m_lastMouseX, m_lastMouseY;
-
-    AnimationExecutor* m_animationExecutor;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -462,6 +459,7 @@ Window::Window(StarFish* starFish)
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_document(nullptr)
+    , m_animationExecutor(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -539,10 +537,9 @@ Window::~Window()
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
                                    eflWindow->m_mobileClickEventHandler);
 
-    if (eflWindow->m_animationExecutor->isAlive()) {
-        eflWindow->m_animationExecutor->stopIfNeeds();
+    if (m_animationExecutor->isAlive()) {
+        m_animationExecutor->stopIfNeeds();
     }
-    eflWindow->m_animationExecutor = nullptr;
 #endif
 }
 
@@ -1138,8 +1135,6 @@ void Window::setNeedsRenderingSlowCase()
             return ECORE_CALLBACK_CANCEL;
         },
         id);
-
-    ((WindowImplEFL*)this)->m_animationExecutor->startIfNeeds();
 }
 
 void Window::setWholeDocumentNeedsStyleRecalc()
