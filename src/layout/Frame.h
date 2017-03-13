@@ -629,8 +629,9 @@ public:
         // TODO add condition
         // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
         // Block formatting context is established when the element is either
-        // float, absolute positioned, or block boxes with 'overflow' other than
-        // 'visible'.
+        // float, absolute positioned, block containers (such as inline-blocks,
+        // table-cells, and table-captions) that are not block boxes,
+        // or block boxes with 'overflow' other than 'visible'.
         // Especially, the last condition should be met another requirement,
         // which is, the overflow should not be propagated to viewport.
         // There are 2 possible cases that overflow property can propagate to
@@ -644,13 +645,21 @@ public:
         m_flags.m_isEstablishesBlockFormattingContext |=
             (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
         m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::TableDisplayValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
             (style->position() == PositionValue::AbsolutePositionValue);
         m_flags.m_isEstablishesBlockFormattingContext |=
             (style->floating() != FloatValue::NoneFloatValue);
+        m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() == DisplayValue::TableCellDisplayValue);
+        m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() ==
+             DisplayValue::TableCaptionDisplayValue);
+
+        // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
+        // The table wrapper box establishes a block formatting context
+        m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() == DisplayValue::TableDisplayValue);
+        m_flags.m_isEstablishesBlockFormattingContext |=
+            (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
 
         m_flags.m_isPositioned =
             (style->position() != PositionValue::StaticPositionValue);
