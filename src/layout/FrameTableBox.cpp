@@ -638,7 +638,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // The width of all table sections should be the same,
     // so getting the max width should be the same as the width of
     // any table sections.
-    setWidth(maxWidth);
+    setWidth(maxWidth + paddingWidth() + borderWidth());
     computeBorderMarginPadding(width());
 }
 
@@ -657,8 +657,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() ==
             CaptionSideValue::TopCaptionSideValue) {
-            caption->setWidth(paddingLeft() + width() + paddingRight() -
-                              caption->marginWidth());
+            caption->setWidth(width() - caption->marginWidth());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar + caption->marginTop());
             ySoFar += caption->height() + caption->marginHeight();
@@ -706,15 +705,14 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
     ySoFar += paddingBottom();
     ySoFar += borderBottom();
-    m_tableRect.setWidth(paddingLeft() + width() + paddingRight());
+    m_tableRect.setWidth(width());
     m_tableRect.setHeight(ySoFar - m_tableRect.y());
 
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() ==
             CaptionSideValue::BottomCaptionSideValue) {
-            caption->setWidth(paddingLeft() + width() + paddingRight() -
-                              caption->marginWidth());
+            caption->setWidth(width() - caption->marginWidth());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar + caption->marginTop());
             ySoFar += caption->height() + caption->marginHeight();

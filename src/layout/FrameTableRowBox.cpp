@@ -129,9 +129,6 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
     LayoutUnit xSoFar = 0;
     LayoutUnit borderSpacing = LayoutUnit::fromPixel(
         sectionBox()->tableBox()->style()->horizontalBorderSpacing().fixed());
-    if (firstChild()) {
-        xSoFar += borderSpacing;
-    }
 
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -145,7 +142,11 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             cell->setWidth(cellWidth);
             cell->asFrameTableCellBox()->layoutWidth(ctx);
             xSoFar += cellWidth;
-            xSoFar += borderSpacing;
+
+            if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
+                xSoFar += borderSpacing;
+            }
+
             i++;
         } else {
             // Only FrameTableCell should appear
