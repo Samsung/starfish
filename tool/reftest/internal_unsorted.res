@@ -171,3 +171,6 @@
 377:test/internal-test/css/border/starting_unprocessed_mbp.html
 341:test/internal-test/css/border/next-line-dont-show-end-mbp.html
 527:test/internal-test/css/whitespace/white_space_rules.html
+641:test/internal-test/css/table/table_fixed_01.html
+609:test/internal-test/css/table/table_fixed_02.html
+655:test/internal-test/css/table/table_fixed_03.html
