@@ -122,8 +122,9 @@ void FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
                                     bool force)
 {
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableSectionBox());
-    if ((child->style()->display() == DisplayValue::TableRowDisplayValue) ||
-        (child->style()->display() == DisplayValue::TableCellDisplayValue)) {
+    if (child->isCharacterData() || child->isComment()) {
+        // TODO, do not use assert!
+    } else {
         FrameTableSectionBox* parentSection =
             ctx.currentBlockContainer()->asFrameTableSectionBox();
         FrameTableRowBox* childFrame =
@@ -136,11 +137,7 @@ void FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
             ctx.currentBlockContainer()->appendChild(childFrame);
         }
         STARFISH_ASSERT(childFrame->parent());
-    } else if (child->isCharacterData() || child->isComment()) {
-        // TODO, do not use assert!
-    } else {
-        // TODO
-        STARFISH_ASSERT_NOT_REACHED();
+        return;
     }
 }
 
