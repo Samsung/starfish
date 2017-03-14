@@ -2,15 +2,15 @@ test/reftest/bidi/International_edited/generate_test=bidi-html5-018_format=h5.ht
 test/reftest/bidi/International_edited/generate_test=bidi-html5-020_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-html5-060_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-001_format=h5.html
-test/reftest/bidi/International_edited/generate_test=bidi-markup-002_format=h5.html
+# test/reftest/bidi/International_edited/generate_test=bidi-markup-002_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-003_format=h5.html
-test/reftest/bidi/International_edited/generate_test=bidi-markup-004_format=h5.html
+# test/reftest/bidi/International_edited/generate_test=bidi-markup-004_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-005_format=h5.html
-test/reftest/bidi/International_edited/generate_test=bidi-markup-006_format=h5.html
+# test/reftest/bidi/International_edited/generate_test=bidi-markup-006_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-007_format=h5.html
-test/reftest/bidi/International_edited/generate_test=bidi-markup-008_format=h5.html
+# test/reftest/bidi/International_edited/generate_test=bidi-markup-008_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-009_format=h5.html
-test/reftest/bidi/International_edited/generate_test=bidi-markup-010_format=h5.html
+# test/reftest/bidi/International_edited/generate_test=bidi-markup-010_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-011_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-012_format=h5.html
 test/reftest/bidi/International_edited/generate_test=bidi-markup-013_format=h5.html
