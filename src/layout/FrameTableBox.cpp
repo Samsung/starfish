@@ -508,12 +508,21 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 col.cellWidth = col.maxCellWidth;
                 sumOfAutoCellPreferredWidths += col.cellWidth;
             } else {
-                LayoutUnit cellWidth = col.maxSpecifiedWidth;
-                if (cellWidth.toDouble() <= col.minCellWidth.toDouble()) {
+                LayoutUnit specifiedWidth = 0;
+                col.cellWidth = col.maxSpecifiedWidth;
+
+                if (cell->style()->width().isFixed()) {
+                    specifiedWidth =
+                        LayoutUnit::fromPixel(cell->style()->width().fixed());
+                    specifiedWidth +=
+                        cell->borderWidth() + cell->paddingWidth();
+                    col.cellWidth = specifiedWidth;
+                }
+
+                if (col.cellWidth.toDouble() <= col.minCellWidth.toDouble()) {
                     col.cellWidth = col.minCellWidth;
                     columnsAdjustedToMinWidths.push_back(&col);
                 } else {
-                    col.cellWidth = cellWidth;
                     columnsMayNeedToAdjustWidths.push_back(&col);
                 }
                 sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
@@ -756,11 +765,44 @@ void FrameTableBox::collectColumnWidths(
 
 bool FrameTableBox::isCellWidthAuto(unsigned i)
 {
-    if (i < m_cellsInTheFirstRow.size()) {
-        return m_cellsInTheFirstRow[i]->style()->width().isAuto() ? true
-                                                                  : false;
+    // Determining whether a cell's width is "auto" or "specified" depends on
+    // whether we are performing "auto" or "fixed" layout. To determine whether
+    // we are doing "auto" or "fixed" layout, we need to check whether the
+    // table has specified width or not. We DO NOT read "table-layout" property.
+    // (This is how Blink and Firefox work)
+    //
+    // If the table's width is not given:
+    // * If a column has a specified width anywhere in the row, the column will
+    //   have its width the maximum specified width of all cells in the column.
+    // * Otherwise, the width becomes auto.
+    //
+    // If the table's width is given:
+    // * If the cell in the first row has a specified width, the with becomes
+    //   the width of the column.
+    // * Otherwise, the width becomes auto. In this case, all other specified
+    //   width anywhere in the column except the first row are ignored.
+
+    if (style()->width().isAuto()) {
+        // Table does not have a width
+        if (i < m_cellsInTheFirstRow.size()) {
+            STARFISH_ASSERT(i < m_columnWidths.size());
+            if (m_cellsInTheFirstRow[i]->style()->width().isAuto() &&
+                !(m_columnWidths[i].hasSpecifiedWidth())) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
     } else {
-        return true;
+        // Table has a specified width
+        if (i < m_cellsInTheFirstRow.size()) {
+            return m_cellsInTheFirstRow[i]->style()->width().isAuto() ? true
+                                                                      : false;
+        } else {
+            return true;
+        }
     }
 }
 

@@ -180,3 +180,4 @@
 574:test/internal-test/css/table/table_fixed_07.html
 575:test/internal-test/css/table/table_fixed_08.html
 566:test/internal-test/css/table/table_fixed_09.html
+550:test/internal-test/css/table/table_fixed_10.html
