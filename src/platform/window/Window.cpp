@@ -791,12 +791,7 @@ void Window::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("computeStackingContextProperties");
 #endif
-            m_document->frame()->asFrameBox()->iterateChildBoxes(
-                [](FrameBox* box) -> bool {
-                    box->establishesStackingContextIfNeeds();
-                    return true;
-                },
-                nullptr, nullptr);
+            m_document->frame()->establishesStackingContextIfNeeds();
             if (m_document->frame()->firstChild()) {
                 m_rootStackingContext = m_document->frame()
                                             ->firstChild()

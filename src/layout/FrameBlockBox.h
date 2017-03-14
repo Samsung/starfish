@@ -184,26 +184,31 @@ public:
         return m_boxes;
     }
 
-    void iterateInlineBoxes(
-        const std::function<bool(FrameBox*)>& fn,
-        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
-        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    void establishesStackingContextIfNeeds()
     {
-        if (!fn((Box*)this)) {
-            return;
+        for (size_t i = 0; i < m_boxes.size(); i++) {
+            m_boxes[i]->establishesStackingContextIfNeeds();
+        }
+    }
+
+    InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    {
+        InlineNonReplacedBox* ret = nullptr;
+        for (size_t i = 0; i < m_boxes.size(); i++) {
+            if ((ret = m_boxes[i]->firstInlineNonReplacedBox(f))) {
+                return ret;
+            }
         }
 
-        if (beforeIterateChild) {
-            beforeIterateChild((Box*)this);
-        }
+        return ret;
+    }
+
+    void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    {
+        VisibleRectContext ctx((Box*)this, &loc);
 
         for (size_t i = 0; i < m_boxes.size(); i++) {
-            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild,
-                                          afterIterateChild);
-        }
-
-        if (afterIterateChild) {
-            afterIterateChild((Box*)this);
+            m_boxes[i]->computeVisibleRect(sCtx, loc);
         }
     }
 
@@ -319,13 +324,32 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void iterateChildBoxes(
-        const std::function<bool(FrameBox*)>& fn,
-        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
-        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void establishesStackingContextIfNeeds()
     {
-        InlineBoxLayoutParentBox<InlineNonReplacedBox>::iterateInlineBoxes(
-            fn, beforeIterateChild, afterIterateChild);
+        FrameBox::establishesStackingContextIfNeeds();
+
+        InlineBoxLayoutParentBox<
+            InlineNonReplacedBox>::establishesStackingContextIfNeeds();
+    }
+
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    {
+        if (origin() == f) {
+            return this;
+        }
+
+        return InlineBoxLayoutParentBox<
+            InlineNonReplacedBox>::firstInlineNonReplacedBox(f);
+    }
+
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    {
+        if (!tryUniteVisibleRect(sCtx, loc)) {
+            return;
+        }
+
+        InlineBoxLayoutParentBox<InlineNonReplacedBox>::computeVisibleRect(sCtx,
+                                                                           loc);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -483,13 +507,19 @@ public:
         return "LineBox";
     }
 
-    virtual void iterateChildBoxes(
-        const std::function<bool(FrameBox*)>& fn,
-        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
-        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
+    virtual void establishesStackingContextIfNeeds()
     {
-        InlineBoxLayoutParentBox<LineBox>::iterateInlineBoxes(
-            fn, beforeIterateChild, afterIterateChild);
+        InlineBoxLayoutParentBox<LineBox>::establishesStackingContextIfNeeds();
+    }
+
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    {
+        return InlineBoxLayoutParentBox<LineBox>::firstInlineNonReplacedBox(f);
+    }
+
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    {
+        InlineBoxLayoutParentBox<LineBox>::computeVisibleRect(sCtx, loc);
     }
 };
 
@@ -695,34 +725,9 @@ public:
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage);
 
-    virtual void iterateChildBoxes(
-        const std::function<bool(FrameBox*)>& fn,
-        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
-        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
-    {
-        if (hasBlockFlow()) {
-            FrameBox::iterateChildBoxes(fn, beforeIterateChild,
-                                        afterIterateChild);
-            return;
-        }
-
-        if (!fn(this)) {
-            return;
-        }
-
-        if (beforeIterateChild) {
-            beforeIterateChild(this);
-        }
-
-        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->iterateChildBoxes(fn, beforeIterateChild,
-                                              afterIterateChild);
-        }
-
-        if (afterIterateChild) {
-            afterIterateChild(this);
-        }
-    }
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f);
+    virtual void establishesStackingContextIfNeeds();
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
 
     virtual bool hasBlockFlow()
     {

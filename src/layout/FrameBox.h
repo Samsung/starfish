@@ -870,7 +870,12 @@ public:
         }
     }
 
-    void establishesStackingContextIfNeeds()
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    {
+        return nullptr;
+    }
+
+    virtual void establishesStackingContextIfNeeds()
     {
         if (isEstablishesStackingContext()) {
             STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
@@ -901,6 +906,10 @@ public:
         }
     }
 
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+
+    bool tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+
     void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true)
     {
         if (m_stackingContext) {
@@ -922,34 +931,6 @@ public:
     // !needsGraphicsBuffer)
     virtual void compsitingStackingContext(Canvas* c)
     {
-    }
-
-    // first return value of callback means should continue iterate its child
-    virtual void iterateChildBoxes(
-        const std::function<bool(FrameBox*)>& fn,
-        const std::function<void(FrameBox*)>& beforeIterateChild = nullptr,
-        const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
-    {
-        if (fn(this) && firstChild()) {
-            if (beforeIterateChild) {
-                beforeIterateChild(this);
-            }
-
-            FrameBox* child = firstChild()->asFrameBox();
-            while (true) {
-                child->iterateChildBoxes(fn, beforeIterateChild,
-                                         afterIterateChild);
-                if (child->next()) {
-                    child = child->next()->asFrameBox();
-                } else {
-                    break;
-                }
-            }
-
-            if (afterIterateChild) {
-                afterIterateChild(this);
-            }
-        }
     }
 
     void setInlineBoxIndex(size_t inlineBoxIdx)

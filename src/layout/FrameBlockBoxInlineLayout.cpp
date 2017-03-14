@@ -364,108 +364,103 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
     for (size_t k = 0; k < boxes->size(); k++) {
         FrameBox* f = (*boxes)[k];
 
-        if (f->isNormalFlow()) {
-            if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
-                /*
-                InlineBox* ib = f->asFrameBox()->asInlineBox();
-                if (UNLIKELY(descenderInOut == 0)) {
-                    if (height <
+        if (!f->isNormalFlow()) {
+            continue;
+        }
+
+        if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
+            /*
+            InlineBox* ib = f->asFrameBox()->asInlineBox();
+            if (UNLIKELY(descenderInOut == 0)) {
+                if (height <
+                    ib->asInlineTextBox()->style()->font()->metrics()
+                    .m_fontHeight)
+                {
+                    ib->setY((height -
                         ib->asInlineTextBox()->style()->font()->metrics()
-                        .m_fontHeight)
-                    {
-                        ib->setY((height -
-                            ib->asInlineTextBox()->style()->font()->metrics()
-                                .m_fontHeight
-                        +
-                        ib->asInlineTextBox()->style()->font()->metrics()
-                                .m_descender) /
-                        2);
-                    } else {
-                        ib->setY(height -
-                            ib->asInlineTextBox()->style()->font()->metrics()
                             .m_fontHeight
-                        -
+                    +
+                    ib->asInlineTextBox()->style()->font()->metrics()
+                            .m_descender) /
+                    2);
+                } else {
+                    ib->setY(height -
                         ib->asInlineTextBox()->style()->font()->metrics()
-                            .m_descender);
-                    }
-                } else {
-                    ib->setY(height + maxDescender - ib->height() -
-                    ib->asInlineTextBox()->style()->font()->metrics().m_descender);
-                } */
-                InlineTextBox* ib =
-                    f->asFrameBox()->asInlineBox()->asInlineTextBox();
-                ib->setY(maxAscender -
-                         ib->style()->font()->metrics().m_ascender);
+                        .m_fontHeight
+                    -
+                    ib->asInlineTextBox()->style()->font()->metrics()
+                        .m_descender);
+                }
             } else {
-                VerticalAlignValue va = f->style()->verticalAlign();
-                LayoutUnit marginTop, marginRight, marginBottom, marginLeft;
-                if (!f->isInlineBox()) {
-                    marginTop = f->marginTop();
-                    marginRight = f->marginRight();
-                    marginBottom = f->marginBottom();
-                    marginLeft = f->marginLeft();
-                }
-                if (va == VerticalAlignValue::BaselineVAlignValue) {
-                    if (f->isInlineBox() &&
-                        f->asInlineBox()->isInlineNonReplacedBox()) {
-                        f->setY(height + maxDescender - f->height() -
-                                f->asInlineBox()
-                                    ->asInlineNonReplacedBox()
-                                    ->decender());
-                    } else if (f->isFrameReplaced()) {
-                        // TODO use this code for when replaced content does not
-                        // have content
-                        /*
-                        LayoutUnit asc = ib->marginTop() +
-                        ib->asInlineReplacedBox()->replacedBox()->borderTop()
-                        +
-                        ib->asInlineReplacedBox()->replacedBox()->paddingTop()
-                        +
-                        ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-                        ib->setY(height + maxDescender - asc +
-                        ib->marginTop()); */
-                        f->setY(maxAscender - f->height() - marginBottom);
-                    } else {
-                        STARFISH_ASSERT(f->isFrameBlockBox() &&
-                                        ((f->style()->display() ==
-                                          InlineBlockDisplayValue) ||
-                                         (f->style()->display() ==
-                                          InlineTableDisplayValue)));
-                        LayoutUnit ascender =
-                            inlineBlockAscender(f->asFrameBlockBox());
-                        if (ascender == f->height()) {
-                            f->setY(maxAscender - ascender - marginBottom);
-                        } else {
-                            f->setY(maxAscender - ascender);
-                        }
-                    }
-                    // 4. convert a y pos relative to the baseline to a y pos
-                    // relative to the top-left corner of the box
-                } else if (va == VerticalAlignValue::TopVAlignValue) {
-                    f->setY(marginTop);
-                } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                    f->setY(height - f->height() - marginBottom);
-                } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    f->setY(maxAscender - f->y() + marginTop);
-                } else if (va == VerticalAlignValue::SubVAlignValue) {
-                    f->setY(maxAscender - f->y() + marginTop);
-                } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                    // pascender / 2 + ib->asInlineNonReplacedBox()->ascender()
-                    f->setY(maxAscender - f->y() + marginTop);
-                } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    f->setY(maxAscender - ascender + marginTop);
-                } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    f->setY(maxAscender - descender - f->height() -
-                            marginBottom);
-                } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                    f->setY(maxAscender - f->y() + marginTop);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            }
+                ib->setY(height + maxDescender - ib->height() -
+                ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+            } */
+            InlineTextBox* ib =
+                f->asFrameBox()->asInlineBox()->asInlineTextBox();
+            ib->setY(maxAscender - ib->style()->font()->metrics().m_ascender);
         } else {
-            // out of flow boxes
-            STARFISH_ASSERT(!f->isNormalFlow());
+            VerticalAlignValue va = f->style()->verticalAlign();
+            LayoutUnit marginTop, marginRight, marginBottom, marginLeft;
+            if (!f->isInlineBox()) {
+                marginTop = f->marginTop();
+                marginRight = f->marginRight();
+                marginBottom = f->marginBottom();
+                marginLeft = f->marginLeft();
+            }
+            if (va == VerticalAlignValue::BaselineVAlignValue) {
+                if (f->isInlineBox() &&
+                    f->asInlineBox()->isInlineNonReplacedBox()) {
+                    f->setY(
+                        height + maxDescender - f->height() -
+                        f->asInlineBox()->asInlineNonReplacedBox()->decender());
+                } else if (f->isFrameReplaced()) {
+                    // TODO use this code for when replaced content does not
+                    // have content
+                    /*
+                    LayoutUnit asc = ib->marginTop() +
+                    ib->asInlineReplacedBox()->replacedBox()->borderTop()
+                    +
+                    ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+                    +
+                    ib->asInlineReplacedBox()->replacedBox()->contentHeight();
+                    ib->setY(height + maxDescender - asc +
+                    ib->marginTop()); */
+                    f->setY(maxAscender - f->height() - marginBottom);
+                } else {
+                    STARFISH_ASSERT(
+                        f->isFrameBlockBox() &&
+                        ((f->style()->display() == InlineBlockDisplayValue) ||
+                         (f->style()->display() == InlineTableDisplayValue)));
+                    LayoutUnit ascender =
+                        inlineBlockAscender(f->asFrameBlockBox());
+                    if (ascender == f->height()) {
+                        f->setY(maxAscender - ascender - marginBottom);
+                    } else {
+                        f->setY(maxAscender - ascender);
+                    }
+                }
+                // 4. convert a y pos relative to the baseline to a y pos
+                // relative to the top-left corner of the box
+            } else if (va == VerticalAlignValue::TopVAlignValue) {
+                f->setY(marginTop);
+            } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                f->setY(height - f->height() - marginBottom);
+            } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                f->setY(maxAscender - f->y() + marginTop);
+            } else if (va == VerticalAlignValue::SubVAlignValue) {
+                f->setY(maxAscender - f->y() + marginTop);
+            } else if (va == VerticalAlignValue::SuperVAlignValue) {
+                // pascender / 2 + ib->asInlineNonReplacedBox()->ascender()
+                f->setY(maxAscender - f->y() + marginTop);
+            } else if (va == VerticalAlignValue::TextTopVAlignValue) {
+                f->setY(maxAscender - ascender + marginTop);
+            } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
+                f->setY(maxAscender - descender - f->height() - marginBottom);
+            } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                f->setY(maxAscender - f->y() + marginTop);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }
     }
 
@@ -2172,8 +2167,7 @@ void LineFormattingContext::generateInlineBoxes(Frame* origin)
         // Don't put any inline box leaving pending inline boxes ahead.
         STARFISH_ASSERT(m_pendingInlineBoxes.size() == 0);
 
-        if (f->style() &&
-            f->style()->position() == PositionValue::AbsolutePositionValue) {
+        if (f->style()->position() == PositionValue::AbsolutePositionValue) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
             }
