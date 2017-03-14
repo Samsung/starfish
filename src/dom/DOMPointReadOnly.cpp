@@ -26,7 +26,11 @@ DOMPointReadOnly* DOMPointReadOnly::create(double x, double y, double z,
 }
 
 DOMPointReadOnly::DOMPointReadOnly(double x, double y, double z, double w)
-    : ScriptWrappable(this), m_x(x), m_y(y), m_z(z), m_w(w)
+    : ScriptWrappable(this)
+    , m_x(x)
+    , m_y(y)
+    , m_z(z)
+    , m_w(w)
 {
 }
 }

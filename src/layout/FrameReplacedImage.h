@@ -24,7 +24,8 @@ namespace StarFish {
 
 class FrameReplacedImage : public FrameReplaced {
 public:
-    FrameReplacedImage(Node* node) : FrameReplaced(node, nullptr)
+    FrameReplacedImage(Node* node)
+        : FrameReplaced(node, nullptr)
     {
     }
 

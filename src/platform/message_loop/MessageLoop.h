@@ -27,7 +27,8 @@ class MessageLoop : public gc {
 
 public:
     MessageLoop(StarFish* sf)
-        : m_starFish(sf), m_idlersFromOtherThreadMutex(new Mutex())
+        : m_starFish(sf)
+        , m_idlersFromOtherThreadMutex(new Mutex())
     {
     }
 

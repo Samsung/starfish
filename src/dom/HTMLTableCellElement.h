@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLTableCellElement : public HTMLElement {
 public:
-    HTMLTableCellElement(Document* document) : HTMLElement(document)
+    HTMLTableCellElement(Document* document)
+        : HTMLElement(document)
     {
     }
 
@@ -70,7 +71,8 @@ protected:
 
 class HTMLTDElement : public HTMLTableCellElement {
 public:
-    HTMLTDElement(Document* document) : HTMLTableCellElement(document)
+    HTMLTDElement(Document* document)
+        : HTMLTableCellElement(document)
     {
     }
 
@@ -107,7 +109,8 @@ protected:
 
 class HTMLTHElement : public HTMLTableCellElement {
 public:
-    HTMLTHElement(Document* document) : HTMLTableCellElement(document)
+    HTMLTHElement(Document* document)
+        : HTMLTableCellElement(document)
     {
     }
 

@@ -36,7 +36,8 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 class MediaPlayerMediaSourceClient : public MediaSourceClient {
 public:
     MediaPlayerMediaSourceClient(MediaPlayer* player)
-        : MediaSourceClient(), m_player(player)
+        : MediaSourceClient()
+        , m_player(player)
     {
 #ifndef NDEBUG
         GC_REGISTER_FINALIZER_NO_ORDER(this,

@@ -29,7 +29,10 @@ struct TextToken {
     WordType m_type;
 
     TextToken(FrameText* ft, size_t start, size_t end, WordType type)
-        : m_frameText(ft), m_start(start), m_end(end), m_type(type)
+        : m_frameText(ft)
+        , m_start(start)
+        , m_end(end)
+        , m_type(type)
     {
         switch (m_type) {
         case CollapsibleWhiteSpace:

@@ -78,7 +78,8 @@ void HTMLLinkElement::checkLoadStyleSheet()
 class StyleSheetDownloadClient : public ResourceClient {
 public:
     StyleSheetDownloadClient(HTMLLinkElement* element, Resource* res)
-        : ResourceClient(res), m_element(element)
+        : ResourceClient(res)
+        , m_element(element)
     {
     }
 

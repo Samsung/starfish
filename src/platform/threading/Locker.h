@@ -24,7 +24,8 @@ class Locker {
     STARFISH_MAKE_STACK_ALLOCATED();
 
 public:
-    Locker(T& lock) : m_lock(lock)
+    Locker(T& lock)
+        : m_lock(lock)
     {
         m_lock.lock();
     }

@@ -104,7 +104,8 @@ public:
 class MediaOperationQueueDataRequestPrepare : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, URL* u)
-        : MediaOperationQueueData(p), m_url(u)
+        : MediaOperationQueueData(p)
+        , m_url(u)
     {
     }
 
@@ -157,7 +158,8 @@ public:
 class MediaOperationQueueDataRequestSeek : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestSeek(HTMLMediaElement* p, double position)
-        : MediaOperationQueueData(p), m_seekPosition(position)
+        : MediaOperationQueueData(p)
+        , m_seekPosition(position)
     {
     }
 
@@ -182,7 +184,9 @@ class MediaOperationQueueDataRequestDispatchEvent
 public:
     MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p,
                                                 EventTarget* target, Event* e)
-        : MediaOperationQueueData(p), m_target(target), m_event(e)
+        : MediaOperationQueueData(p)
+        , m_target(target)
+        , m_event(e)
     {
     }
 

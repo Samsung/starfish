@@ -29,7 +29,9 @@ class DOMTokenList : public ScriptWrappable {
 public:
     DOMTokenList(ScriptBindingInstance* instance, Element* element,
                  QualifiedName localName)
-        : ScriptWrappable(this), m_element(element), m_localName(localName)
+        : ScriptWrappable(this)
+        , m_element(element)
+        , m_localName(localName)
     {
     }
 

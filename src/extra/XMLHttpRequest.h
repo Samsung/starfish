@@ -29,7 +29,8 @@ class Blob;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
-    XMLHttpRequestEventTarget() : EventTarget()
+    XMLHttpRequestEventTarget()
+        : EventTarget()
     {
     }
 };

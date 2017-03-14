@@ -97,7 +97,9 @@ inline Size operator-(const Location& a, const Location& b)
 
 class Rect {
 public:
-    Rect(float x, float y, float w, float h) : m_location(x, y), m_size(w, h)
+    Rect(float x, float y, float w, float h)
+        : m_location(x, y)
+        , m_size(w, h)
     {
     }
 
@@ -238,11 +240,18 @@ protected:
 
 class Color {
 public:
-    Color() : m_r(0), m_g(0), m_b(0), m_a(0)
+    Color()
+        : m_r(0)
+        , m_g(0)
+        , m_b(0)
+        , m_a(0)
     {
     }
     Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-        : m_r(r), m_g(g), m_b(b), m_a(a)
+        : m_r(r)
+        , m_g(g)
+        , m_b(b)
+        , m_a(a)
     {
     }
 

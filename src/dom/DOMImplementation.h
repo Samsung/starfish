@@ -29,7 +29,9 @@ class Window;
 class DOMImplementation : public ScriptWrappable {
 public:
     DOMImplementation(Window* window, ScriptBindingInstance* instance)
-        : ScriptWrappable(this), m_window(window), m_instance(instance)
+        : ScriptWrappable(this)
+        , m_window(window)
+        , m_instance(instance)
     {
     }
 

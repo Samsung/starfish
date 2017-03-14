@@ -30,7 +30,9 @@ class HTMLDocumentBuilder : public DocumentBuilder {
 
 public:
     HTMLDocumentBuilder(Document* document)
-        : DocumentBuilder(document), m_parser(nullptr), m_resource(nullptr)
+        : DocumentBuilder(document)
+        , m_parser(nullptr)
+        , m_resource(nullptr)
     {
     }
 

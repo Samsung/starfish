@@ -67,7 +67,9 @@ ImageResource* ResourceLoader::fetchImage(URL* url)
 
 class DocumentOnLoadChecker : public ResourceClient {
 public:
-    DocumentOnLoadChecker(Resource* res) : ResourceClient(res), m_didFire(false)
+    DocumentOnLoadChecker(Resource* res)
+        : ResourceClient(res)
+        , m_didFire(false)
     {
     }
     virtual void didLoadFailed()
@@ -106,7 +108,8 @@ public:
 
 class ResourceAliveChecker : public ResourceClient {
 public:
-    ResourceAliveChecker(Resource* res) : ResourceClient(res)
+    ResourceAliveChecker(Resource* res)
+        : ResourceClient(res)
     {
         auto& v = m_resource->loader()->m_currentLoadingResources;
         v.push_back(m_resource);
@@ -143,7 +146,8 @@ public:
 
 class ResourceSizeTracer : public ResourceClient {
 public:
-    ResourceSizeTracer(Resource* res) : ResourceClient(res)
+    ResourceSizeTracer(Resource* res)
+        : ResourceClient(res)
     {
     }
     virtual void didLoadFailed()
@@ -166,7 +170,8 @@ public:
 class ResourceWatcher : public ResourceClient {
 public:
     ResourceWatcher(Resource* res, Resource* watcher)
-        : ResourceClient(res), m_watcher(watcher)
+        : ResourceClient(res)
+        , m_watcher(watcher)
     {
     }
     virtual void didLoadFailed()

@@ -19,7 +19,8 @@
 
 namespace StarFish {
 
-TextConverter::TextConverter(String* charsetName) : m_converter(nullptr)
+TextConverter::TextConverter(String* charsetName)
+    : m_converter(nullptr)
 {
     UErrorCode err = U_ZERO_ERROR;
     m_converter = ucnv_open(charsetName->utf8Data(), &err);

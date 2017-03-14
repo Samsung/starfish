@@ -25,7 +25,10 @@ class String;
 class HistoryEntry : public gc {
 public:
     HistoryEntry(String* state, String* title, URL* url, bool isPushState)
-        : m_state(state), m_title(title), m_url(url), m_isPushState(isPushState)
+        : m_state(state)
+        , m_title(title)
+        , m_url(url)
+        , m_isPushState(isPushState)
     {
     }
     inline String* state()

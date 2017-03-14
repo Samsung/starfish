@@ -332,7 +332,8 @@ class KeyboardEvent : public UIEvent {
 public:
     KeyboardEvent(String* eventType, String* key,
                   const EventInit& init = EventInit(false, false))
-        : UIEvent(eventType, init), m_metaKey(false)
+        : UIEvent(eventType, init)
+        , m_metaKey(false)
     {
         m_keyCode = convertKeyCodeFromEcore(key);
         m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||

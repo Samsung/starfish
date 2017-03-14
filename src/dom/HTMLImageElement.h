@@ -27,7 +27,9 @@ class HTMLImageElement : public HTMLElement {
 
 public:
     HTMLImageElement(Document* document)
-        : HTMLElement(document), m_imageResource(nullptr), m_imageData(nullptr)
+        : HTMLElement(document)
+        , m_imageResource(nullptr)
+        , m_imageData(nullptr)
     {
     }
 

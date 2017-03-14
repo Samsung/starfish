@@ -27,7 +27,11 @@ DOMRectReadOnly* DOMRectReadOnly::create(double x, double y, double width,
 
 DOMRectReadOnly::DOMRectReadOnly(double x, double y, double width,
                                  double height)
-    : ScriptWrappable(this), m_x(x), m_y(y), m_width(width), m_height(height)
+    : ScriptWrappable(this)
+    , m_x(x)
+    , m_y(y)
+    , m_width(width)
+    , m_height(height)
 {
 }
 }

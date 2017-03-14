@@ -23,7 +23,8 @@ class Resource;
 
 class ResourceClient : public gc {
 public:
-    ResourceClient(Resource* resource) : m_resource(resource)
+    ResourceClient(Resource* resource)
+        : m_resource(resource)
     {
     }
 

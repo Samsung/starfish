@@ -21,7 +21,8 @@
 
 namespace StarFish {
 
-Console::Console(StarFish* starFish) : m_starFish(starFish)
+Console::Console(StarFish* starFish)
+    : m_starFish(starFish)
 {
 }
 

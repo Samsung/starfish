@@ -19,7 +19,10 @@
 namespace StarFish {
 DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
                          double inHeight)
-    : x(inX), y(inY), width(inWidth), height(inHeight)
+    : x(inX)
+    , y(inY)
+    , width(inWidth)
+    , height(inHeight)
 {
 }
 

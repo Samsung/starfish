@@ -113,7 +113,8 @@ static inline bool isEndTagBufferingState(HTMLTokenizer::State state)
 #define HTML_ADVANCE_TO(stateName) ADVANCE_TO(HTMLTokenizer, stateName)
 #define HTML_SWITCH_TO(stateName) SWITCH_TO(HTMLTokenizer, stateName)
 
-HTMLTokenizer::HTMLTokenizer() : m_inputStreamPreprocessor(this)
+HTMLTokenizer::HTMLTokenizer()
+    : m_inputStreamPreprocessor(this)
 {
     reset();
 }

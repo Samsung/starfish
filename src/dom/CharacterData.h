@@ -25,7 +25,8 @@ class Text;
 
 class CharacterData : public Node {
 public:
-    CharacterData(Document* document, String* data) : Node(document)
+    CharacterData(Document* document, String* data)
+        : Node(document)
     {
         m_data = data;
     }

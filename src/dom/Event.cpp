@@ -20,11 +20,15 @@
 
 namespace StarFish {
 
-EventInit::EventInit() : bubbles(false), cancelable(false)
+EventInit::EventInit()
+    : bubbles(false)
+    , cancelable(false)
 {
 }
 
-EventInit::EventInit(bool b, bool c) : bubbles(b), cancelable(c)
+EventInit::EventInit(bool b, bool c)
+    : bubbles(b)
+    , cancelable(c)
 {
 }
 
@@ -59,7 +63,9 @@ Event::Event(String* eventType, const EventInit& init)
 }
 
 ProgressEventInit::ProgressEventInit()
-    : lengthComputable(false), loaded(0), total(0)
+    : lengthComputable(false)
+    , loaded(0)
+    , total(0)
 {
 }
 

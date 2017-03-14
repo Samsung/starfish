@@ -143,7 +143,8 @@ namespace {
 
 HTMLElementStack::ElementRecord::ElementRecord(HTMLStackItem* item,
                                                ElementRecord* next)
-    : m_item(item), m_next(next)
+    : m_item(item)
+    , m_next(next)
 {
     STARFISH_ASSERT(m_item);
 }

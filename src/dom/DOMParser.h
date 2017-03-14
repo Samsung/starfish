@@ -25,7 +25,9 @@ class Document;
 
 class DOMParser : public ScriptWrappable {
 public:
-    DOMParser(StarFish* sf) : ScriptWrappable(this), m_starFish(sf)
+    DOMParser(StarFish* sf)
+        : ScriptWrappable(this)
+        , m_starFish(sf)
     {
     }
 

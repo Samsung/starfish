@@ -19,7 +19,10 @@
 
 namespace StarFish {
 DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
-    : x(inX), y(inY), z(inZ), w(inW)
+    : x(inX)
+    , y(inY)
+    , z(inZ)
+    , w(inW)
 {
 }
 

@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLTBodyElement : public HTMLElement {
 public:
-    HTMLTBodyElement(Document* document) : HTMLElement(document)
+    HTMLTBodyElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

@@ -48,7 +48,9 @@ static bool isNameChar(char c)
 class CSSPropertyParser : public gc {
 public:
     CSSPropertyParser(char* value)
-        : m_startPos(value), m_endPos(value + strlen(value)), m_curPos(value)
+        : m_startPos(value)
+        , m_endPos(value + strlen(value))
+        , m_curPos(value)
     {
     }
 
@@ -467,7 +469,8 @@ public:
         MinusSign,
     };
 
-    CSSParser(Document* document) : m_document(document)
+    CSSParser(Document* document)
+        : m_document(document)
     {
         m_error = String::emptyString;
         m_failedParsing = false;

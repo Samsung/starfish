@@ -101,7 +101,8 @@ public:
 
 class Node : public EventTarget {
 protected:
-    Node(Document* document, ScriptBindingInstance* instance) : EventTarget()
+    Node(Document* document, ScriptBindingInstance* instance)
+        : EventTarget()
     {
         m_document = document;
         initNode();

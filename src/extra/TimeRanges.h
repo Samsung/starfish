@@ -23,7 +23,8 @@ namespace StarFish {
 
 class TimeRanges : public ScriptWrappable {
 public:
-    TimeRanges() : ScriptWrappable(this)
+    TimeRanges()
+        : ScriptWrappable(this)
     {
     }
 

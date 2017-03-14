@@ -27,7 +27,8 @@ namespace StarFish {
 class BlockFormattingContextBlock {
 public:
     BlockFormattingContextBlock(Frame* frm, LayoutContext& ctx)
-        : m_ctx(ctx), m_needs(false)
+        : m_ctx(ctx)
+        , m_needs(false)
     {
         if (frm->isEstablishesBlockFormattingContext()) {
             m_needs = true;

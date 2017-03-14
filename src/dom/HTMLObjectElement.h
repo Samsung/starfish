@@ -28,7 +28,8 @@ class HTMLObjectElementContent;
 
 class HTMLObjectElement : public HTMLElement {
 public:
-    HTMLObjectElement(Document* document) : HTMLElement(document)
+    HTMLObjectElement(Document* document)
+        : HTMLElement(document)
     {
         m_content = nullptr;
     }
@@ -80,7 +81,8 @@ protected:
 
 class HTMLObjectElementContent : public gc {
 public:
-    HTMLObjectElementContent(HTMLObjectElement* element) : m_element(element)
+    HTMLObjectElementContent(HTMLObjectElement* element)
+        : m_element(element)
     {
     }
 

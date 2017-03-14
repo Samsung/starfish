@@ -47,7 +47,8 @@ private:
 class AnimationExecutor : public gc {
 public:
     AnimationExecutor(Window* window)
-        : m_isAlive(false), m_platformAnimator(nullptr)
+        : m_isAlive(false)
+        , m_platformAnimator(nullptr)
     {
         m_window = window;
     }

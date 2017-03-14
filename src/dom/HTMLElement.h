@@ -87,7 +87,8 @@ FOR_EACH_HTML_ELEMENT_OP(FORWRAD_DECLARE_NAME)
 
 class HTMLElement : public Element {
 public:
-    HTMLElement(Document* document) : Element(document)
+    HTMLElement(Document* document)
+        : Element(document)
     {
     }
 

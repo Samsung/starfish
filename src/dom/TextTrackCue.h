@@ -136,7 +136,9 @@ protected:
 class TextTrackCueList : public ScriptWrappable,
                          public GCVector<TextTrackCue*> {
 public:
-    TextTrackCueList() : ScriptWrappable(this), GCVector<TextTrackCue*>()
+    TextTrackCueList()
+        : ScriptWrappable(this)
+        , GCVector<TextTrackCue*>()
     {
     }
 

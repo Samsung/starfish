@@ -31,7 +31,9 @@ public:
     }
 
     TransformOriginData(Length x, Length y)
-        : m_xaxis(x), m_yaxis(y), m_zaxis(Length())
+        : m_xaxis(x)
+        , m_yaxis(y)
+        , m_zaxis(Length())
     {
     }
 
@@ -79,7 +81,8 @@ private:
 
 class StyleTransformOrigin : public gc {
 public:
-    StyleTransformOrigin() : m_originValue(NULL)
+    StyleTransformOrigin()
+        : m_originValue(NULL)
     {
     }
 

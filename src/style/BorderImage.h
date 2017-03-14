@@ -74,7 +74,8 @@ public:
 
 class BorderImage {
 public:
-    BorderImage() : m_data(nullptr)
+    BorderImage()
+        : m_data(nullptr)
     {
     }
 

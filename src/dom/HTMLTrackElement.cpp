@@ -28,7 +28,9 @@ namespace StarFish {
 
 class VttResourceReader : public libwebvtt::Reader {
 public:
-    VttResourceReader() : m_resource(nullptr), m_pointer(-1)
+    VttResourceReader()
+        : m_resource(nullptr)
+        , m_pointer(-1)
     {
     }
 
@@ -75,7 +77,8 @@ private:
 class VTTFileDownloadClient : public ResourceClient {
 public:
     VTTFileDownloadClient(HTMLTrackElement* element, Resource* res)
-        : ResourceClient(res), m_element(element)
+        : ResourceClient(res)
+        , m_element(element)
     {
         STARFISH_ASSERT(m_element);
         m_element->setReadyState(HTMLTrackElement::LOADING);

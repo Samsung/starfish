@@ -148,7 +148,9 @@ public:
     enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
 
     PositionError(StarFish* starFish, Error code)
-        : ScriptWrappable(this), m_starFish(starFish), m_code(code)
+        : ScriptWrappable(this)
+        , m_starFish(starFish)
+        , m_code(code)
     {
     }
 

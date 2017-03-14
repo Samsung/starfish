@@ -32,7 +32,8 @@ class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
 public:
-    InlineBox(Node* node, ComputedStyle* style) : FrameBox(node, style)
+    InlineBox(Node* node, ComputedStyle* style)
+        : FrameBox(node, style)
     {
     }
 
@@ -103,7 +104,8 @@ struct TextRun {
 class InlineTextBox : public InlineBox {
 public:
     InlineTextBox(FrameText* frame, const TextRun& run)
-        : InlineBox(frame->node(), frame->style()), m_textRun(run)
+        : InlineBox(frame->node(), frame->style())
+        , m_textRun(run)
     {
     }
 
@@ -462,7 +464,8 @@ class LineBox : public FrameBox, public InlineBoxLayoutParentBox<LineBox> {
     friend class InlineNonReplacedBox;
 
 public:
-    LineBox(Frame* parent) : FrameBox(nullptr, nullptr)
+    LineBox(Frame* parent)
+        : FrameBox(nullptr, nullptr)
     {
         setParent(parent);
         m_ascender = 0;
@@ -612,7 +615,9 @@ class FrameBlockBox : public FrameBox {
 
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
-        : FrameBox(node, style), m_marginInfo(nullptr), m_heightComputed(false)
+        : FrameBox(node, style)
+        , m_marginInfo(nullptr)
+        , m_heightComputed(false)
     {
         STARFISH_ASSERT((node == nullptr && style != nullptr) ||
                         (node != nullptr && style == nullptr));

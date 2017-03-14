@@ -41,7 +41,9 @@ class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
     DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer,
                                  GCVector<uint8_t>* bufferRemain)
-        : m_inputBuffer(inputBuffer), m_bufferRemain(bufferRemain), m_readPos(0)
+        : m_inputBuffer(inputBuffer)
+        , m_bufferRemain(bufferRemain)
+        , m_readPos(0)
     {
         // STARFISH_LOG_INFO("start demux %d %d\n", (int)m_bufferRemain->size(),
         // (int)m_inputBuffer->m_length);

@@ -22,7 +22,8 @@
 namespace StarFish {
 
 History::History(StarFish* starFish)
-    : ScriptWrappable(this), m_starFish(starFish)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
 {
 }
 

@@ -25,7 +25,8 @@
 
 namespace StarFish {
 
-RowStruct::RowStruct(FrameTableRowBox* tableRow_) : tableRow(tableRow_)
+RowStruct::RowStruct(FrameTableRowBox* tableRow_)
+    : tableRow(tableRow_)
 {
     for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
         if (cell->isFrameTableCellBox()) {

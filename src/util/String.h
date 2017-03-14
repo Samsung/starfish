@@ -508,17 +508,20 @@ protected:
 
 class StringDataASCII : public String, public ASCIIString, public gc {
 public:
-    StringDataASCII(ASCIIString&& str) : ASCIIString(str)
+    StringDataASCII(ASCIIString&& str)
+        : ASCIIString(str)
     {
         putDebugInfo();
     }
 
-    StringDataASCII(const char* str) : ASCIIString(str)
+    StringDataASCII(const char* str)
+        : ASCIIString(str)
     {
         putDebugInfo();
     }
 
-    StringDataASCII(const char* str, size_t len) : ASCIIString(str, &str[len])
+    StringDataASCII(const char* str, size_t len)
+        : ASCIIString(str, &str[len])
     {
         putDebugInfo();
     }
@@ -526,18 +529,21 @@ public:
 
 class StringDataUTF32 : public String, public UTF32String, public gc {
 public:
-    StringDataUTF32(const UTF32String& str) : UTF32String(str)
+    StringDataUTF32(const UTF32String& str)
+        : UTF32String(str)
     {
         m_isASCIIString = false;
         putDebugInfo();
     }
-    StringDataUTF32(UTF32String&& str) : UTF32String(str)
+    StringDataUTF32(UTF32String&& str)
+        : UTF32String(str)
     {
         m_isASCIIString = false;
         putDebugInfo();
     }
     StringDataUTF32(const char* src, size_t len);
-    StringDataUTF32(const char32_t* str) : UTF32String(str)
+    StringDataUTF32(const char32_t* str)
+        : UTF32String(str)
     {
         m_isASCIIString = false;
         putDebugInfo();
@@ -685,11 +691,14 @@ private:
 class StringView : public gc {
 public:
     StringView(String* string, size_t start, size_t end)
-        : m_string(string), m_start(start), m_end(end)
+        : m_string(string)
+        , m_start(start)
+        , m_end(end)
     {
     }
 
-    StringView(String* string) : StringView(string, 0, string->length())
+    StringView(String* string)
+        : StringView(string, 0, string->length())
     {
     }
 
@@ -738,7 +747,8 @@ public:
     {
         return OrdinalNumber(oneBasedInt - 1);
     }
-    OrdinalNumber() : m_zeroBasedValue(0)
+    OrdinalNumber()
+        : m_zeroBasedValue(0)
     {
     }
 
@@ -770,7 +780,8 @@ public:
     }
 
 private:
-    OrdinalNumber(int zeroBasedInt) : m_zeroBasedValue(zeroBasedInt)
+    OrdinalNumber(int zeroBasedInt)
+        : m_zeroBasedValue(zeroBasedInt)
     {
     }
     int m_zeroBasedValue;

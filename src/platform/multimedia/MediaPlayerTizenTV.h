@@ -30,7 +30,8 @@ class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizenTV : public MediaPlayerTizen {
 public:
-    MediaPlayerTizenTV(HTMLMediaElement* element) : MediaPlayerTizen(element)
+    MediaPlayerTizenTV(HTMLMediaElement* element)
+        : MediaPlayerTizen(element)
     {
         m_lastVideoPts = m_lastAudioPts =
             element->defaultPlaybackStartPosition() * 1000;

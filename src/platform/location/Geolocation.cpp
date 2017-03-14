@@ -30,7 +30,8 @@ Geolocation* Geolocation::create(StarFish* starFish)
 #endif
 
 Geolocation::Geolocation(StarFish* starFish)
-    : ScriptWrappable(this), m_starFish(starFish)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
 {
 }
 

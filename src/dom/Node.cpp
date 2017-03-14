@@ -80,7 +80,8 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
     }
 }
 
-Node::Node(Document* document) : EventTarget()
+Node::Node(Document* document)
+    : EventTarget()
 {
     m_document = document;
     initNode();

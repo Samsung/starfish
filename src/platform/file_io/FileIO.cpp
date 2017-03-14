@@ -24,7 +24,8 @@ namespace StarFish {
 
 class FileIOPosix : public FileIO {
 public:
-    FileIOPosix() : m_fp(NULL)
+    FileIOPosix()
+        : m_fp(NULL)
     {
     }
     ~FileIOPosix()

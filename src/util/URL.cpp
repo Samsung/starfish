@@ -23,7 +23,9 @@
 
 namespace StarFish {
 
-URL::URL(String* baseURL, String* url) : ScriptWrappable(this), m_string(url)
+URL::URL(String* baseURL, String* url)
+    : ScriptWrappable(this)
+    , m_string(url)
 {
     m_protocolEnd = m_userStart = m_userEnd = m_passwordEnd = m_hostEnd =
         m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = 0;

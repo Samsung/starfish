@@ -146,7 +146,8 @@ public:
 
 protected:
     MockMediaPlayer(HTMLMediaElement* element)
-        : MediaPlayer(element), m_currentTimestamp(0)
+        : MediaPlayer(element)
+        , m_currentTimestamp(0)
     {
     }
     uint64_t m_currentTimestamp;

@@ -39,7 +39,8 @@ public:
 
 class Attribute {
 public:
-    Attribute(QualifiedName name, String* value) : m_name(name)
+    Attribute(QualifiedName name, String* value)
+        : m_name(name)
     {
         m_value = value;
         m_rareData = nullptr;

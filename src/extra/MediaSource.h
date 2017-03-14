@@ -178,7 +178,8 @@ protected:
 
 class MediaSourceClient : public gc {
 public:
-    MediaSourceClient() : m_mediaSource(nullptr)
+    MediaSourceClient()
+        : m_mediaSource(nullptr)
     {
     }
 

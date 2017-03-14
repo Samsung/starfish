@@ -23,7 +23,8 @@ namespace StarFish {
 
 class FrameDocument : public FrameBlockBox {
 public:
-    FrameDocument(Node* node) : FrameBlockBox(node, nullptr)
+    FrameDocument(Node* node)
+        : FrameBlockBox(node, nullptr)
     {
     }
 
