@@ -333,9 +333,6 @@ protected:
 
     uint32_t m_requestAnimationFrameCounter;
     GCUnorderedMap<uint32_t, void*> m_requestAnimationFrameHandler;
-
-    GCVector<Node*> m_activeNodes;
-    GCVector<Node*> m_hoveredNodes;
 };
 }
 

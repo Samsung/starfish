@@ -491,8 +491,20 @@ public:
         return m_restyleFlags;
     }
 
+    Node* nearestParentElement();
+
     void setState(NodeState state, DynamicRestyleFlags mask, bool enable)
     {
+        // Node needs to recalculate its style when it is updated by user action
+        // such as focus, hover and active.
+        // Specially, when dynamic pseudo class selectors like :focus, :hover or
+        // :active are combined with combinator selectors like descendant, child
+        // or sibling, the node's child and sibling should be also recalculated
+        // to update style. ex) div:hover > p { ... }
+        // Finally, if dynamic pseudo class selectors are compounded to pseudo
+        // element selectors, the pseudo element should be created through
+        // building frame tree only when the node is updated by user action.
+        // ex) div:hover:first-letter { ... }
         if (state == NodeStateNormal) {
             m_state = 0;
             m_restyleFlags = 0;
@@ -501,8 +513,9 @@ public:
             if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
                 setChildrenNeedsStyleRecalc();
                 setSiblingsNeedsStyleRecalc();
+                setNeedsFrameTreeBuild();
             }
-            setNeedsFrameTreeBuild();
+
         } else if (!(m_state & state) == enable) {
             m_state ^= state;
 
@@ -510,8 +523,8 @@ public:
             if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
                 setChildrenNeedsStyleRecalc();
                 setSiblingsNeedsStyleRecalc();
+                setNeedsFrameTreeBuild();
             }
-            setNeedsFrameTreeBuild();
         }
     }
 
