@@ -23,7 +23,9 @@ namespace StarFish {
 
 class TranslateTransform : public gc {
 public:
-    TranslateTransform(Length& tx, Length& ty) : m_tx(tx), m_ty(ty)
+    TranslateTransform(Length& tx, Length& ty)
+        : m_tx(tx)
+        , m_ty(ty)
     {
     }
 

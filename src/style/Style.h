@@ -667,7 +667,9 @@ public:
         TransitionPropertyValueKind
     };
 
-    CSSStyleValuePair() : m_value(0.0f), m_flagImportant(false)
+    CSSStyleValuePair()
+        : m_value(0.0f)
+        , m_flagImportant(false)
     {
     }
 
@@ -1066,7 +1068,9 @@ public:
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
-        : m_valueKind(kind), m_value(value), m_flagImportant(false)
+        : m_valueKind(kind)
+        , m_value(value)
+        , m_flagImportant(false)
     {
     }
 
@@ -1167,11 +1171,15 @@ class ValueList : public GCVector<CSSStyleValuePair>, public gc {
 public:
     enum Separator { None, SpaceSeparator, CommaSeparator, SlashSeparator };
 
-    ValueList() : GCVector<CSSStyleValuePair>(), m_separator(None)
+    ValueList()
+        : GCVector<CSSStyleValuePair>()
+        , m_separator(None)
     {
     }
 
-    ValueList(Separator sep) : GCVector<CSSStyleValuePair>(), m_separator(sep)
+    ValueList(Separator sep)
+        : GCVector<CSSStyleValuePair>()
+        , m_separator(sep)
     {
     }
 
@@ -1204,7 +1212,8 @@ public:
 
     CSSStyleDeclaration(Document* document, Element* element = NULL,
                         StyleType styleType = InternalStyle)
-        : ScriptWrappable(this), m_document(document)
+        : ScriptWrappable(this)
+        , m_document(document)
     {
         m_element = element;
         m_styleType = styleType;
@@ -1694,7 +1703,8 @@ class CSSStyleRule : public ScriptWrappable {
 public:
     CSSStyleRule(CSSSelector::Type type, String* selectorText,
                  Document* document)
-        : ScriptWrappable(this), m_document(document)
+        : ScriptWrappable(this)
+        , m_document(document)
     {
         CSSSelector* selector = new CSSSelector(
             type, CSSSelector::RelationType::None, selectorText);
@@ -1804,7 +1814,8 @@ public:
     };
 
     struct MatchResult {
-        MatchResult() : pseudoType(PseudoElementType::PseudoElementNone)
+        MatchResult()
+            : pseudoType(PseudoElementType::PseudoElementNone)
         {
         }
 

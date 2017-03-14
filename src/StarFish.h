@@ -514,7 +514,8 @@ protected:
 
 class StarFishEnterer {
 public:
-    StarFishEnterer(StarFish* instance) : m_instance(instance)
+    StarFishEnterer(StarFish* instance)
+        : m_instance(instance)
     {
         m_instance->enter();
     }

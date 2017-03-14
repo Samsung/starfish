@@ -31,7 +31,8 @@ class QualifiedName : public gc {
 
 public:
     QualifiedName(const AtomicString& nsURI, const AtomicString& localName)
-        : m_namespaceURI(nsURI), m_localName(localName)
+        : m_namespaceURI(nsURI)
+        , m_localName(localName)
     {
     }
 

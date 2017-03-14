@@ -2609,7 +2609,8 @@ bool isCallableScriptValue(ScriptValue v)
 }
 
 #ifdef USE_ES6_FEATURE
-Promise::Promise() : m_scriptValue(escargot::ESPromiseObject::create())
+Promise::Promise()
+    : m_scriptValue(escargot::ESPromiseObject::create())
 {
     // TODO remove below line if escargot fixed
     m_scriptValue.asESPointer()->asESPromiseObject()->set__proto__(

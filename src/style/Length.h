@@ -36,7 +36,9 @@ public:
         InheritableNumber
     };
 
-    Length(Type type = Auto, float data = 0.f) : m_type(type), m_data(data)
+    Length(Type type = Auto, float data = 0.f)
+        : m_type(type)
+        , m_data(data)
     {
     }
 
@@ -190,11 +192,14 @@ public:
     {
     }
 
-    LengthSize(Length width) : m_width(width)
+    LengthSize(Length width)
+        : m_width(width)
     {
     }
 
-    LengthSize(Length width, Length height) : m_width(width), m_height(height)
+    LengthSize(Length width, Length height)
+        : m_width(width)
+        , m_height(height)
     {
     }
 
@@ -234,11 +239,14 @@ public:
     {
     }
 
-    LengthPosition(Length x) : m_x(x)
+    LengthPosition(Length x)
+        : m_x(x)
     {
     }
 
-    LengthPosition(Length x, Length y) : m_x(x), m_y(y)
+    LengthPosition(Length x, Length y)
+        : m_x(x)
+        , m_y(y)
     {
     }
 
@@ -288,7 +296,10 @@ public:
 
     LengthBox(const Length& t, const Length& r, const Length& b,
               const Length& l)
-        : m_left(l), m_right(r), m_top(t), m_bottom(b)
+        : m_left(l)
+        , m_right(r)
+        , m_top(t)
+        , m_bottom(b)
     {
     }
 

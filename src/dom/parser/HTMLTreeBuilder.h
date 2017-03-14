@@ -63,7 +63,8 @@ class HTMLParser;
 class TextPosition {
 public:
     TextPosition(OrdinalNumber line, OrdinalNumber column)
-        : m_line(line), m_column(column)
+        : m_line(line)
+        , m_column(column)
     {
     }
     TextPosition()

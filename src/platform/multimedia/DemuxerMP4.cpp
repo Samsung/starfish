@@ -25,7 +25,8 @@
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
-    MP4BinaryStreamAdapter(StarFish::DemuxerSource* source) : m_source(source)
+    MP4BinaryStreamAdapter(StarFish::DemuxerSource* source)
+        : m_source(source)
     {
     }
     virtual void ignore(std::streamsize n = 1)
@@ -143,7 +144,8 @@ static void parseMP4(DemuxerSource* source, bool findStream,
 
 class DemuxerMP4 : public Demuxer {
 public:
-    DemuxerMP4() : Demuxer()
+    DemuxerMP4()
+        : Demuxer()
     {
         m_isStreamFinded = false;
         m_nalLengthSize = 2;

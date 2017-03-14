@@ -30,7 +30,8 @@ struct AttributeStringEventFunctionData : public gc {
 public:
     AttributeStringEventFunctionData(Element* target,
                                      String* scriptStringNeedToParse)
-        : m_target(target), m_scriptStringNeedToParse(scriptStringNeedToParse)
+        : m_target(target)
+        , m_scriptStringNeedToParse(scriptStringNeedToParse)
     {
     }
     Element* m_target;
@@ -101,7 +102,8 @@ protected:
 
 class EventTarget : public ScriptWrappable {
 protected:
-    EventTarget() : ScriptWrappable(this)
+    EventTarget()
+        : ScriptWrappable(this)
     {
     }
 

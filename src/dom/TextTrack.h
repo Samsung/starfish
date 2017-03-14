@@ -285,7 +285,8 @@ protected:
 
 class TextTrackList : public EventTarget, public GCVector<TextTrack*> {
 public:
-    TextTrackList() : EventTarget()
+    TextTrackList()
+        : EventTarget()
     {
     }
 

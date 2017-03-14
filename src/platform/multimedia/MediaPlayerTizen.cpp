@@ -84,7 +84,8 @@ void MediaPlayerTizen::printNativePlayerError(int errorCode)
 class MediaPlayerTizenMediaSourceClient : public MediaSourceClient {
 public:
     MediaPlayerTizenMediaSourceClient(MediaPlayerTizen* player)
-        : MediaSourceClient(), m_player(player)
+        : MediaSourceClient()
+        , m_player(player)
     {
 #ifndef NDEBUG
         GC_REGISTER_FINALIZER_NO_ORDER(

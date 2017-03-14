@@ -24,7 +24,8 @@ namespace StarFish {
 class SkewTransform : public gc {
 public:
     SkewTransform(double anglex, double angley)
-        : m_angleX(anglex), m_angleY(angley)
+        : m_angleX(anglex)
+        , m_angleY(angley)
     {
     }
 

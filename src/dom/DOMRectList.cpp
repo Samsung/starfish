@@ -22,7 +22,8 @@
 
 namespace StarFish {
 
-DOMRectList::DOMRectList() : ScriptWrappable(this)
+DOMRectList::DOMRectList()
+    : ScriptWrappable(this)
 {
 }
 

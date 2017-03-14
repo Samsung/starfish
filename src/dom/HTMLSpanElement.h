@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLSpanElement : public HTMLElement {
 public:
-    HTMLSpanElement(Document* document) : HTMLElement(document)
+    HTMLSpanElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

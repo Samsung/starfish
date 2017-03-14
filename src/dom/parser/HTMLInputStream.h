@@ -65,7 +65,8 @@ namespace StarFish {
 // them to the "last" string.
 class HTMLInputStream : public gc {
 public:
-    HTMLInputStream() : m_last(&m_first)
+    HTMLInputStream()
+        : m_last(&m_first)
     {
     }
 

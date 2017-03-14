@@ -24,7 +24,12 @@ namespace StarFish {
 class MatrixTransform : public gc {
 public:
     MatrixTransform(double a, double b, double c, double d, double e, double f)
-        : m_a(a), m_b(b), m_c(c), m_d(d), m_e(e), m_f(f)
+        : m_a(a)
+        , m_b(b)
+        , m_c(c)
+        , m_d(d)
+        , m_e(e)
+        , m_f(f)
     {
     }
 

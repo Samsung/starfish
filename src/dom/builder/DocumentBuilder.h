@@ -23,7 +23,8 @@ namespace StarFish {
 
 class DocumentBuilder : public gc {
 public:
-    DocumentBuilder(Document* document) : m_document(document)
+    DocumentBuilder(Document* document)
+        : m_document(document)
     {
     }
 

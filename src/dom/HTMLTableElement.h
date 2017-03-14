@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLTableElement : public HTMLElement {
 public:
-    HTMLTableElement(Document* document) : HTMLElement(document)
+    HTMLTableElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

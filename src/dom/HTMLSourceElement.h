@@ -24,7 +24,8 @@ namespace StarFish {
 
 class HTMLSourceElement : public HTMLElement {
 public:
-    HTMLSourceElement(Document* document) : HTMLElement(document)
+    HTMLSourceElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

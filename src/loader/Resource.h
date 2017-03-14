@@ -186,7 +186,8 @@ protected:
 
 class ResourceNetworkRequestClient : public NetworkRequestClient {
 public:
-    ResourceNetworkRequestClient(Resource* resource) : m_resource(resource)
+    ResourceNetworkRequestClient(Resource* resource)
+        : m_resource(resource)
     {
     }
 

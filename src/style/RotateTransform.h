@@ -23,7 +23,8 @@ namespace StarFish {
 
 class RotateTransform : public gc {
 public:
-    RotateTransform(double angle) : m_angle(angle)
+    RotateTransform(double angle)
+        : m_angle(angle)
     {
     }
 

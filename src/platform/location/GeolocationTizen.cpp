@@ -59,7 +59,8 @@ struct LocationRequestInfoTizen {
 
 class GeolocationTizen : public Geolocation {
 public:
-    GeolocationTizen(StarFish* starFish) : Geolocation(starFish)
+    GeolocationTizen(StarFish* starFish)
+        : Geolocation(starFish)
     {
         m_cachedLocation.timestamp = 0;
     }

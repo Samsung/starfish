@@ -252,7 +252,9 @@ protected:
 class SourceBufferList : public EventTarget {
 public:
     SourceBufferList(StarFish* starFish, MediaSource* sb)
-        : EventTarget(), m_starFish(starFish), m_parentMediaSource(sb)
+        : EventTarget()
+        , m_starFish(starFish)
+        , m_parentMediaSource(sb)
     {
     }
 

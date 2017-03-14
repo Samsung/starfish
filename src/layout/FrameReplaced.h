@@ -33,14 +33,16 @@ struct IntrinsicSizeUsedInLayout {
     LayoutSize m_intrinsicContentSize;
     std::pair<Length, Length> m_intrinsicSizeIsSpecifiedByAttributeOfElement;
 
-    IntrinsicSizeUsedInLayout() : m_intrinsicContentSize(0, 0)
+    IntrinsicSizeUsedInLayout()
+        : m_intrinsicContentSize(0, 0)
     {
     }
 };
 
 class FrameReplaced : public FrameBox {
 public:
-    FrameReplaced(Node* node, ComputedStyle* style) : FrameBox(node, style)
+    FrameReplaced(Node* node, ComputedStyle* style)
+        : FrameBox(node, style)
     {
     }
 

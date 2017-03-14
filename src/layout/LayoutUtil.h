@@ -136,7 +136,8 @@ const int intMinForLayoutUnit = INT_MIN / kFixedPointDenominator;
 
 class LayoutUnit {
 public:
-    LayoutUnit() : m_value(0)
+    LayoutUnit()
+        : m_value(0)
     {
     }
     LayoutUnit(int value)
@@ -1090,12 +1091,14 @@ inline LayoutSize operator-(const LayoutLocation& a, const LayoutLocation& b)
 class LayoutRect {
 public:
     LayoutRect(LayoutUnit x, LayoutUnit y, LayoutUnit w, LayoutUnit h)
-        : m_location(x, y), m_size(w, h)
+        : m_location(x, y)
+        , m_size(w, h)
     {
     }
 
     LayoutRect(LayoutLocation loc, LayoutSize siz)
-        : m_location(loc), m_size(siz)
+        : m_location(loc)
+        , m_size(siz)
     {
     }
 

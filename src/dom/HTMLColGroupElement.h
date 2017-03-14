@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLColGroupElement : public HTMLElement {
 public:
-    HTMLColGroupElement(Document* document) : HTMLElement(document)
+    HTMLColGroupElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

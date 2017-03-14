@@ -24,7 +24,8 @@ namespace StarFish {
 
 class HTMLAudioElement : public HTMLMediaElement {
 public:
-    HTMLAudioElement(Document* document) : HTMLMediaElement(document)
+    HTMLAudioElement(Document* document)
+        : HTMLMediaElement(document)
     {
     }
 

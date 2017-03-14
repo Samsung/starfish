@@ -73,7 +73,8 @@ struct IdlerData {
 
 class WindowImplEFL : public Window {
 public:
-    WindowImplEFL(StarFish* sf) : Window(sf)
+    WindowImplEFL(StarFish* sf)
+        : Window(sf)
     {
         m_mainBox = nullptr;
         m_dummyBox = nullptr;

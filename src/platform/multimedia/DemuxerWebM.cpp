@@ -22,7 +22,8 @@
 
 class MkvReaderAdapter : public mkvparser::IMkvReader {
 public:
-    MkvReaderAdapter(StarFish::DemuxerSource* source) : m_source(source)
+    MkvReaderAdapter(StarFish::DemuxerSource* source)
+        : m_source(source)
     {
     }
     virtual int Read(long long pos, long len, unsigned char* buf)
@@ -62,7 +63,8 @@ namespace StarFish {
 
 class DemuxerWebM : public Demuxer {
 public:
-    DemuxerWebM() : Demuxer()
+    DemuxerWebM()
+        : Demuxer()
     {
         m_isStreamFinded = false;
         m_headerSegment = nullptr;

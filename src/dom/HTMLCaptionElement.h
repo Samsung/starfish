@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLCaptionElement : public HTMLElement {
 public:
-    HTMLCaptionElement(Document* document) : HTMLElement(document)
+    HTMLCaptionElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

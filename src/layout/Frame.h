@@ -78,7 +78,8 @@ class TextToken;
 class LayoutContext {
 public:
     LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
-        : m_starFish(starFish), m_frameDocument(frameDocument)
+        : m_starFish(starFish)
+        , m_frameDocument(frameDocument)
     {
         establishBlockFormattingContext(true, true);
     }
@@ -566,7 +567,8 @@ class Frame : public gc {
 
 public:
     Frame(Node* node, ComputedStyle* s)
-        : m_node(node), m_styleWhenNodeIsAnonymous(s)
+        : m_node(node)
+        , m_styleWhenNodeIsAnonymous(s)
     {
         m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
         m_flags.m_needsLayout = true;

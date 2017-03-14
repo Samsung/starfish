@@ -59,7 +59,8 @@ template <ClassElementListBehavior onlyRoots>
 class ClassElementList : public gc {
 public:
     ClassElementList(Node& rootNode, String* className)
-        : m_className(className), m_rootNode(&rootNode)
+        : m_className(className)
+        , m_rootNode(&rootNode)
     {
         Node* child = m_rootNode->firstChild();
         while (child) {

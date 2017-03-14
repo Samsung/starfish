@@ -52,7 +52,8 @@ private:
     static const unsigned kMaxLength = 4;
 
 public:
-    DecodedHTMLEntity() : length(0)
+    DecodedHTMLEntity()
+        : length(0)
     {
     }
 

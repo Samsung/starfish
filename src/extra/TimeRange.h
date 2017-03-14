@@ -20,7 +20,9 @@ namespace StarFish {
 
 class TimeRange {
 public:
-    TimeRange(double start = 0, double end = 0) : m_start(start), m_end(end)
+    TimeRange(double start = 0, double end = 0)
+        : m_start(start)
+        , m_end(end)
     {
     }
 

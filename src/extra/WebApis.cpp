@@ -21,7 +21,8 @@
 namespace StarFish {
 
 webapis::webapis(StarFish* starFish)
-    : ScriptWrappable(this), m_starFish(starFish)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
 {
     m_avplay = new avplay(m_starFish);
 }

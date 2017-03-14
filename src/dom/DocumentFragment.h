@@ -23,7 +23,8 @@ namespace StarFish {
 
 class DocumentFragment : public Node {
 public:
-    DocumentFragment(Document* document) : Node(document)
+    DocumentFragment(Document* document)
+        : Node(document)
     {
     }
 

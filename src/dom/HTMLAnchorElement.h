@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
-    HTMLAnchorElement(Document* document) : HTMLElement(document)
+    HTMLAnchorElement(Document* document)
+        : HTMLElement(document)
     {
         setTabIndex(0);
     }

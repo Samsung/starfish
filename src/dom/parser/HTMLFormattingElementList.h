@@ -59,11 +59,13 @@ public:
     class Entry : public gc {
     public:
         // Inline because they're hot and Vector<T> uses them.
-        explicit Entry(HTMLStackItem* item) : m_item(item)
+        explicit Entry(HTMLStackItem* item)
+            : m_item(item)
         {
         }
         enum MarkerEntryType { MarkerEntry };
-        explicit Entry(MarkerEntryType) : m_item(nullptr)
+        explicit Entry(MarkerEntryType)
+            : m_item(nullptr)
         {
         }
         ~Entry()
@@ -110,7 +112,9 @@ public:
 
     class Bookmark {
     public:
-        explicit Bookmark(Entry* entry) : m_hasBeenMoved(false), m_mark(entry)
+        explicit Bookmark(Entry* entry)
+            : m_hasBeenMoved(false)
+            , m_mark(entry)
         {
         }
 

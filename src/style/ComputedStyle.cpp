@@ -47,7 +47,8 @@ class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion
 public:
     StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
         Resource* res, Document* document)
-        : ResourceClient(res), m_document(document)
+        : ResourceClient(res)
+        , m_document(document)
     {
     }
     virtual void didLoadFinished()

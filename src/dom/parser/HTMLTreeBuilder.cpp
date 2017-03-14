@@ -166,7 +166,9 @@ public:
     }
 
     explicit CharacterTokenBuffer(String* characters)
-        : m_characters(characters), m_current(0), m_end(characters->length())
+        : m_characters(characters)
+        , m_current(0)
+        , m_end(characters->length())
     {
         ASSERT(!isEmpty());
     }

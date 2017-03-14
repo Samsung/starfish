@@ -53,7 +53,8 @@ const char32_t kEndOfFileMarker = 0;
 template <typename Tokenizer>
 class InputStreamPreprocessor : public gc {
 public:
-    InputStreamPreprocessor(Tokenizer* tokenizer) : m_tokenizer(tokenizer)
+    InputStreamPreprocessor(Tokenizer* tokenizer)
+        : m_tokenizer(tokenizer)
     {
         reset();
     }

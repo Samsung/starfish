@@ -23,7 +23,9 @@ namespace StarFish {
 
 class ScaleTransform : public gc {
 public:
-    ScaleTransform(double a, double b) : m_x(a), m_y(b)
+    ScaleTransform(double a, double b)
+        : m_x(a)
+        , m_y(b)
     {
     }
 

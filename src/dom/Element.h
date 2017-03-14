@@ -335,7 +335,8 @@ private:
 class NamedElement : public Element {
 public:
     NamedElement(Document* document, const QualifiedName& name)
-        : Element(document), m_name(name)
+        : Element(document)
+        , m_name(name)
     {
     }
 

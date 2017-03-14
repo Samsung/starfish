@@ -24,7 +24,8 @@ namespace StarFish {
 
 class FrameReplacedObject : public FrameReplaced {
 public:
-    FrameReplacedObject(Node* node) : FrameReplaced(node, nullptr)
+    FrameReplacedObject(Node* node)
+        : FrameReplaced(node, nullptr)
     {
         computeStyleFlags();
     }

@@ -32,11 +32,15 @@ class StyleTransformData : public gc {
 public:
     enum OperationType { Matrix, Translate, Scale, Rotate, Skew, None };
 
-    StyleTransformData() : m_type(None), m_value(NULL)
+    StyleTransformData()
+        : m_type(None)
+        , m_value(NULL)
     {
     }
 
-    StyleTransformData(OperationType type) : m_type(type), m_value(NULL)
+    StyleTransformData(OperationType type)
+        : m_type(type)
+        , m_value(NULL)
     {
     }
 

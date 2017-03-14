@@ -23,7 +23,8 @@ namespace StarFish {
 
 class FrameLineBreak : public Frame {
 public:
-    FrameLineBreak(Node* node) : Frame(node, nullptr)
+    FrameLineBreak(Node* node)
+        : Frame(node, nullptr)
     {
     }
 

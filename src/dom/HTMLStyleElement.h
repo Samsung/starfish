@@ -24,7 +24,9 @@ namespace StarFish {
 class HTMLStyleElement : public HTMLElement {
 public:
     HTMLStyleElement(Document* document)
-        : HTMLElement(document), m_generatedSheet(nullptr), m_loaded(false)
+        : HTMLElement(document)
+        , m_generatedSheet(nullptr)
+        , m_loaded(false)
     {
     }
 

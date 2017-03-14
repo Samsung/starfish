@@ -24,15 +24,21 @@ class BorderImageLength {
 public:
     enum Type { LengthType, NumberType };
 
-    BorderImageLength() : m_type(NumberType), m_number(1.0)
+    BorderImageLength()
+        : m_type(NumberType)
+        , m_number(1.0)
     {
     }
 
-    BorderImageLength(Length length) : m_type(LengthType), m_length(length)
+    BorderImageLength(Length length)
+        : m_type(LengthType)
+        , m_length(length)
     {
     }
 
-    BorderImageLength(double number) : m_type(NumberType), m_number(number)
+    BorderImageLength(double number)
+        : m_type(NumberType)
+        , m_number(number)
     {
     }
 
@@ -125,18 +131,27 @@ public:
     }
 
     BorderImageLengthBox(Length l)
-        : m_left(l), m_right(l), m_top(l), m_bottom(l)
+        : m_left(l)
+        , m_right(l)
+        , m_top(l)
+        , m_bottom(l)
     {
     }
 
     BorderImageLengthBox(double num)
-        : m_left(num), m_right(num), m_top(num), m_bottom(num)
+        : m_left(num)
+        , m_right(num)
+        , m_top(num)
+        , m_bottom(num)
     {
     }
 
     BorderImageLengthBox(BorderImageLength& l, BorderImageLength& r,
                          BorderImageLength& t, BorderImageLength& b)
-        : m_left(l), m_right(r), m_top(t), m_bottom(b)
+        : m_left(l)
+        , m_right(r)
+        , m_top(t)
+        , m_bottom(b)
     {
     }
 

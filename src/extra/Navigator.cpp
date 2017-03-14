@@ -21,7 +21,9 @@
 namespace StarFish {
 
 Navigator::Navigator(StarFish* starFish)
-    : ScriptWrappable(this), m_starFish(starFish), m_geoLocation(nullptr)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
+    , m_geoLocation(nullptr)
 {
 }
 }

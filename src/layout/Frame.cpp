@@ -91,7 +91,8 @@ FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
-FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx) : m_box(box)
+FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
+    : m_box(box)
 {
     STARFISH_ASSERT(box->isFloating());
     m_isLeft = box->style()->floating() == LeftFloatValue;

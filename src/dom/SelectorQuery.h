@@ -70,7 +70,8 @@ public:
     };
 
     struct MatchResult {
-        MatchResult() : specificity(0)
+        MatchResult()
+            : specificity(0)
         {
         }
         unsigned specificity;

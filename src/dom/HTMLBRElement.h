@@ -23,7 +23,8 @@ namespace StarFish {
 
 class HTMLBRElement : public HTMLElement {
 public:
-    HTMLBRElement(Document* document) : HTMLElement(document)
+    HTMLBRElement(Document* document)
+        : HTMLElement(document)
     {
     }
 

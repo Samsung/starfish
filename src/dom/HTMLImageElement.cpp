@@ -27,7 +27,8 @@ namespace StarFish {
 class ImageDownloadClient : public ResourceClient {
 public:
     ImageDownloadClient(HTMLImageElement* element, Resource* res)
-        : ResourceClient(res), m_element(element)
+        : ResourceClient(res)
+        , m_element(element)
     {
     }
 

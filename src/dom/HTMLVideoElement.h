@@ -24,7 +24,8 @@ namespace StarFish {
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:
-    HTMLVideoElement(Document* document) : HTMLMediaElement(document)
+    HTMLVideoElement(Document* document)
+        : HTMLMediaElement(document)
     {
     }
 

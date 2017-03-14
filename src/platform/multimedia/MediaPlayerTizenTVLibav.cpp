@@ -35,7 +35,9 @@ extern "C" {
 namespace StarFish {
 
 struct FFMpegIOContext {
-    FFMpegIOContext(const GCVector<uint8_t>& buf) : m_readPos(0), m_buffer(buf)
+    FFMpegIOContext(const GCVector<uint8_t>& buf)
+        : m_readPos(0)
+        , m_buffer(buf)
     {
     }
     size_t m_readPos;

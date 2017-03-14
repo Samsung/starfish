@@ -26,7 +26,9 @@ class Attr;
 class NamedNodeMap : public ScriptWrappable {
 public:
     NamedNodeMap(ScriptBindingInstance* instance, Element* element)
-        : ScriptWrappable(this), m_element(element), m_instance(instance)
+        : ScriptWrappable(this)
+        , m_element(element)
+        , m_instance(instance)
     {
     }
 
