@@ -174,3 +174,7 @@
 641:test/internal-test/css/table/table_fixed_01.html
 609:test/internal-test/css/table/table_fixed_02.html
 655:test/internal-test/css/table/table_fixed_03.html
+535:test/internal-test/css/table/table_fixed_04.html
+527:test/internal-test/css/table/table_fixed_05.html
+576:test/internal-test/css/table/table_fixed_06.html
+574:test/internal-test/css/table/table_fixed_07.html
