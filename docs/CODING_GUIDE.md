@@ -91,7 +91,8 @@ initializer on a separate line, and align the commas with the colon.
 Dog::Dog(String name, Breed breed)
     : Animal()
     , m_name(name)
-    , m_breed(breed) {
+    , m_breed(breed)
+{
 ...
 }
 ```
@@ -155,14 +156,12 @@ returnType functionName(
     int arg1, int arg2);
 ```
 
-The opening curly brace should be at the end of function declaration, not on
-its own in the next line. Closing curly brace can either be on the same or
-next line as the opening brace.
+The opening curly brace should be on its own in the next line.
+Closing curly brace should be on the next line as the opening brace.
 
 ```cpp
-returnType functionName() { };
-
-returnType functionName() {
+returnType functionName()
+{
     ...
 }
 ```
@@ -175,7 +174,8 @@ declared in a header file.
 ```cpp
 void f() { } // Allowed only in a header file
 
-int g() {
+int g()
+{
     return 0;
 }
 ```
@@ -210,7 +210,8 @@ check for memory allocation errors. {+ To verify: Since all memory allocation
 is handled by a GC, there should not really need to use try-catch statements. +}
 
 ```cpp
-bool Page::Create(const char *uri) {
+bool Page::Create(const char *uri)
+{
     try {
         m_uri = new char[CCString::Length(uri) + 1];
     } catch (...) {
