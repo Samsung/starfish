@@ -34,9 +34,7 @@ bool ComputedStyle::hasTransforms(Frame* frame)
 StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
 {
     // https://www.w3.org/TR/css-transforms-1/#transformable-element
-    if (frame->isFrameInline() ||
-        (frame->isFrameBox() && frame->asFrameBox()->isInlineBox() &&
-         frame->asFrameBox()->asInlineBox()->isInlineNonReplacedBox())) {
+    if (frame->isFrameInline() || frame->isInlineNonReplacedBox()) {
         return nullptr;
     }
     return m_transforms;
