@@ -42,7 +42,9 @@ class FrameTableRowBox;
 class FrameTableCellBox;
 class FrameTableColBox;
 class LineBox;
+class InlineTextBox;
 class InlineNonReplacedBox;
+class InlineBoxLayoutParentBox;
 
 enum PaintingStage {
     PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
@@ -735,6 +737,26 @@ public:
         return false;
     }
 
+    virtual bool isInlineBox() const
+    {
+        return false;
+    }
+
+    virtual bool isInlineTextBox() const
+    {
+        return false;
+    }
+
+    virtual bool isInlineNonReplacedBox() const
+    {
+        return false;
+    }
+
+    virtual bool isInlineBoxLayoutParentBox() const
+    {
+        return false;
+    }
+
     virtual bool isFrameTableObjectBox()
     {
         return false;
@@ -806,6 +828,30 @@ public:
     {
         STARFISH_ASSERT(isFrameLineBreak());
         return (FrameLineBreak*)this;
+    }
+
+    LineBox* asLineBox()
+    {
+        STARFISH_ASSERT(isLineBox());
+        return (LineBox*)this;
+    }
+
+    InlineTextBox* asInlineTextBox()
+    {
+        STARFISH_ASSERT(isInlineTextBox());
+        return (InlineTextBox*)this;
+    }
+
+    InlineNonReplacedBox* asInlineNonReplacedBox()
+    {
+        STARFISH_ASSERT(isInlineNonReplacedBox());
+        return (InlineNonReplacedBox*)this;
+    }
+
+    InlineBoxLayoutParentBox* asInlineBoxLayoutParentBox()
+    {
+        STARFISH_ASSERT(isInlineBoxLayoutParentBox());
+        return (InlineBoxLayoutParentBox*)this;
     }
 
     FrameTableBox* asFrameTableBox()

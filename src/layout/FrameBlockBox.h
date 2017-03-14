@@ -27,51 +27,6 @@ namespace StarFish {
 
 class FrameBlockBox;
 class LineFormattingContext;
-class InlineTextBox;        // TextNode
-class InlineNonReplacedBox; // non-replaced element, display: inline
-
-class InlineBox : public FrameBox {
-public:
-    InlineBox(Node* node, ComputedStyle* style)
-        : FrameBox(node, style)
-    {
-    }
-
-    Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
-    {
-        if (stage == HitTestStage::HitTestNormalFlowInline) {
-            return FrameBox::hitTest(x, y, stage);
-        }
-        return nullptr;
-    }
-
-    virtual bool isInlineBox()
-    {
-        return true;
-    }
-
-    virtual bool isInlineTextBox() const
-    {
-        return false;
-    }
-
-    virtual bool isInlineNonReplacedBox() const
-    {
-        return false;
-    }
-
-    InlineTextBox* asInlineTextBox()
-    {
-        STARFISH_ASSERT(isInlineTextBox());
-        return (InlineTextBox*)this;
-    }
-
-    InlineNonReplacedBox* asInlineNonReplacedBox()
-    {
-        STARFISH_ASSERT(isInlineNonReplacedBox());
-        return (InlineNonReplacedBox*)this;
-    }
-};
 
 struct TextRun {
     FrameText* m_frameText;
@@ -101,12 +56,17 @@ struct TextRun {
 #endif
 };
 
-class InlineTextBox : public InlineBox {
+class InlineTextBox : public FrameBox {
 public:
     InlineTextBox(FrameText* frame, const TextRun& run)
-        : InlineBox(frame->node(), frame->style())
+        : FrameBox(frame->node(), frame->style())
         , m_textRun(run)
     {
+    }
+
+    virtual bool isInlineBox() const
+    {
+        return true;
     }
 
     virtual bool isInlineTextBox() const
@@ -115,10 +75,18 @@ public:
     }
 
     virtual void paint(PaintingContext& ctx);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+    {
+        if (stage == HitTestStage::HitTestNormalFlowInline) {
+            return FrameBox::hitTest(x, y, stage);
+        }
+        return nullptr;
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
-        InlineBox::dump(depth);
+        FrameBox::dump(depth);
         printf(" [(%s), dir: %d, start: %d, end %d] ",
                m_textRun.m_stringView.substring()->utf8Data(),
                (int)charDirection(), (int)m_textRun.m_stringView.start(),
@@ -159,9 +127,23 @@ protected:
     TextRun m_textRun;
 };
 
-template <typename Box>
-class InlineBoxLayoutParentBox {
+class InlineBoxLayoutParentBox : public FrameBox {
 public:
+    InlineBoxLayoutParentBox()
+        : InlineBoxLayoutParentBox(nullptr, nullptr)
+    {
+    }
+
+    InlineBoxLayoutParentBox(Frame* frame)
+        : InlineBoxLayoutParentBox(frame->node(), frame->style())
+    {
+    }
+
+    virtual bool isInlineBoxLayoutParentBox() const
+    {
+        return true;
+    }
+
     LayoutUnit ascender() const
     {
         return m_ascender;
@@ -176,7 +158,7 @@ public:
     {
         m_ascender = ascender;
         m_descender = descender;
-        ((Box*)this)->setHeight(m_ascender - m_descender);
+        setHeight(m_ascender - m_descender);
     }
 
     GCVector<FrameBox*>& boxes()
@@ -184,14 +166,14 @@ public:
         return m_boxes;
     }
 
-    void establishesStackingContextIfNeeds()
+    virtual void establishesStackingContextIfNeeds()
     {
         for (size_t i = 0; i < m_boxes.size(); i++) {
             m_boxes[i]->establishesStackingContextIfNeeds();
         }
     }
 
-    InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
         InlineNonReplacedBox* ret = nullptr;
         for (size_t i = 0; i < m_boxes.size(); i++) {
@@ -203,9 +185,9 @@ public:
         return ret;
     }
 
-    void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
     {
-        VisibleRectContext ctx((Box*)this, &loc);
+        VisibleRectContext ctx(this, &loc);
 
         for (size_t i = 0; i < m_boxes.size(); i++) {
             m_boxes[i]->computeVisibleRect(sCtx, loc);
@@ -220,7 +202,7 @@ public:
     void insertInlineBox(FrameBox* box)
     {
         m_boxes.push_back(box);
-        box->setLayoutParent((Box*)this);
+        box->setLayoutParent(this);
     }
     LayoutUnit layoutInlineBoxes(LayoutUnit start);
     void registerRelativePositionedBoxes(LayoutContext& ctx);
@@ -251,11 +233,17 @@ protected:
     LayoutUnit m_descender;
     GCVector<FrameBox*> m_boxes;
     size_t m_absolutePositionedLayoutParentCnt;
+
+    InlineBoxLayoutParentBox(Node* node, ComputedStyle* style)
+        : FrameBox(node, style)
+        , m_ascender(0)
+        , m_descender(0)
+        , m_absolutePositionedLayoutParentCnt(0)
+    {
+    }
 };
 
-class InlineNonReplacedBox
-    : public InlineBox,
-      public InlineBoxLayoutParentBox<InlineNonReplacedBox> {
+class InlineNonReplacedBox : public InlineBoxLayoutParentBox {
     friend class FrameBlockBox;
     friend class LineFormattingContext;
 
@@ -295,6 +283,11 @@ public:
         m_descender = 0;
     }
 
+    virtual bool isInlineBox() const
+    {
+        return true;
+    }
+
     virtual bool isInlineNonReplacedBox() const
     {
         return true;
@@ -328,8 +321,7 @@ public:
     {
         FrameBox::establishesStackingContextIfNeeds();
 
-        InlineBoxLayoutParentBox<
-            InlineNonReplacedBox>::establishesStackingContextIfNeeds();
+        InlineBoxLayoutParentBox::establishesStackingContextIfNeeds();
     }
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
@@ -338,8 +330,7 @@ public:
             return this;
         }
 
-        return InlineBoxLayoutParentBox<
-            InlineNonReplacedBox>::firstInlineNonReplacedBox(f);
+        return InlineBoxLayoutParentBox::firstInlineNonReplacedBox(f);
     }
 
     virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
@@ -348,8 +339,7 @@ public:
             return;
         }
 
-        InlineBoxLayoutParentBox<InlineNonReplacedBox>::computeVisibleRect(sCtx,
-                                                                           loc);
+        InlineBoxLayoutParentBox::computeVisibleRect(sCtx, loc);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -439,7 +429,7 @@ protected:
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin)
-        : InlineBox(frame->node(), frame->style())
+        : InlineBoxLayoutParentBox(frame)
         , m_isCollapsed(false)
         , m_origin(origin)
         , m_mbpStatus(nullptr)
@@ -451,8 +441,6 @@ protected:
         if (origin->isRightMBPCleared()) {
             setRightMBPCleared();
         }
-
-        m_absolutePositionedLayoutParentCnt = 0;
 
         // recompute style flags
         // we should re compute flags here
@@ -482,19 +470,16 @@ protected:
     }
 };
 
-class LineBox : public FrameBox, public InlineBoxLayoutParentBox<LineBox> {
+class LineBox : public InlineBoxLayoutParentBox {
     friend class LineFormattingContext;
     friend class FrameBlockBox;
     friend class InlineNonReplacedBox;
 
 public:
     LineBox(Frame* parent)
-        : FrameBox(nullptr, nullptr)
+        : InlineBoxLayoutParentBox()
     {
         setParent(parent);
-        m_ascender = 0;
-        m_descender = 0;
-        m_absolutePositionedLayoutParentCnt = 0;
     }
 
     virtual bool isLineBox()
@@ -505,21 +490,6 @@ public:
     virtual const char* name()
     {
         return "LineBox";
-    }
-
-    virtual void establishesStackingContextIfNeeds()
-    {
-        InlineBoxLayoutParentBox<LineBox>::establishesStackingContextIfNeeds();
-    }
-
-    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
-    {
-        return InlineBoxLayoutParentBox<LineBox>::firstInlineNonReplacedBox(f);
-    }
-
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
-    {
-        InlineBoxLayoutParentBox<LineBox>::computeVisibleRect(sCtx, loc);
     }
 };
 
@@ -932,8 +902,7 @@ public:
     size_t m_currentLine;
     FrameBlockBox* m_block;
     LayoutContext& m_layoutContext;
-    // This layout parent should be either LineBox or InlineNonReplacedBox
-    FrameBox* m_currentLayoutParent;
+    InlineBoxLayoutParentBox* m_currentLayoutParent;
     FrameText* m_lastFrameText;
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;

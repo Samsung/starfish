@@ -21,7 +21,6 @@
 
 namespace StarFish {
 
-class InlineBox;
 class LineBox;
 
 struct MarginCollapseResult {
@@ -46,28 +45,6 @@ public:
     virtual bool isFrameBox()
     {
         return true;
-    }
-
-    virtual bool isLineBox()
-    {
-        return false;
-    }
-
-    virtual bool isInlineBox()
-    {
-        return false;
-    }
-
-    LineBox* asLineBox()
-    {
-        STARFISH_ASSERT(isLineBox());
-        return (LineBox*)this;
-    }
-
-    InlineBox* asInlineBox()
-    {
-        STARFISH_ASSERT(isInlineBox());
-        return (InlineBox*)this;
     }
 
 #ifdef STARFISH_ENABLE_TEST
