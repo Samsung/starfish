@@ -1327,11 +1327,10 @@ Node* Window::hitTest(float x, float y)
 
 void Window::setActiveNode(Node* n)
 {
-    Node* t = n;
+    Node* t = n->nearestParentElement();
     while (t) {
         t->setState(Node::NodeStateActive,
                     Node::ChildrenOrSiblingsAffectedByActive, true);
-        m_activeNodes.push_back(t);
         t = t->parentNode();
     }
     m_activeNodeWithTouchDown = n;
@@ -1339,13 +1338,16 @@ void Window::setActiveNode(Node* n)
 
 void Window::releaseActiveNode()
 {
-    for (size_t i = 0; i < m_activeNodes.size(); i++) {
-        m_activeNodes[i]->setState(Node::NodeStateActive,
-                                   Node::ChildrenOrSiblingsAffectedByActive,
-                                   false);
+    if (!m_activeNodeWithTouchDown) {
+        return;
     }
-    m_activeNodes.clear();
-    m_activeNodes.shrink_to_fit();
+
+    Node* t = m_activeNodeWithTouchDown->nearestParentElement();
+    while (t) {
+        t->setState(Node::NodeStateActive,
+                    Node::ChildrenOrSiblingsAffectedByActive, false);
+        t = t->parentNode();
+    }
     m_activeNodeWithTouchDown = nullptr;
 }
 
@@ -1358,10 +1360,10 @@ void Window::setFocusedNode(Node* n)
     }
 
     if (!m || m->isDocument()) {
-        if (!this->document()->bodyElement()) {
+        if (!document()->bodyElement()) {
             return;
         }
-        m = this->document()->bodyElement()->asNode();
+        m = document()->bodyElement()->asNode();
     }
 
     if (m_focusedNode == m) {
@@ -1418,17 +1420,10 @@ void Window::releaseFocusedNode()
 
 void Window::setActiveNodeWithMouseMove(Node* n)
 {
-    Node* t = n;
-
-    while (!(t->isElement() && t->asElement()->isHTMLElement()) &&
-           !t->isDocument()) {
-        t = t->parentNode();
-    }
-
+    Node* t = n->nearestParentElement();
     while (t) {
         t->setState(Node::NodeStateHovered,
                     Node::ChildrenOrSiblingsAffectedByHover, true);
-        m_hoveredNodes.push_back(t);
         t = t->parentNode();
     }
     m_activeNodeWithTouchMove = n;
@@ -1436,13 +1431,16 @@ void Window::setActiveNodeWithMouseMove(Node* n)
 
 void Window::releaseActiveNodeWithMouseMove()
 {
-    for (size_t i = 0; i < m_hoveredNodes.size(); i++) {
-        m_hoveredNodes[i]->setState(Node::NodeStateHovered,
-                                    Node::ChildrenOrSiblingsAffectedByHover,
-                                    false);
+    if (!m_activeNodeWithTouchMove) {
+        return;
     }
-    m_hoveredNodes.clear();
-    m_hoveredNodes.shrink_to_fit();
+
+    Node* t = m_activeNodeWithTouchMove->nearestParentElement();
+    while (t) {
+        t->setState(Node::NodeStateHovered,
+                    Node::ChildrenOrSiblingsAffectedByHover, false);
+        t = t->parentNode();
+    }
     m_activeNodeWithTouchMove = nullptr;
 }
 
@@ -1584,91 +1582,66 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
             ((abs(m_touchDownPoint.x() - x) > 30) ||
              (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
         }
         Node* node = hitTest(x, y);
 
         if (!node) {
             return;
         }
-        if (m_activeNodeWithTouchMove == nullptr ||
-            node != m_activeNodeWithTouchMove) {
-            if (m_activeNodeWithTouchMove != nullptr &&
-                node != m_activeNodeWithTouchMove) {
-                releaseActiveNodeWithMouseMove();
-            }
+
+        Node* t = node->nearestParentElement();
+        bool check = true;
+
+        if (m_activeNodeWithTouchMove) {
+            check = (t != m_activeNodeWithTouchMove->nearestParentElement());
+        }
+
+        if (check) {
+            releaseActiveNodeWithMouseMove();
             setActiveNodeWithMouseMove(node);
-            if (m_activeNodeWithTouchMove &&
-                node == m_activeNodeWithTouchMove) {
-                bool shouldDispatchEvent = true;
-                Node* t = m_activeNodeWithTouchMove;
-                while (t) {
-                    if ((t->isElement() && t->asElement()->isHTMLElement())) {
-                        String* eventType = starFish()
-                                                ->staticStrings()
-                                                ->m_mouseover.localName();
-                        Event* e =
-                            new MouseEvent(eventType, EventInit(true, true));
-                        EventTarget::dispatchEvent(t->asNode(), e);
-                        shouldDispatchEvent = false;
-                        break;
-                    }
-                    t = t->parentNode();
-                }
-                if (shouldDispatchEvent) {
-                    if (t == nullptr) {
-                        t = m_document;
-                    }
-                    String* eventType =
-                        starFish()->staticStrings()->m_mouseover.localName();
-                    Event* e = new MouseEvent(eventType, EventInit(true, true));
-                    EventTarget::dispatchEvent(t->asDocument(), e);
-                    shouldDispatchEvent = false;
-                }
+
+            String* eventType =
+                starFish()->staticStrings()->m_mouseover.localName();
+            Event* e = new MouseEvent(eventType, EventInit(true, true));
+
+            if (t) {
+                EventTarget::dispatchEvent(t->asNode(), e);
+            } else {
+                EventTarget::dispatchEvent(m_document, e);
             }
         }
     } else if (kind == MouseEventCancel) {
         if (m_activeNodeWithTouchDown) {
             releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
         }
     } else {
         STARFISH_ASSERT(kind == MouseEventUp);
-        bool shouldCallOnClick = false;
+
         Node* node = hitTest(x, y);
-        if (m_activeNodeWithTouchDown == node) {
-            shouldCallOnClick = true;
+
+        if (!node) {
+            return;
         }
 
-        Node* t = m_activeNodeWithTouchDown;
+        Node* t = node->nearestParentElement();
+        bool check = false;
 
-        bool shouldDispatchEvent = shouldCallOnClick;
-        while (t) {
-            if (shouldDispatchEvent &&
-                (t->isElement() && t->asElement()->isHTMLElement())) {
-                String* eventType =
-                    starFish()->staticStrings()->m_click.localName();
-                Event* e = new MouseEvent(eventType, EventInit(true, true));
-                EventTarget::dispatchEvent(t->asNode(), e);
-                shouldDispatchEvent = false;
-                break;
-            }
-            t = t->parentNode();
+        if (m_activeNodeWithTouchDown) {
+            check = (t == m_activeNodeWithTouchDown->nearestParentElement());
         }
 
-        if (shouldDispatchEvent) {
-            if (t == nullptr) {
-                t = m_document;
-            }
+        if (check) {
             String* eventType =
                 starFish()->staticStrings()->m_click.localName();
             Event* e = new MouseEvent(eventType, EventInit(true, true));
-            EventTarget::dispatchEvent(t->asDocument(), e);
+            if (t) {
+                EventTarget::dispatchEvent(t->asNode(), e);
+            } else {
+                EventTarget::dispatchEvent(m_document, e);
+            }
         }
 
         releaseActiveNode();
-
-        m_activeNodeWithTouchDown = nullptr;
     }
 }
 
@@ -1787,8 +1760,6 @@ void Window::close()
 
     m_activeNodeWithTouchDown = nullptr;
 
-    m_hoveredNodes.clear();
-    m_hoveredNodes.shrink_to_fit();
     m_activeNodeWithTouchMove = nullptr;
 
     if (m_location) {

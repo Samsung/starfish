@@ -290,6 +290,17 @@ unsigned long Node::childElementCount()
     return count;
 }
 
+Node* Node::nearestParentElement()
+{
+    Node* t = this;
+    while (!(t->isElement() && t->asElement()->isHTMLElement()) &&
+           !t->isDocument()) {
+        t = t->parentNode();
+    }
+
+    return t;
+}
+
 unsigned short isPreceding(const Node* node, const Node* isPrec,
                            const Node* refNode)
 {
