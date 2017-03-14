@@ -61,7 +61,7 @@ public:
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
         m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
-        m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
+        m_inheritedStyles.m_verticalBorderSpacing = Length(Length::Fixed, 0);
         initNonInheritedStyles();
     }
 
