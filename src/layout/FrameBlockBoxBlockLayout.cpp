@@ -95,7 +95,8 @@ static bool shouldAvoidFlaots(Frame* f)
 static bool shouldStretchWidth(Frame* f)
 {
     STARFISH_ASSERT(shouldAvoidFlaots(f));
-    return f->style()->width().isAuto() && !f->isFrameReplaced();
+    return f->style()->width().isAuto() && !f->isFrameReplaced() &&
+           !f->isFrameTableBox();
 }
 
 static void setXForDirection(FrameBlockBox* parent, FrameBox* child,
