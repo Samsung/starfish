@@ -41,6 +41,20 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     m_buffer = nullptr;
 }
 
+VisibleRectContext::VisibleRectContext(FrameBox* box, LayoutLocation* loc)
+    : m_box(box)
+    , m_loc(loc)
+{
+    m_loc->setX(m_loc->x() + m_box->x());
+    m_loc->setY(m_loc->y() + m_box->y());
+}
+
+VisibleRectContext::~VisibleRectContext()
+{
+    m_loc->setX(m_loc->x() - m_box->x());
+    m_loc->setY(m_loc->y() - m_box->y());
+}
+
 bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 {
     bool childNeedsBuffer = false;
@@ -63,30 +77,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
         LayoutLocation l(-m_owner->frameRect().location().x(),
                          -m_owner->frameRect().location().y());
 
-        m_owner->iterateChildBoxes(
-            [&](FrameBox* box) -> bool {
-                if (box != m_owner && box->stackingContext() &&
-                    box->stackingContext()->needsOwnBuffer()) {
-                    return false;
-                }
-                LayoutRect r = box->frameRect();
-                r.setX(r.x() + l.x());
-                r.setY(r.y() + l.y());
-                m_visibleRect.unite(r);
-                if (box->style() &&
-                    box->style()->overflow() == OverflowValue::HiddenOverflow) {
-                    return false;
-                }
-                return true;
-            },
-            [&](FrameBox* box) {
-                l.setX(l.x() + box->x());
-                l.setY(l.y() + box->y());
-            },
-            [&](FrameBox* box) {
-                l.setX(l.x() - box->x());
-                l.setY(l.y() - box->y());
-            });
+        m_owner->computeVisibleRect(this, l);
 
         if (m_visibleRect.isEmpty()) {
             m_needsOwnBuffer = false;

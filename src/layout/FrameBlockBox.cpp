@@ -600,6 +600,69 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 }
 
+InlineNonReplacedBox* FrameBlockBox::firstInlineNonReplacedBox(FrameInline* f)
+{
+    InlineNonReplacedBox* ret = nullptr;
+
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            if ((ret = child->firstInlineNonReplacedBox(f))) {
+                return ret;
+            }
+
+            child = child->next();
+        }
+    } else {
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            if ((ret = m_lineBoxes[i]->firstInlineNonReplacedBox(f))) {
+                return ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+void FrameBlockBox::establishesStackingContextIfNeeds()
+{
+    FrameBox::establishesStackingContextIfNeeds();
+
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            child->establishesStackingContextIfNeeds();
+            child = child->next();
+        }
+    } else {
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            m_lineBoxes[i]->establishesStackingContextIfNeeds();
+        }
+    }
+}
+
+void FrameBlockBox::computeVisibleRect(StackingContext* sCtx,
+                                       LayoutLocation& loc)
+{
+    if (!tryUniteVisibleRect(sCtx, loc)) {
+        return;
+    }
+
+    VisibleRectContext ctx(this, &loc);
+
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            child->computeVisibleRect(sCtx, loc);
+            child = child->next();
+        }
+    } else {
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            m_lineBoxes[i]->computeVisibleRect(sCtx, loc);
+        }
+    }
+}
+
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                           HitTestStage s)
 {

@@ -43,4 +43,27 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
     ctx.m_paintingStage = PaintingPositionedElements;
     paintChildrenWith(ctx);
 }
+
+bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+{
+    if (this != sCtx->owner() && stackingContext() &&
+        stackingContext()->needsOwnBuffer()) {
+        return false;
+    }
+
+    LayoutRect r = frameRect();
+    r.setX(r.x() + loc.x());
+    r.setY(r.y() + loc.y());
+    sCtx->unite(r);
+
+    if (style()->overflow() == OverflowValue::HiddenOverflow) {
+        return false;
+    }
+    return true;
+}
+
+void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+{
+    tryUniteVisibleRect(sCtx, loc);
+}
 }

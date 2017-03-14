@@ -42,6 +42,7 @@ class FrameTableRowBox;
 class FrameTableCellBox;
 class FrameTableColBox;
 class LineBox;
+class InlineNonReplacedBox;
 
 enum PaintingStage {
     PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
@@ -1061,6 +1062,21 @@ public:
     }
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual void establishesStackingContextIfNeeds()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

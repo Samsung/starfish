@@ -31,6 +31,15 @@ class Frame;
 class StackingContextChild : public GCVector<StackingContext*>, public gc {
 };
 
+struct VisibleRectContext {
+    VisibleRectContext(FrameBox* box, LayoutLocation* loc);
+    ~VisibleRectContext();
+
+private:
+    FrameBox* m_box;
+    LayoutLocation* m_loc;
+};
+
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
@@ -69,6 +78,11 @@ public:
     const LayoutRect& visibleRect()
     {
         return m_visibleRect;
+    }
+
+    void unite(const LayoutRect& other)
+    {
+        m_visibleRect.unite(other);
     }
 
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);

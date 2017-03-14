@@ -66,24 +66,8 @@ FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
         } else {
             STARFISH_ASSERT(f->isFrameInline());
             FrameBlockBox* c = blockContainer(f);
-            FrameBox* first = nullptr;
             FrameInline* in = f->asFrameInline();
-            c->iterateChildBoxes([&first, &in](FrameBox* box) -> bool {
-                if (!first) {
-                    if (box->isInlineBox() &&
-                        box->asInlineBox()->isInlineNonReplacedBox()) {
-                        InlineNonReplacedBox* inrb =
-                            box->asInlineBox()->asInlineNonReplacedBox();
-                        if (inrb->origin() == in) {
-                            first = inrb;
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            });
-            STARFISH_ASSERT(first);
-            return first;
+            return c->firstInlineNonReplacedBox(in);
         }
     } else {
         FrameBlockBox* blockBox = blockContainer(currentFrame);
