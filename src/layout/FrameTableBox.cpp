@@ -215,6 +215,12 @@ void FrameTableBox::layout(LayoutContext& ctx,
         layoutWidth(ctx);
     }
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
+        LayoutUnit top = paddingTop() + borderTop();
+        LayoutUnit bottom = paddingBottom() + borderBottom();
+        // The table always establishes block formatting context,
+        // so set the third argument to true
+        MarginInfo marginInfo(top, bottom, true, style()->height());
+        setMarginInfo(&marginInfo);
         layoutHeight(ctx);
     }
 }
