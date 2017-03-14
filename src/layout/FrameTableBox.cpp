@@ -433,6 +433,7 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                 specifiedWidth =
                     LayoutUnit::fromPixel(cell->style()->width().fixed());
                 specifiedWidth += cell->borderWidth() + cell->paddingWidth();
+                col.cellWidth = specifiedWidth;
             } else if (cell->style()->width().isPercent()) {
                 specifiedWidth =
                     availableWidth * cell->style()->width().percent();
