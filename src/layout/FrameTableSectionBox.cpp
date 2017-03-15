@@ -104,6 +104,11 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
             FrameTableColBox* col = tableBox()->columnAtAbsoluteColumnIndex(
                 cellStruct.cell->absoluteColumnIndex());
             if (col) {
+                // Paint background using column-group style
+                if (col->parent()->isFrameTableColBox()) {
+                    paintBackground(canvas, col->parent()->style(), rect, rect,
+                                    false);
+                }
                 // Paint background using column style
                 paintBackground(canvas, col->style(), rect, rect, false);
             }
@@ -223,7 +228,8 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     LayoutUnit ySoFar = 0;
     LayoutUnit borderSpacing = LayoutUnit::fromPixel(
         tableBox()->style()->verticalBorderSpacing().fixed());
-    if (isFirstTableSection()) {
+
+    if (tableBox()->firstSectionBoxInVisualOrder() == this) {
         ySoFar += borderSpacing;
     }
 
@@ -240,20 +246,6 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     }
 
     setHeight(ySoFar);
-}
-
-bool FrameTableSectionBox::isFirstTableSection()
-{
-    for (Frame* c = tableBox()->firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            if (c == this) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-    return false;
 }
 
 void FrameTableSectionBox::layout(LayoutContext& ctx,
