@@ -313,6 +313,35 @@ public:
         return false;
     }
 
+    static bool parseTime(const char* token, bool allowNegative, CSSTime* ret)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber()) {
+            return false;
+        }
+        float num = parser->parsedNumber();
+        if (!allowNegative && num < 0) {
+            return false;
+        }
+        parser->consumeString();
+        String* str = parser->parsedString();
+        size_t msPos = str->indexOf('m');
+        if (msPos) {
+            String* sub = str->substring(0, msPos);
+            *ret = CSSTime(sub, num);
+            return parser->isEnd();
+        }
+
+        size_t sPos = str->indexOf('s');
+        if (sPos) {
+            String* sub = str->substring(0, sPos);
+            *ret = CSSTime(str, num);
+            return parser->isEnd();
+        }
+
+        return false;
+    }
+
     static bool parseColorFunctionPart(String* s, bool isAlpha,
                                        unsigned char* ret, bool* isPercent)
     {

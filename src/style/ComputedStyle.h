@@ -22,6 +22,7 @@
 #include "style/StyleSurroundData.h"
 #include "style/StyleTransformData.h"
 #include "style/StyleTransformOrigin.h"
+#include "style/StyleTransitionData.h"
 #include "style/DefaultStyle.h"
 #include "style/ContentData.h"
 
@@ -262,6 +263,13 @@ public:
     {
         if (m_surround == nullptr) {
             m_surround = new StyleSurroundData();
+        }
+    }
+
+    void setTransitionIfNeeded()
+    {
+        if (m_transition == nullptr) {
+            m_transition = new StyleTransitionData();
         }
     }
 
@@ -732,6 +740,34 @@ public:
         return m_overflow;
     }
 
+    TransitionPropertyValue transitionProperty()
+    {
+        if (m_transition == nullptr) {
+            return TransitionPropertyValue::TransitionPropertyAllValue;
+        }
+        return m_transition->transitionProperty();
+    }
+
+    void setTransitionProperty(TransitionPropertyValue property)
+    {
+        setTransitionIfNeeded();
+        m_transition->setTransitionProperty(property);
+    }
+
+    CSSTime transitionDuration()
+    {
+        if (m_transition == nullptr) {
+            return CSSTime(0);
+        }
+        return m_transition->transitionDuration();
+    }
+
+    void setTransitionDuration(CSSTime duration)
+    {
+        setTransitionIfNeeded();
+        m_transition->setTransitionDuration(duration);
+    }
+
 #define SET_SIDE(UPOS, ...)                 \
     void set##UPOS(Length unit)             \
     {                                       \
@@ -1032,6 +1068,7 @@ protected:
     StyleSurroundData* m_surround;
     StyleTransformDataGroup* m_transforms;
     StyleTransformOrigin* m_transformOrigin;
+    StyleTransitionData* m_transition;
     ContentDataGroup m_content;
 };
 

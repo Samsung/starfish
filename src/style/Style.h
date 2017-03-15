@@ -215,6 +215,92 @@ protected:
     float m_value;
 };
 
+class CSSTime {
+public:
+    enum Kind { S, MS };
+
+    CSSTime(double time)
+    {
+        m_kind = MS;
+        m_value = time;
+    }
+
+    CSSTime(Kind kind, double time)
+    {
+        m_kind = kind;
+        m_value = time;
+    }
+
+    CSSTime(String* str, double time)
+    {
+        if (str->length() == 0 || str->equals("s")) {
+            m_kind = S;
+        } else if (str->equals("ms")) {
+            m_kind = MS;
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        m_value = time;
+    }
+
+    Kind kind()
+    {
+        return m_kind;
+    }
+
+    float value()
+    {
+        return m_value;
+    }
+
+    double toTimeValue()
+    {
+        if (m_kind == S) {
+            return m_value * 1000; // to ms
+        } else if (m_kind == MS) {
+            return m_value;
+        }
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    String* toString()
+    {
+        std::stringstream ss(std::stringstream::in | std::stringstream::out);
+        ss << m_value;
+        std::string stdStr = ss.str();
+        if (m_kind == S) {
+            return String::fromUTF8(stdStr.append("s").c_str());
+        } else if (m_kind == MS) {
+            return String::fromUTF8(stdStr.append("ms").c_str());
+        }
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    bool operator==(const CSSTime& t) const
+    {
+        if (m_kind != t.m_kind) {
+            return false;
+        }
+
+        if (m_value != t.m_value) {
+            return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const CSSTime& t) const
+    {
+        return !this->operator==(t);
+    }
+
+protected:
+    Kind m_kind;
+    double m_value; // ms
+};
+
 // inline | block | list-item | inline-block | table | inline-table |
 // table-row-group | table-header-group | table-footer-group | table-row |
 // table-column-group | table-column | table-cell | table-caption | none |
@@ -403,6 +489,7 @@ enum UnicodeBidiValue {
 };
 
 enum TransitionPropertyValue {
+    TransitionPropertyAllValue,
     TransitionPropertyWidthValue,
     TransitionPropertyHeightValue,
 };
@@ -620,6 +707,7 @@ public:
                 // https://www.w3.org/TR/CSS21/syndata.html#value-def-number
         Int32,
         Angle, //
+        Time,
         Normal,
         StringValueKind,
         ColorValueKind,
@@ -813,6 +901,12 @@ public:
         return m_value.m_angle;
     }
 
+    CSSTime timeValue()
+    {
+        STARFISH_ASSERT(m_valueKind == Time);
+        return m_value.m_time;
+    }
+
     CSSTransformFunctions* transformValue()
     {
         STARFISH_ASSERT(m_valueKind == TransformFunctions);
@@ -922,6 +1016,12 @@ public:
         return m_value.m_tableLayout;
     }
 
+    TransitionPropertyValue transitionPropertyValue()
+    {
+        STARFISH_ASSERT(m_valueKind == TransitionPropertyValueKind);
+        return m_value.m_transitionProperty;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -953,6 +1053,8 @@ public:
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
+        TransitionPropertyValue m_transitionProperty;
+        CSSTime m_time;
         ValueData(int v)
         {
             m_floatValue = v;
@@ -1064,6 +1166,14 @@ public:
         ValueData(TableLayoutValue v)
         {
             m_tableLayout = v;
+        }
+        ValueData(TransitionPropertyValue v)
+        {
+            m_transitionProperty = v;
+        }
+        ValueData(CSSTime v)
+        {
+            m_time = v;
         }
     };
 
