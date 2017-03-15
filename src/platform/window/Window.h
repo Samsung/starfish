@@ -173,28 +173,24 @@ public:
     void cancelAnimationFrame(uint32_t reqID);
 
     enum TouchEventKind {
-        TouchEventDown,
+        TouchEventStart,
         TouchEventMove,
-        TouchEventUp,
+        TouchEventEnd,
         TouchEventCancel
     };
-    void dispatchTouchEvent(float x, float y, TouchEventKind kind);
+    void dispatchTouchEvent(float x, float y, TouchEventKind kind,
+                            bool isMobile);
 
     enum KeyEventKind { KeyEventDown, KeyEventUp };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
     Node* hitTest(float x, float y);
-    Node* activeNodeWithTouchDown()
-    {
-        return m_activeNodeWithTouchDown;
-    }
 
     enum MouseEventKind {
         MouseEventDown,
         MouseEventMove,
         MouseEventUp,
-        MouseEventCancel,
-        MouseEventIn,
+        MouseEventEnter,
         MouseEventOut
     };
     void dispatchMouseEvent(float x, float y, MouseEventKind kind);
@@ -205,8 +201,8 @@ public:
     void setFocusedNode(Node* n);
     void releaseFocusedNode();
 
-    void setActiveNodeWithMouseMove(Node* n);
-    void releaseActiveNodeWithMouseMove();
+    void setHoveredNode(Node* n);
+    void releaseHoveredNode();
 
     void processUrlFragment(String* name);
     void setCSSTarget(Node* n);
@@ -316,9 +312,7 @@ protected:
 #endif
     StackingContext* m_rootStackingContext;
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
-    Node* m_activeNodeWithTouchDown;
 
-    Node* m_activeNodeWithTouchMove;
     Node* m_focusedNode;
     Node* m_relatedTarget;
     Node* m_cssTarget;
@@ -333,6 +327,10 @@ protected:
 
     uint32_t m_requestAnimationFrameCounter;
     GCUnorderedMap<uint32_t, void*> m_requestAnimationFrameHandler;
+
+    GCVector<Node*> m_activeNodes;
+    GCVector<Node*> m_hoveredNodes;
+    ;
 };
 }
 

@@ -833,6 +833,24 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onmouseup =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onmouseup"));
+    m_touchstart =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "touchstart"));
+    m_ontouchstart =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "ontouchstart"));
+    m_touchmove =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "touchmove"));
+    m_ontouchmove =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "ontouchmove"));
+    m_touchend =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "touchend"));
+    m_ontouchend =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "ontouchend"));
     m_load = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "load"));
     m_onload = QualifiedName(AtomicString::emptyAtomicString(),

@@ -407,7 +407,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         sf->m_lastMouseY = ev->canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y,
-                               Window::TouchEventDown);
+                               Window::TouchEventStart, true);
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
@@ -421,7 +421,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         sf->m_lastMouseY = ev->cur.canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y,
-                               Window::TouchEventMove);
+                               Window::TouchEventMove, true);
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
@@ -433,7 +433,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         sf->starFish()->messageLoop()->addIdler(
             [](size_t a, void* data) {
                 ((Window*)data)
-                    ->dispatchTouchEvent(0, 0, Window::TouchEventCancel);
+                    ->dispatchTouchEvent(0, 0, Window::TouchEventCancel, true);
             },
             sf);
         return;
@@ -446,7 +446,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         WindowImplEFL* sf = (WindowImplEFL*)data;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY,
-                               Window::TouchEventUp);
+                               Window::TouchEventEnd, true);
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
@@ -494,8 +494,6 @@ void Window::initFlags()
     m_isRunning = true;
     m_pendingStyleSheetCount = 0;
     m_lastRenderingTime = 0;
-
-    m_activeNodeWithTouchDown = nullptr;
 }
 
 Window::~Window()
@@ -1101,8 +1099,8 @@ void Window::forceDisableOnloadCapture()
 
 void Window::simulateClick(float x, float y)
 {
-    dispatchTouchEvent(x, y, Window::TouchEventDown);
-    dispatchTouchEvent(x, y, Window::TouchEventUp);
+    dispatchTouchEvent(x, y, Window::TouchEventStart, true);
+    dispatchTouchEvent(x, y, Window::TouchEventEnd, true);
 }
 
 void Window::simulateVisibilitychange(bool show)
@@ -1320,32 +1318,6 @@ Node* Window::hitTest(float x, float y)
     return nullptr;
 }
 
-void Window::setActiveNode(Node* n)
-{
-    Node* t = n->nearestParentElement();
-    while (t) {
-        t->setState(Node::NodeStateActive,
-                    Node::ChildrenOrSiblingsAffectedByActive, true);
-        t = t->parentNode();
-    }
-    m_activeNodeWithTouchDown = n;
-}
-
-void Window::releaseActiveNode()
-{
-    if (!m_activeNodeWithTouchDown) {
-        return;
-    }
-
-    Node* t = m_activeNodeWithTouchDown->nearestParentElement();
-    while (t) {
-        t->setState(Node::NodeStateActive,
-                    Node::ChildrenOrSiblingsAffectedByActive, false);
-        t = t->parentNode();
-    }
-    m_activeNodeWithTouchDown = nullptr;
-}
-
 void Window::setFocusedNode(Node* n)
 {
     Node* m = n;
@@ -1413,30 +1385,56 @@ void Window::releaseFocusedNode()
     }
 }
 
-void Window::setActiveNodeWithMouseMove(Node* n)
+void Window::setActiveNode(Node* n)
+{
+    Node* t = n->nearestParentElement();
+    while (t) {
+        t->setState(Node::NodeStateActive,
+                    Node::ChildrenOrSiblingsAffectedByActive, true);
+        m_activeNodes.push_back(t);
+        t = t->parentNode();
+    }
+}
+
+void Window::releaseActiveNode()
+{
+    if (m_activeNodes.size() == 0) {
+        return;
+    }
+
+    for (size_t i = 0; i < m_activeNodes.size(); i++) {
+        m_activeNodes[i]->setState(Node::NodeStateActive,
+                                   Node::ChildrenOrSiblingsAffectedByActive,
+                                   false);
+    }
+    m_activeNodes.clear();
+    m_activeNodes.shrink_to_fit();
+}
+
+void Window::setHoveredNode(Node* n)
 {
     Node* t = n->nearestParentElement();
     while (t) {
         t->setState(Node::NodeStateHovered,
                     Node::ChildrenOrSiblingsAffectedByHover, true);
+        m_hoveredNodes.push_back(t);
         t = t->parentNode();
     }
-    m_activeNodeWithTouchMove = n;
 }
 
-void Window::releaseActiveNodeWithMouseMove()
+void Window::releaseHoveredNode()
 {
-    if (!m_activeNodeWithTouchMove) {
+    if (m_hoveredNodes.size() == 0) {
         return;
     }
 
-    Node* t = m_activeNodeWithTouchMove->nearestParentElement();
-    while (t) {
-        t->setState(Node::NodeStateHovered,
-                    Node::ChildrenOrSiblingsAffectedByHover, false);
-        t = t->parentNode();
+    for (size_t i = 0; i < m_hoveredNodes.size(); i++) {
+        m_hoveredNodes[i]->setState(Node::NodeStateHovered,
+                                    Node::ChildrenOrSiblingsAffectedByHover,
+                                    false);
     }
-    m_activeNodeWithTouchMove = nullptr;
+    m_hoveredNodes.clear();
+    m_hoveredNodes.shrink_to_fit();
 }
 
 void Window::processUrlFragment(String* name)
@@ -1484,159 +1482,142 @@ void Window::releaseCSSTarget()
     }
 }
 
-void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
+void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
+                                bool isMobile)
 {
-    // STARFISH_LOG_INFO("Window::dispatchTouchEvent %f %f kind %d\n", x, y,
-    // (int)kind);
     if (!m_isRunning) {
         return;
     }
 
-    if (kind == TouchEventDown) {
+    if (kind == TouchEventStart) { // or MouseEventDown
         Node* node = hitTest(x, y);
         if (!node) {
-            // STARFISH_LOG_INFO("dispatchTouchEvent: hitTest is NULL\n");
             return;
         }
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
         setFocusedNode(node);
-    } else if (kind == TouchEventMove) {
+
+        String* eventType;
+        Event* e;
+        if (isMobile) {
+            eventType = starFish()->staticStrings()->m_touchstart.localName();
+            e = new TouchEvent(eventType, EventInit(true, true));
+        } else {
+            eventType = starFish()->staticStrings()->m_mousedown.localName();
+            e = new MouseEvent(eventType, EventInit(true, true));
+        }
+
+        if (m_activeNodes.size() > 0) {
+            EventTarget::dispatchEvent(m_activeNodes[0], e);
+        } else {
+            EventTarget::dispatchEvent(m_document, e);
+        }
+
+    } else if (kind == TouchEventMove) { // or MouseEventMove
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) &&
-            m_activeNodeWithTouchDown &&
-            ((abs(m_touchDownPoint.x() - x) > 30) ||
-             (abs(m_touchDownPoint.y() - y) > 30))) {
-            releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
-        }
-    } else if (kind == TouchEventCancel) {
-        if (m_activeNodeWithTouchDown) {
-            releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
-        }
-    } else {
-        STARFISH_ASSERT(kind == TouchEventUp);
-        bool shouldCallOnClick = false;
-        Node* node = hitTest(x, y);
-        if (m_activeNodeWithTouchDown == node) {
-            shouldCallOnClick = true;
-        }
-
-        Node* t = m_activeNodeWithTouchDown;
-
-        bool shouldDispatchEvent = shouldCallOnClick;
-        while (t) {
-            if (shouldDispatchEvent &&
-                (t->isElement() && t->asElement()->isHTMLElement())) {
-                String* eventType =
-                    starFish()->staticStrings()->m_click.localName();
-                Event* e = new MouseEvent(eventType, EventInit(true, true));
-                EventTarget::dispatchEvent(t->asNode(), e);
-                shouldDispatchEvent = false;
-                break;
-            }
-            t = t->parentNode();
-        }
-
-        if (shouldDispatchEvent) {
-            if (t == nullptr) {
-                t = m_document;
-            }
-            String* eventType =
-                starFish()->staticStrings()->m_click.localName();
-            Event* e = new MouseEvent(eventType, EventInit(true, true));
-            EventTarget::dispatchEvent(t->asDocument(), e);
-        }
-
-        releaseActiveNode();
-
-        m_activeNodeWithTouchDown = nullptr;
-    }
-}
-
-void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
-{
-    // STARFISH_LOG_INFO("Window::dispatchMouseEvent %f %f kind %d\n", x, y,
-    // (int)kind);
-    if (!m_isRunning) {
-        return;
-    }
-
-    if (kind == MouseEventDown) {
-        Node* node = hitTest(x, y);
-        if (!node) {
-            // STARFISH_LOG_INFO("MouseEventDown: hitTest is NULL\n");
-            return;
-        }
-        m_touchDownPoint = Location(x, y);
-        setActiveNode(node);
-        setFocusedNode(node);
-    } else if (kind == MouseEventMove) {
-        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) &&
-            m_activeNodeWithTouchDown &&
             ((abs(m_touchDownPoint.x() - x) > 30) ||
              (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
         }
         Node* node = hitTest(x, y);
-
         if (!node) {
             return;
         }
 
         Node* t = node->nearestParentElement();
-        bool check = true;
+        if (!isMobile) {
+            bool check = true;
+            if (m_hoveredNodes.size() > 0) {
+                check = (t != m_hoveredNodes[0]);
+            }
 
-        if (m_activeNodeWithTouchMove) {
-            check = (t != m_activeNodeWithTouchMove->nearestParentElement());
-        }
+            if (check) {
+                releaseHoveredNode();
+                setHoveredNode(node);
 
-        if (check) {
-            releaseActiveNodeWithMouseMove();
-            setActiveNodeWithMouseMove(node);
+                String* eventType =
+                    starFish()->staticStrings()->m_mouseover.localName();
+                Event* e = new MouseEvent(eventType, EventInit(true, true));
 
-            String* eventType =
-                starFish()->staticStrings()->m_mouseover.localName();
-            Event* e = new MouseEvent(eventType, EventInit(true, true));
-
-            if (t) {
-                EventTarget::dispatchEvent(t->asNode(), e);
-            } else {
-                EventTarget::dispatchEvent(m_document, e);
+                if (t) {
+                    EventTarget::dispatchEvent(t, e);
+                } else {
+                    EventTarget::dispatchEvent(m_document, e);
+                }
             }
         }
-    } else if (kind == MouseEventCancel) {
-        if (m_activeNodeWithTouchDown) {
-            releaseActiveNode();
+
+        String* eventType;
+        Event* e;
+        if (isMobile) {
+            eventType = starFish()->staticStrings()->m_touchmove.localName();
+            e = new TouchEvent(eventType, EventInit(true, true));
+        } else {
+            eventType = starFish()->staticStrings()->m_mousemove.localName();
+            e = new MouseEvent(eventType, EventInit(true, true));
         }
+
+        if (t) {
+            EventTarget::dispatchEvent(t, e);
+        } else {
+            EventTarget::dispatchEvent(m_document, e);
+        }
+    } else if (kind == TouchEventCancel) {
+        releaseActiveNode();
+        releaseHoveredNode();
     } else {
-        STARFISH_ASSERT(kind == MouseEventUp);
+        STARFISH_ASSERT(kind == TouchEventEnd); // or MouseEventUp
 
         Node* node = hitTest(x, y);
-
         if (!node) {
             return;
         }
 
         Node* t = node->nearestParentElement();
         bool check = false;
-
-        if (m_activeNodeWithTouchDown) {
-            check = (t == m_activeNodeWithTouchDown->nearestParentElement());
+        if (m_activeNodes.size() > 0) {
+            check = (t == m_activeNodes[0]);
         }
 
         if (check) {
             String* eventType =
                 starFish()->staticStrings()->m_click.localName();
-            Event* e = new MouseEvent(eventType, EventInit(true, true));
+            Event* e;
+
+            String* eventType2;
+            Event* e2;
+            if (isMobile) {
+                e = new TouchEvent(eventType, EventInit(true, true));
+                eventType2 =
+                    starFish()->staticStrings()->m_touchend.localName();
+                e2 = new TouchEvent(eventType2, EventInit(true, true));
+            } else {
+                e = new MouseEvent(eventType, EventInit(true, true));
+                eventType2 = starFish()->staticStrings()->m_mouseup.localName();
+                e2 = new MouseEvent(eventType2, EventInit(true, true));
+            }
+
             if (t) {
-                EventTarget::dispatchEvent(t->asNode(), e);
+                EventTarget::dispatchEvent(t, e);
+                EventTarget::dispatchEvent(t, e2);
             } else {
                 EventTarget::dispatchEvent(m_document, e);
+                EventTarget::dispatchEvent(m_document, e2);
             }
         }
 
         releaseActiveNode();
+    }
+}
+
+void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
+{
+    if (kind <= MouseEventUp) {
+        dispatchTouchEvent(x, y, (TouchEventKind)kind, false);
+    } else if (kind == MouseEventEnter) {
+    } else {
+        STARFISH_ASSERT(kind == MouseEventOut);
     }
 }
 
@@ -1753,9 +1734,10 @@ void Window::close()
     m_relatedTarget = nullptr;
     m_cssTarget = nullptr;
 
-    m_activeNodeWithTouchDown = nullptr;
-
-    m_activeNodeWithTouchMove = nullptr;
+    m_activeNodes.clear();
+    m_activeNodes.shrink_to_fit();
+    m_hoveredNodes.clear();
+    m_hoveredNodes.shrink_to_fit();
 
     if (m_location) {
         m_location->close();

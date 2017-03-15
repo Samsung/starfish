@@ -239,6 +239,12 @@ public:
     QualifiedName m_onmouseover;
     QualifiedName m_mouseup;
     QualifiedName m_onmouseup;
+    QualifiedName m_touchstart;
+    QualifiedName m_ontouchstart;
+    QualifiedName m_touchmove;
+    QualifiedName m_ontouchmove;
+    QualifiedName m_touchend;
+    QualifiedName m_ontouchend;
     QualifiedName m_load;
     QualifiedName m_onload;
     QualifiedName m_error;
