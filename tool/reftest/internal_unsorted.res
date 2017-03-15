@@ -186,3 +186,4 @@
 548:test/internal-test/css/table/table_auto_01.html
 639:test/internal-test/css/table/table_auto_02.html
 592:test/internal-test/css/table/r_first-letter-selector-007.html
+612:test/internal-test/css/table/r_css3-modsel-73.html
