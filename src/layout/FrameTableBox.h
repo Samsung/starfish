@@ -127,8 +127,6 @@ private:
 
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
                              GCVector<ColSizeStruct>& columnWidths);
-    void calCellWidthForAutoTableLayout(LayoutContext& ctx);
-    void calCellWidthForFixedTableLayout(LayoutContext& ctx);
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();

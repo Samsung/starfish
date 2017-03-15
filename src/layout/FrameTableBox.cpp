@@ -227,93 +227,6 @@ void FrameTableBox::layout(LayoutContext& ctx,
 
 void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
-    switch (style()->tableLayout()) {
-    case TableLayoutValue::AutoTableLayoutValue:
-        calCellWidthForAutoTableLayout(ctx);
-        break;
-    case TableLayoutValue::FixedTableLayoutValue:
-        calCellWidthForFixedTableLayout(ctx);
-        break;
-    default:
-        // TableLayout has the above two values only
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void FrameTableBox::calCellWidthForAutoTableLayout(LayoutContext& ctx)
-{
-    // 1. We traverse the table to calculate min/max cell widths of the table
-    //    before we perform table layout.
-    m_columnWidths.clear();
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->calCellWidth(ctx);
-            collectColumnWidths(m_columnWidths,
-                                c->asFrameTableSectionBox()->columnWidths());
-        }
-    }
-
-    // 2. Determine the column size of the table
-    //    If the parent's width is smaller than the max table width,
-    //    the with of the table is adjusted to somewhere between min/max table
-    //    width.
-    //    If the parent's width >= the max table width,
-    //    max table width is used
-
-    // 2.1 calculate the table width
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
-    LayoutUnit tableWidth = 0;
-    tableWidth += mbpWidth();
-    tableWidth += borderSpacing;
-    for (auto& colSize : m_columnWidths) {
-        tableWidth += colSize.maxCellWidth + borderSpacing;
-    }
-
-    LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
-    if (tableWidth > parentContentWidth) {
-        LayoutUnit availableWidth = parentContentWidth;
-        availableWidth -= mbpWidth();
-        availableWidth -=
-            borderSpacing + (borderSpacing * m_columnWidths.size());
-
-        // 2.2 Calculate the ratio of which each column is to be reduced.
-        //     The cell width is:
-        //     minCellWidth <= cellWidth <= maxCellWidth
-        LayoutUnit totalCellWidths = 0;
-        for (auto& col : m_columnWidths) {
-            totalCellWidths += col.maxCellWidth;
-        }
-
-        for (auto& col : m_columnWidths) {
-            // FIXME: LayoutUnit has a rounding error bug when division is
-            // performed. To workaround, we convert LayoutUnit to double,
-            // do calculation, and convert back to LayoutUnit.
-            LayoutUnit newCellWidth(
-                availableWidth.toDouble() *
-                (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-
-            if (newCellWidth < col.minCellWidth) {
-                col.cellWidth = col.minCellWidth;
-                availableWidth -= col.minCellWidth;
-                totalCellWidths -= col.maxCellWidth;
-            }
-        }
-
-        for (auto& col : m_columnWidths) {
-            if (col.cellWidth != col.minCellWidth) {
-                // To workaround the rounding error in LayoutUnit
-                LayoutUnit newCellWidth(
-                    availableWidth.toDouble() *
-                    (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth = std::max(col.minCellWidth, newCellWidth);
-            }
-        }
-    }
-}
-
-void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
-{
     // 0. Get the cells in the first row. These are used to determine:
     // * the width of each cell, and
     // * the width property (i.e., auto or specified) in the table.
@@ -587,7 +500,14 @@ void FrameTableBox::calCellWidthForFixedTableLayout(LayoutContext& ctx)
                         remainingWidth.toDouble() *
                         (col.cellWidth.toDouble() /
                          sumOfAdjustedSpecifiedCellWidths.toDouble()));
-                    col.cellWidth = std::max(col.minCellWidth, newCellWidth);
+
+                    if (newCellWidth < col.cellWidth) {
+                        // Cells with specified width can only reduce its width
+                        // if there is no room. It cannot grow larger than
+                        // its specified width
+                        col.cellWidth =
+                            std::max(col.minCellWidth, newCellWidth);
+                    }
                 }
             }
         } else {
