@@ -118,6 +118,7 @@ public:
 
     // This function return nullptr if there is no valid column object
     FrameTableColBox* columnAtAbsoluteColumnIndex(unsigned index);
+    FrameTableSectionBox* firstSectionBoxInVisualOrder();
 
 private:
     void layoutWidth(LayoutContext& ctx);
@@ -131,7 +132,6 @@ private:
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
-    FrameTableSectionBox* firstSectionBoxInVisualOrder();
 
     bool isCellWidthAuto(unsigned i);
 
