@@ -59,32 +59,29 @@ public:
 
     virtual void handleDefaultEvent(Event* event)
     {
-        if (event->isUIEvent() && event->asUIEvent()->isMouseEvent()) {
-            if (event->eventType()->equals("click")) {
-                auto href =
-                    document()->window()->starFish()->staticStrings()->m_href;
-                size_t s = hasAttribute(href);
-                if (s != SIZE_MAX) {
-                    String* h = getAttribute(s)->trim();
-                    if (h->length()) {
-                        if (h->startsWith("#")) {
-                            document()->window()->navigateAsync(URL::createURL(
-                                document()
-                                    ->documentURI()
-                                    ->urlString()
-                                    ->substring(0, document()
-                                                       ->documentURI()
-                                                       ->urlString()
-                                                       ->indexOf('#')),
-                                h));
-                        } else {
-                            document()->window()->navigateAsync(URL::createURL(
-                                document()->documentURI()->urlString(), h));
-                        }
+        if (event->isUIEvent() && ((event->asUIEvent()->isMouseEvent() ||
+                                    event->asUIEvent()->isTouchEvent()) &&
+                                   event->eventType()->equals("click"))) {
+            auto href =
+                document()->window()->starFish()->staticStrings()->m_href;
+            size_t s = hasAttribute(href);
+            if (s != SIZE_MAX) {
+                String* h = getAttribute(s)->trim();
+                if (h->length()) {
+                    if (h->startsWith("#")) {
+                        document()->window()->navigateAsync(URL::createURL(
+                            document()->documentURI()->urlString()->substring(
+                                0,
+                                document()->documentURI()->urlString()->indexOf(
+                                    '#')),
+                            h));
                     } else {
-                        document()->window()->navigateAsync(
-                            document()->documentURI());
+                        document()->window()->navigateAsync(URL::createURL(
+                            document()->documentURI()->urlString(), h));
                     }
+                } else {
+                    document()->window()->navigateAsync(
+                        document()->documentURI());
                 }
             }
         }

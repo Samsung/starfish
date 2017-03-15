@@ -34,6 +34,18 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_click, value, this);
     } else if (name == ss->m_onmouseover) {
         setAttributeEventListener(ss->m_mouseover, value, this);
+    } else if (name == ss->m_onmouseup) {
+        setAttributeEventListener(ss->m_mouseup, value, this);
+    } else if (name == ss->m_onmousedown) {
+        setAttributeEventListener(ss->m_mousedown, value, this);
+    } else if (name == ss->m_onmousemove) {
+        setAttributeEventListener(ss->m_mousemove, value, this);
+    } else if (name == ss->m_ontouchstart) {
+        setAttributeEventListener(ss->m_touchstart, value, this);
+    } else if (name == ss->m_ontouchend) {
+        setAttributeEventListener(ss->m_touchend, value, this);
+    } else if (name == ss->m_ontouchmove) {
+        setAttributeEventListener(ss->m_touchmove, value, this);
     } else if (name == ss->m_onload) {
         setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onunload) {
