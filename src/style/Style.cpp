@@ -1046,12 +1046,6 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, false, style, false, color, false);
 }
 
-String* CSSStyleDeclaration::Transition()
-{
-    // TODO
-    return nullptr;
-}
-
 static bool parseBorderShorthand(GCVector<String*>* tokens,
                                  CSSStyleValuePair* width,
                                  CSSStyleValuePair* style,
@@ -1507,6 +1501,19 @@ String* CSSStyleValuePair::toString()
         }
         return str;
     }
+    case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
+        switch (transitionPropertyValue()) {
+        case TransitionPropertyAllValue:
+            return String::fromUTF8("all");
+        case TransitionPropertyWidthValue:
+            return String::fromUTF8("width");
+        case TransitionPropertyHeightValue:
+            return String::fromUTF8("height");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::Time:
+        return timeValue().toString();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1867,10 +1874,15 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
 {
     // TODO other property types
     m_valueKind = CSSStyleValuePair::ValueKind::TransitionPropertyValueKind;
-    if (STRING_VALUE_IS_STRING("width")) {
-        m_value = TransitionPropertyValue::TransitionPropertyWidthValue;
+    if (STRING_VALUE_IS_STRING("all")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyAllValue;
+    } else if (STRING_VALUE_IS_STRING("width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyWidthValue;
     } else if (STRING_VALUE_IS_STRING("height")) {
-        m_value = TransitionPropertyValue::TransitionPropertyHeightValue;
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyHeightValue;
     } else {
         return false;
     }
@@ -1882,8 +1894,9 @@ bool CSSStyleValuePair::updateValueUnitTransitionDuration(String* value)
     if (value->length() < 1) {
         return false;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = value;
+        m_valueKind = CSSStyleValuePair::ValueKind::Time;
+        CSSPropertyParser::parseTime(value->utf8Data(), false,
+                                     &(m_value.m_time));
     }
     return true;
 }
@@ -1940,6 +1953,34 @@ void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
         duration.setFlagImportant(isImportant);
         addTransitionCSSValuePairs(this, property, duration);
     }
+}
+
+static String* createTransitionString(String* property, String* duration)
+{
+    String* space = String::spaceString;
+    String* sum = String::emptyString;
+
+    if (!property->equals(String::emptyString) &&
+        !property->equals(String::initialString)) {
+        sum = property;
+    }
+
+    if (!duration->equals(String::emptyString) &&
+        !duration->equals(String::initialString)) {
+        if (sum->length()) {
+            sum = sum->concat(space);
+        }
+        sum = sum->concat(duration);
+    }
+
+    return sum;
+}
+
+String* CSSStyleDeclaration::Transition()
+{
+    String* property = TransitionProperty();
+    String* duration = TransitionDuration();
+    return createTransitionString(property, duration);
 }
 
 void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
@@ -2990,10 +3031,31 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionProperty:
-            // TODO
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setTransitionProperty(
+                    TransitionPropertyValue::TransitionPropertyAllValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::TransitionPropertyValueKind ==
+                    cssValues[k].valueKind());
+                style->setTransitionProperty(
+                    cssValues[k].transitionPropertyValue());
+                break;
+            }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDuration:
-            // TODO
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setTransitionDuration(CSSTime(0));
+                break;
+            default:
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::Time ==
+                                cssValues[k].valueKind());
+                style->setTransitionDuration(cssValues[k].timeValue());
+                break;
+            }
             break;
         case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
             // TODO
