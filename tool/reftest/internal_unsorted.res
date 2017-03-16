@@ -190,3 +190,13 @@
 639:test/internal-test/css/table/table_auto_02.html
 592:test/internal-test/css/table/r_first-letter-selector-007.html
 612:test/internal-test/css/table/r_css3-modsel-73.html
+425:test/internal-test/css/table/table_layer_01.html
+473:test/internal-test/css/table/table_layer_02.html
+468:test/internal-test/css/table/table_layer_03.html
+560:test/internal-test/css/table/table_layer_04.html
+491:test/internal-test/css/table/table_layer_05.html
+490:test/internal-test/css/table/table_layer_06.html
+485:test/internal-test/css/table/table_border-spacing_01.html
+476:test/internal-test/css/table/table_border-spacing_02.html
+426:test/internal-test/css/table/table_border-spacing_03.html
+461:test/internal-test/css/table/table_section-position_01.html
