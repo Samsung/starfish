@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+using namespace escargot;
+
 class EventTarget;
 class Window;
 class Node;
@@ -113,11 +115,11 @@ class DOMPoint;
 class DOMQuad;
 class DOMRectList;
 
-typedef escargot::ESValue ScriptValue;
-typedef escargot::ESObject* ScriptObject;
-typedef escargot::ESFunctionObject* ScriptFunction;
-#define ScriptValueUndefined escargot::ESValue()
-#define ScriptValueNull escargot::ESValue(escargot::ESValue::ESNull)
+typedef ESValue ScriptValue;
+typedef ESObject* ScriptObject;
+typedef ESFunctionObject* ScriptFunction;
+#define ScriptValueUndefined ESValue()
+#define ScriptValueNull ESValue(ESValue::ESNull)
 
 class ScriptWrappable : public gc {
 public:
@@ -183,7 +185,7 @@ public:
 
     void giveUpScriptValue()
     {
-        m_object = (escargot::ESObject*)1;
+        m_object = (ESObject*)1;
     }
 
     ScriptObject scriptObjectSlowCase();
@@ -289,7 +291,7 @@ public:
     bool hasProperty(String* name);
 
 private:
-    escargot::ESObject* m_object;
+    ESObject* m_object;
 };
 
 #ifdef USE_ES6_FEATURE
@@ -318,7 +320,7 @@ ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
                                ScriptValue thisValue);
 ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
 ScriptValue parseJSON(String* jsonData);
-String* jsonStringify(escargot::ESValue);
+String* jsonStringify(ESValue);
 
 bool isCallableScriptValue(ScriptValue v);
 }

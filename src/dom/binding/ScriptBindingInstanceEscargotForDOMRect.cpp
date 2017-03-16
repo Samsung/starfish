@@ -1,0 +1,165 @@
+/*
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
+
+#include "dom/DOM.h"
+#include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+namespace StarFish {
+
+using namespace escargot;
+
+ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
+{
+    ESString* DOMRectString = ESString::create("DOMRect");
+    auto DOMRectFunction = ESFunctionObject::create(
+        NULL,
+        [](ESVMInstance* instance) -> ESValue {
+
+            int cnt = instance->currentExecutionContext()->argumentCount();
+            (cnt > 4) ? cnt = 4 : cnt;
+            DOMRect* rect = nullptr;
+            double args[4] = {
+                0,
+            };
+            if (cnt == 0) {
+                rect = DOMRect::create();
+            } else {
+                for (int i = 0; i < cnt; ++i) {
+                    args[i] = instance->currentExecutionContext()
+                                  ->readArgument(i)
+                                  .toNumber();
+                }
+                if (cnt == 1) {
+                    rect = DOMRect::create(args[0]);
+                } else if (cnt == 2) {
+                    rect = DOMRect::create(args[0], args[1]);
+                } else if (cnt == 3) {
+                    rect = DOMRect::create(args[0], args[1], args[2]);
+                } else {
+                    rect = DOMRect::create(args[0], args[1], args[2], args[3]);
+                }
+            }
+            return rect->scriptValue();
+        },
+        DOMRectString, 0, true, true);
+
+    DOMRectFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DOMRectFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    DOMRectFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->domRectReadOnly()->protoType());
+    DOMRectFunction->set__proto__(
+        fetchData(scriptBindingInstance)->domRectReadOnly());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("x"),
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            return ESValue(rect->x());
+        },
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            if (rect != nullptr) {
+                rect->setX(v.toNumber());
+                return ESValue();
+            }
+            THROW_ILLEGAL_INVOCATION();
+            return ESValue();
+        },
+        true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("y"),
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            return ESValue(rect->y());
+        },
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            if (rect != nullptr) {
+                rect->setY(v.toNumber());
+                return ESValue();
+            }
+            THROW_ILLEGAL_INVOCATION();
+            return ESValue();
+        },
+        true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("width"),
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            return ESValue(rect->width());
+        },
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            if (rect != nullptr) {
+                rect->setWidth(v.toNumber());
+                return ESValue();
+            }
+            THROW_ILLEGAL_INVOCATION();
+            return ESValue();
+        },
+        true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("height"),
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            return ESValue(rect->height());
+        },
+        [](ESVMInstance* instance) -> ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
+                                         DOMRect);
+            DOMRect* rect = originalObj;
+            if (rect != nullptr) {
+                rect->setHeight(v.toNumber());
+                return ESValue();
+            }
+            THROW_ILLEGAL_INVOCATION();
+            return ESValue();
+        },
+        true, true);
+
+    return DOMRectFunction;
+}
+}
