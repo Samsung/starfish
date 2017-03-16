@@ -17,9 +17,14 @@
 #ifndef __StarFishScriptBindingInstanceDataEscargot__
 #define __StarFishScriptBindingInstanceDataEscargot__
 
+#include "dom/binding/ScriptBindingInstance.h"
+
+#include <Escargot.h>
+
 namespace StarFish {
 
-const uint32_t kEscargotObjectCheckMagic = 0x0fff;
+using namespace escargot;
+
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(node, Node)                                   \
     F(element, Element)                             \
@@ -129,25 +134,23 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)  \
     STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
-#define FOR_EACH_DECLARE_FN(codeName, exportName)    \
-    escargot::ESFunctionObject* binding##exportName( \
+#define FOR_EACH_DECLARE_FN(codeName, exportName) \
+    ESFunctionObject* binding##exportName(        \
         ScriptBindingInstance* scriptBindingInstance);
 
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_DECLARE_FN);
-
-class ScriptBindingInstance;
 
 class ScriptBindingInstanceDataEscargot : public gc {
     friend void ScriptBindingInstance::initBinding(StarFish* sf);
 
 public:
     ScriptBindingInstance* m_bindingInstance;
-    escargot::ESVMInstance* m_instance;
-    escargot::ESFunctionObject* m_orgToString;
-    escargot::ESFunctionObject* m_eventTarget;
-    escargot::ESFunctionObject* m_window;
+    ESVMInstance* m_instance;
+    ESFunctionObject* m_orgToString;
+    ESFunctionObject* m_eventTarget;
+    ESFunctionObject* m_window;
 #ifdef STARFISH_EXP
-    escargot::ESFunctionObject* m_domImplementation;
+    ESFunctionObject* m_domImplementation;
 #endif
 
     ScriptBindingInstanceDataEscargot(ScriptBindingInstance* bindingInstance)
@@ -157,7 +160,7 @@ public:
     }
 
 #define FOR_EACH_GETTER_FN(codeName, exportName)                   \
-    escargot::ESFunctionObject* codeName()                         \
+    ESFunctionObject* codeName()                                   \
     {                                                              \
         if (UNLIKELY(m_##codeName == nullptr)) {                   \
             m_##codeName = binding##exportName(m_bindingInstance); \
@@ -169,7 +172,7 @@ public:
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_FN)
 
 #define FOR_EACH_GETTER_VALUE_FN(codeName, exportName)             \
-    escargot::ESValue codeName##Value()                            \
+    ESValue codeName##Value()                                      \
     {                                                              \
         if (UNLIKELY(m_##codeName == nullptr)) {                   \
             m_##codeName = binding##exportName(m_bindingInstance); \
@@ -181,98 +184,95 @@ public:
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
 
 private:
-    escargot::ESFunctionObject* m_node;
-    escargot::ESFunctionObject* m_element;
-    escargot::ESFunctionObject* m_document;
-    escargot::ESFunctionObject* m_documentType;
-    escargot::ESFunctionObject* m_documentFragment;
-    escargot::ESFunctionObject* m_htmlDocument;
-    escargot::ESFunctionObject* m_characterData;
-    escargot::ESFunctionObject* m_text;
-    escargot::ESFunctionObject* m_cDataSection;
-    escargot::ESFunctionObject* m_comment;
+    ESFunctionObject* m_node;
+    ESFunctionObject* m_element;
+    ESFunctionObject* m_document;
+    ESFunctionObject* m_documentType;
+    ESFunctionObject* m_documentFragment;
+    ESFunctionObject* m_htmlDocument;
+    ESFunctionObject* m_characterData;
+    ESFunctionObject* m_text;
+    ESFunctionObject* m_cDataSection;
+    ESFunctionObject* m_comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    escargot::ESFunctionObject* m_textTrack;
-    escargot::ESFunctionObject* m_textTrackList;
-    escargot::ESFunctionObject* m_textTrackCue;
-    escargot::ESFunctionObject* m_textTrackCueList;
-    escargot::ESFunctionObject* m_VTTCue;
-    escargot::ESFunctionObject* m_timeRanges;
-    escargot::ESFunctionObject* m_htmlMediaElement;
-    escargot::ESFunctionObject* m_htmlVideoElement;
-    escargot::ESFunctionObject* m_htmlAudioElement;
-    escargot::ESFunctionObject* m_htmlTrackElement;
-    escargot::ESFunctionObject* m_htmlSourceElement;
-    escargot::ESFunctionObject* m_mediaSource;
-    escargot::ESFunctionObject* m_sourceBuffer;
-    escargot::ESFunctionObject* m_sourceBufferList;
+    ESFunctionObject* m_textTrack;
+    ESFunctionObject* m_textTrackList;
+    ESFunctionObject* m_textTrackCue;
+    ESFunctionObject* m_textTrackCueList;
+    ESFunctionObject* m_VTTCue;
+    ESFunctionObject* m_timeRanges;
+    ESFunctionObject* m_htmlMediaElement;
+    ESFunctionObject* m_htmlVideoElement;
+    ESFunctionObject* m_htmlAudioElement;
+    ESFunctionObject* m_htmlTrackElement;
+    ESFunctionObject* m_htmlSourceElement;
+    ESFunctionObject* m_mediaSource;
+    ESFunctionObject* m_sourceBuffer;
+    ESFunctionObject* m_sourceBufferList;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    escargot::ESFunctionObject* m_webApis;
-    escargot::ESFunctionObject* m_avPlay;
+    ESFunctionObject* m_webApis;
+    ESFunctionObject* m_avPlay;
 #endif
 #endif
 #ifdef STARFISH_ENABLE_MULTI_PAGE
-    escargot::ESFunctionObject* m_htmlAnchorElement;
+    ESFunctionObject* m_htmlAnchorElement;
 #endif
-    escargot::ESFunctionObject* m_htmlElement;
-    escargot::ESFunctionObject* m_htmlHtmlElement;
-    escargot::ESFunctionObject* m_htmlHeadElement;
-    escargot::ESFunctionObject* m_htmlScriptElement;
-    escargot::ESFunctionObject* m_htmlStyleElement;
-    escargot::ESFunctionObject* m_htmlLinkElement;
-    escargot::ESFunctionObject* m_htmlBodyElement;
-    escargot::ESFunctionObject* m_htmlDivElement;
-    escargot::ESFunctionObject* m_htmlImageElement;
-    escargot::ESFunctionObject* m_htmlBrElement;
-    escargot::ESFunctionObject* m_htmlObjectElement;
-    escargot::ESFunctionObject* m_htmlMetaElement;
-    escargot::ESFunctionObject* m_htmlParagraphElement;
-    escargot::ESFunctionObject* m_htmlPreElement;
-    escargot::ESFunctionObject* m_htmlSpanElement;
-    escargot::ESFunctionObject* m_htmlCollection;
-    escargot::ESFunctionObject* m_htmlUnknownElement;
-    escargot::ESFunctionObject* m_pseudoElement;
-    escargot::ESFunctionObject* m_event;
-    escargot::ESFunctionObject* m_uiEvent;
-    escargot::ESFunctionObject* m_mouseEvent;
-    escargot::ESFunctionObject* m_touchEvent;
-    escargot::ESFunctionObject* m_keyboardEvent;
-    escargot::ESFunctionObject* m_focusEvent;
-    escargot::ESFunctionObject* m_progressEvent;
-    escargot::ESFunctionObject* m_nodeList;
-    escargot::ESFunctionObject* m_domTokenList;
-    escargot::ESFunctionObject* m_domSettableTokenList;
-    escargot::ESFunctionObject* m_namedNodeMap;
-    escargot::ESFunctionObject* m_attr;
-    escargot::ESFunctionObject* m_cssStyleDeclaration;
-    escargot::ESFunctionObject* m_cssStyleRule;
-    escargot::ESFunctionObject* m_xhrElement;
-    escargot::ESFunctionObject* m_blobElement;
-    escargot::ESFunctionObject* m_url;
-    escargot::ESFunctionObject* m_location;
-    escargot::ESFunctionObject* m_domException;
-    escargot::ESFunctionObject* m_history;
-    escargot::ESFunctionObject* m_navigator;
-    escargot::ESFunctionObject* m_geolocation;
-    escargot::ESFunctionObject* m_coordinates;
-    escargot::ESFunctionObject* m_geoposition;
-    escargot::ESFunctionObject* m_positionError;
-    escargot::ESFunctionObject* m_domParser;
-    escargot::ESFunctionObject* m_domRectReadOnly;
-    escargot::ESFunctionObject* m_domRect;
-    escargot::ESFunctionObject* m_domPointReadOnly;
-    escargot::ESFunctionObject* m_domPoint;
-    escargot::ESFunctionObject* m_domQuad;
-    escargot::ESFunctionObject* m_domRectList;
+    ESFunctionObject* m_htmlElement;
+    ESFunctionObject* m_htmlHtmlElement;
+    ESFunctionObject* m_htmlHeadElement;
+    ESFunctionObject* m_htmlScriptElement;
+    ESFunctionObject* m_htmlStyleElement;
+    ESFunctionObject* m_htmlLinkElement;
+    ESFunctionObject* m_htmlBodyElement;
+    ESFunctionObject* m_htmlDivElement;
+    ESFunctionObject* m_htmlImageElement;
+    ESFunctionObject* m_htmlBrElement;
+    ESFunctionObject* m_htmlObjectElement;
+    ESFunctionObject* m_htmlMetaElement;
+    ESFunctionObject* m_htmlParagraphElement;
+    ESFunctionObject* m_htmlPreElement;
+    ESFunctionObject* m_htmlSpanElement;
+    ESFunctionObject* m_htmlCollection;
+    ESFunctionObject* m_htmlUnknownElement;
+    ESFunctionObject* m_pseudoElement;
+    ESFunctionObject* m_event;
+    ESFunctionObject* m_uiEvent;
+    ESFunctionObject* m_mouseEvent;
+    ESFunctionObject* m_touchEvent;
+    ESFunctionObject* m_keyboardEvent;
+    ESFunctionObject* m_focusEvent;
+    ESFunctionObject* m_progressEvent;
+    ESFunctionObject* m_nodeList;
+    ESFunctionObject* m_domTokenList;
+    ESFunctionObject* m_domSettableTokenList;
+    ESFunctionObject* m_namedNodeMap;
+    ESFunctionObject* m_attr;
+    ESFunctionObject* m_cssStyleDeclaration;
+    ESFunctionObject* m_cssStyleRule;
+    ESFunctionObject* m_xhrElement;
+    ESFunctionObject* m_blobElement;
+    ESFunctionObject* m_url;
+    ESFunctionObject* m_location;
+    ESFunctionObject* m_domException;
+    ESFunctionObject* m_history;
+    ESFunctionObject* m_navigator;
+    ESFunctionObject* m_geolocation;
+    ESFunctionObject* m_coordinates;
+    ESFunctionObject* m_geoposition;
+    ESFunctionObject* m_positionError;
+    ESFunctionObject* m_domParser;
+    ESFunctionObject* m_domRectReadOnly;
+    ESFunctionObject* m_domRect;
+    ESFunctionObject* m_domPointReadOnly;
+    ESFunctionObject* m_domPoint;
+    ESFunctionObject* m_domQuad;
+    ESFunctionObject* m_domRectList;
 
 public:
-#define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) \
-    escargot::ESValue m_value##codeName;
+#define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) ESValue m_value##codeName;
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
 };
-
-String* toBrowserString(const escargot::ESValue& v);
 }
 
 #endif
