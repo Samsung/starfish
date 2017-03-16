@@ -150,12 +150,13 @@ public:
         return m_parsedInt32;
     }
 
-    // a-z | 0-9 | - | _ | %
+    // a-z | 0-9 | - | _ | % | space
     bool consumeString()
     {
         int len = 0;
         for (char *cur = m_curPos; cur < m_endPos; cur++, len++) {
-            if (!(isNameChar(*cur) || *cur == '%')) {
+            if (!(isNameChar(*cur) || *cur == '%' ||
+                  String::isASCIISpace(*cur))) {
                 break;
             }
         }
