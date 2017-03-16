@@ -80,6 +80,8 @@ public:
         return m_maxCellWidth;
     }
 
+    void paintBackgroundAndBorders(Canvas* canvas);
+
     void applyVerticalAlign();
     LayoutUnit calBaseline();
 
