@@ -339,6 +339,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             (borderSpacing * m_columnWidths.size()) + borderSpacing;
         LayoutUnit sumOfSpecifiedCellWidths = 0;
 
+        double sumOfWidthPercentage = 0;
         for (auto& c : cellsWithSpecifiedWidths) {
             ColSizeStruct& col = *c;
             STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
@@ -354,11 +355,33 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 specifiedWidth =
                     availableWidth * cell->style()->width().percent();
                 col.cellWidth = specifiedWidth;
+                sumOfWidthPercentage += cell->style()->width().percent();
             }
             sumOfSpecifiedCellWidths += specifiedWidth;
         }
 
-        if (sumOfSpecifiedCellWidths >= availableWidth) {
+        if (sumOfWidthPercentage > 1) {
+            // Sum of all widths specified in percentage is greater than 100%.
+            // In this case, we reduce each cell width in proportion to its
+            // width over the sum of all widths.
+            sumOfSpecifiedCellWidths = 0;
+            for (auto& c : cellsWithSpecifiedWidths) {
+                ColSizeStruct& col = *c;
+                STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
+                FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+
+                if (cell->style()->width().isPercent()) {
+                    LayoutUnit specifiedWidth =
+                        availableWidth * (cell->style()->width().percent() /
+                                          sumOfWidthPercentage);
+                    col.cellWidth = specifiedWidth;
+                }
+                sumOfSpecifiedCellWidths += col.cellWidth;
+            }
+        }
+
+        if (sumOfSpecifiedCellWidths + LayoutUnit::epsilon() >=
+            availableWidth) {
             // Set the widths of all cells with "width: auto" to 0, if any
             for (auto& c : cellsWithAutoWidths) {
                 ColSizeStruct& col = *c;
@@ -409,7 +432,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             }
         }
     } else {
-        bool FOLLOW_SPEC = true;
         // 1. A cell width cannot be smaller than the min width of the
         // cell
         LayoutUnit sumOfAutoCellPreferredWidths = 0;

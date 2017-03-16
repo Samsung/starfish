@@ -142,6 +142,15 @@ void FrameTableCellBox::layout(LayoutContext& ctx,
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+// Table draws the border around the TableFrameSections
+void FrameTableCellBox::paintBackgroundAndBorders(Canvas* canvas)
+{
+    // Do not print borders and background if the cell width is 0
+    if (width() > 0) {
+        FrameBox::paintBackgroundAndBorders(canvas);
+    }
+}
+
 void FrameTableCellBox::applyVerticalAlign()
 {
     // 1. Cal the content height of all child boxes
