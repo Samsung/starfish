@@ -242,6 +242,7 @@ test/reftest/vendor/webkit_original/fast/block/float/024.html
 test/reftest/vendor/webkit_original/fast/block/float/029.html
 #test/reftest/vendor/webkit_original/fast/block/float/030.html
 test/reftest/vendor/webkit_original/fast/block/float/031.html
+test/reftest/vendor/webkit_original/fast/block/float/avoidance-percent-width-strict.html
 test/reftest/vendor/webkit_original/fast/block/float/br-with-clear.html
 test/reftest/vendor/webkit_original/fast/block/float/clamped-right-float.html
 test/reftest/vendor/webkit_original/fast/block/float/clear-element-too-wide-for-containing-block.html
