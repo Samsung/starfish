@@ -350,11 +350,12 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             } else if (cell->style()->width().isPercent()) {
                 specifiedWidth =
                     availableWidth * cell->style()->width().percent();
+                col.cellWidth = specifiedWidth;
             }
             sumOfSpecifiedCellWidths += specifiedWidth;
         }
 
-        if (sumOfSpecifiedCellWidths >= tableWidth) {
+        if (sumOfSpecifiedCellWidths >= availableWidth) {
             // Set the widths of all cells with "width: auto" to 0, if any
             for (auto& c : cellsWithAutoWidths) {
                 ColSizeStruct& col = *c;
@@ -716,8 +717,7 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
     // Determining whether a cell's width is "auto" or "specified" depends on
     // whether we are performing "auto" or "fixed" layout. To determine whether
     // we are doing "auto" or "fixed" layout, we need to check whether the
-    // table has specified width or not. We DO NOT read "table-layout" property.
-    // (This is how Blink and Firefox work)
+    // table has specified width or not.
     //
     // If the table's width is not given:
     // * If a column has a specified width anywhere in the row, the column will
