@@ -727,6 +727,8 @@ csswg_test_css1:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css1.res -p$(TEST_NPROCS)
 csswg_test_css21:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css21.res -p$(TEST_NPROCS)
+csswg_test_css21_tables:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css21_tables.res -p$(TEST_NPROCS)
 csswg_test_css3_color:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_color.res -p$(TEST_NPROCS)
 csswg_test_css3_backgrounds:
@@ -742,6 +744,7 @@ csswg_test_rtl:
 csswg_test_all:
 	make csswg_test_css1
 	make csswg_test_css21
+	make csswg_test_css21_tables
 	make csswg_test_css3_color
 	make csswg_test_css3_transforms
 	make csswg_test_css3_backgrounds
