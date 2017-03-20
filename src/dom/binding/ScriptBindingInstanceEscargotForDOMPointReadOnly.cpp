@@ -24,6 +24,38 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue xGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
+                                 DOMPointReadOnly);
+    DOMPointReadOnly* point = originalObj;
+    return ESValue(point->x());
+}
+
+static ESValue yGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
+                                 DOMPointReadOnly);
+    DOMPointReadOnly* point = originalObj;
+    return ESValue(point->y());
+}
+
+static ESValue zGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
+                                 DOMPointReadOnly);
+    DOMPointReadOnly* point = originalObj;
+    return ESValue(point->z());
+}
+
+static ESValue wGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
+                                 DOMPointReadOnly);
+    DOMPointReadOnly* point = originalObj;
+    return ESValue(point->w());
+}
+
 ESFunctionObject* bindingDOMPointReadOnly(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -34,51 +66,19 @@ ESFunctionObject* bindingDOMPointReadOnly(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("x"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMPointReadOnlyObject,
-                DOMPointReadOnly);
-            DOMPointReadOnly* point = originalObj;
-            return ESValue(point->x());
-        },
-        nullptr, true, true);
+        ESString::create("x"), xGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("y"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMPointReadOnlyObject,
-                DOMPointReadOnly);
-            DOMPointReadOnly* point = originalObj;
-            return ESValue(point->y());
-        },
-        nullptr, true, true);
+        ESString::create("y"), yGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("z"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMPointReadOnlyObject,
-                DOMPointReadOnly);
-            DOMPointReadOnly* point = originalObj;
-            return ESValue(point->z());
-        },
-        nullptr, true, true);
+        ESString::create("z"), zGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("w"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMPointReadOnlyObject,
-                DOMPointReadOnly);
-            DOMPointReadOnly* point = originalObj;
-            return ESValue(point->w());
-        },
-        nullptr, true, true);
+        ESString::create("w"), wGetterFunction, nullptr, true, true);
 
     return DOMPointReadOnlyFunction;
 }

@@ -25,6 +25,48 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue appCodeNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return toJSString(originalObj->appCodeName());
+}
+
+static ESValue appNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return toJSString(originalObj->appName());
+}
+
+static ESValue appVersionGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return toJSString(originalObj->appVersion());
+}
+
+static ESValue vendorGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return toJSString(originalObj->vendor());
+}
+
+static ESValue userAgentGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return toJSString(originalObj->userAgent());
+}
+
+static ESValue geolocationGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
+                                 Navigator);
+    return originalObj->geoLocation()->scriptObject();
+}
+
 ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Navigator, fetchData(scriptBindingInstance)
@@ -33,63 +75,27 @@ ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appCodeName"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return toJSString(originalObj->appCodeName());
-        },
-        nullptr);
+        ESString::create("appCodeName"), appCodeNameGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appName"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return toJSString(originalObj->appName());
-        },
-        nullptr);
+        ESString::create("appName"), appNameGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appVersion"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return toJSString(originalObj->appVersion());
-        },
-        nullptr);
+        ESString::create("appVersion"), appVersionGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("vendor"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return toJSString(originalObj->vendor());
-        },
-        nullptr);
+        ESString::create("vendor"), vendorGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("userAgent"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return toJSString(originalObj->userAgent());
-        },
-        nullptr);
+        ESString::create("userAgent"), userAgentGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("geolocation"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                         Navigator);
-            return originalObj->geoLocation()->scriptObject();
-        },
-        nullptr);
+        ESString::create("geolocation"), geolocationGetterFunction, nullptr);
 
     return NavigatorFunction;
 }

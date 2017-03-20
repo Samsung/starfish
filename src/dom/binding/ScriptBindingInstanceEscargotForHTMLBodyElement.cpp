@@ -24,6 +24,88 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue onLoadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+        auto eventType =
+            element->document()->window()->starFish()->staticStrings()->m_load;
+        return element->document()->window()->attributeEventListener(eventType);
+    } else {
+        THROW_ILLEGAL_INVOCATION();
+    }
+}
+
+static ESValue onLoadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+        auto eventType =
+            element->document()->window()->starFish()->staticStrings()->m_load;
+        if (v.isObject() ||
+            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+            element->document()->window()->setAttributeEventListener(eventType,
+                                                                     v);
+        } else {
+            element->document()->window()->clearAttributeEventListener(
+                eventType);
+        }
+    } else {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    return ESValue();
+}
+
+static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+        auto eventType = element->document()
+                             ->window()
+                             ->starFish()
+                             ->staticStrings()
+                             ->m_unload;
+        return element->document()->window()->attributeEventListener(eventType);
+    } else {
+        THROW_ILLEGAL_INVOCATION();
+    }
+}
+
+static ESValue onUnLoadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+        auto eventType = element->document()
+                             ->window()
+                             ->starFish()
+                             ->staticStrings()
+                             ->m_unload;
+        if (v.isObject() ||
+            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+            element->document()->window()->setAttributeEventListener(eventType,
+                                                                     v);
+        } else {
+            element->document()->window()->clearAttributeEventListener(
+                eventType);
+        }
+    } else {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    return ESValue();
+}
+
 ESFunctionObject* bindingHTMLBodyElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,101 +114,12 @@ ESFunctionObject* bindingHTMLBodyElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                auto element =
-                    nd->asElement()->asHTMLElement()->asHTMLBodyElement();
-                auto eventType = element->document()
-                                     ->window()
-                                     ->starFish()
-                                     ->staticStrings()
-                                     ->m_load;
-                return element->document()->window()->attributeEventListener(
-                    eventType);
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                auto element =
-                    nd->asElement()->asHTMLElement()->asHTMLBodyElement();
-                auto eventType = element->document()
-                                     ->window()
-                                     ->starFish()
-                                     ->staticStrings()
-                                     ->m_load;
-                if (v.isObject() || (v.isESPointer() &&
-                                     v.asESPointer()->isESFunctionObject())) {
-                    element->document()->window()->setAttributeEventListener(
-                        eventType, v);
-                } else {
-                    element->document()->window()->clearAttributeEventListener(
-                        eventType);
-                }
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-            return ESValue();
-        });
+        ESString::create("onload"), onLoadGetterFunction, onLoadSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onunload"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                auto element =
-                    nd->asElement()->asHTMLElement()->asHTMLBodyElement();
-                auto eventType = element->document()
-                                     ->window()
-                                     ->starFish()
-                                     ->staticStrings()
-                                     ->m_unload;
-                return element->document()->window()->attributeEventListener(
-                    eventType);
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                auto element =
-                    nd->asElement()->asHTMLElement()->asHTMLBodyElement();
-                auto eventType = element->document()
-                                     ->window()
-                                     ->starFish()
-                                     ->staticStrings()
-                                     ->m_unload;
-                if (v.isObject() || (v.isESPointer() &&
-                                     v.asESPointer()->isESFunctionObject())) {
-                    element->document()->window()->setAttributeEventListener(
-                        eventType, v);
-                } else {
-                    element->document()->window()->clearAttributeEventListener(
-                        eventType);
-                }
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-            return ESValue();
-        });
+        ESString::create("onunload"), onUnLoadGetterFunction,
+        onUnLoadSetterFunction);
 
     return HTMLBodyElementFunction;
 }

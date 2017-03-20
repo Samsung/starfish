@@ -24,85 +24,93 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue nameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    String* n = ((Attr*)originalObj)->name().localName();
+    return toJSString(n);
+}
+
+static ESValue valueGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    String* value = ((Attr*)originalObj)->value();
+    return toJSString(value);
+}
+
+static ESValue valueSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    ((Attr*)originalObj)->setValue(toBrowserString(v));
+    // FIXME(JMP): Actually this function have to return old Attr's value
+    // but we have to modify 'typedef void (*ESNativeSetter)(...)' in
+    // escargot/src/runtime/ESValue.h
+    // Because this need to many changes, we do the modification latter
+    return ESValue();
+}
+
+static ESValue ownerElementGetterFunction(ESObject* obj, ESObject* originalObj,
+                                          ESString* propertyName)
+{
+    CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+    if (!((Node*)originalObj->extraPointerData())->isAttr()) {
+        THROW_ILLEGAL_INVOCATION()
+    }
+
+    Element* elem = ((Attr*)originalObj->extraPointerData())->ownerElement();
+    if (elem != nullptr) {
+        return elem->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+static ESValue specifiedGetterFunction(ESObject* obj, ESObject* originalObj,
+                                       ESString* propertyName)
+{
+    CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+    if (!((Node*)originalObj->extraPointerData())->isAttr()) {
+        THROW_ILLEGAL_INVOCATION()
+    }
+    return ESValue(true);
+}
+
 ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
 {
     /* 4.8.2 Interface Attr */
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
         Attr, fetchData(scriptBindingInstance)->node());
 
-    auto attrNameValueGetter = [](ESVMInstance* instance) -> ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        String* n = ((Attr*)originalObj)->name().localName();
-        return toJSString(n);
-    };
-
-    auto attrValueGetter = [](ESVMInstance* instance) -> ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        String* value = ((Attr*)originalObj)->value();
-        return toJSString(value);
-    };
-
-    auto attrValueSetter = [](ESVMInstance* instance) -> ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        ((Attr*)originalObj)->setValue(toBrowserString(v));
-        // FIXME(JMP): Actually this function have to return old Attr's value
-        // but we have to modify 'typedef void (*ESNativeSetter)(...)' in
-        // escargot/src/runtime/ESValue.h
-        // Because this need to many changes, we do the modification latter
-        return ESValue();
-    };
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("name"), attrNameValueGetter, nullptr);
+        ESString::create("name"), nameGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("localName"), attrNameValueGetter, nullptr);
+        ESString::create("localName"), nameGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("value"), attrValueGetter, attrValueSetter);
+        ESString::create("value"), valueGetterFunction, valueSetterFunction);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
+        ESString::create("nodeValue"), valueGetterFunction,
+        valueSetterFunction);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("textContent"), attrValueGetter, attrValueSetter);
+        ESString::create("textContent"), valueGetterFunction,
+        valueSetterFunction);
 
     AttrFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineAccessorProperty(
-            ESString::create("ownerElement"),
-            [](ESObject* obj, ESObject* originalObj,
-               ESString* name) -> ESValue {
-                CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-                if (!((Node*)originalObj->extraPointerData())->isAttr()) {
-                    THROW_ILLEGAL_INVOCATION()
-                }
-
-                Element* elem =
-                    ((Attr*)originalObj->extraPointerData())->ownerElement();
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-                return ESValue(ESValue::ESNull);
-            },
-            NULL, false, false, false);
+        ->defineAccessorProperty(ESString::create("ownerElement"),
+                                 ownerElementGetterFunction, NULL, false, false,
+                                 false);
 
     AttrFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineAccessorProperty(
-            ESString::create("specified"),
-            [](ESObject* obj, ESObject* originalObj,
-               ESString* name) -> ESValue {
-                CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-                if (!((Node*)originalObj->extraPointerData())->isAttr()) {
-                    THROW_ILLEGAL_INVOCATION()
-                }
-                return ESValue(true);
-            },
-            NULL, false, false, false);
+        ->defineAccessorProperty(ESString::create("specified"),
+                                 specifiedGetterFunction, NULL, false, false,
+                                 false);
 
     return AttrFunction;
 }

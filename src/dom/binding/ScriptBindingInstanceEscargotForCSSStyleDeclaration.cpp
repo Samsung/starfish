@@ -25,6 +25,105 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue lengthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(
+        ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);
+    uint32_t len = originalObj->length();
+    return ESValue(len);
+}
+
+#ifdef STARFISH_ENABLE_TEST
+static ESValue getPropertyValueFunction(ESVMInstance* instance)
+{
+    try {
+        ESValue thisValue =
+            instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue,
+                     ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CSSStyleDeclaration* decl =
+            (CSSStyleDeclaration*)thisValue.asESPointer()
+                ->asESObject()
+                ->extraPointerData();
+        ESValue prop = instance->currentExecutionContext()->readArgument(0);
+
+        if (prop.isESString()) {
+            String* name = toBrowserString(prop);
+            const char* c = name->utf8Data();
+            CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+            String* val = String::emptyString;
+            switch (kind) {
+#define MATCH_KEY(Name, ...) \
+    case CSSStyleKind::Name: \
+        val = decl->Name();  \
+        break;
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
+#undef MATCH_KEY
+            default:
+                break;
+            }
+            return toJSString(val);
+        } else {
+            return ESString::create("");
+        }
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static ESValue setPropertyFunction(ESVMInstance* instance)
+{
+    try {
+        ESValue thisValue =
+            instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue,
+                     ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CSSStyleDeclaration* decl =
+            (CSSStyleDeclaration*)thisValue.asESPointer()
+                ->asESObject()
+                ->extraPointerData();
+        ESValue prop = instance->currentExecutionContext()->readArgument(0);
+        ESValue val = instance->currentExecutionContext()->readArgument(1);
+
+        String* name = toBrowserString(prop.toString())->toLower();
+        const char* c = name->utf8Data();
+        CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+
+        bool isImportant = false;
+        if (instance->currentExecutionContext()->argumentCount() == 3) {
+            String* pri = toBrowserString(instance->currentExecutionContext()
+                                              ->readArgument(2)
+                                              .toString())
+                              ->toLower();
+            if (!pri->equals(String::emptyString)) {
+                if (pri->equals(String::fromUTF8("important"))) {
+                    isImportant = true;
+                } else {
+                    return ESValue();
+                }
+            }
+
+            if (kind == CSSStyleKind::Unknown) {
+            } else {
+                if (false) {
+                }
+#define SET_ATTR(name, nameLower, nameCSSCase)              \
+    else if (kind == CSSStyleKind::name)                    \
+    {                                                       \
+        decl->set##name(toBrowserString(val), isImportant); \
+    }
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+            }
+        }
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return ESValue();
+}
+#endif
+
 ESFunctionObject* bindingCSSStyleDeclaration(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -36,15 +135,7 @@ ESFunctionObject* bindingCSSStyleDeclaration(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CSSStyleDeclarationObject,
-                CSSStyleDeclaration);
-            uint32_t len = originalObj->length();
-            return ESValue(len);
-        },
-        nullptr);
+        ESString::create("length"), lengthGetterFunction, nullptr);
 
 #ifdef STARFISH_ENABLE_TEST
     CSSStyleDeclarationFunction->protoType()
@@ -52,118 +143,17 @@ ESFunctionObject* bindingCSSStyleDeclaration(
         ->asESObject()
         ->defineDataProperty(
             ESString::create("getPropertyValue"), true, true, true,
-            ESFunctionObject::create(
-                nullptr,
-                [](ESVMInstance* instance) -> ESValue {
-                    try {
-                        ESValue thisValue = instance->currentExecutionContext()
-                                                ->resolveThisBinding();
-                        CHECK_TYPEOF(
-                            thisValue,
-                            ScriptWrappable::Type::CSSStyleDeclarationObject);
-                        CSSStyleDeclaration* decl =
-                            (CSSStyleDeclaration*)thisValue.asESPointer()
-                                ->asESObject()
-                                ->extraPointerData();
-                        ESValue prop =
-                            instance->currentExecutionContext()->readArgument(
-                                0);
-
-                        if (prop.isESString()) {
-                            String* name = toBrowserString(prop);
-                            const char* c = name->utf8Data();
-                            CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
-                            String* val = String::emptyString;
-                            switch (kind) {
-#define MATCH_KEY(Name, ...) \
-    case CSSStyleKind::Name: \
-        val = decl->Name();  \
-        break;
-                                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
-#undef MATCH_KEY
-                            default:
-                                break;
-                            }
-                            return toJSString(val);
-                        } else {
-                            return ESString::create("");
-                        }
-                    } catch (DOMException* e) {
-                        ESVMInstance::currentInstance()->throwError(
-                            e->scriptValue());
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                    }
-                },
-                ESString::create("getPropertyValue"), 2, false));
+            ESFunctionObject::create(nullptr, getPropertyValueFunction,
+                                     ESString::create("getPropertyValue"), 2,
+                                     false));
 
     CSSStyleDeclarationFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("setProperty"), true, true, true,
-            ESFunctionObject::create(
-                nullptr,
-                [](ESVMInstance* instance) -> ESValue {
-                    try {
-                        ESValue thisValue = instance->currentExecutionContext()
-                                                ->resolveThisBinding();
-                        CHECK_TYPEOF(
-                            thisValue,
-                            ScriptWrappable::Type::CSSStyleDeclarationObject);
-                        CSSStyleDeclaration* decl =
-                            (CSSStyleDeclaration*)thisValue.asESPointer()
-                                ->asESObject()
-                                ->extraPointerData();
-                        ESValue prop =
-                            instance->currentExecutionContext()->readArgument(
-                                0);
-                        ESValue val =
-                            instance->currentExecutionContext()->readArgument(
-                                1);
-
-                        String* name =
-                            toBrowserString(prop.toString())->toLower();
-                        const char* c = name->utf8Data();
-                        CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
-
-                        bool isImportant = false;
-                        if (instance->currentExecutionContext()
-                                ->argumentCount() == 3) {
-                            String* pri =
-                                toBrowserString(
-                                    instance->currentExecutionContext()
-                                        ->readArgument(2)
-                                        .toString())
-                                    ->toLower();
-                            if (!pri->equals(String::emptyString)) {
-                                if (pri->equals(
-                                        String::fromUTF8("important"))) {
-                                    isImportant = true;
-                                } else {
-                                    return ESValue();
-                                }
-                            }
-
-                            if (kind == CSSStyleKind::Unknown) {
-                            } else {
-                                if (false) {
-                                }
-#define SET_ATTR(name, nameLower, nameCSSCase)              \
-    else if (kind == CSSStyleKind::name)                    \
-    {                                                       \
-        decl->set##name(toBrowserString(val), isImportant); \
-    }
-                                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                            }
-                        }
-                    } catch (DOMException* e) {
-                        ESVMInstance::currentInstance()->throwError(
-                            e->scriptValue());
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                    }
-                    return ESValue();
-                },
-                ESString::create("setProperty"), 3, false));
+        ->defineDataProperty(ESString::create("setProperty"), true, true, true,
+                             ESFunctionObject::create(
+                                 nullptr, setPropertyFunction,
+                                 ESString::create("setProperty"), 3, false));
 #endif
 
     return CSSStyleDeclarationFunction;

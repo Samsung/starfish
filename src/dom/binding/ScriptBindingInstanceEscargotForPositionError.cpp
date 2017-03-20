@@ -25,6 +25,20 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue codeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject,
+                                 PositionError);
+    return ESValue(originalObj->code());
+}
+
+static ESValue messageGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject,
+                                 PositionError);
+    return ESString::create(originalObj->message());
+}
+
 ESFunctionObject* bindingPositionError(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -34,23 +48,11 @@ ESFunctionObject* bindingPositionError(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         PositionErrorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("code"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::PositionErrorObject, PositionError);
-            return ESValue(originalObj->code());
-        },
-        nullptr);
+        ESString::create("code"), codeGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         PositionErrorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("message"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::PositionErrorObject, PositionError);
-            return ESString::create(originalObj->message());
-        },
-        nullptr);
+        ESString::create("message"), messageGetterFunction, nullptr);
 
     PositionErrorFunction->asESObject()->defineDataProperty(
         ESString::create("PERMISSION_DENIED"), false, false, false, ESValue(1));

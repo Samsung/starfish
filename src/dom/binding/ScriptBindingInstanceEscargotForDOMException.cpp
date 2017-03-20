@@ -24,6 +24,27 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue nameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
+                                 DOMException);
+    return ESString::create(originalObj->name());
+}
+
+static ESValue messageGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
+                                 DOMException);
+    return toJSString(originalObj->message());
+}
+
+static ESValue codeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
+                                 DOMException);
+    return ESValue(originalObj->code());
+}
+
 ESFunctionObject* bindingDOMException(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -39,32 +60,16 @@ ESFunctionObject* bindingDOMException(
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMExceptionFunction->protoType().asESPointer()->asESObject(),
         fetchData(scriptBindingInstance)->m_instance->strings().name,
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMExceptionObject, DOMException);
-            return ESString::create(originalObj->name());
-        },
-        nullptr);
+        nameGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMExceptionFunction->protoType().asESPointer()->asESObject(),
         fetchData(scriptBindingInstance)->m_instance->strings().message,
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMExceptionObject, DOMException);
-            return toJSString(originalObj->message());
-        },
-        nullptr);
+        messageGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMExceptionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("code"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMExceptionObject, DOMException);
-            return ESValue(originalObj->code());
-        },
-        nullptr);
+        ESString::create("code"), codeGetterFunction, nullptr);
 
     DOMExceptionFunction->asESObject()->defineDataProperty(
         ESString::create("INDEX_SIZE_ERR"), false, false, false, ESValue(1));

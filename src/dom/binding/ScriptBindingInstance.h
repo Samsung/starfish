@@ -63,13 +63,15 @@ ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance);
 
 String* toBrowserString(const ESValue& v);
 ESValue toJSString(String* v);
+
+ESValue defaultFunction(ESVMInstance* instance);
+ESValue errorOnConstructorFunction(ESVMInstance* instance);
 }
 
 #define DEFINE_FUNCTION(functionName, parentName)                         \
     ESString* functionName##String = ESString::create(#functionName);     \
     ESFunctionObject* functionName##Function = ESFunctionObject::create(  \
-        NULL, [](ESVMInstance*) -> ESValue { return ESValue(); },         \
-        functionName##String, 0, true, true);                             \
+        NULL, defaultFunction, functionName##String, 0, true, true);      \
     functionName##Function->defineAccessorProperty(                       \
         ESVMInstance::currentInstance()->strings().prototype.string(),    \
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), \
@@ -83,28 +85,22 @@ ESValue toJSString(String* v);
         ->asESObject()                                                    \
         ->set__proto__(parentName);
 
-#define DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentName)             \
-    ESString* functionName##String = ESString::create(#functionName);         \
-    ESFunctionObject* functionName##Function = ESFunctionObject::create(      \
-        NULL,                                                                 \
-        [](ESVMInstance*) -> ESValue {                                        \
-            ESVMInstance::currentInstance()->throwError(ESValue(              \
-                TypeError::create(ESString::create("Illegal constructor")))); \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                            \
-            return ESValue();                                                 \
-        },                                                                    \
-        functionName##String, 0, true, true);                                 \
-    functionName##Function->defineAccessorProperty(                           \
-        ESVMInstance::currentInstance()->strings().prototype.string(),        \
-        ESVMInstance::currentInstance()->functionPrototypeAccessorData(),     \
-        false, false, false);                                                 \
-    functionName##Function->protoType()                                       \
-        .asESPointer()                                                        \
-        ->asESObject()                                                        \
-        ->forceNonVectorHiddenClass(false);                                   \
-    functionName##Function->protoType()                                       \
-        .asESPointer()                                                        \
-        ->asESObject()                                                        \
+#define DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentName)         \
+    ESString* functionName##String = ESString::create(#functionName);     \
+    ESFunctionObject* functionName##Function =                            \
+        ESFunctionObject::create(NULL, errorOnConstructorFunction,        \
+                                 functionName##String, 0, true, true);    \
+    functionName##Function->defineAccessorProperty(                       \
+        ESVMInstance::currentInstance()->strings().prototype.string(),    \
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), \
+        false, false, false);                                             \
+    functionName##Function->protoType()                                   \
+        .asESPointer()                                                    \
+        ->asESObject()                                                    \
+        ->forceNonVectorHiddenClass(false);                               \
+    functionName##Function->protoType()                                   \
+        .asESPointer()                                                    \
+        ->asESObject()                                                    \
         ->set__proto__(parentName);
 
 #define DEFINE_FUNCTION_WITH_PARENTFUNC(functionName, parentFunction) \
@@ -208,6 +204,7 @@ ESValue toJSString(String* v);
         }                                                                      \
         return ESValue();                                                      \
     }
+
 #define DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F)        \
     [](ESVMInstance* instance) -> ESValue {                                    \
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
@@ -229,6 +226,7 @@ ESValue toJSString(String* v);
         }                                                                      \
         return ESValue();                                                      \
     }
+
 #define DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(ElementName, getter, setter, \
                                                TYPE_F)                      \
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(                \
@@ -238,6 +236,7 @@ ESValue toJSString(String* v);
         ESString::create(#getter),                                          \
         DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F),    \
         DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F));
+
 #define DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(ElementName, getter, TYPE_F) \
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(               \
         HTML##ElementName##ElementFunction->protoType()                    \

@@ -25,6 +25,113 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue addTextTrackFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
+          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg3 = instance->currentExecutionContext()->readArgument(2);
+    String* kind = String::emptyString;
+    String* label = String::emptyString;
+    String* language = String::emptyString;
+
+    // First Arg : kind
+    if (arg1.isUndefinedOrNull() || !arg1.isESString()) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    kind = toBrowserString(arg1.toString());
+    // Second Arg : label (can be omitted)
+    if (!arg2.isUndefinedOrNull() && !arg2.isESString()) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    if (!arg2.isUndefinedOrNull()) {
+        label = toBrowserString(arg2.toString());
+    }
+    // Third Arg : language (can be omitted)
+    if (!arg3.isUndefinedOrNull() && !arg3.isESString()) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    if (!arg3.isUndefinedOrNull()) {
+        language = toBrowserString(arg3.toString());
+    }
+
+    HTMLMediaElement* element =
+        originalObj->asElement()->asHTMLElement()->asHTMLMediaElement();
+    TextTrack* track = element->addTextTrack(kind, label, language);
+    if (!track) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    return track->scriptValue();
+}
+
+static ESValue loadFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
+          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->load();
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue canPlayTypeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
+          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    String* result = originalObj->asElement()
+                         ->asHTMLElement()
+                         ->asHTMLMediaElement()
+                         ->canPlayType(toBrowserString(v.toString()));
+    if (!result) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    return toJSString(result);
+}
+
+static ESValue pauseFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
+          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->pause();
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue playFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
+          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
+        THROW_ILLEGAL_INVOCATION();
+    }
+#ifdef USE_ES6_FEATURE
+    return originalObj->asElement()
+        ->asHTMLElement()
+        ->asHTMLMediaElement()
+        ->play()
+        ->scriptValue();
+#else
+    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->play();
+    return ESValue();
+#endif
+}
+
 ESFunctionObject* bindingHTMLMediaElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -121,174 +228,42 @@ ESFunctionObject* bindingHTMLMediaElement(
     HTMLMediaElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("addTextTrack"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    GENERATE_THIS_AND_CHECK_TYPE(
-                        ScriptWrappable::Type::NodeObject, Node);
-                    Node* nd = originalObj;
-                    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-                          nd->asElement()
-                              ->asHTMLElement()
-                              ->isHTMLMediaElement())) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-
-                    ESValue arg1 =
-                        instance->currentExecutionContext()->readArgument(0);
-                    ESValue arg2 =
-                        instance->currentExecutionContext()->readArgument(1);
-                    ESValue arg3 =
-                        instance->currentExecutionContext()->readArgument(2);
-                    String* kind = String::emptyString;
-                    String* label = String::emptyString;
-                    String* language = String::emptyString;
-
-                    // First Arg : kind
-                    if (arg1.isUndefinedOrNull() || !arg1.isESString()) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    kind = toBrowserString(arg1.toString());
-                    // Second Arg : label (can be omitted)
-                    if (!arg2.isUndefinedOrNull() && !arg2.isESString()) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    if (!arg2.isUndefinedOrNull()) {
-                        label = toBrowserString(arg2.toString());
-                    }
-                    // Third Arg : language (can be omitted)
-                    if (!arg3.isUndefinedOrNull() && !arg3.isESString()) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    if (!arg3.isUndefinedOrNull()) {
-                        language = toBrowserString(arg3.toString());
-                    }
-
-                    HTMLMediaElement* element = originalObj->asElement()
-                                                    ->asHTMLElement()
-                                                    ->asHTMLMediaElement();
-                    TextTrack* track =
-                        element->addTextTrack(kind, label, language);
-                    if (!track) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    return track->scriptValue();
-                },
-                ESString::create("addTextTrack"), 3, false));
+        ->defineDataProperty(ESString::create("addTextTrack"), true, true, true,
+                             ESFunctionObject::create(
+                                 NULL, addTextTrackFunction,
+                                 ESString::create("addTextTrack"), 3, false));
 
     HTMLMediaElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("load"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    GENERATE_THIS_AND_CHECK_TYPE(
-                        ScriptWrappable::Type::NodeObject, Node);
-                    Node* nd = originalObj;
-                    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-                          nd->asElement()
-                              ->asHTMLElement()
-                              ->isHTMLMediaElement())) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    originalObj->asElement()
-                        ->asHTMLElement()
-                        ->asHTMLMediaElement()
-                        ->load();
-                    return ESValue(ESValue::ESUndefined);
-                },
-                ESString::create("load"), 0, false));
+        ->defineDataProperty(ESString::create("load"), true, true, true,
+                             ESFunctionObject::create(NULL, loadFunction,
+                                                      ESString::create("load"),
+                                                      0, false));
 
     HTMLMediaElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("canPlayType"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    GENERATE_THIS_AND_CHECK_TYPE(
-                        ScriptWrappable::Type::NodeObject, Node);
-                    Node* nd = originalObj;
-                    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-                          nd->asElement()
-                              ->asHTMLElement()
-                              ->isHTMLMediaElement())) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    String* result =
-                        originalObj->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLMediaElement()
-                            ->canPlayType(toBrowserString(v.toString()));
-                    if (!result) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    return toJSString(result);
-                },
-                ESString::create("canPlayType"), 1, false));
+        ->defineDataProperty(ESString::create("canPlayType"), true, true, true,
+                             ESFunctionObject::create(
+                                 NULL, canPlayTypeFunction,
+                                 ESString::create("canPlayType"), 1, false));
 
     HTMLMediaElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("pause"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    GENERATE_THIS_AND_CHECK_TYPE(
-                        ScriptWrappable::Type::NodeObject, Node);
-                    Node* nd = originalObj;
-                    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-                          nd->asElement()
-                              ->asHTMLElement()
-                              ->isHTMLMediaElement())) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-                    originalObj->asElement()
-                        ->asHTMLElement()
-                        ->asHTMLMediaElement()
-                        ->pause();
-                    return ESValue(ESValue::ESUndefined);
-                },
-                ESString::create("pause"), 0, false));
+        ->defineDataProperty(ESString::create("pause"), true, true, true,
+                             ESFunctionObject::create(NULL, pauseFunction,
+                                                      ESString::create("pause"),
+                                                      0, false));
 
     HTMLMediaElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("play"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    GENERATE_THIS_AND_CHECK_TYPE(
-                        ScriptWrappable::Type::NodeObject, Node);
-                    Node* nd = originalObj;
-                    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-                          nd->asElement()
-                              ->asHTMLElement()
-                              ->isHTMLMediaElement())) {
-                        THROW_ILLEGAL_INVOCATION();
-                    }
-#ifdef USE_ES6_FEATURE
-                    return originalObj->asElement()
-                        ->asHTMLElement()
-                        ->asHTMLMediaElement()
-                        ->play()
-                        ->scriptValue();
-#else
-                    originalObj->asElement()
-                        ->asHTMLElement()
-                        ->asHTMLMediaElement()
-                        ->play();
-                    return ESValue();
-#endif
-                },
-                ESString::create("play"), 0, false));
+        ->defineDataProperty(ESString::create("play"), true, true, true,
+                             ESFunctionObject::create(NULL, playFunction,
+                                                      ESString::create("play"),
+                                                      0, false));
 
     return HTMLMediaElementFunction;
 }

@@ -24,6 +24,70 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue xGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->x());
+}
+
+static ESValue yGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->y());
+}
+
+static ESValue widthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->width());
+}
+
+static ESValue heightGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->height());
+}
+
+static ESValue topGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->top());
+}
+
+static ESValue rightGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->right());
+}
+
+static ESValue bottomGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->bottom());
+}
+
+static ESValue leftGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
+                                 DOMRectReadOnly);
+    DOMRectReadOnly* rect = originalObj;
+    return ESValue(rect->left());
+}
+
 ESFunctionObject* bindingDOMRectReadOnly(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -34,91 +98,35 @@ ESFunctionObject* bindingDOMRectReadOnly(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("x"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->x());
-        },
-        nullptr, true, true);
+        ESString::create("x"), xGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("y"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->y());
-        },
-        nullptr, true, true);
+        ESString::create("y"), yGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("width"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->width());
-        },
-        nullptr, true, true);
+        ESString::create("width"), widthGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("height"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->height());
-        },
-        nullptr, true, true);
+        ESString::create("height"), heightGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("top"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->top());
-        },
-        nullptr, true, true);
+        ESString::create("top"), topGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("right"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->right());
-        },
-        nullptr, true, true);
+        ESString::create("right"), rightGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("bottom"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->bottom());
-        },
-        nullptr, true, true);
+        ESString::create("bottom"), bottomGetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("left"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
-            DOMRectReadOnly* rect = originalObj;
-            return ESValue(rect->left());
-        },
-        nullptr, true, true);
+        ESString::create("left"), leftGetterFunction, nullptr, true, true);
 
     return DOMRectReadOnlyFunction;
 }

@@ -24,6 +24,33 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue typeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+        return toJSString(nd->asElement()->getAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_type));
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue typeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+        nd->asElement()->setAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_type,
+            toBrowserString(v.toString()));
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
 ESFunctionObject* bindingHTMLStyleElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,39 +59,7 @@ ESFunctionObject* bindingHTMLStyleElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLStyleElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("type"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-                return toJSString(
-                    nd->asElement()->getAttribute(nd->document()
-                                                      ->window()
-                                                      ->starFish()
-                                                      ->staticStrings()
-                                                      ->m_type));
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-                nd->asElement()->setAttribute(nd->document()
-                                                  ->window()
-                                                  ->starFish()
-                                                  ->staticStrings()
-                                                  ->m_type,
-                                              toBrowserString(v.toString()));
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("type"), typeGetterFunction, typeSetterFunction);
     return HTMLStyleElementFunction;
 }
 }

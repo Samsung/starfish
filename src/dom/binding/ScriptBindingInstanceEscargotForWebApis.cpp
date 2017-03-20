@@ -27,19 +27,21 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue avplayGetterFunction(ESVMInstance* instance)
+{
+    return ((Window*)instance->globalObject()->extraPointerData())
+        ->Webapis()
+        ->AVPlay()
+        ->scriptObject();
+}
+
 ESFunctionObject* bindingwebapis(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(webapis, fetchData(scriptBindingInstance)
                                                  ->m_instance->globalObject()
                                                  ->objectPrototype());
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        webapisFunction, ESString::create("avplay"),
-        [](ESVMInstance* instance) -> ESValue {
-            return ((Window*)instance->globalObject()->extraPointerData())
-                ->Webapis()
-                ->AVPlay()
-                ->scriptObject();
-        },
+        webapisFunction, ESString::create("avplay"), avplayGetterFunction,
         nullptr);
     return webapisFunction;
 }

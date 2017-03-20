@@ -24,6 +24,123 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue srcGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                return toJSString(nd->asElement()
+                                      ->asHTMLElement()
+                                      ->asHTMLImageElement()
+                                      ->src());
+            }
+        }
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue srcSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                nd->asElement()->asHTMLElement()->asHTMLImageElement()->setSrc(
+                    toBrowserString(v));
+                return ESValue();
+            }
+        }
+    }
+    return ESValue();
+}
+
+static ESValue widthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                String* width = nd->asElement()
+                                    ->asHTMLElement()
+                                    ->asHTMLImageElement()
+                                    ->width();
+                return ESValue(String::parseInt(width));
+            }
+        }
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue widthSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+
+    if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
+        return ESValue();
+    }
+
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                nd->asElement()
+                    ->asHTMLElement()
+                    ->asHTMLImageElement()
+                    ->setWidth(v.toInt32());
+                return ESValue();
+            }
+        }
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue heightGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                String* height = nd->asElement()
+                                     ->asHTMLElement()
+                                     ->asHTMLImageElement()
+                                     ->height();
+                return ESValue(String::parseInt(height));
+            }
+        }
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue heightSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+
+    if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
+        return ESValue();
+    }
+
+    if (nd->isElement()) {
+        if (nd->asElement()->isHTMLElement()) {
+            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                nd->asElement()
+                    ->asHTMLElement()
+                    ->asHTMLImageElement()
+                    ->setHeight(v.toInt32());
+                return ESValue();
+            }
+        }
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
 ESFunctionObject* bindingHTMLImageElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,140 +149,15 @@ ESFunctionObject* bindingHTMLImageElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("src"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        return toJSString(nd->asElement()
-                                              ->asHTMLElement()
-                                              ->asHTMLImageElement()
-                                              ->src());
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        nd->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLImageElement()
-                            ->setSrc(toBrowserString(v));
-                        return ESValue();
-                    }
-                }
-            }
-            return ESValue();
-        });
+        ESString::create("src"), srcGetterFunction, srcSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("width"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        String* width = nd->asElement()
-                                            ->asHTMLElement()
-                                            ->asHTMLImageElement()
-                                            ->width();
-                        return ESValue(String::parseInt(width));
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-
-            if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
-                return ESValue();
-            }
-
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        nd->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLImageElement()
-                            ->setWidth(v.toInt32());
-                        return ESValue();
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("width"), widthGetterFunction, widthSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("height"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        String* height = nd->asElement()
-                                             ->asHTMLElement()
-                                             ->asHTMLImageElement()
-                                             ->height();
-                        return ESValue(String::parseInt(height));
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-
-            if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
-                return ESValue();
-            }
-
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()
-                            ->asHTMLElement()
-                            ->isHTMLImageElement()) {
-                        nd->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLImageElement()
-                            ->setHeight(v.toInt32());
-                        return ESValue();
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("height"), heightGetterFunction, heightSetterFunction);
     return HTMLImageElementFunction;
 }
 }

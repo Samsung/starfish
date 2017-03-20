@@ -24,6 +24,31 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMRectListObject);
+    DOMRectList* domRectList =
+        (DOMRectList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+    TO_INDEX_UINT32(argValue, idx);
+    if (idx != INVALID_INDEX && idx < domRectList->length()) {
+        DOMRect* rect = domRectList->item(idx);
+        return rect->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+static ESValue lengthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectListObject,
+                                 DOMRectList);
+    uint32_t len = originalObj->length();
+    return ESValue(len);
+}
+
 ESFunctionObject* bindingDOMRectList(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -35,41 +60,14 @@ ESFunctionObject* bindingDOMRectList(
     DOMRectListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("item"), true, true, true,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    ESValue thisValue = instance->currentExecutionContext()
-                                            ->resolveThisBinding();
-                    CHECK_TYPEOF(thisValue,
-                                 ScriptWrappable::Type::DOMRectListObject);
-                    DOMRectList* domRectList =
-                        (DOMRectList*)thisValue.asESPointer()
-                            ->asESObject()
-                            ->extraPointerData();
-
-                    ESValue argValue =
-                        instance->currentExecutionContext()->readArgument(0);
-                    TO_INDEX_UINT32(argValue, idx);
-                    if (idx != INVALID_INDEX && idx < domRectList->length()) {
-                        DOMRect* rect = domRectList->item(idx);
-                        return rect->scriptValue();
-                    }
-                    return ESValue(ESValue::ESNull);
-                },
-                ESString::create("item"), 1, false));
+        ->defineDataProperty(ESString::create("item"), true, true, true,
+                             ESFunctionObject::create(NULL, itemFunction,
+                                                      ESString::create("item"),
+                                                      1, false));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMRectListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMRectListObject, DOMRectList);
-            uint32_t len = originalObj->length();
-            return ESValue(len);
-        },
-        nullptr);
+        ESString::create("length"), lengthGetterFunction, nullptr);
 
     return DOMRectListFunction;
 }
