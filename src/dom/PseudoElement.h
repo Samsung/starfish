@@ -58,7 +58,7 @@ protected:
     StyleResolver::PseudoElementType m_pseudoId;
 };
 
-inline bool pseudoElementLayoutObjectIsNeeded(ComputedStyle* style)
+inline bool pseudoElementFrameIsNeeded(ComputedStyle* style)
 {
     if (!style || style->display() == NoneDisplayValue) {
         return false;
@@ -67,11 +67,7 @@ inline bool pseudoElementLayoutObjectIsNeeded(ComputedStyle* style)
         StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
         return true;
     }
-#if 0
-    return style->contentData();
-#else
-    return false;
-#endif
+    return style->content().size();
 }
 
 class FirstLetterPseudoElement : public PseudoElement {

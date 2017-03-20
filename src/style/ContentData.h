@@ -95,6 +95,16 @@ public:
         m_type = type;
     }
 
+    bool isText()
+    {
+        return m_type == Text;
+    }
+
+    bool isImage()
+    {
+        return m_type == Image;
+    }
+
     TextContentData* text() const
     {
         STARFISH_ASSERT(type() == ContentType::Text);
