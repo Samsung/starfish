@@ -25,6 +25,140 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue hrefGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getHref());
+}
+
+static ESValue hrefSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else {
+        originalObj->setHref(
+            String::fromUTF8(instance->currentExecutionContext()
+                                 ->readArgument(0)
+                                 .toString()
+                                 ->utf8Data()));
+    }
+    return ESValue();
+}
+
+static ESValue pathNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getPathname());
+}
+
+static ESValue pathNameSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else {
+        originalObj->setPathname(
+            String::fromUTF8(instance->currentExecutionContext()
+                                 ->readArgument(0)
+                                 .toString()
+                                 ->utf8Data()));
+    }
+    return ESValue();
+}
+
+static ESValue searchGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getSearch());
+}
+
+static ESValue searchSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else {
+        originalObj->setSearch(
+            String::fromUTF8(instance->currentExecutionContext()
+                                 ->readArgument(0)
+                                 .toString()
+                                 ->utf8Data()));
+    }
+    return ESValue();
+}
+
+static ESValue hashGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getHash());
+}
+
+static ESValue hashSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else {
+        originalObj->setHash(
+            String::fromUTF8(instance->currentExecutionContext()
+                                 ->readArgument(0)
+                                 .toString()
+                                 ->utf8Data()));
+    }
+    return ESValue();
+}
+
+static ESValue hostGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getHost());
+}
+
+static ESValue hostNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getHostname());
+}
+
+static ESValue protocolGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    return toJSString(originalObj->getProtocol());
+}
+
+static ESValue protocolSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
+                                 LocationObj);
+    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else {
+        originalObj->setProtocol(
+            String::fromUTF8(instance->currentExecutionContext()
+                                 ->readArgument(0)
+                                 .toString()
+                                 ->utf8Data()));
+    }
+    return ESValue();
+}
+
 ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Location, fetchData(scriptBindingInstance)
@@ -33,143 +167,33 @@ ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("href"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getHref());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            if (argCount < 1) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            } else {
-                originalObj->setHref(
-                    String::fromUTF8(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .toString()
-                                         ->utf8Data()));
-            }
-            return ESValue();
-        });
+        ESString::create("href"), hrefGetterFunction, hrefSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("pathname"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getPathname());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            if (argCount < 1) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            } else {
-                originalObj->setPathname(
-                    String::fromUTF8(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .toString()
-                                         ->utf8Data()));
-            }
-            return ESValue();
-        });
+        ESString::create("pathname"), pathNameGetterFunction,
+        pathNameSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("search"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getSearch());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            if (argCount < 1) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            } else {
-                originalObj->setSearch(
-                    String::fromUTF8(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .toString()
-                                         ->utf8Data()));
-            }
-            return ESValue();
-        });
+        ESString::create("search"), searchGetterFunction, searchSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("hash"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getHash());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            if (argCount < 1) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            } else {
-                originalObj->setHash(
-                    String::fromUTF8(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .toString()
-                                         ->utf8Data()));
-            }
-            return ESValue();
-        });
+        ESString::create("hash"), hashGetterFunction, hashSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("host"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getHost());
-        },
-        nullptr);
+        ESString::create("host"), hostGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("hostname"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getHostname());
-        },
-        nullptr);
+        ESString::create("hostname"), hostNameGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("protocol"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            return toJSString(originalObj->getProtocol());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                         LocationObj);
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            if (argCount < 1) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            } else {
-                originalObj->setProtocol(
-                    String::fromUTF8(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .toString()
-                                         ->utf8Data()));
-            }
-            return ESValue();
-        });
+        ESString::create("protocol"), protocolGetterFunction,
+        protocolSetterFunction);
 
     return LocationFunction;
 }

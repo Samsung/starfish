@@ -25,6 +25,20 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue coordsGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject,
+                                 Geoposition);
+    return ESValue(originalObj->coords()->scriptObject());
+}
+
+static ESValue timestampGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject,
+                                 Geoposition);
+    return ESValue(originalObj->timestamp());
+}
+
 ESFunctionObject* bindingGeoposition(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -34,23 +48,11 @@ ESFunctionObject* bindingGeoposition(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         GeopositionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("coords"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::GeopositionObject, Geoposition);
-            return ESValue(originalObj->coords()->scriptObject());
-        },
-        nullptr);
+        ESString::create("coords"), coordsGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         GeopositionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("timestamp"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::GeopositionObject, Geoposition);
-            return ESValue(originalObj->timestamp());
-        },
-        nullptr);
+        ESString::create("timestamp"), timestampGetterFunction, nullptr);
 
     return GeopositionFunction;
 }

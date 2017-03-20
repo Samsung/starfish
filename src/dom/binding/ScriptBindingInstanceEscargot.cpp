@@ -179,6 +179,19 @@ ESValue toJSString(String* v)
     return createScriptString(v);
 }
 
+ESValue defaultFunction(ESVMInstance* instance)
+{
+    return ESValue();
+}
+
+ESValue errorOnConstructorFunction(ESVMInstance* instance)
+{
+    ESVMInstance::currentInstance()->throwError(
+        ESValue(TypeError::create(ESString::create("Illegal constructor"))));
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return ESValue();
+}
+
 #if defined(STARFISH_ENABLE_TEST)
 static ESValue wptTextEndFunction(ESVMInstance* instance)
 {

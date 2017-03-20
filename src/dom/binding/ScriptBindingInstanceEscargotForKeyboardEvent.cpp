@@ -24,6 +24,56 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue keyCodeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() &&
+        originalObj->asUIEvent()->isKeyboardEvent()) {
+        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->keyCode());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue ctrlKeyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() &&
+        originalObj->asUIEvent()->isKeyboardEvent()) {
+        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->ctrlKey());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue altKeyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() &&
+        originalObj->asUIEvent()->isKeyboardEvent()) {
+        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->altKey());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue shiftKeyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() &&
+        originalObj->asUIEvent()->isKeyboardEvent()) {
+        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->shiftKey());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue metaKeyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() &&
+        originalObj->asUIEvent()->isKeyboardEvent()) {
+        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->metaKey());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
 ESFunctionObject* bindingKeyboardEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,74 +82,19 @@ ESFunctionObject* bindingKeyboardEvent(
         KeyboardEvent, fetchData(scriptBindingInstance)->uiEvent());
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("keyCode"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isKeyboardEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asKeyboardEvent()->keyCode());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        nullptr);
+        ESString::create("keyCode"), keyCodeGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("ctrlKey"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isKeyboardEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asKeyboardEvent()->ctrlKey());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        nullptr);
+        ESString::create("ctrlKey"), ctrlKeyGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("altKey"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isKeyboardEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asKeyboardEvent()->altKey());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        nullptr);
+        ESString::create("altKey"), altKeyGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("shiftKey"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isKeyboardEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asKeyboardEvent()->shiftKey());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        nullptr);
+        ESString::create("shiftKey"), shiftKeyGetterFunction, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("metaKey"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isKeyboardEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asKeyboardEvent()->metaKey());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        nullptr);
+        ESString::create("metaKey"), metaKeyGetterFunction, nullptr);
     return KeyboardEventFunction;
 }
 }

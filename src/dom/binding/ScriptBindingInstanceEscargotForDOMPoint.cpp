@@ -24,151 +24,158 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue domPointFunction(ESVMInstance* instance)
+{
+    int cnt = instance->currentExecutionContext()->argumentCount();
+    if (cnt == 0) {
+        DOMPoint* point = DOMPoint::create();
+        return point->scriptValue();
+    } else if (cnt == 1) {
+        DOMPoint* point = nullptr;
+        ESValue arg = instance->currentExecutionContext()->readArgument(0);
+        if (arg.isUndefinedOrNull()) {
+            point = DOMPoint::create();
+        } else if (arg.isObject()) {
+            DOMPointInit initPoint;
+            ESValue value;
+            value = arg.asESPointer()->asESObject()->get(ESString::create("x"));
+            if (!value.isUndefined()) {
+                initPoint.x = value.toNumber();
+            }
+            value = arg.asESPointer()->asESObject()->get(ESString::create("y"));
+            if (!value.isUndefined()) {
+                initPoint.y = value.toNumber();
+            }
+            value = arg.asESPointer()->asESObject()->get(ESString::create("z"));
+            if (!value.isUndefined()) {
+                initPoint.z = value.toNumber();
+            }
+            value = arg.asESPointer()->asESObject()->get(ESString::create("w"));
+            if (!value.isUndefined()) {
+                initPoint.w = value.toNumber();
+            }
+            point = DOMPoint::create(initPoint);
+        }
+        return point->scriptValue();
+    } else {
+        (cnt > 4) ? cnt = 4 : cnt;
+        DOMPoint* point = nullptr;
+        double args[4] = { 0, 0, 0, 1 }; // x, y, z, w
+        for (int i = 0; i < cnt; ++i) {
+            ESValue value =
+                instance->currentExecutionContext()->readArgument(i);
+            if (!value.isUndefined()) {
+                args[i] = value.toNumber();
+            }
+        }
+        point = DOMPoint::create(args[0], args[1], args[2], args[3]);
+        return point->scriptValue();
+    }
+}
+
+static ESValue xGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    return ESValue(point->x());
+}
+
+static ESValue xSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    point->setX(v.toNumber());
+    return ESValue();
+}
+
+static ESValue yGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    return ESValue(point->y());
+}
+
+static ESValue ySetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    point->setY(v.toNumber());
+    return ESValue();
+}
+
+static ESValue zGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    return ESValue(point->z());
+}
+
+static ESValue zSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    point->setZ(v.toNumber());
+    return ESValue();
+}
+
+static ESValue wGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    return ESValue(point->w());
+}
+
+static ESValue wSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
+                                 DOMPoint);
+    DOMPoint* point = originalObj;
+    point->setW(v.toNumber());
+    return ESValue();
+}
+
 ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBindingInstance)
 {
     ESString* DOMPointString = ESString::create("DOMPoint");
-    auto DOMPointFunction = ESFunctionObject::create(
-        NULL,
-        [](ESVMInstance* instance) -> ESValue {
+    auto fnDomPoint = ESFunctionObject::create(NULL, domPointFunction,
+                                               DOMPointString, 0, true, true);
 
-            int cnt = instance->currentExecutionContext()->argumentCount();
-            if (cnt == 0) {
-                DOMPoint* point = DOMPoint::create();
-                return point->scriptValue();
-            } else if (cnt == 1) {
-                DOMPoint* point = nullptr;
-                ESValue arg =
-                    instance->currentExecutionContext()->readArgument(0);
-                if (arg.isUndefinedOrNull()) {
-                    point = DOMPoint::create();
-                } else if (arg.isObject()) {
-                    DOMPointInit initPoint;
-                    ESValue value;
-                    value = arg.asESPointer()->asESObject()->get(
-                        ESString::create("x"));
-                    if (!value.isUndefined()) {
-                        initPoint.x = value.toNumber();
-                    }
-                    value = arg.asESPointer()->asESObject()->get(
-                        ESString::create("y"));
-                    if (!value.isUndefined()) {
-                        initPoint.y = value.toNumber();
-                    }
-                    value = arg.asESPointer()->asESObject()->get(
-                        ESString::create("z"));
-                    if (!value.isUndefined()) {
-                        initPoint.z = value.toNumber();
-                    }
-                    value = arg.asESPointer()->asESObject()->get(
-                        ESString::create("w"));
-                    if (!value.isUndefined()) {
-                        initPoint.w = value.toNumber();
-                    }
-                    point = DOMPoint::create(initPoint);
-                }
-                return point->scriptValue();
-            } else {
-                (cnt > 4) ? cnt = 4 : cnt;
-                DOMPoint* point = nullptr;
-                double args[4] = { 0, 0, 0, 1 }; // x, y, z, w
-                for (int i = 0; i < cnt; ++i) {
-                    ESValue value =
-                        instance->currentExecutionContext()->readArgument(i);
-                    if (!value.isUndefined()) {
-                        args[i] = value.toNumber();
-                    }
-                }
-                point = DOMPoint::create(args[0], args[1], args[2], args[3]);
-                return point->scriptValue();
-            }
-        },
-        DOMPointString, 0, true, true);
-
-    DOMPointFunction->defineAccessorProperty(
+    fnDomPoint->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMPointFunction->protoType()
+    fnDomPoint->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    DOMPointFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    fnDomPoint->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)->domPointReadOnly()->protoType());
-    DOMPointFunction->set__proto__(
+    fnDomPoint->set__proto__(
         fetchData(scriptBindingInstance)->domPointReadOnly());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("x"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            return ESValue(point->x());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            point->setX(v.toNumber());
-            return ESValue();
-        },
-        true, true);
+        fnDomPoint->protoType().asESPointer()->asESObject(),
+        ESString::create("x"), xGetterFunction, xSetterFunction, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("y"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            return ESValue(point->y());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            point->setY(v.toNumber());
-            return ESValue();
-        },
-        true, true);
+        fnDomPoint->protoType().asESPointer()->asESObject(),
+        ESString::create("y"), yGetterFunction, ySetterFunction, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("z"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            return ESValue(point->z());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            point->setZ(v.toNumber());
-            return ESValue();
-        },
-        true, true);
+        fnDomPoint->protoType().asESPointer()->asESObject(),
+        ESString::create("z"), zGetterFunction, zSetterFunction, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("w"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            return ESValue(point->w());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                         DOMPoint);
-            DOMPoint* point = originalObj;
-            point->setW(v.toNumber());
-            return ESValue();
-        },
-        true, true);
+        fnDomPoint->protoType().asESPointer()->asESObject(),
+        ESString::create("w"), wGetterFunction, wSetterFunction, true, true);
 
-    return DOMPointFunction;
+    return fnDomPoint;
 }
 }

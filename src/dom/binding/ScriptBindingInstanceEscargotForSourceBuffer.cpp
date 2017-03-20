@@ -249,6 +249,44 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
+#define DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(eventName)                 \
+    static ESValue on##eventName##GetterFunction(ESVMInstance* instance)  \
+    {                                                                     \
+        GENERATE_THIS_AND_CHECK_TYPE(                                     \
+            ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
+        auto eventname =                                                  \
+            (((Window*)instance->globalObject()->extraPointerData()))     \
+                ->starFish()                                              \
+                ->staticStrings()                                         \
+                ->m_##eventName;                                          \
+        return originalObj->attributeEventListener(eventname);            \
+    }                                                                     \
+                                                                          \
+    static ESValue on##eventName##SetterFunction(ESVMInstance* instance)  \
+    {                                                                     \
+        GENERATE_THIS_AND_CHECK_TYPE(                                     \
+            ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
+        auto eventname =                                                  \
+            (((Window*)instance->globalObject()->extraPointerData()))     \
+                ->starFish()                                              \
+                ->staticStrings()                                         \
+                ->m_##eventName;                                          \
+        if (v.isObject() ||                                               \
+            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
+            originalObj->setAttributeEventListener(eventname, v);         \
+        } else {                                                          \
+            originalObj->clearAttributeEventListener(eventname);          \
+        }                                                                 \
+        return ESValue();                                                 \
+    }
+
+DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(updatestart);
+DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(update);
+DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(updateend);
+DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(error);
+DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(abort);
+#undef DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC
+
 ESFunctionObject* bindingSourceBuffer(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -297,33 +335,6 @@ ESFunctionObject* bindingSourceBuffer(
         ESString::create("timestampOffset"), timestampOffsetGetterFunction,
         timestampOffsetSetterFunction);
 
-    /*
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-    ESString::create("audioTracks"),
-        [](ESVMInstance* instance) -> ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-    SourceBuffer);
-        AudioTrackList* audioTracks = originalObj->audioTracks();
-        if (audioTracks) {
-            return audioTracks->scriptValue();
-        }
-        return ESValue(ESValue::ESUndefined);
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-    ESString::create("videoTracks"),
-        [](ESVMInstance* instance) -> ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-    SourceBuffer);
-        VideoTrackList* videoTracks = originalObj->videoTracks();
-        if (videoTracks) {
-            return videoTracks->scriptValue();
-        }
-        return ESValue(ESValue::ESUndefined);
-    }, nullptr);
-    */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferFunction->protoType().asESPointer()->asESObject(),
         ESString::create("textTracks"), textTracksGetterFunction, nullptr);
@@ -340,36 +351,11 @@ ESFunctionObject* bindingSourceBuffer(
 
 // event handler
 
-#define DEFINE_SOURCEBUFFER_EVENT_HANDLER(eventName)                          \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(                  \
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),        \
-        ESString::create("on" #eventName),                                    \
-        [](ESVMInstance* instance) -> ESValue {                               \
-            GENERATE_THIS_AND_CHECK_TYPE(                                     \
-                ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
-            auto eventname =                                                  \
-                (((Window*)instance->globalObject()->extraPointerData()))     \
-                    ->starFish()                                              \
-                    ->staticStrings()                                         \
-                    ->m_##eventName;                                          \
-            return originalObj->attributeEventListener(eventname);            \
-        },                                                                    \
-        [](ESVMInstance* instance) -> ESValue {                               \
-            GENERATE_THIS_AND_CHECK_TYPE(                                     \
-                ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
-            auto eventname =                                                  \
-                (((Window*)instance->globalObject()->extraPointerData()))     \
-                    ->starFish()                                              \
-                    ->staticStrings()                                         \
-                    ->m_##eventName;                                          \
-            if (v.isObject() ||                                               \
-                (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
-                originalObj->setAttributeEventListener(eventname, v);         \
-            } else {                                                          \
-                originalObj->clearAttributeEventListener(eventname);          \
-            }                                                                 \
-            return ESValue();                                                 \
-        });
+#define DEFINE_SOURCEBUFFER_EVENT_HANDLER(eventName)                      \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(              \
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),    \
+        ESString::create("on" #eventName), on##eventName##GetterFunction, \
+        on##eventName##SetterFunction);
 
     DEFINE_SOURCEBUFFER_EVENT_HANDLER(updatestart);
     DEFINE_SOURCEBUFFER_EVENT_HANDLER(update);

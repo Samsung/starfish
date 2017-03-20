@@ -24,6 +24,171 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue lengthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(
+        ScriptWrappable::Type::DOMSettableTokenListObject,
+        DOMSettableTokenList);
+    uint32_t len = originalObj->length();
+    return ESValue(len);
+}
+
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    DOMTokenList* self = (DOMTokenList*)thisValue.asESPointer()
+                             ->asESObject()
+                             ->extraPointerData();
+    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+    TO_INDEX_UINT32(argValue, idx);
+    if (idx != INVALID_INDEX && idx < self->length()) {
+        String* elem = self->item(idx);
+        return toJSString(elem);
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+static ESValue containsFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    try {
+        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        if (argValue.isESString()) {
+            bool res = ((DOMTokenList*)thisValue.asESPointer()
+                            ->asESObject()
+                            ->extraPointerData())
+                           ->contains(toBrowserString(argValue.asESString()));
+            return ESValue(res);
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static ESValue addFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    try {
+        GCVector<String*> tokens;
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        for (int i = 0; i < argCount; i++) {
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(i);
+            if (argValue.isESString()) {
+                String* aa = toBrowserString(argValue.asESString());
+                tokens.push_back(aa);
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        }
+        if (argCount > 0) {
+            ((DOMTokenList*)thisValue.asESPointer()->asESObject())
+                ->add(&tokens);
+        }
+        return ESValue(ESValue::ESNull);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static ESValue removeFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    try {
+        GCVector<String*> tokens;
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        for (int i = 0; i < argCount; i++) {
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(i);
+            if (argValue.isESString()) {
+                String* aa = toBrowserString(argValue.asESString());
+                tokens.push_back(aa);
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        }
+        if (argCount > 0) {
+            ((DOMTokenList*)thisValue.asESPointer()
+                 ->asESObject()
+                 ->extraPointerData())
+                ->remove(&tokens);
+        }
+        return ESValue(ESValue::ESNull);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static ESValue toggleFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    try {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        ESValue forceValue;
+        if (argCount >= 2) {
+            forceValue = instance->currentExecutionContext()->readArgument(1);
+        }
+        if (argCount > 0 && argValue.isESString()) {
+            bool didAdd;
+            if (argCount == 1) {
+                didAdd = ((DOMTokenList*)thisValue.asESPointer()
+                              ->asESObject()
+                              ->extraPointerData())
+                             ->toggle(toBrowserString(argValue.asESString()),
+                                      false, false);
+            } else {
+                ASSERT(forceValue.isBoolean());
+                didAdd = ((DOMTokenList*)thisValue.asESPointer()
+                              ->asESObject()
+                              ->extraPointerData())
+                             ->toggle(toBrowserString(argValue.asESString()),
+                                      true, forceValue.asBoolean());
+            }
+            return ESValue(didAdd);
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return ESValue(ESValue::ESNull);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static ESValue valueGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(
+        ScriptWrappable::Type::DOMSettableTokenListObject,
+        DOMSettableTokenList);
+    String* value = originalObj->value();
+    return toJSString(value);
+}
+
+static ESValue valueSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(
+        ScriptWrappable::Type::DOMSettableTokenListObject,
+        DOMSettableTokenList);
+    originalObj->setValue(toBrowserString(v));
+    return ESValue();
+}
+
 ESFunctionObject* bindingDOMSettableTokenList(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -35,235 +200,51 @@ ESFunctionObject* bindingDOMSettableTokenList(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMSettableTokenListObject,
-                DOMSettableTokenList);
-            uint32_t len = originalObj->length();
-            return ESValue(len);
-        },
-        nullptr);
+        ESString::create("length"), lengthGetterFunction, nullptr);
 
-    ESFunctionObject* domSettableTokenListItemFunction =
-        ESFunctionObject::create(
-            NULL,
-            [](ESVMInstance* instance) -> ESValue {
-                ESValue thisValue =
-                    instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue,
-                             ScriptWrappable::Type::DOMSettableTokenListObject);
-                DOMTokenList* self = (DOMTokenList*)thisValue.asESPointer()
-                                         ->asESObject()
-                                         ->extraPointerData();
-                ESValue argValue =
-                    instance->currentExecutionContext()->readArgument(0);
-                TO_INDEX_UINT32(argValue, idx);
-                if (idx != INVALID_INDEX && idx < self->length()) {
-                    String* elem = self->item(idx);
-                    return toJSString(elem);
-                }
-                return ESValue(ESValue::ESNull);
-            },
-            ESString::create("item"), 1, false);
     DOMSettableTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->defineDataProperty(ESString::create("item"), false, false, false,
-                             domSettableTokenListItemFunction);
+                             ESFunctionObject::create(NULL, itemFunction,
+                                                      ESString::create("item"),
+                                                      1, false));
 
-    ESFunctionObject* domSettableTokenListContainsFunction =
-        ESFunctionObject::create(
-            NULL,
-            [](ESVMInstance* instance) -> ESValue {
-                ESValue thisValue =
-                    instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue,
-                             ScriptWrappable::Type::DOMSettableTokenListObject);
-                try {
-                    ESValue argValue =
-                        instance->currentExecutionContext()->readArgument(0);
-                    if (argValue.isESString()) {
-                        bool res = ((DOMTokenList*)thisValue.asESPointer()
-                                        ->asESObject()
-                                        ->extraPointerData())
-                                       ->contains(toBrowserString(
-                                           argValue.asESString()));
-                        return ESValue(res);
-                    } else {
-                        THROW_ILLEGAL_INVOCATION()
-                    }
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-
-            },
-            ESString::create("contains"), 1, false);
     DOMSettableTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("contains"), false, false, false,
-                             domSettableTokenListContainsFunction);
+        ->defineDataProperty(
+            ESString::create("contains"), false, false, false,
+            ESFunctionObject::create(NULL, containsFunction,
+                                     ESString::create("contains"), 1, false));
 
-    ESFunctionObject* domSettableTokenListAddFunction =
-        ESFunctionObject::create(
-            NULL,
-            [](ESVMInstance* instance) -> ESValue {
-                ESValue thisValue =
-                    instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue,
-                             ScriptWrappable::Type::DOMSettableTokenListObject);
-                try {
-                    GCVector<String*> tokens;
-                    int argCount =
-                        instance->currentExecutionContext()->argumentCount();
-                    for (int i = 0; i < argCount; i++) {
-                        ESValue argValue =
-                            instance->currentExecutionContext()->readArgument(
-                                i);
-                        if (argValue.isESString()) {
-                            String* aa = toBrowserString(argValue.asESString());
-                            tokens.push_back(aa);
-                        } else {
-                            THROW_ILLEGAL_INVOCATION()
-                        }
-                    }
-                    if (argCount > 0) {
-                        ((DOMTokenList*)thisValue.asESPointer()->asESObject())
-                            ->add(&tokens);
-                    }
-                    return ESValue(ESValue::ESNull);
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            },
-            ESString::create("add"), 1, false);
     DOMSettableTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->defineDataProperty(ESString::create("add"), false, false, false,
-                             domSettableTokenListAddFunction);
+                             ESFunctionObject::create(NULL, addFunction,
+                                                      ESString::create("add"),
+                                                      1, false));
 
-    ESFunctionObject* domSettableTokenListRemoveFunction =
-        ESFunctionObject::create(
-            NULL,
-            [](ESVMInstance* instance) -> ESValue {
-                ESValue thisValue =
-                    instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue,
-                             ScriptWrappable::Type::DOMSettableTokenListObject);
-                try {
-                    GCVector<String*> tokens;
-                    int argCount =
-                        instance->currentExecutionContext()->argumentCount();
-                    for (int i = 0; i < argCount; i++) {
-                        ESValue argValue =
-                            instance->currentExecutionContext()->readArgument(
-                                i);
-                        if (argValue.isESString()) {
-                            String* aa = toBrowserString(argValue.asESString());
-                            tokens.push_back(aa);
-                        } else {
-                            THROW_ILLEGAL_INVOCATION()
-                        }
-                    }
-                    if (argCount > 0) {
-                        ((DOMTokenList*)thisValue.asESPointer()
-                             ->asESObject()
-                             ->extraPointerData())
-                            ->remove(&tokens);
-                    }
-                    return ESValue(ESValue::ESNull);
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            },
-            ESString::create("remove"), 1, false);
     DOMSettableTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("remove"), false, false, false,
-                             domSettableTokenListRemoveFunction);
+        ->defineDataProperty(
+            ESString::create("remove"), false, false, false,
+            ESFunctionObject::create(NULL, removeFunction,
+                                     ESString::create("remove"), 1, false));
 
-    ESFunctionObject* domSettableTokenListToggleFunction =
-        ESFunctionObject::create(
-            NULL,
-            [](ESVMInstance* instance) -> ESValue {
-                ESValue thisValue =
-                    instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue,
-                             ScriptWrappable::Type::DOMSettableTokenListObject);
-                try {
-                    int argCount =
-                        instance->currentExecutionContext()->argumentCount();
-                    ESValue argValue =
-                        instance->currentExecutionContext()->readArgument(0);
-                    ESValue forceValue;
-                    if (argCount >= 2) {
-                        forceValue =
-                            instance->currentExecutionContext()->readArgument(
-                                1);
-                    }
-                    if (argCount > 0 && argValue.isESString()) {
-                        bool didAdd;
-                        if (argCount == 1) {
-                            didAdd = ((DOMTokenList*)thisValue.asESPointer()
-                                          ->asESObject()
-                                          ->extraPointerData())
-                                         ->toggle(toBrowserString(
-                                                      argValue.asESString()),
-                                                  false, false);
-                        } else {
-                            ASSERT(forceValue.isBoolean());
-                            didAdd = ((DOMTokenList*)thisValue.asESPointer()
-                                          ->asESObject()
-                                          ->extraPointerData())
-                                         ->toggle(toBrowserString(
-                                                      argValue.asESString()),
-                                                  true, forceValue.asBoolean());
-                        }
-                        return ESValue(didAdd);
-                    } else {
-                        THROW_ILLEGAL_INVOCATION()
-                    }
-                    return ESValue(ESValue::ESNull);
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            },
-            ESString::create("toggle"), 1, false);
     DOMSettableTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("toggle"), false, false, false,
-                             domSettableTokenListToggleFunction);
+        ->defineDataProperty(
+            ESString::create("toggle"), false, false, false,
+            ESFunctionObject::create(NULL, toggleFunction,
+                                     ESString::create("toggle"), 1, false));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("value"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMSettableTokenListObject,
-                DOMSettableTokenList);
-            String* value = originalObj->value();
-            return toJSString(value);
-            return ESValue(ESValue::ESNull);
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::DOMSettableTokenListObject,
-                DOMSettableTokenList);
-            originalObj->setValue(toBrowserString(v));
-            return ESValue();
-        });
+        ESString::create("value"), valueGetterFunction, valueSetterFunction);
 
     return DOMSettableTokenListFunction;
 }

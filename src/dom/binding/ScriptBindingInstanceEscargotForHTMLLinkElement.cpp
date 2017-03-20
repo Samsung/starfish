@@ -24,6 +24,93 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue hrefGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        size_t idx = nd->asElement()->hasAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_href);
+        if (idx != SIZE_MAX) {
+            return toJSString(
+                URL::getURLString(nd->document()->documentURI()->urlString(),
+                                  nd->asElement()->getAttribute(idx)));
+        }
+        return toJSString(String::emptyString);
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue hrefSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        nd->asElement()->setAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_href,
+            toBrowserString(v.toString()));
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue relGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        return toJSString(nd->asElement()->getAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_rel));
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue relSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        nd->asElement()->setAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_rel,
+            toBrowserString(v.toString()));
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue typeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        return toJSString(nd->asElement()->getAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_type));
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
+static ESValue typeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    Node* nd = originalObj;
+    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
+        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        nd->asElement()->setAttribute(
+            nd->document()->window()->starFish()->staticStrings()->m_type,
+            toBrowserString(v.toString()));
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
 ESFunctionObject* bindingHTMLLinkElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,116 +119,15 @@ ESFunctionObject* bindingHTMLLinkElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("href"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                size_t idx = nd->asElement()->hasAttribute(nd->document()
-                                                               ->window()
-                                                               ->starFish()
-                                                               ->staticStrings()
-                                                               ->m_href);
-                if (idx != SIZE_MAX) {
-                    return toJSString(URL::getURLString(
-                        nd->document()->documentURI()->urlString(),
-                        nd->asElement()->getAttribute(idx)));
-                }
-                return toJSString(String::emptyString);
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()
-                                                  ->window()
-                                                  ->starFish()
-                                                  ->staticStrings()
-                                                  ->m_href,
-                                              toBrowserString(v.toString()));
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("href"), hrefGetterFunction, hrefSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("rel"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                return toJSString(
-                    nd->asElement()->getAttribute(nd->document()
-                                                      ->window()
-                                                      ->starFish()
-                                                      ->staticStrings()
-                                                      ->m_rel));
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()
-                                                  ->window()
-                                                  ->starFish()
-                                                  ->staticStrings()
-                                                  ->m_rel,
-                                              toBrowserString(v.toString()));
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("rel"), relGetterFunction, relSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("type"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                return toJSString(
-                    nd->asElement()->getAttribute(nd->document()
-                                                      ->window()
-                                                      ->starFish()
-                                                      ->staticStrings()
-                                                      ->m_type));
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject,
-                                         Node);
-            Node* nd = originalObj;
-            if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-                nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()
-                                                  ->window()
-                                                  ->starFish()
-                                                  ->staticStrings()
-                                                  ->m_type,
-                                              toBrowserString(v.toString()));
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        });
+        ESString::create("type"), typeGetterFunction, typeSetterFunction);
 
     return HTMLLinkElementFunction;
 }

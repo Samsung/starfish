@@ -25,6 +25,71 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue latitudeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    return ESValue(originalObj->latitude());
+}
+
+static ESValue longitudeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    return ESValue(originalObj->longitude());
+}
+
+static ESValue altitudeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    if (originalObj->altitude()) {
+        return ESValue(*originalObj->altitude());
+    } else {
+        return ScriptValueNull;
+    }
+}
+
+static ESValue accuracyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    return ESValue(originalObj->accuracy());
+}
+
+static ESValue altitudeAccuracyGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    if (originalObj->altitudeAccuracy()) {
+        return ESValue(*originalObj->altitudeAccuracy());
+    } else {
+        return ScriptValueNull;
+    }
+}
+
+static ESValue headingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    if (originalObj->heading()) {
+        return ESValue(*originalObj->heading());
+    } else {
+        return ESValue(std::numeric_limits<double>::quiet_NaN());
+    }
+}
+
+static ESValue speedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
+                                 Coordinates);
+    if (originalObj->speed()) {
+        return ESValue(*originalObj->speed());
+    } else {
+        return ScriptValueNull;
+    }
+}
+
 ESFunctionObject* bindingCoordinates(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -34,89 +99,32 @@ ESFunctionObject* bindingCoordinates(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("latitude"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            return ESValue(originalObj->latitude());
-        },
+        ESString::create("latitude"), latitudeGetterFunction, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("longitude"), longitudeGetterFunction, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("altitude"), altitudeGetterFunction, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("accuracy"), accuracyGetterFunction, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("altitudeAccuracy"), altitudeAccuracyGetterFunction,
         nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("longitude"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            return ESValue(originalObj->longitude());
-        },
-        nullptr);
+        ESString::create("heading"), headingGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("altitude"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            if (originalObj->altitude()) {
-                return ESValue(*originalObj->altitude());
-            } else {
-                return ScriptValueNull;
-            }
-        },
-        nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("accuracy"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            return ESValue(originalObj->accuracy());
-        },
-        nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("altitudeAccuracy"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            if (originalObj->altitudeAccuracy()) {
-                return ESValue(*originalObj->altitudeAccuracy());
-            } else {
-                return ScriptValueNull;
-            }
-        },
-        nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("heading"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            if (originalObj->heading()) {
-                return ESValue(*originalObj->heading());
-            } else {
-                return ESValue(std::numeric_limits<double>::quiet_NaN());
-            }
-        },
-        nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("speed"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::CoordinatesObject, Coordinates);
-            if (originalObj->speed()) {
-                return ESValue(*originalObj->speed());
-            } else {
-                return ScriptValueNull;
-            }
-        },
-        nullptr);
+        ESString::create("speed"), speedGetterFunction, nullptr);
 
     return CoordinatesFunction;
 }

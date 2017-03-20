@@ -25,72 +25,70 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue domParserFunction(ESVMInstance* instance)
+{
+    Window* wnd = ((Window*)ESVMInstance::currentInstance()
+                       ->globalObject()
+                       ->extraPointerData());
+    auto v = new DOMParser(wnd->starFish());
+    return v->scriptValue();
+}
+
+static ESValue parseFromStringFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMParserObject,
+                                 DOMParser);
+
+    if (instance->currentInstance()
+            ->currentExecutionContext()
+            ->argumentCount() < 2) {
+        auto msg = ESString::create(
+            "Failed to execute 'parseFromString' on "
+            "'DOMParser': "
+            "needs 2 parameter.");
+        instance->throwError(ESValue(TypeError::create(msg)));
+    }
+
+    try {
+        Document* doc = originalObj->parseFromString(
+            toBrowserString(instance->currentInstance()
+                                ->currentExecutionContext()
+                                ->readArgument(0)),
+            toBrowserString(instance->currentInstance()
+                                ->currentExecutionContext()
+                                ->readArgument(1)));
+        return doc->scriptValue();
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
 {
     /* XMLHttpRequest */
-    ESFunctionObject* DOMParserFunction = ESFunctionObject::create(
-        NULL,
-        [](ESVMInstance* instance) -> ESValue {
-            Window* wnd = ((Window*)ESVMInstance::currentInstance()
-                               ->globalObject()
-                               ->extraPointerData());
-            auto v = new DOMParser(wnd->starFish());
-            return v->scriptValue();
-        },
-        ESString::create("DOMParser"), 0, true, false);
+    ESFunctionObject* fnDomParser = ESFunctionObject::create(
+        NULL, domParserFunction, ESString::create("DOMParser"), 0, true, false);
 
-    DOMParserFunction->protoType()
+    fnDomParser->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    DOMParserFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    fnDomParser->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)
             ->m_instance->globalObject()
             ->objectPrototype());
     fetchData(scriptBindingInstance)
         ->m_instance->globalObject()
         ->defineDataProperty(ESString::create("DOMParser"), false, false, false,
-                             DOMParserFunction);
+                             fnDomParser);
 
-    ESFunctionObject* parseFromStringFunction = ESFunctionObject::create(
-        nullptr,
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMParserObject,
-                                         DOMParser);
+    fnDomParser->protoType().asESPointer()->asESObject()->defineDataProperty(
+        ESString::create("parseFromString"), true, true, true,
+        ESFunctionObject::create(nullptr, parseFromStringFunction,
+                                 ESString::create("parseFromString"), 2));
 
-            if (instance->currentInstance()
-                    ->currentExecutionContext()
-                    ->argumentCount() < 2) {
-                auto msg = ESString::create(
-                    "Failed to execute 'parseFromString' on "
-                    "'DOMParser': "
-                    "needs 2 parameter.");
-                instance->throwError(ESValue(TypeError::create(msg)));
-            }
-
-            try {
-                Document* doc = originalObj->parseFromString(
-                    toBrowserString(instance->currentInstance()
-                                        ->currentExecutionContext()
-                                        ->readArgument(0)),
-                    toBrowserString(instance->currentInstance()
-                                        ->currentExecutionContext()
-                                        ->readArgument(1)));
-                return doc->scriptValue();
-            } catch (DOMException* e) {
-                ESVMInstance::currentInstance()->throwError(e->scriptValue());
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        },
-        ESString::create("parseFromString"), 2);
-
-    DOMParserFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("parseFromString"), true, true,
-                             true, parseFromStringFunction);
-
-    return DOMParserFunction;
+    return fnDomParser;
 }
 }
 #endif

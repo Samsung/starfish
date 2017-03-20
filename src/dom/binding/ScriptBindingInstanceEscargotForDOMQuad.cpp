@@ -24,6 +24,41 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue p1GetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    DOMQuad* quad = originalObj;
+    return quad->p1()->scriptValue();
+}
+
+static ESValue p2GetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    DOMQuad* quad = originalObj;
+    return quad->p2()->scriptValue();
+}
+
+static ESValue p3GetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    DOMQuad* quad = originalObj;
+    return quad->p3()->scriptValue();
+}
+
+static ESValue p4GetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    DOMQuad* quad = originalObj;
+    return quad->p4()->scriptValue();
+}
+
+static ESValue boundsGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    DOMQuad* quad = originalObj;
+    return quad->bounds()->scriptValue();
+}
+
 ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
 {
     /*
@@ -38,58 +73,23 @@ ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p1"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject,
-                                         DOMQuad);
-            DOMQuad* quad = originalObj;
-            return quad->p1()->scriptValue();
-        },
-        nullptr, true, true);
+        ESString::create("p1"), p1GetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p2"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject,
-                                         DOMQuad);
-            DOMQuad* quad = originalObj;
-            return quad->p2()->scriptValue();
-        },
-        nullptr, true, true);
+        ESString::create("p2"), p2GetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p3"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject,
-                                         DOMQuad);
-            DOMQuad* quad = originalObj;
-            return quad->p3()->scriptValue();
-        },
-        nullptr, true, true);
+        ESString::create("p3"), p3GetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p4"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject,
-                                         DOMQuad);
-            DOMQuad* quad = originalObj;
-            return quad->p4()->scriptValue();
-        },
-        nullptr, true, true);
+        ESString::create("p4"), p4GetterFunction, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("bounds"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject,
-                                         DOMQuad);
-            DOMQuad* quad = originalObj;
-            return quad->bounds()->scriptValue();
-        },
-        nullptr, true, true);
+        ESString::create("bounds"), boundsGetterFunction, nullptr, true, true);
 
     return DOMQuadFunction;
 }

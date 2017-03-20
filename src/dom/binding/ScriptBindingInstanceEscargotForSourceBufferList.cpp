@@ -34,6 +34,18 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
     return ESValue(len);
 }
 
+static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject,
+                                 SourceBufferList);
+    if (v.toIndex() >= originalObj->length()) {
+        return ESValue(ESValue::ESUndefined);
+    } else {
+        SourceBuffer* buffer = (*originalObj)[v.toIndex()];
+        return buffer->scriptValue();
+    }
+}
+
 ESFunctionObject* bindingSourceBufferList(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -46,20 +58,7 @@ ESFunctionObject* bindingSourceBufferList(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("SourceBuffer"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(
-                ScriptWrappable::Type::SourceBufferListObject,
-                SourceBufferList);
-            if (v.toIndex() >= originalObj->length()) {
-                return ESValue(ESValue::ESUndefined);
-            } else {
-                SourceBuffer* buffer = (*originalObj)[v.toIndex()];
-                return buffer->scriptValue();
-            }
-
-        },
-        nullptr);
+        ESString::create("SourceBuffer"), sourceBufferGetterFunction, nullptr);
 
     return SourceBufferListFunction;
 }

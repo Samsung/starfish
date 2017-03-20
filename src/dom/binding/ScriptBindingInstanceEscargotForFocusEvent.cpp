@@ -24,6 +24,16 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue relatedTargetGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    if (originalObj->isUIEvent() && originalObj->asUIEvent()->isFocusEvent()) {
+        return ESValue(
+            originalObj->asUIEvent()->asFocusEvent()->relatedTarget());
+    }
+    THROW_ILLEGAL_INVOCATION();
+}
+
 ESFunctionObject* bindingFocusEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -32,17 +42,7 @@ ESFunctionObject* bindingFocusEvent(
         FocusEvent, fetchData(scriptBindingInstance)->uiEvent());
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         FocusEventFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("relatedTarget"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject,
-                                         Event);
-            if (originalObj->isUIEvent() &&
-                originalObj->asUIEvent()->isFocusEvent()) {
-                return ESValue(
-                    originalObj->asUIEvent()->asFocusEvent()->relatedTarget());
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
+        ESString::create("relatedTarget"), relatedTargetGetterFunction,
         nullptr);
     return FocusEventFunction;
 }

@@ -24,142 +24,147 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue domRectFunction(ESVMInstance* instance)
+{
+    int cnt = instance->currentExecutionContext()->argumentCount();
+    (cnt > 4) ? cnt = 4 : cnt;
+    DOMRect* rect = nullptr;
+    double args[4] = {
+        0,
+    };
+    if (cnt == 0) {
+        rect = DOMRect::create();
+    } else {
+        for (int i = 0; i < cnt; ++i) {
+            args[i] =
+                instance->currentExecutionContext()->readArgument(i).toNumber();
+        }
+        if (cnt == 1) {
+            rect = DOMRect::create(args[0]);
+        } else if (cnt == 2) {
+            rect = DOMRect::create(args[0], args[1]);
+        } else if (cnt == 3) {
+            rect = DOMRect::create(args[0], args[1], args[2]);
+        } else {
+            rect = DOMRect::create(args[0], args[1], args[2], args[3]);
+        }
+    }
+    return rect->scriptValue();
+}
+
+static ESValue xGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    return ESValue(rect->x());
+}
+
+static ESValue xSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    if (rect != nullptr) {
+        rect->setX(v.toNumber());
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue yGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    return ESValue(rect->y());
+}
+
+static ESValue ySetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    if (rect != nullptr) {
+        rect->setY(v.toNumber());
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue widthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    return ESValue(rect->width());
+}
+
+static ESValue widthSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    if (rect != nullptr) {
+        rect->setWidth(v.toNumber());
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
+static ESValue heightGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    return ESValue(rect->height());
+}
+
+static ESValue heightSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    DOMRect* rect = originalObj;
+    if (rect != nullptr) {
+        rect->setHeight(v.toNumber());
+        return ESValue();
+    }
+    THROW_ILLEGAL_INVOCATION();
+    return ESValue();
+}
+
 ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
 {
     ESString* DOMRectString = ESString::create("DOMRect");
-    auto DOMRectFunction = ESFunctionObject::create(
-        NULL,
-        [](ESVMInstance* instance) -> ESValue {
+    auto fnDOMRect = ESFunctionObject::create(NULL, domRectFunction,
+                                              DOMRectString, 0, true, true);
 
-            int cnt = instance->currentExecutionContext()->argumentCount();
-            (cnt > 4) ? cnt = 4 : cnt;
-            DOMRect* rect = nullptr;
-            double args[4] = {
-                0,
-            };
-            if (cnt == 0) {
-                rect = DOMRect::create();
-            } else {
-                for (int i = 0; i < cnt; ++i) {
-                    args[i] = instance->currentExecutionContext()
-                                  ->readArgument(i)
-                                  .toNumber();
-                }
-                if (cnt == 1) {
-                    rect = DOMRect::create(args[0]);
-                } else if (cnt == 2) {
-                    rect = DOMRect::create(args[0], args[1]);
-                } else if (cnt == 3) {
-                    rect = DOMRect::create(args[0], args[1], args[2]);
-                } else {
-                    rect = DOMRect::create(args[0], args[1], args[2], args[3]);
-                }
-            }
-            return rect->scriptValue();
-        },
-        DOMRectString, 0, true, true);
-
-    DOMRectFunction->defineAccessorProperty(
+    fnDOMRect->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMRectFunction->protoType()
+    fnDOMRect->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    DOMRectFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    fnDOMRect->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)->domRectReadOnly()->protoType());
-    DOMRectFunction->set__proto__(
+    fnDOMRect->set__proto__(
         fetchData(scriptBindingInstance)->domRectReadOnly());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMRectFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("x"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            return ESValue(rect->x());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            if (rect != nullptr) {
-                rect->setX(v.toNumber());
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        },
+        fnDOMRect->protoType().asESPointer()->asESObject(),
+        ESString::create("x"), xGetterFunction, xSetterFunction, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnDOMRect->protoType().asESPointer()->asESObject(),
+        ESString::create("y"), yGetterFunction, ySetterFunction, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnDOMRect->protoType().asESPointer()->asESObject(),
+        ESString::create("width"), widthGetterFunction, widthSetterFunction,
         true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMRectFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("y"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            return ESValue(rect->y());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            if (rect != nullptr) {
-                rect->setY(v.toNumber());
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        },
+        fnDOMRect->protoType().asESPointer()->asESObject(),
+        ESString::create("height"), heightGetterFunction, heightSetterFunction,
         true, true);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMRectFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("width"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            return ESValue(rect->width());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            if (rect != nullptr) {
-                rect->setWidth(v.toNumber());
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        },
-        true, true);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMRectFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("height"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            return ESValue(rect->height());
-        },
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject,
-                                         DOMRect);
-            DOMRect* rect = originalObj;
-            if (rect != nullptr) {
-                rect->setHeight(v.toNumber());
-                return ESValue();
-            }
-            THROW_ILLEGAL_INVOCATION();
-            return ESValue();
-        },
-        true, true);
-
-    return DOMRectFunction;
+    return fnDOMRect;
 }
 }

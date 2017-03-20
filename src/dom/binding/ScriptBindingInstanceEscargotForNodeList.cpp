@@ -25,6 +25,31 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+    NodeList* nodeList =
+        (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+    TO_INDEX_UINT32(argValue, idx);
+    if (idx != INVALID_INDEX && idx < nodeList->length()) {
+        Node* nd = nodeList->item(idx);
+        return nd->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+static ESValue lengthFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject,
+                                 NodeList);
+    uint32_t len = originalObj->length();
+    return ESValue(len);
+}
+
 ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(scriptBindingInstance)
@@ -34,40 +59,14 @@ ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
     NodeListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("item"), false, false, false,
-            ESFunctionObject::create(
-                NULL,
-                [](ESVMInstance* instance) -> ESValue {
-                    ESValue thisValue = instance->currentExecutionContext()
-                                            ->resolveThisBinding();
-                    CHECK_TYPEOF(thisValue,
-                                 ScriptWrappable::Type::NodeListObject);
-                    NodeList* nodeList = (NodeList*)thisValue.asESPointer()
-                                             ->asESObject()
-                                             ->extraPointerData();
-
-                    ESValue argValue =
-                        instance->currentExecutionContext()->readArgument(0);
-                    TO_INDEX_UINT32(argValue, idx);
-                    if (idx != INVALID_INDEX && idx < nodeList->length()) {
-                        Node* nd = nodeList->item(idx);
-                        return nd->scriptValue();
-                    }
-                    return ESValue(ESValue::ESNull);
-                },
-                ESString::create("item"), 1, false));
+        ->defineDataProperty(ESString::create("item"), false, false, false,
+                             ESFunctionObject::create(NULL, itemFunction,
+                                                      ESString::create("item"),
+                                                      1, false));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NodeListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"),
-        [](ESVMInstance* instance) -> ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject,
-                                         NodeList);
-            uint32_t len = originalObj->length();
-            return ESValue(len);
-        },
-        nullptr);
+        ESString::create("length"), lengthFunction, nullptr);
 
     return NodeListFunction;
 }
