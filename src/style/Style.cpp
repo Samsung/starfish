@@ -3724,9 +3724,16 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     StyleResolver::PseudoElementType pseudoId = PseudoElementNone;
     CSSStyleSheet* sheet = m_sheets[0];
 
-    if (isForPseudoElement &&
-        element->hasPseudoElement(PseudoElementFirstLetter)) {
-        pseudoId = PseudoElementFirstLetter;
+    if (isForPseudoElement) {
+        if (element->hasPseudoElement(PseudoElementFirstLetter)) {
+            pseudoId = PseudoElementFirstLetter;
+        } else if (element->hasPseudoElement(PseudoElementFirstLine)) {
+            pseudoId = PseudoElementFirstLine;
+        } else if (element->hasPseudoElement(PseudoElementBefore)) {
+            pseudoId = PseudoElementBefore;
+        } else if (element->hasPseudoElement(PseudoElementAfter)) {
+            pseudoId = PseudoElementAfter;
+        }
     } else {
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
             GCDeque<CSSSelector*>* selectorList =
@@ -4108,9 +4115,9 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector,
 bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector,
                                        MatchResult& result)
 {
-    // TODO
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoFirstLine:
+        // TODO
         result.pseudoType = PseudoElementType::PseudoElementFirstLine;
         return false;
     case CSSSelector::PseudoType::PseudoFirstLetter:
@@ -4118,10 +4125,10 @@ bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector,
         return true;
     case CSSSelector::PseudoType::PseudoBefore:
         result.pseudoType = PseudoElementType::PseudoElementBefore;
-        return false;
+        return true;
     case CSSSelector::PseudoType::PseudoAfter:
         result.pseudoType = PseudoElementType::PseudoElementAfter;
-        return false;
+        return true;
     default:
         return false;
     }
