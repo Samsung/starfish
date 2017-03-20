@@ -303,9 +303,20 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         hasTableWidth = true;
         if (style()->width().isFixed()) {
             tableWidth = LayoutUnit::fromPixel(style()->width().fixed());
+
+            // For CSS table, width is the table content width EXCLUDING
+            // border and padding.
+            // For HTML table, width is the table width INCLUDNIG border and
+            // padding.
+            // For our implementation, tableWidth refers to CSS table convention
+            if (!isAnonymous() &&
+                node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+                tableWidth -= borderWidth() + paddingWidth();
+            }
         } else if (style()->width().isPercent()) {
             tableWidth =
                 parentContentWidth.toInt() * style()->width().percent();
+            tableWidth -= borderWidth() + paddingWidth();
         } else {
             // should not be here
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -334,7 +345,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // cell widths to fit them into the width of table.
     if (hasTableWidth) {
         LayoutUnit availableWidth = tableWidth;
-        availableWidth -= borderWidth() + paddingWidth();
         availableWidth -=
             (borderSpacing * m_columnWidths.size()) + borderSpacing;
         LayoutUnit sumOfSpecifiedCellWidths = 0;
@@ -389,7 +399,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             }
         } else {
             LayoutUnit remainingWidth = tableWidth - sumOfSpecifiedCellWidths;
-            remainingWidth -= borderWidth() + paddingWidth();
             remainingWidth -=
                 (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
