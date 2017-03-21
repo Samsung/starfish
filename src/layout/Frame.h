@@ -398,7 +398,7 @@ public:
         , m_remainedWidth(lastKnownWidth)
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
-        , m_isPendingBreakLine(false)
+        , m_isPendingWrapLine(false)
     {
     }
 
@@ -494,9 +494,9 @@ public:
         return m_isWhiteSpaceAtLast;
     }
 
-    bool isPendingBreakLine() const
+    bool isPendingWrapLine() const
     {
-        return m_isPendingBreakLine;
+        return m_isPendingWrapLine;
     }
 
     void breakLine(bool wrapped)
@@ -504,7 +504,7 @@ public:
         finishLine(wrapped);
         setIsWhiteSpaceAtLast(true, 0);
         m_currentLineWidth = 0;
-        m_isPendingBreakLine = false;
+        m_isPendingWrapLine = false;
     }
 
     void finishLine(bool wrapped)
@@ -534,7 +534,7 @@ private:
     LayoutUnit m_remainedWidth;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
-    bool m_isPendingBreakLine;
+    bool m_isPendingWrapLine;
 
     bool canInsertToLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox(Frame* f) const
