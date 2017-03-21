@@ -851,8 +851,8 @@ FrameTableSectionBox* FrameTableBox::firstSectionBoxInVisualOrder()
 // NOTE : The implementation is in progress.
 // The baseline is calculated as follows.
 // * Use the tables wrapperbox height if there are only empty sections
-// * Use the baseline of the first row if the first row has
-//   'vertical-align: baseline'
+// * Use the vertical-align value of the cell that has the tallest line box
+//   in the first row
 // * Use the tallest linebox height if the first row has other
 //   "vertical-align" values.
 // * Use Y position of the center of the cell if the first row has only
@@ -870,44 +870,32 @@ LayoutUnit FrameTableBox::calBaseline()
     }
 
     RowStruct& firstRS = firstSection->grid()[0];
-    LineBox* tallestLineBox = nullptr;
-    LayoutUnit maxLineBoxHeight = 0;
-
+    LineBox* tallestLB = nullptr;
+    bool isBaseLine = false;
     for (size_t i = 0; i < firstRS.cells.size(); ++i) {
         FrameTableCellBox* c = firstRS.cells[i].cell;
-        LineBox* firstLineBox = nullptr;
+        LineBox* flb = c->firstLineBox();
 
-        if (c->hasBlockFlow() && c->firstChild()) {
-            FrameBlockBox* firstBox = c->firstChild()->asFrameBlockBox();
-            if (!firstBox->lineBoxes().empty()) {
-                firstLineBox = firstBox->lineBoxes()[0];
-            }
-        } else if (!c->lineBoxes().empty()) {
-            firstLineBox = c->lineBoxes()[0];
-        }
-
-        if (firstLineBox && maxLineBoxHeight < firstLineBox->height()) {
-            tallestLineBox = firstLineBox;
-            maxLineBoxHeight = firstLineBox->height();
+        if (flb && (!tallestLB || (tallestLB->height() < flb->height()))) {
+            tallestLB = flb;
+            isBaseLine = c->style()->verticalAlign() ==
+                         VerticalAlignValue::BaselineVAlignValue;
         }
     }
 
-    LayoutUnit ySoFar = firstSection->y();
-
-    if (tallestLineBox) {
-        ySoFar += firstRS.tableRow->y() + firstRS.cells[0].cell->y();
-        if (firstRS.tableRow->style()->verticalAlign() ==
-            VerticalAlignValue::BaselineVAlignValue) {
-            return ySoFar + firstRS.tableRow->baseline();
+    if (tallestLB) {
+        if (isBaseLine) {
+            return firstRS.tableRow->absolutePoint(this).y() +
+                   firstRS.tableRow->baseline();
         }
-        return ySoFar + tallestLineBox->y() + tallestLineBox->height();
+        return tallestLB->absolutePoint(this).y() + tallestLB->height();
     } else if (firstRS.cells.size()) {
         // Empty cell
-        return ySoFar + firstRS.tableRow->y() + firstRS.cells[0].cell->y() +
+        return firstRS.cells[0].cell->absolutePoint(this).y() +
                (firstRS.cells[0].cell->height().toDouble() / 2);
     }
     // Empty first row
-    return ySoFar;
+    return firstRS.tableRow->absolutePoint(this).y();
 }
 
 FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
