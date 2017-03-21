@@ -79,7 +79,7 @@ def case_runner(tc):
     try:
         subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
         if not os.path.isfile(tc_result_png):
-            print "ERROR : Srarfish error - " + tc_file
+            print "ERROR : Starfish error - " + tc_file
             return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
 
         # Diff
