@@ -156,20 +156,6 @@ void FrameTableCellBox::applyVerticalAlign()
     // 1. Cal the content height of all child boxes
     //    Also calculate the ascender of the first line. It is used
     //    in "vertical-align: baseline"
-    LayoutUnit childContentHeight = 0;
-    LayoutUnit ascenderOfTheFirstLineBox = 0;
-
-    if (hasBlockFlow() && firstChild()) {
-        STARFISH_ASSERT(firstChild()->isFrameBlockBox());
-        FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
-        if (!firstBox->lineBoxes().empty()) {
-            ascenderOfTheFirstLineBox = firstBox->lineBoxes()[0]->ascender();
-        }
-    } else if (!m_lineBoxes.empty()) {
-        LineBox* firstBox = m_lineBoxes[0];
-        ascenderOfTheFirstLineBox = firstBox->ascender();
-    }
-
     // 2. Cal y pos where the first child box will be positioned
     LayoutUnit yPosOffset = 0;
     switch (style()->verticalAlign()) {
@@ -187,8 +173,7 @@ void FrameTableCellBox::applyVerticalAlign()
         break;
     }
     case VerticalAlignValue::BaselineVAlignValue:
-        yPosOffset = rowBox()->baseline() - ascenderOfTheFirstLineBox;
-        yPosOffset -= borderTop() + paddingTop();
+        yPosOffset = rowBox()->baseline() - calBaseline();
         break;
     default:
         break;
@@ -211,28 +196,13 @@ void FrameTableCellBox::applyVerticalAlign()
 LayoutUnit FrameTableCellBox::calBaseline()
 {
     // baseline is only calculated when this cell has "vertical-align: baseline"
-    if (style()->verticalAlign() != VerticalAlignValue::BaselineVAlignValue) {
-        return 0;
-    }
-
-    LineBox* firstLineBox = nullptr;
-    if (hasBlockFlow() && firstChild()) {
-        STARFISH_ASSERT(firstChild()->isFrameBlockBox());
-        FrameBlockBox* box = firstChild()->asFrameBlockBox();
-        if (!box->lineBoxes().empty()) {
-            firstLineBox = box->lineBoxes()[0];
-        }
-    } else {
-        if (!m_lineBoxes.empty()) {
-            firstLineBox = m_lineBoxes[0];
+    if (style()->verticalAlign() == VerticalAlignValue::BaselineVAlignValue) {
+        LineBox* flb = firstLineBox();
+        if (flb) {
+            return flb->absolutePoint(this).y() + flb->ascender();
         }
     }
-
-    if (firstLineBox == nullptr) {
-        return 0;
-    }
-
-    return firstLineBox->y() + firstLineBox->ascender();
+    return 0;
 }
 
 int FrameTableCellBox::colspan()
