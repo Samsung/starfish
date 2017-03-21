@@ -182,10 +182,33 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         }
     }
 
-    setHeight(maxHeightSoFar);
+    LayoutUnit specifiedHeight = 0;
+    if (style()->height().isFixed()) {
+        specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
+    } else if (style()->height().isPercent()) {
+        // The spec does not define how to calculate the height when the height
+        // is specified in percentage
+    }
 
-    // 3. Place the contents of each cell according to the vertical-align of
-    //    each cell
+    setHeight(std::max(maxHeightSoFar, specifiedHeight));
+}
+
+void FrameTableRowBox::increaseCellHeightBy(LayoutUnit cellHeightOffset)
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCellBox()) {
+            FrameTableCellBox* cellBox = c->asFrameTableCellBox();
+            cellBox->setHeight(cellBox->height() + cellHeightOffset);
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    setHeight(height() + cellHeightOffset);
+}
+
+void FrameTableRowBox::applyVerticalAlign()
+{
     m_baseline = calBaseline();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {

@@ -65,6 +65,9 @@ public:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
+    void increaseRowHeightBy(LayoutUnit rowHeightOffset);
+    void applyVerticalAlign();
+
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);

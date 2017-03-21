@@ -132,6 +132,7 @@ private:
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
 
     bool isCellWidthAuto(unsigned i);
+    size_t numOfRowsInTheTable();
 
 #ifndef NDEBUG
     // width() is removed from HTML5. But We implement it as it is extensively
