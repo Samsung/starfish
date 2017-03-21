@@ -228,4 +228,15 @@ bool Page::Create(const char *uri)
 ### Comment Style
 Both `//` and `/* */` style comments can be used, although `//` style is
 much preferred.
+### ADD conmment for newly function
+* Having a clear function name and parameters will solve many readability problems.
+* We are not aiming to generate an API doc. We think it is unneeded.
+* We don't need to write comment for every function. We prefer to write comments at place where function definition in cpp file
+* What we want to write is (unusual, important, or pre/post conditions of) function behaviours that are difficult to deliver to readers by code. Some examples include, "This function should be called after finishing xxx, or it will give you yyy."
+* Since writing comments is optional, we do not want to have rigid formats. (Also, not updating comments after updating actual code is bad). We are thinking of having simple comments starting with `//` in the header file above the function we want to add comments. (Again this is more like informal comment rule.)
+* Which function to write comment is more like up to developers. Each developer needs to decide what to write comments (or not)
 
+* @yichoi says
+I do not encourage to add comment
+ - in the function body
+ - in the header file
