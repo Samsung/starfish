@@ -1799,7 +1799,7 @@ bool PreferredWidthContext::canInsertToLineBox(LayoutUnit width)
 bool PreferredWidthContext::dontBreakLine(Frame* f, LayoutUnit width)
 {
     return (!hasFloatingBoxAlreadyInLineBox(f) && m_currentLineWidth == 0) ||
-           canInsertToLineBox(width) || !f->shouldWrapLines();
+           canInsertToLineBox(width);
 }
 
 bool LineFormattingContext::canInsertToLineBox(Frame* f, LayoutUnit width)
@@ -2021,7 +2021,7 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     FrameText* f = token.m_frameText;
     if (token.m_type == WordType::ForcedNewline) {
         generateInlineTextBox(token);
-        breakLine(nullptr);
+        m_isPendingBreakLine = true;
         return;
     }
     // Ignore first White space
@@ -2690,7 +2690,7 @@ void InlineNonReplacedBox::layoutInline(
 
 void PreferredWidthContext::handleTextToken(TextToken& token)
 {
-    if (m_isPendingBreakLine) {
+    if (m_isPendingWrapLine) {
         breakLine(true);
     }
 
@@ -2733,6 +2733,9 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
             m_currentLineWidth = w;
         }
     } else if (type == WordType::ForcedNewline) {
+        // In compute preferred width, even if trying break line here, it is
+        // okay. Because we care only the longest width not the exact layout
+        // result.
         breakLine(false);
     } else if (f->shouldWrapLines() && !f->isDirectDescendantOfTableCellBox()) {
         if (dontBreakLine(f, w)) {
@@ -2740,7 +2743,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
         } else {
             if (type == WordType::CollapsibleWhiteSpace) {
                 m_currentLineWidth += w;
-                m_isPendingBreakLine = true;
+                m_isPendingWrapLine = true;
             } else {
                 breakLine(true);
                 if (type == WordType::General) {
@@ -2824,7 +2827,7 @@ void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
 
 void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    if (ctx.isPendingBreakLine()) {
+    if (ctx.isPendingWrapLine()) {
         ctx.breakLine(true);
     }
 
@@ -2876,7 +2879,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
 void FrameLineBreak::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    if (ctx.isPendingBreakLine()) {
+    if (ctx.isPendingWrapLine()) {
         if (dontClear(ctx.hasFloat(), this)) {
             ctx.breakLine(true);
         }
@@ -2891,7 +2894,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         return;
     }
 
-    if (ctx.isPendingBreakLine()) {
+    if (ctx.isPendingWrapLine()) {
         ctx.breakLine(true);
     }
 
