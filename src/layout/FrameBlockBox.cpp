@@ -624,6 +624,9 @@ InlineNonReplacedBox* FrameBlockBox::firstInlineNonReplacedBox(FrameInline* f)
     return ret;
 }
 
+// This function returns nullptr if
+// * This block box contains no lineboxes, OR
+// * This function is called before doing layout.
 LineBox* FrameBlockBox::firstLineBox()
 {
     LineBox* ret = nullptr;
