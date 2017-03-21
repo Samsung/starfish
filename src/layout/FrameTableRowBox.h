@@ -47,6 +47,9 @@ public:
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
+    void increaseCellHeightBy(LayoutUnit cellHeightOffset);
+    void applyVerticalAlign();
+
     LayoutUnit calBaseline();
 
     LayoutUnit baseline()

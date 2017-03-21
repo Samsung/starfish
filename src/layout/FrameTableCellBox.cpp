@@ -173,6 +173,11 @@ void FrameTableCellBox::applyVerticalAlign()
         break;
     }
     case VerticalAlignValue::BaselineVAlignValue:
+    case VerticalAlignValue::SubVAlignValue:
+    case VerticalAlignValue::SuperVAlignValue:
+    case VerticalAlignValue::TextTopVAlignValue:
+    case VerticalAlignValue::TextBottomVAlignValue:
+    case VerticalAlignValue::NumericVAlignValue:
         yPosOffset = rowBox()->baseline() - calBaseline();
         break;
     default:
@@ -180,27 +185,41 @@ void FrameTableCellBox::applyVerticalAlign()
     }
 
     // 3. Move all child boxes by yPosOffset
+    // Child boxes may have moved by a previous call of applyVerticalAlign().
+    // In this case, we move child boxes back to their starting positions, and
+    // move them by yPosOffset.
     if (hasBlockFlow()) {
         for (Frame* c = firstChild(); c; c = c->next()) {
             if (c->isFrameBlockBox()) {
-                c->asFrameBox()->moveY(yPosOffset.round());
+                c->asFrameBox()->moveY(yPosOffset);
             }
         }
     } else {
         for (auto& b : m_lineBoxes) {
-            b->moveY(yPosOffset.round());
+            b->moveY(yPosOffset);
         }
     }
 }
 
 LayoutUnit FrameTableCellBox::calBaseline()
 {
-    // baseline is only calculated when this cell has "vertical-align: baseline"
-    if (style()->verticalAlign() == VerticalAlignValue::BaselineVAlignValue) {
+    // To reduce unneeded computation, baseline is only calculated when
+    // this cell has "vertical-align: baseline" or equivalent
+    switch (style()->verticalAlign()) {
+    case VerticalAlignValue::BaselineVAlignValue:
+    case VerticalAlignValue::SubVAlignValue:
+    case VerticalAlignValue::SuperVAlignValue:
+    case VerticalAlignValue::TextTopVAlignValue:
+    case VerticalAlignValue::TextBottomVAlignValue:
+    case VerticalAlignValue::NumericVAlignValue: {
         LineBox* flb = firstLineBox();
         if (flb) {
             return flb->absolutePoint(this).y() + flb->ascender();
         }
+        break;
+    }
+    default:
+        break;
     }
     return 0;
 }

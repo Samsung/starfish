@@ -706,7 +706,31 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     ySoFar += paddingBottom();
     ySoFar += borderBottom();
     m_tableRect.setWidth(width());
-    m_tableRect.setHeight(ySoFar - m_tableRect.y());
+
+    LayoutUnit specifiedHeight = 0;
+    if (style()->height().isFixed()) {
+        specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
+    }
+
+    LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
+    if (sectionHeight < specifiedHeight) {
+        // table height is specified, and it is greater than the sum of
+        // all row heights. In this case, distribute remaining spaces equally
+        // among rows.
+        LayoutUnit extraSpace = specifiedHeight - sectionHeight;
+        size_t rowCount = numOfRowsInTheTable();
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameTableSectionBox()) {
+                c->asFrameTableSectionBox()->increaseRowHeightBy(
+                    LayoutUnit(extraSpace.toDouble() / rowCount));
+            }
+        }
+
+        ySoFar += extraSpace;
+        sectionHeight = specifiedHeight;
+    }
+
+    m_tableRect.setHeight(sectionHeight);
 
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
@@ -719,6 +743,13 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
         }
     }
     setHeight(ySoFar);
+
+    // 4. Apply vertical-align to each cell
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            c->asFrameTableSectionBox()->applyVerticalAlign();
+        }
+    }
 }
 
 void FrameTableBox::collectColumnWidths(
@@ -783,6 +814,18 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
         }
         return true;
     }
+}
+
+size_t FrameTableBox::numOfRowsInTheTable()
+{
+    size_t rowCount = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            rowCount += c->asFrameTableSectionBox()->grid().size();
+        }
+    }
+
+    return rowCount;
 }
 
 // Table draws the border around the TableFrameSections

@@ -248,6 +248,33 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
+void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)
+{
+    LayoutUnit extraHeight = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableRowBox()) {
+            c->asFrameTableRowBox()->increaseCellHeightBy(rowHeightOffset);
+            extraHeight += rowHeightOffset;
+        } else {
+            // Only FrameTableRow should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    setHeight(height() + extraHeight);
+}
+
+void FrameTableSectionBox::applyVerticalAlign()
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableRowBox()) {
+            c->asFrameTableRowBox()->applyVerticalAlign();
+        } else {
+            // Only FrameTableRow should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
 void FrameTableSectionBox::layout(LayoutContext& ctx,
                                   Frame::LayoutWantToResolve resolveWhat)
 {

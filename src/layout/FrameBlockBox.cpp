@@ -450,7 +450,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         contentHeight = layoutInline(ctx);
     }
 
-    // The contentHeight is Used when table cell contents are vertically aligned
+    // The contentHeight is used when table cell contents are vertically aligned
     // in the table row.
     if (style()->display() == TableCellDisplayValue) {
         this->asFrameTableCellBox()->setActualContentHeight(contentHeight);
