@@ -124,7 +124,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
         parentFrame = n->frame();
     }
 
-    if (parentFrame->isAnonymous() ||
+    if (!parentFrame || parentFrame->isAnonymous() ||
         !(parentFrame->node()->isElement() &&
           parentFrame->node()->asElement()->hasPseudoElement(
               StyleResolver::PseudoElementType::PseudoElementFirstLetter)) ||
