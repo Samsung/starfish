@@ -289,6 +289,27 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::BorderRightColor);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        data.m_color = NamedColor::namedColorToColor(
+            NamedColor::NamedColorValue::grayNamedColor);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::BorderBottomColor);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        data.m_color = NamedColor::namedColorToColor(
+            NamedColor::NamedColorValue::grayNamedColor);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::BorderLeftColor);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        data.m_color = NamedColor::namedColorToColor(
+            NamedColor::NamedColorValue::grayNamedColor);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         pair.setKeyKind(CSSStyleValuePair::TableLayout);
         pair.setValueKind(CSSStyleValuePair::ValueKind::TableLayoutValueKind);
         data.m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
@@ -403,6 +424,26 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
         pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
         pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1px");
         rule->styleDeclaration()->addValuePair(pair);
 
         userAgentStyleSheet->addRule(rule);
