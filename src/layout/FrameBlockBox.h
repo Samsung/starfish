@@ -696,6 +696,7 @@ public:
                                        HitTestStage stage);
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f);
+    virtual LineBox* firstLineBox();
     virtual void establishesStackingContextIfNeeds();
     virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
 

@@ -1116,6 +1116,10 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    virtual LineBox* firstLineBox()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     virtual void establishesStackingContextIfNeeds()
     {
