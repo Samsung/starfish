@@ -106,6 +106,7 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
+    virtual void layoutInline(LineFormattingContext& ctx);
     virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth,
                                       LayoutUnit& intrinsicHeight,
                                       LayoutUnit parentContentWidth,
