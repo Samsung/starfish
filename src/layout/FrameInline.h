@@ -39,6 +39,7 @@ public:
     }
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
+    virtual void layoutInline(LineFormattingContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)

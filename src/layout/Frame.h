@@ -45,6 +45,7 @@ class LineBox;
 class InlineTextBox;
 class InlineNonReplacedBox;
 class InlineBoxLayoutParentBox;
+class LineFormattingContext;
 
 enum PaintingStage {
     PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
@@ -471,8 +472,7 @@ public:
         return minWidth;
     }
 
-    static LayoutUnit computePreferredWidthWithNewContext(
-        PreferredWidthContext& ctx, Frame* f);
+    LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
     {
@@ -520,9 +520,13 @@ public:
     void handleTextToken(TextToken& token);
 
     void handleFloatingBox(Frame* f, LayoutUnit w);
+
     void updateCurrentLineWidth(Frame* f, LayoutUnit w,
                                 WordType type = General);
+
     void updateUnprocessedStartingMBPWidth(Frame* f);
+
+    void computePreferredWidthInline(Frame* prent);
 
 private:
     LayoutContext& m_layoutContext;
@@ -1108,6 +1112,11 @@ public:
     }
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual void layoutInline(LineFormattingContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

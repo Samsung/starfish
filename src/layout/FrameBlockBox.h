@@ -298,7 +298,7 @@ public:
         return "InlineNonReplacedBox";
     }
 
-    void layoutInline(LineFormattingContext* lineFormattingContext);
+    virtual void layoutInline(LineFormattingContext& lineFormattingContext);
     virtual void paint(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx)
     {
@@ -685,6 +685,7 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
+    virtual void layoutInline(LineFormattingContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
@@ -807,15 +808,13 @@ private:
 
     void insertPendingFloatingBoxes();
     void insertPendingInlineBoxes();
-    void unregisterAbsolutePositionedBoxes();
-    void markInlineBoxIndex(FrameBox* box);
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
-    void generateInlineBox(FrameBox* box);
     void generateInlineTextBox(TextToken& token);
-    void generateInlineNonReplacedBox(FrameInline* f);
     void generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
+
     void registerAbsolutePositionedBox(FrameBox* box);
+    void unregisterAbsolutePositionedBoxes();
 
     template <typename Box>
     LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
@@ -848,12 +847,20 @@ public:
 
     void computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
 
-    void generateInlineBoxes(Frame* origin);
+    void layoutInline(Frame* origin);
 
     void finishLineForLineBox(FrameLineBreak* br, bool isLastLine);
     void finishLineForInlineNonReplacedBox(FrameLineBreak* br, bool isLastNode);
     void breakLine(FrameLineBreak* br);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
+
+    void insertInlineBox(FrameBox* box, bool force);
+    void insertFloatingBox(FrameBox* box);
+    void markInlineBoxIndex(FrameBox* box);
+
+    bool removeLastLineBoxIfNeeds();
+    void registerRelativePositionedBoxes();
+    LayoutUnit contentHeightForBlock();
 
     /*
     bool isBreakedLineWithoutBR(size_t idx)
