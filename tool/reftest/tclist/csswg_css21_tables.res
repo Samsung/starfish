@@ -620,7 +620,7 @@ test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-004.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-initial-001.htm
 test/reftest/csswg-test/css21_original/tables/empty-cell-visibility-hidden-001.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-001.htm
-#test/reftest/csswg-test/css21_original/tables/fixed-table-layout-002a.htm
+test/reftest/csswg-test/css21_original/tables/fixed-table-layout-002a.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-002a-ref.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-002.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003a01.htm
@@ -1013,7 +1013,7 @@ test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-203.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-210.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-whitespace-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-background-edge-and-border-model-001.htm
-#test/reftest/csswg-test/css21_original/tables/table-background-edge-and-border-model-002.htm
+test/reftest/csswg-test/css21_original/tables/table-background-edge-and-border-model-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-cell-001.htm
 test/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-cell-001-ref.htm
 #test/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-colgroup-001.htm
@@ -1072,8 +1072,8 @@ test/reftest/csswg-test/css21_original/tables/table-header-group-003.htm
 #test/reftest/csswg-test/css21_original/tables/table-header-group-004.htm
 test/reftest/csswg-test/css21_original/tables/table-header-group-005.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-001.htm
-#test/reftest/csswg-test/css21_original/tables/table-height-algorithm-002.htm
-#test/reftest/csswg-test/css21_original/tables/table-height-algorithm-003.htm
+test/reftest/csswg-test/css21_original/tables/table-height-algorithm-002.htm
+test/reftest/csswg-test/css21_original/tables/table-height-algorithm-003.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-004.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-008a.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-008b.htm
@@ -1099,11 +1099,11 @@ test/reftest/csswg-test/css21_original/tables/table-height-algorithm-025.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-026.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-027.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-028.htm
-#test/reftest/csswg-test/css21_original/tables/table-height-algorithm-029.htm
+test/reftest/csswg-test/css21_original/tables/table-height-algorithm-029.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-030.htm
 #test/reftest/csswg-test/css21_original/tables/table-height-algorithm-031.htm
 #test/reftest/csswg-test/css21_original/tables/table-height-algorithm-032.htm
-#test/reftest/csswg-test/css21_original/tables/table-intro-example-001.htm
+test/reftest/csswg-test/css21_original/tables/table-intro-example-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-intro-example-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-intro-example-003.htm
 #test/reftest/csswg-test/css21_original/tables/table-intro-example-004.htm
