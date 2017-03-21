@@ -84,6 +84,7 @@ if (condition1 ||
 
 ## Classes
 ### Constructors
+Initialization of the member variables should be done in the initializer as much as possible.
 When initialize member variables in a constructor, always split each
 initializer on a separate line, and align the commas with the colon.
 
@@ -96,6 +97,44 @@ Dog::Dog(String name, Breed breed)
 ...
 }
 ```
+
+Calling other constructor inside a constructor should be avoided.
+This is in preparation for an environment where we cannot use c++11 features (such as embedded devices).
+```cpp
+Dog::Dog()
+    , m_isAnimal(true)
+{
+}
+
+Dog::Dog(String name, Breed breed)
+    : Dog()  //<--- Not allowed
+    , m_name(name)
+    , m_breed(breed)
+{
+...
+}
+
+```
+
+Write it one by one.
+```cpp
+Dog::Dog()
+    , m_isAnimal(true)
+    , m_name(String::emptyString)
+    , m_breed(Breed::emptyBreed)
+{
+}
+
+Dog::Dog(String name, Breed breed)
+    : m_isAnimal(true)
+    , m_name(name)
+    , m_breed(breed)
+{
+...
+}
+
+```
+
 
 ### Class Modifiers
 Do not indent class modifiers (i.e., `public`, `protected`, and `private`) in
