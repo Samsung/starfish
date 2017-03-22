@@ -1507,10 +1507,94 @@ String* CSSStyleValuePair::toString()
         switch (transitionPropertyValue()) {
         case TransitionPropertyAllValue:
             return String::fromUTF8("all");
-        case TransitionPropertyWidthValue:
-            return String::fromUTF8("width");
+        case TransitionPropertyBackgroundColorValue:
+            return String::fromUTF8("background-color");
+        case TransitionPropertyBackgroundPositionValue:
+            return String::fromUTF8("background-position");
+        case TransitionPropertyBorderBottomColorValue:
+            return String::fromUTF8("border-bottom-color");
+        case TransitionPropertyBorderBottomWidthValue:
+            return String::fromUTF8("border-bottom-width");
+        case TransitionPropertyBorderLeftColorValue:
+            return String::fromUTF8("border-left-color");
+        case TransitionPropertyBorderLeftWidthValue:
+            return String::fromUTF8("border-left-width");
+        case TransitionPropertyBorderRightColorValue:
+            return String::fromUTF8("border-right-color");
+        case TransitionPropertyBorderRightWidthValue:
+            return String::fromUTF8("border-right-width");
+        case TransitionPropertyBorderSpacingValue:
+            return String::fromUTF8("border-spacing");
+        case TransitionPropertyBorderTopColorValue:
+            return String::fromUTF8("border-top-color");
+        case TransitionPropertyBorderTopWidthValue:
+            return String::fromUTF8("border-top-width");
+        case TransitionPropertyBottomValue:
+            return String::fromUTF8("bottom");
+        case TransitionPropertyClipValue:
+            return String::fromUTF8("clip");
+        case TransitionPropertyColorValue:
+            return String::fromUTF8("color");
+        case TransitionPropertyFontSizeValue:
+            return String::fromUTF8("font-size");
+        case TransitionPropertyFontWeightValue:
+            return String::fromUTF8("font-weight");
         case TransitionPropertyHeightValue:
             return String::fromUTF8("height");
+        case TransitionPropertyLeftValue:
+            return String::fromUTF8("left");
+        case TransitionPropertyLetterSpacingValue:
+            return String::fromUTF8("letter-spacing");
+        case TransitionPropertyLineHeightValue:
+            return String::fromUTF8("line-height");
+        case TransitionPropertyMarginBottomValue:
+            return String::fromUTF8("margin-bottom");
+        case TransitionPropertyMarginLeftValue:
+            return String::fromUTF8("margin-left");
+        case TransitionPropertyMarginRightValue:
+            return String::fromUTF8("margin-right");
+        case TransitionPropertyMarginTopValue:
+            return String::fromUTF8("margin-top");
+        case TransitionPropertyMaxHeightValue:
+            return String::fromUTF8("max-height");
+        case TransitionPropertyMaxWidthValue:
+            return String::fromUTF8("max-width");
+        case TransitionPropertyMinHeightValue:
+            return String::fromUTF8("min-height");
+        case TransitionPropertyMinWidthValue:
+            return String::fromUTF8("min-width");
+        case TransitionPropertyOpacityValue:
+            return String::fromUTF8("opacity");
+        case TransitionPropertyOutlineColorValue:
+            return String::fromUTF8("outline-color");
+        case TransitionPropertyOutlineWidthValue:
+            return String::fromUTF8("outline-width");
+        case TransitionPropertyPaddingBottomValue:
+            return String::fromUTF8("padding-bottom");
+        case TransitionPropertyPaddingLeftValue:
+            return String::fromUTF8("padding-left");
+        case TransitionPropertyPaddingRightValue:
+            return String::fromUTF8("padding-right");
+        case TransitionPropertyPaddingTopValue:
+            return String::fromUTF8("padding-top");
+        case TransitionPropertyRightValue:
+            return String::fromUTF8("right");
+        case TransitionPropertyTextIndentValue:
+            return String::fromUTF8("text-indent");
+        case TransitionPropertyTextDhadowValue:
+            return String::fromUTF8("text-shadow");
+        case TransitionPropertyTopValue:
+            return String::fromUTF8("top");
+        case TransitionPropertyVerticalAlignValue:
+            return String::fromUTF8("vertical-align");
+        case TransitionPropertyVisibilityValue:
+            return String::fromUTF8("visibility");
+        case TransitionPropertyWidthValue:
+            return String::fromUTF8("width");
+        case TransitionPropertyWordSpacingValue:
+            return String::fromUTF8("word-spacing");
+        case TransitionPropertyZIndexValue:
+            return String::fromUTF8("z-index");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -1874,17 +1958,142 @@ static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
 
 bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
 {
-    // TODO other property types
     m_valueKind = CSSStyleValuePair::ValueKind::TransitionPropertyValueKind;
     if (STRING_VALUE_IS_STRING("all")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyAllValue;
-    } else if (STRING_VALUE_IS_STRING("width")) {
+    } else if (STRING_VALUE_IS_STRING("background-color")) {
         m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyWidthValue;
+            TransitionPropertyValue::TransitionPropertyBackgroundColorValue;
+    } else if (STRING_VALUE_IS_STRING("background-position")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBackgroundPositionValue;
+    } else if (STRING_VALUE_IS_STRING("border-bottom-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderBottomColorValue;
+    } else if (STRING_VALUE_IS_STRING("border-bottom-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderBottomWidthValue;
+    } else if (STRING_VALUE_IS_STRING("border-left-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderLeftColorValue;
+    } else if (STRING_VALUE_IS_STRING("border-left-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderLeftWidthValue;
+    } else if (STRING_VALUE_IS_STRING("border-right-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderRightColorValue;
+    } else if (STRING_VALUE_IS_STRING("border-right-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderRightWidthValue;
+    } else if (STRING_VALUE_IS_STRING("border-spacing")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderSpacingValue;
+    } else if (STRING_VALUE_IS_STRING("border-top-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderTopColorValue;
+    } else if (STRING_VALUE_IS_STRING("border-top-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderTopWidthValue;
+    } else if (STRING_VALUE_IS_STRING("bottom")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBottomValue;
+    } else if (STRING_VALUE_IS_STRING("clip")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyClipValue;
+    } else if (STRING_VALUE_IS_STRING("color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyColorValue;
+    } else if (STRING_VALUE_IS_STRING("font-size")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyFontSizeValue;
+    } else if (STRING_VALUE_IS_STRING("font-weight")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyFontWeightValue;
     } else if (STRING_VALUE_IS_STRING("height")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyHeightValue;
+    } else if (STRING_VALUE_IS_STRING("left")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyLeftValue;
+    } else if (STRING_VALUE_IS_STRING("letter-spacing")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyLetterSpacingValue;
+    } else if (STRING_VALUE_IS_STRING("line-height")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyLineHeightValue;
+    } else if (STRING_VALUE_IS_STRING("margin-bottom")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMarginBottomValue;
+    } else if (STRING_VALUE_IS_STRING("margin-left")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMarginLeftValue;
+    } else if (STRING_VALUE_IS_STRING("margin-right")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMarginRightValue;
+    } else if (STRING_VALUE_IS_STRING("margin-top")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMarginTopValue;
+    } else if (STRING_VALUE_IS_STRING("max-height")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMaxHeightValue;
+    } else if (STRING_VALUE_IS_STRING("max-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMaxWidthValue;
+    } else if (STRING_VALUE_IS_STRING("min-height")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMinHeightValue;
+    } else if (STRING_VALUE_IS_STRING("min-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyMinWidthValue;
+    } else if (STRING_VALUE_IS_STRING("opacity")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyOpacityValue;
+    } else if (STRING_VALUE_IS_STRING("outline-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyOutlineColorValue;
+    } else if (STRING_VALUE_IS_STRING("outline-width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyOutlineWidthValue;
+    } else if (STRING_VALUE_IS_STRING("padding-bottom")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyPaddingBottomValue;
+    } else if (STRING_VALUE_IS_STRING("padding-left")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyPaddingLeftValue;
+    } else if (STRING_VALUE_IS_STRING("padding-right")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyPaddingRightValue;
+    } else if (STRING_VALUE_IS_STRING("padding-top")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyPaddingTopValue;
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyRightValue;
+    } else if (STRING_VALUE_IS_STRING("text-indent")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyTextIndentValue;
+    } else if (STRING_VALUE_IS_STRING("text-shadow")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyTextDhadowValue;
+    } else if (STRING_VALUE_IS_STRING("top")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyTopValue;
+    } else if (STRING_VALUE_IS_STRING("vertical-align")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyVerticalAlignValue;
+    } else if (STRING_VALUE_IS_STRING("visibility")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyVisibilityValue;
+    } else if (STRING_VALUE_IS_STRING("width")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyWidthValue;
+    } else if (STRING_VALUE_IS_STRING("word-spacing")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyWordSpacingValue;
+    } else if (STRING_VALUE_IS_STRING("z-index")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyZIndexValue;
     } else {
         return false;
     }
