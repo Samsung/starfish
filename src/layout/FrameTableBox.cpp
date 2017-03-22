@@ -170,8 +170,10 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         return;
     }
 
-    if (child->isCharacterData() || child->isComment()) {
-        // TODO
+    if (child->isComment() ||
+        (child->isCharacterData() &&
+         child->textContent()->containsOnlyWhitespace())) {
+        // TODO, do not use assert!
         return;
     } else if (wrapInAnnoymousSection) {
         // If there are 2 continuous node which becomes internal table box
@@ -185,7 +187,6 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         // which referencing the same thing.
         // To prevent this situation, we separate two cases with which returned
         // pointer has a parent or not.
-
         childFrame =
             FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
         if (!childFrame->parent()) {

@@ -81,8 +81,11 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
                                 bool force)
 {
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableRowBox());
-    if (child->isCharacterData() || child->isComment()) {
+    if (child->isComment() ||
+        (child->isCharacterData() &&
+         child->textContent()->containsOnlyWhitespace())) {
         // TODO, do not use assert!
+        return;
     } else {
         FrameTableRowBox* parentRow =
             ctx.currentBlockContainer()->asFrameTableRowBox();
