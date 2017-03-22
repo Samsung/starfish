@@ -4,7 +4,7 @@ build:
   tags:
     - main_build
   before_script:
-    - make tidy; if ! cat error_report | grep 'total suggestion files:\s0'; then exit 1; elif ! cat error_report | grep 'total errors:\s0'; then exit 1; fi
+    - ./tool/check_tidy.py > error_report; if ! cat error_report | grep 'total suggestion files:\s0'; then exit 1; elif ! cat error_report | grep 'total errors:\s0'; then exit 1; fi
     - rm -f .git/index.lock
     - rm -f .git/modules/test/index.lock
     - rm -f .git/modules/third_party/escargot/index.lock
