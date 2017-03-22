@@ -45,6 +45,14 @@ static bool isNameChar(char c)
     return false;
 }
 
+static bool isQuote(char c)
+{
+    if (c == '"' || c == '\'') {
+        return true;
+    }
+    return false;
+}
+
 class CSSPropertyParser : public gc {
 public:
     CSSPropertyParser(char* value)
@@ -150,13 +158,12 @@ public:
         return m_parsedInt32;
     }
 
-    // a-z | 0-9 | - | _ | % | space
+    // a-z | 0-9 | - | _ | %
     bool consumeString()
     {
         int len = 0;
         for (char *cur = m_curPos; cur < m_endPos; cur++, len++) {
-            if (!(isNameChar(*cur) || *cur == '%' ||
-                  String::isASCIISpace(*cur))) {
+            if (!(isNameChar(*cur) || *cur == '%')) {
                 break;
             }
         }
@@ -211,6 +218,16 @@ public:
         m_parsedUrl = String::fromUTF8(start, len);
         m_curPos++;
         return true;
+    }
+
+    bool consumeContentString()
+    {
+        if (isQuote(*m_curPos++) && isQuote(*--m_endPos)) {
+            m_parsedString = String::fromUTF8(m_curPos, m_endPos - m_curPos);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     String* parsedString()
@@ -465,16 +482,13 @@ public:
                                            *ret);
     }
 
-    static bool parseString(String* str, String** ret)
+    static bool parseContentString(String* str, String** ret)
     {
         CSSPropertyParser* parser =
             new CSSPropertyParser((char*)str->utf8Data());
-        if (parser->consumeIfNext('"') || parser->consumeIfNext('\'')) {
-            if (parser->consumeString() &&
-                (parser->consumeIfNext('"') || parser->consumeIfNext('\''))) {
-                *ret = parser->parsedString();
-                return true;
-            }
+        if (parser->consumeContentString()) {
+            *ret = parser->parsedString();
+            return true;
         }
         return false;
     }

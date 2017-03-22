@@ -1432,7 +1432,8 @@ public:
     void notifyNeedsStyleRecalc();
 
     void tokenizeCSSValue(GCVector<String*>* tokens, String* src,
-                          String* seperator = String::emptyString);
+                          String* seperator = String::emptyString,
+                          bool isCaseSensitive = false);
 
     String* Border();
     String* BorderTop();
@@ -1507,21 +1508,26 @@ public:
     void setFont(String* value, bool isImportant);
     void setTransition(String* value, bool isImportant);
 
-#define ATTRIBUTE_SETTER(name, ...)                                 \
-    void set##name(String* value, bool isImportant)                 \
-    {                                                               \
-        if (value->length() == 0) {                                 \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);   \
-            return;                                                 \
-        }                                                           \
-        GCVector<String*> tokens;                                   \
-        tokenizeCSSValue(&tokens, value, String::fromUTF8(","));    \
-        CSSStyleValuePair ret;                                      \
-        if (ret.updateValueCommon(&tokens) ||                       \
-            ret.updateValue##name(&tokens)) {                       \
-            ret.setFlagImportant(isImportant);                      \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret); \
-        }                                                           \
+#define ATTRIBUTE_SETTER(name, ...)                                      \
+    void set##name(String* value, bool isImportant)                      \
+    {                                                                    \
+        if (value->length() == 0) {                                      \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);        \
+            return;                                                      \
+        }                                                                \
+        GCVector<String*> tokens;                                        \
+        if (CSSStyleValuePair::KeyKind::name ==                          \
+            CSSStyleValuePair::KeyKind::Content) {                       \
+            tokenizeCSSValue(&tokens, value, String::emptyString, true); \
+        } else {                                                         \
+            tokenizeCSSValue(&tokens, value, String::fromUTF8(","));     \
+        }                                                                \
+        CSSStyleValuePair ret;                                           \
+        if (ret.updateValueCommon(&tokens) ||                            \
+            ret.updateValue##name(&tokens)) {                            \
+            ret.setFlagImportant(isImportant);                           \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);      \
+        }                                                                \
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
