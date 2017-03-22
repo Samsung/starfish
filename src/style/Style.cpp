@@ -2448,7 +2448,8 @@ ATTRIBUTE_SETTER_FOURSIDE(Border, Color);
 #undef RM_PAIRS
 
 void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
-                                           String* src, String* seperator)
+                                           String* src, String* seperator,
+                                           bool isCaseSensitive)
 {
     tokens->clear();
 
@@ -2503,8 +2504,11 @@ void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
                 tokens->push_back(String::fromUTF8("url")->concat(
                     String::fromUTF8(str.data() + 3, str.length() - 3)));
             } else if (str.length() != 0) {
-                tokens->push_back(
-                    String::fromUTF8(str.data(), str.length())->toLower());
+                String* newToken =
+                    isCaseSensitive
+                        ? String::fromUTF8(str.data(), str.length())
+                        : String::fromUTF8(str.data(), str.length())->toLower();
+                tokens->push_back(newToken);
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
@@ -4808,10 +4812,11 @@ bool CSSStyleValuePair::updateValueContent(GCVector<String*>* tokens)
         if (!ret.updateValueUnitUrlOrNone(value)) {
             CSSPropertyParser* parser =
                 new CSSPropertyParser((char*)(*tokens)[i]->utf8Data());
-            if (parser->parseString(value, &(ret.m_value.m_stringValue))) {
-                ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-            } else if (value->equals("normal")) {
+            if (value->equals("normal")) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+            } else if (parser->parseContentString(
+                           value, &(ret.m_value.m_stringValue))) {
+                ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
             } else {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content
