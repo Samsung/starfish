@@ -1675,6 +1675,7 @@ test/reftest/csswg-test/css21_original/floats-clear/floats-109.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-111.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-112.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-113.htm
+test/reftest/csswg-test/css21_original/floats-clear/floats-114.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-115.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-116.htm
 test/reftest/csswg-test/css21_original/floats-clear/floats-117.htm
