@@ -2529,6 +2529,7 @@ StyleResolver::StyleResolver(Document& document)
     , m_mediumFontSize(
           document.window()->starFish()->defaultFontSizeMultiplier() *
           DEFAULT_FONT_SIZE)
+    , m_usesFirstLineRule(false)
 {
 }
 
@@ -3935,6 +3936,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 {
     Declarations userAgentDeclarations;
     Declarations authorDeclarations;
+
     CSSStyleSheet* sheet = m_sheets[0];
 
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
@@ -4321,9 +4323,9 @@ bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector,
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoFirstLine:
-        // TODO
         result.pseudoType = PseudoElementType::PseudoElementFirstLine;
-        return false;
+        m_usesFirstLineRule = true;
+        return true;
     case CSSSelector::PseudoType::PseudoFirstLetter:
         result.pseudoType = PseudoElementType::PseudoElementFirstLetter;
         return true;

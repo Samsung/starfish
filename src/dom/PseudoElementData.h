@@ -28,12 +28,14 @@ public:
         , m_hasFirstLetter(false)
         , m_hasBefore(false)
         , m_hasAfter(false)
+        , m_hasFirstLineInherited(false)
     {
     }
 
     bool hasPseudoElements() const
     {
-        return m_hasFirstLine || m_hasFirstLetter || m_hasBefore || m_hasAfter;
+        return m_hasFirstLine || m_hasFirstLetter || m_hasBefore ||
+               m_hasAfter || m_hasFirstLineInherited;
     }
 
     bool hasPseudoElement(StyleResolver::PseudoElementType type) const
@@ -47,6 +49,8 @@ public:
             return m_hasBefore;
         case StyleResolver::PseudoElementType::PseudoElementAfter:
             return m_hasAfter;
+        case StyleResolver::PseudoElementType::PseudoElementFirstLineInherited:
+            return m_hasFirstLineInherited;
         default:
             return false;
         }
@@ -67,11 +71,15 @@ public:
         case StyleResolver::PseudoElementType::PseudoElementAfter:
             m_hasAfter = true;
             break;
+        case StyleResolver::PseudoElementType::PseudoElementFirstLineInherited:
+            m_hasFirstLineInherited = true;
+            break;
         case StyleResolver::PseudoElementType::PseudoElementNone:
             m_hasFirstLine = false;
             m_hasFirstLetter = false;
             m_hasBefore = false;
             m_hasAfter = false;
+            m_hasFirstLineInherited = false;
             break;
         default:
             break;
@@ -83,6 +91,7 @@ private:
     bool m_hasFirstLetter;
     bool m_hasBefore;
     bool m_hasAfter;
+    bool m_hasFirstLineInherited;
 };
 }
 

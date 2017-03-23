@@ -55,7 +55,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
     GCVector<FrameBox*>& boxes =
         parentBox->asInlineBoxLayoutParentBox()->boxes();
     if (parentBox->isLineBox()) {
-        parentStyle = m_block->style();
+        parentStyle = m_block->style(m_block, m_block->lineBoxes().size() == 1);
     } else {
         parentStyle = parentBox->style();
     }
@@ -1893,6 +1893,8 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
     size_t offset = token.m_start;
     size_t nextOffset = token.m_end;
     LayoutUnit textWidth = token.width();
+    ComputedStyle* style = token.style();
+    bool isFirstLine = token.isFirstLine();
     const std::vector<TextRun>& runs = m_textRunsPerFrameText[f];
 
     if (token.isWhiteSpace()) {
@@ -1914,10 +1916,11 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
             source = String::emptyString;
             start = end = 0;
         }
-        InlineTextBox* ib =
-            new InlineTextBox(f, TextRun(f, source, start, end, dir));
+        InlineTextBox* ib = new InlineTextBox(
+            f, TextRun(f, source, start, end, dir), isFirstLine);
+        ib->setLayoutParent(m_currentLayoutParent);
         ib->setWidth(textWidth);
-        ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+        ib->setHeight(style->font()->metrics().m_fontHeight);
         setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace);
         insertInlineBox(ib, true);
     } else {
@@ -1954,11 +1957,12 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                     }
                 }
 
-                InlineTextBox* ib =
-                    new InlineTextBox(f, TextRun(f, srcTxt, start, end, dir));
-                ib->setWidth(f->style()->font()->measureText(
+                InlineTextBox* ib = new InlineTextBox(
+                    f, TextRun(f, srcTxt, start, end, dir), isFirstLine);
+                ib->setLayoutParent(m_currentLayoutParent);
+                ib->setWidth(style->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
-                ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                ib->setHeight(style->font()->metrics().m_fontHeight);
                 setIsWhiteSpaceAtLast(false);
                 insertInlineBox(ib, true);
                 start = end;
@@ -1975,10 +1979,11 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                     }
                 }
                 InlineTextBox* ib = new InlineTextBox(
-                    f, TextRun(f, srcTxt, end, nextOffset, dir));
-                ib->setWidth(f->style()->font()->measureText(
+                    f, TextRun(f, srcTxt, end, nextOffset, dir), isFirstLine);
+                ib->setLayoutParent(m_currentLayoutParent);
+                ib->setWidth(style->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
-                ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+                ib->setHeight(style->font()->metrics().m_fontHeight);
                 setIsWhiteSpaceAtLast(false);
                 insertInlineBox(ib, true);
             }
@@ -1992,9 +1997,10 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 }
             }
             InlineTextBox* ib = new InlineTextBox(
-                f, TextRun(f, srcTxt, offset, nextOffset, dir));
+                f, TextRun(f, srcTxt, offset, nextOffset, dir), isFirstLine);
+            ib->setLayoutParent(m_currentLayoutParent);
             ib->setWidth(textWidth);
-            ib->setHeight(f->style()->font()->metrics().m_fontHeight);
+            ib->setHeight(style->font()->metrics().m_fontHeight);
             setIsWhiteSpaceAtLast(false);
             insertInlineBox(ib, true);
         }
@@ -2029,6 +2035,10 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         if (token.isWhiteSpace()) {
             m_isPendingBreakLine = true;
         } else {
+            // restore
+            token.setIsFirstLine(false);
+            token.setWidth(token.m_type);
+
             breakLine(nullptr);
             handleTextToken(token);
         }
@@ -2042,11 +2052,148 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     generateInlineTextBox(token);
 }
 
+void LineFormattingContext::tokenizeText(StarFish* sf, FrameText* f)
+{
+    // TODO : Consider direction
+    String* txt = f->text();
+    size_t len = txt->length();
+
+    bool collapseSpace = !f->shouldPreserveWhiteSpaces();
+    bool collapseNewline = f->shouldIgnoreNewlineChar();
+
+    unsigned offset = 0;
+    bool isFirstLine = true;
+    while (offset < len) {
+        if (m_block->lineBoxes().size() != 1 || m_isPendingBreakLine) {
+            isFirstLine = false;
+        }
+        if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
+            TextToken token = TextToken(f, offset, offset + 1,
+                                        WordType::ForcedNewline, isFirstLine);
+            handleTextToken(token);
+            offset++;
+            continue;
+        }
+        bool isWhiteSpace = false;
+        if (isSeparator(txt->charAt(offset))) {
+            isWhiteSpace = true;
+        }
+
+        // find next space
+        unsigned nextOffset = offset + 1;
+        if (isWhiteSpace) {
+            while (nextOffset < txt->length() &&
+                   isSeparator((*txt)[nextOffset])) {
+                if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
+                    break;
+                }
+                nextOffset++;
+            }
+
+            // Mostly white-spaces in text are collaped.
+            // But the text in <pre> or depending on CSS white-space property,
+            // user agent should preserve white-spaces in text.
+            WordType type = WordType::CollapsibleWhiteSpace;
+            if (!collapseSpace) {
+                type = WordType::NonCollapsibleWhiteSpace;
+            }
+            TextToken token =
+                TextToken(f, offset, nextOffset, type, isFirstLine);
+            handleTextToken(token);
+        } else {
+            size_t start = offset;
+            while (nextOffset < txt->length() &&
+                   !isSeparator((*txt)[nextOffset])) {
+                nextOffset++;
+            }
+
+            auto breaker = sf->lineBreaker();
+            breaker->setText(txt->toUnicodeString(start, nextOffset));
+            int32_t c, prev = 0;
+            size_t txtLen = txt->length();
+            while (((c = breaker->next()) != icu::BreakIterator::DONE) &&
+                   (c + start <= txtLen)) {
+                TextToken token = TextToken(f, prev + start, c + start,
+                                            WordType::General, isFirstLine);
+                handleTextToken(token);
+                prev = c;
+            }
+        }
+        offset = nextOffset;
+    }
+}
+
+void PreferredWidthContext::tokenizeText(StarFish* sf, FrameText* f)
+{
+    // TODO : Consider direction
+    String* txt = f->text();
+    size_t len = txt->length();
+
+    bool collapseSpace = !f->shouldPreserveWhiteSpaces();
+    bool collapseNewline = f->shouldIgnoreNewlineChar();
+
+    unsigned offset = 0;
+    while (offset < len) {
+        if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
+            TextToken token =
+                TextToken(f, offset, offset + 1, WordType::ForcedNewline);
+            offset++;
+            handleTextToken(token);
+            continue;
+        }
+        bool isWhiteSpace = false;
+        if (isSeparator(txt->charAt(offset))) {
+            isWhiteSpace = true;
+        }
+
+        // find next space
+        unsigned nextOffset = offset + 1;
+        if (isWhiteSpace) {
+            while (nextOffset < txt->length() &&
+                   isSeparator((*txt)[nextOffset])) {
+                if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
+                    break;
+                }
+                nextOffset++;
+            }
+
+            // Mostly white-spaces in text are collaped.
+            // But the text in <pre> or depending on CSS white-space property,
+            // user agent should preserve white-spaces in text.
+            WordType type = WordType::CollapsibleWhiteSpace;
+            if (!collapseSpace) {
+                type = WordType::NonCollapsibleWhiteSpace;
+            }
+            TextToken token = TextToken(f, offset, nextOffset, type);
+            handleTextToken(token);
+        } else {
+            size_t start = offset;
+            while (nextOffset < txt->length() &&
+                   !isSeparator((*txt)[nextOffset])) {
+                nextOffset++;
+            }
+
+            auto breaker = sf->lineBreaker();
+            breaker->setText(txt->toUnicodeString(start, nextOffset));
+            int32_t c, prev = 0;
+            size_t txtLen = txt->length();
+            while (((c = breaker->next()) != icu::BreakIterator::DONE) &&
+                   (c + start <= txtLen)) {
+                TextToken token =
+                    TextToken(f, prev + start, c + start, WordType::General);
+                handleTextToken(token);
+                prev = c;
+            }
+        }
+        offset = nextOffset;
+    }
+}
+
 void FrameText::layoutInline(LineFormattingContext& ctx)
 {
     // split the text into tokens using the ICU divider, and for each
     // token, execute the following function
-    tokenizeText(ctx.m_layoutContext.starFish(), this, &ctx);
+    ctx.tokenizeText(ctx.m_layoutContext.starFish(), this);
 }
 
 void FrameReplaced::layoutInline(LineFormattingContext& ctx)
@@ -2822,7 +2969,7 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    tokenizeText(ctx.layoutContext().starFish(), this, &ctx);
+    ctx.tokenizeText(ctx.layoutContext().starFish(), this);
 }
 
 void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)

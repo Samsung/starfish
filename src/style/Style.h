@@ -1964,7 +1964,8 @@ public:
         PseudoElementFirstLine,
         PseudoElementFirstLetter,
         PseudoElementBefore,
-        PseudoElementAfter
+        PseudoElementAfter,
+        PseudoElementFirstLineInherited
     };
 
     enum Match {
@@ -2008,6 +2009,11 @@ public:
         m_allRules = nullptr;
     }
 
+    bool usesFirstLineRule()
+    {
+        return m_usesFirstLineRule;
+    }
+
     void resolveDOMStyle(Document* document, bool force = false);
 #ifdef STARFISH_ENABLE_TEST
     void dumpDOMStyle(Document* document);
@@ -2046,6 +2052,7 @@ protected:
     float m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_allRules;
+    bool m_usesFirstLineRule;
 };
 }
 

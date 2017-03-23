@@ -578,6 +578,153 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     }
 }
 
+Frame* Frame::enclosingFirstLineStyle()
+{
+    Frame* firstLineFrame = this;
+    bool hasPseudo = false;
+
+    while (true) {
+        if (!firstLineFrame->isAnonymous() &&
+            !firstLineFrame->isFrameDocument()) {
+            STARFISH_ASSERT(firstLineFrame->node()->isElement());
+            hasPseudo = firstLineFrame->node()->asElement()->hasPseudoElement(
+                StyleResolver::PseudoElementType::PseudoElementFirstLine);
+        }
+        if (hasPseudo) {
+            break;
+        }
+
+        Frame* parentFrame = firstLineFrame->parent();
+        if (firstLineFrame->isAtomicInlineLevel() ||
+            !firstLineFrame->isNormalFlow() || !parentFrame ||
+            !parentFrame->canHaveFirstLineOrFirstLetterStyle()) {
+            break;
+        }
+
+        STARFISH_ASSERT(parentFrame->isFrameBlockBox());
+
+        if (parentFrame->firstChild() != firstLineFrame) {
+            break;
+        }
+
+        firstLineFrame = parentFrame;
+    }
+
+    if (!hasPseudo) {
+        return nullptr;
+    }
+    return firstLineFrame;
+}
+
+ComputedStyle* Frame::pseudoStyleForFirstLine(
+    StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle)
+{
+    STARFISH_ASSERT(node());
+    STARFISH_ASSERT(node()->isElement());
+
+    if (!node()->asElement()->hasPseudoElement(pseudoId)) {
+        return nullptr;
+    }
+    if (!parentStyle) {
+        parentStyle = style();
+    }
+
+    Node* n = node();
+    while (n) {
+        if (n->isElement()) {
+            break;
+        }
+        n = n->parentNode();
+    }
+
+    if (!n) {
+        return nullptr;
+    }
+
+    Element* element = n->asElement();
+    ComputedStyle* result = new ComputedStyle(parentStyle);
+    if (pseudoId == StyleResolver::PseudoElementType::PseudoElementFirstLine) {
+        document()->styleResolver()->matchAllRules(
+            element, result, parentStyle,
+            StyleResolver::PseudoElementType::PseudoElementFirstLine);
+    } else {
+        document()->styleResolver()->matchAllRules(element, result,
+                                                   parentStyle);
+        result->setPseudoType(
+            StyleResolver::PseudoElementType::PseudoElementFirstLineInherited);
+    }
+
+    result->setDisplay(DisplayValue::InlineDisplayValue);
+    result->setPosition(PositionValue::StaticPositionValue);
+    result->loadResources(element);
+    result->arrangeStyleValues(parentStyle, element);
+
+    return result;
+}
+
+ComputedStyle* Frame::cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
+                                        ComputedStyle* parentStyle)
+{
+    if (!(node()->isElement() &&
+          node()->asElement()->hasPseudoElement(pseudo))) {
+        return nullptr;
+    }
+
+    ComputedStyle* cachedStyle = style()->cachedPseudoStyle(pseudo);
+    if (cachedStyle) {
+        return cachedStyle;
+    }
+
+    ComputedStyle* result = pseudoStyleForFirstLine(pseudo, parentStyle);
+    return style()->addCachedPseudoStyle(result);
+}
+
+static ComputedStyle* firstLineStyleFromCache(Frame* frame,
+                                              ComputedStyle* style)
+{
+    Frame* f = frame;
+    if (f->canHaveFirstLineOrFirstLetterStyle()) {
+        if (Frame* firstLineFrame = f->enclosingFirstLineStyle()) {
+            return firstLineFrame->cachedPseudoStyle(
+                StyleResolver::PseudoElementType::PseudoElementFirstLine,
+                style);
+        }
+    } else if (!f->isAnonymous()) {
+        if (f->isInlineNonReplacedBox()) {
+            return firstLineStyleFromCache(
+                f->asInlineNonReplacedBox()->origin(), style);
+        } else if (f->isFrameInline() &&
+                   !(f->node()->asElement()->hasPseudoElement(
+                       StyleResolver::PseudoElementType::
+                           PseudoElementFirstLetter))) {
+            ComputedStyle* parentStyle =
+                f->parent()->firstLineStyle(f->parent());
+            if (parentStyle != f->parent()->style()) {
+                f->node()->asElement()->setPseudoElement(
+                    StyleResolver::PseudoElementType::
+                        PseudoElementFirstLineInherited);
+                return f->cachedPseudoStyle(StyleResolver::PseudoElementType::
+                                                PseudoElementFirstLineInherited,
+                                            parentStyle);
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+ComputedStyle* Frame::firstLineStyle(Frame* frame)
+{
+    if (document()->styleResolver()->usesFirstLineRule()) {
+        if (ComputedStyle* pseudoStyle = firstLineStyleFromCache(
+                frame->isFrameText() ? frame->parent() : frame,
+                frame->style())) {
+            return pseudoStyle;
+        }
+    }
+    return Frame::style();
+}
+
 Element* Frame::offsetParent()
 {
     if (isDocumentElement() || isBodyElement()) {

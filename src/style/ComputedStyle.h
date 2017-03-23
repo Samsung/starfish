@@ -1006,6 +1006,14 @@ public:
         return m_pseudoId;
     }
 
+    GCVector<ComputedStyle*>& cachedPseudoStyles()
+    {
+        return m_cachedPseudoStyles;
+    }
+    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pid);
+    ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
+    void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
+
 protected:
     void initNonInheritedStyles()
     {
@@ -1021,6 +1029,7 @@ protected:
         m_transforms = nullptr;
         m_transformOrigin = nullptr;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
+        m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
     }
 
     // NOTICE
@@ -1075,6 +1084,7 @@ protected:
     StyleTransformOrigin* m_transformOrigin;
     StyleTransitionData* m_transition;
     ContentDataGroup m_content;
+    GCVector<ComputedStyle*> m_cachedPseudoStyles;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,

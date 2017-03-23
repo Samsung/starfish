@@ -58,9 +58,10 @@ struct TextRun {
 
 class InlineTextBox : public FrameBox {
 public:
-    InlineTextBox(FrameText* frame, const TextRun& run)
+    InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->node(), frame->style())
         , m_textRun(run)
+        , m_isFirstLine(isFirstLine)
     {
     }
 
@@ -123,8 +124,24 @@ public:
         return m_textRun;
     }
 
+    bool isFirstLine()
+    {
+        return m_isFirstLine;
+    }
+
+    ComputedStyle* style()
+    {
+        Frame* parent = layoutParent();
+        while (!parent->node()) {
+            parent = parent->layoutParent();
+        }
+
+        return Frame::style(parent, m_isFirstLine);
+    }
+
 protected:
     TextRun m_textRun;
+    bool m_isFirstLine;
 };
 
 class InlineBoxLayoutParentBox : public FrameBox {
@@ -899,6 +916,8 @@ public:
     bool dontBreakLine(Frame* f, LayoutUnit width);
 
     void computeDirection(Frame* parent, DirectionValue direction);
+
+    void tokenizeText(StarFish* sf, FrameText* f);
 
     LayoutUnit m_leftBoundary;
     LayoutUnit m_rightBoundary;
