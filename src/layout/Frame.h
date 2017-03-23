@@ -527,6 +527,7 @@ public:
     void updateUnprocessedStartingMBPWidth(Frame* f);
 
     void computePreferredWidthInline(Frame* prent);
+    void tokenizeText(StarFish* sf, FrameText* f);
 
 private:
     LayoutContext& m_layoutContext;
@@ -906,7 +907,7 @@ public:
         return false;
     }
 
-    ComputedStyle* style()
+    virtual ComputedStyle* style()
     {
         if (UNLIKELY(isAnonymous())) {
             return m_styleWhenNodeIsAnonymous;
@@ -914,6 +915,13 @@ public:
             return node()->style();
         }
     }
+
+    Frame* enclosingFirstLineStyle();
+    ComputedStyle* pseudoStyleForFirstLine(
+        StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
+    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
+                                     ComputedStyle* parentStyle);
+    ComputedStyle* firstLineStyle(Frame* parent);
 
     void updateComputedStyle(Node* refNode)
     {
@@ -1239,7 +1247,7 @@ public:
                (style()->display() == DisplayValue::TableDisplayValue);
     }
 
-    bool canHaveFirstLetterStyle()
+    bool canHaveFirstLineOrFirstLetterStyle()
     {
         if (isFrameBlockBox()) {
             if (isFrameTableBox() || isFrameTableRowBox() ||
@@ -1276,6 +1284,22 @@ public:
     {
         // When true, newline characters are handled as other whitespace
         return style()->whiteSpace() & WhiteSpaceValue::NoWrapWhiteSpaceValue;
+    }
+
+    virtual ComputedStyle* style(Frame* parent, bool isFirstLine)
+    {
+        if (isFirstLine) {
+            if (ComputedStyle* style = firstLineStyle(parent)) {
+                return style;
+            }
+        }
+        return Frame::style();
+    }
+
+    Document* document()
+    {
+        STARFISH_ASSERT(m_node || parent());
+        return m_node ? m_node->document() : parent()->document();
     }
 
 protected:

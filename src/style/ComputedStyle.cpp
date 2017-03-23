@@ -651,4 +651,49 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
     }
     return matrix;
 }
+
+ComputedStyle* ComputedStyle::cachedPseudoStyle(
+    StyleResolver::PseudoElementType pid)
+{
+    if (pseudoType() != StyleResolver::PseudoElementType::PseudoElementNone) {
+        return nullptr;
+    }
+
+    auto it =
+        std::find_if(m_cachedPseudoStyles.begin(), m_cachedPseudoStyles.end(),
+                     [&pid](ComputedStyle* pseudoStyle) {
+                         return pseudoStyle->pseudoType() == pid;
+                     });
+
+    if (it != m_cachedPseudoStyles.end()) {
+        return *it;
+    } else {
+        return nullptr;
+    }
+}
+
+ComputedStyle* ComputedStyle::addCachedPseudoStyle(ComputedStyle* pseudoStyle)
+{
+    if (!pseudoStyle) {
+        return nullptr;
+    }
+
+    STARFISH_ASSERT(pseudoStyle->pseudoType() >
+                    StyleResolver::PseudoElementType::PseudoElementNone);
+
+    ComputedStyle* result = pseudoStyle;
+    m_cachedPseudoStyles.push_back(pseudoStyle);
+    return result;
+}
+
+void ComputedStyle::removeCachedPseudoStyle(
+    StyleResolver::PseudoElementType pid)
+{
+    m_cachedPseudoStyles.erase(
+        std::remove_if(m_cachedPseudoStyles.begin(), m_cachedPseudoStyles.end(),
+                       [&pid](ComputedStyle* pseudoStyle) {
+                           return pseudoStyle->pseudoType() == pid;
+                       }),
+        m_cachedPseudoStyles.end());
+}
 }
