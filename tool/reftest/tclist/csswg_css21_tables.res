@@ -529,7 +529,7 @@ test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-013.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-014.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-015.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-016.htm
-#test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-017.htm
+test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-017.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-example-001.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-inherited-001.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-initial-001.htm
@@ -757,7 +757,7 @@ test/reftest/csswg-test/css21_original/tables/height-table-cell-001.htm
 #test/reftest/csswg-test/css21_original/tables/height-width-table-001e.htm
 #test/reftest/csswg-test/css21_original/tables/height-width-table-001.htm
 test/reftest/csswg-test/css21_original/tables/inline-table-001.htm
-#test/reftest/csswg-test/css21_original/tables/missing-cell-rendering-001.htm
+test/reftest/csswg-test/css21_original/tables/missing-cell-rendering-001.htm
 test/reftest/csswg-test/css21_original/tables/padding-applies-to-013a.htm
 #test/reftest/csswg-test/css21_original/tables/row-visibility-001.htm
 #test/reftest/csswg-test/css21_original/tables/row-visibility-002.htm
@@ -1044,7 +1044,7 @@ test/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-table-001-ref
 #test/reftest/csswg-test/css21_original/tables/table-borders-004.htm
 #test/reftest/csswg-test/css21_original/tables/table-borders-005.htm
 test/reftest/csswg-test/css21_original/tables/table-caption-001.htm
-#test/reftest/csswg-test/css21_original/tables/table-caption-002.htm
+test/reftest/csswg-test/css21_original/tables/table-caption-002.htm
 test/reftest/csswg-test/css21_original/tables/table-caption-003.htm
 #test/reftest/csswg-test/css21_original/tables/table-caption-horizontal-alignment-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-caption-margins-001.htm
@@ -1145,7 +1145,7 @@ test/reftest/csswg-test/css21_original/tables/table-layout-property-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-margin-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-margin-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-margin-003.htm
-#test/reftest/csswg-test/css21_original/tables/table-margin-004.htm
+test/reftest/csswg-test/css21_original/tables/table-margin-004.htm
 test/reftest/csswg-test/css21_original/tables/table-organization-001.htm
 test/reftest/csswg-test/css21_original/tables/table-organization-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-percent-width-001.htm
