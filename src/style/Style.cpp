@@ -3897,6 +3897,7 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
         case CSSStyleValuePair::KeyKind::Content:
             // Initial value is normal and it computes to 'none' for the
             // :before and :after pseudo-elements.
+            style->clearContent();
             if (cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial ||
                 cssValues[k].valueKind() ==

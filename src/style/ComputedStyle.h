@@ -977,6 +977,11 @@ public:
         return m_content;
     }
 
+    void clearContent()
+    {
+        m_content.clear();
+    }
+
     void setContentText(String* text)
     {
         ContentData content(ContentData::ContentType::Text);
