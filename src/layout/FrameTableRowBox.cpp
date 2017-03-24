@@ -99,11 +99,12 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
             // Put the cell manually into the rowstruct If the row is
             // an anonymous row that has already been created
             if (parentRow->isAnonymous() && parentRow->parent()) {
-                parentRow->parent()
-                    ->asFrameTableSectionBox()
-                    ->grid()[parentRow->rowIndex()]
-                    .cells.push_back(
-                        CellStruct(childFrame->asFrameTableCellBox()));
+                RowStruct& row = parentRow->parent()
+                                     ->asFrameTableSectionBox()
+                                     ->grid()[parentRow->rowIndex()];
+                unsigned curId = row.logicalColumnSize();
+                row.cells.push_back(
+                    CellStruct(childFrame->asFrameTableCellBox(), curId));
             }
         }
         STARFISH_ASSERT(childFrame->parent());
@@ -114,17 +115,34 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
 void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
-    unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             c->asFrameTableCellBox()->calCellWidth(
-                ctx, i, Frame::LayoutWantToResolve::ResolveWidth);
-            i++;
+                ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+}
+
+ColSizeStruct* FrameTableRowBox::colWithColspanAt(unsigned id)
+{
+    if (id < m_colsWithColspans.size()) {
+        if (id == m_colsWithColspans[id].id) {
+            return &m_colsWithColspans[id];
+        }
+    }
+
+    for (size_t i = 0; i < m_colsWithColspans.size(); i++) {
+        ColSizeStruct* col = &m_colsWithColspans[i];
+        if (col->id == id) {
+            return col;
+        }
+    }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
@@ -136,12 +154,19 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
-            FrameBox* cell = c->asFrameTableCellBox();
+            FrameTableCellBox* cell = c->asFrameTableCellBox();
             cell->setX(xSoFar);
             STARFISH_ASSERT(i <
                             sectionBox()->tableBox()->columnWidths().size());
-            LayoutUnit cellWidth =
-                sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+
+            LayoutUnit cellWidth = 0;
+            if (cell->colspan() > 1) {
+                cellWidth = colWithColspanAt(i)->cellWidth;
+            } else {
+                cellWidth =
+                    sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+            }
+
             cell->setWidth(cellWidth);
             cell->asFrameTableCellBox()->layoutWidth(ctx);
             xSoFar += cellWidth;
@@ -150,7 +175,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
                 xSoFar += borderSpacing;
             }
 
-            i++;
+            i += cell->colspan();
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();

@@ -33,7 +33,7 @@ public:
     static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent,
                                                         Node* node);
 
-    void calCellWidth(LayoutContext& ctx, unsigned pos,
+    void calCellWidth(LayoutContext& ctx,
                       Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
@@ -48,7 +48,7 @@ public:
         return parent()->asFrameTableRowBox();
     }
 
-    int colspan();
+    unsigned colspan();
 
     virtual bool isFrameTableCellBox()
     {

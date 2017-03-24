@@ -85,6 +85,7 @@ FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(
     return new FrameTableCellBox(nullptr, style);
 }
 
+// We follow the CSS definition of width in the implementation.
 // The width of a cell refers to the content width, which excludes the border
 // and padding, e.g., <td style="width: 100px">
 //
@@ -99,7 +100,7 @@ FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(
 //  |                          |
 //  +--------------------------+
 //
-void FrameTableCellBox::calCellWidth(LayoutContext& ctx, unsigned pos,
+void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
                                      Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
@@ -185,9 +186,6 @@ void FrameTableCellBox::applyVerticalAlign()
     }
 
     // 3. Move all child boxes by yPosOffset
-    // Child boxes may have moved by a previous call of applyVerticalAlign().
-    // In this case, we move child boxes back to their starting positions, and
-    // move them by yPosOffset.
     if (hasBlockFlow()) {
         for (Frame* c = firstChild(); c; c = c->next()) {
             if (c->isFrameBlockBox()) {
@@ -224,7 +222,7 @@ LayoutUnit FrameTableCellBox::calBaseline()
     return 0;
 }
 
-int FrameTableCellBox::colspan()
+unsigned FrameTableCellBox::colspan()
 {
     String* colspan = String::emptyString;
     if (isAnonymous()) {
@@ -245,6 +243,7 @@ int FrameTableCellBox::colspan()
 
     int num = String::parseInt(colspan);
     // If colspan is not defined, use 1 as the default value
-    return num == 0 ? 1 : num;
+    // Negative colspan value is ignored
+    return num <= 0 ? 1 : num;
 }
 }
