@@ -25,13 +25,13 @@
 
 namespace StarFish {
 
-RowStruct::RowStruct(FrameTableRowBox* tableRow_)
-    : tableRow(tableRow_)
+RowStruct::RowStruct(FrameTableRowBox* tableRow)
+    : m_tableRow(tableRow)
 {
     unsigned i = 0;
     for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
         if (cell->isFrameTableCellBox()) {
-            cells.push_back(CellStruct(cell->asFrameTableCellBox(), i));
+            m_cells.push_back(CellStruct(cell->asFrameTableCellBox(), i));
             i += cell->asFrameTableCellBox()->colspan();
         }
     }
@@ -40,31 +40,31 @@ RowStruct::RowStruct(FrameTableRowBox* tableRow_)
 unsigned RowStruct::logicalColumnSize()
 {
     if (lastCell()) {
-        return lastCell()->id + lastCell()->cell->colspan();
+        return lastCell()->id() + lastCell()->cell()->colspan();
     }
     return 0;
 }
 
 CellStruct* RowStruct::logicalCellStructAt(size_t id)
 {
-    if (id < cells.size()) {
-        if (cells[id].id == id) {
-            return &cells[id];
+    if (id < m_cells.size()) {
+        if (m_cells[id].id() == id) {
+            return &m_cells[id];
         }
     }
 
     size_t logicalId = 0;
-    for (size_t i = 0; i < cells.size(); i++) {
+    for (size_t i = 0; i < m_cells.size(); i++) {
         if (id < logicalId) {
             break;
         }
 
-        CellStruct* cell = &cells[i];
-        if (cell->id == id) {
+        CellStruct* cell = &m_cells[i];
+        if (cell->id() == id) {
             return cell;
         }
 
-        logicalId += cell->cell->colspan();
+        logicalId += cell->cell()->colspan();
     }
 
     return nullptr;
@@ -129,15 +129,15 @@ FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(
 
 void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
 {
-    for (const auto& rowStruct : m_grid) {
-        for (auto& cellStruct : rowStruct.cells) {
-            LayoutRect rect(rowStruct.tableRow->x() + cellStruct.cell->x(),
-                            rowStruct.tableRow->y() + cellStruct.cell->y(),
-                            cellStruct.cell->frameRect().width(),
-                            cellStruct.cell->frameRect().height());
+    for (auto& rowStruct : m_grid) {
+        for (auto& cellStruct : rowStruct.cells()) {
+            LayoutRect rect(rowStruct.tableRow()->x() + cellStruct.cell()->x(),
+                            rowStruct.tableRow()->y() + cellStruct.cell()->y(),
+                            cellStruct.cell()->frameRect().width(),
+                            cellStruct.cell()->frameRect().height());
 
             FrameTableColBox* col = tableBox()->columnAtAbsoluteColumnIndex(
-                cellStruct.cell->absoluteColumnIndex());
+                cellStruct.cell()->absoluteColumnIndex());
             if (col) {
                 // Paint background using column-group style
                 if (col->parent()->isFrameTableColBox()) {
