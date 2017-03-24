@@ -28,11 +28,46 @@ namespace StarFish {
 RowStruct::RowStruct(FrameTableRowBox* tableRow_)
     : tableRow(tableRow_)
 {
+    unsigned i = 0;
     for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
         if (cell->isFrameTableCellBox()) {
-            cells.push_back(CellStruct(cell->asFrameTableCellBox()));
+            cells.push_back(CellStruct(cell->asFrameTableCellBox(), i));
+            i += cell->asFrameTableCellBox()->colspan();
         }
     }
+}
+
+unsigned RowStruct::logicalColumnSize()
+{
+    if (lastCell()) {
+        return lastCell()->id + lastCell()->cell->colspan();
+    }
+    return 0;
+}
+
+CellStruct* RowStruct::logicalCellStructAt(size_t id)
+{
+    if (id < cells.size()) {
+        if (cells[id].id == id) {
+            return &cells[id];
+        }
+    }
+
+    size_t logicalId = 0;
+    for (size_t i = 0; i < cells.size(); i++) {
+        if (id < logicalId) {
+            break;
+        }
+
+        CellStruct* cell = &cells[i];
+        if (cell->id == id) {
+            return cell;
+        }
+
+        logicalId += cell->cell->colspan();
+    }
+
+    return nullptr;
 }
 
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
@@ -165,29 +200,36 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
     size_t logicalColSize = 0;
     for (size_t i = 0; i < m_grid.size(); i++) {
         RowStruct& row = m_grid[i];
-        logicalColSize = std::max<size_t>(logicalColSize, row.cells.size());
+        unsigned colSize = row.logicalColumnSize();
+        logicalColSize = std::max<size_t>(logicalColSize, colSize);
     }
 
-    // 2. get min/max column width for each column that does not have a colspan
+    // 2. get min/max column width for each column that does not have a colspan.
+    // Empty columns are filled with empty ColSizeStruct.
     m_columnWidths.clear();
     for (size_t c = 0; c < logicalColSize; c++) {
         LayoutUnit minCellWidthSoFar = 0;
         LayoutUnit maxCellWidthSoFar = 0;
         LayoutUnit maxSpecifiedWidth = 0;
+
+        // TODO: rowspan is not yet supported
         for (size_t r = 0; r < m_grid.size(); r++) {
             RowStruct& row = m_grid[r];
-            if (c < row.cells.size()) {
-                FrameTableCellBox* cell = row.cells[c].cell;
-                minCellWidthSoFar =
-                    std::max(minCellWidthSoFar, cell->minCellWidth());
-                maxCellWidthSoFar =
-                    std::max(maxCellWidthSoFar, cell->maxCellWidth());
-                if (cell->style()->width().isFixed()) {
-                    LayoutUnit width = cell->style()->width().fixed();
-                    width += cell->borderWidth() + cell->paddingWidth();
-                    maxSpecifiedWidth = std::max(maxSpecifiedWidth, width);
-                } else if (cell->style()->width().isPercent()) {
-                    // Not doing anything at this stage
+            if (c < row.logicalColumnSize()) {
+                FrameTableCellBox* cell = row.logicalCellAt(c);
+
+                if (cell && cell->colspan() == 1) {
+                    minCellWidthSoFar =
+                        std::max(minCellWidthSoFar, cell->minCellWidth());
+                    maxCellWidthSoFar =
+                        std::max(maxCellWidthSoFar, cell->maxCellWidth());
+                    if (cell->style()->width().isFixed()) {
+                        LayoutUnit width = cell->style()->width().fixed();
+                        width += cell->borderWidth() + cell->paddingWidth();
+                        maxSpecifiedWidth = std::max(maxSpecifiedWidth, width);
+                    } else if (cell->style()->width().isPercent()) {
+                        // Not doing anything at this stage
+                    }
                 }
             }
         }
@@ -199,8 +241,41 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
         col.cellWidth = maxCellWidthSoFar;
         m_columnWidths.push_back(col);
     }
+}
 
-    // 3. TODO: increase column widths to fit the columns with colspans.
+void FrameTableSectionBox::calCellWidthsWithColspans()
+{
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
+        tableBox()->style()->horizontalBorderSpacing().fixed());
+
+    for (Frame* r = firstChild(); r; r = r->next()) {
+        STARFISH_ASSERT(r->isFrameTableRowBox());
+        FrameTableRowBox* row = r->asFrameTableRowBox();
+
+        unsigned id = 0;
+        for (Frame* c = row->firstChild(); c; c = c->next()) {
+            STARFISH_ASSERT(c->isFrameTableCellBox());
+            FrameTableCellBox* cell = c->asFrameTableCellBox();
+
+            if (cell->colspan() > 1) {
+                LayoutUnit cellWidth = 0;
+                for (size_t i = id; i < id + cell->colspan(); i++) {
+                    cellWidth += tableBox()->columnWidths()[i].cellWidth;
+
+                    if (i < id + cell->colspan() - 1) {
+                        cellWidth += borderSpacing;
+                    }
+                }
+
+                ColSizeStruct col;
+                col.id = id;
+                col.cellWidth = cellWidth;
+                row->colsWithColspans().push_back(col);
+            }
+
+            id += cell->colspan();
+        }
+    }
 }
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)

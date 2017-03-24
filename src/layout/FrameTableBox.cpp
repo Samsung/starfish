@@ -213,6 +213,7 @@ void FrameTableBox::layout(LayoutContext& ctx,
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         calCellWidth(ctx);
+        calCellWidthsWithColspans();
         layoutWidth(ctx);
     }
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
@@ -223,6 +224,23 @@ void FrameTableBox::layout(LayoutContext& ctx,
         MarginInfo marginInfo(top, bottom, true, style()->height());
         setMarginInfo(&marginInfo);
         layoutHeight(ctx);
+    }
+}
+
+FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
+{
+    FrameTableCellBox* cell = m_cellsInTheFirstRow[id];
+    if (cell) {
+        return cell;
+    } else {
+        for (size_t i = id - 1; i >= 0; i--) {
+            if (m_cellsInTheFirstRow[i]) {
+                return m_cellsInTheFirstRow[i];
+            }
+        }
+        // empty cells in the first row
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return nullptr;
     }
 }
 
@@ -238,9 +256,15 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         return;
     }
 
+    // We use nullptr to occupy spaces for non-existing cells because of
+    // previous colspans
     FrameTableRowBox* row = firstSection->firstChild()->asFrameTableRowBox();
     for (Frame* c = row->firstChild(); c; c = c->next()) {
-        m_cellsInTheFirstRow.push_back(c->asFrameTableCellBox());
+        FrameTableCellBox* cell = c->asFrameTableCellBox();
+        m_cellsInTheFirstRow.push_back(cell);
+        for (unsigned i = 1; i < cell->colspan(); i++) {
+            m_cellsInTheFirstRow.push_back(nullptr);
+        }
     }
 
     // 1. The spec says to look at the first row only to get the width for each
@@ -276,9 +300,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     std::vector<ColSizeStruct*> cellsWithAutoWidths;
     std::vector<ColSizeStruct*> cellsWithSpecifiedWidths;
     for (auto& col : m_columnWidths) {
-        STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-        FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
-
         if (isCellWidthAuto(col.id)) {
             cellsWithAutoWidths.push_back(&col);
         } else {
@@ -354,7 +375,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         for (auto& c : cellsWithSpecifiedWidths) {
             ColSizeStruct& col = *c;
             STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-            FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+            FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
             LayoutUnit specifiedWidth = 0;
             if (cell->style()->width().isFixed()) {
@@ -379,7 +400,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             for (auto& c : cellsWithSpecifiedWidths) {
                 ColSizeStruct& col = *c;
                 STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-                FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+                FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
                 if (cell->style()->width().isPercent()) {
                     LayoutUnit specifiedWidth =
@@ -418,7 +439,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                                     m_columnWidths.size());
 
                     for (auto& col : m_columnWidths) {
-                        FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+                        FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
                         LayoutUnit cellWidth = cell->style()->width().fixed();
                         cellWidth += cell->borderWidth() + cell->paddingWidth();
@@ -449,9 +470,24 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths;
         LayoutUnit sumOfColWidths = 0;
+
         for (auto& col : m_columnWidths) {
             STARFISH_ASSERT(col.id < m_columnWidths.size());
-            FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+            FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+
+            if (cell->colspan() > 1) {
+                if (col.hasSpecifiedWidth()) {
+                    LayoutUnit specifiedWidth = col.maxSpecifiedWidth;
+                    specifiedWidth +=
+                        cell->borderWidth() + cell->paddingWidth();
+                    col.cellWidth = specifiedWidth;
+                } else {
+                    col.cellWidth = col.maxCellWidth;
+                }
+
+                sumOfColWidths += col.cellWidth;
+                continue;
+            }
 
             if (isCellWidthAuto(col.id)) {
                 col.cellWidth = col.maxCellWidth;
@@ -598,7 +634,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 for (auto& c : columnsMayNeedToAdjustWidths) {
                     ColSizeStruct& col = *c;
                     STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-                    FrameTableCellBox* cell = m_cellsInTheFirstRow[col.id];
+                    FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
                     LayoutUnit cellWidth = cell->style()->width().fixed();
                     cellWidth += cell->borderWidth() + cell->paddingWidth();
@@ -610,6 +646,16 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     col.cellWidth = std::max(col.minCellWidth, newCellWidth);
                 }
             }
+        }
+    }
+}
+
+void FrameTableBox::calCellWidthsWithColspans()
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            FrameTableSectionBox* section = c->asFrameTableSectionBox();
+            section->calCellWidthsWithColspans();
         }
     }
 }
@@ -757,17 +803,25 @@ void FrameTableBox::collectColumnWidths(
     GCVector<ColSizeStruct>& columnWidthsSoFar,
     GCVector<ColSizeStruct>& columnWidths)
 {
-    // FIXME: absolute at this stage
-    // Need to consider absolute and logical columns
     if (columnWidthsSoFar.empty()) {
-        columnWidthsSoFar = columnWidths;
+        for (auto& col : columnWidths) {
+            // Add empty ColSizeStruct as place holders
+            while (columnWidthsSoFar.size() < col.id) {
+                columnWidthsSoFar.push_back(ColSizeStruct());
+            }
+            columnWidthsSoFar.push_back(col);
+        }
+
     } else {
         // FIXME: Update to support colspans
         for (unsigned i = 0; i < columnWidths.size(); i++) {
             ColSizeStruct& col = columnWidths[i];
-            if (columnWidthsSoFar.size() == i) {
+
+            // Add empty ColSizeStruct as place holders
+            while (columnWidthsSoFar.size() < col.id) {
                 columnWidthsSoFar.push_back(ColSizeStruct());
             }
+
             ColSizeStruct& colSoFar = columnWidthsSoFar[i];
             colSoFar.maxCellWidth =
                 std::max(colSoFar.maxCellWidth, col.maxCellWidth);
@@ -798,6 +852,12 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
 
     if (style()->width().isAuto()) {
         // Table does not have a width
+
+        // matching cell is empty because of colspan of previous cell
+        if (m_cellsInTheFirstRow[i] == nullptr) {
+            return !m_columnWidths[i].hasSpecifiedWidth();
+        }
+
         if (i < m_cellsInTheFirstRow.size()) {
             STARFISH_ASSERT(i < m_columnWidths.size());
             if (m_cellsInTheFirstRow[i]->style()->width().isAuto() &&
@@ -810,6 +870,14 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
         return true;
     } else {
         // Table has a specified width
+
+        // matching cell is empty because of colspan of previous cell
+        // TODO: Do we need to consider specified widths in the rows in the
+        // same column? Check with Blink
+        if (m_cellsInTheFirstRow[i] == nullptr) {
+            return true;
+        }
+
         if (i < m_cellsInTheFirstRow.size()) {
             return m_cellsInTheFirstRow[i]->style()->width().isAuto();
         }

@@ -27,26 +27,48 @@ class FrameTableRowBox;
 class FrameTableCellBox;
 class ColSizeStruct;
 
-struct CellStruct {
+class CellStruct {
+public:
     CellStruct()
         : cell(nullptr)
     {
     }
 
-    CellStruct(FrameTableCellBox* cell_)
+    CellStruct(FrameTableCellBox* cell_, unsigned id_)
         : cell(cell_)
+        , id(id_)
     {
     }
 
     FrameTableCellBox* cell;
+    unsigned id; // logical Id
 };
 
-struct RowStruct {
+class RowStruct {
+public:
     RowStruct()
         : tableRow(nullptr)
     {
     }
     RowStruct(FrameTableRowBox* tableRow);
+
+    CellStruct* lastCell()
+    {
+        return cells.size() > 0 ? &cells[cells.size() - 1] : nullptr;
+    }
+
+    unsigned logicalColumnSize();
+    CellStruct* logicalCellStructAt(size_t id);
+
+    FrameTableCellBox* logicalCellAt(size_t id)
+    {
+        CellStruct* cell = logicalCellStructAt(id);
+        if (cell) {
+            return cell->cell;
+        }
+
+        return nullptr;
+    }
 
     FrameTableRowBox* tableRow;
     GCVector<CellStruct> cells;
@@ -62,6 +84,7 @@ public:
         FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx);
+    void calCellWidthsWithColspans();
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 

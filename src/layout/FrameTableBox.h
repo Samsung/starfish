@@ -108,6 +108,8 @@ public:
         return m_cellsInTheFirstRow;
     }
 
+    FrameTableCellBox* cellInTheFirstRowAt(unsigned id);
+
     GCVector<FrameTableColBox*>& colObjects()
     {
         return m_colObjects;
@@ -124,6 +126,7 @@ private:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
     void calCellWidth(LayoutContext& ctx);
+    void calCellWidthsWithColspans();
 
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
                              GCVector<ColSizeStruct>& columnWidths);

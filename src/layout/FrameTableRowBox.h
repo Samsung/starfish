@@ -23,6 +23,7 @@ namespace StarFish {
 
 class FrameTreeBuilderContext;
 class FrameTableCellBox;
+class ColSizeStruct;
 
 class FrameTableRowBox : public FrameTableObjectBox {
 public:
@@ -49,6 +50,13 @@ public:
     void layoutHeight(LayoutContext& ctx);
     void increaseCellHeightBy(LayoutUnit cellHeightOffset);
     void applyVerticalAlign();
+
+    GCVector<ColSizeStruct>& colsWithColspans()
+    {
+        return m_colsWithColspans;
+    }
+
+    ColSizeStruct* colWithColspanAt(unsigned id);
 
     LayoutUnit calBaseline();
 
@@ -89,6 +97,7 @@ private:
     unsigned m_rowIndex;
     unsigned m_lastAbsoluteColumnIndex;
     LayoutUnit m_baseline;
+    GCVector<ColSizeStruct> m_colsWithColspans;
 };
 }
 

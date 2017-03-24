@@ -713,7 +713,7 @@ test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003f07-ref.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003f08-ref.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-004.htm
-test/reftest/csswg-test/css21_original/tables/fixed-table-layout-005.htm
+#test/reftest/csswg-test/css21_original/tables/fixed-table-layout-005.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-006.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-007.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-009.htm
