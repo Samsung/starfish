@@ -26,29 +26,6 @@
 
 namespace StarFish {
 
-class TableFormattingContextBlock {
-public:
-    TableFormattingContextBlock(Frame* frm, LayoutContext& ctx)
-        : m_ctx(ctx)
-        , m_needs(false)
-    {
-        if (frm->isEstablishesBlockFormattingContext()) {
-            m_needs = true;
-            m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
-        }
-    }
-
-    ~TableFormattingContextBlock()
-    {
-        if (m_needs) {
-            m_ctx.removeBlockFormattingContext();
-        }
-    }
-
-    LayoutContext& m_ctx;
-    bool m_needs;
-};
-
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
     , m_tableRect(0, 0, 0, 0)
