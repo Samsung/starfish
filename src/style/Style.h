@@ -2013,11 +2013,11 @@ public:
     void dumpDOMStyle(Document* document);
 #endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
-    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent,
-                                bool isForPseudoElement = false);
+    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
 
-    void matchAllRules(Element* element, ComputedStyle* ret,
-                       ComputedStyle* parent, bool isForPseudoElement = false);
+    void matchAllRules(
+        Element* element, ComputedStyle* ret, ComputedStyle* parent,
+        PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
 
 protected:
     void apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
