@@ -226,7 +226,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
 
     ComputedStyle* style = new ComputedStyle(parentStyle);
     parent->document()->styleResolver()->matchAllRules(
-        parent->asElement(), style, parentStyle, true);
+        parent->asElement(), style, parentStyle, pseudoId);
 
     // TODO: Set the proper style according to the type of pseudo-elements
     if (pseudoId ==
@@ -254,7 +254,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
     FrameTreeBuilderContext& ctx)
 {
-    if (!parent->isElement() || parent->asElement()->isPseudoElement()) {
+    if (!parent->isElement() ||
+        !parent->asElement()->hasPseudoElement(pseudoId)) {
         return;
     }
 
@@ -269,10 +270,6 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         pseudoStyleForElementInternal(parent, pseudoId, parentStyle);
 
     if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
-        return;
-    }
-
-    if (pseudoStyle->pseudoType() != pseudoId) {
         return;
     }
 

@@ -2554,8 +2554,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 }
 
 ComputedStyle* StyleResolver::resolveStyle(Element* element,
-                                           ComputedStyle* parent,
-                                           bool isForPseudoElement)
+                                           ComputedStyle* parent)
 {
     ComputedStyle* style = new ComputedStyle(parent);
 
@@ -2585,7 +2584,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
         }
     }
 
-    matchAllRules(element, style, parent, isForPseudoElement);
+    matchAllRules(element, style, parent);
 
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent);
@@ -3932,25 +3931,13 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                                   ComputedStyle* parent,
-                                  bool isForPseudoElement)
+                                  PseudoElementType pseudoElementType)
 {
     Declarations userAgentDeclarations;
     Declarations authorDeclarations;
-
-    StyleResolver::PseudoElementType pseudoId = PseudoElementNone;
     CSSStyleSheet* sheet = m_sheets[0];
 
-    if (isForPseudoElement) {
-        if (element->hasPseudoElement(PseudoElementFirstLetter)) {
-            pseudoId = PseudoElementFirstLetter;
-        } else if (element->hasPseudoElement(PseudoElementFirstLine)) {
-            pseudoId = PseudoElementFirstLine;
-        } else if (element->hasPseudoElement(PseudoElementBefore)) {
-            pseudoId = PseudoElementBefore;
-        } else if (element->hasPseudoElement(PseudoElementAfter)) {
-            pseudoId = PseudoElementAfter;
-        }
-    } else {
+    if (pseudoElementType == PseudoElementType::PseudoElementNone) {
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
             GCDeque<CSSSelector*>* selectorList =
                 sheet->rules()[j]->selectorList();
@@ -3969,14 +3956,15 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         MatchResult result;
         if (matchSelector(element, selectorList, 0, result) ==
             Match::SelectorMatches) {
-            if (result.pseudoType != PseudoElementNone) {
+            if (result.pseudoType != PseudoElementType::PseudoElementNone) {
                 element->setPseudoElement(result.pseudoType);
-                if (pseudoId != PseudoElementNone) {
-                    ret->setPseudoType(pseudoId);
+                if (result.pseudoType == pseudoElementType) {
+                    ret->setPseudoType(pseudoElementType);
                     authorDeclarations.push_back(
                         sheet->rules()[j]->styleDeclaration());
                 }
-            } else if (pseudoId == PseudoElementNone) {
+            } else if (pseudoElementType ==
+                       PseudoElementType::PseudoElementNone) {
                 authorDeclarations.push_back(
                     sheet->rules()[j]->styleDeclaration());
             }
