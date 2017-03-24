@@ -2943,6 +2943,28 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     ctx.finishLine(false);
 }
 
+void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
+{
+    TableFormattingContextBlock context(this, ctx.layoutContext());
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+
+    calCellWidth(context.m_ctx);
+    LayoutUnit w = 0;
+    w += mbpWidth();
+    w += borderSpacing;
+
+    for (auto& col : columnWidths()) {
+        w += col.maxCellWidth;
+        w += borderSpacing;
+    }
+
+    ctx.updatePreferredMinWidth(w);
+    if (style()->display() == DisplayValue::InlineTableDisplayValue) {
+        ctx.updateCurrentLineWidth(this, w + ctx.unprocessedStartingMBPWidth());
+    }
+}
+
 void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
 {
     if (hasBlockFlow()) {

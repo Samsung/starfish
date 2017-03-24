@@ -44,6 +44,29 @@ class FrameTableColBox;
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
 
+class TableFormattingContextBlock {
+public:
+    TableFormattingContextBlock(Frame* frm, LayoutContext& ctx)
+        : m_ctx(ctx)
+        , m_needs(false)
+    {
+        if (frm->isEstablishesBlockFormattingContext()) {
+            m_needs = true;
+            m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
+        }
+    }
+
+    ~TableFormattingContextBlock()
+    {
+        if (m_needs) {
+            m_ctx.removeBlockFormattingContext();
+        }
+    }
+
+    LayoutContext& m_ctx;
+    bool m_needs;
+};
+
 class ColSizeStruct {
 public:
     ColSizeStruct()
@@ -79,6 +102,7 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
