@@ -30,31 +30,42 @@ class ColSizeStruct;
 class CellStruct {
 public:
     CellStruct()
-        : cell(nullptr)
+        : m_cell(nullptr)
     {
     }
 
-    CellStruct(FrameTableCellBox* cell_, unsigned id_)
-        : cell(cell_)
-        , id(id_)
+    CellStruct(FrameTableCellBox* cell, unsigned id)
+        : m_cell(cell)
+        , m_id(id)
     {
     }
 
-    FrameTableCellBox* cell;
-    unsigned id; // logical Id
+    FrameTableCellBox* cell()
+    {
+        return m_cell;
+    }
+
+    unsigned id()
+    {
+        return m_id;
+    }
+
+private:
+    FrameTableCellBox* m_cell;
+    unsigned m_id; // logical Id
 };
 
 class RowStruct {
 public:
     RowStruct()
-        : tableRow(nullptr)
+        : m_tableRow(nullptr)
     {
     }
     RowStruct(FrameTableRowBox* tableRow);
 
     CellStruct* lastCell()
     {
-        return cells.size() > 0 ? &cells[cells.size() - 1] : nullptr;
+        return m_cells.size() > 0 ? &m_cells[m_cells.size() - 1] : nullptr;
     }
 
     unsigned logicalColumnSize();
@@ -64,14 +75,25 @@ public:
     {
         CellStruct* cell = logicalCellStructAt(id);
         if (cell) {
-            return cell->cell;
+            return cell->cell();
         }
 
         return nullptr;
     }
 
-    FrameTableRowBox* tableRow;
-    GCVector<CellStruct> cells;
+    FrameTableRowBox* tableRow()
+    {
+        return m_tableRow;
+    }
+
+    GCVector<CellStruct>& cells()
+    {
+        return m_cells;
+    }
+
+private:
+    FrameTableRowBox* m_tableRow;
+    GCVector<CellStruct> m_cells;
 };
 
 class FrameTableSectionBox : public FrameTableObjectBox {

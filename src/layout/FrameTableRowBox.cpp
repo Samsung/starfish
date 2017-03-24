@@ -103,7 +103,7 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
                                      ->asFrameTableSectionBox()
                                      ->grid()[parentRow->rowIndex()];
                 unsigned curId = row.logicalColumnSize();
-                row.cells.push_back(
+                row.cells().push_back(
                     CellStruct(childFrame->asFrameTableCellBox(), curId));
             }
         }

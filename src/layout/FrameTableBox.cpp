@@ -984,8 +984,8 @@ LayoutUnit FrameTableBox::calBaseline()
     RowStruct& firstRS = firstSection->grid()[0];
     LineBox* tallestLB = nullptr;
     bool isBaseLine = false;
-    for (size_t i = 0; i < firstRS.cells.size(); ++i) {
-        FrameTableCellBox* c = firstRS.cells[i].cell;
+    for (size_t i = 0; i < firstRS.cells().size(); ++i) {
+        FrameTableCellBox* c = firstRS.cells()[i].cell();
         LineBox* flb = c->firstLineBox();
 
         if (flb && (!tallestLB || (tallestLB->height() < flb->height()))) {
@@ -997,17 +997,17 @@ LayoutUnit FrameTableBox::calBaseline()
 
     if (tallestLB) {
         if (isBaseLine) {
-            return firstRS.tableRow->absolutePoint(this).y() +
-                   firstRS.tableRow->baseline();
+            return firstRS.tableRow()->absolutePoint(this).y() +
+                   firstRS.tableRow()->baseline();
         }
         return tallestLB->absolutePoint(this).y() + tallestLB->height();
-    } else if (firstRS.cells.size()) {
+    } else if (firstRS.cells().size()) {
         // Empty cell
-        return firstRS.cells[0].cell->absolutePoint(this).y() +
-               (firstRS.cells[0].cell->height().toDouble() / 2);
+        return firstRS.cells()[0].cell()->absolutePoint(this).y() +
+               (firstRS.cells()[0].cell()->height().toDouble() / 2);
     }
     // Empty first row
-    return firstRS.tableRow->absolutePoint(this).y();
+    return firstRS.tableRow()->absolutePoint(this).y();
 }
 
 FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
