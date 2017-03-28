@@ -3092,24 +3092,47 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
+    if (ctx.isPendingWrapLine()) {
+        ctx.breakLine(true);
+    }
+
     TableFormattingContextBlock context(this, ctx.layoutContext());
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
-    calCellWidth(context.m_ctx);
-    LayoutUnit w = 0;
-    w += mbpWidth();
-    w += borderSpacing;
+    LayoutUnit tablePreferredWidth = 0;
+    LayoutUnit tablePreferredMinWidth = 0;
+    if (style()->width().isFixed()) {
+        tablePreferredWidth = LayoutUnit::fromPixel(style()->width().fixed());
 
-    for (auto& col : columnWidths()) {
-        w += col.maxCellWidth;
-        w += borderSpacing;
+        if (!isAnonymous() &&
+            node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+            tablePreferredWidth -= borderWidth() + paddingWidth();
+        }
+        tablePreferredMinWidth = tablePreferredWidth;
+    } else {
+        calCellWidth(context.m_ctx);
+        tablePreferredWidth += borderSpacing;
+        tablePreferredMinWidth += borderSpacing;
+
+        for (auto& col : columnWidths()) {
+            if (isCellWidthAuto(col.id)) {
+                tablePreferredWidth += col.maxCellWidth;
+                tablePreferredMinWidth += col.minCellWidth;
+            } else {
+                tablePreferredWidth += col.cellWidth;
+                tablePreferredMinWidth += col.cellWidth;
+            }
+
+            tablePreferredWidth += borderSpacing;
+            tablePreferredMinWidth += borderSpacing;
+        }
     }
 
-    ctx.updatePreferredMinWidth(w);
-    if (style()->display() == DisplayValue::InlineTableDisplayValue) {
-        ctx.updateCurrentLineWidth(this, w + ctx.unprocessedStartingMBPWidth());
-    }
+    ctx.updatePreferredMinWidth(tablePreferredMinWidth);
+    ctx.updateCurrentLineWidth(this, tablePreferredWidth +
+                                         ctx.unprocessedStartingMBPWidth());
+    ctx.finishLine(false);
 }
 
 void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
