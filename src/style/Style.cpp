@@ -2464,7 +2464,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
         if (data[i] == '(') {
             inParenthesis = true;
         } else if (data[i] == ')') {
-        } else if (data[i] == '"') {
+        } else if (data[i] == '"' || data[i] == '\'') {
             inQuotes = !inQuotes;
         }
 
