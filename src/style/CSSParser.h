@@ -230,6 +230,30 @@ public:
         }
     }
 
+    bool consumeAttr()
+    {
+        consumeWhitespaces();
+        size_t len = 0;
+        char* start = m_curPos;
+        while (*m_curPos != ')' && m_curPos < m_endPos) {
+            if (String::isASCIISpace(*m_curPos)) {
+                consumeWhitespaces();
+                if (*m_curPos != ')') {
+                    return false;
+                }
+            } else {
+                m_curPos++;
+                len++;
+            }
+        }
+        if (*m_curPos != ')') {
+            return false;
+        }
+        m_parsedString = String::fromUTF8(start, len);
+        m_curPos++;
+        return true;
+    }
+
     String* parsedString()
     {
         return m_parsedString;
@@ -489,6 +513,22 @@ public:
         if (parser->consumeContentString()) {
             *ret = parser->parsedString();
             return true;
+        }
+        return false;
+    }
+
+    static bool parseAttr(String* str, String** ret)
+    {
+        CSSPropertyParser* parser =
+            new CSSPropertyParser((char*)str->utf8Data());
+        if (parser->consumeString()) {
+            String* name = parser->parsedString();
+            if (name->equals("attr") && parser->consumeIfNext('(')) {
+                if (parser->consumeAttr() && parser->isEnd()) {
+                    *ret = parser->parsedString();
+                    return true;
+                }
+            }
         }
         return false;
     }
