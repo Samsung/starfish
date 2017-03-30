@@ -2592,10 +2592,12 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
     return style;
 }
 
-void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
+void StyleResolver::apply(Element* element,
+                          GCVector<CSSStyleValuePair>& cssValues,
                           ComputedStyle* style, ComputedStyle* parentStyle,
                           bool isImportant)
 {
+    URL* origin = element->document()->documentURI();
     for (unsigned k = 0; k < cssValues.size(); k++) {
         if (isImportant != cssValues[k].flagImportant()) {
             continue;
@@ -3920,6 +3922,14 @@ void StyleResolver::apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::StringValueKind) {
                         style->setContentText(item.stringValue());
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::Attr) {
+                        String* attrValue = element->getAttribute(
+                            element->document()->createAttributeName(
+                                item.attrValue()));
+                        if (!attrValue->equals(String::emptyString)) {
+                            style->setContentText(attrValue);
+                        }
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -3973,33 +3983,33 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         }
     }
 
-    URL* url = element->document()->documentURI();
-
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(url, userAgentDeclarations[i]->m_cssValues, ret, parent, false);
+        apply(element, userAgentDeclarations[i]->m_cssValues, ret, parent,
+              false);
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(url, authorDeclarations[i]->m_cssValues, ret, parent, false);
+        apply(element, authorDeclarations[i]->m_cssValues, ret, parent, false);
     }
 
     // inline style
     if (element->inlineStyleWithoutCreation()) {
-        apply(url, element->inlineStyleWithoutCreation()->m_cssValues, ret,
+        apply(element, element->inlineStyleWithoutCreation()->m_cssValues, ret,
               parent, false);
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(url, authorDeclarations[i]->m_cssValues, ret, parent, true);
+        apply(element, authorDeclarations[i]->m_cssValues, ret, parent, true);
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(url, userAgentDeclarations[i]->m_cssValues, ret, parent, true);
+        apply(element, userAgentDeclarations[i]->m_cssValues, ret, parent,
+              true);
     }
 
     // inline style
     if (element->inlineStyleWithoutCreation()) {
-        apply(url, element->inlineStyleWithoutCreation()->m_cssValues, ret,
+        apply(element, element->inlineStyleWithoutCreation()->m_cssValues, ret,
               parent, true);
     }
 }
@@ -4808,6 +4818,8 @@ bool CSSStyleValuePair::updateValueContent(GCVector<String*>* tokens)
             } else if (parser->parseContentString(
                            value, &(ret.m_value.m_stringValue))) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+            } else if (parser->parseAttr(value, &(ret.m_value.m_stringValue))) {
+                ret.m_valueKind = CSSStyleValuePair::ValueKind::Attr;
             } else {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content

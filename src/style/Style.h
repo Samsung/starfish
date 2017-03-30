@@ -799,7 +799,10 @@ public:
         TransformFunctions,
 
         // transition
-        TransitionPropertyValueKind
+        TransitionPropertyValueKind,
+
+        // content
+        Attr
     };
 
     CSSStyleValuePair()
@@ -1067,6 +1070,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == TransitionPropertyValueKind);
         return m_value.m_transitionProperty;
+    }
+
+    String* attrValue()
+    {
+        STARFISH_ASSERT(m_valueKind == Attr);
+        return m_value.m_stringValue;
     }
 
     union ValueData {
@@ -2026,7 +2035,7 @@ public:
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
 
 protected:
-    void apply(URL* origin, GCVector<CSSStyleValuePair>& cssValues,
+    void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
                ComputedStyle* style, ComputedStyle* parentStyle,
                bool isImportant = false);
 
