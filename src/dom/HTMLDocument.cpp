@@ -130,13 +130,11 @@ Element* HTMLDocument::createElement(AtomicString localName,
     return HTMLDocument::createHTMLElement(this, localName);
 }
 
-static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(
-    Document& document)
+static void createHtmlCaseInsensitiveAttributesSet(
+    Document& document, GCUnorderedMap<String*, size_t>& attrSet)
 {
     // This is the list of attributes in HTML 4.01 with values marked as "[CI]"
     // or case-insensitive
-    GCUnorderedMap<String*, size_t>* attrSet =
-        new GCUnorderedMap<String*, size_t>();
     StaticStrings* str = document.window()->starFish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
@@ -154,25 +152,27 @@ static GCUnorderedMap<String*, size_t>* createHtmlCaseInsensitiveAttributesSet(
         &mediaAttr, &methodAttr, &multipleAttr,
         &nohrefAttr, &noresizeAttr, &noshadeAttr, &nowrapAttr,
         &readonlyAttr, */ &str->m_rel,
-        /* &revAttr, &rulesAttr,
-        &scopeAttr, &scrollingAttr, &selectedAttr, &shapeAttr,
+        /* &revAttr, &rulesAttr,*/
+        &str->m_scope,
+        /*&scrollingAttr, &selectedAttr, &shapeAttr,
         &targetAttr, &textAttr, */ &str->m_type,
         /* &valignAttr, &valuetypeAttr, &vlinkAttr */
     };
 
     for (const QualifiedName* attr : caseInsesitiveAttributes) {
-        attrSet->insert(std::make_pair(attr->localName(), 1));
+        attrSet.insert(std::make_pair(attr->localName(), 1));
     }
-
-    return attrSet;
 }
 
 bool HTMLDocument::isCaseSensitiveAttribute(Document& document,
                                             const QualifiedName& attributeName)
 {
-    static GCUnorderedMap<String*, size_t>* caseInsensitiveAttrSet =
-        createHtmlCaseInsensitiveAttributesSet(document);
-    return caseInsensitiveAttrSet->find(attributeName.localName()) ==
-           caseInsensitiveAttrSet->end();
+    static GCUnorderedMap<String*, size_t> caseInsensitiveAttrSet;
+    if (caseInsensitiveAttrSet.size() == 0)
+        createHtmlCaseInsensitiveAttributesSet(document,
+                                               caseInsensitiveAttrSet);
+
+    return caseInsensitiveAttrSet.find(attributeName.localName()) ==
+           caseInsensitiveAttrSet.end();
 }
 }

@@ -761,6 +761,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "type"));
     m_dir = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "dir"));
+    m_disabled =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "disabled"));
     m_color = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "color"));
     m_face = QualifiedName(AtomicString::emptyAtomicString(),
@@ -779,6 +782,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "rowspan"));
     m_span = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "span"));
+    m_scope = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "scope"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));
