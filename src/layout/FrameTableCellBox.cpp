@@ -148,6 +148,11 @@ void FrameTableCellBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     // Do not print borders and background if the cell width is 0
     if (width() > 0) {
+        Color bgColor;
+        if (bgColorFromAttribute(&bgColor)) {
+            style()->setBackgroundColor(bgColor);
+        }
+
         FrameBox::paintBackgroundAndBorders(canvas);
     }
 }

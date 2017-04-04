@@ -780,6 +780,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "colspan"));
     m_rowspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "rowspan"));
+    m_bgColor = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "bgcolor"));
     m_span = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "span"));
     m_scope = QualifiedName(AtomicString::emptyAtomicString(),

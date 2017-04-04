@@ -213,6 +213,7 @@ public:
     QualifiedName m_lang;
     QualifiedName m_colspan;
     QualifiedName m_rowspan;
+    QualifiedName m_bgColor;
     QualifiedName m_span;
     QualifiedName m_scope;
     QualifiedName m_disabled;

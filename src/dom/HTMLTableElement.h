@@ -66,6 +66,19 @@ public:
                      String::fromInt(width));
     }
 
+    String* bgColor()
+    {
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_bgColor);
+    }
+
+    void setBgColor(String* bgColor)
+    {
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_bgColor,
+            bgColor);
+    }
+
     /* Other methods (not in DOM API) */
 
     virtual bool isHTMLTableElement() const
