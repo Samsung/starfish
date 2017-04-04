@@ -18,6 +18,7 @@
 #define __StarFishFrameTableCellBox__
 
 #include "layout/FrameTableObjectBox.h"
+#include "layout/FrameTableBox.h"
 
 namespace StarFish {
 

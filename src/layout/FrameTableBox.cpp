@@ -322,8 +322,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         }
     }
 
-#ifndef NDEBUG
-    // This is used only to run w3c test cases.
+    // We support <table width="xx"> unofficially, as it is used to run
+    // w3c test cases, and real-world web sites.
     // width attribute has the highest priority when defining the width of
     // a table.
     //
@@ -332,13 +332,13 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // Firefox ignores width="0". We ignore width="0"
     if (!isAnonymous() &&
         node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
-        LayoutUnit widthAttribute = widthFromAttribute();
+        LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
         if (widthAttribute > 0) {
             hasTableWidth = true;
             tableWidth = widthAttribute;
+            tableWidth -= borderWidth() + paddingWidth();
         }
     }
-#endif
 
     // 3. If a width of the table is given, we either increase or decrease the
     // cell widths to fit them into the width of table.

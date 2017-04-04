@@ -3100,17 +3100,11 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
+    LayoutUnit parentContentWidth =
+        ctx.layoutContext().parentContentWidth(this);
     LayoutUnit tablePreferredWidth = 0;
     LayoutUnit tablePreferredMinWidth = 0;
-    if (style()->width().isFixed()) {
-        tablePreferredWidth = LayoutUnit::fromPixel(style()->width().fixed());
-
-        if (!isAnonymous() &&
-            node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
-            tablePreferredWidth -= borderWidth() + paddingWidth();
-        }
-        tablePreferredMinWidth = tablePreferredWidth;
-    } else {
+    if (style()->width().isAuto()) {
         calCellWidth(context.m_ctx);
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
@@ -3126,6 +3120,31 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
 
             tablePreferredWidth += borderSpacing;
             tablePreferredMinWidth += borderSpacing;
+        }
+    } else {
+        if (style()->width().isFixed()) {
+            tablePreferredWidth =
+                LayoutUnit::fromPixel(style()->width().fixed());
+
+            if (!isAnonymous() &&
+                node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+                tablePreferredWidth -= borderWidth() + paddingWidth();
+            }
+            tablePreferredMinWidth = tablePreferredWidth;
+        } else if (style()->width().isPercent()) {
+            LayoutUnit tableWidth =
+                parentContentWidth.toInt() * style()->width().percent();
+            tableWidth -= borderWidth() + paddingWidth();
+            tablePreferredWidth = tablePreferredMinWidth = tableWidth;
+        }
+    }
+
+    if (!isAnonymous() &&
+        node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+        LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
+        if (widthAttribute > 0) {
+            widthAttribute -= borderWidth() + paddingWidth();
+            tablePreferredWidth = tablePreferredMinWidth = widthAttribute;
         }
     }
 

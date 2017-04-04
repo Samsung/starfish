@@ -53,7 +53,7 @@ public:
             ->m_tableTagName;
     }
 
-#ifndef NDEBUG
+    /* Not in HTML5 */
     String* width()
     {
         return getAttribute(
@@ -65,7 +65,6 @@ public:
         setAttribute(document()->window()->starFish()->staticStrings()->m_width,
                      String::fromInt(width));
     }
-#endif
 
     /* Other methods (not in DOM API) */
 
