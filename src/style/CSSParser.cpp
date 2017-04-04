@@ -993,6 +993,7 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain,
 void CSSParser::parseSelector(GCVector<GCDeque<CSSSelector*>*>& list,
                               bool& validSelector)
 {
+    m_failedParsing = false;
     validSelector = parseComplexSelectorList(list);
     if (!validSelector) {
         list.clear();
@@ -1072,10 +1073,10 @@ CSSSelector* CSSParser::getPseudoSelector()
     selector->updatePseudoType(token->m_value->toLower(), token->isFunction());
 
     if (token->isIdent()) {
-        token = getToken(true, true);
         if (selector->pseudoType() == CSSSelector::PseudoNone) {
             return nullptr;
         }
+        token = getToken(true, true);
         return selector;
     }
 
