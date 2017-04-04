@@ -4,3 +4,6 @@
 [submodule "test"]
 	path = test
 	url = http://coding.sec.samsung.net/RS7-webtf/widget-tc.git
+[submodule "binding_generator"]
+	path = binding_generator
+	url = git@coding.sec.samsung.net:RS7-webtf/binding_generator.git
