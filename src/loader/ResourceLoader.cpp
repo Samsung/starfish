@@ -257,7 +257,7 @@ void ResourceLoader::cachePruning()
                 size_t siz = data.m_resource->contentSize();
                 m_resourceCacheSize -= siz;
                 removedSize += siz;
-                m_imageResourceCache.erase(iter++);
+                iter = m_imageResourceCache.erase(iter);
             } else {
                 iter++;
             }
@@ -281,7 +281,7 @@ void ResourceLoader::cachePruning()
                     removedSize += siz;
                     m_imageResourceCache.erase(iter2);
                 }
-                m_imageResourceCacheLRUList.erase(iter++);
+                iter = m_imageResourceCacheLRUList.erase(iter);
             }
         }
 
