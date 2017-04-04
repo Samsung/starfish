@@ -3,4 +3,4 @@
 	url = http://10.113.64.74/webtf/escargot.git
 [submodule "test"]
 	path = test
-	url = http://suprem.sec.samsung.net/gerrit/OWES/widget-tc
+	url = http://coding.sec.samsung.net/RS7-webtf/widget-tc.git
