@@ -66,6 +66,20 @@ public:
             document()->window()->starFish()->staticStrings()->m_rowspan);
     }
 
+    /* Not in HTML5 */
+    String* bgColor()
+    {
+        return getAttribute(
+            document()->window()->starFish()->staticStrings()->m_bgColor);
+    }
+
+    void setBgColor(String* bgColor)
+    {
+        setAttribute(
+            document()->window()->starFish()->staticStrings()->m_bgColor,
+            bgColor);
+    }
+
 protected:
 };
 

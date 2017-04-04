@@ -33,6 +33,35 @@ public:
         return true;
     }
 
+    bool bgColorFromAttribute(Color* ret)
+    {
+        if (isAnonymous() ||
+            !(node()->asElement()->asHTMLElement()->isHTMLTableElement() ||
+              node()->asElement()->asHTMLElement()->isHTMLTDElement() ||
+              node()->asElement()->asHTMLElement()->isHTMLTHElement())) {
+            return false;
+        }
+
+        String* color = nullptr;
+        HTMLElement* elem = node()->asElement()->asHTMLElement();
+        if (elem->isHTMLTableElement()) {
+            color = elem->asHTMLTableElement()->bgColor();
+        } else if (elem->isHTMLTDElement()) {
+            color = elem->asHTMLTDElement()->bgColor();
+        } else if (elem->isHTMLTHElement()) {
+            color = elem->asHTMLTHElement()->bgColor();
+        }
+
+        if (color && (!color->equals(String::emptyString))) {
+            CSSStyleValuePair pair;
+            if (pair.updateValueUnitColor(color)) {
+                *ret = pair.colorValue();
+                return true;
+            }
+        }
+        return false;
+    }
+
 protected:
     void paintBorders(Canvas* canvas, LayoutRect& rect);
 };
