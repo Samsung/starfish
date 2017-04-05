@@ -1,6 +1,0 @@
-[submodule "third_party/escargot"]
-	path = third_party/escargot
-	url = git@10.113.64.203:escargot/escargot.git
-[submodule "test"]
-	path = test
-	url = http://coding.sec.samsung.net/RS7-webtf/widget-tc.git
