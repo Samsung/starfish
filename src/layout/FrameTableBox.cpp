@@ -428,13 +428,53 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         col.cellWidth += extraCellWidth;
                     }
                 } else {
-                    // Distribute available spaces equally among cells with
-                    // "width: auto"
-                    LayoutUnit newCellWidth = LayoutUnit(
-                        remainingWidth.toDouble() / cellsWithAutoWidths.size());
-                    for (auto& c : cellsWithAutoWidths) {
-                        ColSizeStruct& col = *c;
-                        col.cellWidth = newCellWidth;
+                    if (style()->tableLayout() ==
+                        TableLayoutValue::FixedTableLayoutValue) {
+                        // Distribute available spaces equally among cells with
+                        // "layout-layout: fixed"
+                        LayoutUnit newCellWidth =
+                            LayoutUnit(remainingWidth.toDouble() /
+                                       cellsWithAutoWidths.size());
+                        for (auto& c : cellsWithAutoWidths) {
+                            ColSizeStruct& col = *c;
+                            col.cellWidth = newCellWidth;
+                        }
+                    } else {
+                        // Adjust cell width in proportion to its preferred
+                        // width
+                        LayoutUnit sumOfAutoCellPreferredWidths = 0;
+                        LayoutUnit sumOfAdjustedSpecifiedCellWidths = 0;
+                        std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
+                        std::vector<ColSizeStruct*>
+                            columnsMayNeedToAdjustWidths;
+                        LayoutUnit sumOfColWidths = 0;
+
+                        setCandidateCellWidthsAndReturnCellInfo(
+                            &sumOfAutoCellPreferredWidths,
+                            &sumOfAdjustedSpecifiedCellWidths,
+                            &columnsAdjustedToMinWidths,
+                            &columnsMayNeedToAdjustWidths, &sumOfColWidths);
+
+                        LayoutUnit newEqualCellWidth =
+                            LayoutUnit(remainingWidth.toDouble() /
+                                       cellsWithAutoWidths.size());
+                        for (auto& c : cellsWithAutoWidths) {
+                            ColSizeStruct& col = *c;
+                            printf("max: %d\n", col.maxCellWidth.toInt());
+
+                            LayoutUnit newCellWidth = 0;
+                            if (col.isEmptyCell()) {
+                                newCellWidth = newEqualCellWidth;
+                            } else {
+                                newCellWidth = LayoutUnit(
+                                    col.maxCellWidth.toDouble() /
+                                    sumOfAutoCellPreferredWidths.toDouble() *
+                                    remainingWidth.toDouble());
+                            }
+
+                            col.cellWidth =
+                                std::max(col.minCellWidth, newCellWidth);
+                        }
                     }
                 }
             }
@@ -448,50 +488,10 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths;
         LayoutUnit sumOfColWidths = 0;
 
-        for (auto& col : m_columnWidths) {
-            STARFISH_ASSERT(col.id < m_columnWidths.size());
-            FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
-
-            if (cell->colspan() > 1) {
-                if (col.hasSpecifiedWidth()) {
-                    LayoutUnit specifiedWidth = col.maxSpecifiedWidth;
-                    specifiedWidth +=
-                        cell->borderWidth() + cell->paddingWidth();
-                    col.cellWidth = specifiedWidth;
-                } else {
-                    col.cellWidth = col.maxCellWidth;
-                }
-
-                sumOfColWidths += col.cellWidth;
-                continue;
-            }
-
-            if (isCellWidthAuto(col.id)) {
-                col.cellWidth = col.maxCellWidth;
-                sumOfAutoCellPreferredWidths += col.cellWidth;
-            } else {
-                LayoutUnit specifiedWidth = 0;
-                col.cellWidth = col.maxSpecifiedWidth;
-
-                if (cell->style()->width().isFixed()) {
-                    specifiedWidth =
-                        LayoutUnit::fromPixel(cell->style()->width().fixed());
-                    specifiedWidth +=
-                        cell->borderWidth() + cell->paddingWidth();
-                    col.cellWidth = specifiedWidth;
-                }
-
-                if (col.cellWidth < col.minCellWidth) {
-                    col.cellWidth = col.minCellWidth;
-                    columnsAdjustedToMinWidths.push_back(&col);
-                } else {
-                    columnsMayNeedToAdjustWidths.push_back(&col);
-                }
-                sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
-            }
-
-            sumOfColWidths += col.cellWidth;
-        }
+        setCandidateCellWidthsAndReturnCellInfo(
+            &sumOfAutoCellPreferredWidths, &sumOfAdjustedSpecifiedCellWidths,
+            &columnsAdjustedToMinWidths, &columnsMayNeedToAdjustWidths,
+            &sumOfColWidths);
 
         LayoutUnit tableWidthByAddingColWidths = sumOfColWidths;
         tableWidthByAddingColWidths += borderWidth() + paddingWidth();
@@ -624,6 +624,68 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 }
             }
         }
+    }
+}
+
+// All input parameters are used as out parameters
+void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
+    LayoutUnit* sumOfAutoCellPreferredWidths,
+    LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
+    std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
+    std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
+    LayoutUnit* sumOfColWidths)
+{
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+
+    for (auto& col : m_columnWidths) {
+        STARFISH_ASSERT(col.id < m_columnWidths.size());
+        FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+
+        if (cell->colspan() > 1) {
+            if (col.hasSpecifiedWidth()) {
+                LayoutUnit specifiedWidth = col.maxSpecifiedWidth;
+                specifiedWidth += cell->borderWidth() + cell->paddingWidth();
+                col.cellWidth = specifiedWidth;
+            } else {
+                col.cellWidth = col.maxCellWidth;
+            }
+
+            *sumOfColWidths += col.cellWidth;
+            if (isCellWidthAuto(col.id)) {
+                *sumOfAutoCellPreferredWidths += col.cellWidth;
+                if (m_cellsInTheFirstRow[col.id] != cell) {
+                    *sumOfAutoCellPreferredWidths += borderSpacing;
+                }
+            }
+            continue;
+        }
+
+        if (isCellWidthAuto(col.id)) {
+            col.cellWidth = col.maxCellWidth;
+            *sumOfAutoCellPreferredWidths += col.cellWidth;
+        } else {
+            LayoutUnit specifiedWidth = 0;
+            col.cellWidth = col.maxSpecifiedWidth;
+
+            if (cell->style()->width().isFixed()) {
+                specifiedWidth =
+                    LayoutUnit::fromPixel(cell->style()->width().fixed());
+                specifiedWidth += cell->borderWidth() + cell->paddingWidth();
+                col.cellWidth = specifiedWidth;
+            }
+
+            // A cell width cannot be smaller than the min width of the cell
+            if (col.cellWidth < col.minCellWidth) {
+                col.cellWidth = col.minCellWidth;
+                columnsAdjustedToMinWidths->push_back(&col);
+            } else {
+                columnsMayNeedToAdjustWidths->push_back(&col);
+            }
+            *sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
+        }
+
+        *sumOfColWidths += col.cellWidth;
     }
 }
 
