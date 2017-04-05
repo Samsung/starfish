@@ -53,6 +53,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isAvplay() const
+    {
+        return true;
+    }
+
     void open(String* url);
     void prepare();
     void setDisplayRect(double offsetLeft, double offsetTop, double offsetWidth,
