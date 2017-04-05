@@ -1570,10 +1570,8 @@ void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
         secondSelectorList.clear();
         parseCompoundSelector(&secondSelectorList);
 
-        if (secondSelectorList.size() == 0) {
-            return;
-        }
-        if (previousCompoundFlags & HasPseudoElementForRightmostCompound) {
+        if (m_failedParsing || secondSelectorList.size() == 0 ||
+            (previousCompoundFlags & HasPseudoElementForRightmostCompound)) {
             return;
         }
 
