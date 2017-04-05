@@ -29,7 +29,6 @@ static ESValue getComputedStyleFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
                      Node);
         // Node* obj =
