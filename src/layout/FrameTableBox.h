@@ -84,6 +84,11 @@ public:
         return maxSpecifiedWidth == 0 ? false : true;
     }
 
+    bool isEmptyCell()
+    {
+        return (minCellWidth == 0) && (maxCellWidth == 0);
+    }
+
     size_t id;
     LayoutUnit maxSpecifiedWidth;
     LayoutUnit minCellWidth;
@@ -154,6 +159,12 @@ private:
     void layoutHeight(LayoutContext& ctx);
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
+    void setCandidateCellWidthsAndReturnCellInfo(
+        LayoutUnit* sumOfAutoCellPreferredWidths,
+        LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
+        std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
+        std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
+        LayoutUnit* sumOfColWidths);
 
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
                              GCVector<ColSizeStruct>& columnWidths);
