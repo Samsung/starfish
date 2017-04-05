@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue onLoadGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
@@ -41,7 +41,7 @@ static ESValue onLoadGetterFunction(ESVMInstance* instance)
 
 static ESValue onLoadSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
@@ -64,7 +64,7 @@ static ESValue onLoadSetterFunction(ESVMInstance* instance)
 
 static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
@@ -82,7 +82,7 @@ static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
 
 static ESValue onUnLoadSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {

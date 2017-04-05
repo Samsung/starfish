@@ -33,6 +33,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isCDataSection() const
+    {
+        return true;
+    }
+
     virtual String* nodeName();
     virtual String* localName();
 

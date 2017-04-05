@@ -93,29 +93,32 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
 
             // left-top
             canvas->drawBorderImage(
-                imgData, Rect(rect.x(), rect.y(), drawRect, drawRect), lSlice,
-                tSlice, 0, 0, scale, isFill);
+                imgData, Unit::Rect(rect.x(), rect.y(), drawRect, drawRect),
+                lSlice, tSlice, 0, 0, scale, isFill);
             // right-top
             canvas->drawBorderImage(imgData,
-                                    Rect((float)rect.width() - drawRect,
-                                         rect.y(), drawRect, drawRect),
+                                    Unit::Rect((float)rect.width() - drawRect,
+                                               rect.y(), drawRect, drawRect),
                                     0, tSlice, rSlice, 0, scale, isFill);
             // right-bottom
             canvas->drawBorderImage(
-                imgData, Rect((float)rect.width() - drawRect,
-                              (float)(rect.y() + rect.height()) - drawRect,
-                              drawRect, drawRect),
+                imgData,
+                Unit::Rect((float)rect.width() - drawRect,
+                           (float)(rect.y() + rect.height()) - drawRect,
+                           drawRect, drawRect),
                 0, 0, rSlice, bSlice, scale, isFill);
             // left-bottom
             canvas->drawBorderImage(
                 imgData,
-                Rect(rect.x(), (float)(rect.y() + rect.height()) - drawRect,
-                     drawRect, drawRect),
+                Unit::Rect(rect.x(),
+                           (float)(rect.y() + rect.height()) - drawRect,
+                           drawRect, drawRect),
                 lSlice, 0, 0, bSlice, scale, isFill);
         } else {
             isFill = style()->surround()->border.image().sliceFill();
             canvas->drawBorderImage(
-                imgData, Rect(rect.x(), rect.y(), rect.width(), rect.height()),
+                imgData,
+                Unit::Rect(rect.x(), rect.y(), rect.width(), rect.height()),
                 lSlice, tSlice, rSlice, bSlice, scale, isFill);
         }
     } else if (style()->hasBorderStyle()) {

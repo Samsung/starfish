@@ -126,8 +126,9 @@ public:
     virtual void drawContent(Canvas* canvas, const LayoutRect& contentRect,
                              const LayoutRect& absContentRect)
     {
-        canvas->punchHole(Rect(contentRect.x(), contentRect.y(),
-                               contentRect.width(), contentRect.height()));
+        canvas->punchHole(Unit::Rect(contentRect.x(), contentRect.y(),
+                                     contentRect.width(),
+                                     contentRect.height()));
     }
 
 protected:

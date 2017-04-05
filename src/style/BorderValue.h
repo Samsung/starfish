@@ -27,7 +27,7 @@ public:
         : m_style(BorderStyleValue::NoneBorderStyleValue)
         , m_hasBorderColor(false)
         , m_width(Length(Length::Fixed, 3))
-        , m_color(Color(0, 0, 0, 255))
+        , m_color(Unit::Color(0, 0, 0, 255))
     {
     }
 
@@ -43,7 +43,7 @@ public:
         return m_width;
     }
 
-    Color color()
+    Unit::Color color()
     {
         return m_color;
     }
@@ -58,7 +58,7 @@ public:
         m_width = length;
     }
 
-    void setColor(Color color)
+    void setColor(Unit::Color color)
     {
         m_color = color;
         m_hasBorderColor = true;
@@ -103,7 +103,7 @@ protected:
     bool m_hasBorderColor : 1;
 
     Length m_width;
-    Color m_color;
+    Unit::Color m_color;
 };
 
 } /* namespace StarFish */

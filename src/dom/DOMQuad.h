@@ -38,9 +38,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMQuad() const
     {
-        return ScriptWrappable::Type::DOMQuadObject;
+        return true;
     }
 
     DOMPoint* p1() const

@@ -21,6 +21,7 @@
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 
 namespace StarFish {
 
@@ -28,16 +29,14 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject,
-                                 SourceBufferList);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBufferList);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }
 
 static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject,
-                                 SourceBufferList);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBufferList);
     if (v.toIndex() >= originalObj->length()) {
         return ESValue(ESValue::ESUndefined);
     } else {

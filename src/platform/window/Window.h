@@ -34,7 +34,7 @@ class StackingContext;
 class CanvasSurface;
 class History;
 class Navigator;
-class webapis;
+class WebApis;
 class AnimationExecutor;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
@@ -54,7 +54,7 @@ public:
     void navigateAsyncWithoutSetHistory(URL* url);
     void setHistory(URL* url);
 
-    virtual bool isWindow()
+    virtual bool isWindow() const
     {
         return true;
     }
@@ -62,11 +62,6 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::WindowObject;
     }
 
     bool inRendering()
@@ -141,7 +136,7 @@ public:
         return m_navigator;
     }
 
-    LocationObj* location()
+    Location* location()
     {
         return m_location;
     }
@@ -152,7 +147,7 @@ public:
     }
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    webapis* Webapis()
+    WebApis* Webapis()
     {
         return m_webapis;
     }
@@ -311,11 +306,11 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     History* m_history;
     Navigator* m_navigator;
-    LocationObj* m_location;
+    Location* m_location;
     Document* m_document;
     AnimationExecutor* m_animationExecutor;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    webapis* m_webapis;
+    WebApis* m_webapis;
 #endif
     StackingContext* m_rootStackingContext;
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
@@ -323,7 +318,7 @@ protected:
     Node* m_focusedNode;
     Node* m_relatedTarget;
     Node* m_cssTarget;
-    Location m_touchDownPoint;
+    Unit::Location m_touchDownPoint;
     int m_ctrlKeyDown;
     int m_shiftKeyDown;
     int m_altKeyDown;
@@ -337,7 +332,6 @@ protected:
 
     GCVector<Node*> m_activeNodes;
     GCVector<Node*> m_hoveredNodes;
-    ;
 };
 }
 

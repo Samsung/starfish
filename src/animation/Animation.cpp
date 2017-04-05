@@ -96,8 +96,8 @@ float AnimationTask::progress()
 // * After this function, NeedsPainting flag will be set.
 void ColorAnimationTask::execute()
 {
-    Color from = m_fromValue.getColor();
-    Color to = m_toValue.getColor();
+    Unit::Color from = m_fromValue.getColor();
+    Unit::Color to = m_toValue.getColor();
 
     Node* current = node();
     ComputedStyle* style = current->style();
@@ -111,7 +111,7 @@ void ColorAnimationTask::execute()
 
     // TODO : More types should be supported
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
-        style->setBackgroundColor(Color(r, g, b, a));
+        style->setBackgroundColor(Unit::Color(r, g, b, a));
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

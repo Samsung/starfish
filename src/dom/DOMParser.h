@@ -36,9 +36,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isDOMParser() const
     {
-        return ScriptWrappable::Type::DOMParserObject;
+        return true;
     }
 
     StarFish* starFish()

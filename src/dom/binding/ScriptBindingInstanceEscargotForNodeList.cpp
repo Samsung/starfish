@@ -29,7 +29,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+    CHECK_TYPEOF(thisValue, NodeList);
     NodeList* nodeList =
         (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -44,8 +44,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 
 static ESValue lengthFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject,
-                                 NodeList);
+    GENERATE_THIS_AND_CHECK_TYPE(NodeList);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }

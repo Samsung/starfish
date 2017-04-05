@@ -18,161 +18,37 @@
 #define __StarFishScriptWrappable__
 
 #include <Escargot.h>
+#include "dom/binding/ScriptBindingInstance.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-class EventTarget;
-class Window;
-class Node;
-class Element;
-class Document;
-class DocumentFragment;
-class DocumentType;
-class HTMLDocument;
-class CharacterData;
-class Text;
-class CDataSection;
-class Comment;
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-class TimeRanges;
-class TextTrack;
-class TextTrackList;
-class TextTrackCue;
-class TextTrackCueList;
-class VTTCue;
-class MediaSource;
-class SourceBuffer;
-class SourceBufferList;
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-class webapis;
-class avplay;
-#endif
-#endif
-class HTMLElement;
-class HTMLHtmlElement;
-class HTMLHeadElement;
-class HTMLScriptElement;
-class HTMLStyleElement;
-class HTMLLinkElement;
-class HTMLBodyElement;
-class HTMLDivElement;
-class HTMLImageElement;
-class HTMLBRElement;
-class HTMLObjectElement;
-class HTMLMetaElement;
-class HTMLParagraphElement;
-class HTMLPreElement;
-class HTMLSpanElement;
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-class HTMLAnchorElement;
-#endif
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-class HTMLMediaElement;
-class HTMLVideoElement;
-class HTMLAudioElement;
-class HTMLTrackElement;
-class HTMLSourceElement;
-#endif
-class HTMLUnknownElement;
-class PseudoElement;
-class Event;
-class UIEvent;
-class MouseEvent;
-class TouchEvent;
-class FocusEvent;
-class KeyboardEvent;
-class ProgressEvent;
-class HTMLCollection;
-class NodeList;
-class DOMTokenList;
-class DOMSettableTokenList;
-class NamedNodeMap;
-class Attr;
-class CSSStyleDeclaration;
-class CSSStyleRule;
-class XMLHttpRequest;
-class Blob;
-class URL;
-class DOMException;
-#ifdef STARFISH_EXP
-class DOMImplementation;
-#endif
-class LocationObj;
-class History;
-class Navigator;
-class ScriptBindingInstance;
-class Geolocation;
-class Geoposition;
-class PositionError;
-class Coordinates;
-class DOMParser;
-class DOMRectReadOnly;
-class DOMRect;
-class DOMPointReadOnly;
-class DOMPoint;
-class DOMQuad;
-class DOMRectList;
-
-typedef ESValue ScriptValue;
-typedef ESObject* ScriptObject;
-typedef ESFunctionObject* ScriptFunction;
-#define ScriptValueUndefined ESValue()
-#define ScriptValueNull ESValue(ESValue::ESNull)
+#define FOR_EACH_FORWARD_DECLARATION(codeName, exportName) class exportName;
+STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
+#undef FOR_EACH_FORWARD_DECLARATION
 
 class ScriptWrappable : public gc {
 public:
-    enum Type {
-        None = 0,
-        EventTargetObject = 1,
-        WindowObject = 2 | EventTargetObject,
-        NodeObject = 4 | EventTargetObject,
-        XMLHttpRequestObject = 6 | EventTargetObject,
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-        TextTrackObject = 8 | EventTargetObject,
-        TextTrackListObject = 10 | EventTargetObject,
-        TextTrackCueObject = 12 | EventTargetObject,
-        MediaSourceObject = 14 | EventTargetObject,
-        SourceBufferObject = 16 | EventTargetObject,
-        SourceBufferListObject = 18 | EventTargetObject,
-        TextTrackCueListObject = 32,
-        TimeRangesObject = 34,
-#endif
-#ifdef STARFISH_EXP
-        DOMImplementationObject = 36,
-#endif
-        EventObject = 38,
-        HTMLCollectionObject = 40,
-        NodeListObject = 42,
-        DOMTokenListObject = 44,
-        DOMSettableTokenListObject = 46,
-        NamedNodeMapObject = 48,
-        CSSStyleDeclarationObject = 50,
-        CSSStyleRuleObject = 52,
-        BlobObject = 54,
-        URLObject = 56,
-        DOMExceptionObject = 58,
-        AttributeStringEventFunctionObject = 60,
-        NavigatorObject = 62,
-        GeolocationObject = 64,
-        GeopositionObject = 66,
-        PositionErrorObject = 68,
-        CoordinatesObject = 70,
-        DOMParserObject = 72,
-        LocationObject = 74,
-        DOMRectReadOnlyObject = 76,
-        DOMRectObject = 78,
-        DOMPointReadOnlyObject = 80,
-        DOMPointObject = 82,
-        DOMQuadObject = 84,
-        DOMRectListObject = 86,
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-        webapisObject = 88,
-        avplayObject = 90,
-#endif
-        HistoryObject = 92
-    };
+#define FOR_EACH_REFLECT_FN(codeName, exportName) \
+    virtual bool is##exportName() const           \
+    {                                             \
+        return false;                             \
+    }
+
+    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_REFLECT_FN);
+#undef FOR_EACH_REFLECT_FN
+
+#define FOR_EACH_CAST_FN(codeName, exportName) \
+    virtual exportName* as##exportName() const \
+    {                                          \
+        STARFISH_ASSERT(is##exportName());     \
+        return (exportName*)this;              \
+    }
+
+    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_CAST_FN);
+#undef FOR_EACH_CAST_FN
+
     ScriptWrappable(void* extraPointerData);
 
     ScriptObject scriptObject()
@@ -195,7 +71,6 @@ public:
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
-    virtual Type type() = 0;
 
     void initScriptWrappable(Window* ptr);
     void initScriptWrappable(Node* ptr);
@@ -249,8 +124,8 @@ public:
     void initScriptWrappable(SourceBuffer* ptr);
     void initScriptWrappable(SourceBufferList* ptr);
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    void initScriptWrappable(webapis* ptr);
-    void initScriptWrappable(avplay* ptr);
+    void initScriptWrappable(WebApis* ptr);
+    void initScriptWrappable(Avplay* ptr);
 #endif
 #endif
     void initScriptWrappable(Event* event);
@@ -273,7 +148,7 @@ public:
     void initScriptWrappable(URL* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMException* exception,
                              ScriptBindingInstance* instance);
-    void initScriptWrappable(LocationObj* ptr);
+    void initScriptWrappable(Location* ptr);
     void initScriptWrappable(History* ptr);
     void initScriptWrappable(Navigator* ptr);
     void initScriptWrappable(Geolocation* ptr);

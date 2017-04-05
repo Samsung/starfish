@@ -19,7 +19,7 @@
 #include "ScriptBindingInstance.h"
 
 #include "dom/DOM.h"
-#include "dom/TextTrack.h"
+#include "dom/TextTrackCueList.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {
@@ -28,8 +28,7 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueListObject,
-                                 TextTrackCueList);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCueList);
     uint32_t len = originalObj->size();
     return ESValue(len);
 }

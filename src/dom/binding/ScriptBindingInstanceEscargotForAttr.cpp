@@ -26,21 +26,21 @@ using namespace escargot;
 
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     String* n = ((Attr*)originalObj)->name().localName();
     return toJSString(n);
 }
 
 static ESValue valueGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     String* value = ((Attr*)originalObj)->value();
     return toJSString(value);
 }
 
 static ESValue valueSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     ((Attr*)originalObj)->setValue(toBrowserString(v));
     // FIXME(JMP): Actually this function have to return old Attr's value
     // but we have to modify 'typedef void (*ESNativeSetter)(...)' in
@@ -52,7 +52,7 @@ static ESValue valueSetterFunction(ESVMInstance* instance)
 static ESValue ownerElementGetterFunction(ESObject* obj, ESObject* originalObj,
                                           ESString* propertyName)
 {
-    CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(originalObj, Node);
     if (!((Node*)originalObj->extraPointerData())->isAttr()) {
         THROW_ILLEGAL_INVOCATION()
     }
@@ -67,7 +67,7 @@ static ESValue ownerElementGetterFunction(ESObject* obj, ESObject* originalObj,
 static ESValue specifiedGetterFunction(ESObject* obj, ESObject* originalObj,
                                        ESString* propertyName)
 {
-    CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(originalObj, Node);
     if (!((Node*)originalObj->extraPointerData())->isAttr()) {
         THROW_ILLEGAL_INVOCATION()
     }

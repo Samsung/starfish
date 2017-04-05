@@ -40,9 +40,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMImplementation() const
     {
-        return ScriptWrappable::Type::DOMImplementationObject;
+        return true;
     }
 
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,

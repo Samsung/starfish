@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement()) {
         if (nd->asElement()->isHTMLElement()) {
@@ -43,7 +43,7 @@ static ESValue srcGetterFunction(ESVMInstance* instance)
 
 static ESValue srcSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement()) {
         if (nd->asElement()->isHTMLElement()) {
@@ -59,7 +59,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement()) {
         if (nd->asElement()->isHTMLElement()) {
@@ -77,7 +77,7 @@ static ESValue widthGetterFunction(ESVMInstance* instance)
 
 static ESValue widthSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
 
     if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
@@ -101,7 +101,7 @@ static ESValue widthSetterFunction(ESVMInstance* instance)
 
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement()) {
         if (nd->asElement()->isHTMLElement()) {
@@ -119,7 +119,7 @@ static ESValue heightGetterFunction(ESVMInstance* instance)
 
 static ESValue heightSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
 
     if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {

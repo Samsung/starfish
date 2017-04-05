@@ -20,8 +20,10 @@
 
 #include "dom/DOM.h"
 #include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 #include "extra/TimeRanges.h"
 
 namespace StarFish {
@@ -32,7 +34,7 @@ static ESValue appendBufferFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+    CHECK_TYPEOF(thisValue, SourceBuffer);
     SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
                                      ->asESObject()
                                      ->extraPointerData();
@@ -75,7 +77,7 @@ static ESValue removeFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+    CHECK_TYPEOF(thisValue, SourceBuffer);
     SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
                                      ->asESObject()
                                      ->extraPointerData();
@@ -96,7 +98,7 @@ static ESValue abortFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+    CHECK_TYPEOF(thisValue, SourceBuffer);
     SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
                                      ->asESObject()
                                      ->extraPointerData();
@@ -113,15 +115,13 @@ static ESValue abortFunction(ESVMInstance* instance)
 
 static ESValue modeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     return ESValue(originalObj->mode());
 }
 
 static ESValue modeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double mode = firstArg.toNumber();
     if (std::isnan(mode)) {
@@ -142,16 +142,14 @@ static ESValue modeSetterFunction(ESVMInstance* instance)
 
 static ESValue updatingGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     return ESValue(originalObj->updating());
 }
 
 static ESValue bufferedGetterFunction(ESVMInstance* instance)
 {
     try {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                     SourceBuffer);
+        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
         TimeRanges* timeRanges = originalObj->buffered();
         if (timeRanges) {
             return timeRanges->scriptValue();
@@ -165,15 +163,13 @@ static ESValue bufferedGetterFunction(ESVMInstance* instance)
 
 static ESValue timestampOffsetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     return ESValue(originalObj->timestampOffset());
 }
 
 static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double timeStampOffset = firstArg.toNumber();
     if (std::isnan(timeStampOffset)) {
@@ -190,8 +186,7 @@ static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
 
 static ESValue textTracksGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     TextTrackList* textTracks = originalObj->textTracks();
     if (textTracks) {
         return textTracks->scriptValue();
@@ -201,15 +196,13 @@ static ESValue textTracksGetterFunction(ESVMInstance* instance)
 
 static ESValue appendWindowStartGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     return ESValue(originalObj->appendWindowStart());
 }
 
 static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double timeStamp = firstArg.toNumber();
     if (std::isnan(timeStamp)) {
@@ -226,15 +219,13 @@ static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
 
 static ESValue appendWindowEndGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     return ESValue(originalObj->appendWindowEnd());
 }
 
 static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject,
-                                 SourceBuffer);
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double timeStamp = firstArg.toNumber();
     if (std::isnan(timeStamp)) {
@@ -252,8 +243,7 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
 #define DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(eventName)                 \
     static ESValue on##eventName##GetterFunction(ESVMInstance* instance)  \
     {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(                                     \
-            ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
+        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);                       \
         auto eventname =                                                  \
             (((Window*)instance->globalObject()->extraPointerData()))     \
                 ->starFish()                                              \
@@ -264,8 +254,7 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
                                                                           \
     static ESValue on##eventName##SetterFunction(ESVMInstance* instance)  \
     {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(                                     \
-            ScriptWrappable::Type::SourceBufferObject, SourceBuffer);     \
+        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);                       \
         auto eventname =                                                  \
             (((Window*)instance->globalObject()->extraPointerData()))     \
                 ->starFish()                                              \

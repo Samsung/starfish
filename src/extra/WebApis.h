@@ -25,10 +25,10 @@
 namespace StarFish {
 
 class StarFish;
-class avplay;
-class webapis : public ScriptWrappable {
+class Avplay;
+class WebApis : public ScriptWrappable {
 public:
-    webapis(StarFish* starFish);
+    WebApis(StarFish* starFish);
     StarFish* starFish()
     {
         return m_starFish;
@@ -39,19 +39,19 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isWebApis() const
     {
-        return ScriptWrappable::Type::webapisObject;
+        return true;
     }
 
-    avplay* AVPlay()
+    Avplay* AVPlay()
     {
         return m_avplay;
     }
 
 protected:
     StarFish* m_starFish;
-    avplay* m_avplay;
+    Avplay* m_avplay;
 };
 }
 

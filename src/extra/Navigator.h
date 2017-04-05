@@ -38,9 +38,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isNavigator() const
     {
-        return ScriptWrappable::Type::NavigatorObject;
+        return true;
     }
 
     String* appCodeName()

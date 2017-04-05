@@ -51,7 +51,7 @@ public:
     {
         m_font = nullptr;
 
-        m_inheritedStyles.m_color = Color(0, 0, 0, 255);
+        m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
         m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
@@ -169,12 +169,12 @@ public:
         m_minHeight = l;
     }
 
-    void setColor(Color r)
+    void setColor(Unit::Color r)
     {
         m_inheritedStyles.m_color = r;
     }
 
-    Color color()
+    Unit::Color color()
     {
         return m_inheritedStyles.m_color;
     }
@@ -347,7 +347,7 @@ public:
         m_transformOrigin->setOriginValue(x, y);
     }
 
-    void setBackgroundColor(Color color)
+    void setBackgroundColor(Unit::Color color)
     {
         setBackgroundIfNeeded();
         m_background->setBgColor(color);
@@ -417,10 +417,10 @@ public:
         return m_background->sizeOfLayers();
     }
 
-    Color backgroundColor()
+    Unit::Color backgroundColor()
     {
         if (m_background == NULL) {
-            return Color();
+            return Unit::Color();
         }
         return m_background->bgColor();
     }
@@ -561,7 +561,7 @@ public:
     }
 
 #define BORDER_COLOR(UPOS, LPOS, ...)                      \
-    Color border##UPOS##Color()                            \
+    Unit::Color border##UPOS##Color()                      \
     {                                                      \
         if (m_surround == nullptr ||                       \
             !m_surround->border.LPOS().hasBorderColor()) { \
@@ -636,7 +636,7 @@ public:
     }
 
 #define SET_BORDER_COLOR(UPOS, LPOS, ...)          \
-    void setBorder##UPOS##Color(Color color)       \
+    void setBorder##UPOS##Color(Unit::Color color) \
     {                                              \
         setSurroundIfNeeded();                     \
         surround()->border.LPOS().setColor(color); \
@@ -1037,7 +1037,7 @@ protected:
     // property in [compareStyle function]
 
     struct InheritedStyles {
-        Color m_color;
+        Unit::Color m_color;
         Length m_fontSize;
         Length m_letterSpacing;
         Length m_lineHeight;

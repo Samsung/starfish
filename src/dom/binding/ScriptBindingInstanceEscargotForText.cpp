@@ -42,7 +42,7 @@ static ESValue textFunction(ESVMInstance* instance)
 
 static ESValue wholeTextGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!nd->isText()) {
         THROW_ILLEGAL_INVOCATION();

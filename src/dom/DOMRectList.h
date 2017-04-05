@@ -43,9 +43,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMRectList() const
     {
-        return ScriptWrappable::Type::DOMRectListObject;
+        return true;
     }
 
 private:

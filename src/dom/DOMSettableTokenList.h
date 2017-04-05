@@ -47,9 +47,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMSettableTokenList() const
     {
-        return ScriptWrappable::Type::DOMSettableTokenListObject;
+        return true;
     }
 
 private:

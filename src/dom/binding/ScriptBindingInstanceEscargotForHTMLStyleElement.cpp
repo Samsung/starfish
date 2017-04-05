@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
@@ -38,7 +38,7 @@ static ESValue typeGetterFunction(ESVMInstance* instance)
 
 static ESValue typeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {

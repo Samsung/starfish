@@ -19,6 +19,9 @@
 #include "ScriptBindingInstance.h"
 
 #include "dom/DOM.h"
+#include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
+#include "extra/TimeRanges.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {
@@ -27,7 +30,7 @@ using namespace escargot;
 
 static ESValue addTextTrackFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
           nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
@@ -72,7 +75,7 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
 
 static ESValue loadFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
           nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
@@ -84,7 +87,7 @@ static ESValue loadFunction(ESVMInstance* instance)
 
 static ESValue canPlayTypeFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
           nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
@@ -102,7 +105,7 @@ static ESValue canPlayTypeFunction(ESVMInstance* instance)
 
 static ESValue pauseFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
           nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
@@ -114,7 +117,7 @@ static ESValue pauseFunction(ESVMInstance* instance)
 
 static ESValue playFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
           nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {

@@ -55,9 +55,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isMediaSource() const
     {
-        return ScriptWrappable::Type::MediaSourceObject;
+        return true;
     }
 
     StarFish* starFish()

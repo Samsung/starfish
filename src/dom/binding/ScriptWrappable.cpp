@@ -34,17 +34,23 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
+#include "dom/TextTrackCueList.h"
 #include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "extra/WebApis.h"
-#include "extra/AVPlay.h"
+#include "../../extra/Avplay.h"
 #endif
 #endif
 
 #include "extra/History.h"
 #include "extra/Navigator.h"
 #include "extra/Location.h"
+#include "platform/location/Coordinates.h"
 #include "platform/location/Geolocation.h"
+#include "platform/location/Geoposition.h"
+#include "platform/location/PositionError.h"
 
 #include "StarFish.h"
 
@@ -1295,9 +1301,9 @@ void ScriptWrappable::initScriptWrappable(DOMImplementation* ptr,
 }
 #endif
 
-void ScriptWrappable::initScriptWrappable(LocationObj* ptr)
+void ScriptWrappable::initScriptWrappable(Location* ptr)
 {
-    LocationObj* nav = (LocationObj*)this;
+    Location* nav = (Location*)this;
     auto data = fetchData(nav->starFish()->window()->scriptBindingInstance());
     scriptObject()->set__proto__(data->location()->protoType());
 }
@@ -1445,7 +1451,7 @@ static ESValue textTrackListReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     TextTrackList* self = (TextTrackList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::TextTrackListObject);
+    STARFISH_ASSERT(self->isTextTrackList());
     uint32_t idx = key.toIndex();
     if (idx != ESValue::ESInvalidIndexValue && idx < self->size()) {
         TextTrack* e = (*self)[idx];
@@ -1468,7 +1474,7 @@ static ESValueVector textTrackListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     TextTrackList* self = (TextTrackList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::TextTrackListObject);
+    STARFISH_ASSERT(self->isTextTrackList());
     size_t len = self->size();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -1506,8 +1512,7 @@ static ESValue textTrackCueListReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::TextTrackCueListObject);
+    STARFISH_ASSERT(self->isTextTrackCueList());
     uint32_t idx = key.toIndex();
     if (idx != ESValue::ESInvalidIndexValue && idx < self->size()) {
         TextTrackCue* e = (*self)[idx];
@@ -1530,8 +1535,7 @@ static ESValueVector textTrackCueListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::TextTrackCueListObject);
+    STARFISH_ASSERT(self->isTextTrackCueList());
     size_t len = self->size();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -1600,8 +1604,7 @@ static ESValue sourceBufferListReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::SourceBufferListObject);
+    STARFISH_ASSERT(self->isSourceBufferList());
     uint32_t idx = key.toIndex();
     if (idx != ESValue::ESInvalidIndexValue && idx < self->length()) {
         SourceBuffer* e = (*self)[idx];
@@ -1623,8 +1626,7 @@ static ESValueVector sourceBufferListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::SourceBufferListObject);
+    STARFISH_ASSERT(self->isSourceBufferList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -1648,16 +1650,16 @@ void ScriptWrappable::initScriptWrappable(SourceBufferList* ptr)
         sourceBufferListEnumerateCallbackFunction, true);
 }
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-void ScriptWrappable::initScriptWrappable(webapis* ptr)
+void ScriptWrappable::initScriptWrappable(WebApis* ptr)
 {
-    webapis* webApis = (webapis*)this;
+    WebApis* webApis = (WebApis*)this;
     auto data =
         fetchData(webApis->starFish()->window()->scriptBindingInstance());
     scriptObject()->set__proto__(data->webApis()->protoType());
 }
-void ScriptWrappable::initScriptWrappable(avplay* ptr)
+void ScriptWrappable::initScriptWrappable(Avplay* ptr)
 {
-    avplay* avPlay = (avplay*)this;
+    Avplay* avPlay = (Avplay*)this;
     auto data =
         fetchData(avPlay->starFish()->window()->scriptBindingInstance());
     scriptObject()->set__proto__(data->avPlay()->protoType());
@@ -1849,7 +1851,7 @@ static ESValue domRectListReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     DOMRectList* self = (DOMRectList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMRectListObject);
+    STARFISH_ASSERT(self->isDOMRectList());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
         return self->item(idx)->scriptValue();
@@ -1868,7 +1870,7 @@ static ESValueVector domRectListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     DOMRectList* self = (DOMRectList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMRectListObject);
+    STARFISH_ASSERT(self->isDOMRectList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -1978,8 +1980,7 @@ static ESValue htmlCollectionReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::HTMLCollectionObject);
+    STARFISH_ASSERT(self->isHTMLCollection());
     uint32_t idx = key.toIndex();
     if (idx == ESValue::ESInvalidIndexValue) {
         Element* e = self->namedItem(toBrowserString(key));
@@ -2004,8 +2005,7 @@ static ESValueVector htmlCollectionEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::HTMLCollectionObject);
+    STARFISH_ASSERT(self->isHTMLCollection());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -2029,7 +2029,7 @@ static ESValue nodeListReadCallbackFunction(const ESValue& key, ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     NodeList* self = (NodeList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::NodeListObject);
+    STARFISH_ASSERT(self->isNodeList());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
         return self->item(idx)->scriptValue();
@@ -2048,7 +2048,7 @@ static ESValueVector nodeListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     NodeList* self = (NodeList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::NodeListObject);
+    STARFISH_ASSERT(self->isNodeList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -2073,7 +2073,7 @@ static ESValue domTokenListReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMTokenListObject);
+    STARFISH_ASSERT(self->isDOMTokenList());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
         return createScriptString(self->item(idx));
@@ -2092,7 +2092,7 @@ static ESValueVector domTokenListEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMTokenListObject);
+    STARFISH_ASSERT(self->isDOMTokenList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -2124,7 +2124,7 @@ static ESValue namedNodeMapReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::NamedNodeMapObject);
+    STARFISH_ASSERT(self->isNamedNodeMap());
     uint32_t idx = key.toIndex();
     if (idx == ESValue::ESInvalidIndexValue) {
         String* str = toBrowserString(key);
@@ -2150,7 +2150,7 @@ static ESValueVector namedNodeMapEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() == ScriptWrappable::Type::NamedNodeMapObject);
+    STARFISH_ASSERT(self->isNamedNodeMap());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -2182,8 +2182,7 @@ static ESValue cssStyleDeclarationReadCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::CSSStyleDeclarationObject);
+    STARFISH_ASSERT(self->isCSSStyleDeclaration());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
         return ESString::create(self->item(idx)->utf8Data());
@@ -2220,8 +2219,7 @@ static bool cssStyleDeclarationWriteCallbackFunction(const ESValue& key,
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::CSSStyleDeclarationObject);
+    STARFISH_ASSERT(self->isCSSStyleDeclaration());
     const char* str = toBrowserString(key)->utf8Data();
     CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
 
@@ -2250,8 +2248,7 @@ static ESValueVector cssStyleDeclarationEnumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
     CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
-    STARFISH_ASSERT(self->type() ==
-                    ScriptWrappable::Type::CSSStyleDeclarationObject);
+    STARFISH_ASSERT(self->isCSSStyleDeclaration());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -2398,8 +2395,7 @@ static ESValue attributeStringEventFunction(ESVMInstance* instance)
                 ->environment()
                 ->record();
     ESFunctionObject* callee = record->callee();
-    STARFISH_ASSERT(callee->extraData() ==
-                    ScriptWrappable::AttributeStringEventFunctionObject);
+    STARFISH_ASSERT(callee->extraData() == kEventStringAttributeCheckMagic);
     AttributeStringEventFunctionInnerData* data =
         (AttributeStringEventFunctionInnerData*)callee->extraPointerData();
 
@@ -2465,7 +2461,7 @@ ScriptValue createAttributeStringEventFunction(Element* target,
         NULL, attributeStringEventFunction, ESString::create(""), 0, false);
 
     wrapper->codeBlock()->m_needsToPrepareGenerateArgumentsObject = true;
-    wrapper->setExtraData(ScriptWrappable::AttributeStringEventFunctionObject);
+    wrapper->setExtraData(kEventStringAttributeCheckMagic);
     AttributeStringEventFunctionInnerData* data =
         new AttributeStringEventFunctionInnerData();
     data->m_target = target;

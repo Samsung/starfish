@@ -206,7 +206,7 @@ public:
         m_documentURI = newURL;
     }
 
-    LocationObj* location()
+    Location* location()
     {
         return window()->location();
     }

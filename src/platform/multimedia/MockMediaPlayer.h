@@ -140,7 +140,7 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect)
     {
-        canvas->setColor(Color(0, 0, 0, 255));
+        canvas->setColor(Unit::Color(0, 0, 0, 255));
         canvas->drawRect(videoRect);
     }
 

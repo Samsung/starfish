@@ -47,8 +47,7 @@ static ESValue vttCueTextFunction(ESVMInstance* instance)
 
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     if (!originalObj->isVTTCue()) {
         THROW_ILLEGAL_INVOCATION();
     }
@@ -58,8 +57,7 @@ static ESValue textGetterFunction(ESVMInstance* instance)
 
 static ESValue textSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     if (!originalObj->isVTTCue() || !firstArg.isESString()) {
         THROW_ILLEGAL_INVOCATION();
@@ -71,8 +69,7 @@ static ESValue textSetterFunction(ESVMInstance* instance)
 
 static ESValue getCueAsHTMLFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     if (!originalObj->isVTTCue()) {
         THROW_ILLEGAL_INVOCATION();
     }

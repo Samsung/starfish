@@ -19,7 +19,7 @@
 
 namespace StarFish {
 
-LocationObj::LocationObj(StarFish* starFish)
+Location::Location(StarFish* starFish)
     : ScriptWrappable(this)
     , m_starFish(starFish)
 {

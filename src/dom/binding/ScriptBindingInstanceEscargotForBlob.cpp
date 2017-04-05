@@ -85,8 +85,7 @@ static ESValue blobFunction(ESVMInstance* instance)
         if (element.isObject()) {
             ESObject* o = element.toObject();
             if (o->extraData() == kEscargotObjectCheckMagic &&
-                ((ScriptWrappable*)o->extraPointerData())->type() ==
-                    ScriptWrappable::Type::BlobObject) {
+                ((ScriptWrappable*)o->extraPointerData())->isBlob()) {
                 Blob* bb = (Blob*)o->extraPointerData();
                 bufferInfo.push_back(std::make_pair(bb->data(), bb->size()));
                 totalByteLength += bb->size();
@@ -126,19 +125,19 @@ static ESValue blobFunction(ESVMInstance* instance)
 
 static ESValue sizeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+    GENERATE_THIS_AND_CHECK_TYPE(Blob);
     return ESValue(originalObj->size());
 }
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+    GENERATE_THIS_AND_CHECK_TYPE(Blob);
     return ESValue(toJSString(originalObj->mimeType()));
 }
 
 static ESValue sliceFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+    GENERATE_THIS_AND_CHECK_TYPE(Blob);
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);

@@ -61,9 +61,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMRect() const
     {
-        return ScriptWrappable::Type::DOMRectObject;
+        return true;
     }
 
 protected:

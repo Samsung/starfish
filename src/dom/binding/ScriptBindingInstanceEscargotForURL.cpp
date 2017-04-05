@@ -58,8 +58,7 @@ static ESValue createObjectURLFunction(ESVMInstance* instance)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     if (arg0.isObject() &&
         (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) &&
-        ((ScriptWrappable*)arg0.asObject()->extraPointerData())->type() ==
-            ScriptWrappable::Type::BlobObject) {
+        ((ScriptWrappable*)arg0.asObject()->extraPointerData())->isBlob()) {
         Blob* b = (Blob*)arg0.toObject()->extraPointerData();
         String* url = URL::createObjectURL(b);
         return toJSString(url);
@@ -67,7 +66,7 @@ static ESValue createObjectURLFunction(ESVMInstance* instance)
     } else if (arg0.isObject() &&
                (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) &&
                ((ScriptWrappable*)arg0.asObject()->extraPointerData())
-                       ->type() == ScriptWrappable::Type::MediaSourceObject) {
+                   ->isMediaSource()) {
         MediaSource* m = (MediaSource*)arg0.toObject()->extraPointerData();
         String* url = URL::createObjectURL(m);
         return toJSString(url);
@@ -94,31 +93,31 @@ static ESValue revokeObjectURLFunction(ESVMInstance* instance)
 
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getHref());
 }
 
 static ESValue originGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->origin());
 }
 
 static ESValue protocolGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getProtocol());
 }
 
 static ESValue usernameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getUsername());
 }
 
 static ESValue usernameSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -132,13 +131,13 @@ static ESValue usernameSetterFunction(ESVMInstance* instance)
 
 static ESValue passwordGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getPassword());
 }
 
 static ESValue passwordSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -152,31 +151,31 @@ static ESValue passwordSetterFunction(ESVMInstance* instance)
 
 static ESValue hostGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getHost());
 }
 
 static ESValue hostnameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getHostname());
 }
 
 static ESValue portGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getPort());
 }
 
 static ESValue pathnameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getPathname());
 }
 
 static ESValue pathnameSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -190,13 +189,13 @@ static ESValue pathnameSetterFunction(ESVMInstance* instance)
 
 static ESValue searchGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getSearch());
 }
 
 static ESValue hashGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
     return toJSString(originalObj->getHash());
 }
 

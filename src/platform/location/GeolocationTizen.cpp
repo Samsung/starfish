@@ -35,9 +35,9 @@ struct LocationRequestInfoTizen {
     GeolocationTizen* geolocation;
     StarFish* starFish;
     uint32_t timeoutId;
-    GeopositionCallback cb;
+    GeoPositionCallback cb;
     void* cbData;
-    GeopositionErrorCallback errorCb;
+    GeoPositionErrorCallback errorCb;
     void* errorCbData;
     bool enableHighAccuracy;
     bool shouldContinueRequest;
@@ -64,8 +64,8 @@ public:
     {
         m_cachedLocation.timestamp = 0;
     }
-    virtual void getCurrentPosition(GeopositionCallback cb, void* cbData,
-                                    GeopositionErrorCallback errorCb,
+    virtual void getCurrentPosition(GeoPositionCallback cb, void* cbData,
+                                    GeoPositionErrorCallback errorCb,
                                     void* errorCbData, bool enableHighAccuracy,
                                     int32_t timeout, int32_t maximumAge);
     virtual void close()
@@ -119,7 +119,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
         info->starFish->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
-                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
                            sf, PositionError::Error::PERMISSION_DENIED),
                    data3);
@@ -129,7 +129,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
         info->starFish->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
-                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
                            sf, PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
@@ -139,8 +139,8 @@ static void handleError(int error, LocationRequestInfoTizen* info)
     GC_FREE(info);
 }
 
-void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData,
-                                          GeopositionErrorCallback errorCb,
+void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
+                                          GeoPositionErrorCallback errorCb,
                                           void* errorCbData,
                                           bool enableHighAccuracy,
                                           int32_t timeout, int32_t maximumAge)
@@ -284,8 +284,8 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData,
                     info->starFish->messageLoop()->addIdler(
                         [](size_t, void* data, void* data2, void* data3) {
                             StarFish* sf = (StarFish*)data;
-                            GeopositionErrorCallback cb =
-                                (GeopositionErrorCallback)data2;
+                            GeoPositionErrorCallback cb =
+                                (GeoPositionErrorCallback)data2;
                             cb(sf, new PositionError(
                                        sf, PositionError::Error::TIMEOUT),
                                data3);

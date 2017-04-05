@@ -46,7 +46,7 @@ public:
         m_type = UNDEFINED;
     }
 
-    AnimatedValue(Color colorValue)
+    AnimatedValue(Unit::Color colorValue)
     {
         m_data.m_color = colorValue;
         m_type = COLOR;
@@ -90,7 +90,7 @@ public:
         return m_type == INT;
     }
 
-    Color getColor()
+    Unit::Color getColor()
     {
         STARFISH_ASSERT(m_type == COLOR);
         return m_data.m_color;
@@ -116,7 +116,7 @@ public:
 
 protected:
     union ValueData {
-        Color m_color;
+        Unit::Color m_color;
         Length m_length;
         float m_float;
         int m_int;

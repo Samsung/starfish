@@ -60,22 +60,6 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::EventObject;
-    }
-
-    virtual bool isUIEvent()
-    {
-        return false;
-    }
-
-    UIEvent* asUIEvent()
-    {
-        STARFISH_ASSERT(isUIEvent());
-        return (UIEvent*)this;
-    }
-
     String* eventType() const
     {
         return m_type;

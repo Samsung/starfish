@@ -26,64 +26,56 @@ using namespace escargot;
 
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->x());
 }
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->y());
 }
 
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->width());
 }
 
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->height());
 }
 
 static ESValue topGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->top());
 }
 
 static ESValue rightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->right());
 }
 
 static ESValue bottomGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->bottom());
 }
 
 static ESValue leftGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject,
-                                 DOMRectReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectReadOnly);
     DOMRectReadOnly* rect = originalObj;
     return ESValue(rect->left());
 }

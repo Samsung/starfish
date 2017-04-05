@@ -24,8 +24,8 @@ namespace StarFish {
 struct FrameTextTextDecorationData : public gc {
     bool m_hasUnderLine;
     bool m_hasLineThrough;
-    Color m_underLineColor;
-    Color m_lineThroughColor;
+    Unit::Color m_underLineColor;
+    Unit::Color m_lineThroughColor;
 };
 
 class FrameText : public Frame {

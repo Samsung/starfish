@@ -394,10 +394,12 @@ public:
             canvas->save();
             if (isRootElement) {
                 canvas->translate(0, 0);
-                canvas->clip(Rect(0, 0, colorRect.width(), colorRect.height()));
+                canvas->clip(
+                    Unit::Rect(0, 0, colorRect.width(), colorRect.height()));
             } else {
                 canvas->translate(imageRect.x(), imageRect.y());
-                canvas->clip(Rect(0, 0, imageRect.width(), imageRect.height()));
+                canvas->clip(
+                    Unit::Rect(0, 0, imageRect.width(), imageRect.height()));
             }
 
             float bw = imageRect.width();
@@ -457,18 +459,18 @@ public:
             auto repeatY = style->backgroundRepeatY();
             if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
                 repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true,
-                                        true, isRootElement);
+                canvas->drawRepeatImage(id, Unit::Rect(x, y, bw, bh), w, h,
+                                        true, true, isRootElement);
             } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
                        repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false,
-                                        true, isRootElement);
+                canvas->drawRepeatImage(id, Unit::Rect(x, y, w, bh), w, h,
+                                        false, true, isRootElement);
             } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
                        repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true,
+                canvas->drawRepeatImage(id, Unit::Rect(x, y, bw, h), w, h, true,
                                         false, isRootElement);
             } else {
-                canvas->drawImage(id, Rect(x, y, w, h));
+                canvas->drawImage(id, Unit::Rect(x, y, w, h));
             }
 
             canvas->restore();
@@ -575,28 +577,30 @@ public:
                 }
 
                 // left-top
-                canvas->drawBorderImage(imgData, Rect(0, 0, drawRect, drawRect),
+                canvas->drawBorderImage(imgData,
+                                        Unit::Rect(0, 0, drawRect, drawRect),
                                         lSlice, tSlice, 0, 0, scale, isFill);
                 // right-top
-                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect,
-                                                      0, drawRect, drawRect),
+                canvas->drawBorderImage(imgData,
+                                        Unit::Rect((float)width() - drawRect, 0,
+                                                   drawRect, drawRect),
                                         0, tSlice, rSlice, 0, scale, isFill);
                 // right-bottom
                 canvas->drawBorderImage(imgData,
-                                        Rect((float)width() - drawRect,
-                                             (float)height() - drawRect,
-                                             drawRect, drawRect),
+                                        Unit::Rect((float)width() - drawRect,
+                                                   (float)height() - drawRect,
+                                                   drawRect, drawRect),
                                         0, 0, rSlice, bSlice, scale, isFill);
                 // left-bottom
                 canvas->drawBorderImage(
-                    imgData,
-                    Rect(0, (float)height() - drawRect, drawRect, drawRect),
+                    imgData, Unit::Rect(0, (float)height() - drawRect, drawRect,
+                                        drawRect),
                     lSlice, 0, 0, bSlice, scale, isFill);
             } else {
                 isFill = style()->surround()->border.image().sliceFill();
-                canvas->drawBorderImage(imgData, Rect(0, 0, width(), height()),
-                                        lSlice, tSlice, rSlice, bSlice, scale,
-                                        isFill);
+                canvas->drawBorderImage(
+                    imgData, Unit::Rect(0, 0, width(), height()), lSlice,
+                    tSlice, rSlice, bSlice, scale, isFill);
             }
         } else if (style()->hasBorderStyle()) {
             // draw border

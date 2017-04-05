@@ -26,8 +26,7 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HTMLCollectionObject,
-                                 HTMLCollection);
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }
@@ -36,7 +35,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
+    CHECK_TYPEOF(thisValue, HTMLCollection);
     HTMLCollection* self = (HTMLCollection*)(thisValue.asESPointer()
                                                  ->asESObject()
                                                  ->extraPointerData());
@@ -64,7 +63,7 @@ static ESValue namedItemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
+    CHECK_TYPEOF(thisValue, HTMLCollection);
 
     size_t count = instance->currentExecutionContext()->argumentCount();
     if (count > 0) {

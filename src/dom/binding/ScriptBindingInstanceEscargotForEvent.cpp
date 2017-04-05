@@ -78,14 +78,14 @@ static ESValue eventFunction(ESVMInstance* instance)
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     String* type = const_cast<String*>(originalObj->eventType());
     return toJSString(type);
 }
 
 static ESValue targetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     EventTarget* target = originalObj->target();
     if (target) {
         return target->scriptValue();
@@ -95,7 +95,7 @@ static ESValue targetGetterFunction(ESVMInstance* instance)
 
 static ESValue currentTargetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     EventTarget* currentTarget = originalObj->currentTarget();
     if (currentTarget) {
         return currentTarget->scriptValue();
@@ -105,7 +105,7 @@ static ESValue currentTargetGetterFunction(ESVMInstance* instance)
 
 static ESValue eventPhaseGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     unsigned short eventPhase = originalObj->eventPhase();
     return ESValue(eventPhase);
 }
@@ -114,7 +114,7 @@ static ESValue stopPropagationFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+    CHECK_TYPEOF(thisValue, Event);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount == 0) {
         ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
@@ -127,7 +127,7 @@ static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+    CHECK_TYPEOF(thisValue, Event);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount == 0) {
         ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
@@ -138,14 +138,14 @@ static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
 
 static ESValue bubblesGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     bool bubbles = originalObj->bubbles();
     return ESValue(bubbles);
 }
 
 static ESValue cancelableGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     bool cancelable = originalObj->cancelable();
     return ESValue(cancelable);
 }
@@ -154,7 +154,7 @@ static ESValue preventDefaultFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+    CHECK_TYPEOF(thisValue, Event);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount == 0) {
         ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
@@ -165,14 +165,14 @@ static ESValue preventDefaultFunction(ESVMInstance* instance)
 
 static ESValue defaultPreventedGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     bool defaultPrevented = originalObj->defaultPrevented();
     return ESValue(defaultPrevented);
 }
 
 static ESValue timestampGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     DOMTimeStamp timeStamp = originalObj->timeStamp();
     return ESValue(timeStamp);
 }

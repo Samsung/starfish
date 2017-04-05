@@ -33,28 +33,26 @@ static ESValue xhrElementFunction(ESVMInstance* instance)
     return xhr->scriptValue();
 }
 
-#define DEFINE_XHR_EVENT_HANDLER_FUNC(eventName)                          \
-    static ESValue on##eventName##GetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(                                     \
-            ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest); \
-        auto eventType = originalObj->networkRequest()                    \
-                             .starFish()                                  \
-                             ->staticStrings()                            \
-                             ->m_##eventName;                             \
-        return originalObj->attributeEventListener(eventType);            \
-    }                                                                     \
-                                                                          \
-    static ESValue on##eventName##SetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(                                     \
-            ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest); \
-        auto eventType = originalObj->networkRequest()                    \
-                             .starFish()                                  \
-                             ->staticStrings()                            \
-                             ->m_##eventName;                             \
-        originalObj->setAttributeEventListener(eventType, v);             \
-        return ESValue();                                                 \
+#define DEFINE_XHR_EVENT_HANDLER_FUNC(eventName)                         \
+    static ESValue on##eventName##GetterFunction(ESVMInstance* instance) \
+    {                                                                    \
+        GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);                    \
+        auto eventType = originalObj->networkRequest()                   \
+                             .starFish()                                 \
+                             ->staticStrings()                           \
+                             ->m_##eventName;                            \
+        return originalObj->attributeEventListener(eventType);           \
+    }                                                                    \
+                                                                         \
+    static ESValue on##eventName##SetterFunction(ESVMInstance* instance) \
+    {                                                                    \
+        GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);                    \
+        auto eventType = originalObj->networkRequest()                   \
+                             .starFish()                                 \
+                             ->staticStrings()                           \
+                             ->m_##eventName;                            \
+        originalObj->setAttributeEventListener(eventType, v);            \
+        return ESValue();                                                \
     }
 
 DEFINE_XHR_EVENT_HANDLER_FUNC(loadstart);
@@ -69,16 +67,14 @@ DEFINE_XHR_EVENT_HANDLER_FUNC(readystatechange);
 
 static ESValue timeoutGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     uint32_t c = originalObj->networkRequest().timeout();
     return ESValue(c);
 }
 
 static ESValue timeoutSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         originalObj->setTimeout(v.toUint32());
     } catch (DOMException* e) {
@@ -90,24 +86,21 @@ static ESValue timeoutSetterFunction(ESVMInstance* instance)
 
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     int c = originalObj->networkRequest().readyState();
     return ESValue(c);
 }
 
 static ESValue statusGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     int c = originalObj->networkRequest().status();
     return ESValue(c);
 }
 
 static ESValue responseTextGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         String* c = originalObj->responseText();
 
@@ -124,8 +117,7 @@ static ESValue responseTextGetterFunction(ESVMInstance* instance)
 
 static ESValue responseGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         ESValue c = originalObj->response();
 #ifdef STARFISH_TC_COVERAGE
@@ -141,8 +133,7 @@ static ESValue responseGetterFunction(ESVMInstance* instance)
 
 static ESValue responseTypeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     XMLHttpRequest::ResponseType type = originalObj->responseType();
     if (type == XMLHttpRequest::ResponseType::Unspecified) {
         return ESString::create("");
@@ -163,8 +154,7 @@ static ESValue responseTypeGetterFunction(ESVMInstance* instance)
 
 static ESValue responseTypeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         ESString* str =
             instance->currentExecutionContext()->readArgument(0).toString();
@@ -204,8 +194,7 @@ static ESValue responseTypeSetterFunction(ESVMInstance* instance)
 
 static ESValue setRequestHeaderFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     if (instance->currentExecutionContext()->argumentCount() < 2) {
         auto msg = ESString::create(
             "Failed to execute 'setRequestHeader' on "
@@ -230,8 +219,7 @@ static ESValue setRequestHeaderFunction(ESVMInstance* instance)
 
 static ESValue openFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         if (instance->currentExecutionContext()->argumentCount() >= 2) {
             // https://xhr.spec.whatwg.org/#the-open()-method
@@ -302,8 +290,7 @@ static ESValue openFunction(ESVMInstance* instance)
 
 static ESValue sendFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         if (instance->currentExecutionContext()->argumentCount() == 0) {
             originalObj->send();
@@ -320,8 +307,7 @@ static ESValue sendFunction(ESVMInstance* instance)
 
 static ESValue abortFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject,
-                                 XMLHttpRequest);
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
         originalObj->abort();
         return ESValue(ESValue::ESNull);

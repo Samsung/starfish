@@ -54,14 +54,14 @@ static ESValue domRectFunction(ESVMInstance* instance)
 
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     return ESValue(rect->x());
 }
 
 static ESValue xSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     if (rect != nullptr) {
         rect->setX(v.toNumber());
@@ -73,14 +73,14 @@ static ESValue xSetterFunction(ESVMInstance* instance)
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     return ESValue(rect->y());
 }
 
 static ESValue ySetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     if (rect != nullptr) {
         rect->setY(v.toNumber());
@@ -92,14 +92,14 @@ static ESValue ySetterFunction(ESVMInstance* instance)
 
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     return ESValue(rect->width());
 }
 
 static ESValue widthSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     if (rect != nullptr) {
         rect->setWidth(v.toNumber());
@@ -111,14 +111,14 @@ static ESValue widthSetterFunction(ESVMInstance* instance)
 
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     return ESValue(rect->height());
 }
 
 static ESValue heightSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
     DOMRect* rect = originalObj;
     if (rect != nullptr) {
         rect->setHeight(v.toNumber());

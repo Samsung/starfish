@@ -18,11 +18,26 @@
 
 #include "StarFishConfig.h"
 #include "TextTrack.h"
+#include "TextTrackCueList.h"
 #include "Event.h"
 #include "Document.h"
 #include "HTMLTrackElement.h"
 
 namespace StarFish {
+
+TextTrack::TextTrack(Kind kind, String* label, String* language)
+    : EventTarget()
+    , m_mode(Mode::Off)
+    , m_kind(kind)
+    , m_label(label)
+    , m_language(language)
+    , m_cues(new TextTrackCueList())
+    , m_activeCues(new TextTrackCueList())
+    , m_trackElement(nullptr)
+    , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
+    , m_cachedIdx(0)
+{
+}
 
 void TextTrack::dispatchCueChangeEvent()
 {
@@ -38,6 +53,19 @@ void TextTrack::dispatchCueChangeEvent()
     }
     Event* e = new Event(eventType, EventInit(false, false));
     dispatchEvent(e);
+}
+
+void TextTrack::addCue(TextTrackCue* cue)
+{
+    cue->setTrack(this);
+    m_cues->push_back(cue);
+}
+
+void TextTrack::removeCue(TextTrackCue* cue)
+{
+    cue->unsetTrack();
+    m_cues->erase(std::remove(m_cues->begin(), m_cues->end(), cue),
+                  m_cues->end());
 }
 
 void TextTrack::setKind(String* kind)
@@ -56,6 +84,15 @@ void TextTrack::setMode(String* mode)
     if (!modeEnum == TextTrack::Mode::InvalidMode) {
         m_mode = modeEnum;
     }
+}
+
+void TextTrack::clear()
+{
+    STARFISH_ASSERT(m_cues);
+    m_cues->clear();
+    m_activeCues->clear();
+    m_cachedTime = TEXTTRACK_INVALID_TIMEVALUE;
+    m_cachedIdx = 0;
 }
 
 String* TextTrack::id()

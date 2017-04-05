@@ -33,9 +33,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isTimeRanges() const
     {
-        return ScriptWrappable::Type::TimeRangesObject;
+        return true;
     }
 
     double start(unsigned long idx)

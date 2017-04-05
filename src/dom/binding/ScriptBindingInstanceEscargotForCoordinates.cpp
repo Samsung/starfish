@@ -19,7 +19,7 @@
 
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "platform/location/Geolocation.h"
+#include "platform/location/Coordinates.h"
 
 namespace StarFish {
 
@@ -27,22 +27,19 @@ using namespace escargot;
 
 static ESValue latitudeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     return ESValue(originalObj->latitude());
 }
 
 static ESValue longitudeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     return ESValue(originalObj->longitude());
 }
 
 static ESValue altitudeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     if (originalObj->altitude()) {
         return ESValue(*originalObj->altitude());
     } else {
@@ -52,15 +49,13 @@ static ESValue altitudeGetterFunction(ESVMInstance* instance)
 
 static ESValue accuracyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     return ESValue(originalObj->accuracy());
 }
 
 static ESValue altitudeAccuracyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     if (originalObj->altitudeAccuracy()) {
         return ESValue(*originalObj->altitudeAccuracy());
     } else {
@@ -70,8 +65,7 @@ static ESValue altitudeAccuracyGetterFunction(ESVMInstance* instance)
 
 static ESValue headingGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     if (originalObj->heading()) {
         return ESValue(*originalObj->heading());
     } else {
@@ -81,8 +75,7 @@ static ESValue headingGetterFunction(ESVMInstance* instance)
 
 static ESValue speedGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject,
-                                 Coordinates);
+    GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
     if (originalObj->speed()) {
         return ESValue(*originalObj->speed());
     } else {

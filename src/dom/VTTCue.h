@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishVTTCue__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#ifndef __StarFishVTTCue__
 #define __StarFishVTTCue__
 
 #include "dom/TextTrackCue.h"
@@ -64,3 +65,4 @@ public:
 }
 
 #endif
+#endif // STARFISH_ENABLE_MULTIMEDIA

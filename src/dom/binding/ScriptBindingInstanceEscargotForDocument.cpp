@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue headGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
@@ -40,7 +40,7 @@ static ESValue headGetterFunction(ESVMInstance* instance)
 
 static ESValue bodyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
@@ -54,9 +54,8 @@ static ESValue bodyGetterFunction(ESVMInstance* instance)
 
 static ESValue bodySetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                 ScriptWrappable::Type::NodeObject);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
     if (!v.isUndefinedOrNull()) {
         Node* nd = originalObj;
         Node* node_v = (Node*)instance->currentExecutionContext()
@@ -86,7 +85,7 @@ static ESValue bodySetterFunction(ESVMInstance* instance)
 
 static ESValue documentElementGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
@@ -101,7 +100,7 @@ static ESValue documentElementGetterFunction(ESVMInstance* instance)
 #ifdef STARFISH_EXP
 static ESValue implementationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
@@ -116,7 +115,7 @@ static ESValue implementationGetterFunction(ESVMInstance* instance)
 
 static ESValue characterSetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return toJSString(nd->asDocument()->charset());
@@ -126,7 +125,7 @@ static ESValue characterSetGetterFunction(ESVMInstance* instance)
 
 static ESValue charsetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return toJSString(nd->asDocument()->charset());
@@ -136,7 +135,7 @@ static ESValue charsetGetterFunction(ESVMInstance* instance)
 
 static ESValue contentTypeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return toJSString(nd->asDocument()->contentType());
@@ -146,7 +145,7 @@ static ESValue contentTypeGetterFunction(ESVMInstance* instance)
 
 static ESValue compatModeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return toJSString(nd->asDocument()->compatMode());
@@ -156,7 +155,7 @@ static ESValue compatModeGetterFunction(ESVMInstance* instance)
 
 static ESValue documentURIGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->asDocument()->documentURI()
@@ -168,7 +167,7 @@ static ESValue documentURIGetterFunction(ESVMInstance* instance)
 
 static ESValue urlGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->asDocument()->documentURI()
@@ -180,7 +179,7 @@ static ESValue urlGetterFunction(ESVMInstance* instance)
 
 static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     return originalObj->firstElementChild()
                ? originalObj->firstElementChild()->scriptValue()
                : ESValue(ESValue::ESNull);
@@ -188,7 +187,7 @@ static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 
 static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     return originalObj->lastElementChild()
                ? originalObj->lastElementChild()->scriptValue()
                : ESValue(ESValue::ESNull);
@@ -196,7 +195,7 @@ static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 
 static ESValue childElementCountGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     return ESValue(originalObj->childElementCount());
 }
 
@@ -204,7 +203,7 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -246,7 +245,7 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -292,7 +291,7 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -337,7 +336,7 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
 
 static ESValue doctypeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         DocumentType* docType = nd->asDocument()->docType();
@@ -353,7 +352,7 @@ static ESValue createDocumentFragmentFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -374,7 +373,7 @@ static ESValue createElementFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -426,7 +425,7 @@ static ESValue createTextNodeFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -465,7 +464,7 @@ static ESValue createCommentFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -494,7 +493,7 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -519,7 +518,7 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -574,7 +573,7 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -620,7 +619,7 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
 
 static ESValue childrenGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     if (originalObj->isDocument()) {
         return originalObj->children()->scriptValue();
     }
@@ -629,7 +628,7 @@ static ESValue childrenGetterFunction(ESVMInstance* instance)
 
 static ESValue hiddenGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     if (originalObj->isDocument()) {
         bool hidden = originalObj->asDocument()->hidden();
         return ESValue(hidden);
@@ -639,7 +638,7 @@ static ESValue hiddenGetterFunction(ESVMInstance* instance)
 
 static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     if (originalObj->isDocument()) {
         String* visibilityState = originalObj->asDocument()->visibilityState();
         return toJSString(visibilityState);
@@ -651,7 +650,7 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
     if (obj->isDocument()) {
@@ -673,7 +672,7 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
 
 static ESValue onClickGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->attributeEventListener(
@@ -684,7 +683,7 @@ static ESValue onClickGetterFunction(ESVMInstance* instance)
 
 static ESValue onClickSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         auto eventType =
@@ -703,7 +702,7 @@ static ESValue onClickSetterFunction(ESVMInstance* instance)
 
 static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->attributeEventListener(
@@ -714,7 +713,7 @@ static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
 
 static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         auto eventType =
@@ -733,7 +732,7 @@ static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
 
 static ESValue onFocusGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->attributeEventListener(
@@ -744,7 +743,7 @@ static ESValue onFocusGetterFunction(ESVMInstance* instance)
 
 static ESValue onFocusSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         auto eventType =
@@ -763,7 +762,7 @@ static ESValue onFocusSetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         return nd->attributeEventListener(
@@ -774,7 +773,7 @@ static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         auto eventType =
@@ -793,7 +792,7 @@ static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
 
 static ESValue defaultViewGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
@@ -805,10 +804,10 @@ static ESValue defaultViewGetterFunction(ESVMInstance* instance)
 
 static ESValue locationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
-        LocationObj* location = nd->asDocument()->location();
+        Location* location = nd->asDocument()->location();
         return location->scriptValue();
     }
     return ESValue(ESValue::ESNull);
@@ -816,7 +815,7 @@ static ESValue locationGetterFunction(ESVMInstance* instance)
 
 static ESValue locationSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
         nd->asDocument()->location()->setHref(

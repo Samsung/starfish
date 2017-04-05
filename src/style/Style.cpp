@@ -2591,7 +2591,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
-    ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
+    ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
     ret->m_inheritedStyles.m_textAlign = SideValue::NoneSideValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
@@ -2848,7 +2848,7 @@ void StyleResolver::apply(Element* element,
                 style->setColor(parentStyle->m_inheritedStyles.m_color);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->setColor(Color(0, 0, 0, 255));
+                style->setColor(Unit::Color(0, 0, 0, 255));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setColor(cssValues[k].colorValue());
@@ -3110,7 +3110,7 @@ void StyleResolver::apply(Element* element,
                 style->setBackgroundColor(parentStyle->backgroundColor());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->setBackgroundColor(Color(0, 0, 0, 0));
+                style->setBackgroundColor(Unit::Color(0, 0, 0, 0));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setBackgroundColor(cssValues[k].colorValue());

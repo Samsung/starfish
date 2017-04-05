@@ -152,9 +152,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
-        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(),
-                          owner()->width() - owner()->borderWidth(),
-                          owner()->height() - owner()->borderHeight()));
+        canvas->clip(Unit::Rect(owner()->borderLeft(), owner()->borderTop(),
+                                owner()->width() - owner()->borderWidth(),
+                                owner()->height() - owner()->borderHeight()));
     }
 
     // the child stacking contexts with negative stack levels (most negative
@@ -267,12 +267,12 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
 
         if (owner()->shouldApplyOverflow()) {
-            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
+            canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
         }
 
         owner()->willCompsiteStackingContext(canvas);
         canvas->drawImage(m_buffer,
-                          Rect(minX, minY, bufferWidth, bufferHeight));
+                          Unit::Rect(minX, minY, bufferWidth, bufferHeight));
         owner()->didCompsiteStackingContext(canvas);
 
         // draw debug rect
@@ -280,7 +280,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
     } else {
         if (owner()->shouldApplyOverflow()) {
-            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
+            canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
         }
         owner()->compsitingStackingContext(canvas);
     }

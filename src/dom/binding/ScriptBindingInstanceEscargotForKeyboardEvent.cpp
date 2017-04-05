@@ -26,50 +26,45 @@ using namespace escargot;
 
 static ESValue keyCodeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() &&
-        originalObj->asUIEvent()->isKeyboardEvent()) {
-        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->keyCode());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isKeyboardEvent()) {
+        return ESValue(originalObj->asKeyboardEvent()->keyCode());
     }
     THROW_ILLEGAL_INVOCATION();
 }
 
 static ESValue ctrlKeyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() &&
-        originalObj->asUIEvent()->isKeyboardEvent()) {
-        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->ctrlKey());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isKeyboardEvent()) {
+        return ESValue(originalObj->asKeyboardEvent()->ctrlKey());
     }
     THROW_ILLEGAL_INVOCATION();
 }
 
 static ESValue altKeyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() &&
-        originalObj->asUIEvent()->isKeyboardEvent()) {
-        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->altKey());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isKeyboardEvent()) {
+        return ESValue(originalObj->asKeyboardEvent()->altKey());
     }
     THROW_ILLEGAL_INVOCATION();
 }
 
 static ESValue shiftKeyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() &&
-        originalObj->asUIEvent()->isKeyboardEvent()) {
-        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->shiftKey());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isKeyboardEvent()) {
+        return ESValue(originalObj->asKeyboardEvent()->shiftKey());
     }
     THROW_ILLEGAL_INVOCATION();
 }
 
 static ESValue metaKeyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() &&
-        originalObj->asUIEvent()->isKeyboardEvent()) {
-        return ESValue(originalObj->asUIEvent()->asKeyboardEvent()->metaKey());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isKeyboardEvent()) {
+        return ESValue(originalObj->asKeyboardEvent()->metaKey());
     }
     THROW_ILLEGAL_INVOCATION();
 }

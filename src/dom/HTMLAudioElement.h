@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishHTMLAudioElement__)
+#if STARFISH_ENABLE_MULTIMEDIA
+#ifndef __StarFishHTMLAudioElement__
 #define __StarFishHTMLAudioElement__
 
 #include "dom/HTMLMediaElement.h"
@@ -60,3 +60,4 @@ public:
 }
 
 #endif
+#endif // STARFISH_ENABLE_MULTIMEDIA

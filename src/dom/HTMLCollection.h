@@ -40,9 +40,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isHTMLCollection() const
     {
-        return ScriptWrappable::Type::HTMLCollectionObject;
+        return true;
     }
 
     unsigned long length() const;

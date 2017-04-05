@@ -45,9 +45,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isNodeList() const
     {
-        return ScriptWrappable::Type::NodeListObject;
+        return true;
     }
 
     unsigned long length() const;

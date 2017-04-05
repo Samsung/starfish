@@ -26,10 +26,9 @@ using namespace escargot;
 
 static ESValue relatedTargetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-    if (originalObj->isUIEvent() && originalObj->asUIEvent()->isFocusEvent()) {
-        return ESValue(
-            originalObj->asUIEvent()->asFocusEvent()->relatedTarget());
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    if (originalObj->isFocusEvent()) {
+        return ESValue(originalObj->asFocusEvent()->relatedTarget());
     }
     THROW_ILLEGAL_INVOCATION();
 }

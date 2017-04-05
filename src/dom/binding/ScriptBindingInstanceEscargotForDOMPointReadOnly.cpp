@@ -26,32 +26,28 @@ using namespace escargot;
 
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
-                                 DOMPointReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
     DOMPointReadOnly* point = originalObj;
     return ESValue(point->x());
 }
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
-                                 DOMPointReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
     DOMPointReadOnly* point = originalObj;
     return ESValue(point->y());
 }
 
 static ESValue zGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
-                                 DOMPointReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
     DOMPointReadOnly* point = originalObj;
     return ESValue(point->z());
 }
 
 static ESValue wGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject,
-                                 DOMPointReadOnly);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
     DOMPointReadOnly* point = originalObj;
     return ESValue(point->w());
 }

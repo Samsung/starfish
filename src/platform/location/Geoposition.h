@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishPosition__
+#define __StarFishPosition__
+
+#include "dom/binding/ScriptWrappable.h"
+
+namespace StarFish {
+
+class StarFish;
+class Coordinates;
+
+class Geoposition : public ScriptWrappable {
+public:
+    Geoposition(StarFish* starFish, Coordinates* c, DOMTimeStamp timestamp)
+        : ScriptWrappable(this)
+        , m_starFish(starFish)
+        , m_coords(c)
+        , m_timestamp(timestamp)
+    {
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
+    }
+
+    Coordinates* coords()
+    {
+        return m_coords;
+    }
+
+    const DOMTimeStamp& timestamp()
+    {
+        return m_timestamp;
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
+    virtual bool isGeoposition() const
+    {
+        return true;
+    }
+
+protected:
+    StarFish* m_starFish;
+    Coordinates* m_coords;
+    DOMTimeStamp m_timestamp;
+};
+}
+
+#endif

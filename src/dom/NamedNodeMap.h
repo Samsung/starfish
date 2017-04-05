@@ -37,9 +37,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isNamedNodeMap() const
     {
-        return ScriptWrappable::Type::NamedNodeMapObject;
+        return true;
     }
 
     unsigned long length();
