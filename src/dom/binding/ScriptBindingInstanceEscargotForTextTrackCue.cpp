@@ -28,15 +28,13 @@ using namespace escargot;
 
 static ESValue startTimeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     return ESValue(originalObj->startTime());
 }
 
 static ESValue startTimeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double startTime = firstArg.toNumber();
     if (std::isnan(startTime)) {
@@ -48,15 +46,13 @@ static ESValue startTimeSetterFunction(ESVMInstance* instance)
 
 static ESValue endTimeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     return ESValue(originalObj->endTime());
 }
 
 static ESValue endTimeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double endTime = firstArg.toNumber();
     if (std::isnan(endTime)) {
@@ -68,8 +64,7 @@ static ESValue endTimeSetterFunction(ESVMInstance* instance)
 
 static ESValue trackGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     TextTrack* track = originalObj->track();
     if (track) {
         return track->scriptValue();
@@ -79,15 +74,13 @@ static ESValue trackGetterFunction(ESVMInstance* instance)
 
 static ESValue idGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     return toJSString(originalObj->id());
 }
 
 static ESValue idSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     String* id = toBrowserString(firstArg.toString());
     originalObj->setId(id);
@@ -96,8 +89,7 @@ static ESValue idSetterFunction(ESVMInstance* instance)
 
 static ESValue onEnterGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()
@@ -107,8 +99,7 @@ static ESValue onEnterGetterFunction(ESVMInstance* instance)
 
 static ESValue onEnterSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()
@@ -124,8 +115,7 @@ static ESValue onEnterSetterFunction(ESVMInstance* instance)
 
 static ESValue onExitGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()
@@ -135,8 +125,7 @@ static ESValue onExitGetterFunction(ESVMInstance* instance)
 
 static ESValue onExitSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject,
-                                 TextTrackCue);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()

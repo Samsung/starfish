@@ -40,9 +40,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMTokenList() const
     {
-        return ScriptWrappable::Type::DOMTokenListObject;
+        return true;
     }
 
     static void tokenize(GCVector<String*>* tokens, String* src);

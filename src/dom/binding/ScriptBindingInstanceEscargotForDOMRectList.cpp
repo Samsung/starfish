@@ -28,7 +28,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMRectListObject);
+    CHECK_TYPEOF(thisValue, DOMRectList);
     DOMRectList* domRectList =
         (DOMRectList*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
@@ -43,8 +43,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectListObject,
-                                 DOMRectList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectList);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }

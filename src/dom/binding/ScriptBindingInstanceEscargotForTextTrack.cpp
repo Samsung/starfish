@@ -20,6 +20,7 @@
 
 #include "dom/DOM.h"
 #include "dom/TextTrack.h"
+#include "dom/TextTrackCueList.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {
@@ -31,8 +32,8 @@ static ESValue addCueFunction(ESVMInstance* instance)
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::TextTrackObject);
-    CHECK_TYPEOF(firstArg, ScriptWrappable::Type::TextTrackCueObject);
+    CHECK_TYPEOF(thisValue, TextTrack);
+    CHECK_TYPEOF(firstArg, TextTrackCue);
 
     TextTrack* textTrack =
         (TextTrack*)thisValue.asESPointer()->asESObject()->extraPointerData();
@@ -47,8 +48,8 @@ static ESValue removeCueFunction(ESVMInstance* instance)
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::TextTrackObject);
-    CHECK_TYPEOF(firstArg, ScriptWrappable::Type::TextTrackCueObject);
+    CHECK_TYPEOF(thisValue, TextTrack);
+    CHECK_TYPEOF(firstArg, TextTrackCue);
 
     TextTrack* textTrack =
         (TextTrack*)thisValue.asESPointer()->asESObject()->extraPointerData();
@@ -60,8 +61,7 @@ static ESValue removeCueFunction(ESVMInstance* instance)
 
 static ESValue onCueChangeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()
@@ -71,8 +71,7 @@ static ESValue onCueChangeGetterFunction(ESVMInstance* instance)
 
 static ESValue onCueChangeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
                          ->starFish()
                          ->staticStrings()
@@ -88,8 +87,7 @@ static ESValue onCueChangeSetterFunction(ESVMInstance* instance)
 
 static ESValue cuesGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     TextTrackCueList* list = originalObj->cues();
     if (list) {
         return list->scriptValue();
@@ -99,8 +97,7 @@ static ESValue cuesGetterFunction(ESVMInstance* instance)
 
 static ESValue activeCuesGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     TextTrackCueList* list = originalObj->activeCues();
     if (list) {
         return list->scriptValue();
@@ -110,36 +107,31 @@ static ESValue activeCuesGetterFunction(ESVMInstance* instance)
 
 static ESValue kindGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     return toJSString(TextTrack::kindToString(originalObj->kind()));
 }
 
 static ESValue labelGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     return toJSString(originalObj->label());
 }
 
 static ESValue languageGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     return toJSString(originalObj->language());
 }
 
 static ESValue modeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     return toJSString(TextTrack::modeToString(originalObj->mode()));
 }
 
 static ESValue modeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     if (firstArg.isESString()) {
         originalObj->setMode(toBrowserString(firstArg.toString()));
@@ -149,8 +141,7 @@ static ESValue modeSetterFunction(ESVMInstance* instance)
 
 static ESValue idGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject,
-                                 TextTrack);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
     return toJSString(originalObj->id());
 }
 

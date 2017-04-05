@@ -370,7 +370,7 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
     }
 }
 
-Color NamedColor::namedColorToColor(NamedColorValue namedColor)
+Unit::Color NamedColor::namedColorToColor(NamedColorValue namedColor)
 {
     switch (namedColor) {
 #define ADD_COLOR_ITEM(name, value)           \
@@ -379,7 +379,7 @@ Color NamedColor::namedColorToColor(NamedColorValue namedColor)
         char g = (value & 0xff00) >> 8;       \
         char b = (value & 0xff);              \
         char a = 255;                         \
-        return Color(r, g, b, a);             \
+        return Unit::Color(r, g, b, a);       \
     }
 
         NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
@@ -387,6 +387,6 @@ Color NamedColor::namedColorToColor(NamedColorValue namedColor)
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return Color();
+    return Unit::Color();
 }
 }

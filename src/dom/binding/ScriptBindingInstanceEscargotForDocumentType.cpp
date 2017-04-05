@@ -27,14 +27,14 @@ using namespace escargot;
 extern ESValue removeFunction(ESVMInstance* instance);
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     String* s = originalObj->nodeName();
     return toJSString(s);
 }
 
 static ESValue publicIdGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!nd->isDocumentType()) {
         THROW_ILLEGAL_INVOCATION();
@@ -45,7 +45,7 @@ static ESValue publicIdGetterFunction(ESVMInstance* instance)
 
 static ESValue systemIdGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!nd->isDocumentType()) {
         THROW_ILLEGAL_INVOCATION();

@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -44,7 +44,7 @@ static ESValue hrefGetterFunction(ESVMInstance* instance)
 
 static ESValue hrefSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -59,7 +59,7 @@ static ESValue hrefSetterFunction(ESVMInstance* instance)
 
 static ESValue relGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -71,7 +71,7 @@ static ESValue relGetterFunction(ESVMInstance* instance)
 
 static ESValue relSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -86,7 +86,7 @@ static ESValue relSetterFunction(ESVMInstance* instance)
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -98,7 +98,7 @@ static ESValue typeGetterFunction(ESVMInstance* instance)
 
 static ESValue typeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {

@@ -26,9 +26,7 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(
-        ScriptWrappable::Type::DOMSettableTokenListObject,
-        DOMSettableTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMSettableTokenList);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }
@@ -37,7 +35,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    CHECK_TYPEOF(thisValue, DOMSettableTokenList);
     DOMTokenList* self = (DOMTokenList*)thisValue.asESPointer()
                              ->asESObject()
                              ->extraPointerData();
@@ -54,7 +52,7 @@ static ESValue containsFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    CHECK_TYPEOF(thisValue, DOMSettableTokenList);
     try {
         ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
@@ -76,7 +74,7 @@ static ESValue addFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    CHECK_TYPEOF(thisValue, DOMSettableTokenList);
     try {
         GCVector<String*> tokens;
         int argCount = instance->currentExecutionContext()->argumentCount();
@@ -105,7 +103,7 @@ static ESValue removeFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    CHECK_TYPEOF(thisValue, DOMSettableTokenList);
     try {
         GCVector<String*> tokens;
         int argCount = instance->currentExecutionContext()->argumentCount();
@@ -136,7 +134,7 @@ static ESValue toggleFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+    CHECK_TYPEOF(thisValue, DOMSettableTokenList);
     try {
         int argCount = instance->currentExecutionContext()->argumentCount();
         ESValue argValue = instance->currentExecutionContext()->readArgument(0);
@@ -173,18 +171,14 @@ static ESValue toggleFunction(ESVMInstance* instance)
 
 static ESValue valueGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(
-        ScriptWrappable::Type::DOMSettableTokenListObject,
-        DOMSettableTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMSettableTokenList);
     String* value = originalObj->value();
     return toJSString(value);
 }
 
 static ESValue valueSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(
-        ScriptWrappable::Type::DOMSettableTokenListObject,
-        DOMSettableTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMSettableTokenList);
     originalObj->setValue(toBrowserString(v));
     return ESValue();
 }

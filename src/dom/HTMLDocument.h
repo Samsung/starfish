@@ -37,6 +37,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isHTMLDocument() const
+    {
+        return true;
+    }
+
     virtual Element* createElement(AtomicString localName,
                                    bool shouldCheckName);
     static Element* createHTMLElement(Document* document,

@@ -28,8 +28,7 @@ using namespace escargot;
 
 static ESValue startFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject,
-                                 TimeRanges);
+    GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     TO_INDEX_UINT32(firstArg, idx);
     if (idx != INVALID_INDEX && idx < originalObj->length()) {
@@ -40,8 +39,7 @@ static ESValue startFunction(ESVMInstance* instance)
 
 static ESValue endFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject,
-                                 TimeRanges);
+    GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     TO_INDEX_UINT32(firstArg, idx);
     if (idx != INVALID_INDEX && idx < originalObj->length()) {
@@ -52,8 +50,7 @@ static ESValue endFunction(ESVMInstance* instance)
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject,
-                                 TimeRanges);
+    GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
     return ESValue(originalObj->length());
 }
 

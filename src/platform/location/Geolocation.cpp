@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "Geolocation.h"
+#include "PositionError.h"
 
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/profiling/Profiling.h"
@@ -36,7 +37,7 @@ Geolocation::Geolocation(StarFish* starFish)
 }
 
 bool Geolocation::getCurrentPositionPreprocessing(
-    GeopositionCallback cb, void* cbData, GeopositionErrorCallback errorCb,
+    GeoPositionCallback cb, void* cbData, GeoPositionErrorCallback errorCb,
     void* errorCbData, bool enableHighAccuracy, int32_t timeout,
     int32_t maximumAge)
 {
@@ -44,7 +45,7 @@ bool Geolocation::getCurrentPositionPreprocessing(
         m_starFish->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
-                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT),
                    data3);
             },
@@ -54,8 +55,8 @@ bool Geolocation::getCurrentPositionPreprocessing(
     return true;
 }
 
-void Geolocation::getCurrentPosition(GeopositionCallback cb, void* cbData,
-                                     GeopositionErrorCallback errorCb,
+void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
+                                     GeoPositionErrorCallback errorCb,
                                      void* errorCbData, bool enableHighAccuracy,
                                      int32_t timeout, int32_t maximumAge)
 {
@@ -65,7 +66,7 @@ void Geolocation::getCurrentPosition(GeopositionCallback cb, void* cbData,
         m_starFish->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
-                GeopositionErrorCallback cb = (GeopositionErrorCallback)data2;
+                GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
                            sf, PositionError::Error::POSITION_UNAVAILABLE),
                    data3);

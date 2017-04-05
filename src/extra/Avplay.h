@@ -26,7 +26,7 @@
 namespace StarFish {
 
 class StarFish;
-class avplay : public ScriptWrappable {
+class Avplay : public ScriptWrappable {
 public:
     enum AVPLAY_CALLBACK_TYPE {
         prepare_async_CALLBACK,
@@ -41,8 +41,8 @@ public:
         onstreamcompleted_CALLBACK
     };
 
-    avplay(StarFish* starFish);
-    ~avplay();
+    Avplay(StarFish* starFish);
+    ~Avplay();
     StarFish* starFish()
     {
         return m_starFish;
@@ -73,10 +73,11 @@ public:
     void prepareAsync(ScriptValue listener);
     void setListener(ScriptValue listener);
 
-    virtual Type type()
+    virtual bool isAVPlay() const
     {
-        return ScriptWrappable::Type::avplayObject;
+        return true;
     }
+
     void callJSCallback(AVPLAY_CALLBACK_TYPE type);
 
     void setBufferingPercent(int percent)

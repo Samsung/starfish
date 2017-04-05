@@ -104,7 +104,7 @@ static ESValue progressEventFunction(ESVMInstance* instance)
 
 static ESValue lengthComputableGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     Event* e = originalObj;
     if (e->isProgressEvent()) {
         bool lengthComputable = e->asProgressEvent()->lengthComputable();
@@ -116,7 +116,7 @@ static ESValue lengthComputableGetterFunction(ESVMInstance* instance)
 
 static ESValue loadedGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     Event* e = originalObj;
     if (e->isProgressEvent()) {
         unsigned long long loaded = e->asProgressEvent()->loaded();
@@ -128,7 +128,7 @@ static ESValue loadedGetterFunction(ESVMInstance* instance)
 
 static ESValue totalGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
     Event* e = originalObj;
     if (e->isProgressEvent()) {
         unsigned long long total = e->asProgressEvent()->total();

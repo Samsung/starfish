@@ -19,7 +19,7 @@
 
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "platform/location/Geolocation.h"
+#include "platform/location/PositionError.h"
 
 namespace StarFish {
 
@@ -27,15 +27,13 @@ using namespace escargot;
 
 static ESValue codeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject,
-                                 PositionError);
+    GENERATE_THIS_AND_CHECK_TYPE(PositionError);
     return ESValue(originalObj->code());
 }
 
 static ESValue messageGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject,
-                                 PositionError);
+    GENERATE_THIS_AND_CHECK_TYPE(PositionError);
     return ESString::create(originalObj->message());
 }
 

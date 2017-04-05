@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue dataGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isCharacterData()) {
         return toJSString(nd->asCharacterData()->data());
@@ -36,7 +36,7 @@ static ESValue dataGetterFunction(ESVMInstance* instance)
 
 static ESValue dataSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isCharacterData()) {
         if (v.isNull()) {
@@ -57,7 +57,7 @@ static ESValue dataSetterFunction(ESVMInstance* instance)
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isCharacterData()) {
         if (nd->asCharacterData()->data()->isASCIIString()) {

@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue dirGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         return toJSString(nd->asElement()->getAttribute(
@@ -38,7 +38,7 @@ static ESValue dirGetterFunction(ESVMInstance* instance)
 
 static ESValue dirSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         nd->asElement()->setAttribute(
@@ -52,7 +52,7 @@ static ESValue dirSetterFunction(ESVMInstance* instance)
 
 static ESValue offsetWidthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         return ESValue(nd->asElement()->asHTMLElement()->offsetWidth());
@@ -63,7 +63,7 @@ static ESValue offsetWidthGetterFunction(ESVMInstance* instance)
 
 static ESValue offsetHeightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         return ESValue(nd->asElement()->asHTMLElement()->offsetHeight());
@@ -74,7 +74,7 @@ static ESValue offsetHeightGetterFunction(ESVMInstance* instance)
 
 static ESValue onClickGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -90,7 +90,7 @@ static ESValue onClickGetterFunction(ESVMInstance* instance)
 
 static ESValue onClickSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -110,7 +110,7 @@ static ESValue onClickSetterFunction(ESVMInstance* instance)
 
 static ESValue clickFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* obj = originalObj;
     String* eventType = obj->document()
                             ->window()
@@ -124,7 +124,7 @@ static ESValue clickFunction(ESVMInstance* instance)
 
 static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -140,7 +140,7 @@ static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
 
 static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -163,7 +163,7 @@ static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
 
 static ESValue mouseOverFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* obj = originalObj;
     String* eventType = obj->document()
                             ->window()
@@ -177,7 +177,7 @@ static ESValue mouseOverFunction(ESVMInstance* instance)
 
 static ESValue onLoadGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -191,7 +191,7 @@ static ESValue onLoadGetterFunction(ESVMInstance* instance)
 
 static ESValue onLoadSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -211,7 +211,7 @@ static ESValue onLoadSetterFunction(ESVMInstance* instance)
 
 static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -228,7 +228,7 @@ static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
 
 static ESValue onUnLoadSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -251,7 +251,7 @@ static ESValue onUnLoadSetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -267,7 +267,7 @@ static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -290,7 +290,7 @@ static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyUpGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -306,7 +306,7 @@ static ESValue onKeyUpGetterFunction(ESVMInstance* instance)
 
 static ESValue onKeyUpSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -326,7 +326,7 @@ static ESValue onKeyUpSetterFunction(ESVMInstance* instance)
 
 static ESValue onFocusGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -342,7 +342,7 @@ static ESValue onFocusGetterFunction(ESVMInstance* instance)
 
 static ESValue onFocusSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -362,7 +362,7 @@ static ESValue onFocusSetterFunction(ESVMInstance* instance)
 
 static ESValue focusFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* obj = originalObj;
     String* eventType = obj->document()
                             ->window()
@@ -376,7 +376,7 @@ static ESValue focusFunction(ESVMInstance* instance)
 
 static ESValue onErrorGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();
@@ -392,7 +392,7 @@ static ESValue onErrorGetterFunction(ESVMInstance* instance)
 
 static ESValue onErrorSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement()) {
         auto element = nd->asElement()->asHTMLElement();

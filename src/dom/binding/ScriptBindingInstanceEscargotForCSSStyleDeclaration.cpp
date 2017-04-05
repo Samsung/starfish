@@ -27,8 +27,7 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(
-        ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);
+    GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }
@@ -39,8 +38,7 @@ static ESValue getPropertyValueFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue,
-                     ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CHECK_TYPEOF(thisValue, CSSStyleDeclaration);
         CSSStyleDeclaration* decl =
             (CSSStyleDeclaration*)thisValue.asESPointer()
                 ->asESObject()
@@ -77,8 +75,7 @@ static ESValue setPropertyFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue,
-                     ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CHECK_TYPEOF(thisValue, CSSStyleDeclaration);
         CSSStyleDeclaration* decl =
             (CSSStyleDeclaration*)thisValue.asESPointer()
                 ->asESObject()

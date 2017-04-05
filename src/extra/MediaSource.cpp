@@ -19,6 +19,7 @@
 #include "StarFishConfig.h"
 #include "MediaSource.h"
 #include "SourceBuffer.h"
+#include "SourceBufferList.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLMediaElement.h"

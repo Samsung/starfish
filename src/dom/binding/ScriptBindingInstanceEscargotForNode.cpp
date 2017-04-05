@@ -29,21 +29,21 @@ using namespace escargot;
 
 static ESValue nodeTypeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     unsigned short nodeType = originalObj->nodeType();
     return ESValue(nodeType);
 }
 
 static ESValue nodeNameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     String* nodeName = originalObj->nodeName();
     return toJSString(nodeName);
 }
 
 static ESValue ownerDocumentGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Document* doc = originalObj->ownerDocument();
     if (doc == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -53,7 +53,7 @@ static ESValue ownerDocumentGetterFunction(ESVMInstance* instance)
 
 static ESValue parentNodeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* p = originalObj->parentNode();
     if (p == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -63,7 +63,7 @@ static ESValue parentNodeGetterFunction(ESVMInstance* instance)
 
 static ESValue parentElementGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Element* p = originalObj->parentElement();
     if (p == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -73,7 +73,7 @@ static ESValue parentElementGetterFunction(ESVMInstance* instance)
 
 static ESValue childNodesGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     NodeList* list = originalObj->childNodes();
     STARFISH_ASSERT(list);
     return list->scriptValue();
@@ -81,7 +81,7 @@ static ESValue childNodesGetterFunction(ESVMInstance* instance)
 
 static ESValue nextSiblingGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj->nextSibling();
     if (nd == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -91,7 +91,7 @@ static ESValue nextSiblingGetterFunction(ESVMInstance* instance)
 
 static ESValue previousSiblingGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj->previousSibling();
     if (nd == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -101,7 +101,7 @@ static ESValue previousSiblingGetterFunction(ESVMInstance* instance)
 
 static ESValue firstChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj->firstChild();
     if (nd == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -111,7 +111,7 @@ static ESValue firstChildGetterFunction(ESVMInstance* instance)
 
 static ESValue lastChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj->lastChild();
     if (nd == nullptr) {
         return ESValue(ESValue::ESNull);
@@ -121,7 +121,7 @@ static ESValue lastChildGetterFunction(ESVMInstance* instance)
 
 static ESValue nodeValueGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (!nd->isCharacterData()) {
         return ESValue(ESValue::ESNull);
@@ -132,7 +132,7 @@ static ESValue nodeValueGetterFunction(ESVMInstance* instance)
 
 static ESValue nodeValueSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* node = originalObj;
     if (v.isESString()) {
         node->setNodeValue(toBrowserString(v));
@@ -144,7 +144,7 @@ static ESValue nodeValueSetterFunction(ESVMInstance* instance)
 
 static ESValue textContentGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocumentType() || nd->isDocument()) {
         return ESValue(ESValue::ESNull);
@@ -154,7 +154,7 @@ static ESValue textContentGetterFunction(ESVMInstance* instance)
 
 static ESValue textContentSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     String* arg_str = toBrowserString(v);
     if (v.isUndefinedOrNull() || !arg_str->length()) {
         originalObj->setTextContent(String::emptyString);
@@ -168,7 +168,7 @@ static ESValue cloneNodeFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, (ScriptWrappable::Type::NodeObject));
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
     ESValue arg = instance->currentExecutionContext()->readArgument(0);
@@ -184,7 +184,7 @@ static ESValue hasChildNodesFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
     bool result = obj->hasChildNodes();
@@ -195,7 +195,7 @@ static ESValue isEqualNodeFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
 
     ESValue argValue = instance->currentExecutionContext()->readArgument(0);
 
@@ -255,9 +255,8 @@ static ESValue compareDocumentPositionGetterFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                 ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
+    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
     Node* nodeRef = (Node*)instance->currentExecutionContext()
@@ -273,14 +272,13 @@ static ESValue containsFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(thisValue, Node);
     Node* obj =
         (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
     if (instance->currentExecutionContext()->readArgument(0).isNull()) {
         return ESValue(obj->contains(nullptr));
     }
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                 ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
     Node* nodeRef = (Node*)instance->currentExecutionContext()
                         ->readArgument(0)
                         .asESPointer()
@@ -295,11 +293,10 @@ static ESValue appendChildFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF_WITH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject,
-                                  instance,
+        CHECK_TYPEOF_WITH_ERRCODE(thisValue, Node, instance,
                                   DOMException::HIERARCHY_REQUEST_ERR);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         Node* child = (Node*)instance->currentExecutionContext()
@@ -320,10 +317,10 @@ static ESValue removeChildFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF_WITH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject,
-                                  instance, DOMException::NOT_FOUND_ERR);
+        CHECK_TYPEOF_WITH_ERRCODE(thisValue, Node, instance,
+                                  DOMException::NOT_FOUND_ERR);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         Node* child = (Node*)instance->currentExecutionContext()
@@ -344,11 +341,11 @@ static ESValue replaceChildFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         Node* node = (Node*)instance->currentExecutionContext()
@@ -374,12 +371,12 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         Node* obj =
             (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         Node* node = (Node*)instance->currentExecutionContext()
                          ->readArgument(0)
                          .asESPointer()
@@ -389,7 +386,7 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
         ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
         Node* child = nullptr;
         if (!arg2.isNull()) {
-            CHECK_TYPEOF(arg2, ScriptWrappable::Type::NodeObject);
+            CHECK_TYPEOF(arg2, Node);
             child = (Node*)arg2.asESPointer()->asESObject()->extraPointerData();
         }
 

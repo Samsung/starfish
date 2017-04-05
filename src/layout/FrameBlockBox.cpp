@@ -800,7 +800,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
 
     bool overflowApplied = shouldApplyOverflow();
     if (overflowApplied) {
-        ctx.m_canvas->clip(Rect(0, 0, width(), height()));
+        ctx.m_canvas->clip(Unit::Rect(0, 0, width(), height()));
     }
 
     if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
@@ -813,7 +813,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(
+                ctx.m_canvas->clip(Unit::Rect(
                     borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                     contentWidth(), contentHeight() + paddingBottom()));
             }
@@ -831,7 +831,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(
+                ctx.m_canvas->clip(Unit::Rect(
                     borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                     contentWidth(), contentHeight() + paddingBottom()));
             }
@@ -848,7 +848,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(
+                ctx.m_canvas->clip(Unit::Rect(
                     borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                     contentWidth(), contentHeight() + paddingBottom()));
             }
@@ -864,7 +864,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Rect(
+                ctx.m_canvas->clip(Unit::Rect(
                     borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                     contentWidth(), contentHeight() + paddingBottom()));
             }

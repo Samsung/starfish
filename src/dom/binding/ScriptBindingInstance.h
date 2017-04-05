@@ -19,18 +19,15 @@
 
 #include <Escargot.h>
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "dom/TextTrack.h"
-#include "extra/TimeRanges.h"
-#endif
-
 namespace StarFish {
 
 using namespace escargot;
 
 class ScriptBindingInstanceDataEscargot;
+class String;
 
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;
+const uint32_t kEventStringAttributeCheckMagic = 0x0ffe;
 
 class ScriptBindingInstance : public gc {
 public:
@@ -50,7 +47,7 @@ protected:
     void* m_data;
 #ifdef USE_ES6_FEATURE
     void* m_promiseJobQueue;
-#endif
+#endif // USE_ES6_FEATURE
     size_t m_enterCount;
 };
 
@@ -66,7 +63,131 @@ ESValue toJSString(String* v);
 
 ESValue defaultFunction(ESVMInstance* instance);
 ESValue errorOnConstructorFunction(ESVMInstance* instance);
-}
+
+typedef ESValue ScriptValue;
+typedef ESObject* ScriptObject;
+typedef ESFunctionObject* ScriptFunction;
+#define ScriptValueUndefined ESValue()
+#define ScriptValueNull ESValue(ESValue::ESNull)
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
+    F(node, Node)                                   \
+    F(eventTarget, EventTarget)                     \
+    F(window, Window)                               \
+    F(element, Element)                             \
+    F(document, Document)                           \
+    F(documentType, DocumentType)                   \
+    F(documentFragment, DocumentFragment)           \
+    F(htmlDocument, HTMLDocument)                   \
+    F(characterData, CharacterData)                 \
+    F(text, Text)                                   \
+    F(cDataSection, CDataSection)                   \
+    F(comment, Comment)                             \
+    F(htmlElement, HTMLElement)                     \
+    F(htmlHtmlElement, HTMLHtmlElement)             \
+    F(htmlHeadElement, HTMLHeadElement)             \
+    F(htmlScriptElement, HTMLScriptElement)         \
+    F(htmlStyleElement, HTMLStyleElement)           \
+    F(htmlLinkElement, HTMLLinkElement)             \
+    F(htmlBodyElement, HTMLBodyElement)             \
+    F(htmlDivElement, HTMLDivElement)               \
+    F(htmlImageElement, HTMLImageElement)           \
+    F(htmlBrElement, HTMLBRElement)                 \
+    F(htmlObjectElement, HTMLObjectElement)         \
+    F(htmlMetaElement, HTMLMetaElement)             \
+    F(htmlParagraphElement, HTMLParagraphElement)   \
+    F(htmlPreElement, HTMLPreElement)               \
+    F(htmlSpanElement, HTMLSpanElement)             \
+    F(htmlUnknownElement, HTMLUnknownElement)       \
+    F(pseudoElement, PseudoElement)                 \
+    F(htmlCollection, HTMLCollection)               \
+    F(event, Event)                                 \
+    F(uiEvent, UIEvent)                             \
+    F(mouseEvent, MouseEvent)                       \
+    F(touchEvent, TouchEvent)                       \
+    F(keyboardEvent, KeyboardEvent)                 \
+    F(focusEvent, FocusEvent)                       \
+    F(progressEvent, ProgressEvent)                 \
+    F(nodeList, NodeList)                           \
+    F(domTokenList, DOMTokenList)                   \
+    F(domSettableTokenList, DOMSettableTokenList)   \
+    F(namedNodeMap, NamedNodeMap)                   \
+    F(attr, Attr)                                   \
+    F(cssStyleDeclaration, CSSStyleDeclaration)     \
+    F(cssStyleRule, CSSStyleRule)                   \
+    F(xhrElement, XMLHttpRequest)                   \
+    F(blobElement, Blob)                            \
+    F(url, URL)                                     \
+    F(domRectReadOnly, DOMRectReadOnly)             \
+    F(domRect, DOMRect)                             \
+    F(domPointReadOnly, DOMPointReadOnly)           \
+    F(domPoint, DOMPoint)                           \
+    F(domQuad, DOMQuad)                             \
+    F(domRectList, DOMRectList)                     \
+    F(location, Location)                           \
+    F(domException, DOMException)                   \
+    F(history, History)                             \
+    F(navigator, Navigator)                         \
+    F(geolocation, Geolocation)                     \
+    F(geoposition, Geoposition)                     \
+    F(coordinates, Coordinates)                     \
+    F(positionError, PositionError)
+
+#ifdef STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F) \
+    F(domImplementation, DOMImplementation)
+#else // STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)
+#endif // STARFISH_EXP
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
+    F(htmlMediaElement, HTMLMediaElement)         \
+    F(htmlVideoElement, HTMLVideoElement)         \
+    F(htmlAudioElement, HTMLAudioElement)         \
+    F(htmlTrackElement, HTMLTrackElement)         \
+    F(htmlSourceElement, HTMLSourceElement)       \
+    F(textTrack, TextTrack)                       \
+    F(textTrackList, TextTrackList)               \
+    F(textTrackCue, TextTrackCue)                 \
+    F(textTrackCueList, TextTrackCueList)         \
+    F(VTTCue, VTTCue)                             \
+    F(timeRanges, TimeRanges)                     \
+    F(mediaSource, MediaSource)                   \
+    F(sourceBuffer, SourceBuffer)                 \
+    F(sourceBufferList, SourceBufferList)
+#else // STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
+#endif // STARFISH_ENABLE_MULTIMEDIA
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    F(htmlAnchorElement, HTMLAnchorElement)
+#else // STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#endif // STARFISH_ENABLE_MULTI_PAGE
+
+#ifdef STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(domParser, DOMParser)
+#else // STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
+#endif // STARFISH_ENABLE_DOMPARSER
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
+    F(webApis, WebApis)                            \
+    F(avPlay, Avplay)
+#else // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+#endif // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F)    \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)      \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)  \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
 #define DEFINE_FUNCTION(functionName, parentName)                         \
     ESString* functionName##String = ESString::create(#functionName);     \
@@ -138,7 +259,7 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
         ESVMInstance::currentInstance()->throwError(__err->scriptValue());     \
     }
 
-#define CHECK_TYPEOF(thisValue, btype)                                       \
+#define CHECK_TYPEOF(thisValue, type)                                        \
     {                                                                        \
         ESValue v = thisValue;                                               \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
@@ -146,13 +267,12 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
               (((ScriptWrappable*)v.asESPointer()                            \
                     ->asESObject()                                           \
                     ->extraPointerData())                                    \
-                   ->type() &                                                \
-               btype))) {                                                    \
+                   ->is##type()))) {                                         \
             THROW_ILLEGAL_INVOCATION()                                       \
         }                                                                    \
     }
 
-#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, btype, instance, errcode)       \
+#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, type, instance, errcode)        \
     {                                                                        \
         ESValue v = thisValue;                                               \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
@@ -160,13 +280,12 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
               (((ScriptWrappable*)v.asESPointer()                            \
                     ->asESObject()                                           \
                     ->extraPointerData())                                    \
-                   ->type() &                                                \
-               btype))) {                                                    \
+                   ->is##type()))) {                                         \
             THROW_DOM_EXCEPTION(instance, errcode);                          \
         }                                                                    \
     }
 
-#define GENERATE_THIS_AND_CHECK_TYPE(btype, destType)                        \
+#define GENERATE_THIS_AND_CHECK_TYPE(type)                                   \
     ESValue thisValue =                                                      \
         instance->currentExecutionContext()->resolveThisBinding();           \
     {                                                                        \
@@ -176,38 +295,36 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
               (((ScriptWrappable*)v.asESPointer()                            \
                     ->asESObject()                                           \
                     ->extraPointerData())                                    \
-                   ->type() &                                                \
-               btype))) {                                                    \
+                   ->is##type()))) {                                         \
             THROW_ILLEGAL_INVOCATION()                                       \
         }                                                                    \
     }                                                                        \
-    destType* originalObj = (destType*)(thisValue.asESPointer()              \
-                                            ->asESObject()                   \
-                                            ->extraPointerData());           \
+    type* originalObj =                                                      \
+        (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());  \
     ESValue v = instance->currentExecutionContext()->readArgument(0);
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#define DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F)        \
-    [](ESVMInstance* instance) -> ESValue {                                    \
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
-        Node* nd = originalObj;                                                \
-        if (nd->isElement() && nd->asElement()->isHTMLElement() &&             \
-            nd->asElement()                                                    \
-                ->asHTMLElement()                                              \
-                ->isHTML##ElementName##Element()) {                            \
-            HTML##ElementName##Element* __element =                            \
-                nd->asElement()                                                \
-                    ->asHTMLElement()                                          \
-                    ->asHTML##ElementName##Element();                          \
-            RETURN_##TYPE_F(getter)                                            \
-        }                                                                      \
-        return ESValue();                                                      \
+#define DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
+    [](ESVMInstance* instance) -> ESValue {                             \
+        GENERATE_THIS_AND_CHECK_TYPE(Node);                             \
+        Node* nd = originalObj;                                         \
+        if (nd->isElement() && nd->asElement()->isHTMLElement() &&      \
+            nd->asElement()                                             \
+                ->asHTMLElement()                                       \
+                ->isHTML##ElementName##Element()) {                     \
+            HTML##ElementName##Element* __element =                     \
+                nd->asElement()                                         \
+                    ->asHTMLElement()                                   \
+                    ->asHTML##ElementName##Element();                   \
+            RETURN_##TYPE_F(getter)                                     \
+        }                                                               \
+        return ESValue();                                               \
     }
 
 #define DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F)        \
     [](ESVMInstance* instance) -> ESValue {                                    \
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
+        GENERATE_THIS_AND_CHECK_TYPE(Node);                                    \
         Node* nd = originalObj;                                                \
         if (nd->isElement() && nd->asElement()->isHTMLElement() &&             \
             nd->asElement()                                                    \
@@ -296,5 +413,6 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
         __element->clearAttributeEventListener(eventType);            \
     }
 #endif // STARFISH_ENABLE_MULTIMEDIA
+}
 
 #endif

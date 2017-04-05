@@ -26,22 +26,19 @@ using namespace escargot;
 
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
-                                 DOMException);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMException);
     return ESString::create(originalObj->name());
 }
 
 static ESValue messageGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
-                                 DOMException);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMException);
     return toJSString(originalObj->message());
 }
 
 static ESValue codeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject,
-                                 DOMException);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMException);
     return ESValue(originalObj->code());
 }
 

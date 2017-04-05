@@ -189,7 +189,7 @@ public:
     {
     }
 
-    void setBgColor(Color color)
+    void setBgColor(Unit::Color color)
     {
         m_color = color;
         m_bgColorNeedToUpdate = false;
@@ -279,7 +279,7 @@ public:
         m_layers[layer].setPositionY(position);
     }
 
-    Color bgColor()
+    Unit::Color bgColor()
     {
         return m_color;
     }
@@ -356,7 +356,7 @@ public:
         return m_layers[layer].positionY();
     }
 
-    void checkComputed(Length fontSize, Font* font, Color color)
+    void checkComputed(Length fontSize, Font* font, Unit::Color color)
     {
         // NOTE: To support background layer
         if (m_layers.size() > m_maxLayerImages) {
@@ -421,7 +421,7 @@ private:
     friend inline bool operator!=(const StyleBackgroundData& a,
                                   const StyleBackgroundData& b);
 
-    Color m_color;
+    Unit::Color m_color;
     // background-color type
     bool m_bgColorNeedToUpdate : 1;
     unsigned int m_maxLayerImages;

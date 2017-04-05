@@ -60,9 +60,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMPoint() const
     {
-        return ScriptWrappable::Type::DOMPointObject;
+        return true;
     }
 
 protected:

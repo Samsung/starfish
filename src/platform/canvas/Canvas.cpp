@@ -48,7 +48,7 @@ Evas* internalCanvas()
 class CanvasState {
 public:
     SkMatrix m_matrix;
-    Color m_color;
+    Unit::Color m_color;
     Evas_Object* m_clipper;
     SkRect m_clipRect;
     ClipperLib::Paths m_clipPath;
@@ -56,8 +56,8 @@ public:
     Font* m_font;
     LayoutUnit m_baseX;
     LayoutUnit m_baseY;
-    Color m_underLineColor;
-    Color m_lineThroughColor;
+    Unit::Color m_underLineColor;
+    Unit::Color m_lineThroughColor;
 
     bool m_mapMode;
     bool m_didClip;
@@ -80,7 +80,7 @@ public:
     }
 };
 
-Rect boundingRect(const ClipperLib::Path& path)
+Unit::Rect boundingRect(const ClipperLib::Path& path)
 {
     int minX = 0, minY = 0, maxX = 0, maxY = 0;
 
@@ -98,7 +98,7 @@ Rect boundingRect(const ClipperLib::Path& path)
         maxX = std::max((int)path[i].Y, maxY);
     }
 
-    return Rect(minX, minY, maxX - minX, maxY - minY);
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
 }
 
 class CanvasEFL : public Canvas {
@@ -208,7 +208,7 @@ public:
         }
     }
 
-    virtual void clearColor(const Color& clr)
+    virtual void clearColor(const Unit::Color& clr)
     {
         Evas_Object* eo = evas_object_rectangle_add(m_canvas);
         if (m_objList) {
@@ -326,7 +326,7 @@ public:
         restore();
     }
 
-    virtual void clip(const Rect& rt)
+    virtual void clip(const Unit::Rect& rt)
     {
         if (lastState().m_hasPathClip) {
             ClipperLib::Clipper clipper;
@@ -468,9 +468,9 @@ public:
             evas_object_polygon_point_add(cl, path[i].X, path[i].Y);
         }*/
 
-        Rect clipRt(0, 0, 0, 0);
+        Unit::Rect clipRt(0, 0, 0, 0);
         for (size_t i = 0; i < clipPaths.size(); i++) {
-            Rect rt = boundingRect(clipPaths[i]);
+            Unit::Rect rt = boundingRect(clipPaths[i]);
             if (rt.width() && rt.height()) {
                 clipRt.unite(rt);
             }
@@ -500,7 +500,7 @@ public:
             cr = cairo_create(surface);
 
             for (size_t i = 0; i < clipPaths.size(); i++) {
-                Rect rt = boundingRect(clipPaths[i]);
+                Unit::Rect rt = boundingRect(clipPaths[i]);
                 if (rt.width() && rt.height()) {
                     cairo_save(cr);
                     cairo_translate(cr, -rt.x(), -rt.y());
@@ -569,9 +569,9 @@ public:
         }
     }
 
-    virtual void setColor(const Color& clr_)
+    virtual void setColor(const Unit::Color& clr_)
     {
-        Color clr = clr_;
+        Unit::Color clr = clr_;
         int r = clr.r(), g = clr.g(), b = clr.b();
         evas_color_argb_premul(clr.a(), &r, &g, &b);
         clr.m_a = clr_.m_a;
@@ -586,12 +586,12 @@ public:
         lastState().m_visible = visible;
     }
 
-    virtual Color color()
+    virtual Unit::Color color()
     {
         int r = lastState().m_color.r(), g = lastState().m_color.g(),
             b = lastState().m_color.b();
         evas_color_argb_unpremul(lastState().m_color.a(), &r, &g, &b);
-        Color clr(r, g, b, lastState().m_color.a());
+        Unit::Color clr(r, g, b, lastState().m_color.a());
         return clr;
     }
 
@@ -610,17 +610,17 @@ public:
         lastState().m_hasLineThrough = b;
     }
 
-    virtual void setUnderlineColor(Color clr)
+    virtual void setUnderlineColor(Unit::Color clr)
     {
         lastState().m_underLineColor = clr;
     }
 
-    virtual void setLineThroughColor(Color clr)
+    virtual void setLineThroughColor(Unit::Color clr)
     {
         lastState().m_lineThroughColor = clr;
     }
 
-    void drawEvasRect(int xx, int yy, int ww, int hh, const Rect& rt,
+    void drawEvasRect(int xx, int yy, int ww, int hh, const Unit::Rect& rt,
                       bool isHole = false)
     {
         Evas_Object* eo = evas_object_rectangle_add(m_canvas);
@@ -644,7 +644,7 @@ public:
         }
     }
 
-    virtual void drawRect(const Rect& rt)
+    virtual void drawRect(const Unit::Rect& rt)
     {
         if (!lastState().m_visible) {
             return;
@@ -678,7 +678,7 @@ public:
     }
 
     // NOTE punchHole && Evas can not apply clip
-    virtual void punchHole(const Rect& rt)
+    virtual void punchHole(const Unit::Rect& rt)
     {
         if (!lastState().m_visible) {
             return;
@@ -742,7 +742,7 @@ public:
             ww = snapSizeToPixel(rt.width(), rx);
             hh = snapSizeToPixel(rt.height(), ry);
         }
-        drawEvasRect(xx, yy, ww, hh, Rect(xx, yy, ww, hh));
+        drawEvasRect(xx, yy, ww, hh, Unit::Rect(xx, yy, ww, hh));
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
@@ -856,13 +856,13 @@ public:
                                     LayoutLocation(xx - littleLeft, y + h));
                             } else {
                                 // left, top, w, h
-                                Rect rt(xx, y, h, h);
+                                Unit::Rect rt(xx, y, h, h);
                                 drawRect(rt);
                             }
                         } else {
                             // To sync with phantom-webkit
                             int ph = h * 0.2;
-                            drawRect(Rect(xx, y + h - ph, h, ph));
+                            drawRect(Unit::Rect(xx, y + h - ph, h, ph));
                             /*
                             save();
                             clip(Rect(xx, y, h, h));
@@ -916,9 +916,9 @@ public:
                     xx = lastState().m_baseX + rt.x();
                     yy = lastState().m_baseY + rt.y();
 
-                    Rect test((float)xx, (float)yy, (float)rt.width(),
-                              (float)rt.height());
-                    Rect canvasSize(0, 0, m_width, m_height);
+                    Unit::Rect test((float)xx, (float)yy, (float)rt.width(),
+                                    (float)rt.height());
+                    Unit::Rect canvasSize(0, 0, m_width, m_height);
                     if (canvasSize.contains(test.x(), test.y()) ||
                         canvasSize.contains(test.maxX(), test.y()) ||
                         canvasSize.contains(test.x(), test.maxY()) ||
@@ -1104,8 +1104,8 @@ public:
         }
     }
 
-    void drawImageInner(ImageData* data, const Rect& dst, size_t l, size_t t,
-                        size_t r, size_t b, double scale, bool fill)
+    void drawImageInner(ImageData* data, const Unit::Rect& dst, size_t l,
+                        size_t t, size_t r, size_t b, double scale, bool fill)
     {
         if (!lastState().m_visible) {
             return;
@@ -1187,19 +1187,19 @@ public:
         }
     }
 
-    virtual void drawImage(ImageData* data, const Rect& dst)
+    virtual void drawImage(ImageData* data, const Unit::Rect& dst)
     {
         drawImageInner(data, dst, 0, 0, 0, 0, 1.0, true);
     }
 
-    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l,
-                                 size_t t, size_t r, size_t b, double scale,
-                                 bool fill)
+    virtual void drawBorderImage(ImageData* data, const Unit::Rect& dst,
+                                 size_t l, size_t t, size_t r, size_t b,
+                                 double scale, bool fill)
     {
         drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Rect& dst,
+    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat, bool isRootElement)
     {
@@ -1353,10 +1353,10 @@ public:
                         evas_object_clip_set(eo, clp);
                     }
                     applyClippers(eo);
-                    applyEvasMapIfNeeded(eo,
-                                         Rect(dst.x() + curx, dst.y() + cury,
-                                              imageWidth, imageHeight),
-                                         true);
+                    applyEvasMapIfNeeded(
+                        eo, Unit::Rect(dst.x() + curx, dst.y() + cury,
+                                       imageWidth, imageHeight),
+                        true);
 
                     evas_object_show(eo);
                     cury += imageHeight;
@@ -1372,7 +1372,7 @@ public:
         }
     }
 
-    void drawImage(CanvasSurface* data, const Rect& dst)
+    void drawImage(CanvasSurface* data, const Unit::Rect& dst)
     {
         if (!lastState().m_visible) {
             return;
@@ -1527,12 +1527,12 @@ public:
     void applyEvasMapIfNeeded(Evas_Object* eo, const LayoutRect& dst,
                               bool isImage = false)
     {
-        Rect rt((float)dst.x(), (float)dst.y(), (float)dst.width(),
-                (float)dst.height());
+        Unit::Rect rt((float)dst.x(), (float)dst.y(), (float)dst.width(),
+                      (float)dst.height());
         applyEvasMapIfNeeded(eo, rt, isImage);
     }
 
-    void applyEvasMapIfNeeded(Evas_Object* eo, const Rect& dst,
+    void applyEvasMapIfNeeded(Evas_Object* eo, const Unit::Rect& dst,
                               bool isImage = false)
     {
         if (shouldApplyEvasMap()) {

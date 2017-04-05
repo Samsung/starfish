@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTextTrackCue__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#ifndef __StarFishTextTrackCue__
 #define __StarFishTextTrackCue__
 
 #include "dom/EventTarget.h"
@@ -44,14 +45,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isTextTrackCue() const
     {
-        return ScriptWrappable::Type::TextTrackCueObject;
-    }
-
-    virtual bool isVTTCue() const
-    {
-        return false;
+        return true;
     }
 
     TextTrack* track()
@@ -132,26 +128,7 @@ protected:
     String* m_payload;
     DocumentFragment* m_payloadAsHTML;
 };
-
-class TextTrackCueList : public ScriptWrappable,
-                         public GCVector<TextTrackCue*> {
-public:
-    TextTrackCueList()
-        : ScriptWrappable(this)
-        , GCVector<TextTrackCue*>()
-    {
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::TextTrackCueListObject;
-    }
-};
 }
 
 #endif
+#endif // STARFISH_ENABLE_MULTIMEDIA

@@ -559,9 +559,9 @@ void Window::navigate(URL* url)
 
     m_history = new History(m_starFish);
     m_navigator = new Navigator(m_starFish);
-    m_location = new LocationObj(m_starFish);
+    m_location = new Location(m_starFish);
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    m_webapis = new webapis(m_starFish);
+    m_webapis = new WebApis(m_starFish);
 #endif
     m_document = new HTMLDocument(this, scriptBindingInstance(), url,
                                   String::createASCIIString("UTF-8"), true);
@@ -664,7 +664,7 @@ void Window::paintWindowBackground(Canvas* canvas)
         canvas->clearColor(Color(255, 255, 255, 255));
     }
 #else
-    canvas->clearColor(Color(255, 255, 255, 255));
+    canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
@@ -836,7 +836,7 @@ void Window::rendering()
 
         Canvas* canvas = preparePainting(eflWindow, true);
 #ifndef STARFISH_TIZEN
-        canvas->clearColor(Color(255, 255, 255, 255));
+        canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
         return;
     }
@@ -1489,7 +1489,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         if (!node) {
             return;
         }
-        m_touchDownPoint = Location(x, y);
+        m_touchDownPoint = Unit::Location(x, y);
         setActiveNode(node);
         setFocusedNode(node);
 

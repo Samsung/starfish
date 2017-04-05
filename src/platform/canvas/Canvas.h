@@ -55,7 +55,7 @@ public:
     {
     }
 
-    virtual void clearColor(const Color& clr) = 0;
+    virtual void clearColor(const Unit::Color& clr) = 0;
 
     // state
     virtual void save() = 0;    // push state on state stack
@@ -69,35 +69,35 @@ public:
     virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
     virtual void postMatrix(const SkMatrix& matrix) = 0;
 
-    virtual void clip(const Rect& rt) = 0;
+    virtual void clip(const Unit::Rect& rt) = 0;
 
-    virtual void setColor(const Color& clr) = 0;
-    virtual Color color() = 0;
+    virtual void setColor(const Unit::Color& clr) = 0;
+    virtual Unit::Color color() = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
     virtual void setNeedsUnderline(bool b) = 0;
     virtual void setNeedsLineThrough(bool b) = 0;
-    virtual void setUnderlineColor(Color clr) = 0;
-    virtual void setLineThroughColor(Color clr) = 0;
+    virtual void setUnderlineColor(Unit::Color clr) = 0;
+    virtual void setLineThroughColor(Unit::Color clr) = 0;
 
-    virtual void drawRect(const Rect& rt) = 0;
+    virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom
 
-    virtual void punchHole(const Rect& rt) = 0;
+    virtual void punchHole(const Unit::Rect& rt) = 0;
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& text) = 0;
 
-    virtual void drawImage(ImageData* data, const Rect& dst) = 0;
-    virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;
-    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l,
-                                 size_t t, size_t r, size_t b, double scale,
-                                 bool fill) = 0;
-    virtual void drawRepeatImage(ImageData* data, const Rect& dst,
+    virtual void drawImage(ImageData* data, const Unit::Rect& dst) = 0;
+    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst) = 0;
+    virtual void drawBorderImage(ImageData* data, const Unit::Rect& dst,
+                                 size_t l, size_t t, size_t r, size_t b,
+                                 double scale, bool fill) = 0;
+    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat,
                                  bool isRootElement) = 0;

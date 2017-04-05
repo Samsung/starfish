@@ -18,182 +18,15 @@
 #define __StarFishGeolocation__
 
 #include "dom/binding/ScriptWrappable.h"
-#include "platform/profiling/Profiling.h"
 
 namespace StarFish {
 
 class StarFish;
+class Geoposition;
+class PositionError;
 
-class Coordinates : public ScriptWrappable {
-public:
-    Coordinates(StarFish* starFish, double latitude, double longitude,
-                double* altitude, double accuracy, double* altitudeAccuracy,
-                double* heading, double* speed)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_latitude(latitude)
-        , m_longitude(longitude)
-        , m_altitude(altitude)
-        , m_accuracy(accuracy)
-        , m_altitudeAccuracy(altitudeAccuracy)
-        , m_heading(heading)
-        , m_speed(speed)
-    {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::CoordinatesObject;
-    }
-
-    double latitude()
-    {
-        return m_latitude;
-    }
-
-    double longitude()
-    {
-        return m_longitude;
-    }
-
-    double* altitude()
-    {
-        return m_altitude;
-    }
-
-    double accuracy()
-    {
-        return m_accuracy;
-    }
-
-    double* altitudeAccuracy()
-    {
-        return m_altitudeAccuracy;
-    }
-
-    double* heading()
-    {
-        return m_heading;
-    }
-
-    double* speed()
-    {
-        return m_speed;
-    }
-
-protected:
-    StarFish* m_starFish;
-    double m_latitude;
-    double m_longitude;
-    double* m_altitude; // should be allcated by GC_MALLOC or null
-    double m_accuracy;
-    double* m_altitudeAccuracy; // should be allcated by GC_MALLOC or null
-    double* m_heading;          // should be allcated by GC_MALLOC or null
-    double* m_speed;            // should be allcated by GC_MALLOC or null
-};
-
-class Geoposition : public ScriptWrappable {
-public:
-    Geoposition(StarFish* starFish, Coordinates* c, DOMTimeStamp timestamp)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_coords(c)
-        , m_timestamp(timestamp)
-    {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
-    Coordinates* coords()
-    {
-        return m_coords;
-    }
-
-    const DOMTimeStamp& timestamp()
-    {
-        return m_timestamp;
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::GeopositionObject;
-    }
-
-protected:
-    StarFish* m_starFish;
-    Coordinates* m_coords;
-    DOMTimeStamp m_timestamp;
-};
-
-class PositionError : public ScriptWrappable {
-public:
-    enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
-
-    PositionError(StarFish* starFish, Error code)
-        : ScriptWrappable(this)
-        , m_starFish(starFish)
-        , m_code(code)
-    {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
-    Error code()
-    {
-        return m_code;
-    }
-
-    const char* message()
-    {
-        if (m_code == 1) {
-            return "Permission denied";
-        } else if (m_code == 2) {
-            return "Position unavailable";
-        } else if (m_code == 3) {
-            return "Timeout expired";
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::PositionErrorObject;
-    }
-
-protected:
-    StarFish* m_starFish;
-    Error m_code;
-};
-
-typedef void (*GeopositionCallback)(StarFish*, Geoposition*, void* data);
-typedef void (*GeopositionErrorCallback)(StarFish*, PositionError* error,
+typedef void (*GeoPositionCallback)(StarFish*, Geoposition*, void* data);
+typedef void (*GeoPositionErrorCallback)(StarFish*, PositionError* error,
                                          void* data);
 
 class Geolocation : public ScriptWrappable {
@@ -210,13 +43,13 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isGeolocation() const
     {
-        return ScriptWrappable::Type::GeolocationObject;
+        return true;
     }
 
-    virtual void getCurrentPosition(GeopositionCallback cb, void* cbData,
-                                    GeopositionErrorCallback errorCb,
+    virtual void getCurrentPosition(GeoPositionCallback cb, void* cbData,
+                                    GeoPositionErrorCallback errorCb,
                                     void* errorCbData, bool enableHighAccuracy,
                                     int32_t timeout, int32_t maximumAge);
     virtual void close()
@@ -225,8 +58,8 @@ public:
 
 protected:
     Geolocation(StarFish* starFish);
-    bool getCurrentPositionPreprocessing(GeopositionCallback cb, void* cbData,
-                                         GeopositionErrorCallback errorCb,
+    bool getCurrentPositionPreprocessing(GeoPositionCallback cb, void* cbData,
+                                         GeoPositionErrorCallback errorCb,
                                          void* errorCbData,
                                          bool enableHighAccuracy,
                                          int32_t timeout, int32_t maximumAge);

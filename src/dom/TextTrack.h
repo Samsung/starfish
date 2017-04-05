@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTextTrack__)
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#ifndef __StarFishTextTrack__
 #define __StarFishTextTrack__
 
 #include "dom/VTTCue.h"
@@ -42,44 +43,23 @@ public:
     };
 
     TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString,
-              String* language = String::emptyString)
-        : EventTarget()
-        , m_mode(Mode::Off)
-        , m_kind(kind)
-        , m_label(label)
-        , m_language(language)
-        , m_cues(new TextTrackCueList())
-        , m_activeCues(new TextTrackCueList())
-        , m_trackElement(nullptr)
-        , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
-        , m_cachedIdx(0)
-    {
-    }
+              String* language = String::emptyString);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isTextTrack() const
     {
-        return ScriptWrappable::Type::TextTrackObject;
+        return true;
     }
 
     void dispatchCueChangeEvent();
 
-    void addCue(TextTrackCue* cue)
-    {
-        cue->setTrack(this);
-        m_cues->push_back(cue);
-    }
+    void addCue(TextTrackCue* cue);
 
-    void removeCue(TextTrackCue* cue)
-    {
-        cue->unsetTrack();
-        m_cues->erase(std::remove(m_cues->begin(), m_cues->end(), cue),
-                      m_cues->end());
-    }
+    void removeCue(TextTrackCue* cue);
 
     // void addActiveCue(TextTrackCue* cue)
     // {
@@ -175,14 +155,7 @@ public:
         return m_trackElement != nullptr;
     }
 
-    void clear()
-    {
-        STARFISH_ASSERT(m_cues);
-        m_cues->clear();
-        m_activeCues->clear();
-        m_cachedTime = TEXTTRACK_INVALID_TIMEVALUE;
-        m_cachedIdx = 0;
-    }
+    void clear();
 
     static Kind stringToKind(String* kindStr)
     {
@@ -282,24 +255,7 @@ protected:
     double m_cachedTime;
     unsigned long m_cachedIdx;
 };
-
-class TextTrackList : public EventTarget, public GCVector<TextTrack*> {
-public:
-    TextTrackList()
-        : EventTarget()
-    {
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::TextTrackListObject;
-    }
-};
 }
 
 #endif
+#endif // STARFISH_ENABLE_MULTIMEDIA

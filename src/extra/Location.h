@@ -26,9 +26,9 @@ namespace StarFish {
 class StarFish;
 class URL;
 
-class LocationObj : public ScriptWrappable {
+class Location : public ScriptWrappable {
 public:
-    LocationObj(StarFish* starFish);
+    Location(StarFish* starFish);
     StarFish* starFish()
     {
         return m_starFish;
@@ -115,9 +115,9 @@ public:
         setLocation(url()->urlString());
     }
 
-    virtual Type type()
+    virtual bool isLocation() const
     {
-        return ScriptWrappable::Type::LocationObject;
+        return true;
     }
 
     void close()

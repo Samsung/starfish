@@ -48,9 +48,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMPointReadOnly() const
     {
-        return ScriptWrappable::Type::DOMPointReadOnlyObject;
+        return true;
     }
 
     // to do : doesn't appear to be supported anywhere yet.

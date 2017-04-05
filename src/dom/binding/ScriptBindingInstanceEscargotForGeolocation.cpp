@@ -20,6 +20,8 @@
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "platform/location/Geolocation.h"
+#include "platform/location/Geoposition.h"
+#include "platform/location/PositionError.h"
 
 namespace StarFish {
 
@@ -47,8 +49,7 @@ static void geopositionErrorCallbackFunction(StarFish* starfish,
 
 static ESValue getCurrentPositionFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeolocationObject,
-                                 Geolocation);
+    GENERATE_THIS_AND_CHECK_TYPE(Geolocation);
 
     ESValue opt = instance->currentExecutionContext()->readArgument(2);
     int32_t maximumAgeNumber = 0;

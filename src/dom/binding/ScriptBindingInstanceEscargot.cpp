@@ -290,7 +290,7 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+    CHECK_TYPEOF(thisValue, EventTarget);
     if (instance->currentExecutionContext()->argumentCount() < 2) {
         auto msg = ESString::create(
             "Failed to execute 'addEventListener' on 'EventTaraget': "
@@ -321,7 +321,7 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+    CHECK_TYPEOF(thisValue, EventTarget);
     if (instance->currentExecutionContext()->argumentCount() < 2) {
         auto msg = ESString::create(
             "Failed to execute 'removeEventListener' on "
@@ -350,7 +350,7 @@ static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+    CHECK_TYPEOF(thisValue, EventTarget);
     int argCount = instance->currentExecutionContext()->argumentCount();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     if (firstArg.isUndefinedOrNull()) {
@@ -368,7 +368,7 @@ static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
               ((ScriptWrappable*)firstArg.asESPointer()
                    ->asESObject()
                    ->extraPointerData())
-                      ->type() == ScriptWrappable::Type::EventObject)) {
+                  ->isEvent())) {
             auto msg = ESString::create(
                 "Failed to execute 'dispatchEvent' on 'EventTarget': "
                 "parameter 1 is not of type 'Event'.");
@@ -394,9 +394,9 @@ static ESValue getComputedStyleFunction(ESVMInstance* instance)
     try {
         ESValue thisValue =
             instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        CHECK_TYPEOF(thisValue, Node);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     ScriptWrappable::Type::NodeObject);
+                     Node);
         // Node* obj =
         // (Node*)thisValue.asESPointer()->asESObject()
         //                               ->extraPointerData();
@@ -485,8 +485,7 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_FUNC_FOR_BINDING)
 #ifdef STARFISH_EXP
 static ESValue createHTMLDocumentFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMImplementationObject,
-                                 DOMImplementation);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMImplementation);
     DOMImplementation* impl = originalObj;
     if (impl) {
         Document* doc = impl->createHTMLDocument();

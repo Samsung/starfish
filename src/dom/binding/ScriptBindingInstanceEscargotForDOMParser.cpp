@@ -36,8 +36,7 @@ static ESValue domParserFunction(ESVMInstance* instance)
 
 static ESValue parseFromStringFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMParserObject,
-                                 DOMParser);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMParser);
 
     if (instance->currentInstance()
             ->currentExecutionContext()

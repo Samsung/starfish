@@ -27,7 +27,7 @@ using namespace escargot;
 
 static ESValue goFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
 
     if (instance->currentExecutionContext()->argumentCount() > 0) {
         originalObj->go(
@@ -41,21 +41,21 @@ static ESValue goFunction(ESVMInstance* instance)
 
 static ESValue backFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
     originalObj->back();
     return ESValue();
 }
 
 static ESValue forwardFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
     originalObj->forward();
     return ESValue();
 }
 
 static ESValue pushStateFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
 
     if (instance->currentExecutionContext()->argumentCount() >= 2) {
         // TODO: State value must be stored to form of
@@ -84,7 +84,7 @@ static ESValue pushStateFunction(ESVMInstance* instance)
 
 static ESValue replaceStateFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
 
     if (instance->currentExecutionContext()->argumentCount() >= 2) {
         // TODO: State value must be stored to form of
@@ -113,13 +113,13 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
     return ESValue(originalObj->length());
 }
 
 static ESValue stateGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+    GENERATE_THIS_AND_CHECK_TYPE(History);
     if (!originalObj->state()->equals(String::emptyString)) {
         return parseJSON(originalObj->state());
     }

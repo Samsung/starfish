@@ -65,9 +65,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMException() const
     {
-        return ScriptWrappable::Type::DOMExceptionObject;
+        return true;
     }
 
     String* message()

@@ -27,15 +27,13 @@ using namespace escargot;
 
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getHref());
 }
 
 static ESValue hrefSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -51,15 +49,13 @@ static ESValue hrefSetterFunction(ESVMInstance* instance)
 
 static ESValue pathNameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getPathname());
 }
 
 static ESValue pathNameSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -75,15 +71,13 @@ static ESValue pathNameSetterFunction(ESVMInstance* instance)
 
 static ESValue searchGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getSearch());
 }
 
 static ESValue searchSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -99,15 +93,13 @@ static ESValue searchSetterFunction(ESVMInstance* instance)
 
 static ESValue hashGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getHash());
 }
 
 static ESValue hashSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -123,29 +115,25 @@ static ESValue hashSetterFunction(ESVMInstance* instance)
 
 static ESValue hostGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getHost());
 }
 
 static ESValue hostNameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getHostname());
 }
 
 static ESValue protocolGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     return toJSString(originalObj->getProtocol());
 }
 
 static ESValue protocolSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject,
-                                 LocationObj);
+    GENERATE_THIS_AND_CHECK_TYPE(Location);
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

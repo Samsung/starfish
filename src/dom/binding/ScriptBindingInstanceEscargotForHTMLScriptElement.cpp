@@ -26,7 +26,7 @@ using namespace escargot;
 
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -44,7 +44,7 @@ static ESValue srcGetterFunction(ESVMInstance* instance)
 
 static ESValue srcSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -59,7 +59,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -71,7 +71,7 @@ static ESValue typeGetterFunction(ESVMInstance* instance)
 
 static ESValue typeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -86,7 +86,7 @@ static ESValue typeSetterFunction(ESVMInstance* instance)
 
 static ESValue charsetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -108,7 +108,7 @@ static ESValue charsetGetterFunction(ESVMInstance* instance)
 
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
@@ -120,7 +120,7 @@ static ESValue textGetterFunction(ESVMInstance* instance)
 
 static ESValue textSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isElement() && nd->asElement()->isHTMLElement() &&
         nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {

@@ -20,6 +20,7 @@
 
 #include "dom/DOM.h"
 #include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {
@@ -28,16 +29,14 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackListObject,
-                                 TextTrackList);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
     uint32_t len = originalObj->size();
     return ESValue(len);
 }
 
 static ESValue getTrackByIdGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackListObject,
-                                 TextTrackList);
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
     String* id = toBrowserString(v.toString());
     auto iter = std::find_if(
         originalObj->begin(), originalObj->end(),

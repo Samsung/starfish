@@ -19,7 +19,9 @@
 
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
+#include "platform/location/Coordinates.h"
 #include "platform/location/Geolocation.h"
+#include "platform/location/Geoposition.h"
 
 namespace StarFish {
 
@@ -27,15 +29,13 @@ using namespace escargot;
 
 static ESValue coordsGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject,
-                                 Geoposition);
+    GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
     return ESValue(originalObj->coords()->scriptObject());
 }
 
 static ESValue timestampGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject,
-                                 Geoposition);
+    GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
     return ESValue(originalObj->timestamp());
 }
 

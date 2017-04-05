@@ -31,9 +31,9 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual Type type()
+    virtual bool isDOMRectReadOnly() const
     {
-        return ScriptWrappable::Type::DOMRectReadOnlyObject;
+        return true;
     }
 
     double x() const

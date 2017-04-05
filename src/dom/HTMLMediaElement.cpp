@@ -22,12 +22,14 @@
 #include "dom/HTMLSourceElement.h"
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
 #include "dom/DOMException.h"
 #include "util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 #include "extra/MimeType.h"
 
 namespace StarFish {

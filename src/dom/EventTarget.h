@@ -112,20 +112,9 @@ protected:
     }
 
 public:
-    virtual bool isWindow()
+    virtual bool isEventTarget() const
     {
-        return false;
-    }
-
-    Window* asWindow()
-    {
-        STARFISH_ASSERT(isWindow());
-        return (Window*)this;
-    }
-
-    virtual bool isNode() const
-    {
-        return false;
+        return true;
     }
 
     Node* asNode()

@@ -22,6 +22,7 @@
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 
 namespace StarFish {
 
@@ -38,8 +39,7 @@ static ESValue mediaSourceFunction(ESVMInstance* instance)
 
 static ESValue addSourceBufferFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
 
     try {
@@ -55,10 +55,9 @@ static ESValue addSourceBufferFunction(ESVMInstance* instance)
 
 static ESValue removeSourceBufferFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(firstArg, ScriptWrappable::Type::SourceBufferObject);
+    CHECK_TYPEOF(firstArg, SourceBuffer);
 
     try {
         MediaSource* mediaSource = (MediaSource*)originalObj;
@@ -77,7 +76,7 @@ static ESValue endOfStreamFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::MediaSourceObject);
+    CHECK_TYPEOF(thisValue, MediaSource);
     MediaSource* mediaSource =
         (MediaSource*)thisValue.asESPointer()->asESObject()->extraPointerData();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
@@ -111,22 +110,19 @@ static ESValue isTypeSupportedFunction(ESVMInstance* instance)
 
 static ESValue sourceBuffersFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     return ESValue(originalObj->sourceBuffers()->scriptValue());
 }
 
 static ESValue activeSourceBuffersFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     return ESValue(originalObj->activeSourceBuffers()->scriptValue());
 }
 
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     MediaSource::ReadyState readyState = originalObj->readyState();
 
     if (readyState == MediaSource::Open) {
@@ -144,15 +140,13 @@ static ESValue readyStateGetterFunction(ESVMInstance* instance)
 
 static ESValue durationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     return ESValue(originalObj->duration());
 }
 
 static ESValue durationSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject,
-                                 MediaSource);
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double duration = firstArg.toNumber();
     if (std::isnan(duration)) {

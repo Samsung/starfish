@@ -26,8 +26,7 @@ using namespace escargot;
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NamedNodeMapObject,
-                                 NamedNodeMap);
+    GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     uint32_t len = originalObj->length();
     return ESValue(len);
 }
@@ -36,7 +35,7 @@ static ESValue itemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+    CHECK_TYPEOF(thisValue, NamedNodeMap);
     NamedNodeMap* self = (NamedNodeMap*)thisValue.asESPointer()
                              ->asESObject()
                              ->extraPointerData();
@@ -55,7 +54,7 @@ static ESValue getNamedItemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+    CHECK_TYPEOF(thisValue, NamedNodeMap);
 
     ESValue argValue = instance->currentExecutionContext()->readArgument(0);
     if (argValue.isESString()) {
@@ -78,14 +77,14 @@ static ESValue setNamedItemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+    CHECK_TYPEOF(thisValue, NamedNodeMap);
     NamedNodeMap* namedNodeMap = (NamedNodeMap*)thisValue.asESPointer()
                                      ->asESObject()
                                      ->extraPointerData();
     STARFISH_ASSERT(namedNodeMap->element());
 
     ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(argValue, ScriptWrappable::Type::NodeObject);
+    CHECK_TYPEOF(argValue, Node);
     if (!((Node*)argValue.asESPointer()->asESObject()->extraPointerData())
              ->isAttr()) {
         THROW_ILLEGAL_INVOCATION()
@@ -104,7 +103,7 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+    CHECK_TYPEOF(thisValue, NamedNodeMap);
 
     ESValue argValue = instance->currentExecutionContext()->readArgument(0);
     if (argValue.isESString()) {

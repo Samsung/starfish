@@ -42,9 +42,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isHistory() const
     {
-        return ScriptWrappable::Type::HistoryObject;
+        return true;
     }
 
     int length();

@@ -56,9 +56,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isXMLHttpRequest() const
     {
-        return ScriptWrappable::Type::XMLHttpRequestObject;
+        return true;
     }
 
     NetworkRequest& networkRequest()

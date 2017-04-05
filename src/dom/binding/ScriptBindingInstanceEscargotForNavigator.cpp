@@ -27,43 +27,37 @@ using namespace escargot;
 
 static ESValue appCodeNameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return toJSString(originalObj->appCodeName());
 }
 
 static ESValue appNameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return toJSString(originalObj->appName());
 }
 
 static ESValue appVersionGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return toJSString(originalObj->appVersion());
 }
 
 static ESValue vendorGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return toJSString(originalObj->vendor());
 }
 
 static ESValue userAgentGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return toJSString(originalObj->userAgent());
 }
 
 static ESValue geolocationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject,
-                                 Navigator);
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
     return originalObj->geoLocation()->scriptObject();
 }
 

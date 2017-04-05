@@ -44,9 +44,9 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
+    virtual bool isBlob() const
     {
-        return ScriptWrappable::Type::BlobObject;
+        return true;
     }
 
     StarFish* starFish()

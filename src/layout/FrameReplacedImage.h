@@ -48,10 +48,10 @@ public:
                             ->imageData();
         if (id) {
             canvas->drawImage(
-                id,
-                Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                     width() - borderWidth() - paddingWidth(),
-                     height() - borderHeight() - paddingHeight()));
+                id, Unit::Rect(borderLeft() + paddingLeft(),
+                               borderTop() + paddingTop(),
+                               width() - borderWidth() - paddingWidth(),
+                               height() - borderHeight() - paddingHeight()));
         }
     }
 

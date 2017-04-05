@@ -75,16 +75,14 @@ static ESValue domPointFunction(ESVMInstance* instance)
 
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     return ESValue(point->x());
 }
 
 static ESValue xSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     point->setX(v.toNumber());
     return ESValue();
@@ -92,16 +90,14 @@ static ESValue xSetterFunction(ESVMInstance* instance)
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     return ESValue(point->y());
 }
 
 static ESValue ySetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     point->setY(v.toNumber());
     return ESValue();
@@ -109,16 +105,14 @@ static ESValue ySetterFunction(ESVMInstance* instance)
 
 static ESValue zGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     return ESValue(point->z());
 }
 
 static ESValue zSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     point->setZ(v.toNumber());
     return ESValue();
@@ -126,16 +120,14 @@ static ESValue zSetterFunction(ESVMInstance* instance)
 
 static ESValue wGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     return ESValue(point->w());
 }
 
 static ESValue wSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointObject,
-                                 DOMPoint);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
     DOMPoint* point = originalObj;
     point->setW(v.toNumber());
     return ESValue();

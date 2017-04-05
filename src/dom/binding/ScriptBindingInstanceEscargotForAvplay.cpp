@@ -22,7 +22,7 @@
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "extra/WebApis.h"
-#include "extra/AVPlay.h"
+#include "extra/Avplay.h"
 
 namespace StarFish {
 
@@ -30,9 +30,9 @@ using namespace escargot;
 
 static ESValue openFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     String* url = toBrowserString(firstArg);
@@ -43,8 +43,8 @@ static ESValue openFunction(ESVMInstance* instance)
 
 static ESValue prepareFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->prepare();
@@ -54,13 +54,13 @@ static ESValue prepareFunction(ESVMInstance* instance)
 
 static ESValue setDisplayRectFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue Arg1 = instance->currentExecutionContext()->readArgument(0);
     ESValue Arg2 = instance->currentExecutionContext()->readArgument(1);
     ESValue Arg3 = instance->currentExecutionContext()->readArgument(2);
     ESValue Arg4 = instance->currentExecutionContext()->readArgument(3);
 
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->setDisplayRect(Arg1.toNumber(), Arg2.toNumber(), Arg3.toNumber(),
@@ -71,8 +71,8 @@ static ESValue setDisplayRectFunction(ESVMInstance* instance)
 
 static ESValue playFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->play();
@@ -82,8 +82,8 @@ static ESValue playFunction(ESVMInstance* instance)
 
 static ESValue closeFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->close();
@@ -93,8 +93,8 @@ static ESValue closeFunction(ESVMInstance* instance)
 
 static ESValue pauseFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->pause();
@@ -104,8 +104,8 @@ static ESValue pauseFunction(ESVMInstance* instance)
 
 static ESValue stopFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->stop();
@@ -115,8 +115,8 @@ static ESValue stopFunction(ESVMInstance* instance)
 
 static ESValue suspendFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->suspend();
@@ -126,8 +126,8 @@ static ESValue suspendFunction(ESVMInstance* instance)
 
 static ESValue restoreFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->restore();
@@ -137,8 +137,8 @@ static ESValue restoreFunction(ESVMInstance* instance)
 
 static ESValue getStateFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     return toJSString(avPlay->getState());
@@ -146,8 +146,8 @@ static ESValue getStateFunction(ESVMInstance* instance)
 
 static ESValue getCurrentTimeFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     return ESValue(avPlay->getCurrentTime());
@@ -155,8 +155,8 @@ static ESValue getCurrentTimeFunction(ESVMInstance* instance)
 
 static ESValue getDurationFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     return ESValue(avPlay->getDuration());
@@ -164,10 +164,10 @@ static ESValue getDurationFunction(ESVMInstance* instance)
 
 static ESValue setStreamingPropertyFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->setStreamingProperty(toBrowserString(firstArg),
@@ -177,9 +177,9 @@ static ESValue setStreamingPropertyFunction(ESVMInstance* instance)
 
 static ESValue prepareAsyncFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->prepareAsync(firstArg);
@@ -189,9 +189,9 @@ static ESValue prepareAsyncFunction(ESVMInstance* instance)
 
 static ESValue setListenerFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->setListener(firstArg);
@@ -201,9 +201,9 @@ static ESValue setListenerFunction(ESVMInstance* instance)
 
 static ESValue seekToFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+    GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue Arg = instance->currentExecutionContext()->readArgument(0);
-    avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
+    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
                          ->AVPlay();
     avPlay->seekTo(Arg.toNumber());

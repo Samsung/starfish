@@ -187,10 +187,6 @@ public:
 
     virtual NodeType nodeType() = 0;
     virtual String* nodeName() = 0;
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::NodeObject;
-    }
 
     virtual void beginParsing()
     {
@@ -348,52 +344,6 @@ public:
     virtual bool isNode() const
     {
         return true;
-    }
-
-    virtual bool isElement() const
-    {
-        return false;
-    }
-
-    virtual bool isDocument() const
-    {
-        return false;
-    }
-
-    virtual bool isCharacterData() const
-    {
-        return false;
-    }
-
-    virtual bool isDocumentType() const
-    {
-        return false;
-    }
-
-    virtual bool isDocumentFragment() const
-    {
-        return false;
-    }
-
-    virtual bool isComment() const
-    {
-        return false;
-    }
-
-    virtual bool isText() const
-    {
-        return false;
-    }
-
-    virtual bool isAttr() const
-    {
-        return false;
-    }
-
-    CharacterData* asCharacterData()
-    {
-        STARFISH_ASSERT(isCharacterData());
-        return (CharacterData*)this;
     }
 
     Element* asElement()

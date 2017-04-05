@@ -425,7 +425,7 @@ public:
         return true;
     }
 
-    static bool parseNonNamedColor(String* str, Color* ret)
+    static bool parseNonNamedColor(String* str, Unit::Color* ret)
     {
         bool maybeRGBA = str->startsWith("rgba(");
         bool maybeRGB = str->startsWith("rgb(");
@@ -459,8 +459,8 @@ public:
                     return false;
                 }
             }
-            *ret = Color(parsed[0], parsed[1], parsed[2],
-                         maybeRGBA ? parsed[3] : 255);
+            *ret = Unit::Color(parsed[0], parsed[1], parsed[2],
+                               maybeRGBA ? parsed[3] : 255);
         } else if (maybeCode) {
             const char* s = str->utf8Data();
             const unsigned len = strlen(s);
@@ -477,14 +477,14 @@ public:
             if (len == 7) {
                 unsigned int r, g, b;
                 sscanf(s, "#%02x%02x%02x", &r, &g, &b);
-                *ret = Color(r, g, b, 255);
+                *ret = Unit::Color(r, g, b, 255);
             } else if (len == 4) {
                 unsigned int r, g, b;
                 sscanf(s, "#%01x%01x%01x", &r, &g, &b);
-                *ret = Color(r * 17, g * 17, b * 17, 255);
+                *ret = Unit::Color(r * 17, g * 17, b * 17, 255);
             }
         } else if (str->equals("transparent")) {
-            *ret = Color(0, 0, 0, 0);
+            *ret = Unit::Color(0, 0, 0, 0);
         } else {
             return false;
         }

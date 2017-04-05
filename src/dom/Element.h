@@ -72,11 +72,6 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::NodeObject;
-    }
-
     /* 4.4 Interface Node */
     virtual NodeType nodeType()
     {
@@ -115,11 +110,6 @@ public:
     virtual bool isElement() const
     {
         return true;
-    }
-
-    virtual bool isHTMLElement() const
-    {
-        return false;
     }
 
     HTMLElement* asHTMLElement()
@@ -242,14 +232,7 @@ public:
         return m_inlineStyle;
     }
 
-    CSSStyleDeclaration* inlineStyle()
-    {
-        if (m_inlineStyle == nullptr) {
-            m_inlineStyle = new CSSStyleDeclaration(
-                document(), this, CSSStyleDeclaration::InlineStyle);
-        }
-        return m_inlineStyle;
-    }
+    CSSStyleDeclaration* inlineStyle();
 
     void notifyInlineStyleChanged()
     {

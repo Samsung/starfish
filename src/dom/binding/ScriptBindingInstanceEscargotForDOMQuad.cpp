@@ -26,35 +26,35 @@ using namespace escargot;
 
 static ESValue p1GetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
     DOMQuad* quad = originalObj;
     return quad->p1()->scriptValue();
 }
 
 static ESValue p2GetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
     DOMQuad* quad = originalObj;
     return quad->p2()->scriptValue();
 }
 
 static ESValue p3GetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
     DOMQuad* quad = originalObj;
     return quad->p3()->scriptValue();
 }
 
 static ESValue p4GetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
     DOMQuad* quad = originalObj;
     return quad->p4()->scriptValue();
 }
 
 static ESValue boundsGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
     DOMQuad* quad = originalObj;
     return quad->bounds()->scriptValue();
 }

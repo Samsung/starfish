@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2016-present Samsung Electronics Co., Ltd
  *
@@ -16,15 +17,15 @@
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
 #include "WebApis.h"
-#include "AVPlay.h"
+#include "Avplay.h"
 
 namespace StarFish {
 
-webapis::webapis(StarFish* starFish)
+WebApis::WebApis(StarFish* starFish)
     : ScriptWrappable(this)
     , m_starFish(starFish)
 {
-    m_avplay = new avplay(m_starFish);
+    m_avplay = new AVPlay(m_starFish);
 }
 }
 #endif

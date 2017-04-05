@@ -19,9 +19,6 @@
 
 namespace StarFish {
 
-class String;
-class Color;
-
 class NamedColor {
 public:
 // https://www.w3.org/TR/css3-color/
@@ -185,7 +182,7 @@ public:
     static bool parseNamedColor(const char* str, size_t length,
                                 NamedColorValue& ret);
     static String* namedColorToString(NamedColorValue namedColor);
-    static Color namedColorToColor(NamedColorValue namedColor);
+    static Unit::Color namedColorToColor(NamedColorValue namedColor);
 };
 }
 #endif

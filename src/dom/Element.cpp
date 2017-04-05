@@ -460,6 +460,15 @@ void Element::setPseudoElement(StyleResolver::PseudoElementType type)
     rareMembers->m_pseudoElementData->setPseudoElement(type);
 }
 
+CSSStyleDeclaration* Element::inlineStyle()
+{
+    if (m_inlineStyle == nullptr) {
+        m_inlineStyle = new CSSStyleDeclaration(
+            document(), this, CSSStyleDeclaration::InlineStyle);
+    }
+    return m_inlineStyle;
+}
+
 String* Element::getLaunguage()
 {
     Node* n = this;
