@@ -286,139 +286,9 @@ static ESValue toStringFunction(ESVMInstance* instance)
         instance->currentExecutionContext()->argumentCount(), thisValue);
 }
 
-static ESValue addEventListenerFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'addEventListener' on 'EventTaraget': "
-            "needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-    }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->addEventListener(eventTypeName, listener, capture);
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&%s\n", eventTypeName->utf8Data());
-#endif
-    }
-    return ESValue();
-}
-
-static ESValue removeEventListenerFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'removeEventListener' on "
-            "'EventTaraget': needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-    }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        // TODO: Verify valid event type. (e.g. click)
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->removeEventListener(eventTypeName, listener, capture);
-    }
-    return ESValue();
-}
-
-static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (firstArg.isUndefinedOrNull()) {
-        ESString* msg = ESString::create(
-            "Failed to execute 'dispatchEvent' on 'EventTarget': "
-            "parameter 1 is not of type 'Event'.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    bool ret = false;
-    if (argCount == 1 && firstArg.isObject()) {
-        if (!(firstArg.isObject() &&
-              (firstArg.asESPointer()->asESObject()->extraData() ==
-               kEscargotObjectCheckMagic) &&
-              ((ScriptWrappable*)firstArg.asESPointer()
-                   ->asESObject()
-                   ->extraPointerData())
-                  ->isEvent())) {
-            auto msg = ESString::create(
-                "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                "parameter 1 is not of type 'Event'.");
-            instance->throwError(ESValue(TypeError::create(msg)));
-        }
-        Event* event =
-            (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
-        ret = ((EventTarget*)thisValue.asESPointer()
-                   ->asESObject()
-                   ->extraPointerData())
-                  ->dispatchEvent(event);
-    }
-    return ESValue(ret);
-}
-
 static ESValue windowGetterFunction(ESVMInstance* instance)
 {
     return ESVMInstance::currentInstance()->globalObject();
-}
-
-static ESValue getComputedStyleFunction(ESVMInstance* instance)
-{
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     Node);
-        // Node* obj =
-        // (Node*)thisValue.asESPointer()->asESObject()
-        //                               ->extraPointerData();
-        Node* node = (Node*)instance->currentExecutionContext()
-                         ->readArgument(0)
-                         .asESPointer()
-                         ->asESObject()
-                         ->extraPointerData();
-        ESValue pseudoElm =
-            instance->currentExecutionContext()->readArgument(1);
-
-        if (node->isNode() && pseudoElm.isNull()) {
-            CSSStyleDeclaration* s = node->asNode()->getComputedStyle();
-            if (s) {
-                return s->scriptValue();
-            }
-        }
-        return ESValue(ESValue::ESNull);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
 }
 
 static ESValue documentGetterFunction(ESVMInstance* instance)
@@ -503,7 +373,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->setTimezoneID(icu::UnicodeString::fromUTF8(
         icu::StringPiece(sf->timezoneID()->utf8Data())));
 
-    ESValue v;
+    // binding names first
+    ESObject* globalObject = fetchData(this)->m_instance->globalObject();
+#define DECLARE_NAME_FOR_BINDING(codeName, exportName)             \
+    globalObject->defineAccessorProperty(                          \
+        ESString::create(#exportName), exportName##GetterFunction, \
+        exportName##SetterFunction, true, false, true);
+    STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+#undef DECLARE_NAME_FOR_BINDING
+
+    fetchData(this)->eventTargetValue();
+    fetchData(this)->windowValue();
 
 #if defined(STARFISH_ENABLE_TEST)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(
@@ -550,61 +430,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         ->defineDataProperty(ESString::create("toString"), true, false, true,
                              fnToString);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(
-        EventTarget,
-        fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_eventTarget = EventTargetFunction;
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(
-        EventTargetString, true, false, true, EventTargetFunction);
-
-    auto fnAddEventListener = ESFunctionObject::create(
-        NULL, addEventListenerFunction, ESString::create("addEventListener"), 0,
-        false);
-    fnAddEventListener->codeBlock()->m_forceDenyStrictMode = true;
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("addEventListener"), true, true,
-                             true, fnAddEventListener);
-
-    auto fnRemoveEventListener = ESFunctionObject::create(
-        NULL, removeEventListenerFunction,
-        ESString::create("removeEventListener"), 0, false);
-    fnRemoveEventListener->codeBlock()->m_forceDenyStrictMode = true;
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("removeEventListener"), true,
-                             true, true, fnRemoveEventListener);
-
-    auto fnDispatchEvent =
-        ESFunctionObject::create(NULL, dispatchEventListenerFunction,
-                                 ESString::create("dispatchEvent"), 1, false);
-    fnDispatchEvent->codeBlock()->m_forceDenyStrictMode = true;
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("dispatchEvent"), true, true,
-                             true, fnDispatchEvent);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Window,
-                                                    EventTargetFunction);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), ESString::create("window"),
         windowGetterFunction, nullptr, true, false);
-    fetchData(this)->m_instance->globalObject()->set__proto__(
-        WindowFunction->protoType());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(
-        WindowString, true, false, true, WindowFunction);
-    fetchData(this)->m_window = WindowFunction;
-
-#ifdef STARFISH_ENABLE_TEST
-    WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("getComputedStyle"), true, true, true,
-        ESFunctionObject::create(nullptr, getComputedStyleFunction,
-                                 ESString::create("getComputedStyle"), 2,
-                                 false));
-#endif
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(),
@@ -620,15 +448,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         fetchData(this)->m_instance->globalObject(),
         ESString::create("navigator"), navigatorGetterFunction, nullptr, true,
         false);
-
-    // binding names first
-    ESObject* globalObject = fetchData(this)->m_instance->globalObject();
-#define DECLARE_NAME_FOR_BINDING(codeName, exportName)             \
-    globalObject->defineAccessorProperty(                          \
-        ESString::create(#exportName), exportName##GetterFunction, \
-        exportName##SetterFunction, true, false, true);
-    STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
-#undef DECLARE_NAME_FOR_BINDING
 
 /* 4.5.1 Interface DOMImplementation */
 #ifdef STARFISH_EXP

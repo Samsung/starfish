@@ -36,7 +36,7 @@ public:
     }
     virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
                           bool force) = 0;
-    bool bgColorFromAttribute(Color* ret)
+    bool bgColorFromAttribute(Unit::Color* ret)
     {
         if (!(node() && node()->isElement() &&
               node()->asElement()->isHTMLElement())) {

@@ -60,6 +60,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isEvent() const
+    {
+        return true;
+    }
+
     String* eventType() const
     {
         return m_type;

@@ -955,7 +955,7 @@ void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
                       m_tableRect.width() - borderWidth(),
                       m_tableRect.height() - borderHeight());
 
-    Color bgColor;
+    Unit::Color bgColor;
     if (bgColorFromAttribute(&bgColor)) {
         style()->setBackgroundColor(bgColor);
     }

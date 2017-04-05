@@ -24,8 +24,57 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue getComputedStyleFunction(ESVMInstance* instance)
+{
+    try {
+        ESValue thisValue =
+            instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, Node);
+        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
+                     Node);
+        // Node* obj =
+        // (Node*)thisValue.asESPointer()->asESObject()
+        //                               ->extraPointerData();
+        Node* node = (Node*)instance->currentExecutionContext()
+                         ->readArgument(0)
+                         .asESPointer()
+                         ->asESObject()
+                         ->extraPointerData();
+        ESValue pseudoElm =
+            instance->currentExecutionContext()->readArgument(1);
+
+        if (node->isNode() && pseudoElm.isNull()) {
+            CSSStyleDeclaration* s = node->asNode()->getComputedStyle();
+            if (s) {
+                return s->scriptValue();
+            }
+        }
+        return ESValue(ESValue::ESNull);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 ESFunctionObject* bindingWindow(ScriptBindingInstance* scriptBindingInstance)
 {
-    STARFISH_ASSERT_NOT_REACHED();
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
+        Window, fetchData(scriptBindingInstance)->m_eventTarget);
+    fetchData(scriptBindingInstance)
+        ->m_instance->globalObject()
+        ->set__proto__(WindowFunction->protoType());
+    fetchData(scriptBindingInstance)
+        ->m_instance->globalObject()
+        ->defineDataProperty(WindowString, true, false, true, WindowFunction);
+
+#ifdef STARFISH_ENABLE_TEST
+    WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
+        ESString::create("getComputedStyle"), true, true, true,
+        ESFunctionObject::create(nullptr, getComputedStyleFunction,
+                                 ESString::create("getComputedStyle"), 2,
+                                 false));
+#endif
+
+    return WindowFunction;
 }
 }
