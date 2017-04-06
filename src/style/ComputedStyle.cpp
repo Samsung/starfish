@@ -237,11 +237,12 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
     // 9.7 Relationships between 'display', 'position', and 'float'
     m_originalDisplay = m_display;
-    if (m_originalDisplay != DisplayValue::NoneDisplayValue &&
-        position() == AbsolutePositionValue) {
-        m_display = DisplayValue::BlockDisplayValue;
-    } else if (m_float != FloatValue::NoneFloatValue) {
-        m_display = DisplayValue::BlockDisplayValue;
+    if (m_originalDisplay != DisplayValue::NoneDisplayValue) {
+        if (position() == AbsolutePositionValue) {
+            m_display = DisplayValue::BlockDisplayValue;
+        } else if (m_float != FloatValue::NoneFloatValue) {
+            m_display = DisplayValue::BlockDisplayValue;
+        }
     }
 
     if (lineHeight().isPercent()) {
