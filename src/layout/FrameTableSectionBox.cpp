@@ -211,6 +211,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
         LayoutUnit minCellWidthSoFar = 0;
         LayoutUnit maxCellWidthSoFar = 0;
         LayoutUnit maxSpecifiedWidth = 0;
+        float maxPercentageWidth = 0;
 
         // TODO: rowspan is not yet supported
         for (size_t r = 0; r < m_grid.size(); r++) {
@@ -228,7 +229,9 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
                         width += cell->borderWidth() + cell->paddingWidth();
                         maxSpecifiedWidth = std::max(maxSpecifiedWidth, width);
                     } else if (cell->style()->width().isPercent()) {
-                        // Not doing anything at this stage
+                        maxPercentageWidth =
+                            std::max(maxPercentageWidth,
+                                     cell->style()->width().percent());
                     }
                 }
             }
@@ -236,6 +239,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
         ColSizeStruct col;
         col.id = c;
         col.maxSpecifiedWidth = maxSpecifiedWidth;
+        col.maxPercentageWidth = maxPercentageWidth;
         col.minCellWidth = minCellWidthSoFar;
         col.maxCellWidth = maxCellWidthSoFar;
         col.cellWidth = maxCellWidthSoFar;

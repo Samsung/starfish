@@ -72,16 +72,22 @@ class ColSizeStruct {
 public:
     ColSizeStruct()
         : id(0)
-        , maxSpecifiedWidth(LayoutUnit())
-        , minCellWidth(LayoutUnit())
-        , maxCellWidth(LayoutUnit())
-        , cellWidth(LayoutUnit())
+        , maxSpecifiedWidth(0)
+        , maxPercentageWidth(0)
+        , minCellWidth(0)
+        , maxCellWidth(0)
+        , cellWidth(0)
     {
     }
 
     bool hasSpecifiedWidth()
     {
-        return maxSpecifiedWidth == 0 ? false : true;
+        return maxSpecifiedWidth != 0;
+    }
+
+    bool hasPercentageWidth()
+    {
+        return maxPercentageWidth != 0;
     }
 
     bool isEmptyCell()
@@ -91,6 +97,7 @@ public:
 
     size_t id;
     LayoutUnit maxSpecifiedWidth;
+    double maxPercentageWidth;
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
     LayoutUnit cellWidth;
@@ -160,7 +167,7 @@ private:
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
     void setCandidateCellWidthsAndReturnCellInfo(
-        LayoutUnit* sumOfAutoCellPreferredWidths,
+        LayoutUnit tableWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
         std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
         std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
