@@ -123,7 +123,7 @@ static ESValue stateGetterFunction(ESVMInstance* instance)
     if (!originalObj->state()->equals(String::emptyString)) {
         return parseJSON(originalObj->state());
     }
-    return ScriptValueNull;
+    return ESValue(ESValue::ESNull);
 }
 
 ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)

@@ -163,7 +163,7 @@ static ESValue namespaceURIGetterFunction(ESVMInstance* instance)
     if (nd->isElement()) {
         if (nd->asElement()->name().namespaceURIAtomic() ==
             AtomicString::emptyAtomicString()) {
-            return ScriptValueNull;
+            return ESValue(ESValue::ESNull);
         }
         return toJSString(nd->asElement()->name().namespaceURI());
     } else {

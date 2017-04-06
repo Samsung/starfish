@@ -30,7 +30,7 @@ ScriptValue EventListener::scriptValue() const
             m_scriptStringNeedToParse->m_target,
             m_scriptStringNeedToParse->m_scriptStringNeedToParse, error);
         if (error) {
-            m_listener = ScriptValueNull;
+            m_listener = ESValue(ESValue::ESNull);
         }
         m_isNeedToParse = false;
     }

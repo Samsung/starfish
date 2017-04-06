@@ -43,7 +43,7 @@ static ESValue altitudeGetterFunction(ESVMInstance* instance)
     if (originalObj->altitude()) {
         return ESValue(*originalObj->altitude());
     } else {
-        return ScriptValueNull;
+        return ESValue(ESValue::ESNull);
     }
 }
 
@@ -59,7 +59,7 @@ static ESValue altitudeAccuracyGetterFunction(ESVMInstance* instance)
     if (originalObj->altitudeAccuracy()) {
         return ESValue(*originalObj->altitudeAccuracy());
     } else {
-        return ScriptValueNull;
+        return ESValue(ESValue::ESNull);
     }
 }
 
@@ -79,7 +79,7 @@ static ESValue speedGetterFunction(ESVMInstance* instance)
     if (originalObj->speed()) {
         return ESValue(*originalObj->speed());
     } else {
-        return ScriptValueNull;
+        return ESValue(ESValue::ESNull);
     }
 }
 

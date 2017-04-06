@@ -1342,7 +1342,7 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
         "MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
     mediaPlayer()->play();
 #ifdef USE_ES6_FEATURE
-    m_promise->fulfill(ScriptValueUndefined);
+    m_promise->fulfill(ESValue());
 #endif
 }
 

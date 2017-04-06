@@ -67,8 +67,6 @@ ESValue errorOnConstructorFunction(ESVMInstance* instance);
 typedef ESValue ScriptValue;
 typedef ESObject* ScriptObject;
 typedef ESFunctionObject* ScriptFunction;
-#define ScriptValueUndefined ESValue()
-#define ScriptValueNull ESValue(ESValue::ESNull)
 
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(node, Node)                                   \

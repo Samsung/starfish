@@ -161,7 +161,7 @@ static ESValue documentURIGetterFunction(ESVMInstance* instance)
     if (nd->isDocument()) {
         return nd->asDocument()->documentURI()
                    ? toJSString(nd->asDocument()->documentURI()->urlString())
-                   : ScriptValueNull;
+                   : ESValue(ESValue::ESNull);
     }
     THROW_ILLEGAL_INVOCATION();
 }
@@ -173,7 +173,7 @@ static ESValue urlGetterFunction(ESVMInstance* instance)
     if (nd->isDocument()) {
         return nd->asDocument()->documentURI()
                    ? toJSString(nd->asDocument()->documentURI()->urlString())
-                   : ScriptValueNull;
+                   : ESValue(ESValue::ESNull);
     }
     THROW_ILLEGAL_INVOCATION();
 }
