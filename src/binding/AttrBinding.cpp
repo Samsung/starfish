@@ -24,94 +24,100 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue localNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    String* v = originalObj->localName();
+    return toJSString(v);
+}
+
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    String* n = ((Attr*)originalObj)->name().localName();
-    return toJSString(n);
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    String* v = originalObj->name();
+    return toJSString(v);
 }
 
 static ESValue valueGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    String* value = ((Attr*)originalObj)->value();
-    return toJSString(value);
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    String* v = originalObj->value();
+    return toJSString(v);
 }
 
 static ESValue valueSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    ((Attr*)originalObj)->setValue(toBrowserString(v));
-    // FIXME(JMP): Actually this function have to return old Attr's value
-    // but we have to modify 'typedef void (*ESNativeSetter)(...)' in
-    // escargot/src/runtime/ESValue.h
-    // Because this need to many changes, we do the modification latter
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    ESValue originalV = instance->currentExecutionContext()->readArgument(0);
+    String* v = toBrowserString(originalV);
+    originalObj->setValue(v);
     return ESValue();
 }
 
-static ESValue ownerElementGetterFunction(ESObject* obj, ESObject* originalObj,
-                                          ESString* propertyName)
+static ESValue ownerElementGetterFunction(ESVMInstance* instance)
 {
-    CHECK_TYPEOF(originalObj, Node);
-    if (!((Node*)originalObj->extraPointerData())->isAttr()) {
-        THROW_ILLEGAL_INVOCATION()
-    }
-
-    Element* elem = ((Attr*)originalObj->extraPointerData())->ownerElement();
-    if (elem != nullptr) {
-        return elem->scriptValue();
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    Element* v = originalObj->ownerElement();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
     return ESValue(ESValue::ESNull);
 }
 
-static ESValue specifiedGetterFunction(ESObject* obj, ESObject* originalObj,
-                                       ESString* propertyName)
+static ESValue specifiedGetterFunction(ESVMInstance* instance)
 {
-    CHECK_TYPEOF(originalObj, Node);
-    if (!((Node*)originalObj->extraPointerData())->isAttr()) {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(true);
+    GENERATE_THIS_AND_CHECK_TYPE(Attr);
+    bool v = originalObj->specified();
+    return ESValue(v);
 }
 
 ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* 4.8.2 Interface Attr */
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Attr, fetchData(scriptBindingInstance)->node());
+    ESString* AttrString = ESString::create("Attr");
+    ESFunctionObject* AttrFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, AttrString, 1, true, true);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("name"), nameGetterFunction, nullptr);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("localName"), nameGetterFunction, nullptr);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("value"), valueGetterFunction, valueSetterFunction);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("nodeValue"), valueGetterFunction,
-        valueSetterFunction);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        AttrFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("textContent"), valueGetterFunction,
-        valueSetterFunction);
+    AttrFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
 
     AttrFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineAccessorProperty(ESString::create("ownerElement"),
-                                 ownerElementGetterFunction, NULL, false, false,
-                                 false);
+        ->forceNonVectorHiddenClass(false);
 
-    AttrFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineAccessorProperty(ESString::create("specified"),
-                                 specifiedGetterFunction, NULL, false, false,
-                                 false);
+    AttrFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->node()->protoType());
+
+    AttrFunction->set__proto__(fetchData(scriptBindingInstance)->node());
+
+    // Bind for attributes
+    ESString* localNameString = ESString::create("localName");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        AttrFunction->protoType().asESPointer()->asESObject(), localNameString,
+        localNameGetterFunction, nullptr);
+
+    ESString* nameString = ESString::create("name");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        AttrFunction->protoType().asESPointer()->asESObject(), nameString,
+        nameGetterFunction, nullptr);
+
+    ESString* valueString = ESString::create("value");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        AttrFunction->protoType().asESPointer()->asESObject(), valueString,
+        valueGetterFunction, valueSetterFunction);
+
+    ESString* ownerElementString = ESString::create("ownerElement");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        AttrFunction->protoType().asESPointer()->asESObject(),
+        ownerElementString, ownerElementGetterFunction, nullptr);
+
+    ESString* specifiedString = ESString::create("specified");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        AttrFunction->protoType().asESPointer()->asESObject(), specifiedString,
+        specifiedGetterFunction, nullptr);
 
     return AttrFunction;
 }

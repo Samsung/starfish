@@ -28,7 +28,7 @@ public:
          QualifiedName name)
         : Node(document)
         , m_element(element)
-        , m_name(name)
+        , m_qname(name)
         , m_standAloneValue(String::emptyString)
     {
     }
@@ -37,7 +37,7 @@ public:
          QualifiedName name)
         : Node(document)
         , m_element(nullptr)
-        , m_name(name)
+        , m_qname(name)
         , m_standAloneValue(String::emptyString)
     {
     }
@@ -46,7 +46,7 @@ public:
          QualifiedName name, String* value)
         : Node(document)
         , m_element(nullptr)
-        , m_name(name)
+        , m_qname(name)
         , m_standAloneValue(value)
     {
     }
@@ -56,15 +56,22 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    QualifiedName name()
+    QualifiedName qname() const
     {
-        return m_name;
+        return m_qname;
+    }
+
+    String* name() const
+    {
+        // FIXME: If we support legacy xml, then we have to implement this
+        // to return with namespace
+        return m_qname.localName();
     }
 
     String* value()
     {
         if (m_element) {
-            return m_element->getAttribute(m_name);
+            return m_element->getAttribute(m_qname);
         }
         return m_standAloneValue;
     }
@@ -72,15 +79,20 @@ public:
     void setValue(String* value)
     {
         if (m_element) {
-            m_element->setAttribute(m_name, value);
+            m_element->setAttribute(m_qname, value);
         } else {
             m_standAloneValue = value;
         }
     }
 
-    Element* ownerElement()
+    Element* ownerElement() const
     {
         return m_element;
+    }
+
+    bool specified() const
+    {
+        return true;
     }
 
     /* 4.4 Interface Node */
@@ -92,13 +104,12 @@ public:
 
     virtual String* nodeName()
     {
-        return m_name.localName();
+        return name();
     }
 
     virtual String* localName()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
+        return m_qname.localName();
     }
 
     virtual void setNodeValue(String* val)
@@ -118,7 +129,7 @@ public:
     virtual Node* clone()
     {
         return (Node*)(new Attr(document(), document()->scriptBindingInstance(),
-                                m_name, value()));
+                                m_qname, value()));
     }
 
     virtual bool isAttr() const
@@ -134,7 +145,7 @@ public:
 
 private:
     Element* m_element;
-    QualifiedName m_name;
+    QualifiedName m_qname;
     String* m_standAloneValue;
 };
 }
