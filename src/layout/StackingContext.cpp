@@ -62,7 +62,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     while (iter != m_childContexts.end()) {
         auto iter2 = iter->second->begin();
         while (iter2 != iter->second->end()) {
-            childNeedsBuffer =
+            childNeedsBuffer |=
                 (*iter2)->computeStackingContextProperties(childNeedsBuffer);
             iter2++;
         }
