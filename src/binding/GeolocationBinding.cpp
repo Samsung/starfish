@@ -33,7 +33,7 @@ static void geopositionCallbackFunction(StarFish* starfish, Geoposition* pos,
     if (data) {
         ESFunctionObject* fn = (ESFunctionObject*)data;
         ESValue a = pos->scriptValue();
-        callScriptFunction(fn, &a, 1, ScriptValueUndefined);
+        callScriptFunction(fn, &a, 1, ESValue());
     }
 }
 
@@ -43,7 +43,7 @@ static void geopositionErrorCallbackFunction(StarFish* starfish,
     if (data) {
         ESFunctionObject* fn = (ESFunctionObject*)data;
         ESValue a = error->scriptValue();
-        callScriptFunction(fn, &a, 1, ScriptValueUndefined);
+        callScriptFunction(fn, &a, 1, ESValue());
     }
 }
 

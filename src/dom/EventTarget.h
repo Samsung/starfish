@@ -168,7 +168,7 @@ public:
         auto eventType = name.localName();
         EventListener* l = getAttributeEventListener(eventType);
         if (!l) {
-            return ScriptValueNull;
+            return ESValue(ESValue::ESNull);
         }
         return l->scriptValue();
     }

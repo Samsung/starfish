@@ -39,10 +39,10 @@ XMLHttpRequest::XMLHttpRequest(Document* document)
 void XMLHttpRequest::initResponseData()
 {
     m_responseText = String::emptyString;
-    m_responseJsonObject = ScriptValueNull;
+    m_responseJsonObject = ESValue(ESValue::ESNull);
     m_responseBlob = nullptr;
 #ifdef USE_ES6_FEATURE
-    m_responseArrayBuffer = ScriptValueNull;
+    m_responseArrayBuffer = ESValue(ESValue::ESNull);
 #endif
 }
 
@@ -122,7 +122,7 @@ ScriptValue XMLHttpRequest::response()
         if (m_responseBlob) {
             return m_responseBlob->scriptValue();
         }
-        return ScriptValueNull;
+        return ESValue(ESValue::ESNull);
     } else if (m_responseType == ResponseType::ArrayBuffer) {
 #ifdef USE_ES6_FEATURE
         return m_responseArrayBuffer;

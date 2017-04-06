@@ -129,8 +129,8 @@ Avplay::Avplay(StarFish* starFish)
     , m_offsetHeight(0)
     , m_bufferingPercent(0)
     , m_nativePlayer(nullptr)
-    , m_prepare_async(ScriptValueNull)
-    , m_listener(ScriptValueNull)
+    , m_prepare_async(ESValue(ESValue::ESNull))
+    , m_listener(ESValue(ESValue::ESNull))
 {
 }
 
@@ -377,7 +377,7 @@ void Avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 {
     ScriptValue thisValue =
         escargot::ESVMInstance::currentInstance()->globalObject();
-    ScriptValue fn = ScriptValueNull;
+    ScriptValue fn = ESValue(ESValue::ESNull);
     ScriptValue* argv = {};
     size_t argc = 0;
     switch (type) {
