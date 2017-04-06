@@ -399,7 +399,7 @@ void Element::addAttr(Attr* attr)
     if (!rareMembers->m_attrList) {
         rareMembers->m_attrList = new (GC) GCVector<Attr*>();
     }
-    STARFISH_ASSERT(this->attr(attr->name()) == nullptr);
+    STARFISH_ASSERT(this->attr(attr->qname()) == nullptr);
     rareMembers->m_attrList->push_back(attr);
 }
 
@@ -412,7 +412,7 @@ Attr* Element::attr(QualifiedName name)
         auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
         for (Attr* item : *attrList) {
             STARFISH_ASSERT(item);
-            if (item->name() == name) {
+            if (item->qname() == name) {
                 return item;
             }
         }
