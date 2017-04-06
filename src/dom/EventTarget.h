@@ -17,7 +17,7 @@
 #ifndef __StarFishEventTarget__
 #define __StarFishEventTarget__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

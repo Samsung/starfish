@@ -19,7 +19,7 @@
 #ifndef __StarFishDOMImplementation__
 #define __StarFishDOMImplementation__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

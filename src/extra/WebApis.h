@@ -19,7 +19,7 @@
 #ifndef __StarFishWebApis__
 #define __StarFishWebApis__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {

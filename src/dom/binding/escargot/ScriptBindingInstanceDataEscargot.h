@@ -17,7 +17,7 @@
 #ifndef __StarFishScriptBindingInstanceDataEscargot__
 #define __StarFishScriptBindingInstanceDataEscargot__
 
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 
 #include <Escargot.h>
 

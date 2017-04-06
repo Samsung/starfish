@@ -17,7 +17,7 @@
 #ifndef __StarFishNavigator__
 #define __StarFishNavigator__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/location/Geolocation.h"
 
 namespace StarFish {

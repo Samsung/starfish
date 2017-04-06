@@ -17,7 +17,7 @@
 #ifndef __StarFishNamedNodeMap__
 #define __StarFishNamedNodeMap__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

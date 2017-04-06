@@ -17,7 +17,7 @@
 #ifndef __StarFishBlobObject__
 #define __StarFishBlobObject__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

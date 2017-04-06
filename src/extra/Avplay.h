@@ -18,7 +18,7 @@
 #ifndef __StarFishAVPLAY__
 #define __StarFishAVPLAY__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/window/Window.h"
 #include "dom/Document.h"
 #include <media/player.h>

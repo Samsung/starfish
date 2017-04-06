@@ -17,7 +17,7 @@
 #ifndef __StarFishDOMException__
 #define __StarFishDOMException__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

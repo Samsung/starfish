@@ -17,7 +17,7 @@
 #ifndef __StarFishDOMTokenList__
 #define __StarFishDOMTokenList__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

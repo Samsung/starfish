@@ -17,7 +17,7 @@
 #ifndef __StarFishHistory__
 #define __StarFishHistory__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/window/Window.h"
 #include "dom/Document.h"
 

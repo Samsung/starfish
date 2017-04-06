@@ -17,7 +17,7 @@
 #ifndef __StarFishAttr__
 #define __StarFishAttr__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

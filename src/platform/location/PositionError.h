@@ -17,7 +17,7 @@
 #ifndef __StarFishPositionError__
 #define __StarFishPositionError__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
