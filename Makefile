@@ -355,12 +355,12 @@ endif
 SRC=
 SRC_CC=
 SRC += $(foreach dir, src , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/extra , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/parser , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder/html , $(wildcard $(dir)/*.cpp))
-SRC += $(foreach dir, src/dom/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/xml , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/layout , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/loader , $(wildcard $(dir)/*.cpp))

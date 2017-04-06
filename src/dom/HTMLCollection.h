@@ -17,7 +17,7 @@
 #ifndef __StarFishHTMLCollection__
 #define __StarFishHTMLCollection__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "dom/NodeListImpl.h"
 
 namespace StarFish {

@@ -18,7 +18,7 @@
 #ifndef __StarFishSourceBuffer__
 #define __StarFishSourceBuffer__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/threading/Thread.h"

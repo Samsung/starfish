@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "Window.h"
 
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 #include "dom/HTMLDocument.h"
 #include "layout/FrameTreeBuilder.h"
 #include "platform/canvas/font/Font.h"

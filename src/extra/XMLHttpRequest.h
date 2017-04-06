@@ -17,7 +17,7 @@
 #ifndef __StarFishXMLHttpRequest__
 #define __StarFishXMLHttpRequest__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/network/NetworkRequest.h"
 #include "util/TextConverter.h"

@@ -27,7 +27,7 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/window/Window.h"
 #include "platform/canvas/image/ImageData.h"
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 #include "inspector/Inspector.h"
 #include "extra/Console.h"
 

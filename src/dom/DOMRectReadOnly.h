@@ -18,7 +18,7 @@
 #define __StarFishDOMRectReadOnly__
 
 #include "util/String.h"
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

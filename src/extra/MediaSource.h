@@ -17,7 +17,7 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaSource__)
 #define __StarFishMediaSource__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 
 namespace StarFish {

@@ -17,7 +17,7 @@
 #ifndef __StarFishLocation__
 #define __StarFishLocation__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/window/Window.h"
 #include "dom/Document.h"
 

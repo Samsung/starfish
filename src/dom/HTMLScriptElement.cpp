@@ -19,7 +19,7 @@
 #include "HTMLScriptElement.h"
 #include "CharacterData.h"
 
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 
 #include "platform/network/NetworkRequest.h"
 #include "platform/message_loop/MessageLoop.h"

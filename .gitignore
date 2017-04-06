@@ -4,6 +4,9 @@ StarFish
 *.pyc
 *.class
 
+# Binding Generator generated
+/**/*Idl.txt
+
 # Node releated
 node_modules
 test/tool/pixel_test/bin/nodejs

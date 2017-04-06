@@ -16,7 +16,7 @@
 #if defined(STARFISH_ENABLE_DOMPARSER) && !defined(__StarFishDOMParser__)
 #define __StarFishDOMParser__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

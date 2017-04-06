@@ -18,7 +18,7 @@
 #include "HTMLDocumentBuilder.h"
 
 #include "dom/DOM.h"
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 #include "dom/parser/HTMLParser.h"
 
 namespace StarFish {

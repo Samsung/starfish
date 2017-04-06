@@ -17,7 +17,7 @@
 #ifndef __StarFishCoordinates__
 #define __StarFishCoordinates__
 
-#include "dom/binding/ScriptWrappable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 

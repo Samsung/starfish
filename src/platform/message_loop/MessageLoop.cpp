@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "MessageLoop.h"
-#include "dom/binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingInstance.h"
 #include "platform/threading/Thread.h"
 #include "platform/threading/Locker.h"
 #include "platform/window/Window.h"
