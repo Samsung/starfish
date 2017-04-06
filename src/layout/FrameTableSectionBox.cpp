@@ -252,28 +252,39 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
     LayoutUnit borderSpacing = LayoutUnit::fromPixel(
         tableBox()->style()->horizontalBorderSpacing().fixed());
 
-    for (Frame* r = firstChild(); r; r = r->next()) {
-        STARFISH_ASSERT(r->isFrameTableRowBox());
-        FrameTableRowBox* row = r->asFrameTableRowBox();
+    for (auto& rowStruct : grid()) {
+        FrameTableRowBox* row = rowStruct.tableRow();
+        row->colsWithColspans().clear();
 
         unsigned id = 0;
-        for (Frame* c = row->firstChild(); c; c = c->next()) {
-            STARFISH_ASSERT(c->isFrameTableCellBox());
-            FrameTableCellBox* cell = c->asFrameTableCellBox();
+        for (auto& cellStruct : rowStruct.cells()) {
+            FrameTableCellBox* cell = cellStruct.cell();
 
             if (cell->colspan() > 1) {
-                LayoutUnit cellWidth = 0;
+                LayoutUnit maxCellWidth = 0;
+                LayoutUnit minCellWidth = 0;
+
                 for (size_t i = id; i < id + cell->colspan(); i++) {
-                    cellWidth += tableBox()->columnWidths()[i].cellWidth;
+                    if (tableBox()->columnWidths()[i].hasSpecifiedWidth()) {
+                        maxCellWidth +=
+                            tableBox()->columnWidths()[i].maxSpecifiedWidth;
+                    } else {
+                        maxCellWidth +=
+                            tableBox()->columnWidths()[i].maxCellWidth;
+                    }
+
+                    minCellWidth += tableBox()->columnWidths()[i].minCellWidth;
 
                     if (i < id + cell->colspan() - 1) {
-                        cellWidth += borderSpacing;
+                        maxCellWidth += borderSpacing;
+                        minCellWidth += borderSpacing;
                     }
                 }
 
                 ColSizeStruct col;
                 col.id = id;
-                col.cellWidth = cellWidth;
+                col.maxCellWidth = std::max(cell->maxCellWidth(), maxCellWidth);
+                col.minCellWidth = std::max(cell->minCellWidth(), minCellWidth);
                 row->colsWithColspans().push_back(col);
             }
 

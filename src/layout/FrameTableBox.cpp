@@ -597,7 +597,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // NOTE: We do not increase the width of a cell to its preferred
             // width if the parent width is larger than the sum of specified
             // width.
-            if (tableWidth < tableWidthByAddingColWidths) {
+            if ((0 < tableWidth) &&
+                (tableWidth < tableWidthByAddingColWidths)) {
                 // Decrease the cell widths
                 LayoutUnit availableWidth = tableWidth;
                 availableWidth -= borderWidth() + paddingWidth();
@@ -696,6 +697,45 @@ void FrameTableBox::calCellWidthsWithColspans()
         if (c->isFrameTableSectionBox()) {
             FrameTableSectionBox* section = c->asFrameTableSectionBox();
             section->calCellWidthsWithColspans();
+        }
+    }
+
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            FrameTableSectionBox* section = c->asFrameTableSectionBox();
+
+            for (auto& rowStruct : section->grid()) {
+                FrameTableRowBox* row = rowStruct.tableRow();
+
+                unsigned id = 0;
+                for (auto& cellStruct : rowStruct.cells()) {
+                    FrameTableCellBox* cell = cellStruct.cell();
+
+                    if (cell->colspan() > 1) {
+                        ColSizeStruct* colSize = row->colWithColspanAt(id);
+
+                        LayoutUnit sumOfCellWidth = 0;
+                        for (size_t i = id; i < id + cell->colspan(); i++) {
+                            sumOfCellWidth += m_columnWidths[i].cellWidth;
+                            if (i < id + cell->colspan() - 1) {
+                                sumOfCellWidth += borderSpacing;
+                            }
+                        }
+
+                        if (m_columnWidths[id].hasSpecifiedWidth()) {
+                            colSize->cellWidth =
+                                std::max(sumOfCellWidth,
+                                         m_columnWidths[id].maxSpecifiedWidth);
+                        } else {
+                            colSize->cellWidth = sumOfCellWidth;
+                        }
+                    }
+                    id += cell->colspan();
+                }
+            }
         }
     }
 }
