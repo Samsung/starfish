@@ -122,12 +122,12 @@ static ESValue lastChildGetterFunction(ESVMInstance* instance)
 static ESValue nodeValueGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!nd->isCharacterData()) {
+    String* s = originalObj->nodeValue();
+    if (s != nullptr) {
+        return toJSString(s);
+    } else {
         return ESValue(ESValue::ESNull);
     }
-    String* s = nd->nodeValue();
-    return toJSString(s);
 }
 
 static ESValue nodeValueSetterFunction(ESVMInstance* instance)

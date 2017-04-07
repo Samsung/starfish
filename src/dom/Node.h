@@ -221,6 +221,8 @@ public:
         }
     }
 
+    // FIXME: should be removed! This is not listed on the interface
+    // attributes.
     virtual String* localName()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -256,13 +258,15 @@ public:
 
     virtual String* nodeValue()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
     virtual void setNodeValue(String* val){};
 
-    virtual String* textContent() = 0;
+    virtual String* textContent()
+    {
+        return nullptr;
+    }
 
     virtual void setTextContent(String* val){};
 

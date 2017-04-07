@@ -28,30 +28,37 @@ public:
     CharacterData(Document* document, String* data)
         : Node(document)
     {
+        if (data == nullptr) {
+            data = String::emptyString;
+        }
         m_data = data;
+    }
+
+    virtual bool isCharacterData() const
+    {
+        return true;
     }
 
     /* 4.4 Interface Node */
 
-    virtual NodeType nodeType() = 0;
+    virtual String* nodeValue()
+    {
+        return data();
+    }
 
     virtual void setNodeValue(String* val)
     {
-        String* d = val;
-        if (d == nullptr) {
-            d = String::emptyString;
-        }
-        setData(d);
+        setData(val);
+    }
+
+    virtual String* textContent()
+    {
+        return data();
     }
 
     virtual void setTextContent(String* val)
     {
-        setNodeValue(val);
-    }
-
-    virtual String* nodeValue()
-    {
-        return data();
+        setData(val);
     }
 
     /* 4.9. Interface CharacterData */
@@ -69,7 +76,9 @@ public:
 
     void setData(String* data)
     {
-        STARFISH_ASSERT(data);
+        if (data == nullptr) {
+            data = String::emptyString;
+        }
         String* oldData = m_data;
         m_data = data;
 
@@ -86,19 +95,6 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isCharacterData() const
-    {
-        return true;
-    }
-
-    Text* asText()
-    {
-        STARFISH_ASSERT(isText());
-        return (Text*)this;
-    }
-
-    virtual Node* clone() = 0;
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,
                                   const std::string& replace)
