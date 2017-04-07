@@ -69,112 +69,110 @@ typedef ESObject* ScriptObject;
 typedef ESFunctionObject* ScriptFunction;
 
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
-    F(node, Node)                                   \
-    F(eventTarget, EventTarget)                     \
-    F(window, Window)                               \
-    F(element, Element)                             \
-    F(document, Document)                           \
-    F(documentType, DocumentType)                   \
-    F(documentFragment, DocumentFragment)           \
-    F(htmlDocument, HTMLDocument)                   \
-    F(characterData, CharacterData)                 \
-    F(text, Text)                                   \
-    F(cDataSection, CDataSection)                   \
-    F(comment, Comment)                             \
-    F(htmlElement, HTMLElement)                     \
-    F(htmlHtmlElement, HTMLHtmlElement)             \
-    F(htmlHeadElement, HTMLHeadElement)             \
-    F(htmlScriptElement, HTMLScriptElement)         \
-    F(htmlStyleElement, HTMLStyleElement)           \
-    F(htmlLinkElement, HTMLLinkElement)             \
-    F(htmlBodyElement, HTMLBodyElement)             \
-    F(htmlDivElement, HTMLDivElement)               \
-    F(htmlImageElement, HTMLImageElement)           \
-    F(htmlBrElement, HTMLBRElement)                 \
-    F(htmlObjectElement, HTMLObjectElement)         \
-    F(htmlMetaElement, HTMLMetaElement)             \
-    F(htmlParagraphElement, HTMLParagraphElement)   \
-    F(htmlPreElement, HTMLPreElement)               \
-    F(htmlSpanElement, HTMLSpanElement)             \
-    F(htmlUnknownElement, HTMLUnknownElement)       \
-    F(pseudoElement, PseudoElement)                 \
-    F(htmlCollection, HTMLCollection)               \
-    F(event, Event)                                 \
-    F(uiEvent, UIEvent)                             \
-    F(mouseEvent, MouseEvent)                       \
-    F(touchEvent, TouchEvent)                       \
-    F(keyboardEvent, KeyboardEvent)                 \
-    F(focusEvent, FocusEvent)                       \
-    F(progressEvent, ProgressEvent)                 \
-    F(nodeList, NodeList)                           \
-    F(domTokenList, DOMTokenList)                   \
-    F(domSettableTokenList, DOMSettableTokenList)   \
-    F(namedNodeMap, NamedNodeMap)                   \
-    F(attr, Attr)                                   \
-    F(cssStyleDeclaration, CSSStyleDeclaration)     \
-    F(cssStyleRule, CSSStyleRule)                   \
-    F(xhrElement, XMLHttpRequest)                   \
-    F(blobElement, Blob)                            \
-    F(url, URL)                                     \
-    F(domRectReadOnly, DOMRectReadOnly)             \
-    F(domRect, DOMRect)                             \
-    F(domPointReadOnly, DOMPointReadOnly)           \
-    F(domPoint, DOMPoint)                           \
-    F(domQuad, DOMQuad)                             \
-    F(domRectList, DOMRectList)                     \
-    F(location, Location)                           \
-    F(domException, DOMException)                   \
-    F(history, History)                             \
-    F(navigator, Navigator)                         \
-    F(geolocation, Geolocation)                     \
-    F(geoposition, Geoposition)                     \
-    F(coordinates, Coordinates)                     \
-    F(positionError, PositionError)
+    F(Node)                                         \
+    F(EventTarget)                                  \
+    F(Window)                                       \
+    F(Element)                                      \
+    F(Document)                                     \
+    F(DocumentType)                                 \
+    F(DocumentFragment)                             \
+    F(HTMLDocument)                                 \
+    F(CharacterData)                                \
+    F(Text)                                         \
+    F(CDataSection)                                 \
+    F(Comment)                                      \
+    F(HTMLElement)                                  \
+    F(HTMLHtmlElement)                              \
+    F(HTMLHeadElement)                              \
+    F(HTMLScriptElement)                            \
+    F(HTMLStyleElement)                             \
+    F(HTMLLinkElement)                              \
+    F(HTMLBodyElement)                              \
+    F(HTMLDivElement)                               \
+    F(HTMLImageElement)                             \
+    F(HTMLBRElement)                                \
+    F(HTMLObjectElement)                            \
+    F(HTMLMetaElement)                              \
+    F(HTMLParagraphElement)                         \
+    F(HTMLPreElement)                               \
+    F(HTMLSpanElement)                              \
+    F(HTMLUnknownElement)                           \
+    F(PseudoElement)                                \
+    F(HTMLCollection)                               \
+    F(Event)                                        \
+    F(UIEvent)                                      \
+    F(MouseEvent)                                   \
+    F(TouchEvent)                                   \
+    F(KeyboardEvent)                                \
+    F(FocusEvent)                                   \
+    F(ProgressEvent)                                \
+    F(NodeList)                                     \
+    F(DOMTokenList)                                 \
+    F(DOMSettableTokenList)                         \
+    F(NamedNodeMap)                                 \
+    F(Attr)                                         \
+    F(CSSStyleDeclaration)                          \
+    F(CSSStyleRule)                                 \
+    F(XMLHttpRequest)                               \
+    F(Blob)                                         \
+    F(URL)                                          \
+    F(DOMRectReadOnly)                              \
+    F(DOMRect)                                      \
+    F(DOMPointReadOnly)                             \
+    F(DOMPoint)                                     \
+    F(DOMQuad)                                      \
+    F(DOMRectList)                                  \
+    F(Location)                                     \
+    F(DOMException)                                 \
+    F(History)                                      \
+    F(Navigator)                                    \
+    F(Geolocation)                                  \
+    F(Geoposition)                                  \
+    F(Coordinates)                                  \
+    F(PositionError)
 
 #ifdef STARFISH_EXP
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F) \
-    F(domImplementation, DOMImplementation)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F) F(DOMImplementation)
 #else // STARFISH_EXP
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)
 #endif // STARFISH_EXP
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
-    F(htmlMediaElement, HTMLMediaElement)         \
-    F(htmlVideoElement, HTMLVideoElement)         \
-    F(htmlAudioElement, HTMLAudioElement)         \
-    F(htmlTrackElement, HTMLTrackElement)         \
-    F(htmlSourceElement, HTMLSourceElement)       \
-    F(textTrack, TextTrack)                       \
-    F(textTrackList, TextTrackList)               \
-    F(textTrackCue, TextTrackCue)                 \
-    F(textTrackCueList, TextTrackCueList)         \
-    F(VTTCue, VTTCue)                             \
-    F(timeRanges, TimeRanges)                     \
-    F(mediaSource, MediaSource)                   \
-    F(sourceBuffer, SourceBuffer)                 \
-    F(sourceBufferList, SourceBufferList)
+    F(HTMLMediaElement)                           \
+    F(HTMLVideoElement)                           \
+    F(HTMLAudioElement)                           \
+    F(HTMLTrackElement)                           \
+    F(HTMLSourceElement)                          \
+    F(TextTrack)                                  \
+    F(TextTrackList)                              \
+    F(TextTrackCue)                               \
+    F(TextTrackCueList)                           \
+    F(VTTCue)                                     \
+    F(TimeRanges)                                 \
+    F(MediaSource)                                \
+    F(SourceBuffer)                               \
+    F(SourceBufferList)
 #else // STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
 #endif // STARFISH_ENABLE_MULTIMEDIA
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
-    F(htmlAnchorElement, HTMLAnchorElement)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) F(HTMLAnchorElement)
 #else // STARFISH_ENABLE_MULTI_PAGE
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
 #endif // STARFISH_ENABLE_MULTI_PAGE
 
 #ifdef STARFISH_ENABLE_DOMPARSER
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(domParser, DOMParser)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(DOMParser)
 #else // STARFISH_ENABLE_DOMPARSER
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
 #endif // STARFISH_ENABLE_DOMPARSER
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
-    F(webApis, WebApis)                            \
-    F(avPlay, Avplay)
+    F(WebApis)                                     \
+    F(Avplay)
 #else // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 #endif // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY

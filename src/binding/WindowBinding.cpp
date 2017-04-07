@@ -58,7 +58,7 @@ static ESValue getComputedStyleFunction(ESVMInstance* instance)
 ESFunctionObject* bindingWindow(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Window, fetchData(scriptBindingInstance)->m_eventTarget);
+        Window, fetchData(scriptBindingInstance)->m_fnEventTarget);
     fetchData(scriptBindingInstance)
         ->m_instance->globalObject()
         ->set__proto__(WindowFunction->protoType());

@@ -54,10 +54,10 @@ ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
         ->forceNonVectorHiddenClass(false);
 
     CommentFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->characterData()->protoType());
+        fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
 
     CommentFunction->set__proto__(
-        fetchData(scriptBindingInstance)->characterData());
+        fetchData(scriptBindingInstance)->fnCharacterData());
 
     return CommentFunction;
 }

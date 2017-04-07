@@ -80,7 +80,7 @@ ESFunctionObject* bindingCharacterData(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        CharacterData, fetchData(scriptBindingInstance)->node());
+        CharacterData, fetchData(scriptBindingInstance)->fnNode());
 
     /* 4.9 Interface CharacterData */
 

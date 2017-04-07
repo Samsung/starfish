@@ -29,7 +29,7 @@ ESFunctionObject* bindingHTMLAnchorElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLAnchorElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLAnchorElement, fetchData(scriptBindingInstance)->fnHTMLElement());
     return HTMLAnchorElementFunction;
 }
 }

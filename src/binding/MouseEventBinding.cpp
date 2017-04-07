@@ -29,7 +29,7 @@ ESFunctionObject* bindingMouseEvent(
 {
     /* Mouse Events */
     DEFINE_FUNCTION_WITH_PARENTFUNC(
-        MouseEvent, fetchData(scriptBindingInstance)->uiEvent());
+        MouseEvent, fetchData(scriptBindingInstance)->fnUIEvent());
     return MouseEventFunction;
 }
 }

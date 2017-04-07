@@ -38,7 +38,7 @@ ESFunctionObject* bindingFocusEvent(
 {
     /* Focus Events */
     DEFINE_FUNCTION_WITH_PARENTFUNC(
-        FocusEvent, fetchData(scriptBindingInstance)->uiEvent());
+        FocusEvent, fetchData(scriptBindingInstance)->fnUIEvent());
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         FocusEventFunction->protoType().asESPointer()->asESObject(),
         ESString::create("relatedTarget"), relatedTargetGetterFunction,

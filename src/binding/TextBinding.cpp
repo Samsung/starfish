@@ -63,8 +63,8 @@ ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
     text->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
         false);
     text->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->characterData()->protoType());
-    text->set__proto__(fetchData(scriptBindingInstance)->characterData());
+        fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
+    text->set__proto__(fetchData(scriptBindingInstance)->fnCharacterData());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         text->protoType().asESPointer()->asESObject(),

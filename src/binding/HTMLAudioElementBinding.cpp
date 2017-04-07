@@ -29,7 +29,8 @@ ESFunctionObject* bindingHTMLAudioElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLAudioElement, fetchData(scriptBindingInstance)->htmlMediaElement());
+        HTMLAudioElement,
+        fetchData(scriptBindingInstance)->fnHTMLMediaElement());
     // TODO
     return HTMLAudioElementFunction;
 }

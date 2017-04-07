@@ -150,7 +150,7 @@ ESFunctionObject* bindingProgressEvent(
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
     fnProgressEvent->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->event()->protoType());
+        fetchData(scriptBindingInstance)->fnEvent()->protoType());
     fnProgressEvent->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

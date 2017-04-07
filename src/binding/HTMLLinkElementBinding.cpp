@@ -118,7 +118,7 @@ ESFunctionObject* bindingHTMLLinkElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLLinkElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLLinkElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),

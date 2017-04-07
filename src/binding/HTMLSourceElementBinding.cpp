@@ -29,7 +29,7 @@ ESFunctionObject* bindingHTMLSourceElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLSourceElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLSourceElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Source, src, setSrc, TYPE_STRING);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Source, typeAttr, setTypeAttr,

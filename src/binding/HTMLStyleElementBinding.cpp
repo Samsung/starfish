@@ -56,7 +56,7 @@ ESFunctionObject* bindingHTMLStyleElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLStyleElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLStyleElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLStyleElementFunction->protoType().asESPointer()->asESObject(),

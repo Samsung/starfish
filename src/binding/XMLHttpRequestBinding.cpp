@@ -326,7 +326,7 @@ ESFunctionObject* bindingXMLHttpRequest(
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
         XMLHttpRequestEventTarget,
-        fetchData(scriptBindingInstance)->m_eventTarget);
+        fetchData(scriptBindingInstance)->m_fnEventTarget);
     fetchData(scriptBindingInstance)
         ->m_instance->globalObject()
         ->defineDataProperty(XMLHttpRequestEventTargetString, true, false, true,
