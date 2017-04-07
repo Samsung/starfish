@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "dom/Document.h"
 #include "HTMLScriptElement.h"
-#include "CharacterData.h"
+#include "Text.h"
 
 #include "binding/ScriptBindingInstance.h"
 
@@ -198,7 +198,7 @@ String* HTMLScriptElement::text()
 void HTMLScriptElement::setText(String* s)
 {
     if (firstChild() && firstChild()->isText()) {
-        firstChild()->asCharacterData()->setData(s);
+        firstChild()->asText()->setData(s);
     } else {
         setTextContent(s);
     }

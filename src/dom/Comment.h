@@ -33,6 +33,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isComment() const
+    {
+        return true;
+    }
+
     /* 4.4 Interface Node */
     virtual NodeType nodeType()
     {
@@ -41,10 +46,6 @@ public:
 
     virtual String* nodeName();
     virtual String* localName();
-    virtual String* textContent()
-    {
-        return data();
-    }
 
     virtual Node* clone()
     {
@@ -53,15 +54,6 @@ public:
 
     /* 4.12 Interface Comment */
     // Comment node does not have any public APIs
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isComment() const
-    {
-        return true;
-    }
-
-protected:
 };
 }
 

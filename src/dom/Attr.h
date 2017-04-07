@@ -100,8 +100,14 @@ public:
         return m_qname.localName();
     }
 
+    virtual String* nodeValue()
+    {
+        return value();
+    }
+
     virtual void setNodeValue(String* val)
     {
+        setValue(val);
     }
 
     virtual String* textContent()

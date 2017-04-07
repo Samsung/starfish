@@ -33,6 +33,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual bool isText() const
+    {
+        return true;
+    }
+
     /* 4.4 Interface Node */
 
     virtual NodeType nodeType()
@@ -44,11 +49,6 @@ public:
 
     virtual String* localName();
 
-    virtual String* textContent()
-    {
-        return data();
-    }
-
     /* 4.10 Interface Text */
 
     // Text* splitText(unsigned long offset);
@@ -57,17 +57,10 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isText() const
-    {
-        return true;
-    }
-
     virtual Node* clone()
     {
         return new Text(document(), data());
     }
-
-protected:
 };
 }
 
