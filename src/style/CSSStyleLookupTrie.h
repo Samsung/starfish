@@ -36,6 +36,8 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length);
 // zIndex, fontSize...
 CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length);
 
+bool lookupCSSMediaQueryConstraints(const char* data, unsigned length);
+
 } /* namespace StarFish */
 
 #endif /* __StarFishCSSStyleLookupTrie__ */
