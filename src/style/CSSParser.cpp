@@ -2057,6 +2057,159 @@ CSSToken* CSSParser::makeToken(String* str)
     return getToken(false, false);
 }
 
+static bool isMediaType(CSSToken* token)
+{
+    // TODO: Add print, speech, tv
+    if (token->isIdent(String::createASCIIString("screen")) ||
+        token->isIdent(String::createASCIIString("all"))) {
+        return true;
+    }
+    return false;
+}
+
+bool CSSParser::parseMediaQuery()
+{
+    CSSToken* token = getToken(true, true);
+    bool isMediumSupported = false;
+
+    if (isMediaType(token)) {
+        isMediumSupported = true;
+        token = getToken(true, true);
+    } else if (token->isIdent(String::createASCIIString("not")) ||
+               token->isIdent(String::createASCIIString("only"))) {
+        token = getToken(true, true);
+        if (isMediaType(token)) {
+            isMediumSupported = true;
+            token = getToken(true, true);
+        }
+    } else {
+        return false;
+    }
+
+    if (isMediumSupported) {
+        if (!token->isNotNull()) {
+            return true;
+        }
+        if (token->isIdent(String::createASCIIString("and"))) {
+            token = getToken(true, true);
+        } else if (!token->isSymbol('{')) {
+            return false;
+        }
+    }
+
+    while (token->isSymbol('(')) {
+        token = getToken(true, true);
+        if (token->isIdent() &&
+            lookupCSSMediaQueryConstraints(token->m_value->utf8Data(),
+                                           token->m_value->length())) {
+            token = getToken(true, true);
+            if (token->isSymbol(':')) {
+                token = getToken(true, true);
+                while (!token->isSymbol(')')) {
+                    token = getToken(true, true);
+                }
+
+                if (token->isSymbol(')')) {
+                    token = getToken(true, true);
+
+                    if (token->isNotNull()) {
+                        if (token->isIdent(String::createASCIIString("and"))) {
+                            token = getToken(true, true);
+                        } else if (!token->isSymbol('{')) {
+                            return false;
+                        }
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            } else if (token->isSymbol(')')) {
+                token = getToken(true, true);
+                if (token->isNotNull()) {
+                    if (token->isIdent(String::createASCIIString("and"))) {
+                        token = getToken(true, true);
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    return true;
+};
+
+bool CSSParser::parseMediaRule(CSSToken* aToken, CSSStyleSheet* aSheet)
+{
+    preserveState();
+
+    CSSToken* token = getToken(true, true);
+    bool foundMedia = false;
+
+    bool hasMediaRule = false;
+    while (token->isNotNull()) {
+        ungetToken();
+        bool isMediaQuery = parseMediaQuery();
+        token = currentToken();
+
+        if (isMediaQuery) {
+            foundMedia = true;
+            hasMediaRule = true;
+            if (!token->isSymbol(',')) {
+                if (token->isSymbol('{')) {
+                    break;
+                } else {
+                    // error
+                    token->m_type = CSSToken::NULL_TYPE;
+                    break;
+                }
+            }
+        } else if (token->isSymbol('{')) {
+            break;
+        } else if (foundMedia) {
+            // not a media list
+            token->m_type = CSSToken::NULL_TYPE;
+            break;
+        }
+
+        token = getToken(true, true);
+    }
+
+    bool valid = false;
+    if (token->isSymbol('{') && hasMediaRule) {
+        token = getToken(true, false);
+        while (token->isNotNull()) {
+            if (token->isComment()) {
+                // if (this.mPreserveComments) {
+                //     s += " " + token.value;
+                //     var comment = new jscsspComment();
+                //     comment.parsedCssText = token.value;
+                //     mediaRule.cssRules.push(comment);
+                // }
+            } else if (token->isSymbol('}')) {
+                valid = true;
+                break;
+            } else {
+                parseStyleRule(token, aSheet, true, nullptr, false);
+            }
+            token = getToken(true, false);
+        }
+    }
+
+    if (valid) {
+        forgetState();
+        return true;
+    }
+    restoreState();
+    return false;
+}
+
 void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
 {
     /* m_lookAhead = nullptr;
@@ -2095,7 +2248,13 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
             //     this.addComment(sheet, token.value);
             // }
         } else if (token->isAtRule()) {
-            addUnknownAtRule(target, token->m_value);
+            if (token->isAtRule(String::createASCIIString("@media"))) {
+                if (!parseMediaRule(token, target)) {
+                    addUnknownAtRule(target, token->m_value);
+                }
+            } else {
+                addUnknownAtRule(target, token->m_value);
+            }
             /*
             if (token.isAtRule("@variables")) {
                 if (!foundImportRules && !foundStyleRules) {

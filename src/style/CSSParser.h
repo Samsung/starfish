@@ -567,6 +567,8 @@ public:
                         GCVector<GCDeque<CSSSelector*>*>* sList,
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
+    bool parseMediaRule(CSSToken* aToken, CSSStyleSheet* aSheet);
+    bool parseMediaQuery();
 
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
