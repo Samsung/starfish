@@ -631,7 +631,7 @@ static ESValue hasAttributeFunction(ESVMInstance* instance)
 ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Element, fetchData(scriptBindingInstance)->node());
+        Element, fetchData(scriptBindingInstance)->fnNode());
 
     /* 4.8 Interface Element */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

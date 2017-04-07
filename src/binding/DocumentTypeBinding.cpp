@@ -58,7 +58,7 @@ ESFunctionObject* bindingDocumentType(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        DocumentType, fetchData(scriptBindingInstance)->node());
+        DocumentType, fetchData(scriptBindingInstance)->fnNode());
 
     DocumentTypeFunction->protoType()
         .asESPointer()

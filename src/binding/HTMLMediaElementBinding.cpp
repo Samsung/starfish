@@ -140,7 +140,7 @@ ESFunctionObject* bindingHTMLMediaElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLMediaElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLMediaElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     HTMLMediaElementFunction->asESObject()->defineDataProperty(
         ESString::create("NETWORK_EMPTY"), false, true, false,

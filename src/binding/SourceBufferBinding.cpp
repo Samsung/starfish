@@ -281,7 +281,7 @@ ESFunctionObject* bindingSourceBuffer(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        SourceBuffer, fetchData(scriptBindingInstance)->m_eventTarget);
+        SourceBuffer, fetchData(scriptBindingInstance)->m_fnEventTarget);
     SourceBufferFunction->protoType()
         .asESPointer()
         ->asESObject()

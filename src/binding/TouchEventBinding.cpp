@@ -29,7 +29,7 @@ ESFunctionObject* bindingTouchEvent(
 {
     /* Touch Events */
     DEFINE_FUNCTION_WITH_PARENTFUNC(
-        TouchEvent, fetchData(scriptBindingInstance)->uiEvent());
+        TouchEvent, fetchData(scriptBindingInstance)->fnUIEvent());
     return TouchEventFunction;
 }
 }

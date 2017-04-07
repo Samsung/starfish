@@ -835,7 +835,7 @@ static ESValue locationSetterFunction(ESVMInstance* instance)
 ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Document, fetchData(scriptBindingInstance)->node());
+        Document, fetchData(scriptBindingInstance)->fnNode());
 
     /* 4.5 Interface Document */
 

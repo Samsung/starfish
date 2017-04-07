@@ -30,7 +30,7 @@ ESFunctionObject* bindingHTMLTrackElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLTrackElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLTrackElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     HTMLTrackElementFunction->asESObject()->defineDataProperty(
         ESString::create("NONE"), false, true, false,

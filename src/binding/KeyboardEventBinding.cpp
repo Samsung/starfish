@@ -74,7 +74,7 @@ ESFunctionObject* bindingKeyboardEvent(
 {
     /* Keyboard Events */
     DEFINE_FUNCTION_WITH_PARENTFUNC(
-        KeyboardEvent, fetchData(scriptBindingInstance)->uiEvent());
+        KeyboardEvent, fetchData(scriptBindingInstance)->fnUIEvent());
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         KeyboardEventFunction->protoType().asESPointer()->asESObject(),
         ESString::create("keyCode"), keyCodeGetterFunction, nullptr);

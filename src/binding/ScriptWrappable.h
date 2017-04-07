@@ -24,22 +24,22 @@ namespace StarFish {
 
 using namespace escargot;
 
-#define FOR_EACH_FORWARD_DECLARATION(codeName, exportName) class exportName;
+#define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
 
 class ScriptWrappable : public gc {
 public:
-#define FOR_EACH_REFLECT_FN(codeName, exportName) \
-    virtual bool is##exportName() const           \
-    {                                             \
-        return false;                             \
+#define FOR_EACH_REFLECT_FN(exportName) \
+    virtual bool is##exportName() const \
+    {                                   \
+        return false;                   \
     }
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_REFLECT_FN);
 #undef FOR_EACH_REFLECT_FN
 
-#define FOR_EACH_CAST_FN(codeName, exportName) \
+#define FOR_EACH_CAST_FN(exportName)           \
     virtual exportName* as##exportName() const \
     {                                          \
         STARFISH_ASSERT(is##exportName());     \

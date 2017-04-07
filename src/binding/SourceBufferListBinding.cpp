@@ -50,7 +50,7 @@ ESFunctionObject* bindingSourceBufferList(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        SourceBufferList, fetchData(scriptBindingInstance)->m_eventTarget);
+        SourceBufferList, fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferListFunction->protoType().asESPointer()->asESObject(),

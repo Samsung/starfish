@@ -321,7 +321,7 @@ static ESValue navigatorGetterFunction(ESVMInstance* instance)
         ->scriptObject();
 }
 
-#define DECLARE_FUNC_FOR_BINDING(codeName, exportName)                \
+#define DECLARE_FUNC_FOR_BINDING(exportName)                          \
     static ESValue exportName##GetterFunction(                        \
         ESObject* obj, ESObject* originalObj, ESString* propertyName) \
     {                                                                 \
@@ -330,7 +330,7 @@ static ESValue navigatorGetterFunction(ESVMInstance* instance)
                                ->extraPointerData()))                 \
                              ->document()                             \
                              ->scriptBindingInstance())               \
-            ->codeName##Value();                                      \
+            ->value##exportName();                                    \
     }                                                                 \
                                                                       \
     static void exportName##SetterFunction(                           \
@@ -342,12 +342,12 @@ static ESValue navigatorGetterFunction(ESVMInstance* instance)
                         ->extraPointerData()))                        \
                       ->document()                                    \
                       ->scriptBindingInstance())                      \
-            ->codeName();                                             \
+            ->fn##exportName();                                       \
         Window* wnd = (Window*)ESVMInstance::currentInstance()        \
                           ->globalObject()                            \
                           ->extraPointerData();                       \
         fetchData(wnd->document()->scriptBindingInstance())           \
-            ->m_value##codeName = value;                              \
+            ->m_value##exportName = value;                            \
     }
 STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_FUNC_FOR_BINDING)
 #undef DECLARE_FUNC_FOR_BINDING
@@ -375,15 +375,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     // binding names first
     ESObject* globalObject = fetchData(this)->m_instance->globalObject();
-#define DECLARE_NAME_FOR_BINDING(codeName, exportName)             \
+#define DECLARE_NAME_FOR_BINDING(exportName)                       \
     globalObject->defineAccessorProperty(                          \
         ESString::create(#exportName), exportName##GetterFunction, \
         exportName##SetterFunction, true, false, true);
     STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
-    fetchData(this)->eventTargetValue();
-    fetchData(this)->windowValue();
+    fetchData(this)->valueEventTarget();
+    fetchData(this)->valueWindow();
 
 #if defined(STARFISH_ENABLE_TEST)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(
@@ -454,7 +454,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(
         DOMImplementation,
         fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_domImplementation = DOMImplementationFunction;
+    fetchData(this)->m_fnDOMImplementation = DOMImplementationFunction;
 
     DOMImplementationFunction->protoType()
         .asESPointer()
@@ -471,27 +471,27 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 #endif
 }
 
-#define IMPL_EMPTY_BINDING(exportName, fromCodeName)                       \
-    ESFunctionObject* binding##exportName(                                 \
-        ScriptBindingInstance* scriptBindingInstance)                      \
-    {                                                                      \
-        DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(                   \
-            exportName, fetchData(scriptBindingInstance)->fromCodeName()); \
-        return exportName##Function;                                       \
+#define IMPL_EMPTY_BINDING(exportName, parentName)                           \
+    ESFunctionObject* binding##exportName(                                   \
+        ScriptBindingInstance* scriptBindingInstance)                        \
+    {                                                                        \
+        DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(                     \
+            exportName, fetchData(scriptBindingInstance)->fn##parentName()); \
+        return exportName##Function;                                         \
     }
 
-IMPL_EMPTY_BINDING(HTMLDocument, document);
-IMPL_EMPTY_BINDING(HTMLHtmlElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLHeadElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLDivElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLMetaElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLParagraphElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLPreElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLSpanElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLBRElement, htmlElement);
-IMPL_EMPTY_BINDING(HTMLUnknownElement, htmlElement);
-IMPL_EMPTY_BINDING(PseudoElement, element);
-IMPL_EMPTY_BINDING(CDataSection, text);
+IMPL_EMPTY_BINDING(HTMLDocument, Document);
+IMPL_EMPTY_BINDING(HTMLHtmlElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLHeadElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLDivElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLMetaElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLParagraphElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLPreElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLSpanElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLBRElement, HTMLElement);
+IMPL_EMPTY_BINDING(HTMLUnknownElement, HTMLElement);
+IMPL_EMPTY_BINDING(PseudoElement, Element);
+IMPL_EMPTY_BINDING(CDataSection, Text);
 #undef IMPL_EMPTY_BINDING
 
 String* ScriptBindingInstance::evaluate(String* str)

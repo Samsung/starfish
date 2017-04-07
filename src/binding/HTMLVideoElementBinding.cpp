@@ -29,7 +29,8 @@ ESFunctionObject* bindingHTMLVideoElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLVideoElement, fetchData(scriptBindingInstance)->htmlMediaElement());
+        HTMLVideoElement,
+        fetchData(scriptBindingInstance)->fnHTMLMediaElement());
 
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Video, width, setWidth, TYPE_NUMBER);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Video, height, setHeight,

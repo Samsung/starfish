@@ -89,9 +89,9 @@ ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
         ->forceNonVectorHiddenClass(false);
 
     AttrFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->node()->protoType());
+        fetchData(scriptBindingInstance)->fnNode()->protoType());
 
-    AttrFunction->set__proto__(fetchData(scriptBindingInstance)->node());
+    AttrFunction->set__proto__(fetchData(scriptBindingInstance)->fnNode());
 
     // Bind for attributes
     ESString* localNameString = ESString::create("localName");

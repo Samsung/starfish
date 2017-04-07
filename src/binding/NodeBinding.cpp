@@ -403,7 +403,7 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
 ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Node, fetchData(scriptBindingInstance)->m_eventTarget);
+        Node, fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     /* 4.4 Interface Node */
     NodeFunction->asESObject()->defineDataProperty(

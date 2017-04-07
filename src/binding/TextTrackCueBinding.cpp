@@ -145,7 +145,7 @@ ESFunctionObject* bindingTextTrackCue(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        TextTrackCue, fetchData(scriptBindingInstance)->m_eventTarget);
+        TextTrackCue, fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         TextTrackCueFunction->protoType().asESPointer()->asESObject(),

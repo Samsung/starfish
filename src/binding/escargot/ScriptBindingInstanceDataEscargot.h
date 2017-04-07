@@ -25,8 +25,8 @@ namespace StarFish {
 
 using namespace escargot;
 
-#define FOR_EACH_DECLARE_FN(codeName, exportName) \
-    ESFunctionObject* binding##exportName(        \
+#define FOR_EACH_DECLARE_FN(exportName)    \
+    ESFunctionObject* binding##exportName( \
         ScriptBindingInstance* scriptBindingInstance);
 
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_DECLARE_FN);
@@ -46,38 +46,38 @@ public:
         m_bindingInstance = bindingInstance;
     }
 
-#define FOR_EACH_GETTER_FN(codeName, exportName)                   \
-    ESFunctionObject* codeName()                                   \
-    {                                                              \
-        if (UNLIKELY(m_##codeName == nullptr)) {                   \
-            m_##codeName = binding##exportName(m_bindingInstance); \
-            m_value##codeName = m_##codeName;                      \
-        }                                                          \
-        return m_##codeName;                                       \
+#define FOR_EACH_GETTER_FN(exportName)                                 \
+    ESFunctionObject* fn##exportName()                                 \
+    {                                                                  \
+        if (UNLIKELY(m_fn##exportName == nullptr)) {                   \
+            m_fn##exportName = binding##exportName(m_bindingInstance); \
+            m_value##exportName = m_fn##exportName;                    \
+        }                                                              \
+        return m_fn##exportName;                                       \
     }
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_FN)
 #undef FOR_EACH_GETTER_FN
 
-#define FOR_EACH_GETTER_VALUE_FN(codeName, exportName)             \
-    ESValue codeName##Value()                                      \
-    {                                                              \
-        if (UNLIKELY(m_##codeName == nullptr)) {                   \
-            m_##codeName = binding##exportName(m_bindingInstance); \
-            m_value##codeName = m_##codeName;                      \
-        }                                                          \
-        return m_value##codeName;                                  \
+#define FOR_EACH_GETTER_VALUE_FN(exportName)                           \
+    ESValue value##exportName()                                        \
+    {                                                                  \
+        if (UNLIKELY(m_fn##exportName == nullptr)) {                   \
+            m_fn##exportName = binding##exportName(m_bindingInstance); \
+            m_value##exportName = m_fn##exportName;                    \
+        }                                                              \
+        return m_value##exportName;                                    \
     }
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
 #undef FOR_EACH_GETTER_VALUE_FN
 
-#define FOR_EACH_SCRIPT_FN(codeName, exportName) ESFunctionObject* m_##codeName;
+#define FOR_EACH_SCRIPT_FN(exportName) ESFunctionObject* m_fn##exportName;
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
 #undef FOR_EACH_SCRIPT_FN
 
 public:
-#define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) ESValue m_value##codeName;
+#define FOR_EACH_SCRIPTVALUE_FN(exportName) ESValue m_value##exportName;
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
 #undef FOR_EACH_SCRIPTVALUE_FN
 };

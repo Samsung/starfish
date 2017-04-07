@@ -164,7 +164,7 @@ ESFunctionObject* bindingMediaSource(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource,
-    // fetchData(scriptBindingInstance)->m_eventTarget);
+    // fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     auto mediaSource = ESFunctionObject::create(NULL, mediaSourceFunction,
                                                 ESString::create("MediaSource"),
@@ -179,8 +179,9 @@ ESFunctionObject* bindingMediaSource(
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
     mediaSource->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->m_eventTarget->protoType());
-    mediaSource->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget);
+        fetchData(scriptBindingInstance)->m_fnEventTarget->protoType());
+    mediaSource->set__proto__(
+        fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     mediaSource->protoType().asESPointer()->asESObject()->defineDataProperty(
         ESString::create("addSourceBuffer"), true, true, true,

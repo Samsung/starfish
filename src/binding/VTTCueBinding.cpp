@@ -96,8 +96,8 @@ ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
     vttCueFun->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->characterData()->protoType());
-    vttCueFun->set__proto__(fetchData(scriptBindingInstance)->textTrackCue());
+        fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
+    vttCueFun->set__proto__(fetchData(scriptBindingInstance)->fnTextTrackCue());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         vttCueFun->protoType().asESPointer()->asESObject(),

@@ -152,9 +152,9 @@ ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBindingInstance)
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
     fnDomPoint->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->domPointReadOnly()->protoType());
+        fetchData(scriptBindingInstance)->fnDOMPointReadOnly()->protoType());
     fnDomPoint->set__proto__(
-        fetchData(scriptBindingInstance)->domPointReadOnly());
+        fetchData(scriptBindingInstance)->fnDOMPointReadOnly());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fnDomPoint->protoType().asESPointer()->asESObject(),

@@ -53,7 +53,7 @@ ESFunctionObject* bindingTextTrackList(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        TextTrackList, fetchData(scriptBindingInstance)->m_eventTarget);
+        TextTrackList, fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         TextTrackListFunction->protoType().asESPointer()->asESObject(),

@@ -27,8 +27,8 @@ using namespace escargot;
 ESFunctionObject* bindingUIEvent(ScriptBindingInstance* scriptBindingInstance)
 {
     /* UI Events */
-    DEFINE_FUNCTION_WITH_PARENTFUNC(UIEvent,
-                                    fetchData(scriptBindingInstance)->event());
+    DEFINE_FUNCTION_WITH_PARENTFUNC(
+        UIEvent, fetchData(scriptBindingInstance)->fnEvent());
     return UIEventFunction;
 }
 }

@@ -149,7 +149,7 @@ static ESValue idGetterFunction(ESVMInstance* instance)
 ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        TextTrack, fetchData(scriptBindingInstance)->m_eventTarget);
+        TextTrack, fetchData(scriptBindingInstance)->m_fnEventTarget);
 
     TextTrackFunction->protoType()
         .asESPointer()

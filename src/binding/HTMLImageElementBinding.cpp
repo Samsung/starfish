@@ -149,7 +149,7 @@ ESFunctionObject* bindingHTMLImageElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLImageElement, fetchData(scriptBindingInstance)->htmlElement());
+        HTMLImageElement, fetchData(scriptBindingInstance)->fnHTMLElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(),

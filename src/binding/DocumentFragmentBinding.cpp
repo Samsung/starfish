@@ -28,7 +28,7 @@ ESFunctionObject* bindingDocumentFragment(
     ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        DocumentFragment, fetchData(scriptBindingInstance)->node());
+        DocumentFragment, fetchData(scriptBindingInstance)->fnNode());
     return DocumentFragmentFunction;
 }
 }
