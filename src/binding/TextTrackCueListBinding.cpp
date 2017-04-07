@@ -18,8 +18,7 @@
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
 
-#include "dom/DOM.h"
-#include "dom/TextTrackCueList.h"
+#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {

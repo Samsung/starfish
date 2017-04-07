@@ -17,11 +17,8 @@
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
 
-#include "dom/DOM.h"
+#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "platform/location/Geolocation.h"
-#include "platform/location/Geoposition.h"
-#include "platform/location/PositionError.h"
 
 namespace StarFish {
 

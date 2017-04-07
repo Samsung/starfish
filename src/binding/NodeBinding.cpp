@@ -18,7 +18,7 @@
 #include "ScriptBindingInstance.h"
 #include "ScriptWrappable.h"
 
-#include "dom/DOM.h"
+#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include <Escargot.h>

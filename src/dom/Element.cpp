@@ -15,61 +15,16 @@
  */
 
 #include "StarFishConfig.h"
-#include "Element.h"
-#include "Text.h"
-#include "CDataSection.h"
 
-#include "Document.h"
-#include "DocumentFragment.h"
-
+#include "dom/DOM.h"
 #include "dom/parser/HTMLParser.h"
+#include "dom/xml/XMLSerializer.h"
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
 
 #include "style/Style.h"
 #include "style/CSSParser.h"
-
-#include "HTMLHtmlElement.h"
-#include "HTMLHeadElement.h"
-#include "HTMLHeadingElement.h"
-#include "HTMLLIElement.h"
-#include "HTMLUListElement.h"
-#include "HTMLStrongElement.h"
-#include "HTMLBodyElement.h"
-#include "HTMLDivElement.h"
-#include "HTMLImageElement.h"
-#include "HTMLScriptElement.h"
-#include "HTMLStyleElement.h"
-#include "HTMLBRElement.h"
-#include "HTMLLinkElement.h"
-#include "HTMLMetaElement.h"
-#include "HTMLParagraphElement.h"
-#include "HTMLPreElement.h"
-#include "HTMLSpanElement.h"
-
-#include "HTMLTableElement.h"
-#include "HTMLTRElement.h"
-#include "HTMLTableCellElement.h"
-#include "HTMLCaptionElement.h"
-#include "HTMLColGroupElement.h"
-#include "HTMLColElement.h"
-#include "HTMLTHeadElement.h"
-#include "HTMLTBodyElement.h"
-#include "HTMLTFootElement.h"
-
-#include "HTMLUnknownElement.h"
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "HTMLMediaElement.h"
-#include "HTMLVideoElement.h"
-#include "HTMLAudioElement.h"
-#include "HTMLTrackElement.h"
-#include "HTMLSourceElement.h"
-#endif
-#include "dom/Attr.h"
-#include "dom/xml/XMLSerializer.h"
-#include "dom/DOMRect.h"
-#include "dom/DOMRectList.h"
 
 namespace StarFish {
 

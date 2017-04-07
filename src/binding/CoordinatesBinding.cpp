@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
 
-#include "dom/DOM.h"
+#include "binding/Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "platform/location/Coordinates.h"
 

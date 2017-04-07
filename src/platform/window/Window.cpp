@@ -19,6 +19,7 @@
 
 #include "binding/ScriptBindingInstance.h"
 #include "dom/HTMLDocument.h"
+#include "dom/Traverse.h"
 #include "layout/FrameTreeBuilder.h"
 #include "platform/canvas/font/Font.h"
 #include "platform/message_loop/MessageLoop.h"
