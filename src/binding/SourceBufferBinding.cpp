@@ -18,13 +18,8 @@
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
 
-#include "dom/DOM.h"
-#include "dom/TextTrack.h"
-#include "dom/TextTrackList.h"
+#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "extra/SourceBuffer.h"
-#include "extra/SourceBufferList.h"
-#include "extra/TimeRanges.h"
 
 namespace StarFish {
 

@@ -19,7 +19,7 @@
 
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "dom/DOM.h"
+#include "Binding.h"
 
 #include "vm/ESVMInstance.h"
 
@@ -31,26 +31,6 @@
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "dom/TextTrack.h"
-#include "dom/TextTrackList.h"
-#include "dom/TextTrackCueList.h"
-#include "extra/SourceBuffer.h"
-#include "extra/SourceBufferList.h"
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#include "extra/WebApis.h"
-#include "../../extra/Avplay.h"
-#endif
-#endif
-
-#include "extra/History.h"
-#include "extra/Navigator.h"
-#include "extra/Location.h"
-#include "platform/location/Coordinates.h"
-#include "platform/location/Geolocation.h"
-#include "platform/location/Geoposition.h"
-#include "platform/location/PositionError.h"
 
 #include "StarFish.h"
 

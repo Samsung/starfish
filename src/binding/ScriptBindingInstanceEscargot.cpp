@@ -21,11 +21,8 @@
 
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "dom/DOM.h"
+#include "Binding.h"
 #include "extra/Console.h"
-#include "extra/History.h"
-#include "extra/Navigator.h"
-#include "extra/Location.h"
 
 #include <Escargot.h>
 #include <vm/ESVMInstance.h>

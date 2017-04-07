@@ -17,6 +17,7 @@
 #ifndef __StarFishAttr__
 #define __StarFishAttr__
 
+#include "Node.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
@@ -68,22 +69,9 @@ public:
         return m_qname.localName();
     }
 
-    String* value()
-    {
-        if (m_element) {
-            return m_element->getAttribute(m_qname);
-        }
-        return m_standAloneValue;
-    }
+    String* value();
 
-    void setValue(String* value)
-    {
-        if (m_element) {
-            m_element->setAttribute(m_qname, value);
-        } else {
-            m_standAloneValue = value;
-        }
-    }
+    void setValue(String* value);
 
     Element* ownerElement() const
     {
@@ -126,11 +114,7 @@ public:
     {
     }
 
-    virtual Node* clone()
-    {
-        return (Node*)(new Attr(document(), document()->scriptBindingInstance(),
-                                m_qname, value()));
-    }
+    virtual Node* clone();
 
     virtual bool isAttr() const
     {

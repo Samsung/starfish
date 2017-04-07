@@ -15,21 +15,32 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-
-#include "Binding.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+#include "Attr.h"
+#include "Document.h"
+#include "Element.h"
 
 namespace StarFish {
 
-using namespace escargot;
-
-ESFunctionObject* bindingTouchEvent(
-    ScriptBindingInstance* scriptBindingInstance)
+String* Attr::value()
 {
-    /* Touch Events */
-    DEFINE_FUNCTION_WITH_PARENTFUNC(
-        TouchEvent, fetchData(scriptBindingInstance)->fnUIEvent());
-    return TouchEventFunction;
+    if (m_element) {
+        return m_element->getAttribute(m_qname);
+    }
+    return m_standAloneValue;
+}
+
+void Attr::setValue(String* value)
+{
+    if (m_element) {
+        m_element->setAttribute(m_qname, value);
+    } else {
+        m_standAloneValue = value;
+    }
+}
+
+Node* Attr::clone()
+{
+    return (Node*)(new Attr(document(), document()->scriptBindingInstance(),
+                            m_qname, value()));
 }
 }
