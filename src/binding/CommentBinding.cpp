@@ -26,36 +26,39 @@ using namespace escargot;
 
 static ESValue commentFunction(ESVMInstance* instance)
 {
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (argCount > 0) {
-        ESString* data = firstArg.toString();
-        Comment* comment =
-            new Comment((((Window*)ESVMInstance::currentInstance()
-                              ->globalObject()
-                              ->extraPointerData()))
-                            ->document(),
-                        String::fromUTF8(data->utf8Data()));
-        return comment->scriptValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    if (arg0.isUndefined()) {
+        arg0 = ESString::create("");
     }
-    return ESValue();
+    String* data0 = String::fromUTF8(arg0.toString()->utf8Data());
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    Comment* comment = new Comment(window->document(), data0);
+
+    return comment->scriptValue();
 }
 
 ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* 4.10 Interface Comment */
-    auto comment = ESFunctionObject::create(
-        NULL, commentFunction, ESString::create("Comment"), 0, true, true);
-    comment->defineAccessorProperty(
+    ESString* CommentString = ESString::create("Comment");
+    ESFunctionObject* CommentFunction = ESFunctionObject::create(
+        nullptr, commentFunction, CommentString, 0, true, true);
+
+    CommentFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    comment->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
-        false);
-    comment->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->characterData()->protoType());
-    comment->set__proto__(fetchData(scriptBindingInstance)->characterData());
 
-    return comment;
+    CommentFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+
+    CommentFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->characterData()->protoType());
+
+    CommentFunction->set__proto__(
+        fetchData(scriptBindingInstance)->characterData());
+
+    return CommentFunction;
 }
 }
