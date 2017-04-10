@@ -112,12 +112,12 @@ public:
 
     virtual String* textContent()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
+        return value();
     }
 
     virtual void setTextContent(String* val)
     {
+        setValue(val);
     }
 
     virtual Node* clone();

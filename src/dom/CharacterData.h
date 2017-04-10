@@ -28,9 +28,7 @@ public:
     CharacterData(Document* document, String* data)
         : Node(document)
     {
-        if (data == nullptr) {
-            data = String::emptyString;
-        }
+        STARFISH_ASSERT(data);
         m_data = data;
     }
 
