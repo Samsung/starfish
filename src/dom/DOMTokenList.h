@@ -48,7 +48,7 @@ public:
     static void tokenize(GCVector<String*>* tokens, String* src);
     static void concatTokensInsideParentheses(GCVector<String*>* tokens);
     unsigned long length();
-    String* item(unsigned long index);
+    Nullable<String*> item(unsigned long index);
     bool contains(String* token);
     String* addSingleToken(String* src, GCVector<String*>* tokens,
                            String* token);

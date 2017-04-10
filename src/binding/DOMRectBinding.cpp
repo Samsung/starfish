@@ -33,20 +33,20 @@ static ESValue domRectFunction(ESVMInstance* instance)
         0,
     };
     if (cnt == 0) {
-        rect = DOMRect::create();
+        rect = new DOMRect();
     } else {
         for (int i = 0; i < cnt; ++i) {
             args[i] =
                 instance->currentExecutionContext()->readArgument(i).toNumber();
         }
         if (cnt == 1) {
-            rect = DOMRect::create(args[0]);
+            rect = new DOMRect(args[0]);
         } else if (cnt == 2) {
-            rect = DOMRect::create(args[0], args[1]);
+            rect = new DOMRect(args[0], args[1]);
         } else if (cnt == 3) {
-            rect = DOMRect::create(args[0], args[1], args[2]);
+            rect = new DOMRect(args[0], args[1], args[2]);
         } else {
-            rect = DOMRect::create(args[0], args[1], args[2], args[3]);
+            rect = new DOMRect(args[0], args[1], args[2], args[3]);
         }
     }
     return rect->scriptValue();

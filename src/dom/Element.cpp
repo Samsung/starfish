@@ -254,10 +254,10 @@ DOMRect* Element::getBoundingClientRect()
     std::vector<DOMQuad> quads;
     getClientQuads(quads);
     if (quads.empty()) {
-        return DOMRect::create();
+        return new DOMRect();
     }
 
-    DOMRect* rect = DOMRect::create(quads[0].bounds());
+    DOMRect* rect = new DOMRect(quads[0].bounds());
 
     for (size_t i = 1; i < quads.size(); ++i) {
         rect->unite(quads[i].bounds());

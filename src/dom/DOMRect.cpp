@@ -26,18 +26,13 @@ DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
 {
 }
 
-DOMRect* DOMRect::create(double x, double y, double width, double height)
-{
-    return new DOMRect(x, y, width, height);
-}
-
-DOMRect* DOMRect::create(const DOMRectReadOnly* rect)
-{
-    return new DOMRect(rect->x(), rect->y(), rect->width(), rect->height());
-}
-
 DOMRect::DOMRect(double x, double y, double width, double height)
     : DOMRectReadOnly(x, y, width, height)
+{
+}
+
+DOMRect::DOMRect(const DOMRectReadOnly* rect)
+    : DOMRect(rect->x(), rect->y(), rect->width(), rect->height())
 {
 }
 

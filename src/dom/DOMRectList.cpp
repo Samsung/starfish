@@ -32,7 +32,7 @@ DOMRectList::DOMRectList(const std::vector<DOMQuad>& quads)
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {
-        m_list.push_back(DOMRect::create(quads[i].bounds()));
+        m_list.push_back(new DOMRect(quads[i].bounds()));
     }
 }
 

@@ -34,9 +34,8 @@ struct DOMRectInit {
 
 class DOMRect : public DOMRectReadOnly {
 public:
-    static DOMRect* create(double x = 0, double y = 0, double width = 0,
-                           double height = 0);
-    static DOMRect* create(const DOMRectReadOnly*);
+    DOMRect(double x = 0, double y = 0, double width = 0, double height = 0);
+    DOMRect(const DOMRectReadOnly*);
 
     void setX(double x)
     {
@@ -65,9 +64,6 @@ public:
     {
         return true;
     }
-
-protected:
-    DOMRect(double x, double y, double width, double height);
 };
 }
 
