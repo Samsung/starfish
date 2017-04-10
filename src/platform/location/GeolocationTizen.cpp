@@ -102,8 +102,8 @@ static void sendResult(LocationRequestInfoTizen* info)
 {
     Coordinates* c = new Coordinates(
         info->starFish, info->latitude, info->longitude,
-        new (GC) double(info->altitude), info->horizontalAccuracy, nullptr,
-        new (GC) double(info->direction), new (GC) double(info->speed * 1000));
+        Nullable(info->altitude), info->horizontalAccuracy, Nullable(),
+        Nullable(info->direction), Nullable(info->speed * 1000));
     info->cb(info->starFish,
              new Geoposition(info->starFish, c, info->timestamp), info->cbData);
 

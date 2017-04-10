@@ -26,8 +26,9 @@ class StarFish;
 class Coordinates : public ScriptWrappable {
 public:
     Coordinates(StarFish* starFish, double latitude, double longitude,
-                double* altitude, double accuracy, double* altitudeAccuracy,
-                double* heading, double* speed)
+                Nullable<double> altitude, double accuracy,
+                Nullable<double> altitudeAccuracy, Nullable<double> heading,
+                Nullable<double> speed)
         : ScriptWrappable(this)
         , m_starFish(starFish)
         , m_latitude(latitude)
@@ -65,7 +66,7 @@ public:
         return m_longitude;
     }
 
-    double* altitude()
+    Nullable<double> altitude()
     {
         return m_altitude;
     }
@@ -75,17 +76,20 @@ public:
         return m_accuracy;
     }
 
-    double* altitudeAccuracy()
+    Nullable<double> altitudeAccuracy()
     {
         return m_altitudeAccuracy;
     }
 
-    double* heading()
+    Nullable<double> heading()
     {
+        if (m_speed.hasValue() && m_speed.getValue() == 0) {
+            return Nullable<double>(std::numeric_limits<double>::quiet_NaN());
+        }
         return m_heading;
     }
 
-    double* speed()
+    Nullable<double> speed()
     {
         return m_speed;
     }
@@ -94,11 +98,11 @@ protected:
     StarFish* m_starFish;
     double m_latitude;
     double m_longitude;
-    double* m_altitude; // should be allcated by GC_MALLOC or null
+    Nullable<double> m_altitude;
     double m_accuracy;
-    double* m_altitudeAccuracy; // should be allcated by GC_MALLOC or null
-    double* m_heading;          // should be allcated by GC_MALLOC or null
-    double* m_speed;            // should be allcated by GC_MALLOC or null
+    Nullable<double> m_altitudeAccuracy;
+    Nullable<double> m_heading;
+    Nullable<double> m_speed;
 };
 }
 
