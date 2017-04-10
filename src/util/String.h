@@ -1121,5 +1121,41 @@ private:
     void (SegmentedString::*m_advanceFunc)();
     void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
 };
+
+template <typename T>
+struct Nullable {
+public:
+    Nullable()
+        : m_hasValue(false) {}
+
+    Nullable(T value)
+        : m_hasValue(true)
+        , m_value(value) {}
+
+    T getValue()
+    {
+        STARFISH_ASSERT(m_hasValue);
+        return m_value;
+    }
+    bool hasValue()
+    {
+        return m_hasValue;
+    }
+    bool operator==(const Nullable& other) const
+    {
+        if (m_hasValue != other.hasValue()) {
+            return false;
+        }
+        return m_hasValue ? m_value == other.m_value : true;
+    }
+    bool operator!=(const Nullable& other) const
+    {
+        return !this->operator==(other);
+    }
+    
+protected:
+    bool m_hasValue;
+    T m_value;
+};
 }
 #endif
