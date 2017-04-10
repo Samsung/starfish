@@ -43,8 +43,10 @@ static ESValue itemFunction(ESVMInstance* instance)
     ESValue argValue = instance->currentExecutionContext()->readArgument(0);
     TO_INDEX_UINT32(argValue, idx);
     if (idx != INVALID_INDEX && idx < self->length()) {
-        String* elem = self->item(idx);
-        return toJSString(elem);
+        Nullable<String*> elem = self->item(idx);
+        if (elem.hasValue()) {
+            return toJSString(elem.getValue());
+        }
     }
     return ESValue(ESValue::ESNull);
 }

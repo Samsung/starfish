@@ -2056,7 +2056,10 @@ static ESValue domTokenListReadCallbackFunction(const ESValue& key,
     STARFISH_ASSERT(self->isDOMTokenList());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
-        return createScriptString(self->item(idx));
+        Nullable<String*> result = self->item(idx);
+        if (result.hasValue()) {
+            return createScriptString(result.getValue());
+        }
     }
     return ESValue(ESValue::ESDeletedValue);
 }

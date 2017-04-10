@@ -113,15 +113,15 @@ unsigned long DOMTokenList::length()
     return tokens.size();
 }
 
-String* DOMTokenList::item(unsigned long index)
+Nullable<String*> DOMTokenList::item(unsigned long index)
 {
     GCVector<String*> tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     if (index < tokens.size()) {
-        return tokens[index];
+        return Nullable<String*>(tokens[index]);
     }
-    return String::emptyString;
+    return Nullable<String*>();
 }
 
 bool DOMTokenList::contains(String* token)
