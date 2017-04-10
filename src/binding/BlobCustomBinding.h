@@ -119,5 +119,6 @@ ESValue blobCustomFunction(ESVMInstance* instance)
         new Blob(w->starFish(), totalByteLength, type, buffer, false, false);
     return newBlob->scriptValue();
 }
+}
 
 #endif
