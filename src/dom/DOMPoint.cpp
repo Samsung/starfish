@@ -26,18 +26,13 @@ DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
 {
 }
 
-DOMPoint* DOMPoint::create(const DOMPointInit& pi)
-{
-    return new DOMPoint(pi.x, pi.y, pi.z, pi.w);
-}
-
-DOMPoint* DOMPoint::create(double x, double y, double z, double w)
-{
-    return new DOMPoint(x, y, z, w);
-}
-
 DOMPoint::DOMPoint(double x, double y, double z, double w)
     : DOMPointReadOnly(x, y, z, w)
+{
+}
+
+DOMPoint::DOMPoint(const DOMPointInit& pi)
+    : DOMPointReadOnly(pi.x, pi.y, pi.z, pi.w)
 {
 }
 }

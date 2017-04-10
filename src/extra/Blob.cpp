@@ -34,6 +34,11 @@ void Blob::removeBlobFromBlobURLStore()
     m_starFish->removeBlobFromBlobURLStore(this);
 }
 
+Blob* Blob::slice(int64_t start)
+{
+    return slice(start, m_size);
+}
+
 Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
 {
     // https://www.w3.org/TR/FileAPI/#slice-method-algo

@@ -28,13 +28,13 @@ static ESValue domPointFunction(ESVMInstance* instance)
 {
     int cnt = instance->currentExecutionContext()->argumentCount();
     if (cnt == 0) {
-        DOMPoint* point = DOMPoint::create();
+        DOMPoint* point = new DOMPoint();
         return point->scriptValue();
     } else if (cnt == 1) {
         DOMPoint* point = nullptr;
         ESValue arg = instance->currentExecutionContext()->readArgument(0);
         if (arg.isUndefinedOrNull()) {
-            point = DOMPoint::create();
+            point = new DOMPoint();
         } else if (arg.isObject()) {
             DOMPointInit initPoint;
             ESValue value;
@@ -54,7 +54,7 @@ static ESValue domPointFunction(ESVMInstance* instance)
             if (!value.isUndefined()) {
                 initPoint.w = value.toNumber();
             }
-            point = DOMPoint::create(initPoint);
+            point = new DOMPoint(initPoint);
         }
         return point->scriptValue();
     } else {
@@ -68,7 +68,7 @@ static ESValue domPointFunction(ESVMInstance* instance)
                 args[i] = value.toNumber();
             }
         }
-        point = DOMPoint::create(args[0], args[1], args[2], args[3]);
+        point = new DOMPoint(args[0], args[1], args[2], args[3]);
         return point->scriptValue();
     }
 }

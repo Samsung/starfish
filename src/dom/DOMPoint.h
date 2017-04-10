@@ -34,9 +34,8 @@ struct DOMPointInit {
 
 class DOMPoint : public DOMPointReadOnly {
 public:
-    static DOMPoint* create(double x = 0, double y = 0, double z = 0,
-                            double w = 1);
-    static DOMPoint* create(const DOMPointInit&);
+    DOMPoint(double x = 0, double y = 0, double z = 0, double w = 1);
+    DOMPoint(const DOMPointInit&);
 
     void setX(double x)
     {
@@ -64,9 +63,6 @@ public:
     {
         return true;
     }
-
-protected:
-    DOMPoint(double x, double y, double z, double w);
 };
 }
 

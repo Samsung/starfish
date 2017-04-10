@@ -87,7 +87,9 @@ public:
         }
     }
 
-    Blob* slice(int64_t start, int64_t end, String* contentType);
+    Blob* slice(int64_t start = 0);
+    Blob* slice(int64_t start, int64_t end,
+                String* contentType = String::emptyString);
 
 protected:
     void addBlobToBlobURLStore();
