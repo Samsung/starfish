@@ -1126,11 +1126,15 @@ template <typename T>
 struct Nullable {
 public:
     Nullable()
-        : m_hasValue(false) {}
+        : m_hasValue(false)
+    {
+    }
 
     Nullable(T value)
         : m_hasValue(true)
-        , m_value(value) {}
+        , m_value(value)
+    {
+    }
 
     T getValue()
     {
@@ -1152,7 +1156,7 @@ public:
     {
         return !this->operator==(other);
     }
-    
+
 protected:
     bool m_hasValue;
     T m_value;
