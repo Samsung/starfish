@@ -172,7 +172,7 @@ public:
                               m_buffer.data(), m_buffer.size());
         m_htmlSource =
             converter->convert(m_buffer.data(), m_buffer.size(), true);
-        m_builder.document()->setCharset(converter->encoding());
+        m_builder.document()->setCharacterSet(converter->encoding());
         load();
     }
 

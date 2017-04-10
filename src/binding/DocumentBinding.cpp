@@ -29,7 +29,7 @@ static ESValue headGetterFunction(ESVMInstance* instance)
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
-        HTMLHeadElement* head = document->headElement();
+        HTMLHeadElement* head = document->head();
         if (head) {
             return head->scriptValue();
         }
@@ -43,7 +43,7 @@ static ESValue bodyGetterFunction(ESVMInstance* instance)
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
-        HTMLBodyElement* body = document->bodyElement();
+        HTMLBodyElement* body = document->body();
         if (body) {
             return body->scriptValue();
         }
@@ -66,7 +66,7 @@ static ESValue bodySetterFunction(ESVMInstance* instance)
         if (nd->isDocument()) {
             if (node_v->isElement() && node_v->asElement()->isHTMLElement() &&
                 node_v->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                HTMLBodyElement* body = nd->asDocument()->bodyElement();
+                HTMLBodyElement* body = nd->asDocument()->body();
                 HTMLHtmlElement* html_root = nd->asDocument()->rootElement();
                 if (body) {
                     html_root->removeChild(body);
@@ -104,7 +104,7 @@ static ESValue implementationGetterFunction(ESVMInstance* instance)
     Node* nd = originalObj;
     if (nd->isDocument()) {
         Document* document = nd->asDocument();
-        DOMImplementation* impl = document->domImplementation();
+        DOMImplementation* impl = document->implementation();
         if (impl) {
             return impl->scriptValue();
         }
@@ -118,7 +118,7 @@ static ESValue characterSetGetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->charset());
+        return toJSString(nd->asDocument()->characterSet());
     }
     THROW_ILLEGAL_INVOCATION();
 }
@@ -128,7 +128,7 @@ static ESValue charsetGetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->charset());
+        return toJSString(nd->asDocument()->characterSet());
     }
     THROW_ILLEGAL_INVOCATION();
 }
@@ -339,7 +339,7 @@ static ESValue doctypeGetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* nd = originalObj;
     if (nd->isDocument()) {
-        DocumentType* docType = nd->asDocument()->docType();
+        DocumentType* docType = nd->asDocument()->doctype();
         if (docType != nullptr) {
             return docType->scriptValue();
         }
@@ -640,7 +640,8 @@ static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     if (originalObj->isDocument()) {
-        String* visibilityState = originalObj->asDocument()->visibilityState();
+        VisibilityState visibilityState =
+            originalObj->asDocument()->visibilityState();
         return toJSString(visibilityState);
     }
     THROW_ILLEGAL_INVOCATION()

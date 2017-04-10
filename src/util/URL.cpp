@@ -360,8 +360,7 @@ String* URL::createObjectURL(Blob* blob)
         store = blob->starFish()->addBlobInBlobURLStore(blob);
     }
     return StarFish::blobURLStoreToString(
-        store,
-        blob->starFish()->window()->document()->documentURI()->urlString());
+        store, blob->starFish()->window()->document()->urlString());
 }
 
 void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)
@@ -389,11 +388,8 @@ String* URL::createObjectURL(MediaSource* mediaSource)
         store =
             mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
     }
-    return StarFish::blobURLStoreToString(store, mediaSource->starFish()
-                                                     ->window()
-                                                     ->document()
-                                                     ->documentURI()
-                                                     ->urlString());
+    return StarFish::blobURLStoreToString(
+        store, mediaSource->starFish()->window()->document()->urlString());
 }
 #endif
 

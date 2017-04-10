@@ -1323,10 +1323,10 @@ void Window::setFocusedNode(Node* n)
     }
 
     if (!m || m->isDocument()) {
-        if (!document()->bodyElement()) {
+        if (!document()->body()) {
             return;
         }
-        m = document()->bodyElement()->asNode();
+        m = document()->body()->asNode();
     }
 
     if (m_focusedNode == m) {
@@ -1664,8 +1664,8 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
     // or 2) body element if possible
     // or 3) root element
     if (document()->rootElement()) {
-        EventTarget::dispatchEvent((document()->bodyElement()
-                                        ? document()->bodyElement()->asNode()
+        EventTarget::dispatchEvent((document()->body()
+                                        ? document()->body()->asNode()
                                         : document()->rootElement()->asNode()),
                                    e);
     }
@@ -1693,7 +1693,7 @@ void Window::pause()
 
     m_isRunning = false;
 
-    document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
+    document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
     document()->resourceLoader()->cachePruning();
 }
@@ -1713,8 +1713,7 @@ void Window::resume()
     m_needsPainting = true;
     rendering();
 
-    document()->setVisibleState(
-        PageVisibilityState::PageVisibilityStateVisible);
+    document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
 }
 
 void Window::close()

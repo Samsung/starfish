@@ -203,13 +203,12 @@ static void traverseChildFrames(
     Frame* c = parent;
 
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
-        String* u =
-            URL::getURLString(c->node()->document()->documentURI()->urlString(),
-                              c->node()
-                                  ->asElement()
-                                  ->asHTMLElement()
-                                  ->asHTMLImageElement()
-                                  ->src());
+        String* u = URL::getURLString(c->node()->document()->urlString(),
+                                      c->node()
+                                          ->asElement()
+                                          ->asHTMLElement()
+                                          ->asHTMLImageElement()
+                                          ->src());
         currentUsingResourcePaths.insert(u->utf8Data());
     }
 

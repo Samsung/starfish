@@ -107,16 +107,16 @@ bool History::isPushState()
 
 void History::pushState(String* state, String* title, String* url)
 {
-    URL* newURL = URL::createURL(
-        starFish()->window()->document()->documentURI()->urlString(), url);
+    URL* newURL =
+        URL::createURL(starFish()->window()->document()->urlString(), url);
     setHistory(state, title, newURL, true);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
 void History::replaceState(String* state, String* title, String* url)
 {
-    URL* newURL = URL::createURL(
-        starFish()->window()->document()->documentURI()->urlString(), url);
+    URL* newURL =
+        URL::createURL(starFish()->window()->document()->urlString(), url);
     history()[offset()]->replaceState(state, title, newURL);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
@@ -125,7 +125,7 @@ void History::setHistory(String* state, String* title, URL* url,
                          bool isPushState)
 {
     if (starFish()->window()->document() &&
-        starFish()->window()->document()->documentURI()->urlString()->equals(
+        starFish()->window()->document()->urlString()->equals(
             url->urlString())) {
         return;
     }

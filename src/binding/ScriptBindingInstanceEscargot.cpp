@@ -176,6 +176,27 @@ ESValue toJSString(String* v)
     return createScriptString(v);
 }
 
+ESValue toJSString(VisibilityState state)
+{
+    String* str = String::emptyString;
+    switch (state) {
+    case VisibilityState::VisibilityStateHidden:
+        str = String::createASCIIString("hidden");
+        break;
+    case VisibilityState::VisibilityStatePrerender:
+        str = String::createASCIIString("prerender");
+        break;
+    case VisibilityState::VisibilityStateUnloaded:
+        str = String::createASCIIString("unloaded");
+        break;
+    case VisibilityState::VisibilityStateVisible:
+        str = String::createASCIIString("visible");
+        break;
+    }
+
+    return toJSString(str);
+}
+
 ESValue defaultFunction(ESVMInstance* instance)
 {
     return ESValue();

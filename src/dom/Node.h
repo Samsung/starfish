@@ -651,7 +651,7 @@ private:
     void validateReplace(Node* child, Node* childToRemove);
 
 protected:
-    Node* getDocTypeChild();
+    Node* getDoctypeChild();
     bool m_inParsing : 1;
     bool m_needsStyleRecalc : 1;
     bool m_childNeedsStyleRecalc : 1;

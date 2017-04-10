@@ -605,7 +605,7 @@ public:
         if (m_node && m_node->isElement() &&
             m_node->asElement()->isHTMLElement() &&
             m_node->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
-            HTMLBodyElement* bodyElement = m_node->document()->bodyElement();
+            HTMLBodyElement* bodyElement = m_node->document()->body();
             if (bodyElement) {
                 return bodyElement->style()->overflow() != style()->overflow();
             }
