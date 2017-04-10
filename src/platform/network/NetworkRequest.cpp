@@ -658,8 +658,7 @@ void NetworkRequest::send(String* body)
                 headerText += m_url->getHostname()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
-                headerText +=
-                    m_document->documentURI()->urlString()->utf8Data();
+                headerText += m_document->urlString()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
             }
 

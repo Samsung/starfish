@@ -41,11 +41,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)
     , m_documentURI(uri)
-    , m_charset(charSet)
+    , m_characterSet(charSet)
     , m_resourceLoader(*this)
     , m_styleResolver(*this)
     , m_documentBuilder(nullptr)
-    , m_pageVisibilityState(PageVisibilityStateVisible)
+    , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
@@ -910,8 +910,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     setFrame(df);
 
 #ifdef STARFISH_EXP
-    m_domImplementation =
-        new DOMImplementation(m_window, m_scriptBindingInstance);
+    m_implementation = new DOMImplementation(m_window, m_scriptBindingInstance);
 #endif
 
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -988,7 +987,7 @@ void Document::notifyDomContentLoaded()
 
 void Document::close()
 {
-    Element* bodyElem = bodyElement();
+    Element* bodyElem = body();
     if (bodyElem) {
         String* eventType =
             window()->starFish()->staticStrings()->m_unload.localName();
@@ -1105,7 +1104,7 @@ Element* Document::documentElement()
     return rootElement();
 }
 
-HTMLHeadElement* Document::headElement()
+HTMLHeadElement* Document::head()
 {
     Node* head = childMatchedBy(this, [](Node* nd) -> bool {
         if (nd->isElement() && nd->asElement()->isHTMLElement() &&
@@ -1120,7 +1119,7 @@ HTMLHeadElement* Document::headElement()
     return nullptr;
 }
 
-HTMLBodyElement* Document::bodyElement()
+HTMLBodyElement* Document::body()
 {
     Node* body = childMatchedBy(this, [](Node* nd) -> bool {
         if (nd->isElement() && nd->asElement()->isHTMLElement() &&
@@ -1137,28 +1136,10 @@ HTMLBodyElement* Document::bodyElement()
 
 bool Document::hidden() const
 {
-    return m_pageVisibilityState ==
-           PageVisibilityState::PageVisibilityStateHidden;
+    return m_pageVisibilityState == VisibilityState::VisibilityStateHidden;
 }
 
-String* Document::visibilityState()
-{
-    switch (m_pageVisibilityState) {
-    case PageVisibilityState::PageVisibilityStateHidden:
-        return String::createASCIIString("hidden");
-    case PageVisibilityState::PageVisibilityStatePrerender:
-        return String::createASCIIString("prerender");
-    case PageVisibilityState::PageVisibilityStateUnloaded:
-        return String::createASCIIString("unloaded");
-    case PageVisibilityState::PageVisibilityStateVisible:
-        return String::createASCIIString("visible");
-    }
-
-    STARFISH_ASSERT_NOT_REACHED();
-    return String::emptyString;
-}
-
-void Document::setVisibleState(PageVisibilityState visibilityState)
+void Document::setVisibilityState(VisibilityState visibilityState)
 {
     if (m_pageVisibilityState != visibilityState) {
         m_pageVisibilityState = visibilityState;
@@ -1270,7 +1251,7 @@ QualifiedName Document::createAttributeName(String* name)
 Element* Document::activeElement()
 {
     // TODO
-    return this->bodyElement()->asElement();
+    return this->body()->asElement();
 }
 
 bool Document::hasFocus() const

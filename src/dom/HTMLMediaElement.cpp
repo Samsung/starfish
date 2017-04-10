@@ -1178,8 +1178,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 
         // If urlString was obtained successfully, set the currentSrc attribute
         // to urlString.
-        URL* url = URL::createURL(self->document()->documentURI()->urlString(),
-                                  self->src());
+        URL* url = URL::createURL(self->document()->urlString(), self->src());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
@@ -1224,8 +1223,8 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
                 new MediaOperationQueueDataRequestResourceSelection(self));
             return;
         }
-        URL* url = URL::createURL(self->document()->documentURI()->urlString(),
-                                  candidate->src());
+        URL* url =
+            URL::createURL(self->document()->urlString(), candidate->src());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.

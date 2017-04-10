@@ -69,14 +69,12 @@ public:
                 if (h->length()) {
                     if (h->startsWith("#")) {
                         document()->window()->navigateAsync(URL::createURL(
-                            document()->documentURI()->urlString()->substring(
-                                0,
-                                document()->documentURI()->urlString()->indexOf(
-                                    '#')),
+                            document()->urlString()->substring(
+                                0, document()->urlString()->indexOf('#')),
                             h));
                     } else {
-                        document()->window()->navigateAsync(URL::createURL(
-                            document()->documentURI()->urlString(), h));
+                        document()->window()->navigateAsync(
+                            URL::createURL(document()->urlString(), h));
                     }
                 } else {
                     document()->window()->navigateAsync(

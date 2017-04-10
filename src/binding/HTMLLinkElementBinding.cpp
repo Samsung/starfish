@@ -34,7 +34,7 @@ static ESValue hrefGetterFunction(ESVMInstance* instance)
             nd->document()->window()->starFish()->staticStrings()->m_href);
         if (idx != SIZE_MAX) {
             return toJSString(
-                URL::getURLString(nd->document()->documentURI()->urlString(),
+                URL::getURLString(nd->document()->urlString(),
                                   nd->asElement()->getAttribute(idx)));
         }
         return toJSString(String::emptyString);

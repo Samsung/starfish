@@ -33,13 +33,15 @@ class DocumentBuilder;
 class DOMImplementation;
 #endif
 
-/* Page Visibility */
-enum PageVisibilityState {
-    PageVisibilityStateHidden,
-    PageVisibilityStateVisible,
-    PageVisibilityStatePrerender,
-    PageVisibilityStateUnloaded
+/* VisibilityState */
+enum VisibilityState {
+    VisibilityStateHidden,
+    VisibilityStateVisible,
+    VisibilityStatePrerender,
+    VisibilityStateUnloaded
 };
+
+ESValue toJSString(VisibilityState v);
 
 class Document : public Node {
 #ifdef STARFISH_EXP
@@ -101,9 +103,9 @@ public:
     Element* getElementById(String* id);
 
     /* 4.5. Interface Document */
-    DocumentType* docType()
+    DocumentType* doctype()
     {
-        Node* node = getDocTypeChild();
+        Node* node = getDoctypeChild();
         if (node != nullptr) {
             return node->asDocumentType();
         }
@@ -123,9 +125,9 @@ public:
     QualifiedName createAttributeName(String* name);
 
 #ifdef STARFISH_EXP
-    DOMImplementation* domImplementation()
+    DOMImplementation* implementation()
     {
-        return m_domImplementation;
+        return m_implementation;
     }
 #endif
 
@@ -173,13 +175,17 @@ public:
     }
 
     HTMLHtmlElement* rootElement();
-    HTMLHeadElement* headElement();
-    HTMLBodyElement* bodyElement();
+    HTMLHeadElement* head();
+    HTMLBodyElement* body();
 
     /* Page Visibility */
     bool hidden() const;
-    String* visibilityState();
-    void setVisibleState(PageVisibilityState visibilityState);
+    VisibilityState visibilityState()
+    {
+        return m_pageVisibilityState;
+    }
+
+    void setVisibilityState(VisibilityState visibilityState);
 
     void updateDOMVersion()
     {
@@ -194,6 +200,11 @@ public:
     void setInParsing(bool b)
     {
         m_inParsing = b;
+    }
+
+    String* urlString()
+    {
+        return m_documentURI->urlString();
     }
 
     URL* documentURI()
@@ -237,9 +248,9 @@ public:
 
     Element* elementFromPoint(float x, float y);
     ImageData* brokenImage();
-    String* charset()
+    String* characterSet()
     {
-        return m_charset;
+        return m_characterSet;
     }
     String* contentType()
     {
@@ -258,9 +269,9 @@ public:
 protected:
     // only used in html document builder
     friend class HTMLResourceClient;
-    void setCharset(String* s)
+    void setCharacterSet(String* s)
     {
-        m_charset = s;
+        m_characterSet = s;
     }
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
@@ -270,13 +281,13 @@ protected:
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
     URL* m_documentURI;
-    String* m_charset;
+    String* m_characterSet;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     ImageData* m_brokenImage;
     ScriptBindingInstance* m_scriptBindingInstance;
-    PageVisibilityState m_pageVisibilityState;
+    VisibilityState m_pageVisibilityState;
     size_t m_domVersion;
     GCVector<NetworkRequest*> m_activeNetworkRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
@@ -287,7 +298,7 @@ protected:
 #endif
 #ifdef STARFISH_EXP
 private:
-    DOMImplementation* m_domImplementation;
+    DOMImplementation* m_implementation;
 #endif
 };
 

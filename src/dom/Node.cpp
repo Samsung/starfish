@@ -486,7 +486,7 @@ NamedNodeMap* Node::attributes()
     return nullptr;
 }
 
-Node* Node::getDocTypeChild()
+Node* Node::getDoctypeChild()
 {
     for (Node* c = firstChild(); c != nullptr; c = c->nextSibling()) {
         if (c->isDocumentType()) {
@@ -557,7 +557,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                                        "doctype is following child.");
             }
         } else if (node->isDocumentType()) {
-            if (getDocTypeChild() ||
+            if (getDoctypeChild() ||
                 (child != nullptr && child->previousSibling() != nullptr &&
                  child->previousSibling()->isElement()) ||
                 (child == nullptr && firstElementChild() != nullptr)) {
@@ -774,8 +774,8 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
                                        "child.");
             }
         } else if (child->isDocumentType()) {
-            if ((getDocTypeChild() != nullptr &&
-                 getDocTypeChild() != childRef) ||
+            if ((getDoctypeChild() != nullptr &&
+                 getDoctypeChild() != childRef) ||
                 (childRef != nullptr &&
                  childRef->previousSibling() != nullptr &&
                  childRef->previousSibling()->isElement())) {

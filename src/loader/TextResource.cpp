@@ -25,10 +25,12 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
 {
     if (!m_converter) {
         if (m_preferredEncoding->equals(String::emptyString)) {
-            m_converter = new TextConverter(
-                m_networkRequest->mimeType(),
-                m_networkRequest->starFish()->window()->document()->charset(),
-                buffer, length);
+            m_converter = new TextConverter(m_networkRequest->mimeType(),
+                                            m_networkRequest->starFish()
+                                                ->window()
+                                                ->document()
+                                                ->characterSet(),
+                                            buffer, length);
         } else {
             m_converter = new TextConverter(m_preferredEncoding);
         }
