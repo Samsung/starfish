@@ -682,9 +682,8 @@ ComputedStyle* ComputedStyle::addCachedPseudoStyle(ComputedStyle* pseudoStyle)
     STARFISH_ASSERT(pseudoStyle->pseudoType() >
                     StyleResolver::PseudoElementType::PseudoElementNone);
 
-    ComputedStyle* result = pseudoStyle;
     m_cachedPseudoStyles.push_back(pseudoStyle);
-    return result;
+    return pseudoStyle;
 }
 
 void ComputedStyle::removeCachedPseudoStyle(

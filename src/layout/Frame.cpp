@@ -698,7 +698,7 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
                        StyleResolver::PseudoElementType::
                            PseudoElementFirstLetter))) {
             ComputedStyle* parentStyle =
-                f->parent()->firstLineStyle(f->parent());
+                f->parent()->firstLineStyle(f->parent(), f->parent()->style());
             if (parentStyle != f->parent()->style()) {
                 f->node()->asElement()->setPseudoElement(
                     StyleResolver::PseudoElementType::
@@ -713,12 +713,11 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
     return nullptr;
 }
 
-ComputedStyle* Frame::firstLineStyle(Frame* frame)
+ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
 {
     if (document()->styleResolver()->usesFirstLineRule()) {
         if (ComputedStyle* pseudoStyle = firstLineStyleFromCache(
-                frame->isFrameText() ? frame->parent() : frame,
-                frame->style())) {
+                frame->isFrameText() ? frame->parent() : frame, frameStyle)) {
             return pseudoStyle;
         }
     }

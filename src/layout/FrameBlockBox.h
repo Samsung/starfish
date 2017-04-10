@@ -132,11 +132,11 @@ public:
     ComputedStyle* style()
     {
         Frame* parent = layoutParent();
-        while (!parent->node()) {
+        while (parent->isLineBox()) {
             parent = parent->layoutParent();
         }
 
-        return Frame::style(parent, m_isFirstLine);
+        return Frame::style(parent, parent->style(), m_isFirstLine);
     }
 
 protected:
@@ -273,8 +273,8 @@ class InlineNonReplacedBox : public InlineBoxLayoutParentBox {
     };
 
 public:
-    InlineNonReplacedBox(InlineNonReplacedBox* inlineBox)
-        : InlineNonReplacedBox(inlineBox, inlineBox->origin())
+    InlineNonReplacedBox(InlineNonReplacedBox* inlineBox, bool isFirstLine)
+        : InlineNonReplacedBox(inlineBox, inlineBox->origin(), isFirstLine)
     {
         m_mbpStatus = inlineBox->m_mbpStatus;
 
@@ -290,8 +290,8 @@ public:
         m_orgPadding = inlineBox->m_orgPadding;
     }
 
-    InlineNonReplacedBox(FrameInline* frame)
-        : InlineNonReplacedBox(frame, frame)
+    InlineNonReplacedBox(FrameInline* frame, bool isFirstLine)
+        : InlineNonReplacedBox(frame, frame, isFirstLine)
     {
         m_mbpStatus = new (UseGC) unsigned int;
         *m_mbpStatus = 0;
@@ -331,6 +331,11 @@ public:
         }
     }
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+
+    ComputedStyle* style()
+    {
+        return Frame::style(this, Frame::style(), m_isFirstLine);
+    }
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
@@ -444,12 +449,14 @@ protected:
     FrameInline* m_origin;
     unsigned* m_mbpStatus;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+    bool m_isFirstLine;
 
-    InlineNonReplacedBox(Frame* frame, FrameInline* origin)
+    InlineNonReplacedBox(Frame* frame, FrameInline* origin, bool isFirstLine)
         : InlineBoxLayoutParentBox(frame)
         , m_isCollapsed(false)
         , m_origin(origin)
         , m_mbpStatus(nullptr)
+        , m_isFirstLine(isFirstLine)
     {
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
@@ -775,6 +782,11 @@ public:
     GCVector<LineBox*>& lineBoxes()
     {
         return m_lineBoxes;
+    }
+
+    bool isFirstLineBox() const
+    {
+        return m_lineBoxes.size() == 1;
     }
 
 protected:

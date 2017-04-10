@@ -921,7 +921,7 @@ public:
         StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
     ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
                                      ComputedStyle* parentStyle);
-    ComputedStyle* firstLineStyle(Frame* parent);
+    ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
 
     void updateComputedStyle(Node* refNode)
     {
@@ -1286,10 +1286,11 @@ public:
         return style()->whiteSpace() & WhiteSpaceValue::NoWrapWhiteSpaceValue;
     }
 
-    virtual ComputedStyle* style(Frame* parent, bool isFirstLine)
+    virtual ComputedStyle* style(Frame* parent, ComputedStyle* parentStyle,
+                                 bool isFirstLine)
     {
         if (isFirstLine) {
-            if (ComputedStyle* style = firstLineStyle(parent)) {
+            if (ComputedStyle* style = firstLineStyle(parent, parentStyle)) {
                 return style;
             }
         }

@@ -47,7 +47,9 @@ struct TextToken {
 
     ComputedStyle* style()
     {
-        return m_frameText->style(m_frameText->parent(), m_isFirstLine);
+        return m_frameText->style(m_frameText->parent(),
+                                  m_frameText->parent()->style(),
+                                  m_isFirstLine);
     }
 
     void setWidth(WordType type)
