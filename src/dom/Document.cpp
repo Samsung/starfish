@@ -426,6 +426,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+        data.m_side = SideValue::CenterSideValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         pair.setKeyKind(CSSStyleValuePair::PaddingTop);
         pair.setValueKind(CSSStyleValuePair::Length);
         pair.setLengthValue("1px");
