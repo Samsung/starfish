@@ -217,7 +217,7 @@ void Element::getClientQuads(std::vector<DOMQuad>& quads)
             ((FrameBox*)frameObject)
                 ->absoluteRect((FrameBox*)document()->rootElement()->frame());
 
-        DOMQuad* q = DOMQuad::create(
+        DOMQuad* q = new DOMQuad(
             DOMPointInit(rect.location().x(), rect.location().y()),
             DOMPointInit(rect.location().x() + rect.size().width(),
                          rect.location().y()),

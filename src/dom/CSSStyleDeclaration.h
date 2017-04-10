@@ -273,6 +273,9 @@ public:
         return String::emptyString;
     }
 
+    String* getPropertyValue(String* name);
+    void setProperty(String* name, String* value, String* priority);
+
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
     Document* m_document;

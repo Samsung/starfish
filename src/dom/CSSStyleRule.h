@@ -21,6 +21,7 @@
 
 namespace StarFish {
 
+class CSSStyleDeclaration;
 class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 

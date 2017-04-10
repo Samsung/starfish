@@ -41,20 +41,6 @@ static inline double saturateInf(double value)
     return value;
 }
 
-DOMQuad* DOMQuad::create(const DOMPointInit& p1, const DOMPointInit& p2,
-                         const DOMPointInit& p3, const DOMPointInit& p4)
-{
-    return new DOMQuad(p1, p2, p3, p4);
-}
-
-DOMQuad* DOMQuad::create(const DOMRectInit& rect)
-{
-    return new DOMQuad(DOMPointInit(rect.x, rect.y),
-                       DOMPointInit(rect.x + rect.width, rect.y),
-                       DOMPointInit(rect.x + rect.width, rect.y + rect.height),
-                       DOMPointInit(rect.x, rect.y + rect.height));
-}
-
 DOMRectReadOnly* DOMQuad::bounds() const
 {
     if (m_bounds == nullptr) {
@@ -76,11 +62,19 @@ DOMRectReadOnly* DOMQuad::bounds() const
 DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2,
                  const DOMPointInit& p3, const DOMPointInit& p4)
     : ScriptWrappable(this)
-    , m_p1(DOMPoint::create(p1))
-    , m_p2(DOMPoint::create(p2))
-    , m_p3(DOMPoint::create(p3))
-    , m_p4(DOMPoint::create(p4))
+    , m_p1(new DOMPoint(p1))
+    , m_p2(new DOMPoint(p2))
+    , m_p3(new DOMPoint(p3))
+    , m_p4(new DOMPoint(p4))
 {
     m_bounds = nullptr;
+}
+
+DOMQuad::DOMQuad(const DOMRectInit& rect)
+    : DOMQuad(DOMPointInit(rect.x, rect.y),
+              DOMPointInit(rect.x + rect.width, rect.y),
+              DOMPointInit(rect.x + rect.width, rect.y + rect.height),
+              DOMPointInit(rect.x, rect.y + rect.height))
+{
 }
 }

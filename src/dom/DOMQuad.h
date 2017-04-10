@@ -29,9 +29,9 @@ class DOMRectReadOnly;
 
 class DOMQuad : public ScriptWrappable {
 public:
-    static DOMQuad* create(const DOMPointInit&, const DOMPointInit&,
-                           const DOMPointInit&, const DOMPointInit&);
-    static DOMQuad* create(const DOMRectInit&);
+    DOMQuad(const DOMPointInit&, const DOMPointInit&, const DOMPointInit&,
+            const DOMPointInit&);
+    DOMQuad(const DOMRectInit&);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -62,8 +62,6 @@ public:
     DOMRectReadOnly* bounds() const;
 
 protected:
-    DOMQuad(const DOMPointInit&, const DOMPointInit&, const DOMPointInit&,
-            const DOMPointInit&);
     DOMPoint* m_p1;
     DOMPoint* m_p2;
     DOMPoint* m_p3;

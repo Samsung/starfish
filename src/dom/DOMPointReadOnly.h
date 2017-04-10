@@ -24,7 +24,7 @@ namespace StarFish {
 
 class DOMPointReadOnly : public ScriptWrappable {
 public:
-    static DOMPointReadOnly* create(double x, double y, double z, double w);
+    DOMPointReadOnly(double x, double y, double z, double w);
 
     double x() const
     {
@@ -57,8 +57,6 @@ public:
     // DOMPoint matrixTransform(DOMMatrixReadOnly matrix);
 
 protected:
-    DOMPointReadOnly(double x, double y, double z, double w);
-
     double m_x;
     double m_y;
     double m_z;

@@ -19,12 +19,6 @@
 
 namespace StarFish {
 
-DOMPointReadOnly* DOMPointReadOnly::create(double x, double y, double z,
-                                           double w)
-{
-    return new DOMPointReadOnly(x, y, z, w);
-}
-
 DOMPointReadOnly::DOMPointReadOnly(double x, double y, double z, double w)
     : ScriptWrappable(this)
     , m_x(x)
