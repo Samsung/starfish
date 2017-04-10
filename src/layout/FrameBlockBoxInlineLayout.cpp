@@ -55,7 +55,8 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
     GCVector<FrameBox*>& boxes =
         parentBox->asInlineBoxLayoutParentBox()->boxes();
     if (parentBox->isLineBox()) {
-        parentStyle = m_block->style(m_block, m_block->lineBoxes().size() == 1);
+        parentStyle = m_block->style(m_block, m_block->style(),
+                                     m_block->isFirstLineBox());
     } else {
         parentStyle = parentBox->style();
     }
@@ -578,8 +579,8 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
                     size_t insertPos = i;
 
                     for (size_t j = 0; j < boxesToCopy.size(); j++) {
-                        InlineNonReplacedBox* newBox =
-                            new InlineNonReplacedBox(inrb);
+                        InlineNonReplacedBox* newBox = new InlineNonReplacedBox(
+                            inrb, m_block->isFirstLineBox());
                         newBox->setX(boxesToCopy[j]->x() + inrb->x());
                         newBox->setY(inrb->y());
                         boxesToCopy[j]->setX(0);
@@ -2064,7 +2065,7 @@ void LineFormattingContext::tokenizeText(StarFish* sf, FrameText* f)
     unsigned offset = 0;
     bool isFirstLine = true;
     while (offset < len) {
-        if (m_block->lineBoxes().size() != 1 || m_isPendingBreakLine) {
+        if (!m_block->isFirstLineBox() || m_isPendingBreakLine) {
             isFirstLine = false;
         }
         if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
@@ -2266,7 +2267,8 @@ void FrameLineBreak::layoutInline(LineFormattingContext& ctx)
 
 void FrameInline::layoutInline(LineFormattingContext& ctx)
 {
-    InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(this);
+    InlineNonReplacedBox* inlineBox =
+        new InlineNonReplacedBox(this, ctx.m_block->isFirstLineBox());
     ctx.m_currentLayoutParent->insertInlineBox(inlineBox);
     if (ctx.m_currentLayoutParent->isLineBox()) {
         ctx.markInlineBoxIndex(inlineBox);
@@ -2708,12 +2710,12 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(self);
+    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(self, false);
     FrameBox* parent = self->layoutParent()->asFrameBox();
     InlineNonReplacedBox* current = newSelf;
     while (parent->isInlineNonReplacedBox()) {
         InlineNonReplacedBox* newInrb =
-            new InlineNonReplacedBox(parent->asInlineNonReplacedBox());
+            new InlineNonReplacedBox(parent->asInlineNonReplacedBox(), false);
         newInrb->insertInlineBox(current);
         current = newInrb;
         parent = parent->layoutParent()->asFrameBox();
