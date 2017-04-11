@@ -28,12 +28,9 @@ ESValue bodyDocumentSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    if (!(v.isESPointer() && v.asESPointer()->isESObject() &&
-          ((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData())
-              ->isHTMLBodyElement())) {
-        THROW_DOM_EXCEPTION(instance, DOMException::HIERARCHY_REQUEST_ERR);
-    }
+    CHECK_TYPEOF(v, HTMLElement);
+    CHECK_TYPEOF_WITH_ERRCODE(v, HTMLBodyElement, instance,
+                              DOMException::HIERARCHY_REQUEST_ERR);
 
     HTMLBodyElement* body = originalObj->body();
     HTMLHtmlElement* html = originalObj->rootElement();
