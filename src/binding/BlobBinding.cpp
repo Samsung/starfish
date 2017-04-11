@@ -26,16 +26,19 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue sizeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
-    return ESValue(originalObj->size());
+    double v = originalObj->size();
+    return ESValue(v);
 }
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
-    return ESValue(toJSString(originalObj->mimeType()));
+    String* v = originalObj->mimeType();
+    return toJSString(v);
 }
 
 static ESValue sliceFunction(ESVMInstance* instance)
