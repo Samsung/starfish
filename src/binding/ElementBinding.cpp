@@ -24,90 +24,142 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+extern ESValue namespaceURIElementGetterFunction(ESVMInstance* instance);
+
+static ESValue localNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    String* v = originalObj->localName();
+    return toJSString(v);
+}
+
+static ESValue tagNameGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    String* v = originalObj->tagName();
+    return toJSString(v);
+}
+
+extern ESValue idElementGetterFunction(ESVMInstance* instance);
+
+extern ESValue idElementSetterFunction(ESVMInstance* instance);
+
+extern ESValue classNameElementGetterFunction(ESVMInstance* instance);
+
+extern ESValue classNameElementSetterFunction(ESVMInstance* instance);
+
+extern ESValue classListElementGetterFunction(ESVMInstance* instance);
+
+static ESValue attributesGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    NamedNodeMap* v = originalObj->attributes();
+    return v->scriptValue();
+}
+
+#ifdef STARFISH_ENABLE_TEST
+static ESValue innerHTMLGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    String* v = originalObj->innerHTML();
+    return toJSString(v);
+}
+
+static ESValue innerHTMLSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    ESValue originalV = instance->currentExecutionContext()->readArgument(0);
+    String* v;
+    if (originalV.isNull()) {
+        v = String::emptyString;
+    }
+    v = toBrowserString(originalV);
+    originalObj->setInnerHTML(v);
+    return ESValue();
+}
+#endif
+
+static ESValue clientTopGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    int32_t v = originalObj->clientTop();
+    return ESValue(v);
+}
+
+static ESValue clientLeftGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    int32_t v = originalObj->clientLeft();
+    return ESValue(v);
+}
+
+static ESValue clientWidthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    int32_t v = originalObj->clientWidth();
+    return ESValue(v);
+}
+
+static ESValue clientHeightGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    int32_t v = originalObj->clientHeight();
+    return ESValue(v);
+}
+
+static ESValue childrenGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    HTMLCollection* v = originalObj->children();
+    return v->scriptValue();
+}
+
 static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->firstElementChild()
-               ? originalObj->firstElementChild()->scriptValue()
-               : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    Element* v = originalObj->firstElementChild();
+    if (v != nullptr) {
+        return v->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
 }
 
 static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->lastElementChild()
-               ? originalObj->lastElementChild()->scriptValue()
-               : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    Element* v = originalObj->lastElementChild();
+    if (v != nullptr) {
+        return v->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
 }
 
-ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
+static ESValue childElementCountGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->nextElementSibling()
-               ? originalObj->nextElementSibling()->scriptValue()
-               : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    uint32_t v = originalObj->childElementCount();
+    return ESValue(v);
 }
 
 ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->previousElementSibling()
-               ? originalObj->previousElementSibling()->scriptValue()
-               : ESValue(ESValue::ESNull);
-}
-
-static ESValue childElementCountGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return ESValue(originalObj->childElementCount());
-}
-
-static ESValue clientLeftGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isElement()) {
-        return ESValue(originalObj->asElement()->clientLeft());
+    Node* v = originalObj->previousElementSibling();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
-    THROW_ILLEGAL_INVOCATION();
+    return ESValue(ESValue::ESNull);
 }
 
-static ESValue clientTopGetterFunction(ESVMInstance* instance)
+ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isElement()) {
-        return ESValue(originalObj->asElement()->clientTop());
+    Node* v = originalObj->nextElementSibling();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue clientWidthGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isElement()) {
-        return ESValue(originalObj->asElement()->clientWidth());
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue clientHeightGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isElement()) {
-        return ESValue(originalObj->asElement()->clientHeight());
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue offsetParentGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isElement()) {
-        return originalObj->asElement()->offsetParent()
-                   ? originalObj->asElement()->offsetParent()->scriptValue()
-                   : ESValue(ESValue::ESNull);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    return ESValue(ESValue::ESNull);
 }
 
 static ESValue getClientRectsGetterFunction(ESVMInstance* instance)
@@ -132,148 +184,6 @@ static ESValue getBoundingClientRectGetterFunction(ESVMInstance* instance)
     DOMRect* rect = elem->getBoundingClientRect();
 
     return rect->scriptValue();
-}
-
-static ESValue localNameGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        return toJSString(nd->asElement()->localName());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue tagNameGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        return toJSString(nd->asElement()->tagName());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue namespaceURIGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        if (nd->asElement()->name().namespaceURIAtomic() ==
-            AtomicString::emptyAtomicString()) {
-            return ESValue(ESValue::ESNull);
-        }
-        return toJSString(nd->asElement()->name().namespaceURI());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue idGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_id));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue idSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_id,
-            toBrowserString(v));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue classNameGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_class));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue classNameSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_class,
-            toBrowserString(v));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue childrenGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    HTMLCollection* nd = originalObj->children();
-    return nd->scriptValue();
-}
-
-static ESValue classListGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    DOMTokenList* nd = originalObj->classList();
-    if (nd == nullptr) {
-        return ESValue(ESValue::ESUndefined);
-    }
-    return nd->scriptValue();
-}
-
-static ESValue innerHTMLGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        return toJSString(nd->asElement()->innerHTML());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue innerHTMLSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setInnerHTML(toBrowserString(v));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue attributesGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    NamedNodeMap* nd = originalObj->attributes();
-    if (nd == nullptr) {
-        return ESValue(ESValue::ESUndefined);
-    }
-    return nd->scriptValue();
 }
 
 ESValue removeFunction(ESVMInstance* instance)
@@ -675,10 +585,6 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
         ElementFunction->protoType().asESPointer()->asESObject(),
         ESString::create("clientHeight"), clientHeightGetterFunction, nullptr);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("offsetParent"), offsetParentGetterFunction, nullptr);
-
     ElementFunction->protoType()
         .asESPointer()
         ->asESObject()
@@ -707,16 +613,18 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("namespaceURI"), namespaceURIGetterFunction, nullptr);
+        ESString::create("namespaceURI"), namespaceURIElementGetterFunction,
+        nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("id"), idGetterFunction, idSetterFunction);
+        ESString::create("id"), idElementGetterFunction,
+        idElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("className"), classNameGetterFunction,
-        classNameSetterFunction);
+        ESString::create("className"), classNameElementGetterFunction,
+        classNameElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
@@ -724,7 +632,7 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("classList"), classListGetterFunction, nullptr);
+        ESString::create("classList"), classListElementGetterFunction, nullptr);
 
 #ifdef STARFISH_ENABLE_TEST
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

@@ -123,4 +123,3 @@ ESValue blobConstructor(ESVMInstance* instance)
     return newBlob->scriptValue();
 }
 }
-
