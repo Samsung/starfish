@@ -23,54 +23,28 @@
 namespace StarFish {
 
 using namespace escargot;
-
+// Implement for attributes
 static ESValue dataGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isCharacterData()) {
-        return toJSString(nd->asCharacterData()->data());
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
+    String* v = originalObj->data();
+    return toJSString(v);
 }
 
 static ESValue dataSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    Node* nd = originalObj;
-    if (nd->isCharacterData()) {
-        if (v.isNull()) {
-            nd->asCharacterData()->setData(
-                toBrowserString(ESString::create("")));
-            return ESValue();
-        } else if (v.isUndefined()) {
-            nd->asCharacterData()->setData(
-                toBrowserString(ESString::create("undefined")));
-            return ESValue();
-        }
-        nd->asCharacterData()->setData(toBrowserString(v));
-        return ESValue();
+    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
+    ESValue originalV = instance->currentExecutionContext()->readArgument(0);
+    String* v;
+    if (originalV.isNull()) {
+        v = String::emptyString;
     }
-    THROW_ILLEGAL_INVOCATION();
+    v = toBrowserString(originalV);
+    originalObj->setData(v);
     return ESValue();
 }
 
-static ESValue lengthGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isCharacterData()) {
-        if (nd->asCharacterData()->data()->isASCIIString()) {
-            return ESValue(nd->asCharacterData()->length());
-        } else {
-            // TODO: measure length without converting
-            return ESValue(
-                toJSString(nd->asCharacterData()->data()).toString()->length());
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+extern ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance);
 
 extern ESValue nextElementSiblingGetterFunction(ESVMInstance* instance);
 extern ESValue previousElementSiblingGetterFunction(ESVMInstance* instance);
@@ -90,7 +64,7 @@ ESFunctionObject* bindingCharacterData(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CharacterDataFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        ESString::create("length"), lengthCharacterDataGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CharacterDataFunction->protoType().asESPointer()->asESObject(),
