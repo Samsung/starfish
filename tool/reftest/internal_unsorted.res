@@ -189,8 +189,11 @@
 442:test/internal-test/css/table/table_fixed_16.html
 482:test/internal-test/css/table/table_fixed_17.html
 442:test/internal-test/css/table/table_fixed_18.html
+472:test/internal-test/css/table/table_fixed_19.html
 548:test/internal-test/css/table/table_auto_01.html
 639:test/internal-test/css/table/table_auto_02.html
+656:test/internal-test/css/table/table_auto_03.html
+579:test/internal-test/css/table/table_auto_04.html
 592:test/internal-test/css/table/r_first-letter-selector-007.html
 612:test/internal-test/css/table/r_css3-modsel-73.html
 425:test/internal-test/css/table/table_layer_01.html
