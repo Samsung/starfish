@@ -580,6 +580,7 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
 
 Frame* Frame::enclosingFirstLineStyle()
 {
+    STARFISH_ASSERT(isFrameBlockBox());
     Frame* firstLineFrame = this;
     bool hasPseudo = false;
 
@@ -603,7 +604,15 @@ Frame* Frame::enclosingFirstLineStyle()
 
         STARFISH_ASSERT(parentFrame->isFrameBlockBox());
 
-        if (parentFrame->firstChild() != firstLineFrame) {
+        Frame* child = parentFrame->firstChild();
+        if (child->isAnonymous() && child->firstChild()->isFrameText()) {
+            String* text = child->firstChild()->asFrameText()->text();
+            if (text->containsOnlyWhitespace()) {
+                child = child->next();
+            }
+        }
+
+        if (child != firstLineFrame) {
             break;
         }
 
