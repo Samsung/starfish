@@ -112,4 +112,10 @@ LayoutRect HTMLElement::offsetRect()
     }
     return LayoutRect(0, 0, 0, 0);
 }
+
+Element* HTMLElement::offsetParent()
+{
+    Frame* frameObject = frame();
+    return frameObject ? frameObject->offsetParent() : nullptr;
+}
 }

@@ -736,7 +736,8 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("body"), bodyGetterFunction, bodyDocumentSetterFunction);
+        ESString::create("body"), bodyGetterFunction,
+        bodyDocumentSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
@@ -928,7 +929,8 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("defaultView"), defaultViewDocumentGetterFunction, nullptr);
+        ESString::create("defaultView"), defaultViewDocumentGetterFunction,
+        nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),

@@ -188,9 +188,6 @@ public:
     uint32_t clientWidth();
     uint32_t clientHeight();
 
-    // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
-    Element* offsetParent();
-
     // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
     DOMRectList* getClientRects();
     DOMRect* getBoundingClientRect();
