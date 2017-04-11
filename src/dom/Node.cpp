@@ -990,6 +990,11 @@ void Node::parserTakeAllChildrenFrom(Node* oldParent)
     }
 }
 
+HTMLCollection* Node::getElementsByTagName(String* name)
+{
+    return getElementsByTagName(document()->createAttributeName(name));
+}
+
 HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
 {
     RareNodeMembers* rareData = ensureRareMembers();

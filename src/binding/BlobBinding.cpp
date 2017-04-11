@@ -20,13 +20,12 @@
 #include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "BlobCustomBinding.h"
-
 namespace StarFish {
 
 using namespace escargot;
 
-// Implement for attributes
+extern ESValue blobConstructor(ESVMInstance* instance);
+
 static ESValue sizeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
@@ -69,7 +68,7 @@ ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
 {
     /* Blob */
     auto fnBlob = ESFunctionObject::create(
-        NULL, blobCustomFunction, ESString::create("Blob"), 0, true, true);
+        NULL, blobConstructor, ESString::create("Blob"), 0, true, true);
     fnBlob->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

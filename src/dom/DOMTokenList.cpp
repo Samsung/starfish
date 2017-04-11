@@ -247,6 +247,16 @@ void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
     delete[] matchFlags;
 }
 
+bool DOMTokenList::toggle(String* token)
+{
+    return toggle(token, false, false);
+}
+
+bool DOMTokenList::toggle(String* token, bool isForced)
+{
+    return toggle(token, true, isForced);
+}
+
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
     validateToken(token);

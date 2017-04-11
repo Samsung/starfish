@@ -57,6 +57,9 @@ public:
                            String* token);
     void remove(String* token);
     void remove(GCVector<String*>* tokens);
+
+    bool toggle(String* token);
+    bool toggle(String* token, bool isForced);
     bool toggle(String* token, bool isForced, bool forceValue);
     String* toString();
     void validateToken(String* token); // Throw Exceptions
