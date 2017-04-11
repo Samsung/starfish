@@ -24,7 +24,7 @@ namespace StarFish {
 
 using namespace escargot;
 
-ESValue bodySetterFunction(ESVMInstance* instance)
+ESValue bodyDocumentSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     ESValue v = instance->currentExecutionContext()->readArgument(0);
@@ -49,7 +49,7 @@ ESValue bodySetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-ESValue defaultViewGetterFunction(ESVMInstance* instance)
+ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     Window* window = originalObj->window();
@@ -59,7 +59,7 @@ ESValue defaultViewGetterFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESNull);
 }
 
-ESValue locationSetterFunction(ESVMInstance* instance)
+ESValue locationDocumentSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     ESValue v = instance->currentExecutionContext()->readArgument(0);

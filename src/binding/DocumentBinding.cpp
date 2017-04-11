@@ -23,180 +23,126 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue headGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Document* document = nd->asDocument();
-        HTMLHeadElement* head = document->head();
-        if (head) {
-            return head->scriptValue();
-        }
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue bodyGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Document* document = nd->asDocument();
-        HTMLBodyElement* body = document->body();
-        if (body) {
-            return body->scriptValue();
-        }
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue bodySetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (!v.isUndefinedOrNull()) {
-        Node* nd = originalObj;
-        Node* node_v = (Node*)instance->currentExecutionContext()
-                           ->readArgument(0)
-                           .asESPointer()
-                           ->asESObject()
-                           ->extraPointerData();
-        if (nd->isDocument()) {
-            if (node_v->isElement() && node_v->asElement()->isHTMLElement() &&
-                node_v->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                HTMLBodyElement* body = nd->asDocument()->body();
-                HTMLHtmlElement* html_root = nd->asDocument()->rootElement();
-                if (body) {
-                    html_root->removeChild(body);
-                }
-                html_root->appendChild(node_v);
-            } else {
-                THROW_DOM_EXCEPTION(instance,
-                                    DOMException::HIERARCHY_REQUEST_ERR);
-            }
-            return ESValue();
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
-
-static ESValue documentElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Document* document = nd->asDocument();
-        Element* docElem = document->documentElement();
-        if (docElem) {
-            return docElem->scriptValue();
-        }
-    }
-    return ESValue(ESValue::ESNull);
-}
-
+// Implement for attributes
 #ifdef STARFISH_EXP
 static ESValue implementationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Document* document = nd->asDocument();
-        DOMImplementation* impl = document->implementation();
-        if (impl) {
-            return impl->scriptValue();
-        }
-    }
-    return ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    DOMImplementation* v = originalObj->implementation();
+    return v->scriptValue();
 }
 #endif
 
-static ESValue characterSetGetterFunction(ESVMInstance* instance)
+static ESValue URLGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->characterSet());
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue charsetGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->characterSet());
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue contentTypeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->contentType());
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
-
-static ESValue compatModeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return toJSString(nd->asDocument()->compatMode());
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->urlString();
+    return toJSString(v);
 }
 
 static ESValue documentURIGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->asDocument()->documentURI()
-                   ? toJSString(nd->asDocument()->documentURI()->urlString())
-                   : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->urlString();
+    return toJSString(v);
+}
+
+static ESValue compatModeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->compatMode();
+    return toJSString(v);
+}
+
+static ESValue characterSetGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->characterSet();
+    return toJSString(v);
+}
+
+static ESValue charsetGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->characterSet();
+    return toJSString(v);
+}
+
+static ESValue contentTypeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    String* v = originalObj->contentType();
+    return toJSString(v);
+}
+
+static ESValue doctypeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    DocumentType* v = originalObj->doctype();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
-    THROW_ILLEGAL_INVOCATION();
+    return ESValue(ESValue::ESNull);
 }
 
-static ESValue urlGetterFunction(ESVMInstance* instance)
+static ESValue documentElementGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->asDocument()->documentURI()
-                   ? toJSString(nd->asDocument()->documentURI()->urlString())
-                   : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    Element* v = originalObj->documentElement();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
-    THROW_ILLEGAL_INVOCATION();
+    return ESValue(ESValue::ESNull);
 }
 
-static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
+static ESValue locationGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->firstElementChild()
-               ? originalObj->firstElementChild()->scriptValue()
-               : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    Location* v = originalObj->location();
+    if (v != nullptr) {
+        return v->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
 }
 
-static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
+extern ESValue locationDocumentSetterFunction(ESVMInstance* instance);
+
+static ESValue bodyGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return originalObj->lastElementChild()
-               ? originalObj->lastElementChild()->scriptValue()
-               : ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    HTMLElement* v = originalObj->body();
+    if (v != nullptr) {
+        return v->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
 }
 
-static ESValue childElementCountGetterFunction(ESVMInstance* instance)
+extern ESValue bodyDocumentSetterFunction(ESVMInstance* instance);
+
+static ESValue headGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    return ESValue(originalObj->childElementCount());
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    HTMLHeadElement* v = originalObj->head();
+    if (v != nullptr) {
+        return v->scriptValue();
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+extern ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance);
+
+static ESValue hiddenGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    bool v = originalObj->hidden();
+    return ESValue(v);
+}
+
+static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    VisibilityState v = originalObj->visibilityState();
+    return toJSString(v);
 }
 
 static ESValue getElementByIdFunction(ESVMInstance* instance)
@@ -330,19 +276,6 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
         }
     } else {
         THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue doctypeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        DocumentType* docType = nd->asDocument()->doctype();
-        if (docType != nullptr) {
-            return docType->scriptValue();
-        }
     }
     return ESValue(ESValue::ESNull);
 }
@@ -619,32 +552,27 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
 
 static ESValue childrenGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isDocument()) {
-        return originalObj->children()->scriptValue();
-    }
-    THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    return originalObj->children()->scriptValue();
 }
 
-static ESValue hiddenGetterFunction(ESVMInstance* instance)
+static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isDocument()) {
-        bool hidden = originalObj->asDocument()->hidden();
-        return ESValue(hidden);
-    }
-    THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    return originalObj->firstElementChild()->scriptValue();
 }
 
-static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
+static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    if (originalObj->isDocument()) {
-        VisibilityState visibilityState =
-            originalObj->asDocument()->visibilityState();
-        return toJSString(visibilityState);
-    }
-    THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    return originalObj->lastElementChild()->scriptValue();
+}
+
+static ESValue childElementCountGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    uint32_t v = originalObj->childElementCount();
+    return ESValue(v);
 }
 
 static ESValue elementFromPointFunction(ESVMInstance* instance)
@@ -795,43 +723,6 @@ static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-static ESValue defaultViewGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Document* document = nd->asDocument();
-        Window* window = document->window();
-        return window->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue locationGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        Location* location = nd->asDocument()->location();
-        return location->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue locationSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asDocument()->location()->setHref(
-            String::fromUTF8(v.toString()->utf8Data()));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
 ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
@@ -845,7 +736,7 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("body"), bodyGetterFunction, bodySetterFunction);
+        ESString::create("body"), bodyGetterFunction, bodyDocumentSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
@@ -881,7 +772,7 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("URL"), urlGetterFunction, nullptr);
+        ESString::create("URL"), URLGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
@@ -1037,12 +928,12 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("defaultView"), defaultViewGetterFunction, nullptr);
+        ESString::create("defaultView"), defaultViewDocumentGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
         ESString::create("location"), locationGetterFunction,
-        locationSetterFunction);
+        locationDocumentSetterFunction);
 
     return DocumentFunction;
 }
