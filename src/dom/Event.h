@@ -294,9 +294,9 @@ public:
         return true;
     }
 
-    int relatedTarget()
+    EventTarget* relatedTarget()
     {
-        return 0;
+        STARFISH_ASSERT_NOT_REACHED();
     }
 };
 

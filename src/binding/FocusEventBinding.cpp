@@ -24,13 +24,15 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue relatedTargetGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    if (originalObj->isFocusEvent()) {
-        return ESValue(originalObj->asFocusEvent()->relatedTarget());
+    GENERATE_THIS_AND_CHECK_TYPE(FocusEvent);
+    EventTarget* v = originalObj->relatedTarget();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
-    THROW_ILLEGAL_INVOCATION();
+    return ESValue(ESValue::ESNull);
 }
 
 ESFunctionObject* bindingFocusEvent(
