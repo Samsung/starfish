@@ -76,19 +76,20 @@ static ESValue eventFunction(ESVMInstance* instance)
     }
 }
 
+// Implement for attributes
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    String* type = const_cast<String*>(originalObj->eventType());
-    return toJSString(type);
+    String* v = originalObj->type();
+    return toJSString(v);
 }
 
 static ESValue targetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    EventTarget* target = originalObj->target();
-    if (target) {
-        return target->scriptValue();
+    EventTarget* v = originalObj->target();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
     return ESValue(ESValue::ESNull);
 }
@@ -96,9 +97,9 @@ static ESValue targetGetterFunction(ESVMInstance* instance)
 static ESValue currentTargetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    EventTarget* currentTarget = originalObj->currentTarget();
-    if (currentTarget) {
-        return currentTarget->scriptValue();
+    EventTarget* v = originalObj->currentTarget();
+    if (v != nullptr) {
+        return v->scriptValue();
     }
     return ESValue(ESValue::ESNull);
 }
@@ -106,8 +107,36 @@ static ESValue currentTargetGetterFunction(ESVMInstance* instance)
 static ESValue eventPhaseGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    unsigned short eventPhase = originalObj->eventPhase();
-    return ESValue(eventPhase);
+    uint32_t v = originalObj->eventPhase();
+    return ESValue(v);
+}
+
+static ESValue bubblesGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    bool v = originalObj->bubbles();
+    return ESValue(v);
+}
+
+static ESValue cancelableGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    bool v = originalObj->cancelable();
+    return ESValue(v);
+}
+
+static ESValue defaultPreventedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    bool v = originalObj->defaultPrevented();
+    return ESValue(v);
+}
+
+static ESValue timeStampGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    DOMTimeStamp v = originalObj->timeStamp();
+    return ESValue(v);
 }
 
 static ESValue stopPropagationFunction(ESVMInstance* instance)
@@ -136,20 +165,6 @@ static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue bubblesGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool bubbles = originalObj->bubbles();
-    return ESValue(bubbles);
-}
-
-static ESValue cancelableGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool cancelable = originalObj->cancelable();
-    return ESValue(cancelable);
-}
-
 static ESValue preventDefaultFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -161,20 +176,6 @@ static ESValue preventDefaultFunction(ESVMInstance* instance)
             ->preventDefault();
     }
     return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue defaultPreventedGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool defaultPrevented = originalObj->defaultPrevented();
-    return ESValue(defaultPrevented);
-}
-
-static ESValue timestampGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    DOMTimeStamp timeStamp = originalObj->timeStamp();
-    return ESValue(timeStamp);
 }
 
 ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
@@ -270,7 +271,7 @@ ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("timeStamp"), timestampGetterFunction, nullptr);
+        ESString::create("timeStamp"), timeStampGetterFunction, nullptr);
 
     return fnEvent;
 }

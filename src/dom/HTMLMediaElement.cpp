@@ -1330,7 +1330,7 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     STARFISH_LOG_INFO(
         "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() "
         "-> %s\n",
-        m_event->eventType()->utf8Data());
+        m_event->type()->utf8Data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEvent(m_event);
 }

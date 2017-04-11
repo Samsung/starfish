@@ -189,7 +189,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         }
         EventTarget* eventTarget = eventPath[i - 1];
         GCVector<EventListener*>* originals =
-            eventTarget->getEventListeners(event->eventType());
+            eventTarget->getEventListeners(event->type());
         if (originals) {
             // Iterate Copied Vector : listeners can be removed during iteration
             GCVector<EventListener*> copies =
@@ -217,7 +217,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 8. Invoke the event listeners of event's target attribute value with
     // event, if event's stop propagation flag is unset.
     GCVector<EventListener*>* originals =
-        origin->getEventListeners(event->eventType());
+        origin->getEventListeners(event->type());
     if (originals) {
         if (!event->stopPropagation()) {
             // Iterate Copied Vector : listeners can be removed during iteration
@@ -249,7 +249,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             }
             EventTarget* eventTarget = eventPath[i];
             GCVector<EventListener*>* originals =
-                eventTarget->getEventListeners(event->eventType());
+                eventTarget->getEventListeners(event->type());
             if (originals) {
                 // Iterate Copied Vector : listeners can be removed during
                 // iteration

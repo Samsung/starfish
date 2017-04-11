@@ -65,7 +65,7 @@ public:
         return true;
     }
 
-    String* eventType() const
+    String* type() const
     {
         return m_type;
     }
