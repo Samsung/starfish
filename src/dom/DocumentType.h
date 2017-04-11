@@ -42,6 +42,11 @@ public:
         initScriptWrappable(this);
     }
 
+    String* name() const
+    {
+        return m_name;
+    }
+
     /* 4.4 Interface Node */
 
     virtual NodeType nodeType()
@@ -49,9 +54,9 @@ public:
         return DOCUMENT_TYPE_NODE;
     }
 
-    virtual String* nodeName()
+    virtual String* nodeName() override
     {
-        return m_name;
+        return name();
     }
 
     virtual Element* parentElement()
