@@ -328,6 +328,7 @@ public:
     void parserTakeAllChildrenFrom(Node* oldParent);
 
     /* 4.5. Interface Document */
+    HTMLCollection* getElementsByTagName(String* name);
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 

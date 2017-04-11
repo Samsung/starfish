@@ -70,33 +70,7 @@ static ESValue containsFunction(ESVMInstance* instance)
     }
 }
 
-static ESValue addFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
-    try {
-        GCVector<String*> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(i);
-            ESString* argStr = argValue.toString();
-            String* aa = toBrowserString(argStr);
-            tokens.push_back(aa);
-        }
-        if (argCount > 0) {
-            ((DOMTokenList*)thisValue.asESPointer()
-                 ->asESObject()
-                 ->extraPointerData())
-                ->add(&tokens);
-        }
-        return ESValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
+extern ESValue addDOMTokenListFunction(ESVMInstance* instance);
 
 static ESValue removeFunction(ESVMInstance* instance)
 {
@@ -222,10 +196,10 @@ ESFunctionObject* bindingDOMTokenList(
     DOMTokenListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("add"), false, false, false,
-                             ESFunctionObject::create(NULL, addFunction,
-                                                      ESString::create("add"),
-                                                      1, false));
+        ->defineDataProperty(
+            ESString::create("add"), false, false, false,
+            ESFunctionObject::create(NULL, addDOMTokenListFunction,
+                                     ESString::create("add"), 1, false));
 
     DOMTokenListFunction->protoType()
         .asESPointer()

@@ -115,12 +115,19 @@ public:
     DocumentFragment* createDocumentFragment();
     virtual Element* createElement(AtomicString localName,
                                    bool shouldCheckName);
+    Element* createElement(String* name)
+    {
+        AtomicString atomicName = AtomicString::createAttrAtomicString(
+            window()->starFish(), name->utf8Data());
+        return createElement(atomicName, true);
+    }
     Text* createTextNode(String* data);
     CDataSection* createCDataSectionNode(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);
+
     Attr* createAttribute(QualifiedName localName);
     QualifiedName createAttributeName(String* name);
 

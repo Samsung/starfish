@@ -14,14 +14,17 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishBlobCustomBinding__
-#define __StarFishBlobCustomBinding__
+#include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
+
+#include "Binding.h"
+#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESValue blobCustomFunction(ESVMInstance* instance)
+ESValue blobConstructor(ESVMInstance* instance)
 {
     // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
     int argCount = instance->currentExecutionContext()->argumentCount();
@@ -121,4 +124,3 @@ ESValue blobCustomFunction(ESVMInstance* instance)
 }
 }
 
-#endif
