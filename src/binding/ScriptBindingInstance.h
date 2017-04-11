@@ -255,9 +255,8 @@ typedef ESFunctionObject* ScriptFunction;
         ESVMInstance::currentInstance()->throwError(__err->scriptValue());     \
     }
 
-#define CHECK_TYPEOF(thisValue, type)                                        \
+#define CHECK_TYPEOF(v, type)                                                \
     {                                                                        \
-        ESValue v = thisValue;                                               \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
                                kEscargotObjectCheckMagic) &&                 \
               (((ScriptWrappable*)v.asESPointer()                            \
@@ -268,9 +267,8 @@ typedef ESFunctionObject* ScriptFunction;
         }                                                                    \
     }
 
-#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, type, instance, errcode)        \
+#define CHECK_TYPEOF_WITH_ERRCODE(v, type, instance, errcode)                \
     {                                                                        \
-        ESValue v = thisValue;                                               \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
                                kEscargotObjectCheckMagic) &&                 \
               (((ScriptWrappable*)v.asESPointer()                            \

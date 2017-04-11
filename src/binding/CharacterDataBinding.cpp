@@ -38,8 +38,9 @@ static ESValue dataSetterFunction(ESVMInstance* instance)
     String* v;
     if (originalV.isNull()) {
         v = String::emptyString;
+    } else {
+        v = toBrowserString(originalV);
     }
-    v = toBrowserString(originalV);
     originalObj->setData(v);
     return ESValue();
 }
