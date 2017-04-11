@@ -366,20 +366,15 @@ public:
         }
         parser->consumeString();
         String* str = parser->parsedString();
-        size_t msPos = str->indexOf('m');
-        if (msPos) {
-            String* sub = str->substring(0, msPos);
-            *ret = CSSTime(sub, num);
+
+        if (str->equalsWithoutCase("s") ||
+            str->equalsWithoutCase(String::emptyString)) {
+            *ret = CSSTime(CSSTime::Kind::S, num);
+            return parser->isEnd();
+        } else if (str->equalsWithoutCase("ms")) {
+            *ret = CSSTime(CSSTime::Kind::MS, num);
             return parser->isEnd();
         }
-
-        size_t sPos = str->indexOf('s');
-        if (sPos) {
-            String* sub = str->substring(0, sPos);
-            *ret = CSSTime(str, num);
-            return parser->isEnd();
-        }
-
         return false;
     }
 

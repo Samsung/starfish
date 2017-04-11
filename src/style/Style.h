@@ -231,19 +231,6 @@ public:
         m_value = time;
     }
 
-    CSSTime(String* str, double time)
-    {
-        if (str->length() == 0 || str->equals("s")) {
-            m_kind = S;
-        } else if (str->equals("ms")) {
-            m_kind = MS;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        m_value = time;
-    }
-
     Kind kind()
     {
         return m_kind;
@@ -541,6 +528,18 @@ enum TransitionPropertyValue {
     TransitionPropertyZIndexValue
 };
 
+enum TransitionTimingFunctionValue {
+    TransitionTimingFunctionEaseValue,
+    TransitionTimingFunctionLinearValue,
+    TransitionTimingFunctionEaseInValue,
+    TransitionTimingFunctionEaseOutValue,
+    TransitionTimingFunctionEaseInOutValue,
+    TransitionTimingFunctionStepStartValue,
+    TransitionTimingFunctionStepEndValue,
+    TransitionTimingFunctionStepsValue,
+    TransitionTimingFunctionCubicBezierValue
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -800,6 +799,7 @@ public:
 
         // transition
         TransitionPropertyValueKind,
+        TransitionTimingFunctionValueKind,
 
         // content
         Attr
@@ -1072,6 +1072,12 @@ public:
         return m_value.m_transitionProperty;
     }
 
+    TransitionTimingFunctionValue transitionTimingFunctionValue()
+    {
+        STARFISH_ASSERT(m_valueKind == TransitionTimingFunctionValueKind);
+        return m_value.m_transitionTimingFunction;
+    }
+
     String* attrValue()
     {
         STARFISH_ASSERT(m_valueKind == Attr);
@@ -1110,6 +1116,7 @@ public:
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
         TransitionPropertyValue m_transitionProperty;
+        TransitionTimingFunctionValue m_transitionTimingFunction;
         CSSTime m_time;
         ValueData(int v)
         {
@@ -1231,6 +1238,10 @@ public:
         {
             m_time = v;
         }
+        ValueData(TransitionTimingFunctionValue v)
+        {
+            m_transitionTimingFunction = v;
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -1324,7 +1335,8 @@ public:
     bool updateValueUnitFontWeight(String* token);
     bool updateValueUnitLineHeight(String* token);
     bool updateValueUnitTransitionProperty(String* value);
-    bool updateValueUnitTransitionDuration(String* value);
+    bool updateValueUnitTransitionTimingFunction(String* value);
+    bool updateValueUnitTransitionTime(String* value);
 
 protected:
     KeyKind m_keyKind;

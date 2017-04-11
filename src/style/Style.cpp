@@ -1948,12 +1948,17 @@ static void removeTransitionCSSValuePairs(CSSStyleDeclaration* target)
 
 static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
                                        CSSStyleValuePair property,
-                                       CSSStyleValuePair duration)
+                                       CSSStyleValuePair duration,
+                                       CSSStyleValuePair timingFunction,
+                                       CSSStyleValuePair delay)
 {
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty,
                             property);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration,
                             duration);
+    target->addCSSValuePair(
+        CSSStyleValuePair::KeyKind::TransitionTimingFunction, timingFunction);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay, delay);
 }
 
 bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
@@ -2100,21 +2105,52 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitTransitionDuration(String* value)
+bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(String* value)
 {
-    if (value->length() < 1) {
-        return false;
+    m_valueKind =
+        CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind;
+    if (STRING_VALUE_IS_STRING("ease")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
+    } else if (STRING_VALUE_IS_STRING("linear")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue;
+    } else if (STRING_VALUE_IS_STRING("ease-in")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue;
+    } else if (STRING_VALUE_IS_STRING("ease-out")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue;
+    } else if (STRING_VALUE_IS_STRING("ease-in-out")) {
+        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
+            TransitionTimingFunctionEaseInOutValue;
+    } else if (STRING_VALUE_IS_STRING("step-start")) {
+        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
+            TransitionTimingFunctionStepStartValue;
+    } else if (STRING_VALUE_IS_STRING("step-end")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::Time;
-        CSSPropertyParser::parseTime(value->utf8Data(), false,
-                                     &(m_value.m_time));
+        return false;
     }
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitTransitionTime(String* value)
+{
+    if (value->length() < 1) {
+        return false;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::Time;
+    return CSSPropertyParser::parseTime(value->utf8Data(), false,
+                                        &(m_value.m_time));
+}
+
 static bool parseTransitionShorthand(GCVector<String*>* tokens,
                                      CSSStyleValuePair* property,
-                                     CSSStyleValuePair* duration)
+                                     CSSStyleValuePair* duration,
+                                     CSSStyleValuePair* timingFunction,
+                                     CSSStyleValuePair* delay)
 {
     // TODO other shorthands
     size_t len = tokens->size();
@@ -2124,19 +2160,25 @@ static bool parseTransitionShorthand(GCVector<String*>* tokens,
 
     property->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     duration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
-    bool hasProperty = false, hasDuration = false;
+    bool isFirstTimeValue = true;
     CSSStyleValuePair temp;
 
     for (size_t i = 0; i < len; i++) {
         String* tok = (*tokens)[i];
-        if (!hasProperty && temp.updateValueUnitTransitionProperty(tok)) {
+        if (temp.updateValueUnitTransitionProperty(tok)) {
             *property = temp;
-            hasProperty = true;
-        } else if (!hasDuration &&
-                   temp.updateValueUnitTransitionDuration(tok)) {
+        } else if (isFirstTimeValue &&
+                   temp.updateValueUnitTransitionTime(tok)) {
             *duration = temp;
-            hasDuration = true;
+            isFirstTimeValue = false;
+        } else if (temp.updateValueUnitTransitionTimingFunction(tok)) {
+            *timingFunction = temp;
+        } else if (!isFirstTimeValue &&
+                   temp.updateValueUnitTransitionTime(tok)) {
+            *delay = temp;
         } else {
             return false;
         }
@@ -2155,14 +2197,18 @@ void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
     tokenizeCSSValue(&tokens, value);
 
     // TODO comma separation
-    CSSStyleValuePair v, property, duration;
+    CSSStyleValuePair v, property, duration, timingFunction, delay;
     if (v.updateValueCommon(&tokens)) {
         v.setFlagImportant(isImportant);
-        addTransitionCSSValuePairs(this, v, v);
-    } else if (parseTransitionShorthand(&tokens, &property, &duration)) {
+        addTransitionCSSValuePairs(this, v, v, v, v);
+    } else if (parseTransitionShorthand(&tokens, &property, &duration,
+                                        &timingFunction, &delay)) {
         property.setFlagImportant(isImportant);
         duration.setFlagImportant(isImportant);
-        addTransitionCSSValuePairs(this, property, duration);
+        timingFunction.setFlagImportant(isImportant);
+        delay.setFlagImportant(isImportant);
+        addTransitionCSSValuePairs(this, property, duration, timingFunction,
+                                   delay);
     }
 }
 
