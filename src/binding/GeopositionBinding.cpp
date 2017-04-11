@@ -24,16 +24,19 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue coordsGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
-    return ESValue(originalObj->coords()->scriptObject());
+    Coordinates* v = originalObj->coords();
+    return v->scriptValue();
 }
 
 static ESValue timestampGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
-    return ESValue(originalObj->timestamp());
+    DOMTimeStamp v = originalObj->timestamp();
+    return ESValue(v);
 }
 
 ESFunctionObject* bindingGeoposition(
