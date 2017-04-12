@@ -95,7 +95,7 @@ int History::length()
     return history().size();
 }
 
-String* History::state()
+ScriptValue History::state()
 {
     return history()[offset()]->state();
 }
@@ -105,7 +105,7 @@ bool History::isPushState()
     return history()[offset()]->isPushState();
 }
 
-void History::pushState(String* state, String* title, String* url)
+void History::pushState(ScriptValue state, String* title, String* url)
 {
     URL* newURL =
         URL::createURL(starFish()->window()->document()->urlString(), url);
@@ -113,7 +113,7 @@ void History::pushState(String* state, String* title, String* url)
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
-void History::replaceState(String* state, String* title, String* url)
+void History::replaceState(ScriptValue state, String* title, String* url)
 {
     URL* newURL =
         URL::createURL(starFish()->window()->document()->urlString(), url);
@@ -121,7 +121,7 @@ void History::replaceState(String* state, String* title, String* url)
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
-void History::setHistory(String* state, String* title, URL* url,
+void History::setHistory(ScriptValue state, String* title, URL* url,
                          bool isPushState)
 {
     if (starFish()->window()->document() &&

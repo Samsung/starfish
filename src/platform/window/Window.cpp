@@ -574,7 +574,8 @@ void Window::setHistory(URL* url)
     if (!m_history) {
         m_history = new History(m_starFish);
     }
-    m_history->setHistory(String::emptyString, String::emptyString, url);
+    m_history->setHistory(ScriptValue(ScriptValue::ESNull), String::emptyString,
+                          url);
 }
 
 void Window::navigateAsync(URL* url)

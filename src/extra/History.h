@@ -48,16 +48,16 @@ public:
     }
 
     int length();
-    String* state();
+    ScriptValue state();
 
     void back();
     void forward();
     void go(int delta);
 
-    void pushState(String* state, String* title, String* url);
-    void replaceState(String* state, String* title, String* url);
+    void pushState(ScriptValue state, String* title, String* url);
+    void replaceState(ScriptValue state, String* title, String* url);
 
-    void setHistory(String* state, String* title, URL* url,
+    void setHistory(ScriptValue state, String* title, URL* url,
                     bool isPushState = false);
 
     /*
