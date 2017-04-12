@@ -188,12 +188,8 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
 {
     // 0. We traverse the cells first to determine min/max cell size
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRowBox()) {
-            c->asFrameTableRowBox()->calCellWidth(ctx);
-        } else {
-            // Only FrameTableRow should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableRowBox());
+        c->asFrameTableRowBox()->calCellWidth(ctx);
     }
 
     // 1. get max logical column size
@@ -301,14 +297,10 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
     LayoutUnit xSoFar = borderSpacing;
     LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRowBox()) {
-            c->asFrameTableRowBox()->layoutWidth(ctx);
-            c->asFrameBox()->setX(xSoFar);
-            maxWidth = std::max(maxWidth, c->asFrameBox()->width());
-        } else {
-            // Only FrameTableRow should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableRowBox());
+        c->asFrameTableRowBox()->layoutWidth(ctx);
+        c->asFrameBox()->setX(xSoFar);
+        maxWidth = std::max(maxWidth, c->asFrameBox()->width());
     }
 
     // The width of all rows should be the same, so ideally, the maxWidth
@@ -327,15 +319,11 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     }
 
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRowBox()) {
-            c->asFrameBox()->setY(ySoFar);
-            c->asFrameTableRowBox()->layoutHeight(ctx);
-            ySoFar += c->asFrameBox()->height();
-            ySoFar += borderSpacing;
-        } else {
-            // Only FrameTableRow should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableRowBox());
+        c->asFrameBox()->setY(ySoFar);
+        c->asFrameTableRowBox()->layoutHeight(ctx);
+        ySoFar += c->asFrameBox()->height();
+        ySoFar += borderSpacing;
     }
 
     setHeight(ySoFar);
@@ -345,13 +333,9 @@ void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)
 {
     LayoutUnit extraHeight = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRowBox()) {
-            c->asFrameTableRowBox()->increaseCellHeightBy(rowHeightOffset);
-            extraHeight += rowHeightOffset;
-        } else {
-            // Only FrameTableRow should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableRowBox());
+        c->asFrameTableRowBox()->increaseCellHeightBy(rowHeightOffset);
+        extraHeight += rowHeightOffset;
     }
     setHeight(height() + extraHeight);
 }
@@ -359,12 +343,8 @@ void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)
 void FrameTableSectionBox::applyVerticalAlign()
 {
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRowBox()) {
-            c->asFrameTableRowBox()->applyVerticalAlign();
-        } else {
-            // Only FrameTableRow should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableRowBox());
+        c->asFrameTableRowBox()->applyVerticalAlign();
     }
 }
 
