@@ -28,11 +28,11 @@ static ESValue goFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
 
-    if (instance->currentExecutionContext()->argumentCount() > 0) {
-        originalObj->go(
-            instance->currentExecutionContext()->readArgument(0).asInt32());
-    } else {
+    ESValue v = instance->currentExecutionContext()->readArgument(0);
+    if (v.isUndefinedOrNull()) {
         originalObj->go(0);
+    } else {
+        originalObj->go(v.toInt32());
     }
 
     return ESValue();
@@ -56,28 +56,31 @@ static ESValue pushStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
 
-    if (instance->currentExecutionContext()->argumentCount() >= 2) {
-        // TODO: State value must be stored to form of
-        // StructuredClone
-        // Therefore, implement StructuredClone() to convert
-        // state value
-        String* state =
-            jsonStringify(instance->currentExecutionContext()->readArgument(0));
-        String* title = String::fromUTF8(instance->currentExecutionContext()
-                                             ->readArgument(1)
-                                             .toString()
-                                             ->utf8Data());
-        String* url = String::fromUTF8(instance->currentExecutionContext()
-                                           ->readArgument(2)
-                                           .toString()
-                                           ->utf8Data());
-        originalObj->pushState(state, title, url);
-    } else {
-        auto msg = ESString::create(
+    if (instance->currentExecutionContext()->argumentCount() < 2) {
+        ESString* msg = ESString::create(
             "Failed to execute 'pushState' on 'History': 2 "
             "arguments required, but only 0 present.");
         instance->throwError(ESValue(TypeError::create(msg)));
     }
+
+    // TODO: State value must be stored to form of StructuredClone
+    // Therefore, implement StructuredClone() to convert state value
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+
+    ScriptValue state = arg0;
+    String* title = String::fromUTF8(arg1.toString()->utf8Data());
+    String* url;
+
+    if (arg2.isUndefined()) {
+        url = String::emptyString;
+    } else {
+        url = String::fromUTF8(arg1.toString()->utf8Data());
+    }
+
+    originalObj->pushState(state, title, url);
+
     return ESValue();
 }
 
@@ -85,28 +88,30 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
 
-    if (instance->currentExecutionContext()->argumentCount() >= 2) {
-        // TODO: State value must be stored to form of
-        // StructuredClone
-        // Therefore, implement StructuredClone() to convert
-        // state value
-        String* state =
-            jsonStringify(instance->currentExecutionContext()->readArgument(0));
-        String* title = String::fromUTF8(instance->currentExecutionContext()
-                                             ->readArgument(1)
-                                             .toString()
-                                             ->utf8Data());
-        String* url = String::fromUTF8(instance->currentExecutionContext()
-                                           ->readArgument(2)
-                                           .toString()
-                                           ->utf8Data());
-        originalObj->replaceState(state, title, url);
-    } else {
-        auto msg = ESString::create(
-            "Failed to execute 'pushState' on 'History': 2 "
+    if (instance->currentExecutionContext()->argumentCount() < 2) {
+        ESString* msg = ESString::create(
+            "Failed to execute 'replaceState' on 'History': 2 "
             "arguments required, but only 0 present.");
         instance->throwError(ESValue(TypeError::create(msg)));
     }
+
+    // TODO: State value must be stored to form of StructuredClone
+    // Therefore, implement StructuredClone() to convert state value
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+
+    ScriptValue state = arg0;
+    String* title = String::fromUTF8(arg1.toString()->utf8Data());
+    String* url;
+
+    if (arg2.isUndefined()) {
+        url = String::emptyString;
+    } else {
+        url = String::fromUTF8(arg1.toString()->utf8Data());
+    }
+
+    originalObj->replaceState(state, title, url);
     return ESValue();
 }
 
@@ -119,10 +124,7 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
 static ESValue stateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-    if (!originalObj->state()->equals(String::emptyString)) {
-        return parseJSON(originalObj->state());
-    }
-    return ESValue(ESValue::ESNull);
+    return originalObj->state();
 }
 
 ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)

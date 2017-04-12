@@ -17,6 +17,8 @@
 #ifndef __StarFishHistoryEntry__
 #define __StarFishHistoryEntry__
 
+#include "binding/ScriptBindingInstance.h"
+
 namespace StarFish {
 
 class URL;
@@ -24,14 +26,14 @@ class String;
 
 class HistoryEntry : public gc {
 public:
-    HistoryEntry(String* state, String* title, URL* url, bool isPushState)
+    HistoryEntry(ScriptValue state, String* title, URL* url, bool isPushState)
         : m_state(state)
         , m_title(title)
         , m_url(url)
         , m_isPushState(isPushState)
     {
     }
-    inline String* state()
+    inline ScriptValue state()
     {
         return m_state;
     }
@@ -48,7 +50,7 @@ public:
         return m_isPushState;
     }
 
-    void replaceState(String* state, String* title, URL* url)
+    void replaceState(ScriptValue state, String* title, URL* url)
     {
         m_state = state;
         m_title = title;
@@ -56,7 +58,7 @@ public:
     }
 
 private:
-    String* m_state;
+    ScriptValue m_state;
     String* m_title;
     URL* m_url;
     bool m_isPushState;
