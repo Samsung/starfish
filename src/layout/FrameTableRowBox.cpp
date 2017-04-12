@@ -153,33 +153,27 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            FrameTableCellBox* cell = c->asFrameTableCellBox();
-            cell->setX(xSoFar);
-            STARFISH_ASSERT(i <
-                            sectionBox()->tableBox()->columnWidths().size());
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        FrameTableCellBox* cell = c->asFrameTableCellBox();
+        cell->setX(xSoFar);
+        STARFISH_ASSERT(i < sectionBox()->tableBox()->columnWidths().size());
 
-            LayoutUnit cellWidth = 0;
-            if (cell->colspan() > 1) {
-                cellWidth = colWithColspanAt(i)->cellWidth;
-            } else {
-                cellWidth =
-                    sectionBox()->tableBox()->columnWidths()[i].cellWidth;
-            }
-
-            cell->setWidth(cellWidth);
-            cell->asFrameTableCellBox()->layoutWidth(ctx);
-            xSoFar += cellWidth;
-
-            if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
-                xSoFar += borderSpacing;
-            }
-
-            i += cell->colspan();
+        LayoutUnit cellWidth = 0;
+        if (cell->colspan() > 1) {
+            cellWidth = colWithColspanAt(i)->cellWidth;
         } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            cellWidth = sectionBox()->tableBox()->columnWidths()[i].cellWidth;
         }
+
+        cell->setWidth(cellWidth);
+        cell->asFrameTableCellBox()->layoutWidth(ctx);
+        xSoFar += cellWidth;
+
+        if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
+            xSoFar += borderSpacing;
+        }
+
+        i += cell->colspan();
     }
 
     setWidth(xSoFar);
@@ -191,15 +185,11 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     // 1. We make the second iteration of cells to layout cells
     //    and calculate the width of each cell
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            FrameTableCellBox* cell = c->asFrameTableCellBox();
-            cell->layoutHeight(ctx);
-            LayoutUnit cellHeight = cell->height();
-            maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
-        } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        FrameTableCellBox* cell = c->asFrameTableCellBox();
+        cell->layoutHeight(ctx);
+        LayoutUnit cellHeight = cell->height();
+        maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
     }
 
     // 2. The height of each cell is set to the max height of the cells
@@ -224,13 +214,9 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 void FrameTableRowBox::increaseCellHeightBy(LayoutUnit cellHeightOffset)
 {
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            FrameTableCellBox* cellBox = c->asFrameTableCellBox();
-            cellBox->setHeight(cellBox->height() + cellHeightOffset);
-        } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        FrameTableCellBox* cellBox = c->asFrameTableCellBox();
+        cellBox->setHeight(cellBox->height() + cellHeightOffset);
     }
     setHeight(height() + cellHeightOffset);
 }
@@ -239,12 +225,8 @@ void FrameTableRowBox::applyVerticalAlign()
 {
     m_baseline = calBaseline();
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            c->asFrameTableCellBox()->applyVerticalAlign();
-        } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        c->asFrameTableCellBox()->applyVerticalAlign();
     }
 }
 
@@ -252,13 +234,8 @@ LayoutUnit FrameTableRowBox::calBaseline()
 {
     LayoutUnit maxSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            maxSoFar =
-                std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline());
-        } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        maxSoFar = std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline());
     }
 
     return maxSoFar;
