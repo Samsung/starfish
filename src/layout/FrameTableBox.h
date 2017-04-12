@@ -234,6 +234,7 @@ private:
 
     FrameTableSectionBox* m_thead;
     FrameTableSectionBox* m_tfoot;
+    LayoutUnit m_candidateWidth;
 };
 }
 
