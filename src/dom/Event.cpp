@@ -21,14 +21,56 @@
 namespace StarFish {
 
 EventInit::EventInit()
-    : bubbles(false)
-    , cancelable(false)
+    : EventInit(false, false, false)
 {
 }
 
-EventInit::EventInit(bool b, bool c)
-    : bubbles(b)
-    , cancelable(c)
+EventInit::EventInit(bool bubbles)
+    : EventInit(bubbles, false, false)
+{
+}
+
+EventInit::EventInit(bool bubbles, bool cancelable)
+    : EventInit(bubbles, cancelable, false)
+{
+}
+
+EventInit::EventInit(bool bubbles, bool cancelable, bool composed)
+    : bubbles(bubbles)
+    , cancelable(cancelable)
+    , composed(composed)
+{
+}
+
+FocusEventInit::FocusEventInit()
+    : EventInit()
+    , relatedTarget(nullptr)
+{
+}
+FocusEventInit::FocusEventInit(Node* relatedTarget)
+    : EventInit()
+    , relatedTarget(relatedTarget)
+{
+}
+FocusEventInit::FocusEventInit(bool bubbles)
+    : EventInit(bubbles)
+    , relatedTarget(nullptr)
+{
+}
+FocusEventInit::FocusEventInit(bool bubbles, bool cancelable)
+    : EventInit(bubbles, cancelable)
+    , relatedTarget(nullptr)
+{
+}
+FocusEventInit::FocusEventInit(bool bubbles, bool cancelable, bool composed)
+    : EventInit(bubbles, cancelable, composed)
+    , relatedTarget(nullptr)
+{
+}
+FocusEventInit::FocusEventInit(bool bubbles, bool cancelable, bool composed,
+                               Node* relatedTarget)
+    : EventInit(bubbles, cancelable, composed)
+    , relatedTarget(relatedTarget)
 {
 }
 

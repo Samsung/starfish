@@ -24,65 +24,9 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue addEventListenerFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'addEventListener' on 'EventTaraget': "
-            "needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-    }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->addEventListener(eventTypeName, listener, capture);
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&%s\n", eventTypeName->utf8Data());
-#endif
-    }
-    return ESValue();
-}
+extern ESValue addEventListenerEventTargetFunction(ESVMInstance* instance);
 
-static ESValue removeEventListenerFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'removeEventListener' on "
-            "'EventTaraget': needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-    }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        // TODO: Verify valid event type. (e.g. click)
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->removeEventListener(eventTypeName, listener, capture);
-    }
-    return ESValue();
-}
+extern ESValue removeEventListenerEventTargetFunction(ESVMInstance* instance);
 
 static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
 {
@@ -131,8 +75,8 @@ ESFunctionObject* bindingEventTarget(
                                         ->objectPrototype());
 
     auto fnAddEventListener = ESFunctionObject::create(
-        NULL, addEventListenerFunction, ESString::create("addEventListener"), 0,
-        false);
+        NULL, addEventListenerEventTargetFunction,
+        ESString::create("addEventListener"), 0, false);
     fnAddEventListener->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetFunction->protoType()
         .asESPointer()
@@ -141,7 +85,7 @@ ESFunctionObject* bindingEventTarget(
                              true, fnAddEventListener);
 
     auto fnRemoveEventListener = ESFunctionObject::create(
-        NULL, removeEventListenerFunction,
+        NULL, removeEventListenerEventTargetFunction,
         ESString::create("removeEventListener"), 0, false);
     fnRemoveEventListener->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetFunction->protoType()
