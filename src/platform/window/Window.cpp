@@ -1342,13 +1342,13 @@ void Window::setFocusedNode(Node* n)
     if (t) {
         if (t->isElement() && t->asElement()->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_blur.localName();
-            e = new FocusEvent(eventType, EventInit(false, false));
+            e = new FocusEvent(eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
         if (t->isElement() && t->asElement()->isHTMLElement() &&
             !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusout.localName();
-            e = new FocusEvent(eventType, EventInit(true, false));
+            e = new FocusEvent(eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);
         }
     }
@@ -1359,13 +1359,13 @@ void Window::setFocusedNode(Node* n)
     if (t) {
         if (t->isElement() && t->asElement()->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_focus.localName();
-            e = new FocusEvent(eventType, EventInit(false, false));
+            e = new FocusEvent(eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
         if (t->isElement() && t->asElement()->isHTMLElement() &&
             !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusin.localName();
-            e = new FocusEvent(eventType, EventInit(true, false));
+            e = new FocusEvent(eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);
         }
     }

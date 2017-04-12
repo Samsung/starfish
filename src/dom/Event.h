@@ -23,18 +23,24 @@ namespace StarFish {
 
 struct EventInit {
     EventInit();
+    EventInit(bool bubbles);
     EventInit(bool bubbles, bool cancelable);
+    EventInit(bool bubbles, bool cancelable, bool composed);
 
     bool bubbles;
     bool cancelable;
+    bool composed;
 };
 
 struct FocusEventInit : EventInit {
-    FocusEventInit(bool bubbles, bool cancelable,
-                   Node* relatedTarget = nullptr);
+    FocusEventInit();
+    FocusEventInit(Node* relatedTarget);
+    FocusEventInit(bool bubbles);
+    FocusEventInit(bool bubbles, bool cancelable);
+    FocusEventInit(bool bubbles, bool cancelable, bool composed);
+    FocusEventInit(bool bubbles, bool cancelable, bool composed,
+                   Node* relatedTarget);
 
-    bool bubbles;
-    bool cancelable;
     Node* relatedTarget;
 };
 
@@ -283,8 +289,7 @@ public:
 
 class FocusEvent : public UIEvent {
 public:
-    FocusEvent(String* eventType,
-               const EventInit& init = EventInit(false, false))
+    FocusEvent(String* eventType, const FocusEventInit& init = FocusEventInit())
         : UIEvent(eventType, init)
     {
     }

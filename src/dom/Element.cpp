@@ -37,6 +37,12 @@ String* Element::tagName()
     }
 }
 
+bool Element::hasAttribute(String* name)
+{
+    QualifiedName qName = document()->createAttributeName(name);
+    return hasAttribute(qName) != SIZE_MAX;
+}
+
 size_t Element::hasAttribute(QualifiedName name)
 {
     for (size_t i = 0; i < m_attributes.size(); i++) {
@@ -47,9 +53,29 @@ size_t Element::hasAttribute(QualifiedName name)
     return SIZE_MAX;
 }
 
+Nullable<String*> Element::getAttribute(String* name)
+{
+    QualifiedName qName = document()->createAttributeName(name);
+    size_t idx = hasAttribute(qName);
+    if (idx == SIZE_MAX) {
+        return Nullable<String*>();
+    }
+    return Nullable<String*>(getAttribute(idx));
+}
+
 String* Element::getAttribute(size_t pos)
 {
     return m_attributes[pos].value();
+}
+
+void Element::setAttribute(String* name, String* value)
+{
+    if (!QualifiedName::checkNameProductionRule(name, name->length())) {
+        throw new DOMException(document()->window()->scriptBindingInstance(),
+                               DOMException::Code::INVALID_CHARACTER_ERR,
+                               nullptr);
+    }
+    setAttribute(document()->createAttributeName(name), value);
 }
 
 void Element::setAttribute(QualifiedName name, String* value)
@@ -63,6 +89,11 @@ void Element::setAttribute(QualifiedName name, String* value)
         m_attributes[idx].setValue(value);
         didAttributeChanged(name, v, value, false, false);
     }
+}
+
+void Element::removeAttribute(String* name)
+{
+    removeAttribute(document()->createAttributeName(name));
 }
 
 void Element::removeAttribute(QualifiedName name)

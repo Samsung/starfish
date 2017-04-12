@@ -140,6 +140,11 @@ public:
     void setAttribute(QualifiedName name, String* value);
     void removeAttribute(QualifiedName name);
 
+    bool hasAttribute(String* name);
+    Nullable<String*> getAttribute(String* name);
+    void setAttribute(String* name, String* value);
+    void removeAttribute(String* name);
+
     // DO NOT MODIFY ATTRIBUTE
     const Attribute& attributeData(QualifiedName name)
     {
