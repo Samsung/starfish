@@ -31,6 +31,7 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     , m_tableRect(0, 0, 0, 0)
     , m_thead(nullptr)
     , m_tfoot(nullptr)
+    , m_candidateWidth(0)
 {
 }
 
@@ -228,19 +229,17 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
     FrameTableSectionBox* firstSection = firstSectionBoxInVisualOrder();
-    if (!firstSection || !firstSection->firstChild()) {
-        // We stop layout for an empty table
-        return;
-    }
-
-    // We use nullptr to occupy spaces for non-existing cells because of
-    // previous colspans
-    FrameTableRowBox* row = firstSection->firstChild()->asFrameTableRowBox();
-    for (Frame* c = row->firstChild(); c; c = c->next()) {
-        FrameTableCellBox* cell = c->asFrameTableCellBox();
-        m_cellsInTheFirstRow.push_back(cell);
-        for (unsigned i = 1; i < cell->colspan(); i++) {
-            m_cellsInTheFirstRow.push_back(nullptr);
+    if (firstSection && firstSection->firstChild()) {
+        // We use nullptr to occupy spaces for non-existing cells because of
+        // previous colspans
+        FrameTableRowBox* row =
+            firstSection->firstChild()->asFrameTableRowBox();
+        for (Frame* c = row->firstChild(); c; c = c->next()) {
+            FrameTableCellBox* cell = c->asFrameTableCellBox();
+            m_cellsInTheFirstRow.push_back(cell);
+            for (unsigned i = 1; i < cell->colspan(); i++) {
+                m_cellsInTheFirstRow.push_back(nullptr);
+            }
         }
     }
 
@@ -338,6 +337,10 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             tableWidth = widthAttribute;
             tableWidth -= borderWidth() + paddingWidth();
         }
+    }
+
+    if (hasTableWidth) {
+        m_candidateWidth = tableWidth;
     }
 
     // 3. If a width of the table is given, we either increase or decrease the
@@ -827,11 +830,11 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // The width of the caption is limited by the max width of the
     // FrameTableSection. Hence, captions can only be placed after calculating
     // the width of the table, which has already been done by calContentWidth()
-    LayoutUnit maxWidth = 0;
+    LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
             c->asFrameTableSectionBox()->layoutWidth(ctx);
-            maxWidth = std::max(maxWidth, c->asFrameBox()->width());
+            maxWidthSoFar = std::max(maxWidthSoFar, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layout(
                 ctx, Frame::LayoutWantToResolve::ResolveWidth);
@@ -847,7 +850,11 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // The width of all table sections should be the same,
     // so getting the max width should be the same as the width of
     // any table sections.
-    setWidth(maxWidth + paddingWidth() + borderWidth());
+    LayoutUnit tableWidth = maxWidthSoFar;
+    if (m_candidateWidth > tableWidth) {
+        tableWidth = m_candidateWidth;
+    }
+    setWidth(tableWidth + paddingWidth() + borderWidth());
     computeBorderMarginPadding(width());
 }
 
@@ -917,8 +924,11 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     m_tableRect.setWidth(width());
 
     LayoutUnit specifiedHeight = 0;
+    bool hasTableHeight = false;
     if (style()->height().isFixed()) {
+        hasTableHeight = true;
         specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
+        specifiedHeight += borderHeight() + paddingHeight();
     }
 
     LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
