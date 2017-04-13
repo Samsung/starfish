@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "DOMException.h"
+#include "Document.h"
 
 namespace StarFish {
 
@@ -73,10 +74,20 @@ DOMException::DOMException(ScriptBindingInstance* instance, Code code,
     : ScriptWrappable(this)
     , m_instance(instance)
     , m_code(code)
+    , m_name(String::emptyString)
 {
     if (!message) {
         message = s_descriptions[code];
     }
     m_message = String::fromUTF8(message);
+}
+
+DOMException::DOMException(Document* document, String* message, String* name)
+    : ScriptWrappable(this)
+    , m_instance(document->scriptBindingInstance())
+    , m_code(Code::DOM_EXCEPTION)
+    , m_message(message)
+    , m_name(name)
+{
 }
 }

@@ -1062,6 +1062,14 @@ Comment* Document::createComment(String* data)
     return new Comment(this, data);
 }
 
+Attr* Document::createAttribute(String* name)
+{
+    QualifiedName qname = QualifiedName(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAttrAtomicString(window()->starFish(), "null"));
+    return createAttribute(qname);
+}
+
 Attr* Document::createAttribute(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(

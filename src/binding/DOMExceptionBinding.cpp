@@ -27,7 +27,7 @@ using namespace escargot;
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMException);
-    return ESString::create(originalObj->name());
+    return ESString::create(originalObj->charname());
 }
 
 static ESValue messageGetterFunction(ESVMInstance* instance)
