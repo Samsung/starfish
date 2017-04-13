@@ -129,6 +129,7 @@ public:
     // HTMLCollection* getElementsByClassName(String* classNames);
 
     Attr* createAttribute(QualifiedName localName);
+    Attr* createAttribute(String* name);
     QualifiedName createAttributeName(String* name);
 
 #ifdef STARFISH_EXP
