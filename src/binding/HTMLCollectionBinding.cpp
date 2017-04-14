@@ -24,11 +24,14 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    uint32_t result;
+    result = originalObj->length();
+
+    return ESValue(result);
 }
 
 static ESValue itemFunction(ESVMInstance* instance)
