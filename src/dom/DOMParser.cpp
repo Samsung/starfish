@@ -97,7 +97,7 @@ static void buildDocumentFromXML(
             parent->document(), String::fromUTF8(node->name()),
             String::fromUTF8(node->value()), String::emptyString);
     } else if (node->type() == rapidxml::node_type::node_cdata) {
-        newNode = parent->document()->createCDataSectionNode(
+        newNode = parent->document()->createCDATASectionNode(
             String::fromUTF8(node->value()));
     } else if (node->type() == rapidxml::node_type::node_data) {
         newNode =

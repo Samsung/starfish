@@ -79,7 +79,7 @@ typedef ESFunctionObject* ScriptFunction;
     F(HTMLDocument)                                 \
     F(CharacterData)                                \
     F(Text)                                         \
-    F(CDataSection)                                 \
+    F(CDATASection)                                 \
     F(Comment)                                      \
     F(HTMLElement)                                  \
     F(HTMLHtmlElement)                              \

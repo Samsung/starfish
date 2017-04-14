@@ -112,15 +112,8 @@ static ESValue onClickSetterFunction(ESVMInstance* instance)
 
 static ESValue clickFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* obj = originalObj;
-    String* eventType = obj->document()
-                            ->window()
-                            ->starFish()
-                            ->staticStrings()
-                            ->m_click.localName();
-    Event* e = new Event(eventType, EventInit(true, true));
-    obj->dispatchEvent(e);
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    originalObj->click();
     return ESValue(ESValue::ESUndefined);
 }
 
@@ -370,15 +363,8 @@ static ESValue onFocusSetterFunction(ESVMInstance* instance)
 
 static ESValue focusFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* obj = originalObj;
-    String* eventType = obj->document()
-                            ->window()
-                            ->starFish()
-                            ->staticStrings()
-                            ->m_focus.localName();
-    Event* e = new Event(eventType, EventInit(false, false));
-    obj->dispatchEvent(e);
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    originalObj->focus();
     return ESValue(ESValue::ESUndefined);
 }
 

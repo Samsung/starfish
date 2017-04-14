@@ -727,7 +727,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     , m_documentFragmentLocalName(
           AtomicString::createAtomicString(sf, "#document-fragment"))
     , m_textLocalName(AtomicString::createAtomicString(sf, "#text"))
-    , m_cDataSectionLocalName(
+    , m_cdataSectionLocalName(
           AtomicString::createAtomicString(sf, "#cdata-section"))
     , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
 {

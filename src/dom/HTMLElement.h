@@ -129,6 +129,9 @@ public:
         return (float)offsetRect().height() + .5f;
     }
 
+    void click();
+    void focus();
+
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
     Element* offsetParent();
 

@@ -118,4 +118,18 @@ Element* HTMLElement::offsetParent()
     Frame* frameObject = frame();
     return frameObject ? frameObject->offsetParent() : nullptr;
 }
+
+void HTMLElement::click()
+{
+    String* eventType =
+        document()->window()->starFish()->staticStrings()->m_click.localName();
+    dispatchEvent(new Event(eventType, EventInit(true, true)));
+}
+
+void HTMLElement::focus()
+{
+    String* eventType =
+        document()->window()->starFish()->staticStrings()->m_focus.localName();
+    dispatchEvent(new Event(eventType, EventInit(true, true)));
+}
 }

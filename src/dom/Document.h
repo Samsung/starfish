@@ -122,7 +122,7 @@ public:
         return createElement(atomicName, true);
     }
     Text* createTextNode(String* data);
-    CDataSection* createCDataSectionNode(String* data);
+    CDATASection* createCDATASectionNode(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);

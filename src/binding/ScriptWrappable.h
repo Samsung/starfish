@@ -83,7 +83,7 @@ public:
     void initScriptWrappable(HTMLDocument* ptr);
     void initScriptWrappable(CharacterData* ptr);
     void initScriptWrappable(Text* ptr);
-    void initScriptWrappable(CDataSection* ptr);
+    void initScriptWrappable(CDATASection* ptr);
     void initScriptWrappable(Comment* ptr);
 #ifdef STARFISH_EXP
     void initScriptWrappable(DOMImplementation* ptr, ScriptBindingInstance*);
