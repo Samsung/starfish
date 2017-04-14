@@ -29,6 +29,12 @@ public:
     {
     }
 
+    HTMLAudioElement(Document* document, String* src)
+        : HTMLMediaElement(document)
+    {
+        setSrc(src);
+    }
+
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);

@@ -33,6 +33,19 @@ public:
     {
     }
 
+    HTMLImageElement(Document* document, unsigned long width)
+        : HTMLImageElement(document)
+    {
+        setWidth(width);
+    }
+
+    HTMLImageElement(Document* document, unsigned long width,
+                     unsigned long height)
+        : HTMLImageElement(document, width)
+    {
+        setHeight(height);
+    }
+
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);

@@ -90,6 +90,7 @@ typedef ESFunctionObject* ScriptFunction;
     F(HTMLBodyElement)                              \
     F(HTMLDivElement)                               \
     F(HTMLImageElement)                             \
+    F(Image)                                        \
     F(HTMLBRElement)                                \
     F(HTMLObjectElement)                            \
     F(HTMLMetaElement)                              \
@@ -142,6 +143,7 @@ typedef ESFunctionObject* ScriptFunction;
     F(HTMLMediaElement)                           \
     F(HTMLVideoElement)                           \
     F(HTMLAudioElement)                           \
+    F(Audio)                                      \
     F(HTMLTrackElement)                           \
     F(HTMLSourceElement)                          \
     F(TextTrack)                                  \

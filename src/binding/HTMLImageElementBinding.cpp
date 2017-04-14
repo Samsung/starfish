@@ -24,6 +24,39 @@ namespace StarFish {
 
 using namespace escargot;
 
+static ESValue htmlimageelementConstructor(ESVMInstance* instance)
+{
+    size_t validArgCount = 2;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    uint32_t value0;
+    if (arg0.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value0 = arg0.toUint32();
+    }
+    // Handle argument arg1
+    uint32_t value1;
+    if (arg1.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value1 = arg1.toUint32();
+    }
+    HTMLImageElement* result = nullptr;
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    Document* callWith = window->document();
+    // Call native function (nargs: 0-2)
+    if (validArgCount == 0) {
+        result = new HTMLImageElement(callWith);
+    } else if (validArgCount == 1) {
+        result = new HTMLImageElement(callWith, value0);
+    } else if (validArgCount == 2) {
+        result = new HTMLImageElement(callWith, value0, value1);
+    }
+    return result->scriptValue();
+}
+
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
@@ -163,5 +196,27 @@ ESFunctionObject* bindingHTMLImageElement(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
         ESString::create("height"), heightGetterFunction, heightSetterFunction);
     return HTMLImageElementFunction;
+}
+
+ESFunctionObject* bindingImage(ScriptBindingInstance* scriptBindingInstance)
+{
+    ESString* ImageString = ESString::create("Image");
+
+    ESFunctionObject* ImageFunction = ESFunctionObject::create(
+        nullptr, htmlimageelementConstructor, ImageString, 2, true, true);
+
+    ImageFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    ImageFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    ImageFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLImageElement()->protoType());
+    ImageFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLImageElement());
+    return ImageFunction;
 }
 }

@@ -13,8 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
 
@@ -25,14 +24,79 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for constructor
+static ESValue htmlaudioelementConstructor(ESVMInstance* instance)
+{
+    size_t validArgCount = 1;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    if (arg0.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value0 = toBrowserString(arg0);
+    }
+    HTMLAudioElement* result = nullptr;
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    Document* callWith = window->document();
+    // Call native function (nargs: 0-1)
+    if (validArgCount == 0) {
+        result = new HTMLAudioElement(callWith);
+    } else if (validArgCount == 1) {
+        result = new HTMLAudioElement(callWith, value0);
+    }
+    return result->scriptValue();
+}
+
 ESFunctionObject* bindingHTMLAudioElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLAudioElement,
+    // Bind for constructor
+    ESString* HTMLAudioElementString = ESString::create("HTMLAudioElement");
+    ESFunctionObject* HTMLAudioElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLAudioElementString, 1, true, true);
+    HTMLAudioElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLAudioElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLAudioElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)
+                           ->fnHTMLMediaElement()
+                           ->protoType());
+    HTMLAudioElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLMediaElement());
-    // TODO
+    ESObject* HTMLAudioElementObj =
+        HTMLAudioElementFunction->protoType().asESPointer()->asESObject();
     return HTMLAudioElementFunction;
+}
+
+ESFunctionObject* bindingAudio(ScriptBindingInstance* scriptBindingInstance)
+{
+    ESString* AudioString = ESString::create("Audio");
+
+    ESFunctionObject* AudioFunction = ESFunctionObject::create(
+        nullptr, htmlaudioelementConstructor, AudioString, 1, true, true);
+
+    AudioFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    AudioFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    AudioFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLAudioElement()->protoType());
+    AudioFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLAudioElement());
+    return AudioFunction;
 }
 }
 #endif
