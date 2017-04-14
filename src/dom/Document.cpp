@@ -1052,9 +1052,9 @@ Text* Document::createTextNode(String* data)
     return new Text(this, data);
 }
 
-CDataSection* Document::createCDataSectionNode(String* data)
+CDATASection* Document::createCDATASectionNode(String* data)
 {
-    return new CDataSection(this, data);
+    return new CDATASection(this, data);
 }
 
 Comment* Document::createComment(String* data)

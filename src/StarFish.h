@@ -184,7 +184,7 @@ public:
     AtomicString m_documentLocalName;
     AtomicString m_documentFragmentLocalName;
     AtomicString m_textLocalName;
-    AtomicString m_cDataSectionLocalName;
+    AtomicString m_cdataSectionLocalName;
     AtomicString m_commentLocalName;
 
 // HTML Tag Names

@@ -15,21 +15,21 @@
  */
 
 #include "StarFishConfig.h"
-#include "CDataSection.h"
+#include "CDATASection.h"
 #include "Document.h"
 
 namespace StarFish {
 
-String* CDataSection::nodeName()
+String* CDATASection::nodeName()
 {
     return document()
         ->window()
         ->starFish()
         ->staticStrings()
-        ->m_cDataSectionLocalName;
+        ->m_cdataSectionLocalName;
 }
 
-String* CDataSection::localName()
+String* CDATASection::localName()
 {
     return String::emptyString;
 }

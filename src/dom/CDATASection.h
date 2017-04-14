@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishCDataSection__
-#define __StarFishCDataSection__
+#ifndef __StarFishCDATASection__
+#define __StarFishCDATASection__
 
 #include "dom/Text.h"
 
 namespace StarFish {
 
-class CDataSection : public Text {
+class CDATASection : public Text {
 public:
-    CDataSection(Document* document, String* data)
+    CDATASection(Document* document, String* data)
         : Text(document, data)
     {
     }
@@ -43,7 +43,7 @@ public:
 
     virtual Node* clone()
     {
-        return new CDataSection(document(), data());
+        return new CDATASection(document(), data());
     }
 
 protected:

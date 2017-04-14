@@ -498,18 +498,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return exportName##Function;                                         \
     }
 
-IMPL_EMPTY_BINDING(HTMLDocument, Document);
-IMPL_EMPTY_BINDING(HTMLHtmlElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLHeadElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLDivElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLMetaElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLParagraphElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLPreElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLSpanElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLBRElement, HTMLElement);
-IMPL_EMPTY_BINDING(HTMLUnknownElement, HTMLElement);
+// TODO PseudoElement may not be a binding target
 IMPL_EMPTY_BINDING(PseudoElement, Element);
-IMPL_EMPTY_BINDING(CDataSection, Text);
 #undef IMPL_EMPTY_BINDING
 
 String* ScriptBindingInstance::evaluate(String* str)

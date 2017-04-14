@@ -21,7 +21,7 @@
 // And please keep them in alphabetic order with proper ifdef guard.
 
 #include "dom/Attr.h"
-#include "dom/CDataSection.h"
+#include "dom/CDATASection.h"
 #include "dom/CharacterData.h"
 #include "dom/Comment.h"
 #include "dom/CSSStyleDeclaration.h"

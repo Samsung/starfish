@@ -1357,11 +1357,11 @@ void ScriptWrappable::initScriptWrappable(Text* ptr)
     scriptObject()->set__proto__(data->fnText()->protoType());
 }
 
-void ScriptWrappable::initScriptWrappable(CDataSection* ptr)
+void ScriptWrappable::initScriptWrappable(CDATASection* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->fnCDataSection()->protoType());
+    scriptObject()->set__proto__(data->fnCDATASection()->protoType());
 }
 
 void ScriptWrappable::initScriptWrappable(Comment* ptr)
