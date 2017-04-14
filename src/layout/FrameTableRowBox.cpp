@@ -44,6 +44,11 @@ FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(
         current->setFrame(currentFrame);
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
+
+        FrameTreeBuilder::createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementBefore,
+            ctx);
+
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             currentFrame->addChild(c, ctx, force);
         }
@@ -60,6 +65,9 @@ FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(
         ctx.mergeTextDecorationData(currentFrame->style());
         currentFrame->addChild(current, ctx, force);
     }
+
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
 
     ctx.setCurrentBlockContainer(parent);
     STARFISH_ASSERT(currentFrame);

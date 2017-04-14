@@ -48,6 +48,11 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
         current->setFrame(currentFrame);
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
+
+        FrameTreeBuilder::createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementBefore,
+            ctx);
+
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTreeBuilder::buildTree(c, ctx, force);
         }
@@ -66,6 +71,9 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
     }
 
     ctx.setCurrentBlockContainer(parent);
+
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
 
     FrameTreeBuilder::createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
