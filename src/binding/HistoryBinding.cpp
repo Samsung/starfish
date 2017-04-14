@@ -32,7 +32,7 @@ static ESValue goFunction(ESVMInstance* instance)
     if (v.isUndefinedOrNull()) {
         originalObj->go(0);
     } else {
-        originalObj->go(v.toInt32());
+        originalObj->go(v.toUint32());
     }
 
     return ESValue();

@@ -169,7 +169,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     , m_enterCount(0)
     , m_seed((unsigned int)time(NULL))
-    , m_offset(-1)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;

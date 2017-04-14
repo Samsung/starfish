@@ -466,15 +466,6 @@ public:
         return m_console;
     }
 
-    int& offset()
-    {
-        return m_offset;
-    }
-    GCVector<HistoryEntry*>& history()
-    {
-        return m_historyList;
-    }
-
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
     {
@@ -510,9 +501,6 @@ protected:
 #endif
     size_t m_enterCount;
     unsigned int m_seed;
-
-    int m_offset;
-    GCVector<HistoryEntry*> m_historyList;
 
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
