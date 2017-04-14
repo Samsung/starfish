@@ -47,7 +47,7 @@ public:
         return true;
     }
 
-    int length();
+    size_t length();
     ScriptValue state();
 
     void back();
@@ -60,6 +60,11 @@ public:
     void setHistory(ScriptValue state, String* title, URL* url,
                     bool isPushState = false);
 
+    HistoryEntry* currentHistoryEntry()
+    {
+        return m_historyEntries[m_offset];
+    }
+
     /*
     // TODO: implement functions below
     void setScrollRestoration(const String& value);
@@ -69,12 +74,11 @@ public:
     */
 protected:
     StarFish* m_starFish;
-    URL* getURL(int delta);
+    GCVector<HistoryEntry*> m_historyEntries;
+    size_t m_offset;
+    URL* getURL();
 
-    int historyForwardListCount();
-    int historyBackListCount();
-    bool navigateBackForward(int offset);
-    int& offset();
+    bool navigate(int offset);
     GCVector<HistoryEntry*>& history();
     bool isPushState();
 };

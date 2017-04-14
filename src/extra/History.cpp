@@ -24,6 +24,7 @@ namespace StarFish {
 History::History(StarFish* starFish)
     : ScriptWrappable(this)
     , m_starFish(starFish)
+    , m_offset(SIZE_MAX)
 {
 }
 
@@ -31,78 +32,69 @@ void History::back()
 {
     go(-1);
 }
+
 void History::forward()
 {
     go(1);
 }
+
 void History::go(int delta)
 {
-    if (delta) {
+    if (delta != 0) {
         // navigate according to history
-        navigateBackForward(delta);
+        navigate(delta);
     } else {
-        // refresh: delta is 0 or empty
-        starFish()->window()->navigateAsyncWithoutSetHistory(getURL(0));
+        starFish()->window()->navigateAsyncWithoutSetHistory(
+            currentHistoryEntry()->url());
     }
 }
 
-int& History::offset()
+URL* History::getURL()
 {
-    return starFish()->offset();
+    return m_historyEntries[m_offset]->url();
 }
 
-GCVector<HistoryEntry*>& History::history()
+bool History::navigate(int delta)
 {
-    return starFish()->history();
-}
+    STARFISH_ASSERT(delta != 0);
 
-URL* History::getURL(int delta)
-{
-    return history()[offset()]->url();
-}
-
-int History::historyForwardListCount()
-{
-    return length() - historyBackListCount() - 1;
-}
-
-int History::historyBackListCount()
-{
-    return offset() < 0 ? 0 : offset();
-}
-
-bool History::navigateBackForward(int delta)
-{
-    if (delta > historyForwardListCount()) {
-        return false;
-    }
-    if (delta < -historyBackListCount()) {
-        return false;
+    if (delta > 0) {
+        STARFISH_ASSERT(length() - 1 >= m_offset);
+        if (static_cast<size_t>(delta) > length() - m_offset - 1) {
+            return false;
+        }
+    } else {
+        // delta < 0
+        if (m_offset < static_cast<size_t>(-delta)) {
+            return false;
+        }
     }
 
-    offset() += delta;
+    m_offset += delta;
+
+    URL* url = currentHistoryEntry()->url();
     if (!isPushState()) {
-        starFish()->window()->navigateAsyncWithoutSetHistory(getURL(delta));
+        starFish()->window()->navigateAsyncWithoutSetHistory(url);
     } else {
-        starFish()->window()->document()->setDocumentURI(getURL(delta));
+        starFish()->window()->document()->setDocumentURI(url);
     }
 
     return true;
 }
 
-int History::length()
+size_t History::length()
 {
-    return history().size();
+    return m_historyEntries.size();
 }
 
 ScriptValue History::state()
 {
-    return history()[offset()]->state();
+    return currentHistoryEntry()->state();
 }
 
 bool History::isPushState()
 {
-    return history()[offset()]->isPushState();
+    return currentHistoryEntry()->isPushState();
 }
 
 void History::pushState(ScriptValue state, String* title, String* url)
@@ -117,7 +109,7 @@ void History::replaceState(ScriptValue state, String* title, String* url)
 {
     URL* newURL =
         URL::createURL(starFish()->window()->document()->urlString(), url);
-    history()[offset()]->replaceState(state, title, newURL);
+    m_historyEntries[m_offset]->replaceState(state, title, newURL);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
@@ -130,14 +122,13 @@ void History::setHistory(ScriptValue state, String* title, URL* url,
         return;
     }
 
-    if (offset() != length() - 1) {
-        auto it = history().begin() + (offset() + 1);
-        while (it != history().end()) {
-            it = history().erase(it);
-        }
-    }
-    offset()++;
-    history().push_back(new HistoryEntry(state, title, url, isPushState));
+    STARFISH_ASSERT(m_offset <= length() - 1);
+    m_offset++;
+    m_historyEntries.erase(m_historyEntries.begin() + m_offset,
+                           m_historyEntries.end());
+
+    m_historyEntries.push_back(
+        new HistoryEntry(state, title, url, isPushState));
 }
 
 } /* namespace StarFish */
