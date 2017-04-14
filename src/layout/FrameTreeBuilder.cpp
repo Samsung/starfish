@@ -477,7 +477,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             STARFISH_ASSERT(current->parentNode());
             Frame* parent = current->parentNode()->frame();
             while (parent) {
-                if (!parent->isAnonymous() && parent->isBlockLevel()) {
+                if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
                     break;
                 }
                 parent = parent->parent();
