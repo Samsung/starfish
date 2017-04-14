@@ -24,6 +24,25 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue lengthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(History);
+    uint32_t result;
+    result = originalObj->length();
+
+    return ESValue(result);
+}
+
+static ESValue stateGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(History);
+    ScriptValue result;
+    result = originalObj->state();
+
+    return result;
+}
+
 static ESValue goFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
@@ -113,18 +132,6 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
 
     originalObj->replaceState(state, title, url);
     return ESValue();
-}
-
-static ESValue lengthGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(History);
-    return ESValue(originalObj->length());
-}
-
-static ESValue stateGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(History);
-    return originalObj->state();
 }
 
 ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)
