@@ -442,6 +442,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             if (!currentFrame->parent()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(
                     ctx.currentBlockContainer(), currentFrame, current, ctx);
+                ctx.setIsInFrameInlineFlow(false);
             }
             shouldSkipChildren = true;
         } else {
@@ -476,7 +477,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             STARFISH_ASSERT(current->parentNode());
             Frame* parent = current->parentNode()->frame();
             while (parent) {
-                if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
+                if (!parent->isAnonymous() && parent->isBlockLevel()) {
                     break;
                 }
                 parent = parent->parent();

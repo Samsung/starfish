@@ -192,6 +192,10 @@ void FrameTableBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         calCellWidth(ctx);
         calCellWidthsWithColspans();
+        LayoutUnit top = paddingTop() + borderTop();
+        LayoutUnit bottom = paddingBottom() + borderBottom();
+        MarginInfo marginInfo(top, bottom, true, style()->height());
+        setMarginInfo(&marginInfo);
         layoutWidth(ctx);
     }
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
@@ -207,6 +211,12 @@ void FrameTableBox::layout(LayoutContext& ctx,
 
 FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
 {
+    // There are more cells in the following rows than the first row
+    // This case happens when following rows have anonymous cells
+    if (id >= m_cellsInTheFirstRow.size()) {
+        return nullptr;
+    }
+
     FrameTableCellBox* cell = m_cellsInTheFirstRow[id];
     if (cell) {
         return cell;
@@ -415,20 +425,22 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 // available spaces among cells. The extra space for each cell
                 // is proportional to the width of each cell.
                 if (cellsWithAutoWidths.empty()) {
-                    STARFISH_ASSERT(m_cellsInTheFirstRow.size() ==
-                                    m_columnWidths.size());
-
                     for (auto& col : m_columnWidths) {
                         FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
-                        LayoutUnit cellWidth = cell->style()->width().fixed();
-                        cellWidth += cell->borderWidth() + cell->paddingWidth();
+                        if (cell->style()->width().isFixed()) {
+                            LayoutUnit cellWidth =
+                                cell->style()->width().fixed();
 
-                        LayoutUnit extraCellWidth =
-                            LayoutUnit(cellWidth.toDouble() /
-                                       sumOfSpecifiedCellWidths.toDouble() *
-                                       remainingWidth.toDouble());
-                        col.cellWidth += extraCellWidth;
+                            cellWidth +=
+                                cell->borderWidth() + cell->paddingWidth();
+
+                            LayoutUnit extraCellWidth =
+                                LayoutUnit(cellWidth.toDouble() /
+                                           sumOfSpecifiedCellWidths.toDouble() *
+                                           remainingWidth.toDouble());
+                            col.cellWidth += extraCellWidth;
+                        }
                     }
                 } else {
                     if (style()->tableLayout() ==
@@ -463,8 +475,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                                        cellsWithAutoWidths.size());
                         for (auto& c : cellsWithAutoWidths) {
                             ColSizeStruct& col = *c;
-                            printf("max: %d\n", col.maxCellWidth.toInt());
-
                             LayoutUnit newCellWidth = 0;
                             if (col.isEmptyCell()) {
                                 newCellWidth = newEqualCellWidth;
@@ -721,6 +731,10 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     for (auto& col : m_columnWidths) {
         STARFISH_ASSERT(col.id < m_columnWidths.size());
         FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+
+        if (!cell) {
+            continue;
+        }
 
         if (cell->colspan() > 1) {
             if (col.hasSpecifiedWidth()) {
@@ -990,7 +1004,7 @@ void FrameTableBox::collectColumnWidths(
             ColSizeStruct& col = columnWidths[i];
 
             // Add empty ColSizeStruct as place holders
-            while (columnWidthsSoFar.size() < col.id) {
+            while (columnWidthsSoFar.size() <= col.id) {
                 columnWidthsSoFar.push_back(ColSizeStruct());
             }
 
@@ -1021,6 +1035,10 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
     //   the width of the column.
     // * Otherwise, the width becomes auto. In this case, all other specified
     //   width anywhere in the column except the first row are ignored.
+
+    if (i >= m_cellsInTheFirstRow.size()) {
+        return true;
+    }
 
     if (style()->width().isAuto()) {
         // Table does not have a width
