@@ -21,6 +21,7 @@
 
 #include "dom/DOM.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
+#include "extra/AVPlay.h"
 #include "extra/WebApis.h"
 
 namespace StarFish {

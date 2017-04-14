@@ -51,7 +51,7 @@ struct TextRun {
                                 ? "R"
                                 : (m_direction == Neutral ? "N" : "M")));
         printf("[%s]", str.data());
-        printf(":%lu\n", m_stringView.length());
+        printf(":%zu\n", m_stringView.length());
     }
 #endif
 };
