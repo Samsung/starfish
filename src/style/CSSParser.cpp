@@ -1526,12 +1526,6 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
     if (simpleSelector->type() != CSSSelector::PseudoElement) {
         return 0;
     }
-    /*
-        if (simpleSelector->pseudoType() == CSSSelector::PseudoContent) {
-            return HasContentPseudoElement;
-        }
-    */
-
     return HasPseudoElementForRightmostCompound;
 }
 
@@ -1544,20 +1538,17 @@ void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
 
     parseCompoundSelector(selectorList);
 
-    if (selectorList->size() == 0) {
+    unsigned selectorSize = selectorList->size();
+    if (selectorSize == 0) {
         return;
     }
 
-    unsigned selectorSize = selectorList->size();
-
     unsigned previousCompoundFlags = 0;
     for (unsigned i = 0; i < selectorSize; i++) {
-        CSSSelector* simple = (*selectorList)[i];
-        if (simple && !previousCompoundFlags) {
+        previousCompoundFlags |= extractCompoundFlags((*selectorList)[i]);
+        if (previousCompoundFlags) {
             break;
         }
-
-        previousCompoundFlags |= extractCompoundFlags(simple);
     }
 
     if (m_failedParsing) {
@@ -1570,8 +1561,14 @@ void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
         secondSelectorList.clear();
         parseCompoundSelector(&secondSelectorList);
 
-        if (m_failedParsing || secondSelectorList.size() == 0 ||
-            (previousCompoundFlags & HasPseudoElementForRightmostCompound)) {
+        if (secondSelectorList.size() == 0) {
+            return;
+        }
+
+        if (previousCompoundFlags & HasPseudoElementForRightmostCompound) {
+            m_failedParsing = true;
+        }
+        if (m_failedParsing) {
             return;
         }
 
