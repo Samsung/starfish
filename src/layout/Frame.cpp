@@ -82,7 +82,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     m_isLeft = box->style()->floating() == LeftFloatValue;
     Frame* parent = box->layoutParent();
     while (parent) {
-        if (parent->isFrameBlockBox() && !parent->isAnonymous()) {
+        if (!parent->isAnonymous() && parent->isBlockLevel()) {
             m_canLayoutParentCollapseWithMarginTop =
                 parent->asFrameBlockBox()
                     ->marginInfo()
