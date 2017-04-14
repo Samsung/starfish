@@ -51,6 +51,11 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
         // Table establishes a new block context
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
+
+        FrameTreeBuilder::createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementBefore,
+            ctx);
+
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             currentFrame->addChild(c, ctx, force);
         }
@@ -82,6 +87,10 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
         ctx.mergeTextDecorationData(currentFrame->style());
         currentFrame->addChild(current, ctx, force);
     }
+
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+
     ctx.setCurrentBlockContainer(parent);
     STARFISH_ASSERT(currentFrame);
     return currentFrame;

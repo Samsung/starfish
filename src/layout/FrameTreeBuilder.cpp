@@ -28,6 +28,7 @@
 #include "FrameReplaced.h"
 #include "FrameReplacedImage.h"
 #include "FrameTableBox.h"
+#include "FrameTableRowBox.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "FrameReplacedVideo.h"
 #endif
@@ -250,6 +251,20 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     return nullptr;
 }
 
+Frame* findPseudoFrameForTable(Frame* frame, bool isBefore)
+{
+    Frame* pseudoFrame = frame;
+    while (pseudoFrame) {
+        if (pseudoFrame->node() && pseudoFrame->node()->isElement() &&
+            pseudoFrame->node()->asElement()->isPseudoElement()) {
+            break;
+        }
+        pseudoFrame =
+            isBefore ? pseudoFrame->firstChild() : pseudoFrame->lastChild();
+    }
+    return pseudoFrame;
+}
+
 void FrameTreeBuilder::createPseudoElementIfNeeded(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
     FrameTreeBuilderContext& ctx)
@@ -338,14 +353,32 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                pseudoElement->isAfterPseudoElement()) {
         DisplayValue contentDisplay = pseudoElement->style()->display();
         DisplayValue parentDisplay = parent->style()->display();
-        if (ComputedStyle::isDisplayTableValueType(contentDisplay) ||
-            ComputedStyle::isDisplayTableValueType(parentDisplay)) {
+        if (ComputedStyle::isDisplayTableValueType(contentDisplay)) {
             // TODO: Consider table-related displays
             STARFISH_ASSERT_NOT_REACHED();
         }
 
         Frame* pseudoFrame = nullptr;
-        if (parent->frame()->isFrameBlockBox()) {
+        if (ctx.currentBlockContainer()->isFrameTableBox()) {
+            FrameTableBox* tableFrame =
+                ctx.currentBlockContainer()->asFrameTableBox();
+            tableFrame->addChild(pseudoElement, ctx, true);
+            pseudoFrame = findPseudoFrameForTable(
+                tableFrame, pseudoElement->isBeforePseudoElement());
+        } else if (ctx.currentBlockContainer()->isFrameTableRowBox()) {
+            FrameTableRowBox* tableRowFrame =
+                ctx.currentBlockContainer()->asFrameTableRowBox();
+            tableRowFrame->addChild(pseudoElement, ctx, true);
+            pseudoFrame = findPseudoFrameForTable(
+                tableRowFrame, pseudoElement->isBeforePseudoElement());
+        } else if (ComputedStyle::isDisplayTableValueType(parentDisplay) &&
+                   !ctx.currentBlockContainer()->isFrameTableCellBox()) {
+            // Table has its own frame tree builder.
+            // FrameTreeBuilder::buildTree is called to generate frames that is
+            // not related to the table in FrameTableCellBox.
+            // Thus, duplicated frames for the pseudo-element can be created.
+            return;
+        } else if (parent->frame()->isFrameBlockBox()) {
             FrameBlockBox* pre = ctx.currentBlockContainer();
             ctx.setCurrentBlockContainer(parent->frame()->asFrameBlockBox());
             pseudoFrame = buildTree(pseudoElement, ctx, true);
