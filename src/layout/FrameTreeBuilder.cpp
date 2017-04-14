@@ -278,7 +278,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     pseudoElement->setParentNode(parent);
     pseudoElement->setStyle(pseudoStyle);
 
-    Frame* pseudoParentFrame;
+    Frame* pseudoParentFrame = nullptr;
     if (pseudoElement->isFirstLetterPseudoElement()) {
         if (Frame* nextFrame =
                 FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
