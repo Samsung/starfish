@@ -24,32 +24,8 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue dirGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_dir));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue dirSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_dir,
-            toBrowserString(v));
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue dirHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue dirHTMLElementSetterFunction(ESVMInstance* instance);
 
 static ESValue offsetWidthGetterFunction(ESVMInstance* instance)
 {
@@ -73,42 +49,8 @@ static ESValue offsetHeightGetterFunction(ESVMInstance* instance)
     }
 }
 
-static ESValue onClickGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_click);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue onClickSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_click;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance);
 
 static ESValue clickFunction(ESVMInstance* instance)
 {
@@ -117,47 +59,10 @@ static ESValue clickFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_mouseover);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
+extern ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType = element->document()
-                             ->window()
-                             ->starFish()
-                             ->staticStrings()
-                             ->m_mouseover;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue mouseOverFunction(ESVMInstance* instance)
+static ESValue mouseoverFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     Node* obj = originalObj;
@@ -171,195 +76,20 @@ static ESValue mouseOverFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue onLoadGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_load;
-        return element->attributeEventListener(eventType);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
+extern ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue onLoadSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_load;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue onunloadHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue onUnLoadGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType = element->document()
-                             ->window()
-                             ->starFish()
-                             ->staticStrings()
-                             ->m_unload;
-        return element->attributeEventListener(eventType);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
+extern ESValue onkeydownHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue onUnLoadSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType = element->document()
-                             ->window()
-                             ->starFish()
-                             ->staticStrings()
-                             ->m_unload;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue onkeyupHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_keydown);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType = element->document()
-                             ->window()
-                             ->starFish()
-                             ->staticStrings()
-                             ->m_keydown;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue onKeyUpGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_keyup);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue onKeyUpSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_keyup;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
-
-static ESValue onFocusGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_focus);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue onFocusSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_focus;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance);
 
 static ESValue focusFunction(ESVMInstance* instance)
 {
@@ -368,42 +98,8 @@ static ESValue focusFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue onErrorGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        return element->attributeEventListener(element->document()
-                                                   ->window()
-                                                   ->starFish()
-                                                   ->staticStrings()
-                                                   ->m_error);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-}
-
-static ESValue onErrorSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        auto element = nd->asElement()->asHTMLElement();
-        auto eventType =
-            element->document()->window()->starFish()->staticStrings()->m_error;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            element->setAttributeEventListener(eventType, v);
-        } else {
-            element->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return ESValue();
-}
+extern ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingHTMLElement(
     ScriptBindingInstance* scriptBindingInstance)
@@ -413,7 +109,8 @@ ESFunctionObject* bindingHTMLElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("dir"), dirGetterFunction, dirSetterFunction);
+        ESString::create("dir"), dirHTMLElementGetterFunction,
+        dirHTMLElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
@@ -425,8 +122,8 @@ ESFunctionObject* bindingHTMLElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onclick"), onClickGetterFunction,
-        onClickSetterFunction);
+        ESString::create("onclick"), onclickHTMLElementGetterFunction,
+        onclickHTMLElementSetterFunction);
 
     HTMLElementFunction->protoType()
         .asESPointer()
@@ -438,40 +135,41 @@ ESFunctionObject* bindingHTMLElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onmouseover"), onMouseOverGetterFunction,
-        onMouseOverSetterFunction);
+        ESString::create("onmouseover"), onmouseoverHTMLElementGetterFunction,
+        onmouseoverHTMLElementSetterFunction);
 
     HTMLElementFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->defineDataProperty(
             ESString::create("mouseover"), true, true, true,
-            ESFunctionObject::create(NULL, mouseOverFunction,
+            ESFunctionObject::create(NULL, mouseoverFunction,
                                      ESString::create("mouseover"), 1, false));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"), onLoadGetterFunction, onLoadSetterFunction);
+        ESString::create("onload"), onloadHTMLElementGetterFunction,
+        onloadHTMLElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onunload"), onUnLoadGetterFunction,
-        onUnLoadSetterFunction);
+        ESString::create("onunload"), onunloadHTMLElementGetterFunction,
+        onunloadHTMLElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeydown"), onKeyDownGetterFunction,
-        onKeyDownSetterFunction);
+        ESString::create("onkeydown"), onkeydownHTMLElementGetterFunction,
+        onkeydownHTMLElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeyup"), onKeyUpGetterFunction,
-        onKeyUpSetterFunction);
+        ESString::create("onkeyup"), onkeyupHTMLElementGetterFunction,
+        onkeyupHTMLElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onfocus"), onFocusGetterFunction,
-        onFocusSetterFunction);
+        ESString::create("onfocus"), onfocusHTMLElementGetterFunction,
+        onfocusHTMLElementSetterFunction);
 
     HTMLElementFunction->protoType()
         .asESPointer()
@@ -483,8 +181,8 @@ ESFunctionObject* bindingHTMLElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onerror"), onErrorGetterFunction,
-        onErrorSetterFunction);
+        ESString::create("onerror"), onerrorHTMLElementGetterFunction,
+        onerrorHTMLElementSetterFunction);
 
     return HTMLElementFunction;
 }

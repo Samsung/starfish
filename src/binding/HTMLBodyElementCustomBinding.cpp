@@ -24,55 +24,55 @@ namespace StarFish {
 
 using namespace escargot;
 
-ESValue onLoadGetterFunction(ESVMInstance* instance)
+ESValue onloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
     Window* window = originalObj->document()->window();
-    QualifiedName eventType = window->starFish()->staticStrings()->m_load;
+    QualifiedName attr = window->starFish()->staticStrings()->m_load;
 
-    return window->attributeEventListener(eventType);
+    return window->attributeEventListener(attr);
 }
 
-ESValue onLoadSetterFunction(ESVMInstance* instance)
+ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
     Window* window = originalObj->document()->window();
-    QualifiedName eventType = window->starFish()->staticStrings()->m_load;
+    QualifiedName attr = window->starFish()->staticStrings()->m_load;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
     if (arg0.isObject()) {
-        window->setAttributeEventListener(eventType, arg0);
+        window->setAttributeEventListener(attr, arg0);
     } else {
-        window->clearAttributeEventListener(eventType);
+        window->clearAttributeEventListener(attr);
     }
 
     return ESValue();
 }
 
-ESValue onUnLoadGetterFunction(ESVMInstance* instance)
+ESValue onunloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
     Window* window = originalObj->document()->window();
-    QualifiedName eventType = window->starFish()->staticStrings()->m_unload;
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
 
-    return window->attributeEventListener(eventType);
+    return window->attributeEventListener(attr);
 }
 
-ESValue onUnLoadSetterFunction(ESVMInstance* instance)
+ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
     Window* window = originalObj->document()->window();
-    QualifiedName eventType = window->starFish()->staticStrings()->m_unload;
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
     if (arg0.isObject()) {
-        window->setAttributeEventListener(eventType, arg0);
+        window->setAttributeEventListener(attr, arg0);
     } else {
-        window->clearAttributeEventListener(eventType);
+        window->clearAttributeEventListener(attr);
     }
 
     return ESValue();

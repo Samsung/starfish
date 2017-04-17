@@ -73,8 +73,9 @@ static ESValue innerHTMLSetterFunction(ESVMInstance* instance)
     String* v;
     if (originalV.isNull()) {
         v = String::emptyString;
+    } else {
+        v = toBrowserString(originalV);
     }
-    v = toBrowserString(originalV);
     originalObj->setInnerHTML(v);
     return ESValue();
 }
