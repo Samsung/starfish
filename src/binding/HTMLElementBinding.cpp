@@ -24,30 +24,27 @@ namespace StarFish {
 
 using namespace escargot;
 
-extern ESValue dirHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue dirHTMLElementSetterFunction(ESVMInstance* instance);
-
+// Implement for attributes
 static ESValue offsetWidthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        return ESValue(nd->asElement()->asHTMLElement()->offsetWidth());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    int32_t result;
+    result = originalObj->offsetWidth();
+
+    return ESValue(result);
 }
 
 static ESValue offsetHeightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-        return ESValue(nd->asElement()->asHTMLElement()->offsetHeight());
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    int32_t result;
+    result = originalObj->offsetHeight();
+
+    return ESValue(result);
 }
+
+extern ESValue dirHTMLElementGetterFunction(ESVMInstance* instance);
+extern ESValue dirHTMLElementSetterFunction(ESVMInstance* instance);
 
 extern ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance);
 extern ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance);

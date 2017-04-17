@@ -120,11 +120,11 @@ public:
     int tabIndex();
     bool supportsFocus();
     LayoutRect offsetRect();
-    uint32_t offsetWidth()
+    long offsetWidth()
     {
         return (float)offsetRect().width() + .5f;
     }
-    uint32_t offsetHeight()
+    long offsetHeight()
     {
         return (float)offsetRect().height() + .5f;
     }
