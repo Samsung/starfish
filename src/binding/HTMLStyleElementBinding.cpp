@@ -24,43 +24,58 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type));
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLStyleElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->type();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue typeSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLStyleElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setType(value0);
     return ESValue();
 }
 
 ESFunctionObject* bindingHTMLStyleElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLStyleElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLStyleElementString = ESString::create("HTMLStyleElement");
+    ESFunctionObject* HTMLStyleElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLStyleElementString, 1, true, true);
+    HTMLStyleElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLStyleElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLStyleElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLStyleElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
+    ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLStyleElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("type"), typeGetterFunction, typeSetterFunction);
+        typeString, typeGetterFunction, typeSetterFunction);
+
     return HTMLStyleElementFunction;
 }
 }
