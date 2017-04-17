@@ -57,124 +57,64 @@ static ESValue htmlimageelementConstructor(ESVMInstance* instance)
     return result->scriptValue();
 }
 
+// Implement for attributes
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                return toJSString(nd->asElement()
-                                      ->asHTMLElement()
-                                      ->asHTMLImageElement()
-                                      ->src());
-            }
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    String* result = String::emptyString;
+    result = originalObj->src();
+
+    return toJSString(result);
 }
 
 static ESValue srcSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                ESValue v =
-                    instance->currentExecutionContext()->readArgument(0);
-                nd->asElement()->asHTMLElement()->asHTMLImageElement()->setSrc(
-                    toBrowserString(v));
-                return ESValue();
-            }
-        }
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setSrc(value0);
     return ESValue();
 }
 
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                String* width = nd->asElement()
-                                    ->asHTMLElement()
-                                    ->asHTMLImageElement()
-                                    ->width();
-                return ESValue(String::parseInt(width));
-            }
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    uint32_t result;
+    result = originalObj->width();
+
+    return ESValue(result);
 }
 
 static ESValue widthSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
-        return ESValue();
-    }
-
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                nd->asElement()
-                    ->asHTMLElement()
-                    ->asHTMLImageElement()
-                    ->setWidth(v.toInt32());
-                return ESValue();
-            }
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    uint32_t value0;
+    value0 = arg0.toUint32();
+    originalObj->setWidth(value0);
     return ESValue();
 }
 
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                String* height = nd->asElement()
-                                     ->asHTMLElement()
-                                     ->asHTMLImageElement()
-                                     ->height();
-                return ESValue(String::parseInt(height));
-            }
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    uint32_t result;
+    result = originalObj->height();
+
+    return ESValue(result);
 }
 
 static ESValue heightSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
-        return ESValue();
-    }
-
-    if (nd->isElement()) {
-        if (nd->asElement()->isHTMLElement()) {
-            if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                nd->asElement()
-                    ->asHTMLElement()
-                    ->asHTMLImageElement()
-                    ->setHeight(v.toInt32());
-                return ESValue();
-            }
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    uint32_t value0;
+    value0 = arg0.toUint32();
+    originalObj->setHeight(value0);
     return ESValue();
 }
 

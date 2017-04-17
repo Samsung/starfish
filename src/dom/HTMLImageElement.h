@@ -81,25 +81,27 @@ public:
             document()->window()->starFish()->staticStrings()->m_src);
     }
 
-    String* width()
+    unsigned long width()
     {
-        return getAttribute(
+        String* widthStr = getAttribute(
             document()->window()->starFish()->staticStrings()->m_width);
+        return String::parseInt(widthStr);
     }
 
-    void setWidth(int width)
+    void setWidth(unsigned long width)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_width,
                      String::fromInt(width));
     }
 
-    String* height()
+    unsigned long height()
     {
-        return getAttribute(
+        String* heightStr = getAttribute(
             document()->window()->starFish()->staticStrings()->m_height);
+        return String::parseInt(heightStr);
     }
 
-    void setHeight(int height)
+    void setHeight(unsigned long height)
     {
         setAttribute(
             document()->window()->starFish()->staticStrings()->m_height,
