@@ -53,18 +53,19 @@ size_t Element::hasAttribute(QualifiedName name)
     return SIZE_MAX;
 }
 
-Nullable<String*> Element::getAttribute(String* name)
+String* Element::getAttribute(String* name)
 {
     QualifiedName qName = document()->createAttributeName(name);
     size_t idx = hasAttribute(qName);
-    if (idx == SIZE_MAX) {
-        return Nullable<String*>();
-    }
-    return Nullable<String*>(getAttribute(idx));
+    return getAttribute(idx);
 }
 
 String* Element::getAttribute(size_t pos)
 {
+    if (pos == SIZE_MAX) {
+        return String::emptyString;
+    }
+
     return m_attributes[pos].value();
 }
 

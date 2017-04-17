@@ -24,113 +24,64 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue hrefGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        size_t idx = nd->asElement()->hasAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_href);
-        if (idx != SIZE_MAX) {
-            return toJSString(
-                URL::getURLString(nd->document()->urlString(),
-                                  nd->asElement()->getAttribute(idx)));
-        }
-        return toJSString(String::emptyString);
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+// Implement for attributes
+extern ESValue hrefHTMLLinkElementGetterFunction(ESVMInstance* instance);
 
-static ESValue hrefSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_href,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
+extern ESValue hrefHTMLLinkElementSetterFunction(ESVMInstance* instance);
 
-static ESValue relGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_rel));
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+extern ESValue relHTMLLinkElementGetterFunction(ESVMInstance* instance);
 
-static ESValue relSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_rel,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
+extern ESValue relHTMLLinkElementSetterFunction(ESVMInstance* instance);
 
-static ESValue typeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type));
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+extern ESValue typeHTMLLinkElementGetterFunction(ESVMInstance* instance);
 
-static ESValue typeSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
+extern ESValue typeHTMLLinkElementSetterFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingHTMLLinkElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLLinkElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLLinkElementString = ESString::create("HTMLLinkElement");
+    ESFunctionObject* HTMLLinkElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLLinkElementString, 1, true, true);
+    HTMLLinkElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLLinkElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLLinkElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLLinkElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
+
+    // Bind for attributes
+    ESString* hrefString = ESString::create("href");
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("href"), hrefGetterFunction, hrefSetterFunction);
+        hrefString, hrefHTMLLinkElementGetterFunction,
+        hrefHTMLLinkElementSetterFunction);
+
+    ESString* relString = ESString::create("rel");
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("rel"), relGetterFunction, relSetterFunction);
+        relString, relHTMLLinkElementGetterFunction,
+        relHTMLLinkElementSetterFunction);
+
+    ESString* typeString = ESString::create("type");
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("type"), typeGetterFunction, typeSetterFunction);
+        typeString, typeHTMLLinkElementGetterFunction,
+        typeHTMLLinkElementSetterFunction);
 
     return HTMLLinkElementFunction;
 }

@@ -131,9 +131,6 @@ public:
     String* getAttribute(QualifiedName name)
     {
         size_t siz = hasAttribute(name);
-        if (siz == SIZE_MAX) {
-            return String::emptyString;
-        }
         return getAttribute(siz);
     }
     String* getAttribute(size_t pos);
@@ -141,7 +138,7 @@ public:
     void removeAttribute(QualifiedName name);
 
     bool hasAttribute(String* name);
-    Nullable<String*> getAttribute(String* name);
+    String* getAttribute(String* name);
     void setAttribute(String* name, String* value);
     void removeAttribute(String* name);
 
