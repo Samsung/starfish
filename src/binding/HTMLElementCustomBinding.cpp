@@ -24,30 +24,6 @@ namespace StarFish {
 
 using namespace escargot;
 
-ESValue dirHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_dir;
-
-    return toJSString(originalObj->getAttribute(attr));
-}
-
-ESValue dirHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_dir;
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    String* value0 = toBrowserString(arg0);
-    originalObj->setAttribute(attr, value0);
-
-    return ESValue();
-}
-
 ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);

@@ -1207,9 +1207,9 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
             self->appendToOperationQueue(
                 new MediaOperationQueueDataRequestResourceSelection(self));
             return;
-        } else if (candidate->typeAttr()->length() > 0 &&
-                   MimeType::parseFromString(candidate->typeAttr()).isValid() &&
-                   !MediaSource::isTypeSupported(candidate->typeAttr())) {
+        } else if (candidate->type()->length() > 0 &&
+                   MimeType::parseFromString(candidate->type()).isValid() &&
+                   !MediaSource::isTypeSupported(candidate->type())) {
             // FIXME : MediaSource::isTypeSupported() -> replaced method to
             // proper one.
 

@@ -25,17 +25,68 @@ namespace StarFish {
 using namespace escargot;
 
 // Implement for attributes
-extern ESValue hrefHTMLLinkElementGetterFunction(ESVMInstance* instance);
+static ESValue hrefGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->href();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue hrefHTMLLinkElementSetterFunction(ESVMInstance* instance);
+static ESValue hrefSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setHref(value0);
+    return ESValue();
+}
 
-extern ESValue relHTMLLinkElementGetterFunction(ESVMInstance* instance);
+static ESValue relGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->rel();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue relHTMLLinkElementSetterFunction(ESVMInstance* instance);
+static ESValue relSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setRel(value0);
+    return ESValue();
+}
 
-extern ESValue typeHTMLLinkElementGetterFunction(ESVMInstance* instance);
+static ESValue typeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->type();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue typeHTMLLinkElementSetterFunction(ESVMInstance* instance);
+static ESValue typeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setType(value0);
+    return ESValue();
+}
 
 ESFunctionObject* bindingHTMLLinkElement(
     ScriptBindingInstance* scriptBindingInstance)
@@ -63,25 +114,19 @@ ESFunctionObject* bindingHTMLLinkElement(
 
     // Bind for attributes
     ESString* hrefString = ESString::create("href");
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        hrefString, hrefHTMLLinkElementGetterFunction,
-        hrefHTMLLinkElementSetterFunction);
+        hrefString, hrefGetterFunction, hrefSetterFunction);
 
     ESString* relString = ESString::create("rel");
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        relString, relHTMLLinkElementGetterFunction,
-        relHTMLLinkElementSetterFunction);
+        relString, relGetterFunction, relSetterFunction);
 
     ESString* typeString = ESString::create("type");
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeHTMLLinkElementGetterFunction,
-        typeHTMLLinkElementSetterFunction);
+        typeString, typeGetterFunction, typeSetterFunction);
 
     return HTMLLinkElementFunction;
 }

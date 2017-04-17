@@ -441,6 +441,29 @@ void Element::setPseudoElement(StyleResolver::PseudoElementType type)
     rareMembers->m_pseudoElementData->setPseudoElement(type);
 }
 
+String* Element::idAttr()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_id);
+}
+
+void Element::setIdAttr(String* id)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_id, id);
+}
+
+String* Element::className()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_class);
+}
+
+void Element::setClassName(String* className)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_class,
+                 className);
+}
+
 CSSStyleDeclaration* Element::inlineStyle()
 {
     if (m_inlineStyle == nullptr) {

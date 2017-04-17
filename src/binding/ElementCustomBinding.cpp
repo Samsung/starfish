@@ -34,45 +34,6 @@ ESValue namespaceURIElementGetterFunction(ESVMInstance* instance)
     return toJSString(originalObj->name().namespaceURI());
 }
 
-ESValue idElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-    return toJSString(originalObj->getAttribute(
-        originalObj->document()->window()->starFish()->staticStrings()->m_id));
-}
-
-ESValue idElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    originalObj->setAttribute(
-        originalObj->document()->window()->starFish()->staticStrings()->m_id,
-        toBrowserString(v));
-
-    return ESValue();
-}
-
-ESValue classNameElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-    return toJSString(originalObj->getAttribute(originalObj->document()
-                                                    ->window()
-                                                    ->starFish()
-                                                    ->staticStrings()
-                                                    ->m_class));
-}
-
-ESValue classNameElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    originalObj->setAttribute(
-        originalObj->document()->window()->starFish()->staticStrings()->m_class,
-        toBrowserString(v));
-
-    return ESValue();
-}
-
 ESValue classListElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
@@ -81,5 +42,27 @@ ESValue classListElementGetterFunction(ESVMInstance* instance)
         return ESValue(ESValue::ESUndefined);
     }
     return nd->scriptValue();
+}
+
+ESValue styleElementGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+
+    CSSStyleDeclaration* result = originalObj->asElement()->inlineStyle();
+    return result->scriptValue();
+}
+
+ESValue styleElementSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+
+    Window* window = originalObj->document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_style;
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    String* value0 = toBrowserString(arg0);
+
+    originalObj->setAttribute(attr, value0);
+    return ESValue();
 }
 }

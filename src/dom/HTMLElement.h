@@ -129,6 +129,9 @@ public:
         return (float)offsetRect().height() + .5f;
     }
 
+    String* dir();
+    void setDir(String* dir);
+
     void click();
     void focus();
 

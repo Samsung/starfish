@@ -47,8 +47,32 @@ static ESValue dataSetterFunction(ESVMInstance* instance)
 
 extern ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance);
 
-extern ESValue nextElementSiblingGetterFunction(ESVMInstance* instance);
-extern ESValue previousElementSiblingGetterFunction(ESVMInstance* instance);
+static ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
+    // Declare return value (empty when void)
+    Element* result = nullptr;
+    result = originalObj->previousElementSibling();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
+    // Declare return value (empty when void)
+    Element* result = nullptr;
+    result = originalObj->nextElementSibling();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
 extern ESValue removeFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingCharacterData(

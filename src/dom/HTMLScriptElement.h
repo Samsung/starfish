@@ -68,6 +68,15 @@ public:
         return true;
     }
 
+    String* src();
+    void setSrc(String* src);
+
+    String* type();
+    void setType(String* type);
+
+    String* charset();
+    void setCharset(String* charset);
+
     String* text();
     void setText(String* s);
 

@@ -210,6 +210,12 @@ public:
         return m_id;
     }
 
+    String* idAttr();
+    void setIdAttr(String* id);
+
+    String* className();
+    void setClassName(String* className);
+
     // DO NOT MODIFY THIS VECTOR
     const GCVector<String*>& classNames()
     {

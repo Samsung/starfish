@@ -58,7 +58,7 @@ public:
             document()->window()->starFish()->staticStrings()->m_src);
     }
 
-    String* typeAttr()
+    String* type()
     {
         return getAttribute(
             document()->window()->starFish()->staticStrings()->m_type);
@@ -70,7 +70,7 @@ public:
                      src);
     }
 
-    void setTypeAttr(String* type)
+    void setType(String* type)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_type,
                      type);
