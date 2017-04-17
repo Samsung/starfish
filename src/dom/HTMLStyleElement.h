@@ -62,6 +62,9 @@ public:
         return true;
     }
 
+    String* type();
+    void setType(String* type);
+
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();

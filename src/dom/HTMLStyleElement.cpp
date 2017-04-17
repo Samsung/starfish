@@ -35,6 +35,18 @@ bool isCSSType(const char* type)
     return false;
 }
 
+String* HTMLStyleElement::type()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_type);
+}
+
+void HTMLStyleElement::setType(String* type)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
+                 type);
+}
+
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
 {
     HTMLElement::didCharacterDataModified(before, after);
