@@ -31,9 +31,7 @@ ESValue onprogressHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_progress;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onprogressHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -61,9 +59,7 @@ ESValue onsuspendHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_suspend;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onsuspendHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -91,9 +87,7 @@ ESValue onabortHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_abort;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onabortHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -121,9 +115,7 @@ ESValue onemptiedHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_emptied;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onemptiedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -151,9 +143,7 @@ ESValue onstalledHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_stalled;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onstalledHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -181,9 +171,7 @@ ESValue onloadedmetadataHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_loadedmetadata;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onloadedmetadataHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -211,9 +199,7 @@ ESValue onloadeddataHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_loadeddata;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onloadeddataHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -241,9 +227,7 @@ ESValue onloadstartHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_loadstart;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onloadstartHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -271,9 +255,7 @@ ESValue oncanplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_canplay;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue oncanplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -301,9 +283,7 @@ ESValue oncanplaythroughHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_canplaythrough;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue oncanplaythroughHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -331,9 +311,7 @@ ESValue onplayingHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_playing;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onplayingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -361,9 +339,7 @@ ESValue onwaitingHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_waiting;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onwaitingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -391,9 +367,7 @@ ESValue onseekingHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_seeking;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onseekingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -421,9 +395,7 @@ ESValue onseekedHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_seeked;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onseekedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -451,9 +423,7 @@ ESValue onendedHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_ended;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onendedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -481,9 +451,7 @@ ESValue ondurationchangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_durationchange;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue ondurationchangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -511,9 +479,7 @@ ESValue ontimeupdateHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_timeupdate;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue ontimeupdateHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -541,9 +507,7 @@ ESValue onplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_play;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -571,9 +535,7 @@ ESValue onpauseHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_pause;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onpauseHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -601,9 +563,7 @@ ESValue onratechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_ratechange;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onratechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -631,9 +591,7 @@ ESValue onvolumechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
     Window* window = originalObj->document()->window();
     QualifiedName attr = window->starFish()->staticStrings()->m_volumechange;
 
-    String* result = originalObj->getAttribute(attr);
-
-    return toJSString(result);
+    return window->attributeEventListener(attr);
 }
 
 ESValue onvolumechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)

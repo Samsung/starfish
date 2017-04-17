@@ -27,15 +27,52 @@ namespace StarFish {
 
 bool isCSSType(const char* type);
 
-URL* HTMLLinkElement::href()
+String* HTMLLinkElement::href()
 {
-    size_t href =
-        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
-    if (href != SIZE_MAX) {
-        String* url = getAttribute(href);
-        return URL::createURL(document()->documentURI()->baseURI(), url);
+    String* url =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
+
+    return URL::getURLString(document()->documentURI()->baseURI(), url);
+}
+
+void HTMLLinkElement::setHref(String* href)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_href,
+                 href);
+}
+
+String* HTMLLinkElement::rel()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_rel);
+}
+
+void HTMLLinkElement::setRel(String* rel)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_rel, rel);
+}
+
+String* HTMLLinkElement::type()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_type);
+}
+
+void HTMLLinkElement::setType(String* type)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_rel,
+                 type);
+}
+
+URL* HTMLLinkElement::url()
+{
+    String* url =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
+
+    if (url == String::emptyString) {
+        return nullptr;
     }
-    return nullptr;
+    return URL::createURL(document()->documentURI()->baseURI(), url);
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumenTree()

@@ -25,17 +25,68 @@ namespace StarFish {
 using namespace escargot;
 
 // Implement for attributes
-extern ESValue srcHTMLScriptElementGetterFunction(ESVMInstance* instance);
+static ESValue srcGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->src();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue srcHTMLScriptElementSetterFunction(ESVMInstance* instance);
+static ESValue srcSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setSrc(value0);
+    return ESValue();
+}
 
-extern ESValue typeHTMLScriptElementGetterFunction(ESVMInstance* instance);
+static ESValue typeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->type();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue typeHTMLScriptElementSetterFunction(ESVMInstance* instance);
+static ESValue typeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setType(value0);
+    return ESValue();
+}
 
-extern ESValue charsetHTMLScriptElementGetterFunction(ESVMInstance* instance);
+static ESValue charsetGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->charset();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-extern ESValue charsetHTMLScriptElementSetterFunction(ESVMInstance* instance);
+static ESValue charsetSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setCharset(value0);
+    return ESValue();
+}
 
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
@@ -86,20 +137,17 @@ ESFunctionObject* bindingHTMLScriptElement(
     ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        srcString, srcHTMLScriptElementGetterFunction,
-        srcHTMLScriptElementSetterFunction);
+        srcString, srcGetterFunction, srcSetterFunction);
 
     ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeHTMLScriptElementGetterFunction,
-        typeHTMLScriptElementSetterFunction);
+        typeString, typeGetterFunction, typeSetterFunction);
 
     ESString* charsetString = ESString::create("charset");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        charsetString, charsetHTMLScriptElementGetterFunction,
-        charsetHTMLScriptElementSetterFunction);
+        charsetString, charsetGetterFunction, charsetSetterFunction);
 
     ESString* textString = ESString::create("text");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

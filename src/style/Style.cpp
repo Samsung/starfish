@@ -923,7 +923,7 @@ URL* CSSStyleSheet::url()
         return m_origin->asElement()
             ->asHTMLElement()
             ->asHTMLLinkElement()
-            ->href();
+            ->url();
     }
     return m_origin->document()->documentURI();
 }

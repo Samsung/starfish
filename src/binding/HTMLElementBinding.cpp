@@ -25,161 +25,190 @@ namespace StarFish {
 using namespace escargot;
 
 // Implement for attributes
+static ESValue dirGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->dir();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue dirSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setDir(value0);
+    return ESValue();
+}
+
 static ESValue offsetWidthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    // Declare return value (empty when void)
     int32_t result;
     result = originalObj->offsetWidth();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
 static ESValue offsetHeightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    // Declare return value (empty when void)
     int32_t result;
     result = originalObj->offsetHeight();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
-extern ESValue dirHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue dirHTMLElementSetterFunction(ESVMInstance* instance);
-
 extern ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance);
+
 extern ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue clickFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-    originalObj->click();
-    return ESValue(ESValue::ESUndefined);
-}
+extern ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance);
 
-extern ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance);
+extern ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance);
 
-static ESValue mouseoverFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* obj = originalObj;
-    String* eventType = obj->document()
-                            ->window()
-                            ->starFish()
-                            ->staticStrings()
-                            ->m_mouseover.localName();
-    Event* e = new Event(eventType, EventInit(true, true));
-    obj->dispatchEvent(e);
-    return ESValue(ESValue::ESUndefined);
-}
+extern ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance);
 
-extern ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance);
-
-extern ESValue onunloadHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance);
+extern ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance);
 
 extern ESValue onkeydownHTMLElementGetterFunction(ESVMInstance* instance);
+
 extern ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance);
 
 extern ESValue onkeyupHTMLElementGetterFunction(ESVMInstance* instance);
+
 extern ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance);
 
-extern ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance);
+extern ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance);
+
+extern ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance);
+
+extern ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance);
+
+extern ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance);
+
+// Implement for functions
+static ESValue clickFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->click();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
 
 static ESValue focusFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
     originalObj->focus();
+
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
-
-extern ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance);
-extern ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingHTMLElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLElement, fetchData(scriptBindingInstance)->fnElement());
+    // Bind for constructor
+    ESString* HTMLElementString = ESString::create("HTMLElement");
+    ESFunctionObject* HTMLElementFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, HTMLElementString, 1, true, true);
+    HTMLElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnElement()->protoType());
+    HTMLElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnElement());
+    ESObject* HTMLElementObj =
+        HTMLElementFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* dirString = ESString::create("dir");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), dirString,
+        dirGetterFunction, dirSetterFunction);
+
+    ESString* offsetWidthString = ESString::create("offsetWidth");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("dir"), dirHTMLElementGetterFunction,
-        dirHTMLElementSetterFunction);
+        offsetWidthString, offsetWidthGetterFunction, nullptr);
 
+    ESString* offsetHeightString = ESString::create("offsetHeight");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("offsetWidth"), offsetWidthGetterFunction, nullptr);
+        offsetHeightString, offsetHeightGetterFunction, nullptr);
 
+    ESString* onclickString = ESString::create("onclick");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("offsetHeight"), offsetHeightGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onclick"), onclickHTMLElementGetterFunction,
+        onclickString, onclickHTMLElementGetterFunction,
         onclickHTMLElementSetterFunction);
 
-    HTMLElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("click"), true, true, true,
-                             ESFunctionObject::create(NULL, clickFunction,
-                                                      ESString::create("click"),
-                                                      1, false));
-
+    ESString* onerrorString = ESString::create("onerror");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onmouseover"), onmouseoverHTMLElementGetterFunction,
-        onmouseoverHTMLElementSetterFunction);
+        onerrorString, onerrorHTMLElementGetterFunction,
+        onerrorHTMLElementSetterFunction);
 
-    HTMLElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("mouseover"), true, true, true,
-            ESFunctionObject::create(NULL, mouseoverFunction,
-                                     ESString::create("mouseover"), 1, false));
-
+    ESString* onfocusString = ESString::create("onfocus");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"), onloadHTMLElementGetterFunction,
-        onloadHTMLElementSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onunload"), onunloadHTMLElementGetterFunction,
-        onunloadHTMLElementSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeydown"), onkeydownHTMLElementGetterFunction,
-        onkeydownHTMLElementSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeyup"), onkeyupHTMLElementGetterFunction,
-        onkeyupHTMLElementSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onfocus"), onfocusHTMLElementGetterFunction,
+        onfocusString, onfocusHTMLElementGetterFunction,
         onfocusHTMLElementSetterFunction);
 
-    HTMLElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("focus"), true, true, true,
-                             ESFunctionObject::create(NULL, focusFunction,
-                                                      ESString::create("focus"),
-                                                      1, false));
-
+    ESString* onkeydownString = ESString::create("onkeydown");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onerror"), onerrorHTMLElementGetterFunction,
-        onerrorHTMLElementSetterFunction);
+        onkeydownString, onkeydownHTMLElementGetterFunction,
+        onkeydownHTMLElementSetterFunction);
+
+    ESString* onkeyupString = ESString::create("onkeyup");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(),
+        onkeyupString, onkeyupHTMLElementGetterFunction,
+        onkeyupHTMLElementSetterFunction);
+
+    ESString* onloadString = ESString::create("onload");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(),
+        onloadString, onloadHTMLElementGetterFunction,
+        onloadHTMLElementSetterFunction);
+
+    ESString* onmouseoverString = ESString::create("onmouseover");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(),
+        onmouseoverString, onmouseoverHTMLElementGetterFunction,
+        onmouseoverHTMLElementSetterFunction);
+
+    // Bind for functions
+    ESString* clickString = ESString::create("click");
+    ESFunctionObject* clickESFn =
+        ESFunctionObject::create(nullptr, clickFunction, clickString, 0, false);
+    HTMLElementObj->defineDataProperty(clickString, true, true, true,
+                                       clickESFn);
+
+    ESString* focusString = ESString::create("focus");
+    ESFunctionObject* focusESFn =
+        ESFunctionObject::create(nullptr, focusFunction, focusString, 0, false);
+    HTMLElementObj->defineDataProperty(focusString, true, true, true,
+                                       focusESFn);
 
     return HTMLElementFunction;
 }

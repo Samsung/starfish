@@ -183,9 +183,46 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
     executeScript();
 }
 
+String* HTMLScriptElement::src()
+{
+    String* url =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+
+    return URL::getURLString(document()->documentURI()->baseURI(), url);
+}
+
+void HTMLScriptElement::setSrc(String* src)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+}
+
+String* HTMLScriptElement::type()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_type);
+}
+
+void HTMLScriptElement::setType(String* type)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
+                 type);
+}
+
+String* HTMLScriptElement::charset()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_charset);
+}
+
+void HTMLScriptElement::setCharset(String* charset)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_charset,
+                 charset);
+}
+
 String* HTMLScriptElement::text()
 {
-    String* str = String::createASCIIString("");
+    String* str = String::emptyString;
     for (Node* child = firstChild(); child != nullptr;
          child = child->nextSibling()) {
         if (child->nodeType() == TEXT_NODE) {

@@ -61,7 +61,16 @@ public:
         return true;
     }
 
-    URL* href();
+    String* href();
+    void setHref(String* href);
+
+    String* rel();
+    void setRel(String* rel);
+
+    String* type();
+    void setType(String* type);
+
+    URL* url();
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

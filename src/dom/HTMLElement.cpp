@@ -119,6 +119,17 @@ Element* HTMLElement::offsetParent()
     return frameObject ? frameObject->offsetParent() : nullptr;
 }
 
+String* HTMLElement::dir()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_dir);
+}
+
+void HTMLElement::setDir(String* dir)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_dir, dir);
+}
+
 void HTMLElement::click()
 {
     String* eventType =
