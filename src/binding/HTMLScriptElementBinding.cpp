@@ -24,139 +24,87 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue srcGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        size_t idx = nd->asElement()->hasAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_src);
-        if (idx != SIZE_MAX) {
-            return toJSString(
-                URL::getURLString(nd->document()->urlString(),
-                                  nd->asElement()->getAttribute(idx)));
-        }
-        return toJSString(String::emptyString);
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+// Implement for attributes
+extern ESValue srcHTMLScriptElementGetterFunction(ESVMInstance* instance);
 
-static ESValue srcSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_src,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
+extern ESValue srcHTMLScriptElementSetterFunction(ESVMInstance* instance);
 
-static ESValue typeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        return toJSString(nd->asElement()->getAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type));
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+extern ESValue typeHTMLScriptElementGetterFunction(ESVMInstance* instance);
 
-static ESValue typeSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->setAttribute(
-            nd->document()->window()->starFish()->staticStrings()->m_type,
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
-    return ESValue();
-}
+extern ESValue typeHTMLScriptElementSetterFunction(ESVMInstance* instance);
 
-static ESValue charsetGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        QualifiedName name =
-            QualifiedName(AtomicString::emptyAtomicString(),
-                          AtomicString::createAttrAtomicString(
-                              nd->document()->window()->starFish(), "charset"));
-        size_t idx = nd->asElement()->hasAttribute(name);
-        if (idx == SIZE_MAX) {
-            return ESString::create("");
-        } else {
-            String* value = nd->asElement()->getAttribute(idx);
-            // STARFISH_ASSERT(value.equals("UTF-8"));
-            return toJSString(value);
-        }
-    }
-    THROW_ILLEGAL_INVOCATION();
-}
+extern ESValue charsetHTMLScriptElementGetterFunction(ESVMInstance* instance);
+
+extern ESValue charsetHTMLScriptElementSetterFunction(ESVMInstance* instance);
 
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        return toJSString(
-            nd->asElement()->asHTMLElement()->asHTMLScriptElement()->text());
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->text();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue textSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-        nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        nd->asElement()->asHTMLElement()->asHTMLScriptElement()->setText(
-            toBrowserString(v.toString()));
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setText(value0);
     return ESValue();
 }
 
 ESFunctionObject* bindingHTMLScriptElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLScriptElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLScriptElementString = ESString::create("HTMLScriptElement");
+    ESFunctionObject* HTMLScriptElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLScriptElementString, 1, true, true);
+    HTMLScriptElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLScriptElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLScriptElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLScriptElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
+    ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("src"), srcGetterFunction, srcSetterFunction);
+        srcString, srcHTMLScriptElementGetterFunction,
+        srcHTMLScriptElementSetterFunction);
 
+    ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("type"), typeGetterFunction, typeSetterFunction);
+        typeString, typeHTMLScriptElementGetterFunction,
+        typeHTMLScriptElementSetterFunction);
 
+    ESString* charsetString = ESString::create("charset");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("text"), textGetterFunction, textSetterFunction);
+        charsetString, charsetHTMLScriptElementGetterFunction,
+        charsetHTMLScriptElementSetterFunction);
 
-    // TODO : Implement setter
+    ESString* textString = ESString::create("text");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("charset"), charsetGetterFunction, nullptr);
+        textString, textGetterFunction, textSetterFunction);
 
     return HTMLScriptElementFunction;
 }
