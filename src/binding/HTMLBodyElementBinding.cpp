@@ -24,11 +24,11 @@ namespace StarFish {
 
 using namespace escargot;
 
-extern ESValue onLoadGetterFunction(ESVMInstance* instance);
-extern ESValue onLoadSetterFunction(ESVMInstance* instance);
+extern ESValue onloadHTMLBodyElementGetterFunction(ESVMInstance* instance);
+extern ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance);
 
-extern ESValue onUnLoadGetterFunction(ESVMInstance* instance);
-extern ESValue onUnLoadSetterFunction(ESVMInstance* instance);
+extern ESValue onunloadHTMLBodyElementGetterFunction(ESVMInstance* instance);
+extern ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingHTMLBodyElement(
     ScriptBindingInstance* scriptBindingInstance)
@@ -38,12 +38,13 @@ ESFunctionObject* bindingHTMLBodyElement(
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"), onLoadGetterFunction, onLoadSetterFunction);
+        ESString::create("onload"), onloadHTMLBodyElementGetterFunction,
+        onLoadHTMLBodyElementSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onunload"), onUnLoadGetterFunction,
-        onUnLoadSetterFunction);
+        ESString::create("onunload"), onunloadHTMLBodyElementGetterFunction,
+        onunloadHTMLBodyElementSetterFunction);
 
     return HTMLBodyElementFunction;
 }
