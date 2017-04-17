@@ -280,24 +280,17 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         return;
     }
 
-    ComputedStyle* parentStyle = parent->style();
-    ComputedStyle* pseudoStyle =
-        pseudoStyleForElementInternal(parent, pseudoId, parentStyle);
-
-    if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
-        return;
-    }
-
     PseudoElement* pseudoElement =
         new PseudoElement(parent->document(), pseudoId);
     pseudoElement->setParentNode(parent);
-    pseudoElement->setStyle(pseudoStyle);
 
     Frame* pseudoParentFrame = nullptr;
+    ComputedStyle* parentStyle = parent->style();
     if (pseudoElement->isFirstLetterPseudoElement()) {
         if (Frame* nextFrame =
                 FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
             pseudoParentFrame = nextFrame->parent();
+            parentStyle = nextFrame->style();
         }
     } else if (pseudoElement->parentNode()) {
         pseudoParentFrame = pseudoElement->parentNode()->frame();
@@ -306,6 +299,13 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     if (!pseudoParentFrame) {
         return;
     }
+
+    ComputedStyle* pseudoStyle =
+        pseudoStyleForElementInternal(parent, pseudoId, parentStyle);
+    if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
+        return;
+    }
+    pseudoElement->setStyle(pseudoStyle);
 
     Frame* pseudoFrame;
     if (pseudoStyle->floating() != FloatValue::NoneFloatValue) {
