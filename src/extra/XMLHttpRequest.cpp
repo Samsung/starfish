@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
-#include "dom/Event.h"
+#include "dom/ProgressEvent.h"
 #include "dom/DOMException.h"
 #include "platform/window/Window.h"
 

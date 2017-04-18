@@ -31,6 +31,26 @@
 
 namespace StarFish {
 
+ActiveHTMLCollectionList*
+RareNodeMembers::ensureActiveHtmlCollectionListForTagName()
+{
+    if (m_activeHtmlCollectionListsForTagName == nullptr) {
+        m_activeHtmlCollectionListsForTagName =
+            new (GC) ActiveHTMLCollectionList;
+    }
+    return m_activeHtmlCollectionListsForTagName;
+}
+
+ActiveHTMLCollectionList*
+RareNodeMembers::ensureActiveHtmlCollectionListForClassName()
+{
+    if (m_activeHtmlCollectionListsForClassName == nullptr) {
+        m_activeHtmlCollectionListsForClassName =
+            new (GC) ActiveHTMLCollectionList;
+    }
+    return m_activeHtmlCollectionListsForClassName;
+}
+
 HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
     ActiveHTMLCollectionList* list, String* query)
 {
@@ -80,13 +100,6 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
     }
 }
 
-Node::Node(Document* document)
-    : EventTarget()
-{
-    m_document = document;
-    initNode();
-}
-
 NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);
@@ -97,6 +110,26 @@ NodeList* Node::childNodes()
                          NodeListImpl::ChildNodeFilter, this, true);
     }
     return rareData->m_childNodeList;
+}
+
+String* Node::textContent()
+{
+    if (isDocumentFragment() || isElement()) {
+        String* str = String::emptyString;
+        for (Node* child = firstChild(); child != nullptr;
+             child = child->nextSibling()) {
+            if (child->isText() || child->isElement()) {
+                str = str->concat(child->textContent());
+            }
+        }
+        return str;
+    } else if (isAttr()) {
+        return asAttr()->value();
+    } else if (isText() || isComment()) {
+        return asCharacterData()->data();
+    }
+
+    return nullptr;
 }
 
 Node* Node::cloneNode(bool deep)

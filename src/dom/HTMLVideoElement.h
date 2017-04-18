@@ -52,7 +52,7 @@ public:
             ->m_videoTagName;
     }
 
-    virtual bool isHTMLVideoElement() const
+    virtual bool isHTMLVideoElement() const override
     {
         return true;
     }

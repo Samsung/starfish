@@ -50,7 +50,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isTextTrack() const
+    virtual bool isTextTrack() const override
     {
         return true;
     }

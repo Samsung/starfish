@@ -40,7 +40,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMTokenList() const
+    virtual bool isDOMTokenList() const override
     {
         return true;
     }

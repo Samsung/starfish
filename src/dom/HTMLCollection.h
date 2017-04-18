@@ -18,6 +18,7 @@
 #define __StarFishHTMLCollection__
 
 #include "binding/ScriptWrappable.h"
+#include "dom/NodeList.h"
 #include "dom/NodeListImpl.h"
 
 namespace StarFish {
@@ -29,11 +30,7 @@ class HTMLCollection : public ScriptWrappable {
 public:
     HTMLCollection(ScriptBindingInstance* instance, Node* root,
                    NodeListImpl::FilterFunctionType filterType, void* data,
-                   bool canCache = false)
-        : ScriptWrappable(this)
-        , m_nodeListImpl(root, filterType, data, canCache)
-    {
-    }
+                   bool canCache = false);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

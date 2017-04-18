@@ -31,7 +31,7 @@ ESFunctionObject* bindingHTMLDivElement(
     ESString* HTMLDivElementString = ESString::create("HTMLDivElement");
     ESFunctionObject* HTMLDivElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLDivElementString, 1, true, true);
+                                 HTMLDivElementString, 0, true, true);
     HTMLDivElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

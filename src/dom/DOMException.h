@@ -68,7 +68,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMException() const
+    virtual bool isDOMException() const override
     {
         return true;
     }

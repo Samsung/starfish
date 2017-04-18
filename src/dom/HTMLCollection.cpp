@@ -18,9 +18,16 @@
 #include "HTMLCollection.h"
 #include "dom/Document.h"
 #include "dom/HTMLElement.h"
-#include "dom/Traverse.h"
 
 namespace StarFish {
+
+HTMLCollection::HTMLCollection(ScriptBindingInstance* instance, Node* root,
+                               NodeListImpl::FilterFunctionType filterType,
+                               void* data, bool canCache)
+    : ScriptWrappable(this)
+    , m_nodeListImpl(root, filterType, data, canCache)
+{
+}
 
 unsigned long HTMLCollection::length() const
 {

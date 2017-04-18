@@ -39,12 +39,12 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isWebApis() const
+    virtual bool isWebApis() const override
     {
         return true;
     }
 
-    Avplay* AVPlay()
+    Avplay* Avplay()
     {
         return m_avplay;
     }

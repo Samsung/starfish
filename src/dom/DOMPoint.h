@@ -59,7 +59,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMPoint() const
+    virtual bool isDOMPoint() const override
     {
         return true;
     }

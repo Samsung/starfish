@@ -37,7 +37,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isHTMLDocument() const
+    virtual bool isHTMLDocument() const override
     {
         return true;
     }

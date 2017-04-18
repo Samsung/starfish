@@ -76,7 +76,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isCSSStyleDeclaration() const
+    virtual bool isCSSStyleDeclaration() const override
     {
         return true;
     }

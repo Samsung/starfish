@@ -38,7 +38,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isNavigator() const
+    virtual bool isNavigator() const override
     {
         return true;
     }
@@ -88,5 +88,4 @@ protected:
     Geolocation* m_geolocation;
 };
 }
-
 #endif

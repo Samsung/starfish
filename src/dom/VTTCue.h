@@ -37,7 +37,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isVTTCue() const
+    virtual bool isVTTCue() const override
     {
         return true;
     }

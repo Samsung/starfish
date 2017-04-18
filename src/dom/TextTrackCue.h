@@ -25,7 +25,6 @@
 namespace StarFish {
 
 class TextTrack;
-class TimeRange;
 
 class TextTrackCue : public EventTarget {
 public:
@@ -45,7 +44,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isTextTrackCue() const
+    virtual bool isTextTrackCue() const override
     {
         return true;
     }

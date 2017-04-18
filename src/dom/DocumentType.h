@@ -49,7 +49,7 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return DOCUMENT_TYPE_NODE;
     }
@@ -61,12 +61,6 @@ public:
 
     virtual Element* parentElement()
     {
-        return nullptr;
-    }
-
-    virtual String* textContent()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
@@ -83,7 +77,7 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-    virtual bool isDocumentType() const
+    virtual bool isDocumentType() const override
     {
         return true;
     }

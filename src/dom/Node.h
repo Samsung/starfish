@@ -25,7 +25,6 @@
 #include "platform/canvas/image/ImageData.h"
 #include "dom/Event.h"
 #include "dom/EventTarget.h"
-#include "dom/HTMLCollection.h"
 #include "dom/DOMTokenList.h"
 #include "dom/NamedNodeMap.h"
 #include "dom/DOMException.h"
@@ -55,34 +54,19 @@ public:
     {
     }
 
-    virtual bool isRareElementMembers()
+    virtual bool isRareElementMembers() const
     {
         return false;
     }
 
-    RareElementMembers* asRareElementMembers()
+    RareElementMembers* asRareElementMembers() const
     {
         STARFISH_ASSERT(isRareElementMembers());
         return (RareElementMembers*)(this);
     }
 
-    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName()
-    {
-        if (m_activeHtmlCollectionListsForTagName == nullptr) {
-            m_activeHtmlCollectionListsForTagName =
-                new (GC) ActiveHTMLCollectionList;
-        }
-        return m_activeHtmlCollectionListsForTagName;
-    }
-
-    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName()
-    {
-        if (m_activeHtmlCollectionListsForClassName == nullptr) {
-            m_activeHtmlCollectionListsForClassName =
-                new (GC) ActiveHTMLCollectionList;
-        }
-        return m_activeHtmlCollectionListsForClassName;
-    }
+    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName();
+    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName();
 
     HTMLCollection* hasQueryInActiveHtmlCollectionList(
         ActiveHTMLCollectionList* list, String* query);
@@ -101,41 +85,27 @@ public:
 
 class Node : public EventTarget {
 protected:
-    Node(Document* document, ScriptBindingInstance* instance)
+    Node(Document* document)
         : EventTarget()
+        , m_inParsing(false)
+        , m_needsStyleRecalc(true)
+        , m_childNeedsStyleRecalc(true)
+        , m_needsFrameTreeBuild(true)
+        , m_childNeedsFrameTreeBuild(true)
+        , m_didInlineStyleModifiedAfterAttributeSet(false)
+        , m_hasDirAttribute(false)
+        , m_state(NodeStateNormal)
+        , m_restyleFlags(0)
+        , m_rareNodeMembers(nullptr)
+        , m_document(document)
+        , m_nextSibling(nullptr)
+        , m_previousSibling(nullptr)
+        , m_firstChild(nullptr)
+        , m_lastChild(nullptr)
+        , m_parentNode(nullptr)
+        , m_style(nullptr)
+        , m_frame(nullptr)
     {
-        m_document = document;
-        initNode();
-    }
-
-    Node(Document* document);
-
-    void initNode()
-    {
-        m_parentNode = nullptr;
-
-        m_nextSibling = nullptr;
-        m_previousSibling = nullptr;
-
-        m_firstChild = nullptr;
-        m_lastChild = nullptr;
-
-        m_state = NodeStateNormal;
-        m_restyleFlags = 0;
-
-        m_inParsing = false;
-        m_needsStyleRecalc = true;
-        m_childNeedsStyleRecalc = true;
-
-        m_needsFrameTreeBuild = true;
-        m_childNeedsFrameTreeBuild = true;
-
-        m_didInlineStyleModifiedAfterAttributeSet = false;
-        m_hasDirAttribute = false;
-
-        m_style = nullptr;
-        m_frame = nullptr;
-        m_rareNodeMembers = nullptr;
     }
 
 public:
@@ -185,7 +155,7 @@ public:
         AffectedByLastChildRules = 1 << 11,
     };
 
-    virtual NodeType nodeType() = 0;
+    virtual NodeType nodeType() const = 0;
     virtual String* nodeName() = 0;
 
     virtual void beginParsing()
@@ -256,17 +226,14 @@ public:
         return m_nextSibling;
     }
 
-    virtual String* nodeValue()
+    virtual String* nodeValue() const
     {
         return nullptr;
     }
 
     virtual void setNodeValue(String* val){};
 
-    virtual String* textContent()
-    {
-        return nullptr;
-    }
+    String* textContent();
 
     virtual void setTextContent(String* val){};
 
@@ -346,33 +313,9 @@ public:
         NodeStateTarget = 1 << 3,
     };
 
-    virtual bool isNode() const
+    virtual bool isNode() const override
     {
         return true;
-    }
-
-    Element* asElement()
-    {
-        STARFISH_ASSERT(isElement());
-        return (Element*)this;
-    }
-
-    Document* asDocument()
-    {
-        STARFISH_ASSERT(isDocument());
-        return (Document*)this;
-    }
-
-    DocumentType* asDocumentType()
-    {
-        STARFISH_ASSERT(isDocumentType());
-        return (DocumentType*)this;
-    }
-
-    Text* asText()
-    {
-        STARFISH_ASSERT(isText());
-        return (Text*)this;
     }
 
     void setFirstChild(Node* s)

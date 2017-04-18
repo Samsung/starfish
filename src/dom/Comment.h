@@ -33,13 +33,13 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isComment() const
+    virtual bool isComment() const override
     {
         return true;
     }
 
     /* 4.4 Interface Node */
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return Node::COMMENT_NODE;
     }

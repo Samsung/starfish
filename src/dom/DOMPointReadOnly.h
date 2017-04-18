@@ -48,7 +48,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMPointReadOnly() const
+    virtual bool isDOMPointReadOnly() const override
     {
         return true;
     }

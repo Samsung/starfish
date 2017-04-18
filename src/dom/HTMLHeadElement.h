@@ -51,7 +51,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLHeadElement() const
+    virtual bool isHTMLHeadElement() const override
     {
         return true;
     }

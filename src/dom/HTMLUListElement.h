@@ -52,7 +52,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLUListElement() const
+    virtual bool isHTMLUListElement() const override
     {
         return true;
     }

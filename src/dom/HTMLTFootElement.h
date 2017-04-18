@@ -55,7 +55,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLTFootElement() const
+    virtual bool isHTMLTFootElement() const override
     {
         return true;
     }

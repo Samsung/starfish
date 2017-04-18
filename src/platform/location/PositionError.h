@@ -62,7 +62,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isPositionError() const
+    virtual bool isPositionError() const override
     {
         return true;
     }

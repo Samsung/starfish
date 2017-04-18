@@ -32,7 +32,7 @@ static ESValue openFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     String* url = toBrowserString(firstArg);
     avPlay->open(url);
 
@@ -44,7 +44,7 @@ static ESValue prepareFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->prepare();
 
     return ESValue(ESValue::ESUndefined);
@@ -60,7 +60,7 @@ static ESValue setDisplayRectFunction(ESVMInstance* instance)
 
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->setDisplayRect(Arg1.toNumber(), Arg2.toNumber(), Arg3.toNumber(),
                            Arg4.toNumber());
 
@@ -72,7 +72,7 @@ static ESValue playFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->play();
 
     return ESValue(ESValue::ESUndefined);
@@ -83,7 +83,7 @@ static ESValue closeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->close();
 
     return ESValue(ESValue::ESUndefined);
@@ -94,7 +94,7 @@ static ESValue pauseFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->pause();
 
     return ESValue(ESValue::ESUndefined);
@@ -105,7 +105,7 @@ static ESValue stopFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->stop();
 
     return ESValue(ESValue::ESUndefined);
@@ -116,7 +116,7 @@ static ESValue suspendFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->suspend();
 
     return ESValue(ESValue::ESUndefined);
@@ -127,7 +127,7 @@ static ESValue restoreFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->restore();
 
     return ESValue(ESValue::ESUndefined);
@@ -138,7 +138,7 @@ static ESValue getStateFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     return toJSString(avPlay->getState());
 }
 
@@ -147,7 +147,7 @@ static ESValue getCurrentTimeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     return ESValue(avPlay->getCurrentTime());
 }
 
@@ -156,7 +156,7 @@ static ESValue getDurationFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     return ESValue(avPlay->getDuration());
 }
 
@@ -167,7 +167,7 @@ static ESValue setStreamingPropertyFunction(ESVMInstance* instance)
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->setStreamingProperty(toBrowserString(firstArg),
                                  toBrowserString(secondArg));
     return ESValue(ESValue::ESUndefined);
@@ -179,7 +179,7 @@ static ESValue prepareAsyncFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->prepareAsync(firstArg);
 
     return ESValue(ESValue::ESUndefined);
@@ -191,7 +191,7 @@ static ESValue setListenerFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->setListener(firstArg);
 
     return ESValue(ESValue::ESUndefined);
@@ -203,7 +203,7 @@ static ESValue seekToFunction(ESVMInstance* instance)
     ESValue Arg = instance->currentExecutionContext()->readArgument(0);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->AVPlay();
+                         ->Avplay();
     avPlay->seekTo(Arg.toNumber());
     return ESValue(ESValue::ESUndefined);
 }

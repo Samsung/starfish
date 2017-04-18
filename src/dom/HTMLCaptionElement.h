@@ -55,7 +55,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLCaptionElement() const
+    virtual bool isHTMLCaptionElement() const override
     {
         return true;
     }

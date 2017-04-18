@@ -57,7 +57,7 @@ public:
             ->m_trackTagName;
     }
 
-    virtual bool isHTMLTrackElement() const
+    virtual bool isHTMLTrackElement() const override
     {
         return true;
     }

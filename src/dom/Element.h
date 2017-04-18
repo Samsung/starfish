@@ -34,10 +34,12 @@ public:
         , m_pseudoElementData(nullptr)
     {
     }
-    bool isRareElementMembers()
+
+    bool isRareElementMembers() const override
     {
         return true;
     }
+
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
     PseudoElementData* m_pseudoElementData;
@@ -45,26 +47,15 @@ public:
 
 class Element : public Node {
 public:
-    Element(Document* document, ScriptBindingInstance* instance)
-        : Node(document, instance)
-        , m_inlineStyle(nullptr)
-        , m_focused(false)
-        , m_tabIndex(0)
-        , m_tabIndexWasSetExplicitly(false)
-    {
-        m_id = String::emptyString;
-        m_className = String::emptyString;
-    }
-
     Element(Document* document)
         : Node(document)
         , m_inlineStyle(nullptr)
         , m_focused(false)
         , m_tabIndex(0)
         , m_tabIndexWasSetExplicitly(false)
+        , m_id(String::emptyString)
+        , m_className(String::emptyString)
     {
-        m_id = String::emptyString;
-        m_className = String::emptyString;
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -73,29 +64,12 @@ public:
     }
 
     /* 4.4 Interface Node */
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return ELEMENT_NODE;
     }
 
-    virtual String* textContent()
-    {
-        if ((nodeType() == TEXT_NODE) ||
-            (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
-            return textContent();
-        }
-        String* str = String::createASCIIString("");
-        for (Node* child = firstChild(); child != nullptr;
-             child = child->nextSibling()) {
-            if (child->nodeType() == TEXT_NODE ||
-                child->nodeType() == ELEMENT_NODE) {
-                str = str->concat(child->textContent());
-            }
-        }
-        return str;
-    }
-
-    virtual void setTextContent(String* text);
+    virtual void setTextContent(String* text) override;
 
 #ifdef STARFISH_ENABLE_TEST
     String* innerHTML();
@@ -107,15 +81,9 @@ public:
 
     /* Other methods (not in Node interface) */
 
-    virtual bool isElement() const
+    virtual bool isElement() const override
     {
         return true;
-    }
-
-    HTMLElement* asHTMLElement()
-    {
-        STARFISH_ASSERT(isHTMLElement());
-        return (HTMLElement*)this;
     }
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS

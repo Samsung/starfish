@@ -55,7 +55,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isMediaSource() const
+    virtual bool isMediaSource() const override
     {
         return true;
     }

@@ -34,39 +34,21 @@ public:
     }
 
     /* 4.4 Interface Node */
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return Node::NodeType::DOCUMENT_FRAGMENT_NODE;
     }
 
     virtual String* nodeName();
-    virtual void setTextContent(String* val);
-    virtual String* textContent()
-    {
-        String* str = String::createASCIIString("");
-        for (Node* child = firstChild(); child != nullptr;
-             child = child->nextSibling()) {
-            if (child->nodeType() == TEXT_NODE ||
-                child->nodeType() == ELEMENT_NODE) {
-                str = str->concat(child->textContent());
-            }
-        }
-        return str;
-    }
+    virtual void setTextContent(String* val) override;
 
     virtual Node* clone();
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isDocumentFragment() const
+    virtual bool isDocumentFragment() const override
     {
         return true;
-    }
-
-    Text* asText()
-    {
-        STARFISH_ASSERT(isText());
-        return (Text*)this;
     }
 
 private:

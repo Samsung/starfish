@@ -52,7 +52,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLStrongElement() const
+    virtual bool isHTMLStrongElement() const override
     {
         return true;
     }

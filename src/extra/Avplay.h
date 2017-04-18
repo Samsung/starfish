@@ -53,7 +53,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isAvplay() const
+    virtual bool isAvplay() const override
     {
         return true;
     }
@@ -77,11 +77,6 @@ public:
     void setStreamingProperty(String* arg1, String* arg2);
     void prepareAsync(ScriptValue listener);
     void setListener(ScriptValue listener);
-
-    virtual bool isAVPlay() const
-    {
-        return true;
-    }
 
     void callJSCallback(AVPLAY_CALLBACK_TYPE type);
 

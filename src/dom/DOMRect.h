@@ -60,7 +60,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMRect() const
+    virtual bool isDOMRect() const override
     {
         return true;
     }

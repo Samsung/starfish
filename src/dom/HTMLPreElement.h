@@ -51,7 +51,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLPreElement() const
+    virtual bool isHTMLPreElement() const override
     {
         return true;
     }

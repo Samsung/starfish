@@ -40,7 +40,7 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-    virtual bool isHTMLSourceElement() const
+    virtual bool isHTMLSourceElement() const override
     {
         return true;
     }

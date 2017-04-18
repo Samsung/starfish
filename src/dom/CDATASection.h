@@ -33,7 +33,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isCDataSection() const
+    virtual bool isCDATASection() const override
     {
         return true;
     }

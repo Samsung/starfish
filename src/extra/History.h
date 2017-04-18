@@ -42,7 +42,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isHistory() const
+    virtual bool isHistory() const override
     {
         return true;
     }
