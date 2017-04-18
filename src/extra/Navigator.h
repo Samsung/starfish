@@ -68,24 +68,24 @@ public:
         return String::createASCIIString(USER_AGENT(APP_CODE_NAME, VERSION));
     }
 
-    Geolocation* geoLocation()
+    Geolocation* geolocation()
     {
-        if (m_geoLocation == nullptr) {
-            m_geoLocation = Geolocation::create(m_starFish);
+        if (m_geolocation == nullptr) {
+            m_geolocation = Geolocation::create(m_starFish);
         }
-        return m_geoLocation;
+        return m_geolocation;
     }
 
     void close()
     {
-        if (m_geoLocation) {
-            m_geoLocation->close();
+        if (m_geolocation) {
+            m_geolocation->close();
         }
     }
 
 protected:
     StarFish* m_starFish;
-    Geolocation* m_geoLocation;
+    Geolocation* m_geolocation;
 };
 }
 
