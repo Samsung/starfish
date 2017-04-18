@@ -978,7 +978,7 @@ void Document::notifyDomContentLoaded()
     }
 
     // if there is a fragment identifier, set cssTarget.
-    String* fragment = documentURI()->getHash();
+    String* fragment = documentURI()->hash();
     if (!fragment->equals(String::emptyString)) {
         window()->processUrlFragment(
             fragment->substring(1, fragment->length() - 1));

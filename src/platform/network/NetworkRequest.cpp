@@ -655,7 +655,7 @@ void NetworkRequest::send(String* body)
                 list = curl_slist_append(list, "Origin:null");
             } else {
                 headerText = "Host:";
-                headerText += m_url->getHostname()->utf8Data();
+                headerText += m_url->hostname()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
                 headerText += m_document->urlString()->utf8Data();

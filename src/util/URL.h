@@ -96,20 +96,22 @@ public:
     }
 
     String* origin();
-    String* getHref();
-    String* getProtocol();
-    String* getUsername();
+    String* href();
+    String* protocol();
+    String* username();
     void setUsername(String* newPath);
     String* getPassword();
     void setPassword(String* newPath);
-    String* getHost();
-    String* getHostname();
-    String* getPort();
-    String* getPathname();
+    String* host();
+    void setHost(String* newHost);
+    String* hostname();
+    void setHostname(String* newHostname);
+    String* port();
+    String* pathname();
     void setPathname(String* newPath, bool needRemovingDots = true);
-    String* getSearch();
+    String* search();
     void setSearch(String* newPath);
-    String* getHash();
+    String* hash();
     void setHash(String* newPath);
     void setProtocol(String* newProtocol);
 

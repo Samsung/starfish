@@ -44,15 +44,15 @@ public:
         return m_starFish->window()->document()->documentURI();
     }
 
-    String* getHref()
+    String* href()
     {
-        return url()->getHref();
+        return url()->href();
     }
 
-    String* getHost()
+    String* host()
     {
-        String* hostname = url()->getHostname();
-        String* port = url()->getPort();
+        String* hostname = url()->hostname();
+        String* port = url()->port();
         if (!port->equals(String::emptyString) &&
             !hostname->equals(String::emptyString)) {
             return (hostname->concat(String::fromUTF8(":")))->concat(port);
@@ -61,34 +61,46 @@ public:
         }
     }
 
-    String* getHostname()
+    String* hostname()
     {
-        return url()->getHostname();
+        return url()->hostname();
     }
 
-    String* getProtocol()
+    String* protocol()
     {
-        return url()->getProtocol();
+        return url()->protocol();
     }
 
-    String* getPathname()
+    String* pathname()
     {
-        return url()->getPathname();
+        return url()->pathname();
     }
 
-    String* getSearch()
+    String* search()
     {
-        return url()->getSearch();
+        return url()->search();
     }
 
-    String* getHash()
+    String* hash()
     {
-        return url()->getHash();
+        return url()->hash();
     }
 
     void setHref(String* newURL)
     {
         setLocation(newURL);
+    }
+
+    void setHost(String* newHost)
+    {
+        url()->setHost(newHost);
+        setLocation(url()->urlString());
+    }
+
+    void setHostname(String* newHostname)
+    {
+        url()->setHostname(newHostname);
+        setLocation(url()->urlString());
     }
 
     void setProtocol(String* newProtocol)
