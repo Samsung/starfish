@@ -1945,7 +1945,7 @@ test/reftest/csswg-test/css21_original/generated-content/after-inheritable-002.h
 test/reftest/csswg-test/css21_original/generated-content/after-location-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-after-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-after-002.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-after-011.htm
+test/reftest/csswg-test/css21_original/generated-content/before-after-011.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-display-types-001.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-attr-001.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-restyle-001.htm

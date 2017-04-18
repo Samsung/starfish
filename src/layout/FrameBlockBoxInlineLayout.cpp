@@ -3141,7 +3141,7 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
-    if (!isAnonymous() &&
+    if (node() && node()->isElement() && node()->asElement()->isHTMLElement() &&
         node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
         LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
         if (widthAttribute > 0) {
