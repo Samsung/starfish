@@ -94,7 +94,7 @@ static ESValue revokeObjectURLFunction(ESVMInstance* instance)
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getHref());
+    return toJSString(originalObj->href());
 }
 
 static ESValue originGetterFunction(ESVMInstance* instance)
@@ -106,13 +106,13 @@ static ESValue originGetterFunction(ESVMInstance* instance)
 static ESValue protocolGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getProtocol());
+    return toJSString(originalObj->protocol());
 }
 
 static ESValue usernameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getUsername());
+    return toJSString(originalObj->username());
 }
 
 static ESValue usernameSetterFunction(ESVMInstance* instance)
@@ -152,25 +152,25 @@ static ESValue passwordSetterFunction(ESVMInstance* instance)
 static ESValue hostGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getHost());
+    return toJSString(originalObj->host());
 }
 
 static ESValue hostnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getHostname());
+    return toJSString(originalObj->hostname());
 }
 
 static ESValue portGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getPort());
+    return toJSString(originalObj->port());
 }
 
 static ESValue pathnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getPathname());
+    return toJSString(originalObj->pathname());
 }
 
 static ESValue pathnameSetterFunction(ESVMInstance* instance)
@@ -190,13 +190,13 @@ static ESValue pathnameSetterFunction(ESVMInstance* instance)
 static ESValue searchGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getSearch());
+    return toJSString(originalObj->search());
 }
 
 static ESValue hashGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    return toJSString(originalObj->getHash());
+    return toJSString(originalObj->hash());
 }
 
 ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)

@@ -297,7 +297,7 @@ void URL::parseURLString(String* baseURL, String* url)
     resolvePositions();
 
     if (m_urlString->charAt(m_protocolEnd) == '/') {
-        String* origPath = getPathname();
+        String* origPath = pathname();
         String* newPath = removingDots(origPath);
         if (newPath != origPath) {
             setPathname(newPath, false);
@@ -308,7 +308,7 @@ void URL::parseURLString(String* baseURL, String* url)
 String* URL::getURLString(String* baseURL, String* url)
 {
     URL* u = new URL(baseURL, url);
-    String* ret = u->getHref();
+    String* ret = u->href();
     return ret;
 }
 
@@ -401,12 +401,12 @@ String* URL::origin()
     return m_urlString->substring(0, m_hostEnd);
 }
 
-String* URL::getHref()
+String* URL::href()
 {
     return m_urlString;
 }
 
-String* URL::getProtocol()
+String* URL::protocol()
 {
     return m_urlString->substring(0, m_protocolEnd)->toLower();
 }
@@ -434,7 +434,7 @@ void URL::setProtocol(String* newProtocol)
     resolvePositions();
 }
 
-String* URL::getUsername()
+String* URL::username()
 {
     return m_urlString->substring(m_userStart, m_userEnd - m_userStart);
 }
@@ -504,21 +504,31 @@ void URL::setPassword(String* newPass)
     resolvePositions();
 }
 
-String* URL::getHost()
+String* URL::host()
 {
     size_t start =
         (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
-String* URL::getHostname()
+void URL::setHost(String* newHost)
+{
+    STARFISH_ASSERT_NOT_REACHED();
+}
+
+String* URL::hostname()
 {
     size_t start =
         (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
-String* URL::getPort()
+void URL::setHostname(String* newHostname)
+{
+    STARFISH_ASSERT_NOT_REACHED();
+}
+
+String* URL::port()
 {
     if (m_hostEnd != m_portEnd) {
         return m_urlString->substring(m_hostEnd + 1, m_portEnd - m_hostEnd - 1);
@@ -527,7 +537,7 @@ String* URL::getPort()
     }
 }
 
-String* URL::getPathname()
+String* URL::pathname()
 {
     if (m_portEnd != m_pathEnd) {
         return m_urlString->substring(m_portEnd, m_pathEnd - m_portEnd);
@@ -551,7 +561,7 @@ void URL::setPathname(String* newPath, bool needRemovingDots)
     resolvePositions();
 }
 
-String* URL::getSearch()
+String* URL::search()
 {
     if (m_pathEnd != m_queryEnd) {
         return m_urlString->substring(m_pathEnd, m_queryEnd - m_pathEnd);
@@ -572,7 +582,7 @@ void URL::setSearch(String* newPath)
     resolvePositions();
 }
 
-String* URL::getHash()
+String* URL::hash()
 {
     if (m_queryEnd != m_fragmentEnd) {
         return m_urlString->substring(m_queryEnd, m_fragmentEnd - m_queryEnd);
