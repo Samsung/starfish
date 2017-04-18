@@ -24,71 +24,117 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue geolocationGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
+    // Declare return value (empty when void)
+    Geolocation* result = nullptr;
+    result = originalObj->geolocation();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
 static ESValue appCodeNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return toJSString(originalObj->appCodeName());
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->appCodeName();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue appNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return toJSString(originalObj->appName());
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->appName();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue appVersionGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return toJSString(originalObj->appVersion());
-}
-
-static ESValue vendorGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return toJSString(originalObj->vendor());
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->appVersion();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue userAgentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return toJSString(originalObj->userAgent());
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->userAgent();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
-static ESValue geolocationGetterFunction(ESVMInstance* instance)
+static ESValue vendorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    return originalObj->geoLocation()->scriptObject();
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->vendor();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Navigator, fetchData(scriptBindingInstance)
-                                                   ->m_instance->globalObject()
-                                                   ->objectPrototype());
+    // Bind for constructor
+    ESString* NavigatorString = ESString::create("Navigator");
+    ESFunctionObject* NavigatorFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, NavigatorString, 1, true, true);
+    NavigatorFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    NavigatorFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    NavigatorFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)
+            ->m_instance->globalObject()
+            ->objectPrototype());
 
+    // Bind for attributes
+    ESString* geolocationString = ESString::create("geolocation");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appCodeName"), appCodeNameGetterFunction, nullptr);
+        geolocationString, geolocationGetterFunction, nullptr);
 
+    ESString* appCodeNameString = ESString::create("appCodeName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appName"), appNameGetterFunction, nullptr);
+        appCodeNameString, appCodeNameGetterFunction, nullptr);
 
+    ESString* appNameString = ESString::create("appName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appVersion"), appVersionGetterFunction, nullptr);
+        appNameString, appNameGetterFunction, nullptr);
 
+    ESString* appVersionString = ESString::create("appVersion");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("vendor"), vendorGetterFunction, nullptr);
+        appVersionString, appVersionGetterFunction, nullptr);
 
+    ESString* userAgentString = ESString::create("userAgent");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("userAgent"), userAgentGetterFunction, nullptr);
+        userAgentString, userAgentGetterFunction, nullptr);
 
+    ESString* vendorString = ESString::create("vendor");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("geolocation"), geolocationGetterFunction, nullptr);
+        vendorString, vendorGetterFunction, nullptr);
 
     return NavigatorFunction;
 }
