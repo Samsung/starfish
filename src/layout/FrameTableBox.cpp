@@ -348,7 +348,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // NOTE: width="0" is handled differently by Blink and Firefox.
     // When width="0" is given, Blink tries to set table width to 0.
     // Firefox ignores width="0". We ignore width="0"
-    if (!isAnonymous() &&
+    if (!isAnonymous() && node()->isElement() &&
+        node()->asElement()->isHTMLElement() &&
         node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
         LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
         if (widthAttribute > 0) {
