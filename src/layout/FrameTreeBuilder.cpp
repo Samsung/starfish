@@ -354,11 +354,6 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                pseudoElement->isAfterPseudoElement()) {
         DisplayValue contentDisplay = pseudoElement->style()->display();
         DisplayValue parentDisplay = parent->style()->display();
-        if (ComputedStyle::isDisplayTableValueType(contentDisplay) &&
-            ComputedStyle::isDisplayTableValueType(parentDisplay)) {
-            // TODO: Consider table-related displays
-            STARFISH_ASSERT_NOT_REACHED();
-        }
 
         // Create pseudo-element's frame.
         Frame* pseudoFrame = nullptr;
@@ -390,6 +385,9 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
             pseudoFrame = buildTree(pseudoElement, ctx, true);
         }
 
+        // If the content's display is a table-related value, we have to find
+        // the frame for the pseudo-element. Because table has its own frame
+        // tree builder and it returns the entire table frames.
         FrameBlockBox* pre = ctx.currentBlockContainer();
         if (contentDisplay == DisplayValue::TableDisplayValue ||
             contentDisplay == DisplayValue::InlineTableDisplayValue ||

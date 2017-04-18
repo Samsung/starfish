@@ -70,10 +70,10 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
         FrameTreeBuilder::buildTree(current, ctx, force);
     }
 
-    ctx.setCurrentBlockContainer(parent);
-
     FrameTreeBuilder::createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+
+    ctx.setCurrentBlockContainer(parent);
 
     FrameTreeBuilder::createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
