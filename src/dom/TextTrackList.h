@@ -32,7 +32,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isTextTrackList() const
+    virtual bool isTextTrackList() const override
     {
         return true;
     }

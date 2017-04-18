@@ -34,7 +34,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isSourceBufferList() const
+    virtual bool isSourceBufferList() const override
     {
         return true;
     }

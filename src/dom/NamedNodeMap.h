@@ -37,7 +37,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isNamedNodeMap() const
+    virtual bool isNamedNodeMap() const override
     {
         return true;
     }

@@ -120,7 +120,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isSourceBuffer() const
+    virtual bool isSourceBuffer() const override
     {
         return true;
     }

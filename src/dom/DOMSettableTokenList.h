@@ -18,10 +18,13 @@
 #define __StarFishDOMSettableTokenList__
 
 #include "binding/ScriptWrappable.h"
+#include "DOMTokenList.h"
 
 namespace StarFish {
 
 class Element;
+class String;
+
 class DOMSettableTokenList : public DOMTokenList {
 public:
     DOMSettableTokenList(ScriptBindingInstance* instance, Element* element,
@@ -47,7 +50,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMSettableTokenList() const
+    virtual bool isDOMSettableTokenList() const override
     {
         return true;
     }

@@ -33,7 +33,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isTimeRanges() const
+    virtual bool isTimeRanges() const override
     {
         return true;
     }

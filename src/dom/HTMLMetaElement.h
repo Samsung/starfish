@@ -56,7 +56,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLMetaElement() const
+    virtual bool isHTMLMetaElement() const override
     {
         return true;
     }

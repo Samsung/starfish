@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-String* Attr::value()
+String* Attr::value() const
 {
     if (m_element) {
         return m_element->getAttribute(m_qname);

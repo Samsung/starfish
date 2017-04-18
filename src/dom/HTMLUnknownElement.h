@@ -51,7 +51,7 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-    virtual bool isHTMLUnknownElement() const
+    virtual bool isHTMLUnknownElement() const override
     {
         return true;
     }

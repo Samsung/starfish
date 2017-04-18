@@ -33,7 +33,7 @@ namespace StarFish {
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    URL* uri, String* charSet, bool isXMLDocument,
                    bool doesParticipateInRendering)
-    : Node(this, scriptBindingInstance)
+    : Node(this)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_isXMLDocument(isXMLDocument)

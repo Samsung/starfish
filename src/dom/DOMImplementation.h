@@ -40,7 +40,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMImplementation() const
+    virtual bool isDOMImplementation() const override
     {
         return true;
     }

@@ -69,7 +69,7 @@ public:
         return m_qname.localName();
     }
 
-    String* value();
+    String* value() const;
 
     void setValue(String* value);
 
@@ -85,7 +85,7 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return ATTRIBUTE_NODE;
     }
@@ -100,29 +100,24 @@ public:
         return m_qname.localName();
     }
 
-    virtual String* nodeValue()
+    virtual String* nodeValue() const override
     {
         return value();
     }
 
-    virtual void setNodeValue(String* val)
+    virtual void setNodeValue(String* val) override
     {
         setValue(val);
     }
 
-    virtual String* textContent()
-    {
-        return value();
-    }
-
-    virtual void setTextContent(String* val)
+    virtual void setTextContent(String* val) override
     {
         setValue(val);
     }
 
     virtual Node* clone();
 
-    virtual bool isAttr() const
+    virtual bool isAttr() const override
     {
         return true;
     }

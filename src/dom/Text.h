@@ -33,14 +33,14 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isText() const
+    virtual bool isText() const override
     {
         return true;
     }
 
     /* 4.4 Interface Node */
 
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return Node::TEXT_NODE;
     }

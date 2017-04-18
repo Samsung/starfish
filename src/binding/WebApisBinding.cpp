@@ -30,7 +30,7 @@ static ESValue avplayGetterFunction(ESVMInstance* instance)
 {
     return ((Window*)instance->globalObject()->extraPointerData())
         ->Webapis()
-        ->AVPlay()
+        ->Avplay()
         ->scriptObject();
 }
 

@@ -17,7 +17,6 @@
 #ifndef __StarFishDOMRectReadOnly__
 #define __StarFishDOMRectReadOnly__
 
-#include "util/String.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
@@ -31,7 +30,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMRectReadOnly() const
+    virtual bool isDOMRectReadOnly() const override
     {
         return true;
     }

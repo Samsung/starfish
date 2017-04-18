@@ -28,24 +28,16 @@ class NodeList : public ScriptWrappable {
 public:
     NodeList(ScriptBindingInstance* instance, Node* root,
              NodeListImpl::FilterFunctionType filterType, void* data,
-             bool canCache = false)
-        : ScriptWrappable(this)
-        , m_nodeListImpl(root, filterType, data, canCache)
-    {
-    }
+             bool canCache = false);
 
-    NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true)
-        : ScriptWrappable(this)
-        , m_nodeListImpl(root, canCache)
-    {
-    }
+    NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isNodeList() const
+    virtual bool isNodeList() const override
     {
         return true;
     }

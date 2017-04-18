@@ -63,7 +63,7 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-    virtual bool isHTMLScriptElement() const
+    virtual bool isHTMLScriptElement() const override
     {
         return true;
     }

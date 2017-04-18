@@ -140,22 +140,17 @@ public:
 #endif
 
     /* Other methods */
-    virtual NodeType nodeType()
+    virtual NodeType nodeType() const override
     {
         return DOCUMENT_NODE;
     }
 
     virtual String* nodeName();
     virtual String* localName();
-    virtual String* textContent()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
-    }
 
     Element* documentElement();
 
-    virtual bool isDocument() const
+    virtual bool isDocument() const override
     {
         return true;
     }

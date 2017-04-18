@@ -55,7 +55,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLTBodyElement() const
+    virtual bool isHTMLTBodyElement() const override
     {
         return true;
     }

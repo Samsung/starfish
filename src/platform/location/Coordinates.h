@@ -51,7 +51,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isCoordinates() const
+    virtual bool isCoordinates() const override
     {
         return true;
     }

@@ -127,7 +127,7 @@ public:
         setLocation(url()->urlString());
     }
 
-    virtual bool isLocation() const
+    virtual bool isLocation() const override
     {
         return true;
     }

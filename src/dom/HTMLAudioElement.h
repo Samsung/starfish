@@ -58,7 +58,7 @@ public:
             ->m_audioTagName;
     }
 
-    virtual bool isHTMLAudioElement() const
+    virtual bool isHTMLAudioElement() const override
     {
         return true;
     }

@@ -38,7 +38,7 @@ public:
         initScriptWrappable(this, instance);
     }
 
-    virtual bool isDOMQuad() const
+    virtual bool isDOMQuad() const override
     {
         return true;
     }

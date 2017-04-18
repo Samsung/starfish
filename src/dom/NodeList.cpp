@@ -15,11 +15,24 @@
  */
 
 #include "StarFishConfig.h"
-#include "NodeList.h"
-#include "dom/Document.h"
-#include "dom/Traverse.h"
+#include "dom/NodeList.h"
+#include "dom/NodeListImpl.h"
 
 namespace StarFish {
+
+NodeList::NodeList(ScriptBindingInstance* instance, Node* root,
+                   NodeListImpl::FilterFunctionType filterType, void* data,
+                   bool canCache)
+    : ScriptWrappable(this)
+    , m_nodeListImpl(root, filterType, data, canCache)
+{
+}
+
+NodeList::NodeList(ScriptBindingInstance* instance, Node* root, bool canCache)
+    : ScriptWrappable(this)
+    , m_nodeListImpl(root, canCache)
+{
+}
 
 unsigned long NodeList::length() const
 {

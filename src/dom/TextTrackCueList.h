@@ -34,7 +34,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isTextTrackCueList() const
+    virtual bool isTextTrackCueList() const override
     {
         return true;
     }

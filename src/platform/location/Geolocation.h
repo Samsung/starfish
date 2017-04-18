@@ -43,7 +43,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isGeolocation() const
+    virtual bool isGeolocation() const override
     {
         return true;
     }

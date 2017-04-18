@@ -54,7 +54,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isGeoposition() const
+    virtual bool isGeoposition() const override
     {
         return true;
     }

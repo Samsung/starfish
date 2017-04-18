@@ -44,7 +44,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isBlob() const
+    virtual bool isBlob() const override
     {
         return true;
     }

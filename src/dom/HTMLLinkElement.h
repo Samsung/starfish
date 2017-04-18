@@ -56,7 +56,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLLinkElement() const
+    virtual bool isHTMLLinkElement() const override
     {
         return true;
     }

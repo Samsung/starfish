@@ -51,7 +51,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLSpanElement() const
+    virtual bool isHTMLSpanElement() const override
     {
         return true;
     }

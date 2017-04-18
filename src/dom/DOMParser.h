@@ -36,7 +36,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isDOMParser() const
+    virtual bool isDOMParser() const override
     {
         return true;
     }

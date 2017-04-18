@@ -61,7 +61,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLObjectElement() const
+    virtual bool isHTMLObjectElement() const override
     {
         return true;
     }

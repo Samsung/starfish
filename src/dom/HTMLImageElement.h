@@ -115,7 +115,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLImageElement() const
+    virtual bool isHTMLImageElement() const override
     {
         return true;
     }

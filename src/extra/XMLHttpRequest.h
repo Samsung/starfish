@@ -56,7 +56,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isXMLHttpRequest() const
+    virtual bool isXMLHttpRequest() const override
     {
         return true;
     }

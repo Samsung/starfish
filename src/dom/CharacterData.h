@@ -32,36 +32,31 @@ public:
         m_data = data;
     }
 
-    virtual bool isCharacterData() const
+    virtual bool isCharacterData() const override
     {
         return true;
     }
 
     /* 4.4 Interface Node */
 
-    virtual String* nodeValue()
+    virtual String* nodeValue() const override
     {
         return data();
     }
 
-    virtual void setNodeValue(String* val)
+    virtual void setNodeValue(String* val) override
     {
         setData(val);
     }
 
-    virtual String* textContent()
-    {
-        return data();
-    }
-
-    virtual void setTextContent(String* val)
+    virtual void setTextContent(String* val) override
     {
         setData(val);
     }
 
     /* 4.9. Interface CharacterData */
 
-    String* data()
+    String* data() const
     {
         return m_data;
     }

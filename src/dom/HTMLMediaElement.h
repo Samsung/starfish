@@ -237,7 +237,7 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual bool isHTMLMediaElement() const
+    virtual bool isHTMLMediaElement() const override
     {
         return true;
     }

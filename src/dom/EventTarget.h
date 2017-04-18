@@ -112,15 +112,9 @@ protected:
     }
 
 public:
-    virtual bool isEventTarget() const
+    virtual bool isEventTarget() const override
     {
         return true;
-    }
-
-    Node* asNode()
-    {
-        STARFISH_ASSERT(isNode());
-        return (Node*)this;
     }
 
     GCVector<EventListener*>* getEventListeners(const String* eventType);
