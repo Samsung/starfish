@@ -35,15 +35,18 @@ public:
 
     bool bgColorFromAttribute(Color* ret)
     {
-        if (isAnonymous() ||
-            !(node()->asElement()->asHTMLElement()->isHTMLTableElement() ||
-              node()->asElement()->asHTMLElement()->isHTMLTDElement() ||
-              node()->asElement()->asHTMLElement()->isHTMLTHElement())) {
+        if (!(node() && node()->isElement() &&
+              node()->asElement()->isHTMLElement())) {
+            return false;
+        }
+
+        HTMLElement* elem = node()->asElement()->asHTMLElement();
+        if (!(elem->isHTMLTableElement() || elem->isHTMLTDElement() ||
+              elem->isHTMLTHElement())) {
             return false;
         }
 
         String* color = nullptr;
-        HTMLElement* elem = node()->asElement()->asHTMLElement();
         if (elem->isHTMLTableElement()) {
             color = elem->asHTMLTableElement()->bgColor();
         } else if (elem->isHTMLTDElement()) {

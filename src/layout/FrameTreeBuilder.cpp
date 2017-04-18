@@ -29,6 +29,7 @@
 #include "FrameReplacedImage.h"
 #include "FrameTableBox.h"
 #include "FrameTableRowBox.h"
+#include "FrameTableSectionBox.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "FrameReplacedVideo.h"
 #endif
@@ -251,7 +252,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     return nullptr;
 }
 
-Frame* findPseudoFrameForTable(Frame* frame, bool isBefore)
+Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
 {
     Frame* pseudoFrame = frame;
     while (pseudoFrame) {
@@ -353,11 +354,13 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                pseudoElement->isAfterPseudoElement()) {
         DisplayValue contentDisplay = pseudoElement->style()->display();
         DisplayValue parentDisplay = parent->style()->display();
-        if (ComputedStyle::isDisplayTableValueType(contentDisplay)) {
+        if (ComputedStyle::isDisplayTableValueType(contentDisplay) &&
+            ComputedStyle::isDisplayTableValueType(parentDisplay)) {
             // TODO: Consider table-related displays
             STARFISH_ASSERT_NOT_REACHED();
         }
 
+        // Create pseudo-element's frame.
         Frame* pseudoFrame = nullptr;
         if (ctx.currentBlockContainer()->isFrameTableBox()) {
             FrameTableBox* tableFrame =
@@ -387,6 +390,25 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
             pseudoFrame = buildTree(pseudoElement, ctx, true);
         }
 
+        FrameBlockBox* pre = ctx.currentBlockContainer();
+        if (contentDisplay == DisplayValue::TableDisplayValue ||
+            contentDisplay == DisplayValue::InlineTableDisplayValue ||
+            contentDisplay == DisplayValue::TableRowGroupDisplayValue ||
+            contentDisplay == DisplayValue::TableHeaderGroupDisplayValue ||
+            contentDisplay == DisplayValue::TableFooterGroupDisplayValue ||
+            contentDisplay == DisplayValue::TableRowDisplayValue) {
+            pseudoFrame = findPseudoFrameForTable(pseudoFrame);
+            ctx.setCurrentBlockContainer(pseudoFrame->asFrameBlockBox());
+        } else if (contentDisplay == DisplayValue::TableCaptionDisplayValue ||
+                   contentDisplay == DisplayValue::TableCellDisplayValue) {
+            pseudoFrame = findPseudoFrameForTable(pseudoFrame);
+        } else if (contentDisplay == DisplayValue::TableColumnDisplayValue ||
+                   contentDisplay ==
+                       DisplayValue::TableColumnGroupDisplayValue) {
+            return;
+        }
+
+        // Add content's frame to the pseudo-element.
         ContentDataGroup& content = pseudoElement->style()->content();
         auto iter = content.begin();
         while (iter != content.end()) {
@@ -403,13 +425,37 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                 contentText->setParentNode(pseudoElement);
                 contentText->clearNeedsStyleRecalc();
 
-                FrameText* contentTextFrame = new FrameText(
-                    contentText, contentTextStyle, ctx.currentDecorationData());
-                contentText->setFrame(contentTextFrame);
-                pseudoFrame->appendChild(contentTextFrame);
+                if (contentDisplay == DisplayValue::TableDisplayValue ||
+                    contentDisplay == DisplayValue::InlineTableDisplayValue) {
+                    STARFISH_ASSERT(pseudoFrame->isFrameTableBox());
+                    pseudoFrame->asFrameTableBox()->addChild(contentText, ctx,
+                                                             true);
+                } else if (contentDisplay ==
+                               DisplayValue::TableRowGroupDisplayValue ||
+                           contentDisplay ==
+                               DisplayValue::TableHeaderGroupDisplayValue ||
+                           contentDisplay ==
+                               DisplayValue::TableFooterGroupDisplayValue) {
+                    STARFISH_ASSERT(pseudoFrame->isFrameTableSectionBox());
+                    pseudoFrame->asFrameTableSectionBox()->addChild(contentText,
+                                                                    ctx, true);
+                } else if (contentDisplay ==
+                           DisplayValue::TableRowDisplayValue) {
+                    STARFISH_ASSERT(pseudoFrame->isFrameTableRowBox());
+                    pseudoFrame->asFrameTableRowBox()->addChild(contentText,
+                                                                ctx, true);
+                } else {
+                    FrameText* contentTextFrame =
+                        new FrameText(contentText, contentTextStyle,
+                                      ctx.currentDecorationData());
+                    contentText->setFrame(contentTextFrame);
+                    pseudoFrame->appendChild(contentTextFrame);
+                }
             }
             iter++;
         }
+
+        ctx.setCurrentBlockContainer(pre);
     }
 }
 

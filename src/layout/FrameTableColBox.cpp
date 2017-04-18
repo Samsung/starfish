@@ -104,18 +104,18 @@ void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
 unsigned FrameTableColBox::span()
 {
     int ret = 0;
-    if (node() &&
-        node()->asElement()->asHTMLElement()->isHTMLColGroupElement()) {
-        String* span = node()
-                           ->asElement()
-                           ->asHTMLElement()
-                           ->asHTMLColGroupElement()
-                           ->span();
+
+    if (!(node() && node()->isElement() &&
+          node()->asElement()->isHTMLElement())) {
+        return ret;
+    }
+
+    HTMLElement* e = node()->asElement()->asHTMLElement();
+    if (e->isHTMLColGroupElement()) {
+        String* span = e->asHTMLColGroupElement()->span();
         ret = String::parseInt(span);
-    } else if (node() &&
-               node()->asElement()->asHTMLElement()->isHTMLColElement()) {
-        String* span =
-            node()->asElement()->asHTMLElement()->asHTMLColElement()->span();
+    } else if (e->isHTMLColElement()) {
+        String* span = e->asHTMLColElement()->span();
         ret = String::parseInt(span);
     }
     // span is only accepted when HTML element is either <col> or <colGroup>,

@@ -1927,16 +1927,16 @@ test/reftest/csswg-test/css21_original/generated-content/after-content-display-0
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-002.htm
 # test/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-005.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-006.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-007.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-008.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-009.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-010.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-006.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-007.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-008.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-009.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-010.htm
 # test/reftest/csswg-test/css21_original/generated-content/after-content-display-011.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-012.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-013.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-014.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-015.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-012.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-013.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-014.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-015.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-016.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-017.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-018.htm
@@ -1958,16 +1958,16 @@ test/reftest/csswg-test/css21_original/generated-content/before-content-display-
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-002.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-005.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-006.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-007.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-008.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-009.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-010.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-006.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-007.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-008.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-009.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-010.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-content-display-011.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-012.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-013.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-014.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-015.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-012.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-013.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-014.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-015.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-016.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-017.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-018.htm
