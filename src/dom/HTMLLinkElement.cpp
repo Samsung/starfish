@@ -60,7 +60,7 @@ String* HTMLLinkElement::type()
 
 void HTMLLinkElement::setType(String* type)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_rel,
+    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
                  type);
 }
 
