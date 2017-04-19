@@ -23,13 +23,8 @@ namespace StarFish {
 
 class HTMLStrongElement : public HTMLElement {
 public:
-    HTMLStrongElement(Document* document, AtomicString name)
+    HTMLStrongElement(Document* document)
         : HTMLElement(document)
-        , m_name(document->window()
-                     ->starFish()
-                     ->staticStrings()
-                     ->m_xhtmlNamespaceURI,
-                 name)
     {
     }
 
@@ -40,15 +35,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return m_name.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return m_name;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 

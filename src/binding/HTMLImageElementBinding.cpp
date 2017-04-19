@@ -16,9 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/HTMLImageElement.h"
 
 namespace StarFish {
 
@@ -44,8 +44,7 @@ static ESValue htmlimageelementConstructor(ESVMInstance* instance)
         value1 = arg1.toUint32();
     }
     HTMLImageElement* result = nullptr;
-    Window* window = (Window*)instance->globalObject()->extraPointerData();
-    Document* callWith = window->document();
+    Document* callWith = fetchDocument(instance);
     // Call native function (nargs: 0-2)
     if (validArgCount == 0) {
         result = new HTMLImageElement(callWith);

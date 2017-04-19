@@ -60,11 +60,11 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
                name == str->m_h6TagName.localNameAtomic()) {
         return new HTMLHeadingElement(document, name);
     } else if (name == str->m_liTagName.localNameAtomic()) {
-        return new HTMLLIElement(document, name);
+        return new HTMLLIElement(document);
     } else if (name == str->m_ulTagName.localNameAtomic()) {
-        return new HTMLUListElement(document, name);
+        return new HTMLUListElement(document);
     } else if (name == str->m_strongTagName.localNameAtomic()) {
-        return new HTMLStrongElement(document, name);
+        return new HTMLStrongElement(document);
     } else if (name == str->m_tableTagName.localNameAtomic()) {
         return new HTMLTableElement(document);
     } else if (name == str->m_thTagName.localNameAtomic()) {

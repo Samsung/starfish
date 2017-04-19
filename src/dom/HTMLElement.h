@@ -69,6 +69,30 @@ public:
     void click();
     void focus();
 
+    ScriptValue onclickEventListener();
+    void setOnclickEventListener(ScriptValue onclick);
+
+    ScriptValue onmouseoverEventListener();
+    void setOnmouseoverEventListener(ScriptValue onmouseover);
+
+    ScriptValue onkeydownEventListener();
+    void setOnkeydownEventListener(ScriptValue onkeydown);
+
+    ScriptValue onkeyupEventListener();
+    void setOnkeyupEventListener(ScriptValue onkeyup);
+
+    ScriptValue onfocusEventListener();
+    void setOnfocusEventListener(ScriptValue onfocus);
+
+    ScriptValue onerrorEventListener();
+    void setOnerrorEventListener(ScriptValue onerror);
+
+    ScriptValue onloadEventListener();
+    void setOnloadEventListener(ScriptValue onload);
+
+    ScriptValue onunloadEventListener();
+    void setOnunloadEventListener(ScriptValue onunload);
+
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
     Element* offsetParent();
 

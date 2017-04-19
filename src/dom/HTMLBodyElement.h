@@ -50,21 +50,14 @@ public:
         return true;
     }
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle)
-    {
-        HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->backgroundColor().isTransparent() ||
-            !newStyle->backgroundImage()->equals(String::emptyString)) {
-            document()->window()->m_hasBodyElementBackground = true;
-        } else {
-            document()->window()->m_hasBodyElementBackground = false;
-        }
+    ScriptValue onloadEventListener();
+    void setOnloadEventListener(ScriptValue onload);
 
-        if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
-            document()->setNeedsFrameTreeBuild();
-        }
-    }
+    ScriptValue onunloadEventListener();
+    void setOnunloadEventListener(ScriptValue onunload);
+
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle);
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

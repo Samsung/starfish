@@ -183,6 +183,20 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
     executeScript();
 }
 
+String* HTMLScriptElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_scriptTagName.localName();
+}
+
+QualifiedName HTMLScriptElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_scriptTagName;
+}
+
 String* HTMLScriptElement::src()
 {
     String* url =

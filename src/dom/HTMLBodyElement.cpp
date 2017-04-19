@@ -34,6 +34,60 @@ QualifiedName HTMLBodyElement::name()
     return document()->window()->starFish()->staticStrings()->m_bodyTagName;
 }
 
+ScriptValue HTMLBodyElement::onloadEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_load;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLBodyElement::setOnloadEventListener(ScriptValue onload)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_load;
+
+    if (onload.isObject()) {
+        window->setAttributeEventListener(attr, onload);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLBodyElement::onunloadEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLBodyElement::setOnunloadEventListener(ScriptValue onunload)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
+
+    if (onunload.isObject()) {
+        window->setAttributeEventListener(attr, onunload);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
+                                              ComputedStyle* newStyle)
+{
+    HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
+    if (!newStyle->backgroundColor().isTransparent() ||
+        !newStyle->backgroundImage()->equals(String::emptyString)) {
+        document()->window()->m_hasBodyElementBackground = true;
+    } else {
+        document()->window()->m_hasBodyElementBackground = false;
+    }
+
+    if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
+        document()->setNeedsFrameTreeBuild();
+    }
+}
+
 void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
                                           String* value, bool attributeCreated,
                                           bool attributeRemoved)

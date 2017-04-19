@@ -200,6 +200,8 @@ public:
         return false;
     }
 
+    void setStyleAttr(String* style);
+
     CSSStyleDeclaration* inlineStyleWithoutCreation()
     {
         return m_inlineStyle;

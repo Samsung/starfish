@@ -160,6 +160,12 @@ Document* fetchDocument(ESVMInstance* instance)
     return window->document();
 }
 
+StarFish* fetchStarFish(ESVMInstance* instance)
+{
+    Window* window = ((Window*)instance->globalObject()->extraPointerData());
+    return window->starFish();
+}
+
 String* toBrowserString(const ESValue& v)
 {
     escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();

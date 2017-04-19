@@ -17,7 +17,6 @@
 #ifndef __StarFishKeyboardEvent__
 #define __StarFishKeyboardEvent__
 
-#include "binding/ScriptWrappable.h"
 #include "UIEvent.h"
 
 namespace StarFish {

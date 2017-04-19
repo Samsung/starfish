@@ -27,6 +27,20 @@ namespace StarFish {
 
 bool isCSSType(const char* type);
 
+String* HTMLLinkElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_linkTagName.localName();
+}
+
+QualifiedName HTMLLinkElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_linkTagName;
+}
+
 String* HTMLLinkElement::href()
 {
     String* url =

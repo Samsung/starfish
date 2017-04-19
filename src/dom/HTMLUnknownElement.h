@@ -23,15 +23,7 @@ namespace StarFish {
 
 class HTMLUnknownElement : public HTMLElement {
 public:
-    HTMLUnknownElement(Document* document, AtomicString localName)
-        : HTMLElement(document)
-        , m_name(document->window()
-                     ->starFish()
-                     ->staticStrings()
-                     ->m_xhtmlNamespaceURI,
-                 localName)
-    {
-    }
+    HTMLUnknownElement(Document* document, AtomicString localName);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

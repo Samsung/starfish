@@ -35,6 +35,20 @@ bool isCSSType(const char* type)
     return false;
 }
 
+String* HTMLStyleElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_styleTagName.localName();
+}
+
+QualifiedName HTMLStyleElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_styleTagName;
+}
+
 String* HTMLStyleElement::type()
 {
     return getAttribute(

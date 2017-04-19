@@ -17,9 +17,9 @@
 #ifdef STARFISH_ENABLE_DOMPARSER
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMParser.h"
 
 namespace StarFish {
 
@@ -27,10 +27,8 @@ using namespace escargot;
 
 static ESValue domParserFunction(ESVMInstance* instance)
 {
-    Window* wnd = ((Window*)ESVMInstance::currentInstance()
-                       ->globalObject()
-                       ->extraPointerData());
-    auto v = new DOMParser(wnd->starFish());
+    StarFish* starFish = fetchStarFish(instance);
+    auto v = new DOMParser(starFish);
     return v->scriptValue();
 }
 

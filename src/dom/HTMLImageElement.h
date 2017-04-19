@@ -53,60 +53,19 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_imgTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_imgTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* HTMLImageElement related */
 
-    void setSrc(String* src)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
-                     src);
-    }
+    void setSrc(String* src);
+    String* src();
 
-    String* src()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_src);
-    }
+    unsigned long width();
+    void setWidth(unsigned long width);
 
-    unsigned long width()
-    {
-        String* widthStr = getAttribute(
-            document()->window()->starFish()->staticStrings()->m_width);
-        return String::parseInt(widthStr);
-    }
-
-    void setWidth(unsigned long width)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                     String::fromInt(width));
-    }
-
-    unsigned long height()
-    {
-        String* heightStr = getAttribute(
-            document()->window()->starFish()->staticStrings()->m_height);
-        return String::parseInt(heightStr);
-    }
-
-    void setHeight(unsigned long height)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_height,
-            String::fromInt(height));
-    }
+    unsigned long height();
+    void setHeight(unsigned long height);
 
     ImageData* imageData()
     {

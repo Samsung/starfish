@@ -60,6 +60,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
 ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance);
 
 Document* fetchDocument(ESVMInstance* instance);
+StarFish* fetchStarFish(ESVMInstance* instance);
 
 String* toBrowserString(const ESValue& v);
 ESValue toJSString(String* v);

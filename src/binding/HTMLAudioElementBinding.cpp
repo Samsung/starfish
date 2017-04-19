@@ -16,9 +16,9 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/HTMLAudioElement.h"
 
 namespace StarFish {
 
@@ -37,8 +37,7 @@ static ESValue htmlaudioelementConstructor(ESVMInstance* instance)
         value0 = toBrowserString(arg0);
     }
     HTMLAudioElement* result = nullptr;
-    Window* window = (Window*)instance->globalObject()->extraPointerData();
-    Document* callWith = window->document();
+    Document* callWith = fetchDocument(instance);
     // Call native function (nargs: 0-1)
     if (validArgCount == 0) {
         result = new HTMLAudioElement(callWith);

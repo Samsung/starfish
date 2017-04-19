@@ -16,9 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/HTMLElement.h"
 
 namespace StarFish {
 
@@ -28,26 +28,16 @@ ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_click;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onclickEventListener();
 }
 
 ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_click;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnclickEventListener(arg0);
 
     return ESValue();
 }
@@ -56,54 +46,34 @@ ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_mouseover;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onmouseoverEventListener();
 }
 
 ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_mouseover;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnmouseoverEventListener(arg0)
 
-    return ESValue();
+        return ESValue();
 }
 
 ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onloadEventListener();
 }
 
 ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnloadEventListener(arg0);
 
     return ESValue();
 }
@@ -112,26 +82,16 @@ ESValue onunloadHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onunloadEventListener();
 }
 
 ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnunloadEventListener(arg0);
 
     return ESValue();
 }
@@ -140,26 +100,16 @@ ESValue onkeydownHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_keydown;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onkeydownEventListener();
 }
 
 ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_keydown;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnkeydownEventListener(arg0);
 
     return ESValue();
 }
@@ -168,26 +118,16 @@ ESValue onkeyupHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_keyup;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onkeyupEventListener();
 }
 
 ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_keyup;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnkeyupEventListener(arg0);
 
     return ESValue();
 }
@@ -196,26 +136,16 @@ ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_focus;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onfocusEventListener();
 }
 
 ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_keyup;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnfocusEventListener(arg0);
 
     return ESValue();
 }
@@ -224,26 +154,16 @@ ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_error;
-
-    return originalObj->attributeEventListener(attr);
+    return originalObj->onerrorEventListener();
 }
 
 ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_error;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnerrorEventListener(arg0);
 
     return ESValue();
 }

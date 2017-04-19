@@ -31,7 +31,8 @@ static ESValue commentFunction(ESVMInstance* instance)
         arg0 = ESString::create("");
     }
     String* data0 = String::fromUTF8(arg0.toString()->utf8Data());
-    Comment* comment = new Comment(fetchDocument(instance), data0);
+    Document* document = fetchDocument(instance);
+    Comment* comment = new Comment(document, data0);
 
     return comment->scriptValue();
 }
