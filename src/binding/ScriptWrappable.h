@@ -18,11 +18,156 @@
 #define __StarFishScriptWrappable__
 
 #include <Escargot.h>
-#include "binding/ScriptBindingInstance.h"
 
 namespace StarFish {
 
 using namespace escargot;
+
+class Document;
+class ScriptBindingInstanceDataEscargot;
+
+void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    ESObject* obj, ESString* propertyName, NativeFunctionType getter,
+    NativeFunctionType setter, bool isEnumerable = true,
+    bool isConfigurable = true);
+
+ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance);
+
+Document* fetchDocument(ESVMInstance* instance);
+StarFish* fetchStarFish(ESVMInstance* instance);
+
+String* toBrowserString(const ESValue& v);
+ESValue toJSString(String* v);
+
+ESValue defaultFunction(ESVMInstance* instance);
+ESValue errorOnConstructorFunction(ESVMInstance* instance);
+
+typedef ESValue ScriptValue;
+typedef ESObject* ScriptObject;
+typedef ESFunctionObject* ScriptFunction;
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
+    F(Attr)                                         \
+    F(Blob)                                         \
+    F(CDATASection)                                 \
+    F(CharacterData)                                \
+    F(Comment)                                      \
+    F(Coordinates)                                  \
+    F(CSSStyleDeclaration)                          \
+    F(CSSStyleRule)                                 \
+    F(Document)                                     \
+    F(DocumentFragment)                             \
+    F(DocumentType)                                 \
+    F(DOMException)                                 \
+    F(DOMTokenList)                                 \
+    F(DOMPoint)                                     \
+    F(DOMPointReadOnly)                             \
+    F(DOMQuad)                                      \
+    F(DOMRect)                                      \
+    F(DOMRectList)                                  \
+    F(DOMRectReadOnly)                              \
+    F(DOMSettableTokenList)                         \
+    F(Element)                                      \
+    F(Event)                                        \
+    F(EventTarget)                                  \
+    F(FocusEvent)                                   \
+    F(Geolocation)                                  \
+    F(Geoposition)                                  \
+    F(History)                                      \
+    F(HTMLBodyElement)                              \
+    F(HTMLBRElement)                                \
+    F(HTMLCollection)                               \
+    F(HTMLDivElement)                               \
+    F(HTMLDocument)                                 \
+    F(HTMLElement)                                  \
+    F(HTMLHeadElement)                              \
+    F(HTMLHeadingElement)                           \
+    F(HTMLHtmlElement)                              \
+    F(HTMLImageElement)                             \
+    F(HTMLLIElement)                                \
+    F(HTMLLinkElement)                              \
+    F(HTMLMetaElement)                              \
+    F(HTMLObjectElement)                            \
+    F(HTMLParagraphElement)                         \
+    F(HTMLPreElement)                               \
+    F(HTMLScriptElement)                            \
+    F(HTMLStyleElement)                             \
+    F(HTMLSpanElement)                              \
+    F(HTMLStrongElement)                            \
+    F(HTMLUListElement)                             \
+    F(HTMLUnknownElement)                           \
+    F(Image)                                        \
+    F(KeyboardEvent)                                \
+    F(Location)                                     \
+    F(MouseEvent)                                   \
+    F(NamedNodeMap)                                 \
+    F(Navigator)                                    \
+    F(Node)                                         \
+    F(NodeList)                                     \
+    F(PositionError)                                \
+    F(ProgressEvent)                                \
+    F(PseudoElement)                                \
+    F(URL)                                          \
+    F(Text)                                         \
+    F(TouchEvent)                                   \
+    F(UIEvent)                                      \
+    F(Window)                                       \
+    F(XMLHttpRequest)
+
+#ifdef STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F) F(DOMImplementation)
+#else // STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)
+#endif // STARFISH_EXP
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
+    F(HTMLAudioElement)                           \
+    F(HTMLMediaElement)                           \
+    F(HTMLSourceElement)                          \
+    F(HTMLTrackElement)                           \
+    F(HTMLVideoElement)                           \
+    F(MediaSource)                                \
+    F(SourceBuffer)                               \
+    F(SourceBufferList)                           \
+    F(TextTrack)                                  \
+    F(TextTrackCue)                               \
+    F(TextTrackCueList)                           \
+    F(TextTrackList)                              \
+    F(TimeRanges)                                 \
+    F(VTTCue)
+
+#else // STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
+#endif // STARFISH_ENABLE_MULTIMEDIA
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) F(HTMLAnchorElement)
+#else // STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#endif // STARFISH_ENABLE_MULTI_PAGE
+
+#ifdef STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(DOMParser)
+#else // STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
+#endif // STARFISH_ENABLE_DOMPARSER
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
+    F(Avplay)                                      \
+    F(WebApis)
+#else // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+#endif // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F)    \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)      \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)  \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)

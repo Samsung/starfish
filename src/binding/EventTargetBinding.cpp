@@ -18,6 +18,7 @@
 #include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/DOMException.h"
 #include "dom/EventTarget.h"
 
 namespace StarFish {

@@ -16,9 +16,10 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMException.h"
+#include "extra/XMLHttpRequest.h"
 
 namespace StarFish {
 
@@ -26,45 +27,154 @@ using namespace escargot;
 
 static ESValue xhrElementFunction(ESVMInstance* instance)
 {
-    Window* wnd = ((Window*)ESVMInstance::currentInstance()
-                       ->globalObject()
-                       ->extraPointerData());
-    auto xhr = new XMLHttpRequest(wnd->document());
+    Document* document = fetchDocument(instance);
+    auto xhr = new XMLHttpRequest(document);
     return xhr->scriptValue();
 }
 
-#define DEFINE_XHR_EVENT_HANDLER_FUNC(eventName)                          \
-    static ESValue on##eventName##GetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);                     \
-        auto eventType = originalObj->networkRequest()                    \
-                             .starFish()                                  \
-                             ->staticStrings()                            \
-                             ->m_##eventName;                             \
-        return originalObj->attributeEventListener(eventType);            \
-    }                                                                     \
-                                                                          \
-    static ESValue on##eventName##SetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);                     \
-        auto eventType = originalObj->networkRequest()                    \
-                             .starFish()                                  \
-                             ->staticStrings()                            \
-                             ->m_##eventName;                             \
-        ESValue v = instance->currentExecutionContext()->readArgument(0); \
-        originalObj->setAttributeEventListener(eventType, v);             \
-        return ESValue();                                                 \
-    }
+static ESValue onloadstartGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
 
-DEFINE_XHR_EVENT_HANDLER_FUNC(loadstart);
-DEFINE_XHR_EVENT_HANDLER_FUNC(progress);
-DEFINE_XHR_EVENT_HANDLER_FUNC(abort);
-DEFINE_XHR_EVENT_HANDLER_FUNC(error);
-DEFINE_XHR_EVENT_HANDLER_FUNC(load);
-DEFINE_XHR_EVENT_HANDLER_FUNC(timeout);
-DEFINE_XHR_EVENT_HANDLER_FUNC(loadend);
-DEFINE_XHR_EVENT_HANDLER_FUNC(readystatechange);
-#undef DEFINE_XHR_EVENT_HANDLER_FUNC
+    return originalObj->onloadstartEventListener();
+}
+
+static ESValue onloadstartSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnloadstartEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onprogressGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onprogressEventListener();
+}
+
+static ESValue onprogressSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnprogressEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onabortGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onabortEventListener();
+}
+
+static ESValue onabortSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnabortEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onerrorGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onerrorEventListener();
+}
+
+static ESValue onerrorSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnerrorEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onloadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onloadEventListener();
+}
+
+static ESValue onloadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnloadEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue ontimeoutGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->ontimeoutEventListener();
+}
+
+static ESValue ontimeoutSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOntimeoutEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onloadendGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onloadendEventListener();
+}
+
+static ESValue onloadendSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnloadendEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onreadystatechangeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    return originalObj->onreadystatechangeEventListener();
+}
+
+static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOntimeoutEventListener(arg0);
+
+    return ESValue();
+}
 
 static ESValue timeoutGetterFunction(ESVMInstance* instance)
 {
@@ -350,23 +460,44 @@ ESFunctionObject* bindingXMLHttpRequest(
         ->defineDataProperty(ESString::create("XMLHttpRequest"), false, false,
                              false, fnXhrElement);
 
-#define DEFINE_XHR_EVENT_HANDLER(eventName)                               \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(              \
-        XMLHttpRequestEventTargetFunction->protoType()                    \
-            .asESPointer()                                                \
-            ->asESObject(),                                               \
-        ESString::create("on" #eventName), on##eventName##GetterFunction, \
-        on##eventName##SetterFunction);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onloadstart"), onloadstartGetterFunction,
+        onloadstartSetterFunction);
 
-    DEFINE_XHR_EVENT_HANDLER(loadstart);
-    DEFINE_XHR_EVENT_HANDLER(progress);
-    DEFINE_XHR_EVENT_HANDLER(abort);
-    DEFINE_XHR_EVENT_HANDLER(error);
-    DEFINE_XHR_EVENT_HANDLER(load);
-    DEFINE_XHR_EVENT_HANDLER(timeout);
-    DEFINE_XHR_EVENT_HANDLER(loadend);
-    DEFINE_XHR_EVENT_HANDLER(readystatechange);
-#undef DEFINE_XHR_EVENT_HANDLER
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onprogress"), onprogressGetterFunction,
+        onprogressSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onabort"), onabortGetterFunction,
+        onabortSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onerror"), onerrorGetterFunction,
+        onerrorSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onload"), onloadGetterFunction, onloadSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("ontimeout"), ontimeoutGetterFunction,
+        ontimeoutSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onloadend"), onloadendGetterFunction,
+        onloadendSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fnXhrElement->protoType().asESPointer()->asESObject(),
+        ESString::create("onreadystatechange"),
+        onreadystatechangeGetterFunction, onreadystatechangeSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fnXhrElement->protoType().asESPointer()->asESObject(),

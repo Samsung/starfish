@@ -17,9 +17,9 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/HTMLVideoElement.h"
 
 namespace StarFish {
 

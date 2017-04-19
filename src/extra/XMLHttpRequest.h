@@ -29,10 +29,19 @@ class Blob;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
-    XMLHttpRequestEventTarget()
-        : EventTarget()
+    XMLHttpRequestEventTarget(Document* document)
+        : EventTarget(document)
     {
     }
+
+    DECLARE_EVENT_LISTENER(loadstart);
+    DECLARE_EVENT_LISTENER(progress);
+    DECLARE_EVENT_LISTENER(abort);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(load);
+    DECLARE_EVENT_LISTENER(timeout);
+    DECLARE_EVENT_LISTENER(loadend);
+    DECLARE_EVENT_LISTENER(readystatechange);
 };
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,

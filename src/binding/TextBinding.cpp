@@ -16,9 +16,10 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMException.h"
+#include "dom/Text.h"
 
 namespace StarFish {
 
@@ -30,11 +31,8 @@ static ESValue textFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     if (argCount > 0) {
         ESString* data = firstArg.toString();
-        Text* text = new Text((((Window*)ESVMInstance::currentInstance()
-                                    ->globalObject()
-                                    ->extraPointerData()))
-                                  ->document(),
-                              String::fromUTF8(data->utf8Data()));
+        Document* document = fetchDocument(instance);
+        Text* text = new Text(document, String::fromUTF8(data->utf8Data()));
         return text->scriptValue();
     }
     return ESValue();

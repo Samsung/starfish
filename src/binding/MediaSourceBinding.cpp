@@ -17,9 +17,10 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMException.h"
+#include "extra/MediaSource.h"
 
 namespace StarFish {
 
@@ -27,10 +28,7 @@ using namespace escargot;
 
 static ESValue mediaSourceFunction(ESVMInstance* instance)
 {
-    Window* w = ((Window*)ESVMInstance::currentInstance()
-                     ->globalObject()
-                     ->extraPointerData());
-    MediaSource* b = new MediaSource(w->starFish());
+    MediaSource* b = new MediaSource(fetchStarFish(instance));
     return b->scriptValue();
 }
 

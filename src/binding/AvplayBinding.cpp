@@ -20,6 +20,7 @@
 #include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/DOMException.h"
 #include "extra/Avplay.h"
 
 namespace StarFish {

@@ -38,6 +38,77 @@ namespace StarFish {
 
 using namespace escargot;
 
+void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    ESObject* obj, ESString* propertyName, NativeFunctionType getter,
+    NativeFunctionType setter, bool isEnumerable, bool isConfigurable)
+{
+    bool isWritable = setter;
+
+    ESPropertyAccessorData* accData = new ESPropertyAccessorData();
+    accData->setJSGetter(ESFunctionObject::create(
+        nullptr, getter, ESVMInstance::currentInstance()->strings().emptyString,
+        0, false, false));
+    if (setter) {
+        accData->setJSSetter(ESFunctionObject::create(
+            nullptr, setter,
+            ESVMInstance::currentInstance()->strings().emptyString, 1, false,
+            false));
+    }
+    obj->defineAccessorProperty(propertyName, accData, isWritable, isEnumerable,
+                                isConfigurable);
+}
+
+ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
+{
+    return (ScriptBindingInstanceDataEscargot*)instance->data();
+}
+
+Document* fetchDocument(ESVMInstance* instance)
+{
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    return window->document();
+}
+
+StarFish* fetchStarFish(ESVMInstance* instance)
+{
+    Window* window = ((Window*)instance->globalObject()->extraPointerData());
+    return window->starFish();
+}
+
+String* toBrowserString(const ESValue& v)
+{
+    escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();
+    String* newStr = String::fromUTF8(s.m_buffer, s.m_bufferSize);
+    // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored
+    // as '\','n'
+    // The right way is, input string should already have '\n', and white spaces
+    // should be removed from here.
+    // For time being, we simply remove "\n" and other whitespaces strings.
+    // newStr = newStr->replaceAll(String::fromUTF8("\n"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\t"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\f"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\r"), String::spaceString);
+    return newStr;
+}
+
+ESValue toJSString(String* v)
+{
+    return createScriptString(v);
+}
+
+ESValue defaultFunction(ESVMInstance* instance)
+{
+    return ESValue();
+}
+
+ESValue errorOnConstructorFunction(ESVMInstance* instance)
+{
+    ESVMInstance::currentInstance()->throwError(
+        ESValue(TypeError::create(ESString::create("Illegal constructor"))));
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return ESValue();
+}
+
 ScriptWrappable::ScriptWrappable(void* extraPointerData)
 {
     STARFISH_ASSERT(!((size_t)extraPointerData & (size_t)1));
@@ -1642,7 +1713,7 @@ void ScriptWrappable::initScriptWrappable(Avplay* ptr)
     Avplay* avPlay = (Avplay*)this;
     auto data =
         fetchData(avPlay->starFish()->window()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->fnAvPlay()->protoType());
+    scriptObject()->set__proto__(data->fnAvplay()->protoType());
 }
 #endif
 #endif

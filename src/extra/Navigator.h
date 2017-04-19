@@ -18,7 +18,6 @@
 #define __StarFishNavigator__
 
 #include "binding/ScriptWrappable.h"
-#include "platform/location/Geolocation.h"
 
 namespace StarFish {
 
@@ -68,20 +67,9 @@ public:
         return String::createASCIIString(USER_AGENT(APP_CODE_NAME, VERSION));
     }
 
-    Geolocation* geolocation()
-    {
-        if (m_geolocation == nullptr) {
-            m_geolocation = Geolocation::create(m_starFish);
-        }
-        return m_geolocation;
-    }
+    Geolocation* geolocation();
 
-    void close()
-    {
-        if (m_geolocation) {
-            m_geolocation->close();
-        }
-    }
+    void close();
 
 protected:
     StarFish* m_starFish;

@@ -251,6 +251,28 @@ public:
     virtual void didNodeRemovedFromDocumenTree();
     virtual void onDOMContentLoaded();
 
+    DECLARE_EVENT_LISTENER(progress);
+    DECLARE_EVENT_LISTENER(suspend);
+    DECLARE_EVENT_LISTENER(abort);
+    DECLARE_EVENT_LISTENER(emptied);
+    DECLARE_EVENT_LISTENER(stalled);
+    DECLARE_EVENT_LISTENER(loadedmetadata);
+    DECLARE_EVENT_LISTENER(loadeddata);
+    DECLARE_EVENT_LISTENER(loadstart);
+    DECLARE_EVENT_LISTENER(canplay);
+    DECLARE_EVENT_LISTENER(canplaythrough);
+    DECLARE_EVENT_LISTENER(playing);
+    DECLARE_EVENT_LISTENER(waiting);
+    DECLARE_EVENT_LISTENER(seeking);
+    DECLARE_EVENT_LISTENER(seeked);
+    DECLARE_EVENT_LISTENER(ended);
+    DECLARE_EVENT_LISTENER(durationchange);
+    DECLARE_EVENT_LISTENER(timeupdate);
+    DECLARE_EVENT_LISTENER(play);
+    DECLARE_EVENT_LISTENER(pause);
+    DECLARE_EVENT_LISTENER(ratechange);
+    DECLARE_EVENT_LISTENER(volumechange);
+
     TextTrackList* textTracks()
     {
         return m_textTracks;
