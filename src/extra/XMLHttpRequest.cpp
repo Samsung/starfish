@@ -16,11 +16,21 @@
 
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
+#include "dom/Document.h"
 #include "dom/ProgressEvent.h"
 #include "dom/DOMException.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
+
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadstart);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, progress);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, abort);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, error);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, load);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
+DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, readystatechange);
 
 XMLHttpRequest::XMLHttpRequest(Document* document)
     : m_networkRequest(new NetworkRequest(document))

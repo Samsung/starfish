@@ -378,6 +378,28 @@ void HTMLMediaElement::pause()
     }
 }
 
+DEFINE_EVENT_LISTENER(HTMLMediaElement, progress);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, suspend);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, abort);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, emptied);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, stalled);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, loadedmetadata);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, loadeddata);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, loadstart);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, canplay);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, canplaythrough);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, playing);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, waiting);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, seeking);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, seeked);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, ended);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, durationchange);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, timeupdate);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, play);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, pause);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, ratechange);
+DEFINE_EVENT_LISTENER(HTMLMediaElement, volumechange);
+
 void HTMLMediaElement::addTextTrack(TextTrack* track)
 {
     if (track) {

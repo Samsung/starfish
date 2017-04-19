@@ -16,9 +16,10 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMException.h"
+#include "dom/HTMLMediaElement.h"
 
 namespace StarFish {
 
@@ -28,26 +29,16 @@ ESValue onprogressHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_progress;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onprogressEventListener();
 }
 
 ESValue onprogressHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_progress;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnprogressEventListener(arg0);
 
     return ESValue();
 }
@@ -56,26 +47,16 @@ ESValue onsuspendHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_suspend;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onsuspendEventListener();
 }
 
 ESValue onsuspendHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_suspend;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnsuspendEventListener(arg0);
 
     return ESValue();
 }
@@ -84,26 +65,16 @@ ESValue onabortHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_abort;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onabortEventListener();
 }
 
 ESValue onabortHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_abort;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnabortEventListener(arg0);
 
     return ESValue();
 }
@@ -112,26 +83,16 @@ ESValue onemptiedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_emptied;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onemptiedEventListener();
 }
 
 ESValue onemptiedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_emptied;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnemptiedEventListener(arg0);
 
     return ESValue();
 }
@@ -140,26 +101,16 @@ ESValue onstalledHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_stalled;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onstalledEventListener();
 }
 
 ESValue onstalledHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_stalled;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnstalledEventListener(arg0);
 
     return ESValue();
 }
@@ -168,26 +119,16 @@ ESValue onloadedmetadataHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadedmetadata;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onloadedmetadataEventListener();
 }
 
 ESValue onloadedmetadataHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadedmetadata;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnloadedmetadataEventListener(arg0);
 
     return ESValue();
 }
@@ -196,26 +137,16 @@ ESValue onloadeddataHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadeddata;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onloadeddataEventListener();
 }
 
 ESValue onloadeddataHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadeddata;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnloadeddataEventListener(arg0);
 
     return ESValue();
 }
@@ -224,26 +155,16 @@ ESValue onloadstartHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadstart;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onloadstartEventListener();
 }
 
 ESValue onloadstartHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_loadstart;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnloadstartEventListener(arg0);
 
     return ESValue();
 }
@@ -252,26 +173,16 @@ ESValue oncanplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_canplay;
-
-    return window->attributeEventListener(attr);
+    return originalObj->oncanplayEventListener();
 }
 
 ESValue oncanplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_canplay;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOncanplayEventListener(arg0);
 
     return ESValue();
 }
@@ -280,26 +191,16 @@ ESValue oncanplaythroughHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_canplaythrough;
-
-    return window->attributeEventListener(attr);
+    return originalObj->oncanplayEventListener();
 }
 
 ESValue oncanplaythroughHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_canplaythrough;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOncanplaythroughEventListener(arg0);
 
     return ESValue();
 }
@@ -308,26 +209,16 @@ ESValue onplayingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_playing;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onplayingEventListener();
 }
 
 ESValue onplayingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_playing;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnplayingEventListener(arg0);
 
     return ESValue();
 }
@@ -336,26 +227,16 @@ ESValue onwaitingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_waiting;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onwaitingEventListener();
 }
 
 ESValue onwaitingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_waiting;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnwaitingEventListener(arg0);
 
     return ESValue();
 }
@@ -364,26 +245,16 @@ ESValue onseekingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_seeking;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onseekingEventListener();
 }
 
 ESValue onseekingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_seeking;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnseekingEventListener(arg0);
 
     return ESValue();
 }
@@ -392,26 +263,16 @@ ESValue onseekedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_seeked;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onseekedEventListener();
 }
 
 ESValue onseekedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_seeked;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnseekedEventListener(arg0);
 
     return ESValue();
 }
@@ -420,26 +281,16 @@ ESValue onendedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_ended;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onendedEventListener();
 }
 
 ESValue onendedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_ended;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnendedEventListener(arg0);
 
     return ESValue();
 }
@@ -448,26 +299,16 @@ ESValue ondurationchangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_durationchange;
-
-    return window->attributeEventListener(attr);
+    return originalObj->ondurationchangeEventListener();
 }
 
 ESValue ondurationchangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_durationchange;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOndurationchangeEventListener(arg0);
 
     return ESValue();
 }
@@ -476,26 +317,16 @@ ESValue ontimeupdateHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_timeupdate;
-
-    return window->attributeEventListener(attr);
+    return originalObj->ontimeupdateEventListener();
 }
 
 ESValue ontimeupdateHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_timeupdate;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOntimeupdateEventListener(arg0);
 
     return ESValue();
 }
@@ -504,26 +335,16 @@ ESValue onplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_play;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onplayEventListener();
 }
 
 ESValue onplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_play;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnplayEventListener(arg0);
 
     return ESValue();
 }
@@ -532,26 +353,16 @@ ESValue onpauseHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_pause;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onpauseEventListener();
 }
 
 ESValue onpauseHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_pause;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnpauseEventListener(arg0);
 
     return ESValue();
 }
@@ -560,26 +371,16 @@ ESValue onratechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_ratechange;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onratechangeEventListener();
 }
 
 ESValue onratechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_ratechange;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnratechangeEventListener(arg0);
 
     return ESValue();
 }
@@ -588,26 +389,16 @@ ESValue onvolumechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_volumechange;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onvolumechangeEventListener();
 }
 
 ESValue onvolumechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_volumechange;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        originalObj->setAttributeEventListener(attr, arg0);
-    } else {
-        originalObj->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnvolumechangeEventListener(arg0);
 
     return ESValue();
 }

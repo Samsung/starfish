@@ -18,9 +18,11 @@
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/DOMException.h"
+#include "extra/Avplay.h"
+#include "extra/WebApis.h"
 
 namespace StarFish {
 
@@ -28,10 +30,14 @@ using namespace escargot;
 
 static ESValue avplayGetterFunction(ESVMInstance* instance)
 {
-    return ((Window*)instance->globalObject()->extraPointerData())
-        ->Webapis()
-        ->Avplay()
-        ->scriptObject();
+    GENERATE_THIS_AND_CHECK_TYPE(WebApis);
+    Avplay* avplay = originalObj->Avplay();
+
+    if (avplay == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+
+    return avplay->scriptObject();
 }
 
 ESFunctionObject* bindingwebapis(ScriptBindingInstance* scriptBindingInstance)

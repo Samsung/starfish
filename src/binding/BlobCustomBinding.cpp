@@ -29,11 +29,9 @@ ESValue blobConstructor(ESVMInstance* instance)
     // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
     int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount == 0) {
-        Window* w = ((Window*)ESVMInstance::currentInstance()
-                         ->globalObject()
-                         ->extraPointerData());
-        Blob* b = new Blob(w->starFish(), 0, String::emptyString, nullptr,
-                           false, false);
+        StarFish* starFish = fetchStarFish(instance);
+        Blob* b =
+            new Blob(starFish, 0, String::emptyString, nullptr, false, false);
         return b->scriptValue();
     }
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
@@ -115,11 +113,9 @@ ESValue blobConstructor(ESVMInstance* instance)
         type = toBrowserString(secondArg.toString())->toLower();
     }
 
-    Window* w = ((Window*)ESVMInstance::currentInstance()
-                     ->globalObject()
-                     ->extraPointerData());
+    StarFish* starFish = fetchStarFish(instance);
     Blob* newBlob =
-        new Blob(w->starFish(), totalByteLength, type, buffer, false, false);
+        new Blob(starFish, totalByteLength, type, buffer, false, false);
     return newBlob->scriptValue();
 }
 }

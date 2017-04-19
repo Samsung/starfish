@@ -102,8 +102,9 @@ protected:
 
 class EventTarget : public ScriptWrappable {
 protected:
-    EventTarget()
+    EventTarget(Document* document)
         : ScriptWrappable(this)
+        , m_document(document)
     {
     }
 
@@ -168,9 +169,40 @@ public:
         m_eventListeners.clear();
     }
 
+    Document* document()
+    {
+        return m_document;
+    }
+
 protected:
     GCUnorderedMap<String*, GCVector<EventListener*>*> m_eventListeners;
+    Document* m_document;
 };
+
+#define DECLARE_EVENT_LISTENER(EVENT)       \
+    ScriptValue on##EVENT##EventListener(); \
+    void setOn##EVENT##EventListener(ScriptValue on##EVENT);
+
+#define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)                           \
+    ScriptValue EVENT_TARGET::on##EVENT##EventListener()                     \
+    {                                                                        \
+        Window* window = document()->window();                               \
+        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
+                                                                             \
+        return window->attributeEventListener(attr);                         \
+    }                                                                        \
+                                                                             \
+    void EVENT_TARGET::setOnprogressEventListener(ScriptValue on##EVENT)     \
+    {                                                                        \
+        Window* window = document()->window();                               \
+        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
+                                                                             \
+        if (on##EVENT.isObject()) {                                          \
+            setAttributeEventListener(attr, on##EVENT);                      \
+        } else {                                                             \
+            clearAttributeEventListener(attr);                               \
+        }                                                                    \
+    }
 }
 
 #endif

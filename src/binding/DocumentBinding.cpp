@@ -19,6 +19,7 @@
 
 #include "dom/Attr.h"
 #include "dom/DocumentFragment.h"
+#include "dom/DOMException.h"
 #include "dom/Comment.h"
 #include "dom/Element.h"
 #include "dom/Text.h"

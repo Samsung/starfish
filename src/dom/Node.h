@@ -86,7 +86,7 @@ public:
 class Node : public EventTarget {
 protected:
     Node(Document* document)
-        : EventTarget()
+        : EventTarget(document)
         , m_inParsing(false)
         , m_needsStyleRecalc(true)
         , m_childNeedsStyleRecalc(true)
@@ -97,7 +97,6 @@ protected:
         , m_state(NodeStateNormal)
         , m_restyleFlags(0)
         , m_rareNodeMembers(nullptr)
-        , m_document(document)
         , m_nextSibling(nullptr)
         , m_previousSibling(nullptr)
         , m_firstChild(nullptr)
@@ -360,11 +359,6 @@ public:
             child = child->nextSibling();
         }
         return nullptr;
-    }
-
-    Document* document()
-    {
-        return m_document;
     }
 
     virtual Node* clone() = 0;

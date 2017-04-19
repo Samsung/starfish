@@ -26,4 +26,19 @@ Navigator::Navigator(StarFish* starFish)
     , m_geolocation(nullptr)
 {
 }
+
+Geolocation* Navigator::geolocation()
+{
+    if (m_geolocation == nullptr) {
+        m_geolocation = Geolocation::create(m_starFish);
+    }
+    return m_geolocation;
+}
+
+void Navigator::close()
+{
+    if (m_geolocation) {
+        m_geolocation->close();
+    }
+}
 }
