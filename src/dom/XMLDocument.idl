@@ -1,0 +1,3 @@
+// https://www.w3.org/TR/dom/#interface-document
+[Exposed=Window]
+interface XMLDocument : Document {};

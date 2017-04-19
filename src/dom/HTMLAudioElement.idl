@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element
+
+[
+  STARFISH_ENABLE_MULTIMEDIA,
+  NamedConstructor=Audio(optional DOMString src),
+  ConstructorCallWith=Document
+] interface HTMLAudioElement : HTMLMediaElement {};

@@ -1,0 +1,36 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-body-element
+
+[HTMLConstructor]
+interface HTMLBodyElement : HTMLElement {
+  // The onblur, onerror, onfocus, onload, onresize, and onscroll event handlers of the Window object, exposed on the body element, replace the generic event handlers with the same names normally supported by HTML elements.
+  [Unimplemented] attribute EventHandler onblur;
+  [Unimplemented] attribute EventHandler onerror;
+  [Unimplemented] attribute EventHandler onfocus;
+  attribute EventHandler onload;
+  [Unimplemented] attribute EventHandler onresize;
+  [Unimplemented] attribute EventHandler onscroll;
+
+
+  // TODO Support implements
+  // HTMLBodyElement implements WindowEventHandlers;
+  // https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers
+  [Unimplemented] attribute EventHandler onafterprint;
+  [Unimplemented] attribute EventHandler onbeforeprint;
+  [Unimplemented] attribute OnBeforeUnloadEventHandler onbeforeunload;
+  [Unimplemented] attribute EventHandler onhashchange;
+  [Unimplemented] attribute EventHandler onlanguagechange;
+  [Unimplemented] attribute EventHandler onmessage;
+  [Unimplemented] attribute EventHandler onoffline;
+  [Unimplemented] attribute EventHandler ononline;
+  [Unimplemented] attribute EventHandler onpagehide;
+  [Unimplemented] attribute EventHandler onpageshow;
+  [Unimplemented] attribute EventHandler onpopstate;
+  [Unimplemented] attribute EventHandler onrejectionhandled;
+  [Unimplemented] attribute EventHandler onstorage;
+  [Unimplemented] attribute EventHandler onunhandledrejection;
+  attribute EventHandler onunload;
+};
+
+// TODO Support implements
+HTMLBodyElement implements WindowEventHandlers;
+

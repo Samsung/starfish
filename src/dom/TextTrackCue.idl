@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/#texttrackcue
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface TextTrackCue : EventTarget {
+  readonly attribute TextTrack? track;
+
+  attribute DOMString id;
+  attribute double startTime;
+  attribute double endTime;
+  [Unimplemented] attribute boolean pauseOnExit;
+
+  attribute EventHandler onenter;
+  attribute EventHandler onexit;
+};

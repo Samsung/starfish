@@ -1,0 +1,18 @@
+// https://w3c.github.io/media-source/#mediasource
+
+[STARFISH_ENABLE_MULTIMEDIA, Constructor]
+interface MediaSource : EventTarget {
+  readonly attribute SourceBufferList sourceBuffers;
+  readonly attribute SourceBufferList activeSourceBuffers;
+  readonly attribute ReadyState readyState;
+  attribute unrestricted double duration;
+  [Unimplemented] attribute EventHandler onsourceopen;
+  [Unimplemented] attribute EventHandler onsourceended;
+  [Unimplemented] attribute EventHandler onsourceclose;
+  SourceBuffer addSourceBuffer(DOMString type);
+  void removeSourceBuffer(SourceBuffer sourceBuffer);
+  void endOfStream(optional EndOfStreamError error);
+  [Unimplemented] void setLiveSeekableRange(double start, double end);
+  [Unimplemented] void clearLiveSeekableRange();
+  static boolean isTypeSupported(DOMString type);
+};

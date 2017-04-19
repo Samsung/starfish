@@ -1,0 +1,5 @@
+// https://w3c.github.io/webcomponents/spec/shadow/#shadowrootinit-dictionary
+[Unimplemented]
+dictionary ShadowRootInit {
+  required ShadowRootMode mode;
+};

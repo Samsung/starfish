@@ -1,0 +1,11 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-style-element
+
+[HTMLConstructor]
+interface HTMLStyleElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute DOMString media;
+  [Unimplemented, CEReactions] attribute DOMString nonce;
+  [CEReactions] attribute DOMString type;
+};
+
+// TODO Support implements
+HTMLStyleElement implements LinkStyle;

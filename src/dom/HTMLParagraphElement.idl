@@ -1,0 +1,3 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-p-element
+[HTMLConstructor]
+interface HTMLParagraphElement : HTMLElement {};

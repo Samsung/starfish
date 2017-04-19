@@ -1,0 +1,22 @@
+// https://html.spec.whatwg.org/multipage/browsers.html#location
+// NOTE Using DOMString instead of USVString
+
+interface Location {
+
+  // TODO binding generator - Handle Unforgeable
+  [Unforgeable] stringifier attribute DOMString href;
+  [Unimplemented, Unforgeable] readonly attribute DOMString origin;
+  [Unforgeable] attribute DOMString protocol;
+  [Unforgeable] attribute DOMString host;
+  [Unforgeable] attribute DOMString hostname;
+  [Unimplemented, Unforgeable] attribute DOMString port;
+  [Unforgeable] attribute DOMString pathname;
+  [Unforgeable] attribute DOMString search;
+  [Unforgeable] attribute DOMString hash;
+
+  [Unimplemented, Unforgeable] void assign(DOMString url);
+  [Unimplemented, Unforgeable] void replace(DOMString url);
+  [Unimplemented, Unforgeable] void reload();
+
+  [Unimplemented, Unforgeable, SameObject] readonly attribute DOMStringList ancestorOrigins;
+};

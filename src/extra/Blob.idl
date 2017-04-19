@@ -1,0 +1,22 @@
+// https://w3c.github.io/FileAPI/#blob
+// NOTE Using DOMString instead of USVString
+
+typedef (BufferSource or Blob or DOMString) BlobPart;
+
+[CustomConstructor(optional sequence<BlobPart> blobParts, optional BlobPropertyBag options),
+Exposed=(Window,Worker)]
+interface Blob {
+
+  readonly attribute unsigned long long size;
+  [Rename=mimeType] readonly attribute DOMString type;
+
+  // slice Blob into byte-ranged chunks
+  Blob slice([Clamp] optional long long start,
+            [Clamp] optional long long end,
+            optional DOMString contentType);
+};
+
+[Unimplemented] dictionary BlobPropertyBag {
+  DOMString type = "";
+};
+

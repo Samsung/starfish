@@ -1,0 +1,8 @@
+// https://drafts.fxtf.org/geometry/#dictdef-domquadinit
+[Unimplemented]
+dictionary DOMQuadInit {
+  DOMPointInit p1;
+  DOMPointInit p2;
+  DOMPointInit p3;
+  DOMPointInit p4;
+};

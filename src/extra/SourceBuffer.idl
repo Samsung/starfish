@@ -1,0 +1,22 @@
+// https://w3c.github.io/media-source/#sourcebuffer
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface SourceBuffer : EventTarget {
+  attribute AppendMode mode;
+  readonly attribute boolean updating;
+  readonly attribute TimeRanges buffered;
+  attribute double timestampOffset;
+  [Unimplemented] readonly attribute AudioTrackList audioTracks;
+  [Unimplemented] readonly attribute VideoTrackList videoTracks;
+  readonly attribute TextTrackList textTracks;
+  attribute double appendWindowStart;
+  attribute unrestricted double appendWindowEnd;
+  attribute EventHandler onupdatestart;
+  attribute EventHandler onupdate;
+  attribute EventHandler onupdateend;
+  attribute EventHandler onerror;
+  attribute EventHandler onabort;
+  void appendBuffer(BufferSource data);
+  void abort();
+  void remove(double start, unrestricted double end);
+};

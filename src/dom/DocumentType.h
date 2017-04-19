@@ -89,6 +89,11 @@ public:
         return n;
     }
 
+    void remove()
+    {
+        // TODO
+    }
+
 protected:
     String* m_name;
     String* m_publicId;

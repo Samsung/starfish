@@ -1,0 +1,27 @@
+// https://html.spec.whatwg.org/#texttrack
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum TextTrackMode { "disabled",  "hidden",  "showing" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum TextTrackKind { "subtitles",  "captions",  "descriptions",  "chapters",  "metadata" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface TextTrack : EventTarget {
+  readonly attribute TextTrackKind kind;
+  readonly attribute DOMString label;
+  readonly attribute DOMString language;
+
+  readonly attribute DOMString id;
+  [Unimplemented] readonly attribute DOMString inBandMetadataTrackDispatchType;
+
+  attribute TextTrackMode mode;
+
+  readonly attribute TextTrackCueList? cues;
+  readonly attribute TextTrackCueList? activeCues;
+
+  void addCue(TextTrackCue cue);
+  void removeCue(TextTrackCue cue);
+
+  attribute EventHandler oncuechange;
+};

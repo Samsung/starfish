@@ -1,0 +1,34 @@
+// https://w3c.github.io/webvtt/#vttcue
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum AutoKeyword { "auto" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+typedef (double or AutoKeyword) LineAndPositionSetting;
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum DirectionSetting { "", "rl", "lr" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum LineAlignSetting { "start", "center", "end" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum PositionAlignSetting { "line-left", "center", "line-right", "auto" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum AlignSetting { "start", "center", "end", "left", "right" };
+
+[STARFISH_ENABLE_MULTIMEDIA, Constructor(double startTime, double endTime, DOMString text)]
+interface VTTCue : TextTrackCue {
+  [Unimplemented] attribute VTTRegion? region;
+  [Unimplemented] attribute DirectionSetting vertical;
+  [Unimplemented] attribute boolean snapToLines;
+  [Unimplemented] attribute LineAndPositionSetting line;
+  [Unimplemented] attribute LineAlignSetting lineAlign;
+  [Unimplemented] attribute LineAndPositionSetting position;
+  [Unimplemented] attribute PositionAlignSetting positionAlign;
+  [Unimplemented] attribute double size;
+  [Unimplemented] attribute AlignSetting align;
+  attribute DOMString text;
+  DocumentFragment getCueAsHTML();
+};

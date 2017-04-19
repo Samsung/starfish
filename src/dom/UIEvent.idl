@@ -1,0 +1,13 @@
+// https://w3c.github.io/uievents/#interface-UIEvent
+
+[Constructor(DOMString type, optional UIEventInit eventInitDict)]
+interface UIEvent : Event {
+  [Unimplemented] readonly attribute Window? view;
+  [Unimplemented] readonly attribute long detail;
+};
+
+// https://w3c.github.io/uievents/#dictdef-uieventinit
+dictionary UIEventInit : EventInit {
+  Window? view = null;
+  long detail = 0;
+};

@@ -1,0 +1,21 @@
+// https://w3c.github.io/uievents/#idl-mouseevent
+
+[Constructor(DOMString type, optional MouseEventInit eventInitDict)]
+interface MouseEvent : UIEvent {
+  [Unimplemented] readonly attribute long screenX;
+  [Unimplemented] readonly attribute long screenY;
+  [Unimplemented] readonly attribute long clientX;
+  [Unimplemented] readonly attribute long clientY;
+
+  [Unimplemented] readonly attribute boolean ctrlKey;
+  [Unimplemented] readonly attribute boolean shiftKey;
+  [Unimplemented] readonly attribute boolean altKey;
+  [Unimplemented] readonly attribute boolean metaKey;
+
+  [Unimplemented] readonly attribute short button;
+  [Unimplemented] readonly attribute unsigned short buttons;
+
+  [Unimplemented] readonly attribute EventTarget? relatedTarget;
+
+  [Unimplemented] boolean getModifierState(DOMString keyArg);
+};

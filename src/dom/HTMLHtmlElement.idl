@@ -1,0 +1,3 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
+[HTMLConstructor]
+interface HTMLHtmlElement : HTMLElement {};

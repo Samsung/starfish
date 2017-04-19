@@ -1,0 +1,11 @@
+// https://dom.spec.whatwg.org/#childnode
+
+[PartialInterface,
+ NoInterfaceObject,
+ Exposed=Window]
+interface ChildNode {
+  [Unimplemented, CEReactions, Unscopable] void before((Node or DOMString)... nodes);
+  [Unimplemented, CEReactions, Unscopable] void after((Node or DOMString)... nodes);
+  [Unimplemented, CEReactions, Unscopable] void replaceWith((Node or DOMString)... nodes);
+  [CEReactions, Unscopable] void remove();
+};

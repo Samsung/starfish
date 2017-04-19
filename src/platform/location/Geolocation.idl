@@ -1,0 +1,18 @@
+// https://dev.w3.org/geo/api/spec-source.html#geolocation
+
+callback PositionCallback = void (Position position);
+
+callback PositionErrorCallback = void (PositionError positionError);
+
+[NoInterfaceObject]
+interface Geolocation { 
+  [Custom] void getCurrentPosition(PositionCallback successCallback,
+                          optional PositionErrorCallback errorCallback,
+                          optional PositionOptions options);
+
+  [Unimplemented] long watchPosition(PositionCallback successCallback,
+                    optional PositionErrorCallback errorCallback,
+                    optional PositionOptions options);
+
+  [Unimplemented] void clearWatch(long watchId);
+};

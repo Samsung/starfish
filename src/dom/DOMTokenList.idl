@@ -1,0 +1,14 @@
+// https://dom.spec.whatwg.org/#interface-domtokenlist
+
+interface DOMTokenList {
+  readonly attribute unsigned long length;
+  getter DOMString? item(unsigned long index);
+  boolean contains(DOMString token);
+  [Custom, CEReactions] void add(DOMString... tokens);
+  [CEReactions] void remove(DOMString... tokens);
+  [CEReactions] boolean toggle(DOMString token, optional boolean force);
+  [Unimplemented, CEReactions] void replace(DOMString token, DOMString newToken);
+  [Unimplemented] boolean supports(DOMString token);
+  [Unimplemented] stringifier attribute DOMString value;
+  iterable<DOMString>;
+};

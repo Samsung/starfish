@@ -1,0 +1,39 @@
+// REF1. https://w3c.github.io/uievents/#interface-keyboardevent
+// REF2. https://w3c.github.io/uievents/#idl-interface-KeyboardEvent-initializers
+// REF3. https://w3c.github.io/uievents/#legacy-interface-KeyboardEvent
+
+[Constructor(DOMString type, optional KeyboardEventInit eventInitDict)]
+interface KeyboardEvent : UIEvent {
+  // [REF1]----------------------------------------------------
+  // KeyLocationCode
+  const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
+  const unsigned long DOM_KEY_LOCATION_LEFT = 0x01;
+  const unsigned long DOM_KEY_LOCATION_RIGHT = 0x02;
+  const unsigned long DOM_KEY_LOCATION_NUMPAD = 0x03;
+
+  [Unimplemented] readonly attribute DOMString key;
+  [Unimplemented] readonly attribute DOMString code;
+  [Unimplemented] readonly attribute unsigned long location;
+
+  readonly attribute boolean ctrlKey;
+  readonly attribute boolean shiftKey;
+  readonly attribute boolean altKey;
+  readonly attribute boolean metaKey;
+
+  [Unimplemented] readonly attribute boolean repeat;
+  [Unimplemented] readonly attribute boolean isComposing;
+
+  [Unimplemented] boolean getModifierState(DOMString keyArg);
+
+
+  // [REF2]----------------------------------------------------
+  // Originally introduced (and deprecated) in this specification
+  [Unimplemented] void initKeyboardEvent();
+
+
+  // [REF3]----------------------------------------------------
+  // The following support legacy user agents
+  [Unimplemented] readonly attribute unsigned long charCode;
+  readonly attribute unsigned long keyCode;
+  [Unimplemented] readonly attribute unsigned long which;
+};

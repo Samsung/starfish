@@ -37,6 +37,7 @@ Document* fetchDocument(ESVMInstance* instance);
 StarFish* fetchStarFish(ESVMInstance* instance);
 
 String* toBrowserString(const ESValue& v);
+String* toBrowserString(const ESString* v);
 ESValue toJSString(String* v);
 
 ESValue defaultFunction(ESVMInstance* instance);
