@@ -737,6 +737,7 @@ class CSSStyleValuePair : public gc {
 
 public:
     enum KeyKind {
+        Empty,
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
@@ -806,7 +807,9 @@ public:
     };
 
     CSSStyleValuePair()
-        : m_value(0.0f)
+        : m_keyKind(KeyKind::Empty)
+        , m_valueKind(ValueKind::None)
+        , m_value(0.0f)
         , m_flagImportant(false)
     {
     }

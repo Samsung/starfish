@@ -61,6 +61,7 @@ public:
     ClassElementList(Node& rootNode, String* className)
         : m_className(className)
         , m_rootNode(&rootNode)
+        , m_currentElement(nullptr)
     {
         Node* child = m_rootNode->firstChild();
         while (child) {
