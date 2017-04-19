@@ -1,0 +1,24 @@
+// https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element
+// NOTE Using DOMString instead of USVString
+
+[HTMLConstructor]
+interface HTMLObjectElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute DOMString data;
+  [Unimplemented, CEReactions] attribute DOMString type;
+  [Unimplemented, CEReactions] attribute boolean typeMustMatch;
+  [Unimplemented, CEReactions] attribute DOMString name;
+  [Unimplemented, CEReactions] attribute DOMString useMap;
+  [Unimplemented] readonly attribute HTMLFormElement? form;
+  [Unimplemented, CEReactions] attribute DOMString width;
+  [Unimplemented, CEReactions] attribute DOMString height;
+  [Unimplemented] readonly attribute Document? contentDocument;
+  [Unimplemented] readonly attribute WindowProxy? contentWindow;
+  [Unimplemented] Document? getSVGDocument();
+
+  [Unimplemented] readonly attribute boolean willValidate;
+  [Unimplemented] readonly attribute ValidityState validity;
+  [Unimplemented] readonly attribute DOMString validationMessage;
+  [Unimplemented] boolean checkValidity();
+  [Unimplemented] boolean reportValidity();
+  [Unimplemented] void setCustomValidity(DOMString error);
+};

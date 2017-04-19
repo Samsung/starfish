@@ -1,0 +1,11 @@
+// https://developer.mozilla.org/en-US/docs/Web/API/HTMLSourceElement
+// NOTE Using DOMString instead of USVString
+
+[STARFISH_ENABLE_MULTIMEDIA, HTMLConstructor]
+interface HTMLSourceElement : HTMLElement {
+  [CEReactions] attribute DOMString src;
+  [CEReactions] attribute DOMString type;
+  [Unimplemented, CEReactions] attribute DOMString srcset;
+  [Unimplemented, CEReactions] attribute DOMString sizes;
+  [Unimplemented, CEReactions] attribute DOMString media;
+};

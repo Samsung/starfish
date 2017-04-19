@@ -1,0 +1,7 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#meta
+[HTMLConstructor]
+interface HTMLMetaElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute DOMString name;
+  [Unimplemented, CEReactions] attribute DOMString httpEquiv;
+  [Unimplemented, CEReactions] attribute DOMString content;
+};

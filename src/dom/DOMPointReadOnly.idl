@@ -1,0 +1,17 @@
+// https://drafts.fxtf.org/geometry/#dompointreadonly
+
+[Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
+             optional unrestricted double z = 0, optional unrestricted double w = 1),
+ Exposed=(Window,Worker)]
+interface DOMPointReadOnly {
+  [Unimplemented, NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other);
+
+  readonly attribute unrestricted double x;
+  readonly attribute unrestricted double y;
+  readonly attribute unrestricted double z;
+  readonly attribute unrestricted double w;
+
+  [Unimplemented] DOMPoint matrixTransform(optional DOMMatrixInit matrix);
+
+  serializer = { attribute };
+};

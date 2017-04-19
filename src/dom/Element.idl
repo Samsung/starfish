@@ -1,0 +1,91 @@
+// REF1. https://dom.spec.whatwg.org/#interface-element
+// REF2. https://dom.spec.whatwg.org/#parentnode
+// REF3. https://dom.spec.whatwg.org/#nondocumenttypechildnode
+// REF4. https://dom.spec.whatwg.org/#childnode
+// REF5. https://dom.spec.whatwg.org/#slotable
+// REF6. https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
+// REF7. https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
+
+
+[Exposed=Window]
+interface Element : Node {
+  // [REF1]--------------------------------------------------------------
+  [CustomGetter] readonly attribute DOMString? namespaceURI;
+  [Unimplemented] readonly attribute DOMString? prefix;
+  readonly attribute DOMString localName;
+  readonly attribute DOMString tagName;
+
+  [CEReactions, Rename=idAttr] attribute DOMString id;
+  [CEReactions] attribute DOMString className;
+  [CustomGetter, CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+  [Unimplemented, CEReactions, Unscopable] attribute DOMString slot;
+
+  [Unimplemented] boolean hasAttributes();
+  [SameObject] readonly attribute NamedNodeMap attributes;
+  [Unimplemented] sequence<DOMString> getAttributeNames();
+  DOMString? getAttribute(DOMString qualifiedName);
+  [Unimplemented] DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
+  [CEReactions, RaisesException] void setAttribute(DOMString qualifiedName, DOMString value);
+  [Unimplemented, CEReactions] void setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
+  [CEReactions] void removeAttribute(DOMString qualifiedName);
+  [Unimplemented, CEReactions] void removeAttributeNS(DOMString? namespace, DOMString localName);
+  boolean hasAttribute(DOMString qualifiedName);
+  [Unimplemented] boolean hasAttributeNS(DOMString? namespace, DOMString localName);
+
+  [Unimplemented] Attr? getAttributeNode(DOMString qualifiedName);
+  [Unimplemented] Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
+  [Unimplemented, CEReactions] Attr? setAttributeNode(Attr attr);
+  [Unimplemented, CEReactions] Attr? setAttributeNodeNS(Attr attr);
+  [Unimplemented, CEReactions] Attr removeAttributeNode(Attr attr);
+
+  [Unimplemented] ShadowRoot attachShadow(ShadowRootInit init);
+  [Unimplemented] readonly attribute ShadowRoot? shadowRoot;
+
+  [Unimplemented] Element? closest(DOMString selectors);
+  [Unimplemented] boolean matches(DOMString selectors);
+
+  [STARFISH_TC_COVERAGE] HTMLCollection getElementsByTagName(DOMString qualifiedName);
+  [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+  [STARFISH_TC_COVERAGE] HTMLCollection getElementsByClassName(DOMString classNames);
+
+  [Unimplemented, CEReactions] Element? insertAdjacentElement(DOMString where, Element element); // historical
+  [Unimplemented] void insertAdjacentText(DOMString where, DOMString data); // historical
+
+
+  // [REF6]--------------------------------------------------------------
+  [STARFISH_ENABLE_TEST, CEReactions, TreatNullAs=EmptyString] attribute DOMString innerHTML;
+  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString outerHTML;
+  [Unimplemented, CEReactions] void insertAdjacentHTML(DOMString position, DOMString text);
+
+
+  // [REF7]--------------------------------------------------------------
+  // NOTE using DOMRectList instead of sequence<DOMRect>
+  // sequence<DOMRect> getClientRects();
+  DOMRectList getClientRects();
+  [NewObject] DOMRect getBoundingClientRect();
+  [Unimplemented] void scrollIntoView();
+  [Unimplemented] void scrollIntoView((boolean or object) arg);
+  [Unimplemented] void scroll(optional ScrollToOptions options);
+  [Unimplemented] void scroll(unrestricted double x, unrestricted double y);
+  [Unimplemented] void scrollTo(optional ScrollToOptions options);
+  [Unimplemented] void scrollTo(unrestricted double x, unrestricted double y);
+  [Unimplemented] void scrollBy(optional ScrollToOptions options);
+  [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
+  [Unimplemented] attribute unrestricted double scrollTop;
+  [Unimplemented] attribute unrestricted double scrollLeft;
+  [Unimplemented] readonly attribute long scrollWidth;
+  [Unimplemented] readonly attribute long scrollHeight;
+  readonly attribute long clientTop;
+  readonly attribute long clientLeft;
+  readonly attribute long clientWidth;
+  readonly attribute long clientHeight;
+
+  // FIXME added style forcely, I didn't find any explanation or mention about style attribute
+  [CustomGetter, CustomSetter] attribute CSSStyleDeclaration style;
+};
+
+// TODO Support implements
+Element implements ParentNode;
+Element implements NonDocumentTypeChildNode;
+Element implements ChildNode;
+Element implements Slotable;

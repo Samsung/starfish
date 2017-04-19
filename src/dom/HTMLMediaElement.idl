@@ -1,0 +1,93 @@
+// https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement
+// NOTE Using DOMString instead of USVString
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum CanPlayTypeResult { "", "maybe", "probably" };
+
+[STARFISH_ENABLE_MULTIMEDIA]
+typedef (MediaStream or MediaSource or Blob) MediaProvider;
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface HTMLMediaElement : HTMLElement {
+
+  // error state
+  [Unimplemented] readonly attribute MediaError? error;
+
+  // network state
+  [CEReactions] attribute DOMString src;
+  [Unimplemented] attribute MediaProvider? srcObject;
+  readonly attribute DOMString currentSrc;
+  [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
+  const unsigned short NETWORK_EMPTY = 0;
+  const unsigned short NETWORK_IDLE = 1;
+  const unsigned short NETWORK_LOADING = 2;
+  const unsigned short NETWORK_NO_SOURCE = 3;
+  readonly attribute unsigned short networkState;
+  [CEReactions] attribute DOMString preload;
+  readonly attribute TimeRanges buffered;
+  void load();
+  CanPlayTypeResult canPlayType(DOMString type);
+
+  // ready state
+  const unsigned short HAVE_NOTHING = 0;
+  const unsigned short HAVE_METADATA = 1;
+  const unsigned short HAVE_CURRENT_DATA = 2;
+  const unsigned short HAVE_FUTURE_DATA = 3;
+  const unsigned short HAVE_ENOUGH_DATA = 4;
+  readonly attribute unsigned short readyState;
+  readonly attribute boolean seeking;
+
+  // playback state
+  attribute double currentTime;
+  [Unimplemented] void fastSeek(double time);
+  readonly attribute unrestricted double duration;
+  [Unimplemented] object getStartDate();
+  readonly attribute boolean paused;
+  attribute double defaultPlaybackRate;
+  attribute double playbackRate;
+  readonly attribute TimeRanges played;
+  readonly attribute TimeRanges seekable;
+  readonly attribute boolean ended;
+  [CEReactions] attribute boolean autoplay;
+  [CEReactions] attribute boolean loop;
+  Promise<void> play();
+  void pause();
+
+  // controls
+  [CEReactions] attribute boolean controls;
+  attribute double volume;
+  attribute boolean muted;
+  [Unimplemented, CEReactions] attribute boolean defaultMuted;
+
+  // tracks
+  [Unimplemented, SameObject] readonly attribute AudioTrackList audioTracks;
+  [Unimplemented, SameObject] readonly attribute VideoTrackList videoTracks;
+  [SameObject] readonly attribute TextTrackList textTracks;
+  TextTrack addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "");
+
+  // TODO
+  // Move belows to HTMLElement
+  [CustomGetter, CustomSetter] attribute EventHandler onprogress;
+	[CustomGetter, CustomSetter] attribute EventHandler onsuspend;
+	[CustomGetter, CustomSetter] attribute EventHandler onabort;
+	[CustomGetter, CustomSetter] attribute EventHandler onemptied;
+	[CustomGetter, CustomSetter] attribute EventHandler onstalled;
+	[CustomGetter, CustomSetter] attribute EventHandler onloadedmetadata;
+	[CustomGetter, CustomSetter] attribute EventHandler onloadeddata;
+	[CustomGetter, CustomSetter] attribute EventHandler onloadstart;
+	[CustomGetter, CustomSetter] attribute EventHandler oncanplay;
+	[CustomGetter, CustomSetter] attribute EventHandler oncanplaythrough;
+	[CustomGetter, CustomSetter] attribute EventHandler onplaying;
+	[CustomGetter, CustomSetter] attribute EventHandler onwaiting;
+	[CustomGetter, CustomSetter] attribute EventHandler onseeking;
+	[CustomGetter, CustomSetter] attribute EventHandler onseeked;
+	[CustomGetter, CustomSetter] attribute EventHandler onended;
+	[CustomGetter, CustomSetter] attribute EventHandler ondurationchange;
+	[CustomGetter, CustomSetter] attribute EventHandler ontimeupdate;
+	[CustomGetter, CustomSetter] attribute EventHandler onplay;
+	[CustomGetter, CustomSetter] attribute EventHandler onpause;
+	[CustomGetter, CustomSetter] attribute EventHandler onratechange;
+	[CustomGetter, CustomSetter] attribute EventHandler onvolumechange;
+};
+
+enum TextTrackKind { "subtitles",  "captions",  "descriptions",  "chapters",  "metadata" };

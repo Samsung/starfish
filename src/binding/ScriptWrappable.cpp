@@ -77,7 +77,12 @@ StarFish* fetchStarFish(ESVMInstance* instance)
 
 String* toBrowserString(const ESValue& v)
 {
-    escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();
+    return toBrowserString(v.toString());
+}
+
+String* toBrowserString(const ESString* v)
+{
+    escargot::NullableUTF8String s = v->toNullableUTF8String();
     String* newStr = String::fromUTF8(s.m_buffer, s.m_bufferSize);
     // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored
     // as '\','n'

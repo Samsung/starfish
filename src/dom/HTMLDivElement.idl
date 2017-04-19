@@ -1,0 +1,3 @@
+
+// https://www.w3.org/TR/html5/grouping-content.html#the-div-element
+interface HTMLDivElement : HTMLElement {};

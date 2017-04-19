@@ -1,0 +1,21 @@
+// https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268
+interface HTMLDocument : Document {
+  [Unimplemented] attribute DOMString title;
+  [Unimplemented] readonly attribute DOMString referrer;
+  [Unimplemented] readonly attribute DOMString domain;
+  [Unimplemented] readonly attribute DOMString URL;
+  [Unimplemented] attribute HTMLElement body;
+  [Unimplemented] readonly attribute HTMLCollection images;
+  [Unimplemented] readonly attribute HTMLCollection applets;
+  [Unimplemented] readonly attribute HTMLCollection links;
+  [Unimplemented] readonly attribute HTMLCollection forms;
+  [Unimplemented] readonly attribute HTMLCollection anchors;
+  [Unimplemented] attribute DOMString cookie;
+                                        // raises(DOMException) on setting
+
+  [Unimplemented] void open();
+  [Unimplemented] void close();
+  [Unimplemented] void write(DOMString text);
+  [Unimplemented] void writeln(DOMString text);
+  [Unimplemented] NodeList getElementsByName(DOMString elementName);
+};

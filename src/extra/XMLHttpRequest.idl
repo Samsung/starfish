@@ -1,0 +1,65 @@
+// https://xhr.spec.whatwg.org/#xmlhttprequest
+// NOTE Using DOMString instead of USVString
+
+
+[Exposed=(Window,DedicatedWorker,SharedWorker)]
+interface XMLHttpRequestEventTarget : EventTarget {
+  // event handlers
+  attribute EventHandler onloadstart;
+  attribute EventHandler onprogress;
+  attribute EventHandler onabort;
+  attribute EventHandler onerror;
+  attribute EventHandler onload;
+  attribute EventHandler ontimeout;
+  attribute EventHandler onloadend;
+};
+
+[Exposed=(Window,DedicatedWorker,SharedWorker)]
+interface XMLHttpRequestUpload : XMLHttpRequestEventTarget {
+};
+
+enum XMLHttpRequestResponseType {
+  "",
+  "arraybuffer",
+  "blob",
+  "document",
+  "json",
+  "text"
+};
+
+[Constructor,
+ Exposed=(Window,DedicatedWorker,SharedWorker)]
+interface XMLHttpRequest : XMLHttpRequestEventTarget {
+  // event handler
+  attribute EventHandler onreadystatechange;
+
+  // states
+  const unsigned short UNSENT = 0;
+  const unsigned short OPENED = 1;
+  const unsigned short HEADERS_RECEIVED = 2;
+  const unsigned short LOADING = 3;
+  const unsigned short DONE = 4;
+  readonly attribute unsigned short readyState;
+
+  // request
+  void open(ByteString method, DOMString url);
+  void open(ByteString method, DOMString url, boolean async, optional DOMString? username = null, optional DOMString? password = null);
+  void setRequestHeader(ByteString name, ByteString value);
+  attribute unsigned long timeout;
+  [Unimplemented] attribute boolean withCredentials;
+  [Unimplemented, SameObject] readonly attribute XMLHttpRequestUpload upload;
+  void send(optional (Document or BodyInit)? body = null);
+  void abort();
+
+  // response
+  [Unimplemented] readonly attribute DOMString responseURL;
+  readonly attribute unsigned short status;
+  [Unimplemented] readonly attribute ByteString statusText;
+  [Unimplemented] ByteString? getResponseHeader(ByteString name);
+  [Unimplemented] ByteString getAllResponseHeaders();
+  [Unimplemented] void overrideMimeType(DOMString mime);
+  attribute XMLHttpRequestResponseType responseType;
+  readonly attribute any response;
+  readonly attribute DOMString responseText;
+  [Unimplemented, Exposed=Window] readonly attribute Document? responseXML;
+};

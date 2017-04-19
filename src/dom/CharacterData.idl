@@ -1,0 +1,16 @@
+// https://dom.spec.whatwg.org/#interface-characterdata
+
+[Exposed=Window]
+interface CharacterData : Node {
+  [TreatNullAs=EmptyString] attribute DOMString data;
+  [CustomGetter] readonly attribute unsigned long length;
+  [Unimplemented] DOMString substringData(unsigned long offset, unsigned long count);
+  [Unimplemented] void appendData(DOMString data);
+  [Unimplemented] void insertData(unsigned long offset, DOMString data);
+  [Unimplemented] void deleteData(unsigned long offset, unsigned long count);
+  [Unimplemented] void replaceData(unsigned long offset, unsigned long count, DOMString data);
+};
+
+
+CharacterData implements ChildNode;
+CharacterData implements NonDocumentTypeChildNode;

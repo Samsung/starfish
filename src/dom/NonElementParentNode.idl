@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/dom/#interface-nonelementparentnode
+[PartialInterface,
+ NoInterfaceObject,
+ Exposed=Window]
+interface NonElementParentNode {
+  Element? getElementById(DOMString elementId);
+};

@@ -1,0 +1,64 @@
+// https://html.spec.whatwg.org/#the-window-object
+// NOTE Using DOMString instead of USVString
+
+
+[PrimaryGlobal, LegacyUnenumerableNamedProperties]
+interface Window : EventTarget {
+  // the current browsing context
+  [Unforgeable] readonly attribute WindowProxy window;
+  [Unimplemented, Replaceable] readonly attribute WindowProxy self;
+  [Unforgeable] readonly attribute Document document;
+  [Unimplemented] attribute DOMString name; 
+  [PutForwards=href, Unforgeable] readonly attribute Location location;
+  readonly attribute History history;
+  [Unimplemented] readonly attribute CustomElementRegistry customElements;
+  [Unimplemented, Replaceable] readonly attribute BarProp locationbar;
+  [Unimplemented, Replaceable] readonly attribute BarProp menubar;
+  [Unimplemented, Replaceable] readonly attribute BarProp personalbar;
+  [Unimplemented, Replaceable] readonly attribute BarProp scrollbars;
+  [Unimplemented, Replaceable] readonly attribute BarProp statusbar;
+  [Unimplemented, Replaceable] readonly attribute BarProp toolbar;
+  [Unimplemented] attribute DOMString status;
+  [Unimplemented] void close();
+  [Unimplemented] readonly attribute boolean closed;
+  [Unimplemented] void stop();
+  [Unimplemented] void focus();
+  [Unimplemented] void blur();
+
+  // other browsing contexts
+  [Unimplemented, Replaceable] readonly attribute WindowProxy frames;
+  [Unimplemented, Replaceable] readonly attribute unsigned long length;
+  [Unimplemented, Unforgeable] readonly attribute WindowProxy? top;
+  [Unimplemented] attribute any opener;
+  [Unimplemented, Replaceable] readonly attribute WindowProxy? parent;
+  [Unimplemented] readonly attribute Element? frameElement;
+  [Unimplemented] WindowProxy? open(optional DOMString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
+  [Unimplemented] getter object (DOMString name);
+  // Since this is the global object, the IDL named getter adds a NamedPropertiesObject exotic
+  // object on the prototype chain. Indeed, this does not make the global object an exotic object.
+  // Indexed access is taken care of by the WindowProxy exotic object.
+
+  // the user agent
+  readonly attribute Navigator navigator; 
+  [Unimplemented] readonly attribute ApplicationCache applicationCache;
+
+  // user prompts
+  [Unimplemented] void alert();
+  [Unimplemented] void alert(DOMString message);
+  [Unimplemented] boolean confirm(optional DOMString message = "");
+  [Unimplemented] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
+  [Unimplemented] void print();
+
+  [Unimplemented] unsigned long requestAnimationFrame(FrameRequestCallback callback);
+  [Unimplemented] void cancelAnimationFrame(unsigned long handle);
+
+  [Unimplemented] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
+
+  
+};
+
+// TODO Support implements
+Window implements GlobalEventHandlers;
+Window implements WindowEventHandlers;
+
+callback FrameRequestCallback = void (DOMHighResTimeStamp time);

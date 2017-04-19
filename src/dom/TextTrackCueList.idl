@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/#texttrackcuelist
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface TextTrackCueList {
+  readonly attribute unsigned long length;
+  getter TextTrackCue (unsigned long index);
+  [Unimplemented] TextTrackCue? getCueById(DOMString id);
+};

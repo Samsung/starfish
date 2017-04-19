@@ -1,0 +1,6 @@
+// https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface
+
+interface CSSStyleRule : CSSRule {
+  [Unimplemented] attribute DOMString selectorText;
+  [Unimplemented, SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+};

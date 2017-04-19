@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/#texttracklist
+
+[STARFISH_ENABLE_MULTIMEDIA]
+interface TextTrackList : EventTarget {
+  readonly attribute unsigned long length;
+  getter TextTrack (unsigned long index);
+  TextTrack? getTrackById(DOMString id);
+
+  [Unimplemented] attribute EventHandler onchange;
+  [Unimplemented] attribute EventHandler onaddtrack;
+  [Unimplemented] attribute EventHandler onremovetrack;
+};

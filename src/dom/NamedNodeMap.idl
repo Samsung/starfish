@@ -1,0 +1,14 @@
+// https://dom.spec.whatwg.org/#interface-namednodemap
+// NOTE Using NotEnumerable at getter instead of LegacyUnenumerableNamedProperties at interface
+
+[Exposed=Window]
+interface NamedNodeMap {
+  readonly attribute unsigned long length;
+  getter Attr? item(unsigned long index);
+  [NotEnumerable] getter Attr? getNamedItem(DOMString qualifiedName);
+  [Unimplemented] Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
+  [CEReactions] Attr? setNamedItem(Attr attr);
+  [Unimplemented, CEReactions] Attr? setNamedItemNS(Attr attr);
+  [CEReactions] Attr removeNamedItem(DOMString qualifiedName);
+  [Unimplemented, CEReactions] Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
+};

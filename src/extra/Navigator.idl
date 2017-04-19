@@ -1,0 +1,28 @@
+// https://html.spec.whatwg.org/#the-navigator-object
+
+interface Navigator {
+  // Partial
+  // https://dev.w3.org/geo/api/spec-source.html#navi-geo
+  readonly attribute Geolocation geolocation;
+
+  // TODO Support implements
+  // Navigator implements NavigatorID;
+  readonly attribute DOMString appCodeName; // constant "Mozilla"
+  readonly attribute DOMString appName; // constant "Netscape"
+  readonly attribute DOMString appVersion;
+  [Unimplemented] readonly attribute DOMString platform;
+  [Unimplemented] readonly attribute DOMString product; // constant "Gecko"
+  [Unimplemented, Exposed=Window] readonly attribute DOMString productSub;
+  readonly attribute DOMString userAgent;
+  [Exposed=Window] readonly attribute DOMString vendor;
+  [Unimplemented, Exposed=Window] readonly attribute DOMString vendorSub; // constant ""
+};
+
+// TODO Support implements
+Navigator implements NavigatorID;
+Navigator implements NavigatorLanguage;
+Navigator implements NavigatorOnLine;
+Navigator implements NavigatorContentUtils;
+Navigator implements NavigatorCookies;
+Navigator implements NavigatorPlugins;
+Navigator implements NavigatorConcurrentHardware;

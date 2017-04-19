@@ -1,0 +1,29 @@
+// https://dom.spec.whatwg.org/#interface-eventtarget
+
+[Exposed=(Window,Worker)]
+interface EventTarget {
+  // NOTE Starfish only support boolean type for third argument
+  // void addEventListener(DOMString type, EventListener? callback, optional (AddEventListenerOptions or boolean) options);
+  // void removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options);
+  void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
+  void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
+  boolean dispatchEvent(Event event);
+};
+
+
+// callback interface EventListener {
+//   void handleEvent(Event event);
+// };
+
+callback EventListener = void ();
+
+[Unimplemented]
+dictionary EventListenerOptions {
+  boolean capture = false;
+};
+
+[Unimplemented]
+dictionary AddEventListenerOptions : EventListenerOptions {
+  boolean passive = false;
+  boolean once = false;
+};

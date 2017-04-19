@@ -1,0 +1,21 @@
+// https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
+
+[PartialInterface,
+NoInterfaceObject]
+interface DocumentAndElementEventHandlers {
+  [Unimplemented] attribute EventHandler onafterprint;
+  [Unimplemented] attribute EventHandler onbeforeprint;
+  [Unimplemented] attribute OnBeforeUnloadEventHandler onbeforeunload;
+  [Unimplemented] attribute EventHandler onhashchange;
+  [Unimplemented] attribute EventHandler onlanguagechange;
+  [Unimplemented] attribute EventHandler onmessage;
+  [Unimplemented] attribute EventHandler onoffline;
+  [Unimplemented] attribute EventHandler ononline;
+  [Unimplemented] attribute EventHandler onpagehide;
+  [Unimplemented] attribute EventHandler onpageshow;
+  [Unimplemented] attribute EventHandler onpopstate;
+  [Unimplemented] attribute EventHandler onrejectionhandled;
+  [Unimplemented] attribute EventHandler onstorage;
+  [Unimplemented] attribute EventHandler onunhandledrejection;
+  [Unimplemented] attribute EventHandler onunload;
+};

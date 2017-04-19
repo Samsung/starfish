@@ -1,0 +1,3 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-span-element
+[HTMLConstructor]
+interface HTMLSpanElement : HTMLElement {};

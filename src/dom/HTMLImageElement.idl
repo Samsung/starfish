@@ -1,0 +1,23 @@
+// https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element
+// NOTE Using DOMString instead of USVString
+
+[
+  HTMLConstructor,
+  ConstructorCallWith=Document,
+  NamedConstructor=Image(optional unsigned long width, optional unsigned long height)]
+interface HTMLImageElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute DOMString alt;
+  [CEReactions] attribute DOMString src;
+  [Unimplemented, CEReactions] attribute DOMString srcset;
+  [Unimplemented, CEReactions] attribute DOMString sizes;
+  [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
+  [Unimplemented, CEReactions] attribute DOMString useMap;
+  [Unimplemented, CEReactions] attribute boolean isMap;
+  [CEReactions] attribute unsigned long width;
+  [CEReactions] attribute unsigned long height;
+  [Unimplemented] readonly attribute unsigned long naturalWidth;
+  [Unimplemented] readonly attribute unsigned long naturalHeight;
+  [Unimplemented] readonly attribute boolean complete;
+  [Unimplemented] readonly attribute DOMString currentSrc;
+  [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+};

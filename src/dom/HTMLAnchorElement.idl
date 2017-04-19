@@ -1,0 +1,20 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-a-element
+// NOTE Using DOMString instead of USVString
+
+[HTMLConstructor]
+interface HTMLAnchorElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute DOMString target;
+  [Unimplemented, CEReactions] attribute DOMString download;
+  [Unimplemented, CEReactions] attribute DOMString ping;
+  [Unimplemented, CEReactions] attribute DOMString rel;
+  [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+  [Unimplemented, CEReactions] attribute DOMString hreflang;
+  [Unimplemented, CEReactions] attribute DOMString type;
+
+  [Unimplemented, CEReactions] attribute DOMString text;
+
+  [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+};
+
+// TODO Support impements
+HTMLAnchorElement implements HTMLHyperlinkElementUtils;

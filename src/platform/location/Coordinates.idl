@@ -1,0 +1,12 @@
+// https://dev.w3.org/geo/api/spec-source.html#coordinates_interface
+[
+    NoInterfaceObject
+] interface Coordinates {
+  readonly attribute double latitude;
+  readonly attribute double longitude;
+  readonly attribute double? altitude;
+  readonly attribute double accuracy;
+  readonly attribute double? altitudeAccuracy;
+  readonly attribute double? heading;
+  readonly attribute double? speed;
+};

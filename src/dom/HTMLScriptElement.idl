@@ -1,0 +1,17 @@
+// https://html.spec.whatwg.org/multipage/scripting.html#the-script-element
+// NOTE Using DOMString instead of USVString
+
+[HTMLConstructor]
+interface HTMLScriptElement : HTMLElement {
+  [CustomGetter, CustomSetter, CEReactions] attribute DOMString src;
+  [CustomGetter, CustomSetter, CEReactions] attribute DOMString type;
+  [Unimplemented, CEReactions] attribute boolean noModule;
+  [CustomGetter, CustomSetter, CEReactions] attribute DOMString charset;
+  [Unimplemented, CEReactions] attribute boolean async;
+  [Unimplemented, CEReactions] attribute boolean defer;
+  [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
+  [CEReactions] attribute DOMString text;
+  [Unimplemented, CEReactions] attribute DOMString nonce;
+  [Unimplemented, CEReactions] attribute DOMString integrity;
+
+};

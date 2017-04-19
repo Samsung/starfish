@@ -1,0 +1,14 @@
+// https://www.w3.org/TR/progress-events/#interface-progressevent
+
+[Constructor(DOMString type, optional ProgressEventInit eventInitDict)]
+interface ProgressEvent : Event {
+  readonly attribute boolean lengthComputable;
+  readonly attribute unsigned long long loaded;
+  readonly attribute unsigned long long total;
+};
+
+dictionary ProgressEventInit : EventInit {
+  boolean lengthComputable;
+  unsigned long long loaded;
+  unsigned long long total;
+};

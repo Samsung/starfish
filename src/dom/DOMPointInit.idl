@@ -1,0 +1,8 @@
+// https://drafts.fxtf.org/geometry/#dictdef-domquadinit
+[Unimplemented]
+dictionary DOMPointInit {
+    unrestricted double x = 0;
+    unrestricted double y = 0;
+    unrestricted double z = 0;
+    unrestricted double w = 1;
+};
