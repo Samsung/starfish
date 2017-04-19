@@ -18,7 +18,7 @@
 #include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "dom/HTMLImageLIElement.h"
+#include "dom/HTMLLIElement.h"
 
 namespace StarFish {
 

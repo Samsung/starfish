@@ -27,8 +27,8 @@ namespace StarFish {
 // : Wrapper class of TextTrackCue
 class VTTCue : public TextTrackCue {
 public:
-    VTTCue(double start, double end, String* payload)
-        : TextTrackCue(start, end, payload)
+    VTTCue(Document* document, double start, double end, String* payload)
+        : TextTrackCue(document, start, end, payload)
     {
     }
 

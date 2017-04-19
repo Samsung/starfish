@@ -18,11 +18,21 @@
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/Attr.h"
-#include "dom/DocumentFragment.h"
-#include "dom/DOMException.h"
 #include "dom/Comment.h"
+#include "dom/DocumentFragment.h"
+#include "dom/DocumentType.h"
+#include "dom/DOMException.h"
+#ifdef STARFISH_EXP
+#include "dom/DOMImplementation.h"
+#endif
 #include "dom/Element.h"
+#include "dom/HTMLBodyElement.h"
+#include "dom/HTMLCollection.h"
+#include "dom/HTMLElement.h"
+#include "dom/HTMLHeadElement.h"
+#include "dom/Node.h"
 #include "dom/Text.h"
+#include "extra/Location.h"
 
 namespace StarFish {
 
@@ -606,125 +616,73 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
 
 static ESValue onClickGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->attributeEventListener(
-            nd->document()->window()->starFish()->staticStrings()->m_click);
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    return originalObj->onclickEventListener();
 }
 
 static ESValue onClickSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        auto eventType =
-            nd->document()->window()->starFish()->staticStrings()->m_click;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            nd->setAttributeEventListener(eventType, v);
-        } else {
-            nd->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnclickEventListener(arg0);
+
     return ESValue();
 }
 
 static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->attributeEventListener(
-            nd->document()->window()->starFish()->staticStrings()->m_mouseover);
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    return originalObj->onmouseoverEventListener();
 }
 
 static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        auto eventType =
-            nd->document()->window()->starFish()->staticStrings()->m_mouseover;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            nd->setAttributeEventListener(eventType, v);
-        } else {
-            nd->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnmouseoverEventListener(arg0);
+
     return ESValue();
 }
 
 static ESValue onFocusGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->attributeEventListener(
-            nd->document()->window()->starFish()->staticStrings()->m_focus);
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    return originalObj->onfocusEventListener();
 }
 
 static ESValue onFocusSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        auto eventType =
-            nd->document()->window()->starFish()->staticStrings()->m_focus;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            nd->setAttributeEventListener(eventType, v);
-        } else {
-            nd->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnfocusEventListener(arg0);
+
     return ESValue();
 }
 
 static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        return nd->attributeEventListener(
-            nd->document()->window()->starFish()->staticStrings()->m_keydown);
-    }
-    THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    return originalObj->onkeydownEventListener();
 }
 
 static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (nd->isDocument()) {
-        auto eventType =
-            nd->document()->window()->starFish()->staticStrings()->m_keydown;
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        if (v.isObject() ||
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            nd->setAttributeEventListener(eventType, v);
-        } else {
-            nd->clearAttributeEventListener(eventType);
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnkeydownEventListener(arg0);
+
     return ESValue();
 }
 

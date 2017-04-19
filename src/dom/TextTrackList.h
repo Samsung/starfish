@@ -18,12 +18,14 @@
 #ifndef __StarFishTextTrackList__
 #define __StarFishTextTrackList__
 
+#include "TextTrack.h"
+
 namespace StarFish {
 
 class TextTrackList : public EventTarget, public GCVector<TextTrack*> {
 public:
-    TextTrackList()
-        : EventTarget()
+    TextTrackList(Document* document)
+        : EventTarget(document)
     {
     }
 

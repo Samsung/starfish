@@ -18,6 +18,8 @@
 #ifndef __StarFishTextTrackCueList__
 #define __StarFishTextTrackCueList__
 
+#include "TextTrackCue.h"
+
 namespace StarFish {
 
 class TextTrackCueList : public ScriptWrappable,

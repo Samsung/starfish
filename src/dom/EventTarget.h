@@ -192,7 +192,7 @@ protected:
         return window->attributeEventListener(attr);                         \
     }                                                                        \
                                                                              \
-    void EVENT_TARGET::setOnprogressEventListener(ScriptValue on##EVENT)     \
+    void EVENT_TARGET::setOn##EVENT##EventListener(ScriptValue on##EVENT)    \
     {                                                                        \
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \

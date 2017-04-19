@@ -28,7 +28,7 @@ using namespace escargot;
 
 static ESValue mediaSourceFunction(ESVMInstance* instance)
 {
-    MediaSource* b = new MediaSource(fetchStarFish(instance));
+    MediaSource* b = new MediaSource(fetchDocument(instance));
     return b->scriptValue();
 }
 

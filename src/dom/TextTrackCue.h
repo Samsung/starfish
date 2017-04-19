@@ -19,17 +19,18 @@
 #define __StarFishTextTrackCue__
 
 #include "dom/EventTarget.h"
-// #include "dom/DocumentFragment.h"
 #include "extra/TimeRange.h"
 
 namespace StarFish {
 
+class Document;
+class DocumentFragment;
 class TextTrack;
 
 class TextTrackCue : public EventTarget {
 public:
-    TextTrackCue(double start, double end, String* payload)
-        : EventTarget()
+    TextTrackCue(Document* document, double start, double end, String* payload)
+        : EventTarget(document)
         , m_textTrack(nullptr)
         , m_id(String::emptyString)
         , m_timeRange(TimeRange(start, end))

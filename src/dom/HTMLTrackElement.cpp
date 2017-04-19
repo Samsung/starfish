@@ -111,7 +111,7 @@ protected:
 
 HTMLTrackElement::HTMLTrackElement(Document* document)
     : HTMLElement(document)
-    , m_track(new TextTrack())
+    , m_track(new TextTrack(document))
     , m_VTTFileResource(nullptr)
     , m_hasPendingRequest(false)
     , m_live(false)
@@ -120,7 +120,7 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     m_track->setTrackElement(this);
 }
 
-String* HTMLTrackElement::localName();
+String* HTMLTrackElement::localName()
 {
     return document()
         ->window()
@@ -256,7 +256,7 @@ void HTMLTrackElement::generateCues()
                           ->concat(newline);
         }
 
-        VTTCue* newcue = new VTTCue(startTime, endTime, payload);
+        VTTCue* newcue = new VTTCue(m_document, startTime, endTime, payload);
         newcue->setId(id);
         newcue->setTrack(m_track);
 

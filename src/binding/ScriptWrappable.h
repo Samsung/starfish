@@ -94,6 +94,12 @@ typedef ESFunctionObject* ScriptFunction;
     F(HTMLScriptElement)                            \
     F(HTMLStyleElement)                             \
     F(HTMLSpanElement)                              \
+    F(HTMLTableElement)                             \
+    F(HTMLTBodyElement)                             \
+    F(HTMLTDElement)                                \
+    F(HTMLTFootElement)                             \
+    F(HTMLTHeadElement)                             \
+    F(HTMLTHElement)                                \
     F(HTMLStrongElement)                            \
     F(HTMLUListElement)                             \
     F(HTMLUnknownElement)                           \

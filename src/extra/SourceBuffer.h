@@ -113,7 +113,7 @@ public:
         ParsingMediaSegment
     };
 
-    SourceBuffer(StarFish* starFish, String* type);
+    SourceBuffer(Document* document, String* type);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -124,6 +124,12 @@ public:
     {
         return true;
     }
+
+    DECLARE_EVENT_LISTENER(updatestart);
+    DECLARE_EVENT_LISTENER(update);
+    DECLARE_EVENT_LISTENER(updateend);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(abort);
 
     void appendBuffer(const uint8_t* data, unsigned long length);
     void abort();

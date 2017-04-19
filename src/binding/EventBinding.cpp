@@ -20,6 +20,7 @@
 
 #include "dom/DOMException.h"
 #include "dom/Event.h"
+#include "dom/EventTarget.h"
 
 namespace StarFish {
 

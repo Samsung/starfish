@@ -28,10 +28,7 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
+    virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
 
     /* 4.4 Interface Node */
 

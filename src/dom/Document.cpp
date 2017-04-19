@@ -1022,6 +1022,11 @@ Node* Document::clone()
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+DEFINE_EVENT_LISTENER(Document, click);
+DEFINE_EVENT_LISTENER(Document, mouseover);
+DEFINE_EVENT_LISTENER(Document, focus);
+DEFINE_EVENT_LISTENER(Document, keydown);
+
 Element* Document::getElementById(String* id)
 {
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {

@@ -19,6 +19,7 @@
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
+#include "dom/DOMRect.h"
 #include "dom/DOMRectList.h"
 
 namespace StarFish {

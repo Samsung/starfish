@@ -171,6 +171,11 @@ public:
     HTMLHeadElement* head();
     HTMLBodyElement* body();
 
+    DECLARE_EVENT_LISTENER(click);
+    DECLARE_EVENT_LISTENER(mouseover);
+    DECLARE_EVENT_LISTENER(focus);
+    DECLARE_EVENT_LISTENER(keydown);
+
     /* Page Visibility */
     bool hidden() const;
     String* visibilityState()

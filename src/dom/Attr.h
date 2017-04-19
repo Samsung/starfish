@@ -17,8 +17,7 @@
 #ifndef __StarFishAttr__
 #define __StarFishAttr__
 
-#include "Node.h"
-#include "binding/ScriptWrappable.h"
+#include "dom/Node.h"
 
 namespace StarFish {
 
