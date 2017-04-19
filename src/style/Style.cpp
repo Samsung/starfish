@@ -2575,7 +2575,7 @@ StyleResolver::StyleResolver(Document& document)
     , m_mediumFontSize(
           document.window()->starFish()->defaultFontSizeMultiplier() *
           DEFAULT_FONT_SIZE)
-    , m_usesFirstLineRule(true)
+    , m_usesFirstLineRule(false)
 {
 }
 
