@@ -52,29 +52,11 @@ public:
     //        (picture element related case has not been considered.
     //         Hence attribute "media", "srcset", "sizes" are not currently
     //         supported)
-    String* src()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_src);
-    }
+    String* src();
+    void setSrc(String* src);
 
-    String* type()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_type);
-    }
-
-    void setSrc(String* src)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
-                     src);
-    }
-
-    void setType(String* type)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_type,
-                     type);
-    }
+    String* type();
+    void setType(String* type);
     // TODO
 protected:
 };

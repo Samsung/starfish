@@ -16,9 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/Element.h"
 
 namespace StarFish {
 
@@ -56,13 +56,10 @@ ESValue styleElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_style;
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     String* value0 = toBrowserString(arg0);
 
-    originalObj->setAttribute(attr, value0);
+    originalObj->setStyleAttr(value0);
     return ESValue();
 }
 }

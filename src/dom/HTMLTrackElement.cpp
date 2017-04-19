@@ -120,6 +120,20 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     m_track->setTrackElement(this);
 }
 
+String* HTMLTrackElement::localName();
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_trackTagName.localName();
+}
+
+QualifiedName HTMLTrackElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_trackTagName;
+}
+
 void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)

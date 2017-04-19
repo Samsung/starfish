@@ -143,4 +143,146 @@ void HTMLElement::focus()
         document()->window()->starFish()->staticStrings()->m_focus.localName();
     dispatchEvent(new Event(eventType, EventInit(true, true)));
 }
+
+ScriptValue HTMLElement::onclickEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_click;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnclickEventListener(ScriptValue onclick)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_click;
+
+    if (onclick.isObject()) {
+        window->setAttributeEventListener(attr, onclick);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onmouseoverEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_mouseover;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnmouseoverEventListener(ScriptValue onmouseover)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_mouseover;
+
+    if (onmouseover.isObject()) {
+        window->setAttributeEventListener(attr, onmouseover);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onkeydownEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_keydown;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnkeydownEventListener(ScriptValue onkeydown)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_keydown;
+
+    if (onkeydown.isObject()) {
+        window->setAttributeEventListener(attr, onkeydown);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onkeyupEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_keyup;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnkeyupEventListener(ScriptValue onkeyup);
+
+ScriptValue HTMLElement::onfocusEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_focus;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnfocusEventListener(ScriptValue onfocus)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_focus;
+
+    if (onfocus.isObject()) {
+        window->setAttributeEventListener(attr, onfocus);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onerrorEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_error;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnerrorEventListener(ScriptValue onerror)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_error;
+
+    if (onerror.isObject()) {
+        window->setAttributeEventListener(attr, onerror);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onloadEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_load;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnloadEventListener(ScriptValue onload)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_onload;
+
+    if (onload.isObject()) {
+        window->setAttributeEventListener(attr, onload);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
+
+ScriptValue HTMLElement::onunloadEventListener()
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
+    return window->attributeEventListener(attr);
+}
+
+void HTMLElement::setOnunloadEventListener(ScriptValue onunload)
+{
+    Window* window = document()->window();
+    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
+
+    if (onunload.isObject()) {
+        window->setAttributeEventListener(attr, onunload);
+    } else {
+        window->clearAttributeEventListener(attr);
+    }
+}
 }

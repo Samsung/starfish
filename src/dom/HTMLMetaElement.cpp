@@ -24,6 +24,20 @@ namespace StarFish {
 extern bool g_enablePixelTest;
 #endif
 
+String* HTMLMetaElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_metaTagName.localName();
+}
+
+QualifiedName HTMLMetaElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_metaTagName;
+}
+
 void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
                                           String* value, bool attributeCreated,
                                           bool attributeRemoved)

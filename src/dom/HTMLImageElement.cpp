@@ -75,6 +75,57 @@ protected:
     HTMLImageElement* m_element;
 };
 
+String* HTMLImageElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_imgTagName.localName();
+}
+
+QualifiedName HTMLImageElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_imgTagName;
+}
+
+void HTMLImageElement::setSrc(String* src)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+}
+
+String* HTMLImageElement::src()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_src);
+}
+
+unsigned long HTMLImageElement::width()
+{
+    String* widthStr = getAttribute(
+        document()->window()->starFish()->staticStrings()->m_width);
+    return String::parseInt(widthStr);
+}
+
+void HTMLImageElement::setWidth(unsigned long width)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_width,
+                 String::fromInt(width));
+}
+
+unsigned long HTMLImageElement::height()
+{
+    String* heightStr = getAttribute(
+        document()->window()->starFish()->staticStrings()->m_height);
+    return String::parseInt(heightStr);
+}
+
+void HTMLImageElement::setHeight(unsigned long height)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_height,
+                 String::fromInt(height));
+}
+
 void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)

@@ -16,9 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/HTMLBodyElement.h"
 
 namespace StarFish {
 
@@ -28,25 +28,16 @@ ESValue onloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onloadEventListener();
 }
 
 ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        window->setAttributeEventListener(attr, arg0);
-    } else {
-        window->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnloadEventListener(arg0);
 
     return ESValue();
 }
@@ -55,25 +46,16 @@ ESValue onunloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
-
-    return window->attributeEventListener(attr);
+    return originalObj->onunloadEventListener();
 }
 
 ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    Window* window = originalObj->document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    if (arg0.isObject()) {
-        window->setAttributeEventListener(attr, arg0);
-    } else {
-        window->clearAttributeEventListener(attr);
-    }
+    originalObj->setOnunloadEventListener(arg0);
 
     return ESValue();
 }

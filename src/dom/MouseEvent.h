@@ -17,7 +17,6 @@
 #ifndef __StarFishMouseEvent__
 #define __StarFishMouseEvent__
 
-#include "binding/ScriptWrappable.h"
 #include "UIEvent.h"
 
 namespace StarFish {

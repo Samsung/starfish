@@ -463,6 +463,12 @@ void Element::setClassName(String* className)
                  className);
 }
 
+void Element::setStyleAttr(String* style)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_style,
+                 style);
+}
+
 CSSStyleDeclaration* Element::inlineStyle()
 {
     if (m_inlineStyle == nullptr) {

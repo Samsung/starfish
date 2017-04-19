@@ -44,23 +44,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_scriptTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_scriptTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
     virtual bool isHTMLScriptElement() const override

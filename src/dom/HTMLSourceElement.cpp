@@ -19,7 +19,6 @@
 #include "StarFishConfig.h"
 #include "dom/Document.h"
 #include "dom/HTMLSourceElement.h"
-#include "extra/MimeType.h"
 
 namespace StarFish {
 
@@ -35,6 +34,29 @@ String* HTMLSourceElement::localName()
 QualifiedName HTMLSourceElement::name()
 {
     return document()->window()->starFish()->staticStrings()->m_sourceTagName;
+}
+
+String* HTMLSourceElement::src()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_src);
+}
+
+String* HTMLSourceElement::type()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_type);
+}
+
+void HTMLSourceElement::setSrc(String* src)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+}
+
+void HTMLSourceElement::setType(String* type)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
+                 type);
 }
 }
 

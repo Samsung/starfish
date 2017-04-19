@@ -35,19 +35,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_thTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_thTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 

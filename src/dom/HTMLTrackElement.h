@@ -39,23 +39,8 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_trackTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_trackTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     virtual bool isHTMLTrackElement() const override
     {
