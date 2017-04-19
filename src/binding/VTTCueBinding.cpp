@@ -19,6 +19,7 @@
 #include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/DocumentFragment.h"
 #include "dom/DOMException.h"
 #include "dom/VTTCue.h"
 
@@ -40,7 +41,7 @@ static ESValue vttCueTextFunction(ESVMInstance* instance)
     if (std::isnan(startTime) || std::isnan(endTime)) {
         THROW_ILLEGAL_INVOCATION();
     }
-    VTTCue* cue = new VTTCue(startTime, endTime,
+    VTTCue* cue = new VTTCue(fetchDocument(instance), startTime, endTime,
                              String::fromUTF8(thirdArg.toString()->utf8Data()));
     return cue->scriptValue();
 }
@@ -74,8 +75,7 @@ static ESValue getCueAsHTMLFunction(ESVMInstance* instance)
         THROW_ILLEGAL_INVOCATION();
     }
     VTTCue* cue = (VTTCue*)originalObj;
-    Document* document =
-        (((Window*)instance->globalObject()->extraPointerData()))->document();
+    Document* document = fetchDocument(instance);
     DocumentFragment* df = cue->getCueAsHTML(document);
     if (df) {
         return df->scriptValue();

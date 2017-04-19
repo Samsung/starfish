@@ -2259,10 +2259,10 @@ static ESValue cssStyleDeclarationReadCallbackFunction(const ESValue& key,
         } else {
             if (false) {
             }
-#define GET_ATTR(name, nameLower, nameCSSCase)   \
-    else if (kind == CSSStyleKind::name)         \
-    {                                            \
-        return createScriptString(self->name()); \
+#define GET_ATTR(name, nameLower, nameCSSCase)        \
+    else if (kind == CSSStyleKind::name)              \
+    {                                                 \
+        return createScriptString(self->nameLower()); \
     }
             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
 #undef GET_ATTR

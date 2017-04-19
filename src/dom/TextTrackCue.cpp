@@ -20,9 +20,8 @@
 #include "dom/TextTrackCue.h"
 #include "dom/Document.h"
 #include "dom/HTMLDivElement.h"
-#include "dom/HTMLTrackElement.h"
+#include "dom/Event.h"
 #include "dom/parser/HTMLParser.h"
-#include "dom/TextTrack.h"
 
 namespace StarFish {
 

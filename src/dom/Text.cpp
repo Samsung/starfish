@@ -15,10 +15,8 @@
  */
 
 #include "StarFishConfig.h"
-#include "Text.h"
-#include "Traverse.h"
-
 #include "Document.h"
+#include "Text.h"
 
 namespace StarFish {
 

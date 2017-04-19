@@ -28,8 +28,8 @@
 
 namespace StarFish {
 
-MediaSource::MediaSource(StarFish* starFish)
-    : EventTarget()
+MediaSource::MediaSource(Document* document)
+    : EventTarget(document)
     , m_readyState(Closed)
     , m_isActiveBufferComputed(false)
     , m_attachedMediaElement(nullptr)
@@ -37,7 +37,7 @@ MediaSource::MediaSource(StarFish* starFish)
     , m_activeVideoStreamIndex(SIZE_MAX)
     , m_activeAudioSourceBuffer(nullptr)
     , m_activeAudioStreamIndex(SIZE_MAX)
-    , m_starFish(starFish)
+    , m_starFish(document->window()->starFish())
     , m_duration(std::numeric_limits<double>::quiet_NaN())
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {
@@ -96,7 +96,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     STARFISH_ASSERT(isTypeSupported(type));
     STARFISH_ASSERT(m_readyState == Open);
 
-    SourceBuffer* buffer = new SourceBuffer(m_starFish, type);
+    SourceBuffer* buffer = new SourceBuffer(m_document, type);
     if (!m_sourceBuffers) {
         m_sourceBuffers = new SourceBufferList(m_starFish, this);
     }

@@ -20,7 +20,9 @@
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
+#include "dom/TextTrackList.h"
 #include "extra/SourceBuffer.h"
+#include "extra/TimeRanges.h"
 
 namespace StarFish {
 
@@ -236,42 +238,95 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-#define DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(eventName)                 \
-    static ESValue on##eventName##GetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);                       \
-        auto eventname =                                                  \
-            (((Window*)instance->globalObject()->extraPointerData()))     \
-                ->starFish()                                              \
-                ->staticStrings()                                         \
-                ->m_##eventName;                                          \
-        return originalObj->attributeEventListener(eventname);            \
-    }                                                                     \
-                                                                          \
-    static ESValue on##eventName##SetterFunction(ESVMInstance* instance)  \
-    {                                                                     \
-        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);                       \
-        auto eventname =                                                  \
-            (((Window*)instance->globalObject()->extraPointerData()))     \
-                ->starFish()                                              \
-                ->staticStrings()                                         \
-                ->m_##eventName;                                          \
-        ESValue v = instance->currentExecutionContext()->readArgument(0); \
-        if (v.isObject() ||                                               \
-            (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
-            originalObj->setAttributeEventListener(eventname, v);         \
-        } else {                                                          \
-            originalObj->clearAttributeEventListener(eventname);          \
-        }                                                                 \
-        return ESValue();                                                 \
-    }
+static ESValue onupdatestartGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(updatestart);
-DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(update);
-DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(updateend);
-DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(error);
-DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC(abort);
-#undef DEFINE_SOURCEBUFFER_EVENT_HANDLER_FUNC
+    return originalObj->onupdatestartEventListener();
+}
+
+static ESValue onupdatestartSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnupdatestartEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onupdateGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    return originalObj->onupdateEventListener();
+}
+
+static ESValue onupdateSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnupdateEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onupdateendGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    return originalObj->onupdateendEventListener();
+}
+
+static ESValue onupdateendSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnupdateendEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onerrorGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    return originalObj->onerrorEventListener();
+}
+
+static ESValue onerrorSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnerrorEventListener(arg0);
+
+    return ESValue();
+}
+
+static ESValue onabortGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    return originalObj->onabortEventListener();
+}
+
+static ESValue onabortSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+
+    originalObj->setOnabortEventListener(arg0);
+
+    return ESValue();
+}
 
 ESFunctionObject* bindingSourceBuffer(
     ScriptBindingInstance* scriptBindingInstance)
@@ -335,20 +390,30 @@ ESFunctionObject* bindingSourceBuffer(
         ESString::create("appendWindowEnd"), appendWindowEndGetterFunction,
         appendWindowEndSetterFunction);
 
-// event handler
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("onupdatestart"), onupdatestartGetterFunction,
+        onupdatestartSetterFunction);
 
-#define DEFINE_SOURCEBUFFER_EVENT_HANDLER(eventName)                      \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(              \
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),    \
-        ESString::create("on" #eventName), on##eventName##GetterFunction, \
-        on##eventName##SetterFunction);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("onupdate"), onupdateGetterFunction,
+        onupdateSetterFunction);
 
-    DEFINE_SOURCEBUFFER_EVENT_HANDLER(updatestart);
-    DEFINE_SOURCEBUFFER_EVENT_HANDLER(update);
-    DEFINE_SOURCEBUFFER_EVENT_HANDLER(updateend);
-    DEFINE_SOURCEBUFFER_EVENT_HANDLER(error);
-    DEFINE_SOURCEBUFFER_EVENT_HANDLER(abort);
-#undef DEFINE_SOURCEBUFFER_EVENT_HANDLER
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("onupdateend"), onupdateendGetterFunction,
+        onupdateendSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("onerror"), onerrorGetterFunction,
+        onerrorSetterFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(),
+        ESString::create("onabort"), onabortGetterFunction,
+        onabortSetterFunction);
 
     return SourceBufferFunction;
 }

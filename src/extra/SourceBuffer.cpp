@@ -17,16 +17,16 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
-#include "SourceBuffer.h"
-#include "SourceBufferList.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLMediaElement.h"
+#include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
+#include "extra/TimeRanges.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/threading/ThreadPool.h"
-#include "MediaSource.h"
-#include "extra/TimeRanges.h"
 
 #define STARFISH_ENABLE_TIMER
 #define TRACE_MSE_GC
@@ -350,10 +350,10 @@ public:
     double m_appendWindowEnd;
 };
 
-SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
-    : EventTarget()
+SourceBuffer::SourceBuffer(Document* document, String* type)
+    : EventTarget(document)
     , m_isAttachedToParent(false)
-    , m_starFish(starFish)
+    , m_starFish(document->window()->starFish())
     , m_demuxer(nullptr)
     , m_type(type)
     , m_parentMediaSource(nullptr)
@@ -573,6 +573,12 @@ void SourceBuffer::abort()
 
     m_indexPerInitSegment = 0;
 }
+
+DEFINE_EVENT_LISTENER(SourceBuffer, updatestart);
+DEFINE_EVENT_LISTENER(SourceBuffer, update);
+DEFINE_EVENT_LISTENER(SourceBuffer, updateend);
+DEFINE_EVENT_LISTENER(SourceBuffer, error);
+DEFINE_EVENT_LISTENER(SourceBuffer, abort);
 
 void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
 {
@@ -1532,12 +1538,6 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
         }
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-}
-
-void SourceBufferList::scheduleEvent(String* eventName)
-{
-    m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-        this, new Event(eventName));
 }
 }
 

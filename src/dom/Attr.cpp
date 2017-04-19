@@ -15,9 +15,9 @@
  */
 
 #include "StarFishConfig.h"
-#include "Attr.h"
-#include "Document.h"
-#include "Element.h"
+#include "dom/Attr.h"
+#include "dom/Document.h"
+#include "dom/Element.h"
 
 namespace StarFish {
 

@@ -20,6 +20,8 @@
 
 #include "dom/DOMException.h"
 #include "platform/location/Geolocation.h"
+#include "platform/location/Geoposition.h"
+#include "platform/location/PositionError.h"
 
 namespace StarFish {
 

@@ -48,7 +48,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_pendingSeek(std::numeric_limits<double>::quiet_NaN())
     , m_mediaPlayer(nullptr)
     , m_currentSrc(String::emptyString)
-    , m_textTracks(new TextTrackList())
+    , m_textTracks(new TextTrackList(document))
     , m_readyState(HTMLMediaElement::HAVE_NOTHING)
     , m_networkState(NetworkState::NETWORK_EMPTY)
     , m_currentOperation(nullptr)
@@ -416,6 +416,17 @@ void HTMLMediaElement::removeTextTrack(TextTrack* track)
     }
 }
 
+void HTMLMediaElement::setSrc(String* src)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+}
+
+String* HTMLMediaElement::src()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_src);
+}
+
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
                                           String* language)
 {
@@ -423,7 +434,7 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
     if (kindEnum == TextTrack::Kind::InvalidKind) {
         return nullptr;
     }
-    TextTrack* textTrack = new TextTrack(kindEnum, label, language);
+    TextTrack* textTrack = new TextTrack(m_document, kindEnum, label, language);
     m_textTracks->push_back(textTrack);
     return textTrack;
 }

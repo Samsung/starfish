@@ -18,9 +18,12 @@
 #ifndef __StarFishTextTrack__
 #define __StarFishTextTrack__
 
-#include "dom/VTTCue.h"
+#include "dom/EventTarget.h"
 
 namespace StarFish {
+
+class HTMLTrackElement;
+class TextTrackCueList;
 
 #define TEXTTRACK_INVALID_TIMEVALUE -1
 
@@ -42,7 +45,8 @@ public:
         Metadata,
     };
 
-    TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString,
+    TextTrack(Document* document, Kind kind = Kind::Subtitles,
+              String* label = String::emptyString,
               String* language = String::emptyString);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)

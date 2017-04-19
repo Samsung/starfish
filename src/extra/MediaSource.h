@@ -48,7 +48,7 @@ public:
                  // occurred.
     };
 
-    MediaSource(StarFish* starFish);
+    MediaSource(Document* document);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

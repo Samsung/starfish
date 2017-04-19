@@ -17,8 +17,7 @@
 #ifndef __StarFishAttribute__
 #define __StarFishAttribute__
 
-#include "util/String.h"
-#include "binding/ScriptWrappable.h"
+#include "StarFishConfig.h"
 
 namespace StarFish {
 

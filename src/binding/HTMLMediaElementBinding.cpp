@@ -21,6 +21,9 @@
 
 #include "dom/DOMException.h"
 #include "dom/HTMLMediaElement.h"
+#include "dom/TextTrack.h"
+#include "dom/TextTrackList.h"
+#include "extra/TimeRanges.h"
 
 namespace StarFish {
 

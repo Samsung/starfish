@@ -20,6 +20,7 @@
 
 #include "dom/DOMException.h"
 #include "dom/HTMLCollection.h"
+#include "dom/HTMLElement.h"
 
 namespace StarFish {
 

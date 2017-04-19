@@ -15,8 +15,8 @@
  */
 
 #include "StarFishConfig.h"
-#include "CDATASection.h"
-#include "Document.h"
+#include "dom/CDATASection.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 

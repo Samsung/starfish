@@ -18,35 +18,32 @@
 #include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "dom/HTMLLIElement.h"
+#include "dom/HTMLTHElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLLIElement(
+ESFunctionObject* bindingCDATASection(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    ESString* HTMLLIElementString = ESString::create("HTMLLIElement");
-    ESFunctionObject* HTMLStrongElementFunction =
-        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLLIElementString, 1, true, true);
-    HTMLStrongElementFunction->defineAccessorProperty(
+    // Bind for constructor
+    ESString* CDATASectionString = ESString::create("CDATASection");
+    ESFunctionObject* CDATASectionFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, CDATASectionString, 1, true, true);
+    CDATASectionFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLStrongElementFunction->protoType()
+    CDATASectionFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    HTMLStrongElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLStrongElementFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnHTMLElement());
+    CDATASectionFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnText()->protoType());
+    CDATASectionFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnText());
 
-    return HTMLStrongElementFunction;
+    return CDATASectionFunction;
 }
 }

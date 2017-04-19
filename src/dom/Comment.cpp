@@ -15,9 +15,8 @@
  */
 
 #include "StarFishConfig.h"
-#include "Comment.h"
-
-#include "Document.h"
+#include "dom/Comment.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 

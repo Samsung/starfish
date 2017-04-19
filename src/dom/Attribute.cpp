@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#include "Attribute.h"
+#include "dom/Attribute.h"
 
 namespace StarFish {
 

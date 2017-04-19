@@ -2563,6 +2563,41 @@ void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
     }
 }
 
+void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
+                                          CSSStyleValuePair ret)
+{
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            if (styleType() == StyleType::InlineStyle ||
+                ret.flagImportant() == true ||
+                (ret.flagImportant() == false &&
+                 m_cssValues[i].flagImportant() == false)) {
+                m_cssValues[i].setValueKind(ret.valueKind());
+                m_cssValues[i].setValue(ret.value());
+                m_cssValues[i].setFlagImportant(ret.flagImportant());
+                notifyNeedsStyleRecalc();
+            }
+
+            return;
+        }
+    }
+    ret.setKeyKind(name);
+    m_cssValues.push_back(ret);
+    notifyNeedsStyleRecalc();
+}
+
+void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            m_cssValues.erase(m_cssValues.begin() + i);
+            notifyNeedsStyleRecalc();
+            return;
+        }
+    }
+}
+
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
     if (m_element) {

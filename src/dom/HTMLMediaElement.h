@@ -282,17 +282,8 @@ public:
     TextTrack* addTextTrack(String* kind, String* label, String* language);
     void removeTextTrack(TextTrack* track);
 
-    void setSrc(String* src)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src,
-                     src);
-    }
-
-    String* src()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_src);
-    }
+    void setSrc(String* src);
+    String* src();
 
     String* currentSrc();
     NetworkState networkState();
@@ -470,8 +461,7 @@ protected:
     {
         Node* child = firstChild();
         while (child) {
-            if (child->isElement() && child->asElement()->isHTMLElement() &&
-                child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
+            if (child->isHTMLSourceElement()) {
                 return true;
             }
             child = child->nextSibling();

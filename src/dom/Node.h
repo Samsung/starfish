@@ -602,7 +602,6 @@ protected:
     RareNodeMembers* m_rareNodeMembers;
 
 private:
-    Document* m_document;
     Node* m_nextSibling;
     Node* m_previousSibling;
     Node* m_firstChild;

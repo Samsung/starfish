@@ -17,16 +17,17 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
-#include "TextTrack.h"
-#include "TextTrackCueList.h"
 #include "Event.h"
 #include "Document.h"
 #include "HTMLTrackElement.h"
+#include "TextTrack.h"
+#include "TextTrackCue.h"
 
 namespace StarFish {
 
-TextTrack::TextTrack(Kind kind, String* label, String* language)
-    : EventTarget()
+TextTrack::TextTrack(Document* document, Kind kind, String* label,
+                     String* language)
+    : EventTarget(document)
     , m_mode(Mode::Off)
     , m_kind(kind)
     , m_label(label)

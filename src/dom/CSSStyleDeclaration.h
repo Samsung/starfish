@@ -17,6 +17,7 @@
 #ifndef __StarFishCSSStyleDeclaration__
 #define __StarFishCSSStyleDeclaration__
 
+#include "binding/ScriptWrappable.h"
 #include "style/Style.h"
 
 namespace StarFish {
@@ -40,36 +41,16 @@ public:
         m_styleType = styleType;
     }
 
-    void addValuePair(CSSStyleValuePair p)
-    {
-        for (size_t i = 0; i < m_cssValues.size(); i++) {
-            CSSStyleValuePair v = m_cssValues[i];
-            if (v.keyKind() == p.keyKind()) {
-                m_cssValues[i] = p;
-                return;
-            }
-        }
-        m_cssValues.push_back(p);
-    }
+    void addValuePair(CSSStyleValuePair p);
 
-    void clear()
-    {
-        m_cssValues.clear();
-    }
+    void clear();
 
     Document* document()
     {
         return m_document;
     }
 
-    CSSStyleDeclaration* clone(Document* document, Element* element)
-    {
-        CSSStyleDeclaration* newStyle =
-            new CSSStyleDeclaration(document, element);
-        newStyle->m_cssValues = m_cssValues;
-
-        return newStyle;
-    }
+    CSSStyleDeclaration* clone(Document* document, Element* element);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -109,52 +90,14 @@ public:
     String* BackgroundPosition();
     String* Font();
     String* Transition();
-#define ATTRIBUTE_GETTER(name, ...)                                           \
-    String* name()                                                            \
-    {                                                                         \
-        for (unsigned i = 0; i < m_cssValues.size(); i++) {                   \
-            if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::name) \
-                return m_cssValues[i].toString();                             \
-        }                                                                     \
-        return String::emptyString;                                           \
-    }
+#define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
+    FOR_EACH_STYLE_ATTRIBUTE(DECLARE_ATTRIBUTE_GETTER)
+#undef DECLARE_ATTRIBUTE_GETTER
 
-    FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
-#undef ATTRIBUTE_GETTER
+    void addCSSValuePair(CSSStyleValuePair::KeyKind name,
+                         CSSStyleValuePair ret);
 
-    void addCSSValuePair(CSSStyleValuePair::KeyKind name, CSSStyleValuePair ret)
-    {
-        for (unsigned i = 0; i < m_cssValues.size(); i++) {
-            if (m_cssValues[i].keyKind() == name) {
-                if (styleType() == StyleType::InlineStyle ||
-                    ret.flagImportant() == true ||
-                    (ret.flagImportant() == false &&
-                     m_cssValues[i].flagImportant() == false)) {
-                    m_cssValues[i].setValueKind(ret.valueKind());
-                    m_cssValues[i].setValue(ret.value());
-                    m_cssValues[i].setFlagImportant(ret.flagImportant());
-                    notifyNeedsStyleRecalc();
-                }
-
-                return;
-            }
-        }
-        ret.setKeyKind(name);
-        m_cssValues.push_back(ret);
-        notifyNeedsStyleRecalc();
-    }
-
-    void removeCSSValuePair(CSSStyleValuePair::KeyKind name)
-    {
-        unsigned len = m_cssValues.size();
-        for (unsigned i = 0; i < len; i++) {
-            if (m_cssValues[i].keyKind() == name) {
-                m_cssValues.erase(m_cssValues.begin() + i);
-                notifyNeedsStyleRecalc();
-                return;
-            }
-        }
-    }
+    void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
 
     void setBorder(String* value, bool isImportant);
     void setBorderTop(String* value, bool isImportant);
@@ -172,106 +115,27 @@ public:
     void setFont(String* value, bool isImportant);
     void setTransition(String* value, bool isImportant);
 
-#define ATTRIBUTE_SETTER(name, ...)                                      \
-    void set##name(String* value, bool isImportant)                      \
-    {                                                                    \
-        if (value->length() == 0) {                                      \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);        \
-            return;                                                      \
-        }                                                                \
-        GCVector<String*> tokens;                                        \
-        if (CSSStyleValuePair::KeyKind::name ==                          \
-            CSSStyleValuePair::KeyKind::Content) {                       \
-            tokenizeCSSValue(&tokens, value, String::emptyString, true); \
-        } else {                                                         \
-            tokenizeCSSValue(&tokens, value, String::fromUTF8(","));     \
-        }                                                                \
-        CSSStyleValuePair ret;                                           \
-        if (ret.updateValueCommon(&tokens) ||                            \
-            ret.updateValue##name(&tokens)) {                            \
-            ret.setFlagImportant(isImportant);                           \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);      \
-        }                                                                \
-    }
+#define DECLARE_ATTRIBUTE_SETTER(name, ...) \
+    void set##name(String* value, bool isImportant);
+    FOR_EACH_STYLE_ATTRIBUTE(DECLARE_ATTRIBUTE_SETTER)
+#undef DECLARE_ATTRIBUTE_SETTER
 
-    FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
-#undef ATTRIBUTE_SETTER
+#define DECLARE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
+    String* PRE##__VA_ARGS__(bool* isCombined = nullptr);
 
-#define ATTRIBUTE_GETTER_FOURSIDE(PRE, ...)                               \
-    String* PRE##__VA_ARGS__(bool* isCombined = nullptr)                  \
-    {                                                                     \
-        String* top = PRE##Top##__VA_ARGS__();                            \
-        if (!top->equals(String::emptyString)) {                          \
-            String* right = PRE##Right##__VA_ARGS__();                    \
-            if (!right->equals(String::emptyString)) {                    \
-                String* bottom = PRE##Bottom##__VA_ARGS__();              \
-                if (!bottom->equals(String::emptyString)) {               \
-                    String* left = PRE##Left##__VA_ARGS__();              \
-                    if (!left->equals(String::emptyString)) {             \
-                        return combineBoxString(top, right, bottom, left, \
-                                                isCombined);              \
-                    }                                                     \
-                }                                                         \
-            }                                                             \
-        }                                                                 \
-        return String::emptyString;                                       \
-    }
-    ATTRIBUTE_GETTER_FOURSIDE(Margin);
-    ATTRIBUTE_GETTER_FOURSIDE(Padding);
-    ATTRIBUTE_GETTER_FOURSIDE(Border, Width);
-    ATTRIBUTE_GETTER_FOURSIDE(Border, Style);
-    ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
-#undef ATTRIBUTE_GETTER_FOURSIDE
+    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Margin);
+    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Padding);
+    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Width);
+    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Style);
+    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
+#undef DECLARE_ATTRIBUTE_GETTER_FOURSIDE
 
     static String* combineBoxString(String* t, String* r, String* b, String* l,
-                                    bool* isCombined = nullptr)
-    {
-        if (isCombined) {
-            *isCombined = true;
-        }
-        // [NOTICE]
-        // All initial --> return "initial"
-        // Not all, but more than 1 initial --> return ""
-        size_t initialCount = 0;
-        initialCount += t->equals(String::initialString) ? 1 : 0;
-        initialCount += r->equals(String::initialString) ? 1 : 0;
-        initialCount += b->equals(String::initialString) ? 1 : 0;
-        initialCount += l->equals(String::initialString) ? 1 : 0;
-        if (initialCount > 0 && initialCount < 4) {
-        }
+                                    bool* isCombined = nullptr);
 
-        String* space = String::spaceString;
-        if (!r->equals(l)) {
-            return t->concat(space)
-                ->concat(r)
-                ->concat(space)
-                ->concat(b)
-                ->concat(space)
-                ->concat(l);
-        } else if (!t->equals(b)) {
-            return t->concat(space)->concat(r)->concat(space)->concat(b);
-        } else if (!t->equals(r)) {
-            return t->concat(space)->concat(r);
-        } else {
-            if (isCombined) {
-                *isCombined = false;
-            }
-            return t;
-        }
-    }
+    unsigned long length() const;
 
-    unsigned long length() const
-    {
-        return m_cssValues.size();
-    }
-
-    String* item(unsigned long index)
-    {
-        if (index < m_cssValues.size()) {
-            return m_cssValues[index].keyName();
-        }
-        return String::emptyString;
-    }
+    String* item(unsigned long index);
 
     String* getPropertyValue(String* name);
     void setProperty(String* name, String* value, String* priority);
