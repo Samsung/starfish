@@ -46,9 +46,14 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
         (current->style()->display() == DisplayValue::InlineTableDisplayValue);
 
     if (isTable) {
-        currentFrame = new FrameTableBox(current, nullptr);
-        current->setFrame(currentFrame);
-        // Table establishes a new block context
+        if (current->needsFrameTreeBuild() && !current->frame()) {
+            currentFrame = new FrameTableBox(current, nullptr);
+            current->setFrame(currentFrame);
+        } else {
+            STARFISH_ASSERT(current->frame());
+            currentFrame = current->frame()->asFrameTableBox();
+        }
+
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
 
@@ -56,38 +61,58 @@ FrameTableBox* FrameTableBox::buildFrameTable(Node* current,
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
 
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            currentFrame->addChild(c, ctx, force);
+        if (current->childNeedsFrameTreeBuild() || force) {
+            for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+                currentFrame->addChild(c, ctx, force);
+            }
         }
+        current->clearNeedsFrameTreeBuild();
+        current->clearChildNeedsFrameTreeBuild();
     } else {
-        // If the current node is not a table wrapper node, make either
-        // * an anonymous table wrapper box, or
-        // * use the last anonymous wrapper box if it has already been created
-        //   by a previous (and continuous) sibling of the current node.
-        Frame* before = parent->lastChild();
+        if (current->needsFrameTreeBuild()) {
+            // If the current node is not a table wrapper node, make either
+            // * an anonymous table wrapper box, or
+            // * use the last anonymous wrapper box if it has already been
+            //   created by a previous (and continuous) sibling of the current
+            //   node.
+            Frame* before = parent->lastChild();
 
-        // NEED TO DISCUSSION : StarFish generate anonymous block box which has
-        // only whitespace, below code treat above situation
-        while (before && before->isAnonymous() &&
-               before->firstChild()->isFrameText() &&
-               before->firstChild()
-                   ->asFrameText()
-                   ->text()
-                   ->containsOnlyWhitespace()) {
-            before = before->previous();
-        }
+            // NEED TO DISCUSSION : StarFish generate anonymous block box which
+            // has only whitespace, below code treat above situation
+            while (before && before->isAnonymous() &&
+                   before->firstChild()->isFrameText() &&
+                   before->firstChild()
+                       ->asFrameText()
+                       ->text()
+                       ->containsOnlyWhitespace()) {
+                before = before->previous();
+            }
 
-        if (before && before->isAnonymous() && before->isFrameTableBox()) {
-            currentFrame = before->asFrameTableBox();
+            if (before && before->isAnonymous() && before->isFrameTableBox()) {
+                currentFrame = before->asFrameTableBox();
+            } else {
+                currentFrame =
+                    FrameTableBox::createAnonymousWithParent(parent, current);
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
+        } else if (current->childNeedsFrameTreeBuild()) {
+            for (Frame* f = current->frame(); f; f = f->parent()) {
+                if (f->parent() == parent) {
+                    STARFISH_ASSERT(f->isAnonymous());
+                    STARFISH_ASSERT(f->isFrameTableBox());
+                    currentFrame = f->asFrameTableBox();
+                    break;
+                }
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
         } else {
-            currentFrame =
-                FrameTableBox::createAnonymousWithParent(parent, current);
+            STARFISH_ASSERT_NOT_REACHED();
         }
-        ctx.setCurrentBlockContainer(currentFrame);
-        ctx.mergeTextDecorationData(currentFrame->style());
-        currentFrame->addChild(current, ctx, force);
     }
-
     FrameTreeBuilder::createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
 
@@ -119,7 +144,6 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         childFrame =
             FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
         m_captions.push_back(childFrame->asFrameTableCaptionBox());
-        STARFISH_ASSERT(!childFrame->parent());
         break;
     case DisplayValue::TableColumnGroupDisplayValue:
     case DisplayValue::TableColumnDisplayValue:
@@ -137,7 +161,6 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
     case DisplayValue::TableRowGroupDisplayValue:
         childFrame =
             FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
-        STARFISH_ASSERT(!childFrame->parent());
         break;
     default:
         wrapInAnnoymousSection = true;
@@ -181,8 +204,6 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
             STARFISH_ASSERT(childFrame->parent());
         }
         return;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 

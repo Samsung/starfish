@@ -88,27 +88,54 @@ FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(
                            DisplayValue::TableFooterGroupDisplayValue);
 
     if (isTableSection) {
-        currentFrame = new FrameTableSectionBox(current, nullptr);
-        current->setFrame(currentFrame);
-        ctx.setCurrentBlockContainer(currentFrame);
-        ctx.mergeTextDecorationData(currentFrame->style());
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            currentFrame->addChild(c, ctx, force);
-        }
-    } else {
-        // please read comment in FrameTableBox::buildFrameTable
-        Frame* before = parent->lastChild();
-
-        if (before && before->isAnonymous() &&
-            before->isFrameTableSectionBox()) {
-            currentFrame = before->asFrameTableSectionBox();
+        if (current->needsFrameTreeBuild() && !current->frame()) {
+            currentFrame = new FrameTableSectionBox(current, nullptr);
+            current->setFrame(currentFrame);
         } else {
-            currentFrame = FrameTableSectionBox::createAnonymousWithParent(
-                parent, current);
+            STARFISH_ASSERT(current->frame());
+            currentFrame = current->frame()->asFrameTableSectionBox();
         }
+
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
-        currentFrame->addChild(current, ctx, force);
+
+        if (current->childNeedsFrameTreeBuild() || force) {
+            for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+                currentFrame->addChild(c, ctx, force);
+            }
+        }
+        current->clearNeedsFrameTreeBuild();
+        current->clearChildNeedsFrameTreeBuild();
+    } else {
+        if (current->needsFrameTreeBuild()) {
+            // please read comment in FrameTableBox::buildFrameTable
+            Frame* before = parent->lastChild();
+
+            if (before && before->isAnonymous() &&
+                before->isFrameTableSectionBox()) {
+                currentFrame = before->asFrameTableSectionBox();
+            } else {
+                currentFrame = FrameTableSectionBox::createAnonymousWithParent(
+                    parent, current);
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
+        } else if (current->childNeedsFrameTreeBuild()) {
+            for (Frame* f = current->frame(); f; f = f->parent()) {
+                if (f->parent() == parent) {
+                    STARFISH_ASSERT(f->isAnonymous());
+                    STARFISH_ASSERT(f->isFrameTableSectionBox());
+                    currentFrame = f->asFrameTableSectionBox();
+                    break;
+                }
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
     }
 
     ctx.setCurrentBlockContainer(parent);

@@ -35,6 +35,7 @@ class FrameReplaced;
 class FrameInline;
 class FrameLineBreak;
 class FrameDocument;
+class FrameTableObjectBox;
 class FrameTableBox;
 class FrameTableCaptionBox;
 class FrameTableSectionBox;
@@ -857,6 +858,11 @@ public:
     {
         STARFISH_ASSERT(isInlineBoxLayoutParentBox());
         return (InlineBoxLayoutParentBox*)this;
+    }
+    FrameTableObjectBox* asFrameTableObjectBox()
+    {
+        STARFISH_ASSERT(isFrameTableObjectBox());
+        return (FrameTableObjectBox*)this;
     }
 
     FrameTableBox* asFrameTableBox()
