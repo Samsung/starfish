@@ -3982,6 +3982,10 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::Empty:
+            break;
+        default:
+            break;
         }
     }
 }

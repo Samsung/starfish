@@ -446,7 +446,7 @@ public:
                 return false;
             }
 
-            bool isPercent = false, shouldPercent;
+            bool isPercent = false, shouldPercent = false;
             unsigned char parsed[4];
             for (size_t i = 0; i < size; i++) {
                 if (!parseColorFunctionPart(v[i], (i == 3), &parsed[i],
