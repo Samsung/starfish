@@ -25,6 +25,7 @@ using namespace escargot;
 
 class ScriptBindingInstanceDataEscargot;
 class String;
+class Document;
 
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 const uint32_t kEventStringAttributeCheckMagic = 0x0ffe;
@@ -57,6 +58,8 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     bool isConfigurable = true);
 
 ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance);
+
+Document* fetchDocument(ESVMInstance* instance);
 
 String* toBrowserString(const ESValue& v);
 ESValue toJSString(String* v);

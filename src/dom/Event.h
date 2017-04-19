@@ -45,10 +45,6 @@ public:
     Event();
     Event(String* eventType, const EventInit& init = EventInit(false, false));
 
-    virtual ~Event()
-    {
-    }
-
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);

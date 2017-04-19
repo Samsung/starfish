@@ -20,6 +20,20 @@
 
 namespace StarFish {
 
+String* HTMLBodyElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_bodyTagName.localName();
+}
+
+QualifiedName HTMLBodyElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_bodyTagName;
+}
+
 void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
                                           String* value, bool attributeCreated,
                                           bool attributeRemoved)

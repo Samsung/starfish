@@ -28,9 +28,6 @@ class HistoryEntry;
 class History : public ScriptWrappable {
 public:
     History(StarFish* starFish);
-    virtual ~History()
-    {
-    }
 
     StarFish* starFish()
     {

@@ -18,9 +18,9 @@
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "extra/Avplay.h"
 
 namespace StarFish {
 
@@ -30,11 +30,8 @@ static ESValue openFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
     String* url = toBrowserString(firstArg);
-    avPlay->open(url);
+    originalObj->open(url);
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -42,10 +39,7 @@ static ESValue openFunction(ESVMInstance* instance)
 static ESValue prepareFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->prepare();
+    originalObj->prepare();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -58,11 +52,8 @@ static ESValue setDisplayRectFunction(ESVMInstance* instance)
     ESValue Arg3 = instance->currentExecutionContext()->readArgument(2);
     ESValue Arg4 = instance->currentExecutionContext()->readArgument(3);
 
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->setDisplayRect(Arg1.toNumber(), Arg2.toNumber(), Arg3.toNumber(),
-                           Arg4.toNumber());
+    originalObj->setDisplayRect(Arg1.toNumber(), Arg2.toNumber(),
+                                Arg3.toNumber(), Arg4.toNumber());
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -70,10 +61,7 @@ static ESValue setDisplayRectFunction(ESVMInstance* instance)
 static ESValue playFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->play();
+    originalObj->play();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -81,10 +69,7 @@ static ESValue playFunction(ESVMInstance* instance)
 static ESValue closeFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->close();
+    originalObj->close();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -92,10 +77,7 @@ static ESValue closeFunction(ESVMInstance* instance)
 static ESValue pauseFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->pause();
+    originalObj->pause();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -103,10 +85,7 @@ static ESValue pauseFunction(ESVMInstance* instance)
 static ESValue stopFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->stop();
+    originalObj->stop();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -114,10 +93,7 @@ static ESValue stopFunction(ESVMInstance* instance)
 static ESValue suspendFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->suspend();
+    originalObj->suspend();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -125,10 +101,7 @@ static ESValue suspendFunction(ESVMInstance* instance)
 static ESValue restoreFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->restore();
+    originalObj->restore();
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -136,28 +109,19 @@ static ESValue restoreFunction(ESVMInstance* instance)
 static ESValue getStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    return toJSString(avPlay->getState());
+    return toJSString(originalObj->getState());
 }
 
 static ESValue getCurrentTimeFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    return ESValue(avPlay->getCurrentTime());
+    return ESValue(originalObj->getCurrentTime());
 }
 
 static ESValue getDurationFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    return ESValue(avPlay->getDuration());
+    return ESValue(originalObj->getDuration());
 }
 
 static ESValue setStreamingPropertyFunction(ESVMInstance* instance)
@@ -165,11 +129,8 @@ static ESValue setStreamingPropertyFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->setStreamingProperty(toBrowserString(firstArg),
-                                 toBrowserString(secondArg));
+    originalObj->setStreamingProperty(toBrowserString(firstArg),
+                                      toBrowserString(secondArg));
     return ESValue(ESValue::ESUndefined);
 }
 
@@ -189,10 +150,7 @@ static ESValue setListenerFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->setListener(firstArg);
+    originalObj->setListener(firstArg);
 
     return ESValue(ESValue::ESUndefined);
 }
@@ -201,10 +159,7 @@ static ESValue seekToFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Avplay);
     ESValue Arg = instance->currentExecutionContext()->readArgument(0);
-    Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
-                         ->Webapis()
-                         ->Avplay();
-    avPlay->seekTo(Arg.toNumber());
+    originalObj->seekTo(Arg.toNumber());
     return ESValue(ESValue::ESUndefined);
 }
 

@@ -27,27 +27,10 @@ class CSSStyleRule : public ScriptWrappable {
 
 public:
     CSSStyleRule(CSSSelector::Type type, String* selectorText,
-                 Document* document)
-        : ScriptWrappable(this)
-        , m_document(document)
-    {
-        CSSSelector* selector = new CSSSelector(
-            type, CSSSelector::RelationType::None, selectorText);
-        GCDeque<CSSSelector*>* selectorList = new (GC) GCDeque<CSSSelector*>();
-        selectorList->push_back(selector);
-        m_selectorList = selectorList;
-        m_styleDeclaration = new CSSStyleDeclaration(document);
-        m_document = document;
-    }
+                 Document* document);
 
     CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document,
-                 CSSStyleDeclaration* decl)
-        : ScriptWrappable(this)
-        , m_selectorList(selectorList)
-        , m_styleDeclaration(decl)
-        , m_document(document)
-    {
-    }
+                 CSSStyleDeclaration* decl);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

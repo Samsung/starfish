@@ -25,8 +25,7 @@ namespace StarFish {
 class Element;
 class Attr : public Node {
 public:
-    Attr(Document* document, ScriptBindingInstance* instance, Element* element,
-         QualifiedName name)
+    Attr(Document* document, Element* element, QualifiedName name)
         : Node(document)
         , m_element(element)
         , m_qname(name)
@@ -34,8 +33,7 @@ public:
     {
     }
 
-    Attr(Document* document, ScriptBindingInstance* instance,
-         QualifiedName name)
+    Attr(Document* document, QualifiedName name)
         : Node(document)
         , m_element(nullptr)
         , m_qname(name)
@@ -43,8 +41,7 @@ public:
     {
     }
 
-    Attr(Document* document, ScriptBindingInstance* instance,
-         QualifiedName name, String* value)
+    Attr(Document* document, QualifiedName name, String* value)
         : Node(document)
         , m_element(nullptr)
         , m_qname(name)

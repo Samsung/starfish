@@ -1160,6 +1160,78 @@ void Node::setNeedsFrameTreeBuild()
     m_document->window()->setNeedsFrameTreeBuild();
 }
 
+void Node::setNeedsStyleRecalc()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    if (!m_needsStyleRecalc) {
+        m_needsStyleRecalc = true;
+
+        Node* node = parentNode();
+        while (node && !node->childNeedsStyleRecalc()) {
+            node->setChildNeedsStyleRecalc();
+            node = node->parentNode();
+        }
+    }
+    m_document->window()->setNeedsStyleRecalc();
+}
+
+void Node::setChildrenNeedsStyleRecalc()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    Node* child = firstChild();
+    while (child) {
+        child->m_needsStyleRecalc = true;
+        child->setChildrenNeedsStyleRecalc();
+        child = child->nextSibling();
+    }
+}
+
+void Node::setSiblingsNeedsStyleRecalc()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    Node* node = nextSibling();
+    while (node) {
+        node->m_needsStyleRecalc = true;
+        node = node->nextSibling();
+    }
+}
+
+void Node::setNeedsLayout()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    m_document->window()->setNeedsLayout();
+}
+
+void Node::setNeedsPainting()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    m_document->window()->setNeedsPainting();
+}
+
+void Node::setNeedsComposite()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    m_document->window()->setNeedsComposite();
+}
+
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
                                    ComputedStyle* newStyle)
 {

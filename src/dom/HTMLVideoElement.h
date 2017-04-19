@@ -34,23 +34,8 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_videoTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_videoTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     virtual bool isHTMLVideoElement() const override
     {
@@ -61,30 +46,11 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    String* width()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_width);
-    }
+    String* width();
+    void setWidth(int width);
 
-    void setWidth(int width)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                     String::fromInt(width));
-    }
-
-    String* height()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_height);
-    }
-
-    void setHeight(int height)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_height,
-            String::fromInt(height));
-    }
+    String* height();
+    void setHeight(int height);
 
     unsigned long videoWidth();
     unsigned long videoHeight();

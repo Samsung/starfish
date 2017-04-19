@@ -40,45 +40,15 @@ public:
 
     /* table cell related */
 
-    virtual void setColspan(int colspan)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_colspan,
-            String::fromInt(colspan));
-    }
+    String* colspan();
+    void setColspan(int colspan);
 
-    virtual String* colspan()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_colspan);
-    }
-
-    virtual void setRowspan(int rowspan)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_colspan,
-            String::fromInt(rowspan));
-    }
-
-    virtual String* rowspan()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_rowspan);
-    }
+    String* rowspan();
+    void setRowspan(int rowspan);
 
     /* Not in HTML5 */
-    String* bgColor()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_bgColor);
-    }
-
-    void setBgColor(String* bgColor)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_bgColor,
-            bgColor);
-    }
+    String* bgColor();
+    void setBgColor(String* bgColor);
 };
 }
 

@@ -40,7 +40,6 @@ void Attr::setValue(String* value)
 
 Node* Attr::clone()
 {
-    return (Node*)(new Attr(document(), document()->scriptBindingInstance(),
-                            m_qname, value()));
+    return (Node*)(new Attr(document(), m_qname, value()));
 }
 }

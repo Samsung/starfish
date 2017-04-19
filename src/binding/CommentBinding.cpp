@@ -16,9 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/Comment.h"
 
 namespace StarFish {
 
@@ -31,8 +31,7 @@ static ESValue commentFunction(ESVMInstance* instance)
         arg0 = ESString::create("");
     }
     String* data0 = String::fromUTF8(arg0.toString()->utf8Data());
-    Window* window = (Window*)instance->globalObject()->extraPointerData();
-    Comment* comment = new Comment(window->document(), data0);
+    Comment* comment = new Comment(fetchDocument(instance), data0);
 
     return comment->scriptValue();
 }

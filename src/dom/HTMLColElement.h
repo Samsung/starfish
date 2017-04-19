@@ -35,19 +35,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_colTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_colTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 
@@ -56,19 +45,8 @@ public:
         return true;
     }
 
-    void setSpan(int span)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_span,
-                     String::fromInt(span));
-    }
-
-    String* span()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_span);
-    }
-
-protected:
+    void setSpan(int span);
+    String* span();
 };
 }
 

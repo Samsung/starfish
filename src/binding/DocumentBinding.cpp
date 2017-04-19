@@ -15,9 +15,13 @@
  */
 #include "StarFishConfig.h"
 #include "ScriptBindingInstance.h"
-
-#include "Binding.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+
+#include "dom/Attr.h"
+#include "dom/DocumentFragment.h"
+#include "dom/Comment.h"
+#include "dom/Element.h"
+#include "dom/Text.h"
 
 namespace StarFish {
 
@@ -141,7 +145,7 @@ static ESValue hiddenGetterFunction(ESVMInstance* instance)
 static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    VisibilityState v = originalObj->visibilityState();
+    String* v = originalObj->visibilityState();
     return toJSString(v);
 }
 

@@ -126,12 +126,7 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
                                        DOMException::Code::NOT_FOUND_ERR,
                                        nullptr);
             }
-            Attr* toReturn = new Attr(old->document(),
-                                      ((NamedNodeMap*)thisValue.asESPointer()
-                                           ->asESObject()
-                                           ->extraPointerData())
-                                          ->striptBindingInstance(),
-                                      name, old->value());
+            Attr* toReturn = new Attr(old->document(), name, old->value());
             ((NamedNodeMap*)thisValue.asESPointer()
                  ->asESObject()
                  ->extraPointerData())
