@@ -30,48 +30,60 @@ FrameTableColBox* FrameTableColBox::buildFrameTableColBox(
 {
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableBox());
 
-    FrameTableColBox* colGroupBox = nullptr;
-    FrameBlockBox* parentWrapperBox = ctx.currentBlockContainer();
+    FrameTableColBox* currentFrame = nullptr;
+    FrameBlockBox* parent = ctx.currentBlockContainer();
     bool isColGroup = current->style()->display() ==
                       DisplayValue::TableColumnGroupDisplayValue;
 
     if (isColGroup) {
-        colGroupBox = new FrameTableColBox(current, nullptr);
-        current->setFrame(colGroupBox);
-    } else {
-        // If the current node is not a colGroup node, make either
-        // * an anonymous table colGroup box, or
-        // * use the last anonymous table colGroup box if it has already been
-        // created
-        //   by a previous (and continuous) sibling of the current node.
-        Frame* last = parentWrapperBox->lastChild();
-        // Always treat as colgroupbox, if the box is anonymous and
-        // FrameTableColBox
-        if (last && last->isAnonymous() && last->isFrameTableColBox()) {
-            colGroupBox = last->asFrameTableColBox();
-        } else {
-            colGroupBox = FrameTableColBox::createAnonymousWithParent(
-                parentWrapperBox, current);
-        }
-    }
-
-    ctx.setCurrentBlockContainer(colGroupBox);
-    ctx.mergeTextDecorationData(colGroupBox->style());
-
-    if (isColGroup) {
+        currentFrame = new FrameTableColBox(current, nullptr);
+        current->setFrame(currentFrame);
+        ctx.setCurrentBlockContainer(currentFrame);
+        ctx.mergeTextDecorationData(currentFrame->style());
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            colGroupBox->addChild(c, ctx, force);
+            currentFrame->addChild(c, ctx, force);
         }
-    } else if (colGroupBox->isAnonymous()) {
-        colGroupBox->addChild(current, ctx, force);
+        current->clearNeedsFrameTreeBuild();
+        current->clearChildNeedsFrameTreeBuild();
     } else {
-        STARFISH_ASSERT_NOT_REACHED();
+        if (current->needsFrameTreeBuild()) {
+            // If the current node is not a colGroup node, make either
+            // * an anonymous table colGroup box, or
+            // * use the last anonymous table colGroup box if it has already
+            // been created by a previous (and continuous) sibling of
+            // the current node.
+            Frame* last = parent->lastChild();
+            // Always treat as colgroupbox, if the box is anonymous and
+            // FrameTableColBox
+            if (last && last->isAnonymous() && last->isFrameTableColBox()) {
+                currentFrame = last->asFrameTableColBox();
+            } else {
+                currentFrame = FrameTableColBox::createAnonymousWithParent(
+                    parent, current);
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
+        } else if (current->childNeedsFrameTreeBuild()) {
+            for (Frame* f = current->frame(); f; f = f->parent()) {
+                if (f->parent() == parent) {
+                    STARFISH_ASSERT(f->isAnonymous());
+                    STARFISH_ASSERT(f->isFrameTableColBox());
+                    currentFrame = f->asFrameTableColBox();
+                    break;
+                }
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            currentFrame->addChild(current, ctx, force);
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
     }
 
-    ctx.setCurrentBlockContainer(parentWrapperBox);
-
-    STARFISH_ASSERT(colGroupBox);
-    return colGroupBox;
+    ctx.setCurrentBlockContainer(parent);
+    STARFISH_ASSERT(currentFrame);
+    return currentFrame;
 }
 
 FrameTableColBox* FrameTableColBox::createAnonymousWithParent(
@@ -93,6 +105,8 @@ void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         FrameTableColBox* childFrame = new FrameTableColBox(child, nullptr);
         ctx.currentBlockContainer()->appendChild(childFrame);
         child->setFrame(childFrame);
+        child->clearNeedsFrameTreeBuild();
+        child->clearChildNeedsFrameTreeBuild();
         STARFISH_ASSERT(childFrame->parent());
         return;
     }

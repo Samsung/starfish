@@ -37,6 +37,7 @@
 #include "FrameLineBreak.h"
 
 namespace StarFish {
+void dump(Frame* frm, unsigned depth);
 
 FrameTreeBuilderContext::FrameTreeBuilderContext(
     FrameBlockBox* currentBlockContainer)
@@ -123,6 +124,7 @@ void FrameTreeBuilderContext::setIsInFrameInlineFlow(bool b)
 void FrameTreeBuilder::clearTree(Node* current)
 {
     current->setFrame(nullptr);
+    current->setNeedsFrameTreeBuild(true);
 
     Node* n = current->firstChild();
     while (n) {
@@ -464,6 +466,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
     bool shouldSkipChildren = false;
+    bool isTableType = false;
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
     FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
@@ -475,7 +478,12 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         textDecoBack->m_underLineColor = curDeco->m_underLineColor;
     }
 
-    if (current->needsFrameTreeBuild() || force) {
+    if (current->style() &&
+        ComputedStyle::isDisplayTableValueType(current->style()->display())) {
+        isTableType = true;
+    }
+
+    if ((current->needsFrameTreeBuild() || force) || isTableType) {
         force = true;
 
         Frame* currentFrame;
@@ -512,14 +520,20 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                        ->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
-        } else if (ComputedStyle::isDisplayTableValueType(display)) {
+        } else if (isTableType) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table
             // wrapper
+            if (!(current->needsFrameTreeBuild() ||
+                  current->childNeedsFrameTreeBuild())) {
+                return nullptr;
+            }
             currentFrame = FrameTableBox::buildFrameTable(current, ctx, force);
             if (!currentFrame->parent()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(
                     ctx.currentBlockContainer(), currentFrame, current, ctx);
+            }
+            if (display != DisplayValue::InlineTableDisplayValue) {
                 ctx.setIsInFrameInlineFlow(false);
             }
             shouldSkipChildren = true;

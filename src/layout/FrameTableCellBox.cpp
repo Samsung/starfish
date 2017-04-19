@@ -44,8 +44,14 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
         current->style()->display() == DisplayValue::TableCellDisplayValue;
 
     if (isTableCell) {
-        currentFrame = new FrameTableCellBox(current, nullptr);
-        current->setFrame(currentFrame);
+        if (current->needsFrameTreeBuild() && !current->frame()) {
+            currentFrame = new FrameTableCellBox(current, nullptr);
+            current->setFrame(currentFrame);
+        } else {
+            STARFISH_ASSERT(current->frame());
+            currentFrame = current->frame()->asFrameTableCellBox();
+        }
+
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.mergeTextDecorationData(currentFrame->style());
 
@@ -53,21 +59,42 @@ FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
 
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            FrameTreeBuilder::buildTree(c, ctx, force);
+        if (current->childNeedsFrameTreeBuild() || force) {
+            for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+                FrameTreeBuilder::buildTree(c, ctx, false);
+            }
         }
+        current->clearNeedsFrameTreeBuild();
+        current->clearChildNeedsFrameTreeBuild();
     } else {
-        // please read comment in FrameTableBox::buildFrameTable
-        Frame* before = parent->lastChild();
-        if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
-            currentFrame = before->asFrameTableCellBox();
+        if (current->needsFrameTreeBuild()) {
+            // please read comment in FrameTableBox::buildFrameTable
+            Frame* before = parent->lastChild();
+            if (before && before->isAnonymous() &&
+                before->isFrameTableCellBox()) {
+                currentFrame = before->asFrameTableCellBox();
+            } else {
+                currentFrame = FrameTableCellBox::createAnonymousWithParent(
+                    parent, current);
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            FrameTreeBuilder::buildTree(current, ctx, false);
+        } else if (current->childNeedsFrameTreeBuild()) {
+            for (Frame* f = current->frame(); f; f = f->parent()) {
+                if (f->parent() == parent) {
+                    STARFISH_ASSERT(f->isAnonymous());
+                    STARFISH_ASSERT(f->isFrameTableCellBox());
+                    currentFrame = f->asFrameTableCellBox();
+                    break;
+                }
+            }
+            ctx.setCurrentBlockContainer(currentFrame);
+            ctx.mergeTextDecorationData(currentFrame->style());
+            FrameTreeBuilder::buildTree(current, ctx, false);
         } else {
-            currentFrame =
-                FrameTableCellBox::createAnonymousWithParent(parent, current);
+            STARFISH_ASSERT_NOT_REACHED();
         }
-        ctx.setCurrentBlockContainer(currentFrame);
-        ctx.mergeTextDecorationData(currentFrame->style());
-        FrameTreeBuilder::buildTree(current, ctx, force);
     }
 
     FrameTreeBuilder::createPseudoElementIfNeeded(

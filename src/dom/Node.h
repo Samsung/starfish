@@ -41,6 +41,7 @@ class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
 
+
 // TODO use weak reference for activeHtmlCollectionLists
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 
@@ -532,6 +533,11 @@ public:
     inline void setSiblingsNeedsStyleRecalc();
 
     void setNeedsFrameTreeBuild();
+
+    void setNeedsFrameTreeBuild(bool value)
+    {
+        m_needsFrameTreeBuild = value;
+    }
 
     bool needsFrameTreeBuild()
     {
