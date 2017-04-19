@@ -411,8 +411,7 @@ Attr* Element::ensureAttr(QualifiedName name)
         if (!rareMembers->m_attrList) {
             rareMembers->m_attrList = new (GC) GCVector<Attr*>();
         }
-        returnAttr = new Attr(document(), document()->scriptBindingInstance(),
-                              this, name);
+        returnAttr = new Attr(document(), this, name);
         rareMembers->m_attrList->push_back(returnAttr);
     }
     return returnAttr;

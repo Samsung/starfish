@@ -15,23 +15,33 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/CharacterData.h"
+#include "dom/Document.h"
+#include "dom/HTMLColGroupElement.h"
 
 namespace StarFish {
-
-using namespace escargot;
-
-ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance)
+String* HTMLColGroupElement::localName()
 {
-    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    if (originalObj->data()->isASCIIString()) {
-        return ESValue(originalObj->length());
-    } else {
-        // TODO: measure length without converting
-        return ESValue(toJSString(originalObj->data()).toString()->length());
-    }
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_colgroupTagName.localName();
+}
+
+QualifiedName HTMLColGroupElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_colgroupTagName;
+}
+
+void HTMLColGroupElement::setSpan(int span)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_span,
+                 String::fromInt(span));
+}
+
+String* HTMLColGroupElement::span()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_span);
 }
 }

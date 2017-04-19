@@ -109,10 +109,6 @@ protected:
     }
 
 public:
-    virtual ~Node()
-    {
-    }
-
     /* 4.4 Interface Node */
 
     enum NodeType {
@@ -398,7 +394,7 @@ public:
         return m_state;
     }
 
-    inline void setNeedsStyleRecalc();
+    void setNeedsStyleRecalc();
     bool needsStyleRecalc()
     {
         return m_needsStyleRecalc;
@@ -425,9 +421,9 @@ public:
     }
 
     // This function sets the dirty flag only for children.
-    inline void setChildrenNeedsStyleRecalc();
+    void setChildrenNeedsStyleRecalc();
 
-    inline void setSiblingsNeedsStyleRecalc();
+    void setSiblingsNeedsStyleRecalc();
 
     void setNeedsFrameTreeBuild();
 
@@ -461,9 +457,9 @@ public:
         m_childNeedsFrameTreeBuild = false;
     }
 
-    inline void setNeedsLayout();
-    inline void setNeedsPainting();
-    inline void setNeedsComposite();
+    void setNeedsLayout();
+    void setNeedsPainting();
+    void setNeedsComposite();
 
     void setStyle(ComputedStyle* style)
     {

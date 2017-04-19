@@ -36,19 +36,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_aTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_aTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 
@@ -57,38 +46,9 @@ public:
         return true;
     }
 
-    virtual void handleDefaultEvent(Event* event)
-    {
-        if (((event->isMouseEvent() || event->isTouchEvent())) &&
-            event->type()->equals("click")) {
-            auto href =
-                document()->window()->starFish()->staticStrings()->m_href;
-            size_t s = hasAttribute(href);
-            if (s != SIZE_MAX) {
-                String* h = getAttribute(s)->trim();
-                if (h->length()) {
-                    if (h->startsWith("#")) {
-                        document()->window()->navigateAsync(URL::createURL(
-                            document()->urlString()->substring(
-                                0, document()->urlString()->indexOf('#')),
-                            h));
-                    } else {
-                        document()->window()->navigateAsync(
-                            URL::createURL(document()->urlString(), h));
-                    }
-                } else {
-                    document()->window()->navigateAsync(
-                        document()->documentURI());
-                }
-            }
-        }
-    }
+    virtual void handleDefaultEvent(Event* event);
 
-    bool supportsFocus()
-    {
-        auto href = document()->window()->starFish()->staticStrings()->m_href;
-        return hasAttribute(href) != SIZE_MAX ? true : false;
-    }
+    bool supportsFocus();
 
     int tabIndex()
     {

@@ -51,6 +51,10 @@ public:
 
     ScriptWrappable(void* extraPointerData);
 
+    virtual ~ScriptWrappable()
+    {
+    }
+
     ScriptObject scriptObject()
     {
         if (UNLIKELY((size_t)m_object & (size_t)1)) {

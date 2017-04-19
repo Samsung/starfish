@@ -17,15 +17,12 @@
 #ifndef __StarFishDocument__
 #define __StarFishDocument__
 
-#include "util/URL.h"
 #include "dom/Node.h"
-#include "platform/window/Window.h"
 #include "loader/ResourceLoader.h"
 
 namespace StarFish {
 
 class Window;
-class Attribute;
 class NetworkRequest;
 class DocumentBuilder;
 
@@ -40,8 +37,6 @@ enum VisibilityState {
     VisibilityStatePrerender,
     VisibilityStateUnloaded
 };
-
-ESValue toJSString(VisibilityState v);
 
 class Document : public Node {
 #ifdef STARFISH_EXP
@@ -115,12 +110,7 @@ public:
     DocumentFragment* createDocumentFragment();
     virtual Element* createElement(AtomicString localName,
                                    bool shouldCheckName);
-    Element* createElement(String* name)
-    {
-        AtomicString atomicName = AtomicString::createAttrAtomicString(
-            window()->starFish(), name->utf8Data());
-        return createElement(atomicName, true);
-    }
+    Element* createElement(String* name);
     Text* createTextNode(String* data);
     CDATASection* createCDATASectionNode(String* data);
     Comment* createComment(String* data);
@@ -183,9 +173,25 @@ public:
 
     /* Page Visibility */
     bool hidden() const;
-    VisibilityState visibilityState()
+    String* visibilityState()
     {
-        return m_pageVisibilityState;
+        String* str = String::emptyString;
+        switch (m_pageVisibilityState) {
+        case VisibilityState::VisibilityStateHidden:
+            str = String::createASCIIString("hidden");
+            break;
+        case VisibilityState::VisibilityStatePrerender:
+            str = String::createASCIIString("prerender");
+            break;
+        case VisibilityState::VisibilityStateUnloaded:
+            str = String::createASCIIString("unloaded");
+            break;
+        case VisibilityState::VisibilityStateVisible:
+            str = String::createASCIIString("visible");
+            break;
+        }
+
+        return str;
     }
 
     void setVisibilityState(VisibilityState visibilityState);
@@ -205,10 +211,7 @@ public:
         m_inParsing = b;
     }
 
-    String* urlString()
-    {
-        return m_documentURI->urlString();
-    }
+    String* urlString();
 
     URL* documentURI()
     {
@@ -220,10 +223,7 @@ public:
         m_documentURI = newURL;
     }
 
-    Location* location()
-    {
-        return window()->location();
-    }
+    Location* location();
 
     void open();
 
@@ -304,78 +304,6 @@ private:
     DOMImplementation* m_implementation;
 #endif
 };
-
-void Node::setNeedsStyleRecalc()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    if (!m_needsStyleRecalc) {
-        m_needsStyleRecalc = true;
-
-        Node* node = parentNode();
-        while (node && !node->childNeedsStyleRecalc()) {
-            node->setChildNeedsStyleRecalc();
-            node = node->parentNode();
-        }
-    }
-    m_document->window()->setNeedsStyleRecalc();
-}
-
-void Node::setChildrenNeedsStyleRecalc()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    Node* child = firstChild();
-    while (child) {
-        child->m_needsStyleRecalc = true;
-        child->setChildrenNeedsStyleRecalc();
-        child = child->nextSibling();
-    }
-}
-
-void Node::setSiblingsNeedsStyleRecalc()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    Node* node = nextSibling();
-    while (node) {
-        node->m_needsStyleRecalc = true;
-        node = node->nextSibling();
-    }
-}
-
-void Node::setNeedsLayout()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    m_document->window()->setNeedsLayout();
-}
-
-void Node::setNeedsPainting()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    m_document->window()->setNeedsPainting();
-}
-
-void Node::setNeedsComposite()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    m_document->window()->setNeedsComposite();
-}
 }
 
 #endif

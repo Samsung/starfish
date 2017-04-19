@@ -22,6 +22,20 @@
 
 namespace StarFish {
 
+String* HTMLVideoElement::localName()
+{
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_videoTagName.localName();
+}
+
+QualifiedName HTMLVideoElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_videoTagName;
+}
+
 unsigned long HTMLVideoElement::videoWidth()
 {
     return m_mediaPlayer ? m_mediaPlayer->videoWidth()
@@ -47,6 +61,30 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
             setNeedsLayout();
         }
     }
+}
+
+String* HTMLVideoElement::width()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_width);
+}
+
+void HTMLVideoElement::setWidth(int width)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_width,
+                 String::fromInt(width));
+}
+
+String* HTMLVideoElement::height()
+{
+    return getAttribute(
+        document()->window()->starFish()->staticStrings()->m_height);
+}
+
+void HTMLVideoElement::setHeight(int height)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_height,
+                 String::fromInt(height));
 }
 
 String* HTMLVideoElement::poster()

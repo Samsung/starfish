@@ -21,7 +21,6 @@
 
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "Binding.h"
 #include "extra/Console.h"
 
 #include <Escargot.h>
@@ -155,6 +154,12 @@ ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
     return (ScriptBindingInstanceDataEscargot*)instance->data();
 }
 
+Document* fetchDocument(ESVMInstance* instance)
+{
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    return window->document();
+}
+
 String* toBrowserString(const ESValue& v)
 {
     escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();
@@ -174,27 +179,6 @@ String* toBrowserString(const ESValue& v)
 ESValue toJSString(String* v)
 {
     return createScriptString(v);
-}
-
-ESValue toJSString(VisibilityState state)
-{
-    String* str = String::emptyString;
-    switch (state) {
-    case VisibilityState::VisibilityStateHidden:
-        str = String::createASCIIString("hidden");
-        break;
-    case VisibilityState::VisibilityStatePrerender:
-        str = String::createASCIIString("prerender");
-        break;
-    case VisibilityState::VisibilityStateUnloaded:
-        str = String::createASCIIString("unloaded");
-        break;
-    case VisibilityState::VisibilityStateVisible:
-        str = String::createASCIIString("visible");
-        break;
-    }
-
-    return toJSString(str);
 }
 
 ESValue defaultFunction(ESVMInstance* instance)

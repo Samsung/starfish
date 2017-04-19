@@ -40,23 +40,8 @@ public:
         initScriptWrappable(this);
     }
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_audioTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_audioTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     virtual bool isHTMLAudioElement() const override
     {

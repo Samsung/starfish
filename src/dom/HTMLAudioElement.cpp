@@ -15,23 +15,21 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/CharacterData.h"
+#include "dom/Document.h"
+#include "dom/HTMLAudioElement.h"
 
 namespace StarFish {
-
-using namespace escargot;
-
-ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance)
+String* HTMLAudioElement::localName()
 {
-    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    if (originalObj->data()->isASCIIString()) {
-        return ESValue(originalObj->length());
-    } else {
-        // TODO: measure length without converting
-        return ESValue(toJSString(originalObj->data()).toString()->length());
-    }
+    return document()
+        ->window()
+        ->starFish()
+        ->staticStrings()
+        ->m_audioTagName.localName();
+}
+
+QualifiedName HTMLAudioElement::name()
+{
+    return document()->window()->starFish()->staticStrings()->m_audioTagName;
 }
 }

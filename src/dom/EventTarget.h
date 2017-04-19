@@ -107,10 +107,6 @@ protected:
     {
     }
 
-    virtual ~EventTarget()
-    {
-    }
-
 public:
     virtual bool isEventTarget() const override
     {

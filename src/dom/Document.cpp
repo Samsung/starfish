@@ -919,6 +919,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         NULL, NULL, NULL);
 }
 
+Location* Document::location()
+{
+    return window()->location();
+}
+
 void Document::open()
 {
     m_resourceLoader.markDocumentOpenState();
@@ -1047,6 +1052,13 @@ Element* Document::createElement(AtomicString localName, bool shouldCheckName)
     return new NamedElement(this, QualifiedName(AtomicString(), localName));
 }
 
+Element* Document::createElement(String* name)
+{
+    AtomicString atomicName = AtomicString::createAttrAtomicString(
+        window()->starFish(), name->utf8Data());
+    return createElement(atomicName, true);
+}
+
 Text* Document::createTextNode(String* data)
 {
     return new Text(this, data);
@@ -1079,7 +1091,7 @@ Attr* Document::createAttribute(QualifiedName localName)
                                nullptr);
     }
 
-    return new Attr(this, scriptBindingInstance(), localName);
+    return new Attr(this, localName);
 }
 
 HTMLHtmlElement* Document::rootElement()
@@ -1158,6 +1170,11 @@ void Document::setVisibilityState(VisibilityState visibilityState)
         Event* e = new Event(eventType, EventInit(true, false));
         EventTarget::dispatchEvent(this->asNode(), e);
     }
+}
+
+String* Document::urlString()
+{
+    return m_documentURI->urlString();
 }
 
 void Document::didNodeInserted(Node* parent, Node* newChild)

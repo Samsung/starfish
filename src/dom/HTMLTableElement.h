@@ -35,49 +35,15 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_tableTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_tableTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Not in HTML5 */
-    String* width()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_width);
-    }
+    String* width();
+    void setWidth(int width);
 
-    void setWidth(int width)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                     String::fromInt(width));
-    }
-
-    String* bgColor()
-    {
-        return getAttribute(
-            document()->window()->starFish()->staticStrings()->m_bgColor);
-    }
-
-    void setBgColor(String* bgColor)
-    {
-        setAttribute(
-            document()->window()->starFish()->staticStrings()->m_bgColor,
-            bgColor);
-    }
+    String* bgColor();
+    void setBgColor(String* bgColor);
 
     /* Other methods (not in DOM API) */
 
