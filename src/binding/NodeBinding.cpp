@@ -14,12 +14,15 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
+#include "StarFish.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/Document.h"
 #include "dom/DOMException.h"
+#include "dom/Element.h"
 #include "dom/Node.h"
+#include "dom/NodeList.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

@@ -15,7 +15,6 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
@@ -86,8 +85,7 @@ static ESValue revokeObjectURLFunction(ESVMInstance* instance)
 {
     String* arg0 = toBrowserString(
         instance->currentExecutionContext()->readArgument(0).toString());
-    StarFish* sf =
-        ((Window*)instance->globalObject()->extraPointerData())->starFish();
+    StarFish* sf = fetchStarFish(instance);
     URL::revokeObjectURL(sf, arg0);
     return ESValue();
 }

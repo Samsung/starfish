@@ -44,9 +44,6 @@ public:
     {
         return true;
     }
-
-protected:
-    QualifiedName m_name;
 };
 }
 

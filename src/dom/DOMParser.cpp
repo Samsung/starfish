@@ -14,13 +14,18 @@
  *    limitations under the License.
  */
 #ifdef STARFISH_ENABLE_DOMPARSER
-#include "StarFishConfig.h"
-#include "DOMParser.h"
+#include "StarFish.h"
+#include "dom/CDATASection.h"
+#include "dom/Comment.h"
+#include "dom/DocumentFragment.h"
+#include "dom/DocumentType.h"
+#include "dom/DOMParser.h"
 #include "dom/DOMException.h"
-#include "DocumentFragment.h"
+#include "dom/Element.h"
+#include "dom/Text.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
-#include "HTMLDocument.h"
-#include "DOM.h"
+#include "dom/HTMLDocument.h"
+#include "platform/window/Window.h"
 
 #include <../third_party/rapidxml/rapidxml.hpp>
 

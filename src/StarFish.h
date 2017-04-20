@@ -17,14 +17,10 @@
 #ifndef __StarFish__
 #define __StarFish__
 
-#include "util/AtomicString.h"
-#include "util/QualifiedName.h"
+#include "StarFishConfig.h"
 #include "platform/canvas/font/Font.h"
 
 namespace StarFish {
-
-// https://heycam.github.io/webidl/#common-DOMTimeStamp
-typedef unsigned long long DOMTimeStamp;
 
 class MessageLoop;
 class Window;

@@ -14,11 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "XMLHttpRequest.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "dom/ProgressEvent.h"
 #include "dom/DOMException.h"
+#include "dom/ProgressEvent.h"
+#include "extra/Blob.h"
+#include "extra/XMLHttpRequest.h"
+#include "platform/network/NetworkRequest.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
@@ -33,7 +35,8 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, readystatechange);
 
 XMLHttpRequest::XMLHttpRequest(Document* document)
-    : m_networkRequest(new NetworkRequest(document))
+    : XMLHttpRequestEventTarget(document)
+    , m_networkRequest(new NetworkRequest(document))
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {

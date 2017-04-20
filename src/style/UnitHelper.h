@@ -17,9 +17,6 @@
 #ifndef __StarFishUnitHelper__
 #define __StarFishUnitHelper__
 
-#include "StarFish.h"
-#include <math.h>
-
 namespace StarFish {
 
 // https://www.w3.org/TR/CSS2/syndata.html#value-def-length

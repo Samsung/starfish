@@ -653,12 +653,11 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
     Element* element = n->asElement();
     ComputedStyle* result = new ComputedStyle(parentStyle);
     if (pseudoId == StyleResolver::PseudoElementType::PseudoElementFirstLine) {
-        document()->styleResolver()->matchAllRules(
+        document()->styleResolver().matchAllRules(
             element, result, parentStyle,
             StyleResolver::PseudoElementType::PseudoElementFirstLine);
     } else {
-        document()->styleResolver()->matchAllRules(element, result,
-                                                   parentStyle);
+        document()->styleResolver().matchAllRules(element, result, parentStyle);
         result->setPseudoType(
             StyleResolver::PseudoElementType::PseudoElementFirstLineInherited);
     }
@@ -724,7 +723,7 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
 
 ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
 {
-    if (document()->styleResolver()->usesFirstLineRule()) {
+    if (document()->styleResolver().usesFirstLineRule()) {
         if (ComputedStyle* pseudoStyle = firstLineStyleFromCache(
                 frame->isFrameText() ? frame->parent() : frame, frameStyle)) {
             return pseudoStyle;

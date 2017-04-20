@@ -17,12 +17,11 @@
 #ifndef __StarFishHistoryEntry__
 #define __StarFishHistoryEntry__
 
-#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
 class URL;
-class String;
 
 class HistoryEntry : public gc {
 public:

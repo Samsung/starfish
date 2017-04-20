@@ -93,39 +93,39 @@ public:
 
     GCVector<Attribute>& attributes()
     {
-        ASSERT(usesAttributes());
+        STARFISH_ASSERT(usesAttributes());
         return m_attributes;
     }
 
     GCVector<Attribute>& attributes() const
     {
-        ASSERT(usesAttributes());
+        STARFISH_ASSERT(usesAttributes());
         return const_cast<AtomicHTMLToken*>(this)->m_attributes;
     }
 
     String* characters() const
     {
-        ASSERT(m_type == HTMLToken::Character);
+        STARFISH_ASSERT(m_type == HTMLToken::Character);
         return m_data;
     }
 
     String* comment() const
     {
-        ASSERT(m_type == HTMLToken::Comment);
+        STARFISH_ASSERT(m_type == HTMLToken::Comment);
         return m_data;
     }
 
     // FIXME: Distinguish between a missing public identifier and an empty one.
     String* publicIdentifier() const
     {
-        ASSERT(m_type == HTMLToken::DOCTYPE);
+        STARFISH_ASSERT(m_type == HTMLToken::DOCTYPE);
         return m_doctypeData->m_publicIdentifier;
     }
 
     // FIXME: Distinguish between a missing system identifier and an empty one.
     String* systemIdentifier() const
     {
-        ASSERT(m_type == HTMLToken::DOCTYPE);
+        STARFISH_ASSERT(m_type == HTMLToken::DOCTYPE);
         return m_doctypeData->m_systemIdentifier;
     }
 
@@ -243,7 +243,7 @@ public:
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
-        ASSERT(usesName());
+        STARFISH_ASSERT(usesName());
     }
 
 private:
@@ -291,9 +291,9 @@ inline void AtomicHTMLToken::initializeAttributes(
         // FIXME: We should be able to add the following ASSERT once we fix
         // https://bugs.webkit.org/show_bug.cgi?id=62971
         //   ASSERT(attribute.nameRange.start);
-        ASSERT(attribute.nameRange.end);
-        ASSERT(attribute.valueRange.start);
-        ASSERT(attribute.valueRange.end);
+        STARFISH_ASSERT(attribute.nameRange.end);
+        STARFISH_ASSERT(attribute.valueRange.start);
+        STARFISH_ASSERT(attribute.valueRange.end);
 
         // AtomicString value(attribute.value);
         const QualifiedName& name = nameForAttribute(attribute);

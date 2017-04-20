@@ -15,8 +15,8 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#include "StarFishConfig.h"
-#include "Avplay.h"
+#include "StarFish.h"
+#include "extra/Avplay.h"
 #include "platform/message_loop/MessageLoop.h"
 #include <Elementary.h>
 #include <Ecore_X.h>

@@ -20,6 +20,7 @@
 namespace StarFish {
 
 class StarFish;
+class String;
 
 class AtomicString {
     friend class StarFish;
@@ -29,19 +30,13 @@ class AtomicString {
     }
 
 public:
-    AtomicString()
-    {
-        m_string = String::emptyString;
-    }
+    AtomicString();
 
     static AtomicString createAtomicString(StarFish* sf, String* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
-    static AtomicString emptyAtomicString()
-    {
-        return AtomicString(String::emptyString);
-    }
+    static AtomicString emptyAtomicString();
 
     bool operator==(const AtomicString& src) const
     {

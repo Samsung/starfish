@@ -24,6 +24,7 @@
 
 namespace StarFish {
 
+class Canvas;
 class HTMLObjectElementContent;
 
 class HTMLObjectElement : public HTMLElement {
@@ -109,14 +110,7 @@ public:
     }
 
     virtual void drawContent(Canvas* canvas, const LayoutRect& contentRect,
-                             const LayoutRect& absContentRect)
-    {
-        canvas->punchHole(Unit::Rect(contentRect.x(), contentRect.y(),
-                                     contentRect.width(),
-                                     contentRect.height()));
-    }
-
-protected:
+                             const LayoutRect& absContentRect);
 };
 }
 

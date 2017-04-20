@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Font.h"
+#include "StarFish.h"
 
 #include <Evas.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <fontconfig/fontconfig.h>
 
+#include "platform/canvas/font/Font.h"
 #include "style/UnitHelper.h"
 
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)

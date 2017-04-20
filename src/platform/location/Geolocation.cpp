@@ -14,10 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Geolocation.h"
-#include "PositionError.h"
-
+#include "StarFish.h"
+#include "platform/location/Geolocation.h"
+#include "platform/location/PositionError.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/profiling/Profiling.h"
 

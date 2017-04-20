@@ -54,8 +54,6 @@ public:
     {
         return Element::tabIndex();
     }
-
-protected:
 };
 }
 

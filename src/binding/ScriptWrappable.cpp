@@ -14,25 +14,17 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptWrappable.h"
-
-#include "platform/window/Window.h"
-#include "platform/message_loop/MessageLoop.h"
+#include "StarFish.h"
 #include "Binding.h"
-
-#include "vm/ESVMInstance.h"
-
+#include "binding/ScriptWrappable.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "dom/Document.h"
-
-#include "style/CSSStyleLookupTrie.h"
-
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
-
-#include "StarFish.h"
+#include "platform/window/Window.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "style/CSSStyleLookupTrie.h"
+#include "vm/ESVMInstance.h"
 
 namespace StarFish {
 
@@ -1845,7 +1837,7 @@ void ScriptWrappable::initScriptWrappable(PseudoElement* ptr)
 void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
 {
     ScriptBindingInstance* instance =
-        xhr->networkRequest().document()->window()->scriptBindingInstance();
+        xhr->networkRequest()->document()->window()->scriptBindingInstance();
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->fnXMLHttpRequest()->protoType());
 }
@@ -2259,10 +2251,10 @@ static ESValue cssStyleDeclarationReadCallbackFunction(const ESValue& key,
         } else {
             if (false) {
             }
-#define GET_ATTR(name, nameLower, nameCSSCase)        \
-    else if (kind == CSSStyleKind::name)              \
-    {                                                 \
-        return createScriptString(self->nameLower()); \
+#define GET_ATTR(name, nameLower, nameCSSCase)   \
+    else if (kind == CSSStyleKind::name)         \
+    {                                            \
+        return createScriptString(self->name()); \
     }
             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
 #undef GET_ATTR

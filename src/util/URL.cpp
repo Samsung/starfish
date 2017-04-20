@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "URL.h"
+#include "StarFish.h"
+#include "dom/Document.h"
 #include "extra/Blob.h"
 #include "extra/MediaSource.h"
+#include "util/URL.h"
 #include "platform/window/Window.h"
-#include "dom/Document.h"
 
 namespace StarFish {
 

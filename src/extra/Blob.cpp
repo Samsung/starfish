@@ -14,9 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Blob.h"
 #include "StarFish.h"
+#include "extra/Blob.h"
 
 namespace StarFish {
 

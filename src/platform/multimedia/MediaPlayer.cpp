@@ -16,13 +16,10 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
 #include "dom/Document.h"
-#include "dom/HTMLVideoElement.h"
-#include "MediaPlayer.h"
-#include "util/URL.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "extra/MediaSource.h"
+#include "dom/HTMLMediaElement.h"
+#include "platform/multimedia/MediaPlayer.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

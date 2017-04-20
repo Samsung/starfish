@@ -16,7 +16,7 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTimeRanges__)
 #define __StarFishTimeRanges__
 
-#include "dom/EventTarget.h"
+#include "binding/ScriptWrappable.h"
 #include "extra/TimeRange.h"
 
 namespace StarFish {

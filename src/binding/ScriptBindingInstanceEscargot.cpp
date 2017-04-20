@@ -14,22 +14,20 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
+#include "StarFish.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptWrappable.h"
+#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "ScriptWrappable.h"
-
+#include "binding/Binding.h"
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "extra/Console.h"
 
 #include <Escargot.h>
 #include <vm/ESVMInstance.h>
 #ifdef USE_ES6_FEATURE
 #include <runtime/JobQueue.h>
 #endif
-
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #ifdef TIZEN_DEVICE_API
 #include "TizenDeviceAPILoaderForEscargot.h"

@@ -16,15 +16,22 @@
 
 #include "StarFishConfig.h"
 
-#include "dom/DOM.h"
+#include "dom/Attr.h"
+#include "dom/Document.h"
+#include "dom/DocumentFragment.h"
+#include "dom/DOMException.h"
+#include "dom/DOMPoint.h"
+#include "dom/DOMQuad.h"
+#include "dom/DOMRect.h"
+#include "dom/DOMRectList.h"
+#include "dom/Element.h"
 #include "dom/parser/HTMLParser.h"
 #include "dom/xml/XMLSerializer.h"
-
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
-
 #include "style/Style.h"
 #include "style/CSSParser.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

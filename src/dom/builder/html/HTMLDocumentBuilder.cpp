@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HTMLDocumentBuilder.h"
-
-#include "dom/DOM.h"
+#include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
+#include "dom/DOM.h"
+#include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "dom/parser/HTMLParser.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -194,7 +194,7 @@ protected:
 
 void HTMLDocumentBuilder::build(URL* url)
 {
-    m_resource = m_document->resourceLoader()->fetch(url);
+    m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE
     m_resource->request();
@@ -205,7 +205,7 @@ void HTMLDocumentBuilder::build(URL* url)
 
 void HTMLDocumentBuilder::build(String* str)
 {
-    m_document->resourceLoader()->markDocumentOpenState();
+    m_document->resourceLoader().markDocumentOpenState();
     HTMLParser parser(m_document->window()->starFish(), m_document, str);
     parser.startParse();
     parser.parseStep();

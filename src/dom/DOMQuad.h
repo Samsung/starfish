@@ -17,7 +17,6 @@
 #ifndef __StarFishDOMQuad__
 #define __StarFishDOMQuad__
 
-#include "util/String.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {

@@ -18,13 +18,15 @@
 #define __StarFishAnimation__
 
 #include "StarFishConfig.h"
+#include "animation/CubicBezier.h"
+#include "style/Style.h"
+
 #include <sys/time.h>
 #include <Elementary.h>
 
-#include "animation/CubicBezier.h"
-
 namespace StarFish {
 class Node;
+class Window;
 
 enum TransitionTimingFunction {
     Ease,      // cubic-bezier(0, 0, 1, 1)

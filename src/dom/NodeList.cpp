@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "dom/Node.h"
 #include "dom/NodeList.h"
 #include "dom/NodeListImpl.h"
 

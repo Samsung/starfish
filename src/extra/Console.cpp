@@ -13,10 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "StarFishConfig.h"
-
-#include "Console.h"
 #include "StarFish.h"
+#include "extra/Console.h"
 #include "inspector/Inspector.h"
 
 namespace StarFish {

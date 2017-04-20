@@ -17,7 +17,9 @@
 #ifndef __StarBorderImage__
 #define __StarBorderImage__
 
+#include "StarFishConfig.h"
 #include "style/BorderImageLength.h"
+#include "style/Style.h"
 
 namespace StarFish {
 
@@ -27,6 +29,7 @@ namespace StarFish {
                Length(Length::Fixed, 0), Length(Length::Fixed, 0)))
 #define DEFAULT_VALUE_IMAGE_REPEAT() (StretchValue)
 
+class ImageData;
 class ImageResource;
 
 class BorderImageImpl : public gc {
@@ -103,13 +106,7 @@ public:
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_WIDTH() : m_data->m_widths;
     }
-    ImageData* imageData()
-    {
-        if (!isNull() && data()->m_imageResource) {
-            return data()->m_imageResource->imageData();
-        }
-        return NULL;
-    }
+    ImageData* imageData();
 
     ImageResource* imageResource()
     {

@@ -22,6 +22,8 @@
 
 namespace StarFish {
 
+class Document;
+
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 

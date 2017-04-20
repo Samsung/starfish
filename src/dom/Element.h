@@ -19,11 +19,15 @@
 
 #include "dom/Node.h"
 #include "dom/Attribute.h"
+#include "style/Style.h"
 
 namespace StarFish {
 
+class Attr;
+class NamedNodeMap;
 class HTMLElement;
 class CSSStyleDeclaration;
+class PseudoElementData;
 
 class RareElementMembers : public RareNodeMembers {
 public:

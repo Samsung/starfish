@@ -14,20 +14,17 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Node.h"
-
-#include "Document.h"
-#include "DocumentType.h"
-#include "Element.h"
-#include "Traverse.h"
-#include "NodeList.h"
-#include "SelectorQuery.h"
-
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/DocumentType.h"
+#include "dom/Element.h"
+#include "dom/Node.h"
+#include "dom/NodeList.h"
+#include "dom/SelectorQuery.h"
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
-
 #include "style/CSSParser.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

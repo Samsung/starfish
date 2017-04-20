@@ -17,14 +17,14 @@
 #ifndef __StarFishComputedStyle__
 #define __StarFishComputedStyle__
 
+#include "style/ContentData.h"
+#include "style/DefaultStyle.h"
 #include "style/Style.h"
 #include "style/StyleBackgroundData.h"
 #include "style/StyleSurroundData.h"
 #include "style/StyleTransformData.h"
 #include "style/StyleTransformOrigin.h"
 #include "style/StyleTransitionData.h"
-#include "style/DefaultStyle.h"
-#include "style/ContentData.h"
 
 namespace StarFish {
 

@@ -16,21 +16,24 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "extra/TimeRanges.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/DOMException.h"
+#include "dom/Event.h"
 #include "dom/HTMLMediaElement.h"
 #include "dom/HTMLSourceElement.h"
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
 #include "dom/TextTrackList.h"
-#include "dom/DOMException.h"
+#include "extra/MediaSource.h"
+#include "extra/MimeType.h"
+#include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
+#include "extra/TimeRanges.h"
 #include "util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "extra/MediaSource.h"
-#include "extra/SourceBuffer.h"
-#include "extra/SourceBufferList.h"
-#include "extra/MimeType.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -1366,6 +1369,24 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
         m_event->type()->utf8Data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEvent(m_event);
+}
+
+#ifdef USE_ES6_FEATURE
+MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(
+    HTMLMediaElement* p, Promise* pm)
+#else
+MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(
+    HTMLMediaElement* p)
+#endif
+    : MediaOperationQueueData(p)
+{
+#ifdef USE_ES6_FEATURE
+    if (pm) {
+        m_promise = pm;
+    } else {
+        m_promise = new Promise();
+    }
+#endif
 }
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()

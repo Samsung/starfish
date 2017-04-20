@@ -18,9 +18,12 @@
 #define __StarFishHTMLLinkElement__
 
 #include "dom/HTMLElement.h"
-#include "loader/TextResource.h"
 
 namespace StarFish {
+
+class CSSStyleSheet;
+class TextResource;
+class URL;
 
 class HTMLLinkElement : public HTMLElement {
     friend class StyleSheetDownloadClient;

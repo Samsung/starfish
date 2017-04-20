@@ -17,9 +17,14 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaPlayer__)
 #define __StarFishMockMediaPlayer__
 
+#include "StarFishConfig.h"
 #include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
+
+class Canvas;
+class HTMLMediaElement;
+class URL;
 
 class MockMediaPlayer : public MediaPlayer {
     friend class MediaPlayer;
@@ -30,79 +35,9 @@ public:
         pause();
     }
 
-    virtual void play()
-    {
-        if (!m_inPlaying) {
-            m_inPlaying = true;
-            m_starFish->addPointerInRootSet(this);
-            m_currentTimeUpdateTimer = m_starFish->window()->setInterval(
-                [](Window* window, void* data) {
-                    MockMediaPlayer* self = (MockMediaPlayer*)data;
+    virtual void play();
 
-                    if (self->activeMediaSource()) {
-                        uint64_t videoStart = self->m_currentTimestamp;
-                        uint64_t audioStart = self->m_currentTimestamp;
-                        while (self->m_currentTimestamp - videoStart < 250) {
-                            std::pair<MediaPacket*, size_t> packet =
-                                self->activeMediaSource()
-                                    ->activeVideoSourceBuffer()
-                                    ->findProperMediaPacket(
-                                        self->activeMediaSource()
-                                            ->activeVideoStreamIndex(),
-                                        self->m_currentTimestamp);
-                            if (!packet.first) {
-                                break;
-                            }
-                            self->m_currentTimestamp =
-                                packet.first->m_pts + packet.first->m_duration;
-                        }
-
-                        while (audioStart < self->m_currentTimestamp) {
-                            std::pair<MediaPacket*, size_t> packet =
-                                self->activeMediaSource()
-                                    ->activeAudioSourceBuffer()
-                                    ->findProperMediaPacket(
-                                        self->activeMediaSource()
-                                            ->activeAudioStreamIndex(),
-                                        audioStart);
-                            if (!packet.first) {
-                                break;
-                            }
-                            audioStart =
-                                packet.first->m_pts + packet.first->m_duration;
-                        }
-                    } else {
-                        self->m_currentTimestamp += 250;
-                    }
-
-                    if (self->m_currentTimestamp > self->duration() * 1000) {
-                        self->m_currentTimestamp = self->duration() * 1000;
-                    }
-                    STARFISH_LOG_INFO("MockMediaPlayer currentTimeStamp %fs\n",
-                                      self->m_currentTimestamp / 1000.f);
-
-                    if (self->duration() * 1000 - self->m_currentTimestamp <
-                        1000) {
-                        self->pause();
-                        self->m_container->mediaPlayerNotifyEndedItsContainer();
-                    }
-
-                    self->m_container->setOfficialPlaybackPosition(
-                        self->m_currentTimestamp / 1000.0);
-                },
-                250, this);
-        }
-    }
-
-    virtual void pause()
-    {
-        if (m_inPlaying) {
-            m_inPlaying = false;
-            m_starFish->removePointerFromRootSet(this);
-            m_starFish->window()->clearInterval(m_currentTimeUpdateTimer);
-            m_currentTimeUpdateTimer = SIZE_MAX;
-        }
-    }
+    virtual void pause();
 
     virtual void seek(double time)
     {
@@ -138,11 +73,7 @@ public:
     }
 
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
-                           const LayoutRect& absVideoRect)
-    {
-        canvas->setColor(Unit::Color(0, 0, 0, 255));
-        canvas->drawRect(videoRect);
-    }
+                           const LayoutRect& absVideoRect);
 
 protected:
     MockMediaPlayer(HTMLMediaElement* element)

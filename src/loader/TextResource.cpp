@@ -14,10 +14,10 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "TextResource.h"
-
+#include "StarFish.h"
 #include "dom/Document.h"
+#include "loader/TextResource.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

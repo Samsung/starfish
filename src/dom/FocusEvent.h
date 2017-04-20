@@ -17,7 +17,7 @@
 #ifndef __StarFishFocusEvent__
 #define __StarFishFocusEvent__
 
-#include "UIEvent.h"
+#include "dom/UIEvent.h"
 
 namespace StarFish {
 

@@ -17,7 +17,12 @@
 #ifndef __StarFishLength__
 #define __StarFishLength__
 
+#include "layout/LayoutUtil.h"
+
 namespace StarFish {
+
+class String;
+class Font;
 
 class Length {
 public:
@@ -42,23 +47,7 @@ public:
     {
     }
 
-    void changeToFixedIfNeeded(Length fontSize, Font* font)
-    {
-        if (!isComputed()) {
-            float fSize = 0.0f;
-            if (fontSize.isFixed()) {
-                fSize = fontSize.fixed();
-            }
-            if (m_type == EmToBeFixed) {
-                m_data = fSize * m_data;
-                m_type = Fixed;
-            } else if (m_type == ExToBeFixed) {
-                m_data = fSize * m_data * font->metrics().m_xheightRate;
-                m_type = Fixed;
-            }
-            // InheritableNumber does not change its value
-        }
-    }
+    void changeToFixedIfNeeded(Length fontSize, Font* font);
 
     void roundBorderWidth()
     {
@@ -223,11 +212,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font)
-    {
-        m_width.changeToFixedIfNeeded(fontSize, font);
-        m_height.changeToFixedIfNeeded(fontSize, font);
-    }
+    void checkComputed(Length fontSize, Font* font);
 
     Length m_width;
     Length m_height;
@@ -270,11 +255,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font)
-    {
-        m_x.changeToFixedIfNeeded(fontSize, font);
-        m_y.changeToFixedIfNeeded(fontSize, font);
-    }
+    void checkComputed(Length fontSize, Font* font);
 
     Length m_x;
     Length m_y;
@@ -322,13 +303,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font)
-    {
-        m_left.changeToFixedIfNeeded(fontSize, font);
-        m_right.changeToFixedIfNeeded(fontSize, font);
-        m_top.changeToFixedIfNeeded(fontSize, font);
-        m_bottom.changeToFixedIfNeeded(fontSize, font);
-    }
+    void checkComputed(Length fontSize, Font* font);
 
     const Length& left() const
     {

@@ -14,12 +14,17 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
+#include "StarFish.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/Document.h"
 #include "dom/DOMException.h"
+#include "dom/DOMRect.h"
+#include "dom/DOMRectList.h"
 #include "dom/Element.h"
+#include "dom/HTMLCollection.h"
+#include "dom/NamedNodeMap.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -291,8 +296,7 @@ static ESValue getAttributeFunction(ESVMInstance* instance)
             instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, Node);
 
-        auto sf =
-            ((Window*)instance->globalObject()->extraPointerData())->starFish();
+        StarFish* sf = fetchStarFish(instance);
         ESValue argValue = instance->currentExecutionContext()->readArgument(0);
 
         if (argValue.isESString()) {
@@ -326,8 +330,7 @@ static ESValue setAttributeFunction(ESVMInstance* instance)
         ESValue val = instance->currentExecutionContext()->readArgument(1);
 
         if (key.isESString()) {
-            auto sf = ((Window*)instance->globalObject()->extraPointerData())
-                          ->starFish();
+            StarFish* sf = fetchStarFish(instance);
             // Validate key string
             String* keyStr = toBrowserString(key);
             if (!QualifiedName::checkNameProductionRule(keyStr,
@@ -360,8 +363,7 @@ static ESValue removeAttributeFunction(ESVMInstance* instance)
         ESValue key = instance->currentExecutionContext()->readArgument(0);
 
         if (key.isESString()) {
-            auto sf = ((Window*)instance->globalObject()->extraPointerData())
-                          ->starFish();
+            StarFish* sf = fetchStarFish(instance);
             Element* elem =
                 ((Node*)nd.asESPointer()->asESObject()->extraPointerData())
                     ->asElement();
@@ -571,10 +573,7 @@ static ESValue hasAttributeFunction(ESVMInstance* instance)
     if (count == 1) {
         ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            auto sf = ((Window*)ESVMInstance::currentInstance()
-                           ->globalObject()
-                           ->extraPointerData())
-                          ->starFish();
+            StarFish* sf = fetchStarFish(instance);
             QualifiedName name =
                 QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAttrAtomicString(

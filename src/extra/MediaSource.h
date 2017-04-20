@@ -17,13 +17,13 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaSource__)
 #define __StarFishMediaSource__
 
-#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 
 namespace StarFish {
 
 class SourceBuffer;
 class SourceBufferList;
+class StarFish;
 class MediaSourceClient;
 
 class MediaSource : public EventTarget {
@@ -93,10 +93,8 @@ public:
         return false;
     }
 
-    ReadyState readyState()
-    {
-        return m_readyState;
-    }
+    String* readyStateAttr();
+    ReadyState readyState();
 
     void setReadyState(ReadyState state);
 

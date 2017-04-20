@@ -17,7 +17,6 @@
 #ifndef __StarFishDOMPoint__
 #define __StarFishDOMPoint__
 
-#include "util/String.h"
 #include "dom/DOMPointReadOnly.h"
 
 namespace StarFish {

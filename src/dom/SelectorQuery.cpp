@@ -13,14 +13,13 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#include "StarFishConfig.h"
-#include "SelectorQuery.h"
-
-#include "dom/HTMLElement.h"
 #include "dom/Document.h"
-#include "dom/Traverse.h"
+#include "dom/Element.h"
+#include "dom/HTMLElement.h"
+#include "dom/Node.h"
 #include "dom/NodeList.h"
+#include "dom/SelectorQuery.h"
+#include "dom/Traverse.h"
 
 namespace StarFish {
 

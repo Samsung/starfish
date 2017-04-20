@@ -50,8 +50,6 @@ public:
     {
         return true;
     }
-
-private:
 };
 }
 

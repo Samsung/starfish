@@ -17,25 +17,20 @@
 #ifndef __StarFishNode__
 #define __StarFishNode__
 
-#include "util/String.h"
-#include "style/Unit.h"
-#include "style/Length.h"
-#include "style/ComputedStyle.h"
-#include "platform/canvas/Canvas.h"
-#include "platform/canvas/image/ImageData.h"
-#include "dom/Event.h"
 #include "dom/EventTarget.h"
-#include "dom/DOMTokenList.h"
-#include "dom/NamedNodeMap.h"
-#include "dom/DOMException.h"
-#include "dom/PseudoElementData.h"
+#include "style/Style.h"
 
 namespace StarFish {
 
+class CSSSelector;
 class CharacterData;
+class ComputedStyle;
+class Document;
 class DocumentFragment;
+class DOMTokenList;
 class Element;
 class Frame;
+class HTMLCollection;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;

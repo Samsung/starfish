@@ -14,11 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
 #include "dom/DOMRect.h"
-#include "dom/DOMQuad.h"
-
 #include "dom/DOMRectList.h"
+#include "dom/DOMQuad.h"
 
 namespace StarFish {
 

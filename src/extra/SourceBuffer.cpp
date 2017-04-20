@@ -16,8 +16,9 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Event.h"
+#include "dom/Document.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLMediaElement.h"
 #include "extra/MediaSource.h"
@@ -26,7 +27,11 @@
 #include "extra/TimeRanges.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "platform/profiling/Profiling.h"
+#include "platform/threading/Locker.h"
+#include "platform/threading/Mutex.h"
 #include "platform/threading/ThreadPool.h"
+#include "platform/window/Window.h"
 
 #define STARFISH_ENABLE_TIMER
 #define TRACE_MSE_GC

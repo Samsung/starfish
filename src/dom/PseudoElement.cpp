@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "PseudoElement.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/PseudoElement.h"
 #include "layout/FrameText.h"
+#include "platform/window/Window.h"
 
 #define NonBreakingSpace 0x00A0
 

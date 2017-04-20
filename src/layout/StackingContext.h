@@ -17,16 +17,14 @@
 #ifndef __StarFishStackingContext__
 #define __StarFishStackingContext__
 
-#include "platform/canvas/Canvas.h"
-
 namespace StarFish {
 
-class Node;
-class FrameBox;
-class StackingContext;
 class Canvas;
 class CanvasSurface;
 class Frame;
+class FrameBox;
+class Node;
+class StackingContext;
 
 class StackingContextChild : public GCVector<StackingContext*>, public gc {
 };
@@ -60,15 +58,7 @@ public:
         return m_needsOwnBuffer;
     }
 
-    void clearOwnBuffer(bool needsDetachNative = true)
-    {
-        if (m_buffer) {
-            if (needsDetachNative) {
-                m_buffer->detachNativeBuffer();
-            }
-            m_buffer = nullptr;
-        }
-    }
+    void clearOwnBuffer(bool needsDetachNative = true);
 
     CanvasSurface* buffer()
     {

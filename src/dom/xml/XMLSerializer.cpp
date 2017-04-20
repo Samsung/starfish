@@ -18,8 +18,8 @@
 #include "XMLSerializer.h"
 
 #include "dom/Element.h"
-#include "dom/Document.h"
 #include "dom/Comment.h"
+#include "dom/Document.h"
 #include "dom/DocumentType.h"
 
 #include <../third_party/rapidxml/rapidxml.hpp>

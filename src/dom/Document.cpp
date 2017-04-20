@@ -14,19 +14,18 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Document.h"
-#include "Traverse.h"
-
-#include "dom/builder/html/HTMLDocumentBuilder.h"
-#include "layout/FrameDocument.h"
+#include "StarFish.h"
 #include "dom/Attribute.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "loader/ImageResource.h"
-
+#include "dom/Document.h"
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"
 #endif
+#include "dom/Traverse.h"
+#include "dom/builder/html/HTMLDocumentBuilder.h"
+#include "layout/FrameDocument.h"
+#include "loader/ImageResource.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -42,8 +41,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_window(window)
     , m_documentURI(uri)
     , m_characterSet(charSet)
-    , m_resourceLoader(*this)
-    , m_styleResolver(*this)
+    , m_resourceLoader(this)
+    , m_styleResolver(this)
     , m_documentBuilder(nullptr)
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
@@ -1000,7 +999,7 @@ void Document::close()
         EventTarget::dispatchEvent(bodyElem, e);
     }
 
-    resourceLoader()->clear();
+    resourceLoader().clear();
 
     while (m_activeNetworkRequests.size()) {
         m_activeNetworkRequests.back()->abort();
@@ -1256,7 +1255,7 @@ ImageData* Document::brokenImage()
             "gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AYQCBEZPGjJdQAAABl0R"
             "Vh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVDjLY2AYBaNgFIy"
             "CUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
-        ImageResource* res = resourceLoader()->fetchImage(
+        ImageResource* res = resourceLoader().fetchImage(
             URL::createURL(String::emptyString, brokenImg));
         res->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
         m_brokenImage = res->imageData();

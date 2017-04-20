@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLMetaElement.h"
+#include "dom/HTMLMetaElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -71,7 +72,7 @@ void HTMLMetaElement::checkPlatformFlags()
         if (m_name->equalsWithoutCase("pixel-test")) {
             g_enablePixelTest = true;
             document()->setStyle(
-                document()->styleResolver()->resolveDocumentStyle(document()));
+                document()->styleResolver().resolveDocumentStyle(document()));
             document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif

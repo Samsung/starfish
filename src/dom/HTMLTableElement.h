@@ -51,8 +51,6 @@ public:
     {
         return true;
     }
-
-protected:
 };
 }
 

@@ -17,7 +17,6 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
@@ -141,7 +140,7 @@ static ESValue prepareAsyncFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     Avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())
                          ->Webapis()
-                         ->Avplay();
+                         ->avplay();
     avPlay->prepareAsync(firstArg);
 
     return ESValue(ESValue::ESUndefined);

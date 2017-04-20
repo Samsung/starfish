@@ -39,15 +39,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HTMLConstructionSite.h"
-
+#include "StarFish.h"
 #include "dom/DOM.h"
 #include "dom/parser/AtomicHTMLToken.h"
+#include "dom/parser/HTMLConstructionSite.h"
 #include "dom/parser/HTMLParserIdioms.h"
 #include "dom/parser/HTMLStackItem.h"
 #include "dom/parser/HTMLToken.h"
-#include <limits>
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

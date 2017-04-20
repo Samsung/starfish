@@ -14,15 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "NetworkRequest.h"
-
-#include "platform/file_io/FileIO.h"
-#include "platform/window/Window.h"
-#include "platform/threading/ThreadPool.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "platform/message_loop/MessageLoop.h"
 #include "extra/Blob.h"
+#include "platform/file_io/FileIO.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/network/NetworkRequest.h"
+#include "platform/threading/ThreadPool.h"
+#include "platform/window/Window.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <net_connection.h>

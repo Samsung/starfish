@@ -20,7 +20,6 @@
 #define __StarFishWebApis__
 
 #include "binding/ScriptWrappable.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -44,7 +43,7 @@ public:
         return true;
     }
 
-    Avplay* Avplay()
+    Avplay* avplay()
     {
         return m_avplay;
     }

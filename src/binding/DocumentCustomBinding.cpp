@@ -15,12 +15,15 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "dom/Document.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLBodyElement.h"
 #include "dom/HTMLHeadElement.h"
+#include "dom/HTMLHtmlElement.h"
+#include "extra/Location.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

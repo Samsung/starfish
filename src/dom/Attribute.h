@@ -22,6 +22,8 @@
 namespace StarFish {
 
 class Attribute;
+class Element;
+
 typedef String* (*AttributeValueGetter)(Element* element,
                                         const Attribute* const attr);
 

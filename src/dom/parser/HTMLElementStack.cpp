@@ -39,10 +39,12 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HTMLElementStack.h"
-
+#include "StarFish.h"
+#include "dom/Document.h"
 #include "dom/Element.h"
+#include "dom/parser/HTMLElementStack.h"
+#include "dom/parser/HTMLStackItem.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -151,6 +153,16 @@ HTMLElementStack::ElementRecord::ElementRecord(HTMLStackItem* item,
 
 HTMLElementStack::ElementRecord::~ElementRecord()
 {
+}
+
+Element* HTMLElementStack::ElementRecord::element() const
+{
+    return m_item->element();
+}
+
+Node* HTMLElementStack::ElementRecord::node() const
+{
+    return m_item->node();
 }
 
 void HTMLElementStack::ElementRecord::replaceElement(HTMLStackItem* item)
@@ -484,6 +496,24 @@ HTMLElementStack::ElementRecord* HTMLElementStack::topRecord() const
 {
     STARFISH_ASSERT(m_top);
     return m_top;
+}
+
+Element* HTMLElementStack::top() const
+{
+    STARFISH_ASSERT(m_top->element());
+    return m_top->element();
+}
+
+Node* HTMLElementStack::topNode() const
+{
+    STARFISH_ASSERT(m_top->node());
+    return m_top->node();
+}
+
+HTMLStackItem* HTMLElementStack::topStackItem() const
+{
+    STARFISH_ASSERT(m_top->stackItem());
+    return m_top->stackItem();
 }
 
 HTMLStackItem* HTMLElementStack::oneBelowTop() const

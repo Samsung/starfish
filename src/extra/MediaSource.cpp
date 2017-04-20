@@ -16,13 +16,14 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "MediaSource.h"
-#include "SourceBuffer.h"
-#include "SourceBufferList.h"
-#include "dom/Event.h"
+#include "StarFish.h"
+#include "dom/Document.h"
 #include "dom/DOMException.h"
+#include "dom/Event.h"
 #include "dom/HTMLMediaElement.h"
+#include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 #include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
 
@@ -98,7 +99,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
     SourceBuffer* buffer = new SourceBuffer(m_document, type);
     if (!m_sourceBuffers) {
-        m_sourceBuffers = new SourceBufferList(m_starFish, this);
+        m_sourceBuffers = new SourceBufferList(m_document, this);
     }
     m_sourceBuffers->add(buffer, this);
 
@@ -290,19 +291,42 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     m_attachedMediaElement->dispatchDurationchangeEvent();
 }
 
-void MediaSource::setReadyState(ReadyState state)
+String* MediaSource::readyStateAttr()
+{
+    switch (m_readyState) {
+    case MediaSource::Open:
+        return starFish()->staticStrings()->m_open.localName();
+    case MediaSource::Ended:
+        return starFish()->staticStrings()->m_ended.localName();
+    case MediaSource::Closed:
+        return starFish()->staticStrings()->m_closed.localName();
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+MediaSource::ReadyState MediaSource::readyState()
+{
+    return m_readyState;
+}
+
+void MediaSource::setReadyState(MediaSource::ReadyState state)
 {
     STARFISH_ASSERT(m_readyState != state);
     m_readyState = state;
 
     String* eventName = String::emptyString;
-    if (m_readyState == MediaSource::Open) {
+    switch (m_readyState) {
+    case MediaSource::Open:
         eventName = starFish()->staticStrings()->m_sourceopen.localName();
-    } else if (m_readyState == MediaSource::Ended) {
+        break;
+    case MediaSource::Ended:
         eventName = starFish()->staticStrings()->m_sourceended.localName();
-    } else if (m_readyState == MediaSource::Closed) {
+        break;
+    case MediaSource::Closed:
         eventName = starFish()->staticStrings()->m_sourceclose.localName();
-    } else {
+        break;
+    default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
@@ -380,7 +404,7 @@ void MediaSource::detach()
 SourceBufferList* MediaSource::sourceBuffers()
 {
     if (!m_sourceBuffers) {
-        m_sourceBuffers = new SourceBufferList(m_starFish, this);
+        m_sourceBuffers = new SourceBufferList(m_document, this);
     }
     return m_sourceBuffers;
 }
@@ -388,7 +412,7 @@ SourceBufferList* MediaSource::sourceBuffers()
 SourceBufferList* MediaSource::activeSourceBuffers()
 {
     if (!m_activeSourceBuffers) {
-        m_activeSourceBuffers = new SourceBufferList(m_starFish, this);
+        m_activeSourceBuffers = new SourceBufferList(m_document, this);
     }
     return m_activeSourceBuffers;
 }

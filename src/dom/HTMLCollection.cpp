@@ -14,10 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HTMLCollection.h"
+#include "StarFish.h"
 #include "dom/Document.h"
+#include "dom/HTMLCollection.h"
 #include "dom/HTMLElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

@@ -17,25 +17,24 @@
 #ifndef __StarFishWindow__
 #define __StarFishWindow__
 
-#include "util/URL.h"
-#include "style/Style.h"
 #include "dom/EventTarget.h"
 
 namespace StarFish {
 
-class StarFish;
-class Document;
-class Window;
-class ScriptBindingInstance;
-class URL;
-class Canvas;
-class HTMLCollection;
-class StackingContext;
-class CanvasSurface;
-class History;
-class Navigator;
-class WebApis;
 class AnimationExecutor;
+class Canvas;
+class CanvasSurface;
+class Document;
+class History;
+class HTMLCollection;
+class Location;
+class Navigator;
+class ScriptBindingInstance;
+class StarFish;
+class StackingContext;
+class URL;
+class WebApis;
+class Window;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -307,7 +306,6 @@ protected:
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;
-    Document* m_document;
     AnimationExecutor* m_animationExecutor;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;

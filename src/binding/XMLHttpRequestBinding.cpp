@@ -15,7 +15,6 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
@@ -171,7 +170,7 @@ static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOntimeoutEventListener(arg0);
+    originalObj->setOnreadystatechangeEventListener(arg0);
 
     return ESValue();
 }
@@ -179,7 +178,7 @@ static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
 static ESValue timeoutGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    uint32_t c = originalObj->networkRequest().timeout();
+    uint32_t c = originalObj->networkRequest()->timeout();
     return ESValue(c);
 }
 
@@ -199,14 +198,14 @@ static ESValue timeoutSetterFunction(ESVMInstance* instance)
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    int c = originalObj->networkRequest().readyState();
+    int c = originalObj->networkRequest()->readyState();
     return ESValue(c);
 }
 
 static ESValue statusGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    int c = originalObj->networkRequest().status();
+    int c = originalObj->networkRequest()->status();
     return ESValue(c);
 }
 

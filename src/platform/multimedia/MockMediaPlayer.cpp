@@ -16,13 +16,17 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
-#include "MockMediaPlayer.h"
-#include "util/URL.h"
-#include "platform/message_loop/MessageLoop.h"
 #include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
+#include "platform/canvas/Canvas.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/multimedia/Demuxer.h"
+#include "platform/multimedia/MockMediaPlayer.h"
+#include "platform/window/Window.h"
+#include "util/URL.h"
 
 namespace StarFish {
 
@@ -92,6 +96,79 @@ void MockMediaPlayer::prepareMediaSource()
         HTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
+void MockMediaPlayer::play()
+{
+    if (!m_inPlaying) {
+        m_inPlaying = true;
+        m_starFish->addPointerInRootSet(this);
+        m_currentTimeUpdateTimer = m_starFish->window()->setInterval(
+            [](Window* window, void* data) {
+                MockMediaPlayer* self = (MockMediaPlayer*)data;
+
+                if (self->activeMediaSource()) {
+                    uint64_t videoStart = self->m_currentTimestamp;
+                    uint64_t audioStart = self->m_currentTimestamp;
+                    while (self->m_currentTimestamp - videoStart < 250) {
+                        std::pair<MediaPacket*, size_t> packet =
+                            self->activeMediaSource()
+                                ->activeVideoSourceBuffer()
+                                ->findProperMediaPacket(
+                                    self->activeMediaSource()
+                                        ->activeVideoStreamIndex(),
+                                    self->m_currentTimestamp);
+                        if (!packet.first) {
+                            break;
+                        }
+                        self->m_currentTimestamp =
+                            packet.first->m_pts + packet.first->m_duration;
+                    }
+
+                    while (audioStart < self->m_currentTimestamp) {
+                        std::pair<MediaPacket*, size_t> packet =
+                            self->activeMediaSource()
+                                ->activeAudioSourceBuffer()
+                                ->findProperMediaPacket(
+                                    self->activeMediaSource()
+                                        ->activeAudioStreamIndex(),
+                                    audioStart);
+                        if (!packet.first) {
+                            break;
+                        }
+                        audioStart =
+                            packet.first->m_pts + packet.first->m_duration;
+                    }
+                } else {
+                    self->m_currentTimestamp += 250;
+                }
+
+                if (self->m_currentTimestamp > self->duration() * 1000) {
+                    self->m_currentTimestamp = self->duration() * 1000;
+                }
+                STARFISH_LOG_INFO("MockMediaPlayer currentTimeStamp %fs\n",
+                                  self->m_currentTimestamp / 1000.f);
+
+                if (self->duration() * 1000 - self->m_currentTimestamp < 1000) {
+                    self->pause();
+                    self->m_container->mediaPlayerNotifyEndedItsContainer();
+                }
+
+                self->m_container->setOfficialPlaybackPosition(
+                    self->m_currentTimestamp / 1000.0);
+            },
+            250, this);
+    }
+}
+
+void MockMediaPlayer::pause()
+{
+    if (m_inPlaying) {
+        m_inPlaying = false;
+        m_starFish->removePointerFromRootSet(this);
+        m_starFish->window()->clearInterval(m_currentTimeUpdateTimer);
+        m_currentTimeUpdateTimer = SIZE_MAX;
+    }
+}
+
 void MockMediaPlayer::prepare(URL* url)
 {
     if (url->isBlobURL()) {
@@ -120,6 +197,13 @@ void MockMediaPlayer::prepare(URL* url)
         HTMLMediaElement::HAVE_METADATA);
     container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
         HTMLMediaElement::HAVE_FUTURE_DATA);
+}
+
+void MockMediaPlayer::drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+                                const LayoutRect& absVideoRect)
+{
+    canvas->setColor(Unit::Color(0, 0, 0, 255));
+    canvas->drawRect(videoRect);
 }
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

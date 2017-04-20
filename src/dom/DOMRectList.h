@@ -17,8 +17,6 @@
 #ifndef __StarFishDOMRectList__
 #define __StarFishDOMRectList__
 
-#include <cstdio>
-#include "util/String.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {

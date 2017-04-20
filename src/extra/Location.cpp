@@ -13,15 +13,105 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "StarFishConfig.h"
-
-#include "Location.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "extra/Location.h"
+#include "util/URL.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
-Location::Location(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
+URL* Location::url()
 {
+    return m_starFish->window()->document()->documentURI();
+}
+
+String* Location::href()
+{
+    return url()->href();
+}
+
+String* Location::host()
+{
+    String* hostname = url()->hostname();
+    String* port = url()->port();
+    if (!port->equals(String::emptyString) &&
+        !hostname->equals(String::emptyString)) {
+        return (hostname->concat(String::fromUTF8(":")))->concat(port);
+    } else {
+        return hostname;
+    }
+}
+
+String* Location::hostname()
+{
+    return url()->hostname();
+}
+
+String* Location::protocol()
+{
+    return url()->protocol();
+}
+
+String* Location::pathname()
+{
+    return url()->pathname();
+}
+
+String* Location::search()
+{
+    return url()->search();
+}
+
+String* Location::hash()
+{
+    return url()->hash();
+}
+
+void Location::setHref(String* newURL)
+{
+    setLocation(newURL);
+}
+
+void Location::setHost(String* newHost)
+{
+    url()->setHost(newHost);
+    setLocation(url()->urlString());
+}
+
+void Location::setHostname(String* newHostname)
+{
+    url()->setHostname(newHostname);
+    setLocation(url()->urlString());
+}
+
+void Location::setProtocol(String* newProtocol)
+{
+    url()->setProtocol(newProtocol);
+    setLocation(url()->urlString());
+}
+
+void Location::setPathname(String* newPath, bool needRemovingDots)
+{
+    url()->setPathname(newPath, needRemovingDots);
+    setLocation(url()->urlString());
+}
+
+void Location::setSearch(String* search)
+{
+    url()->setSearch(search);
+    setLocation(url()->urlString());
+}
+
+void Location::setHash(String* search)
+{
+    url()->setHash(search);
+    setLocation(url()->urlString());
+}
+
+void Location::setLocation(String* newURL)
+{
+    m_starFish->window()->navigateAsync(URL::createURL(
+        m_starFish->window()->document()->documentURI()->urlString(), newURL));
 }
 }

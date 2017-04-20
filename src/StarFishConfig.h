@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <cstring>
+#include <sstream>
 #include <cassert>
 #include <functional>
 #include <algorithm>
@@ -263,8 +264,53 @@ template <typename T, typename Hasher = std::hash<T>,
           typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
 
+template <typename T>
+struct Nullable {
+public:
+    Nullable()
+        : m_hasValue(false)
+    {
+    }
+
+    Nullable(T value)
+        : m_hasValue(true)
+        , m_value(value)
+    {
+    }
+
+    T getValue()
+    {
+        STARFISH_ASSERT(m_hasValue);
+        return m_value;
+    }
+    bool hasValue()
+    {
+        return m_hasValue;
+    }
+    bool operator==(const Nullable& other) const
+    {
+        if (m_hasValue != other.hasValue()) {
+            return false;
+        }
+        return m_hasValue ? m_value == other.m_value : true;
+    }
+    bool operator!=(const Nullable& other) const
+    {
+        return !this->operator==(other);
+    }
+
+protected:
+    bool m_hasValue;
+    T m_value;
+};
+
+#include "layout/LayoutUtil.h"
 #include "util/String.h"
+#include "util/AtomicString.h"
 #include "util/QualifiedName.h"
+#include "style/Length.h"
 #include "style/Unit.h"
+#include "style/UnitHelper.h"
+#include "platform/canvas/font/Font.h"
 
 #endif

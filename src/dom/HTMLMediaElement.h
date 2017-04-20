@@ -18,16 +18,20 @@
     !defined(__StarFishHTMLMediaElement__)
 #define __StarFishHTMLMediaElement__
 
-#include "dom/Document.h"
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
+class Event;
+class EventTarget;
+class HTMLMediaElement;
+class HTMLSourceElement;
+class MediaPlayer;
+class Node;
 class TextTrack;
 class TextTrackList;
 class TimeRanges;
-class MediaPlayer;
-class HTMLMediaElement;
+class URL;
 
 class ResourceSelectionContext : public gc {
 public:
@@ -119,20 +123,10 @@ class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
 public:
 #ifdef USE_ES6_FEATURE
     MediaOperationQueueDataRequestPlay(HTMLMediaElement* p,
-                                       Promise* pm = nullptr)
+                                       Promise* pm = nullptr);
 #else
-    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p)
+    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p);
 #endif
-        : MediaOperationQueueData(p)
-    {
-#ifdef USE_ES6_FEATURE
-        if (pm) {
-            m_promise = pm;
-        } else {
-            m_promise = new Promise();
-        }
-#endif
-    }
     virtual void processOperationQueue();
     void cancelOperation(DOMException* exception);
     virtual bool isPlayRequest()

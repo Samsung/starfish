@@ -15,10 +15,11 @@
  */
 
 #include "StarFishConfig.h"
-#include "StackingContext.h"
 
-#include "FrameBox.h"
-#include "FrameReplaced.h"
+#include "layout/FrameBox.h"
+#include "layout/FrameReplaced.h"
+#include "layout/StackingContext.h"
+#include "platform/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -53,6 +54,16 @@ VisibleRectContext::~VisibleRectContext()
 {
     m_loc->setX(m_loc->x() - m_box->x());
     m_loc->setY(m_loc->y() - m_box->y());
+}
+
+void StackingContext::clearOwnBuffer(bool needsDetachNative)
+{
+    if (m_buffer) {
+        if (needsDetachNative) {
+            m_buffer->detachNativeBuffer();
+        }
+        m_buffer = nullptr;
+    }
 }
 
 bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)

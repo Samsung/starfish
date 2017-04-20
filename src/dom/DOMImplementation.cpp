@@ -16,11 +16,9 @@
 
 #ifdef STARFISH_EXP
 
-#include "StarFishConfig.h"
-#include "DOMImplementation.h"
-#include "dom/DocumentType.h"
-
 #include "dom/Document.h"
+#include "dom/DocumentType.h"
+#include "dom/DOMImplementation.h"
 #include "dom/HTMLHtmlElement.h"
 #include "dom/HTMLHeadElement.h"
 #include "dom/HTMLBodyElement.h"

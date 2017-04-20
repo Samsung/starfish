@@ -17,7 +17,6 @@
 #ifndef __StarFishProgressEvent__
 #define __StarFishProgressEvent__
 
-#include "binding/ScriptWrappable.h"
 #include "Event.h"
 
 namespace StarFish {

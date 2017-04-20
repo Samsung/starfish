@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FocusEvent.h"
+#include "dom/FocusEvent.h"
 
 namespace StarFish {
 

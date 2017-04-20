@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLObjectElement.h"
+#include "dom/HTMLObjectElement.h"
+#include "platform/canvas/Canvas.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -49,5 +51,13 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
         m_content->load();
         setNeedsFrameTreeBuild();
     }
+}
+
+void MockHTMLObjectElementContent::drawContent(Canvas* canvas,
+                                               const LayoutRect& contentRect,
+                                               const LayoutRect& absContentRect)
+{
+    canvas->punchHole(Unit::Rect(contentRect.x(), contentRect.y(),
+                                 contentRect.width(), contentRect.height()));
 }
 }

@@ -42,9 +42,9 @@
 #ifndef __StarFishHTMLTreeBuilder__
 #define __StarFishHTMLTreeBuilder__
 
+#include "StarFish.h"
 #include "dom/parser/HTMLConstructionSite.h"
 #include "dom/parser/HTMLElementStack.h"
-#include "util/String.h"
 
 namespace StarFish {
 
@@ -53,6 +53,7 @@ class Document;
 class DocumentFragment;
 class Element;
 class HTMLToken;
+class HTMLStackItem;
 class HTMLDocument;
 class Node;
 class HTMLParser;

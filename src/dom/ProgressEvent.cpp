@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
 #include "ProgressEvent.h"
 
 namespace StarFish {

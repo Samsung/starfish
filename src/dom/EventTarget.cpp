@@ -14,11 +14,12 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "EventTarget.h"
-#include "Event.h"
-#include "Document.h"
-#include "Element.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/Element.h"
+#include "dom/EventTarget.h"
+#include "dom/Event.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

@@ -16,11 +16,12 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
 #include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 
 namespace StarFish {
 
@@ -118,19 +119,9 @@ static ESValue activeSourceBuffersFunction(ESVMInstance* instance)
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    MediaSource::ReadyState readyState = originalObj->readyState();
+    String* result = originalObj->readyStateAttr();
 
-    if (readyState == MediaSource::Open) {
-        return toJSString(
-            originalObj->starFish()->staticStrings()->m_open.localName());
-    } else if (readyState == MediaSource::Ended) {
-        return toJSString(
-            originalObj->starFish()->staticStrings()->m_ended.localName());
-    }
-
-    STARFISH_ASSERT(readyState == MediaSource::Closed);
-    return toJSString(
-        originalObj->starFish()->staticStrings()->m_closed.localName());
+    return toJSString(result);
 }
 
 static ESValue durationGetterFunction(ESVMInstance* instance)

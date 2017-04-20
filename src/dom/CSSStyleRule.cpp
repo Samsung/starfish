@@ -14,8 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "CSSStyleRule.h"
+#include "dom/CSSStyleDeclaration.h"
+#include "dom/CSSStyleRule.h"
+#include "style/Style.h"
 
 namespace StarFish {
 

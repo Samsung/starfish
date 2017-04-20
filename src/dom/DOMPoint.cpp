@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
 #include "dom/DOMPoint.h"
 
 namespace StarFish {

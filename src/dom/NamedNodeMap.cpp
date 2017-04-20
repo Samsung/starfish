@@ -13,13 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#include "StarFishConfig.h"
-#include "NamedNodeMap.h"
+#include "dom/Attr.h"
+#include "dom/Attribute.h"
 #include "dom/Document.h"
 #include "dom/Element.h"
-#include "dom/Attribute.h"
-#include "dom/Attr.h"
+#include "dom/NamedNodeMap.h"
 
 namespace StarFish {
 

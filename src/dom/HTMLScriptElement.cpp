@@ -14,19 +14,16 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLScriptElement.h"
-#include "Text.h"
-
-#include "binding/ScriptBindingInstance.h"
-
-#include "platform/network/NetworkRequest.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "loader/ElementResourceClient.h"
-
+#include "dom/HTMLScriptElement.h"
+#include "dom/Text.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "dom/parser/HTMLParser.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/network/NetworkRequest.h"
+#include "platform/window/Window.h"
+#include "loader/ElementResourceClient.h"
 
 namespace StarFish {
 
@@ -138,7 +135,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
                                                ->staticStrings()
                                                ->m_charset)
                                   ->trim();
-            TextResource* res = document()->resourceLoader()->fetchText(
+            TextResource* res = document()->resourceLoader().fetchText(
                 URL::createURL(document()->documentURI()->baseURI(), url),
                 charset);
             res->addResourceClient(

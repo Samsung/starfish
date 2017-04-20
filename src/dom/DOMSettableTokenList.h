@@ -17,13 +17,11 @@
 #ifndef __StarFishDOMSettableTokenList__
 #define __StarFishDOMSettableTokenList__
 
-#include "binding/ScriptWrappable.h"
-#include "DOMTokenList.h"
+#include "dom/DOMTokenList.h"
 
 namespace StarFish {
 
 class Element;
-class String;
 
 class DOMSettableTokenList : public DOMTokenList {
 public:

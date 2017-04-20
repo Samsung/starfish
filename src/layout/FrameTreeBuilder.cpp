@@ -230,7 +230,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     STARFISH_ASSERT(parentStyle);
 
     ComputedStyle* style = new ComputedStyle(parentStyle);
-    parent->document()->styleResolver()->matchAllRules(
+    parent->document()->styleResolver().matchAllRules(
         parent->asElement(), style, parentStyle, pseudoId);
 
     // TODO: Set the proper style according to the type of pseudo-elements

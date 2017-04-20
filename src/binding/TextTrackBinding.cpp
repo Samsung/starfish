@@ -16,11 +16,11 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
 #include "dom/TextTrack.h"
+#include "dom/TextTrackCueList.h"
 
 namespace StarFish {
 
@@ -61,27 +61,18 @@ static ESValue removeCueFunction(ESVMInstance* instance)
 static ESValue onCueChangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_cuechange;
-    return originalObj->attributeEventListener(eventname);
+
+    return originalObj->oncuechangeEventListener();
 }
 
 static ESValue onCueChangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_cuechange;
+
     ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (v.isObject() ||
-        (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-        originalObj->setAttributeEventListener(eventname, v);
-    } else {
-        originalObj->clearAttributeEventListener(eventname);
-    }
+
+    originalObj->setOncuechangeEventListener(v);
+
     return ESValue();
 }
 

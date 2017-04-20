@@ -23,6 +23,7 @@
 namespace StarFish {
 
 class HTMLTrackElement;
+class TextTrackCue;
 class TextTrackCueList;
 
 #define TEXTTRACK_INVALID_TIMEVALUE -1
@@ -58,6 +59,8 @@ public:
     {
         return true;
     }
+
+    DECLARE_EVENT_LISTENER(cuechange);
 
     void dispatchCueChangeEvent();
 

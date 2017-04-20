@@ -17,24 +17,17 @@
 #ifndef __StarFishStyle__
 #define __StarFishStyle__
 
-#include "util/String.h"
-#include "util/URL.h"
-#include "style/Unit.h"
-#include "style/Length.h"
-#include "platform/canvas/font/Font.h"
-#include "style/DefaultStyle.h"
-#include "style/UnitHelper.h"
-#include "dom/EventTarget.h"
-#include "dom/DOMTokenList.h"
+#include "StarFishConfig.h"
 #include "style/NamedColors.h"
-
-#include <sstream>
 
 namespace StarFish {
 
 class ComputedStyle;
-class Element;
+class CSSStyleRule;
 class Document;
+class Element;
+class Node;
+class URL;
 
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
@@ -991,12 +984,7 @@ public:
         return m_value.m_stringValue;
     }
 
-    String* urlValue(URL* urlOfStyleSheet)
-    {
-        STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return URL::getURLString(urlOfStyleSheet->baseURI(),
-                                 m_value.m_stringValue);
-    }
+    String* urlValue(URL* urlOfStyleSheet);
 
     String* urlStringValue()
     {
@@ -1692,7 +1680,7 @@ public:
         PseudoElementType pseudoType;
     };
 
-    StyleResolver(Document& document);
+    StyleResolver(Document* document);
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
@@ -1755,15 +1743,12 @@ protected:
     bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
                                 bool& originFound);
 
-    Document& m_document;
+    Document* m_document;
     float m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_allRules;
     bool m_usesFirstLineRule;
 };
 }
-
-#include "dom/CSSStyleDeclaration.h"
-#include "dom/CSSStyleRule.h"
 
 #endif

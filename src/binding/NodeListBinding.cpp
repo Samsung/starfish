@@ -15,10 +15,10 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
+#include "dom/Node.h"
 #include "dom/NodeList.h"
 
 namespace StarFish {
