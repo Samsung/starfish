@@ -50,11 +50,8 @@ public:
         return true;
     }
 
-    ScriptValue onloadEventListener();
-    void setOnloadEventListener(ScriptValue onload);
-
-    ScriptValue onunloadEventListener();
-    void setOnunloadEventListener(ScriptValue onunload);
+    DECLARE_EVENT_LISTENER(load);
+    DECLARE_EVENT_LISTENER(unload);
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
                                          ComputedStyle* newStyle);

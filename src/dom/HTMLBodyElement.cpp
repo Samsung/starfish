@@ -36,43 +36,8 @@ QualifiedName HTMLBodyElement::name()
     return document()->window()->starFish()->staticStrings()->m_bodyTagName;
 }
 
-ScriptValue HTMLBodyElement::onloadEventListener()
-{
-    Window* window = document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
-    return window->attributeEventListener(attr);
-}
-
-void HTMLBodyElement::setOnloadEventListener(ScriptValue onload)
-{
-    Window* window = document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_load;
-
-    if (onload.isObject()) {
-        window->setAttributeEventListener(attr, onload);
-    } else {
-        window->clearAttributeEventListener(attr);
-    }
-}
-
-ScriptValue HTMLBodyElement::onunloadEventListener()
-{
-    Window* window = document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
-    return window->attributeEventListener(attr);
-}
-
-void HTMLBodyElement::setOnunloadEventListener(ScriptValue onunload)
-{
-    Window* window = document()->window();
-    QualifiedName attr = window->starFish()->staticStrings()->m_unload;
-
-    if (onunload.isObject()) {
-        window->setAttributeEventListener(attr, onunload);
-    } else {
-        window->clearAttributeEventListener(attr);
-    }
-}
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, load);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
 
 void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
                                               ComputedStyle* newStyle)
