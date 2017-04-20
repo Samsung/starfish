@@ -30,7 +30,7 @@ using namespace escargot;
 static ESValue avplayGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(WebApis);
-    Avplay* avplay = originalObj->Avplay();
+    Avplay* avplay = originalObj->avplay();
 
     if (avplay == nullptr) {
         return ESValue(ESValue::ESNull);

@@ -183,6 +183,27 @@ protected:
     ScriptValue on##EVENT##EventListener(); \
     void setOn##EVENT##EventListener(ScriptValue on##EVENT);
 
+#define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)                    \
+    ScriptValue EVENT_TARGET::on##EVENT##EventListener()                     \
+    {                                                                        \
+        Window* window = document()->window();                               \
+        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
+                                                                             \
+        return window->attributeEventListener(attr);                         \
+    }                                                                        \
+                                                                             \
+    void EVENT_TARGET::setOn##EVENT##EventListener(ScriptValue on##EVENT)    \
+    {                                                                        \
+        Window* window = document()->window();                               \
+        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
+                                                                             \
+        if (on##EVENT.isObject()) {                                          \
+            window->setAttributeEventListener(attr, on##EVENT);              \
+        } else {                                                             \
+            window->clearAttributeEventListener(attr);                       \
+        }                                                                    \
+    }
+
 #define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)                           \
     ScriptValue EVENT_TARGET::on##EVENT##EventListener()                     \
     {                                                                        \
