@@ -38,9 +38,16 @@ FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(
     ctx.setCurrentBlockContainer(tableCaption);
     ctx.mergeTextDecorationData(tableCaption->style());
 
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        captionNode, StyleResolver::PseudoElementType::PseudoElementBefore,
+        ctx);
+
     for (Node* c = captionNode->firstChild(); c; c = c->nextSibling()) {
         FrameTreeBuilder::buildTree(c, ctx, force);
     }
+
+    FrameTreeBuilder::createPseudoElementIfNeeded(
+        captionNode, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
 
     ctx.setCurrentBlockContainer(lastContext);
 

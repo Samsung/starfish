@@ -890,6 +890,20 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
+    {
+        CSSStyleRule* rule =
+            new CSSStyleRule(CSSSelector::Type::Tag,
+                             String::createASCIIString("title"), document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = { 0 };
+        data.m_display = DisplayValue::NoneDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
     m_styleResolver.addSheet(userAgentStyleSheet);
 
     auto df = new FrameDocument(this);

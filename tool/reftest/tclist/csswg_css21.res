@@ -1925,7 +1925,7 @@ test/reftest/csswg-test/css21_original/text/white-space-p-element-001.htm
 # test/reftest/csswg-test/css21_original/text/white-space-control-characters-001.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-001.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-002.htm
-# test/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
+test/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-005.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-006.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-007.htm
@@ -1947,8 +1947,8 @@ test/reftest/csswg-test/css21_original/generated-content/before-after-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-after-002.htm
 test/reftest/csswg-test/css21_original/generated-content/before-after-011.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-display-types-001.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-attr-001.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-restyle-001.htm
+test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-attr-001.htm
+test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-restyle-001.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-floated-001.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-images-001.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-positioned-001.htm
@@ -1956,7 +1956,7 @@ test/reftest/csswg-test/css21_original/generated-content/before-after-011.htm
 # test/reftest/csswg-test/css21_original/generated-content/before-after-table-whitespace-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-002.htm
-# test/reftest/csswg-test/css21_original/generated-content/before-content-display-003.htm
+test/reftest/csswg-test/css21_original/generated-content/before-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-005.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-006.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-007.htm
@@ -2017,7 +2017,7 @@ test/reftest/csswg-test/css21_original/generated-content/content-038.htm
 test/reftest/csswg-test/css21_original/generated-content/content-039.htm
 test/reftest/csswg-test/css21_original/generated-content/content-040.htm
 test/reftest/csswg-test/css21_original/generated-content/content-041.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-042.htm
+test/reftest/csswg-test/css21_original/generated-content/content-042.htm
 test/reftest/csswg-test/css21_original/generated-content/content-043.htm
 test/reftest/csswg-test/css21_original/generated-content/content-046.htm
 test/reftest/csswg-test/css21_original/generated-content/content-047.htm
@@ -2033,7 +2033,7 @@ test/reftest/csswg-test/css21_original/generated-content/content-057.htm
 test/reftest/csswg-test/css21_original/generated-content/content-063.htm
 test/reftest/csswg-test/css21_original/generated-content/content-065.htm
 test/reftest/csswg-test/css21_original/generated-content/content-066.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-067.htm
+test/reftest/csswg-test/css21_original/generated-content/content-067.htm
 test/reftest/csswg-test/css21_original/generated-content/content-068.htm
 test/reftest/csswg-test/css21_original/generated-content/content-070.htm
 test/reftest/csswg-test/css21_original/generated-content/content-072.htm
@@ -2046,12 +2046,12 @@ test/reftest/csswg-test/css21_original/generated-content/content-080.htm
 test/reftest/csswg-test/css21_original/generated-content/content-081.htm
 test/reftest/csswg-test/css21_original/generated-content/content-082.htm
 test/reftest/csswg-test/css21_original/generated-content/content-083.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-085.htm
+test/reftest/csswg-test/css21_original/generated-content/content-085.htm
 test/reftest/csswg-test/css21_original/generated-content/content-086.htm
 test/reftest/csswg-test/css21_original/generated-content/content-089.htm
 test/reftest/csswg-test/css21_original/generated-content/content-090.htm
 test/reftest/csswg-test/css21_original/generated-content/content-091.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-096.htm
+test/reftest/csswg-test/css21_original/generated-content/content-096.htm
 test/reftest/csswg-test/css21_original/generated-content/content-097.htm
 test/reftest/csswg-test/css21_original/generated-content/content-099.htm
 test/reftest/csswg-test/css21_original/generated-content/content-100.htm
@@ -2072,12 +2072,12 @@ test/reftest/csswg-test/css21_original/generated-content/content-118.htm
 test/reftest/csswg-test/css21_original/generated-content/content-119.htm
 test/reftest/csswg-test/css21_original/generated-content/content-121.htm
 test/reftest/csswg-test/css21_original/generated-content/content-122.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-123.htm
+test/reftest/csswg-test/css21_original/generated-content/content-123.htm
 test/reftest/csswg-test/css21_original/generated-content/content-126.htm
 test/reftest/csswg-test/css21_original/generated-content/content-127.htm
 test/reftest/csswg-test/css21_original/generated-content/content-129.htm
 test/reftest/csswg-test/css21_original/generated-content/content-130.htm
-# test/reftest/csswg-test/css21_original/generated-content/content-131.htm
+test/reftest/csswg-test/css21_original/generated-content/content-131.htm
 test/reftest/csswg-test/css21_original/generated-content/content-132.htm
 test/reftest/csswg-test/css21_original/generated-content/content-135.htm
 test/reftest/csswg-test/css21_original/generated-content/content-136.htm
