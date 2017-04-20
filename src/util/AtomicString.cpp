@@ -20,6 +20,11 @@
 
 namespace StarFish {
 
+AtomicString::AtomicString()
+{
+    m_string = String::emptyString;
+}
+
 AtomicString AtomicString::createAtomicString(StarFish* sf, String* str)
 {
     return createAtomicString(sf, str->utf8Data());
@@ -63,5 +68,10 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
     map.insert(std::make_pair(data, name));
 
     return name;
+}
+
+AtomicString AtomicString::emptyAtomicString()
+{
+    return AtomicString(String::emptyString);
 }
 }

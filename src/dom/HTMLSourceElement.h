@@ -57,8 +57,6 @@ public:
 
     String* type();
     void setType(String* type);
-    // TODO
-protected:
 };
 }
 

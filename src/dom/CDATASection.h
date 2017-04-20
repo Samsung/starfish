@@ -45,8 +45,6 @@ public:
     {
         return new CDATASection(document(), data());
     }
-
-protected:
 };
 }
 

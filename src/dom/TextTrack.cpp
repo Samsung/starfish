@@ -16,12 +16,14 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "Event.h"
-#include "Document.h"
-#include "HTMLTrackElement.h"
-#include "TextTrack.h"
-#include "TextTrackCue.h"
+#include "StarFish.h"
+#include "dom/Event.h"
+#include "dom/Document.h"
+#include "dom/HTMLTrackElement.h"
+#include "dom/TextTrack.h"
+#include "dom/TextTrackCue.h"
+#include "dom/TextTrackCueList.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -39,6 +41,8 @@ TextTrack::TextTrack(Document* document, Kind kind, String* label,
     , m_cachedIdx(0)
 {
 }
+
+DEFINE_EVENT_LISTENER(TextTrack, cuechange);
 
 void TextTrack::dispatchCueChangeEvent()
 {

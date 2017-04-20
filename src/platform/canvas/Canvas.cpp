@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Canvas.h"
+#include "StarFish.h"
+#include "platform/canvas/Canvas.h"
 #include "platform/canvas/font/Font.h"
 #include "platform/canvas/image/ImageData.h"
 #include "style/UnitHelper.h"

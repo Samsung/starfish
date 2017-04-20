@@ -38,7 +38,7 @@ class ResourceLoader : public gc {
     friend class ResourceSizeTracer;
 
 public:
-    ResourceLoader(Document& doc);
+    ResourceLoader(Document* doc);
 
     Resource* fetch(URL* url);
     TextResource* fetchText(URL* url,

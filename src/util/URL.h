@@ -17,7 +17,6 @@
 #ifndef __StarFishURL__
 #define __StarFishURL__
 
-#include "util/String.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {

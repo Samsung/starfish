@@ -60,15 +60,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "StarFishConfig.h"
-#include "CSSParser.h"
-
+#include "StarFish.h"
 #include "dom/Element.h"
 #include "dom/Document.h"
-
-#include "CSSStyleLookupTrie.h"
-
-#include "Style.h"
+#include "dom/CSSStyleDeclaration.h"
+#include "dom/CSSStyleRule.h"
+#include "style/CSSParser.h"
+#include "style/CSSStyleLookupTrie.h"
+#include "style/Style.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -1038,7 +1038,7 @@ String* CSSParser::determineNamespace(String* prefix)
         return String::fromUTF8("*"); // We'll match any namespace.
     }
 
-    if (m_document->styleResolver()->sheets().size() == 0) {
+    if (m_document->styleResolver().sheets().size() == 0) {
         return nullptr; // Cannot resolve prefix to namespace without a
                         // stylesheet, syntax error.
     }

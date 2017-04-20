@@ -18,23 +18,19 @@
 #ifndef __StarFishSourceBuffer__
 #define __StarFishSourceBuffer__
 
-#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
-#include "platform/threading/Thread.h"
-#include "platform/threading/Mutex.h"
-#include "platform/threading/Locker.h"
 
 namespace StarFish {
 
-class SourceBuffer;
 class AudioTrackList;
-class VideoTrackList;
+class SourceBuffer;
 class TextTrackList;
 class TimeRange;
 class TimeRanges;
 class MediaSource;
-class Demuxer;
+class Mutex;
+class VideoTrackList;
 
 struct SourceBufferData : public gc {
     SourceBuffer* m_sourceBuffer;

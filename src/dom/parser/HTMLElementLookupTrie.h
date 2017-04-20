@@ -41,7 +41,7 @@
 #ifndef __StarFishHTMLElementLookupTrie__
 #define __StarFishHTMLElementLookupTrie__
 
-#include "util/String.h"
+#include "StarFish.h"
 
 namespace StarFish {
 

@@ -15,7 +15,6 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
@@ -56,9 +55,9 @@ ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnmouseoverEventListener(arg0)
+    originalObj->setOnmouseoverEventListener(arg0);
 
-        return ESValue();
+    return ESValue();
 }
 
 ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance)

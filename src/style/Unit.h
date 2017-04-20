@@ -17,9 +17,12 @@
 #ifndef __StarFishUnit__
 #define __StarFishUnit__
 
-#include "StarFish.h"
+#include "StarFishConfig.h"
 
 namespace StarFish {
+
+class String;
+
 namespace Unit {
 
     class Size {
@@ -272,25 +275,7 @@ namespace Unit {
             return m_a == 0;
         }
 
-        String* toString() const
-        {
-            char buf[256];
-            if (m_a == 255) {
-                snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
-            } else {
-                float a = (float)m_a / 255;
-                if (a > 0.05) {
-                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r,
-                             m_g, m_b, a);
-                } else {
-                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g,
-                             m_b);
-                }
-            }
-
-            String* toStr = String::createASCIIString(buf);
-            return toStr;
-        }
+        String* toString() const;
 
         unsigned char r() const
         {

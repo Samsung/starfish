@@ -14,15 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "ResourceLoader.h"
-
+#include "loader/ResourceLoader.h"
+#include "layout/FrameReplacedImage.h"
 #include "platform/network/NetworkRequest.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/profiling/Profiling.h"
-
-#include "layout/FrameReplacedImage.h"
+#include "platform/window/Window.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -38,10 +37,10 @@ extern bool g_fireOnloadEvent;
 
 namespace StarFish {
 
-ResourceLoader::ResourceLoader(Document& document)
+ResourceLoader::ResourceLoader(Document* document)
     : m_isDocumentInOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
-    , m_document(&document)
+    , m_document(document)
     , m_resourceCacheSize(0)
     , m_lastCachePruneTime(0)
 {

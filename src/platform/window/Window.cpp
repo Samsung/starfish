@@ -14,27 +14,25 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Window.h"
+#include "StarFish.h"
 
+#include "animation/Animation.h"
 #include "binding/ScriptBindingInstance.h"
 #include "dom/HTMLDocument.h"
 #include "dom/Traverse.h"
-#include "layout/FrameTreeBuilder.h"
-#include "platform/canvas/font/Font.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "animation/Animation.h"
-
 #include "extra/History.h"
 #include "extra/Navigator.h"
 #include "extra/Location.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "extra/WebApis.h"
 #endif
-
+#include "platform/canvas/font/Font.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
 #include "layout/FrameBlockBox.h"
+#include "layout/FrameTreeBuilder.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -454,12 +452,12 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
 }
 
 Window::Window(StarFish* starFish)
-    : m_starFish(starFish)
+    : EventTarget(nullptr)
+    , m_starFish(starFish)
     , m_scriptBindingInstance(nullptr)
     , m_history(nullptr)
     , m_navigator(nullptr)
     , m_location(nullptr)
-    , m_document(nullptr)
     , m_animationExecutor(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
@@ -711,29 +709,29 @@ void Window::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("parse sheet");
 #endif
-            document()->styleResolver()->sheets()[0]->parseSheetIfneeds();
-            document()->styleResolver()->sheets()[0]->sortRulesBySpecificity();
+            document()->styleResolver().sheets()[0]->parseSheetIfneeds();
+            document()->styleResolver().sheets()[0]->sortRulesBySpecificity();
 
-            document()->styleResolver()->removeAllRules();
-            for (size_t i = 1; i < document()->styleResolver()->sheets().size();
+            document()->styleResolver().removeAllRules();
+            for (size_t i = 1; i < document()->styleResolver().sheets().size();
                  i++) {
-                document()->styleResolver()->sheets()[i]->parseSheetIfneeds();
+                document()->styleResolver().sheets()[i]->parseSheetIfneeds();
                 for (size_t j = 0;
                      j <
-                     document()->styleResolver()->sheets()[i]->rules().size();
+                     document()->styleResolver().sheets()[i]->rules().size();
                      j++) {
-                    document()->styleResolver()->allRules()->addRule(
-                        document()->styleResolver()->sheets()[i]->rules()[j]);
+                    document()->styleResolver().allRules()->addRule(
+                        document()->styleResolver().sheets()[i]->rules()[j]);
                 }
             }
-            document()->styleResolver()->allRules()->sortRulesBySpecificity();
+            document()->styleResolver().allRules()->sortRulesBySpecificity();
         }
 
 // resolve style
 #ifdef STARFISH_ENABLE_TIMER
         Timer t("resolve style");
 #endif
-        document()->styleResolver()->resolveDOMStyle(
+        document()->styleResolver().resolveDOMStyle(
             m_document, m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
@@ -742,7 +740,7 @@ void Window::layoutIfNeeds()
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
-            document()->styleResolver()->dumpDOMStyle(m_document);
+            document()->styleResolver().dumpDOMStyle(m_document);
         }
 #endif
     }
@@ -829,8 +827,8 @@ void Window::rendering()
 {
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     if (m_pendingStyleSheetCount && document() &&
-        document()->resourceLoader()->isDocumentInOpenState() &&
-        ((timestamp() - document()->resourceLoader()->documentOpenTime()) <
+        document()->resourceLoader().isDocumentInOpenState() &&
+        ((timestamp() - document()->resourceLoader().documentOpenTime()) <
          1000)) {
         m_needsRendering = false;
         setTimeout([](Window* wnd, void* data) { wnd->setNeedsRendering(); },
@@ -1696,7 +1694,7 @@ void Window::pause()
 
     document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
-    document()->resourceLoader()->cachePruning();
+    document()->resourceLoader().cachePruning();
 }
 
 void Window::resume()

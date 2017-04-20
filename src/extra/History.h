@@ -18,12 +18,12 @@
 #define __StarFishHistory__
 
 #include "binding/ScriptWrappable.h"
-#include "platform/window/Window.h"
-#include "dom/Document.h"
 
 namespace StarFish {
 
 class HistoryEntry;
+class StarFish;
+class URL;
 
 class History : public ScriptWrappable {
 public:

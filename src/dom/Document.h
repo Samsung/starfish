@@ -19,12 +19,26 @@
 
 #include "dom/Node.h"
 #include "loader/ResourceLoader.h"
+#include "style/Style.h"
 
 namespace StarFish {
 
-class Window;
-class NetworkRequest;
+class Attr;
+class CDATASection;
+class Comment;
+class DocumentType;
+class DocumentFragment;
 class DocumentBuilder;
+class Element;
+class HTMLBodyElement;
+class HTMLHeadElement;
+class HTMLHtmlElement;
+class ImageData;
+class NetworkRequest;
+class Location;
+class Text;
+class URL;
+class Window;
 
 #ifdef STARFISH_EXP
 class DOMImplementation;
@@ -152,14 +166,14 @@ public:
         return m_window;
     }
 
-    ResourceLoader* resourceLoader()
+    ResourceLoader& resourceLoader()
     {
-        return &m_resourceLoader;
+        return m_resourceLoader;
     }
 
-    StyleResolver* styleResolver()
+    StyleResolver& styleResolver()
     {
-        return &m_styleResolver;
+        return m_styleResolver;
     }
 
     ScriptBindingInstance* scriptBindingInstance()

@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLImageElement.h"
-
+#include "dom/HTMLImageElement.h"
+#include "layout/FrameReplacedImage.h"
 #include "loader/ElementResourceClient.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "layout/FrameReplacedImage.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -183,7 +183,7 @@ void HTMLImageElement::unloadImage()
 void HTMLImageElement::loadImage(String* src)
 {
     unloadImage();
-    m_imageResource = document()->resourceLoader()->fetchImage(
+    m_imageResource = document()->resourceLoader().fetchImage(
         URL::createURL(document()->documentURI()->baseURI(), src));
     m_imageResource->addResourceClient(
         new ImageDownloadClient(this, m_imageResource));

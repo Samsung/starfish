@@ -14,10 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HTMLDocument.h"
-
-#include "DOM.h"
+#include "StarFish.h"
+#include "dom/DOM.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -131,11 +130,11 @@ Element* HTMLDocument::createElement(AtomicString localName,
 }
 
 static void createHtmlCaseInsensitiveAttributesSet(
-    Document& document, GCUnorderedMap<String*, size_t>& attrSet)
+    Document* document, GCUnorderedMap<String*, size_t>& attrSet)
 {
     // This is the list of attributes in HTML 4.01 with values marked as "[CI]"
     // or case-insensitive
-    StaticStrings* str = document.window()->starFish()->staticStrings();
+    StaticStrings* str = document->window()->starFish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
         /* &accept_charsetAttr, &acceptAttr, &alignAttr, &alinkAttr, &axisAttr,
@@ -164,7 +163,7 @@ static void createHtmlCaseInsensitiveAttributesSet(
     }
 }
 
-bool HTMLDocument::isCaseSensitiveAttribute(Document& document,
+bool HTMLDocument::isCaseSensitiveAttribute(Document* document,
                                             const QualifiedName& attributeName)
 {
     static GCUnorderedMap<String*, size_t> caseInsensitiveAttrSet;

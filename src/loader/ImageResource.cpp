@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ImageResource.h"
-
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/file_io/FileIO.h"
+#include "StarFish.h"
 #include "dom/Document.h"
+#include "loader/ImageResource.h"
 #include "loader/ResourceLoader.h"
+#include "platform/file_io/FileIO.h"
+#include "platform/message_loop/MessageLoop.h"
 #include "platform/network/NetworkRequest.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

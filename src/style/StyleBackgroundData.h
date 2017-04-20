@@ -17,11 +17,12 @@
 #ifndef __StarFishStyleBackgroundData__
 #define __StarFishStyleBackgroundData__
 
+#include "StarFishConfig.h"
 #include "style/Style.h"
-#include "loader/ImageResource.h"
 
 namespace StarFish {
 
+class ImageData;
 class ImageResource;
 
 class BackgroundLayer : public gc {
@@ -95,13 +96,7 @@ public:
         return m_image;
     }
 
-    ImageData* bgImageData()
-    {
-        if (m_imageResource) {
-            return m_imageResource->imageData();
-        }
-        return nullptr;
-    }
+    ImageData* bgImageData();
 
     ImageResource* bgImageResource()
     {

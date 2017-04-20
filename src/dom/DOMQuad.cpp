@@ -14,9 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "dom/DOMRectReadOnly.h"
 #include "dom/DOMRect.h"
+#include "dom/DOMRectReadOnly.h"
 #include "dom/DOMPoint.h"
 #include "dom/DOMQuad.h"
 

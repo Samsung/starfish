@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLLinkElement.h"
-
+#include "dom/HTMLLinkElement.h"
 #include "loader/ElementResourceClient.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "style/CSSParser.h"
 #include "platform/file_io/FileIO.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
+#include "style/CSSParser.h"
 
 namespace StarFish {
 
@@ -150,7 +150,7 @@ public:
         CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
         if (sheet) {
             m_element->m_generatedSheet = sheet;
-            m_element->document()->styleResolver()->addSheet(sheet);
+            m_element->document()->styleResolver().addSheet(sheet);
             m_element->document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
 
@@ -174,7 +174,7 @@ void HTMLLinkElement::loadStyleSheet()
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
     }
-    m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
+    m_styleSheetTextResource = document()->resourceLoader().fetchText(url);
     m_styleSheetTextResource->addResourceClient(
         new StyleSheetDownloadClient(this, m_styleSheetTextResource));
     m_styleSheetTextResource->addResourceClient(
@@ -190,7 +190,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
         m_styleSheetTextResource = nullptr;
     }
     if (m_generatedSheet) {
-        document()->styleResolver()->removeSheet(m_generatedSheet);
+        document()->styleResolver().removeSheet(m_generatedSheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }

@@ -14,12 +14,14 @@
  *    limitations under the License.
  */
 
+#include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLTableElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
-virtual String* HTMLTableElement::localName()
+String* HTMLTableElement::localName()
 {
     return document()
         ->window()
@@ -28,7 +30,7 @@ virtual String* HTMLTableElement::localName()
         ->m_tableTagName.localName();
 }
 
-virtual QualifiedName HTMLTableElement::name()
+QualifiedName HTMLTableElement::name()
 {
     return document()->window()->starFish()->staticStrings()->m_tableTagName;
 }

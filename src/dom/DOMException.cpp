@@ -14,9 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "DOMException.h"
-#include "Document.h"
+#include "dom/Document.h"
+#include "dom/DOMException.h"
 
 namespace StarFish {
 

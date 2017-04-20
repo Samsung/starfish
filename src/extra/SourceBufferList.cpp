@@ -14,9 +14,14 @@
  *    limitations under the License.
  */
 
+#include "StarFish.h"
 #include "dom/Document.h"
+#include "dom/Event.h"
+#include "dom/HTMLMediaElement.h"
+#include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

@@ -17,7 +17,7 @@
 #ifndef __StarFishHTMLDocument__
 #define __StarFishHTMLDocument__
 
-#include "Document.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
@@ -47,10 +47,8 @@ public:
     static Element* createHTMLElement(Document* document,
                                       AtomicString localName);
 
-    static bool isCaseSensitiveAttribute(Document& document,
+    static bool isCaseSensitiveAttribute(Document* document,
                                          const QualifiedName& attributeName);
-
-protected:
 };
 }
 

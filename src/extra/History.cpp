@@ -13,11 +13,12 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "StarFishConfig.h"
-
-#include "History.h"
-#include "HistoryEntry.h"
-#include "Location.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "extra/History.h"
+#include "extra/HistoryEntry.h"
+#include "extra/Location.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

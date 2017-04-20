@@ -135,7 +135,7 @@ void ComputedStyle::loadResources(
                       ->url()) == *u) {
                 consumer->document()
                     ->resourceLoader()
-                    ->notifyImageResourceActiveState(
+                    .notifyImageResourceActiveState(
                         prevComputedStyleValueForReferenceLoadedResources
                             ->background()
                             ->bgImageResource());
@@ -146,7 +146,7 @@ void ComputedStyle::loadResources(
                     bgIndex);
             } else {
                 ImageResource* res =
-                    consumer->document()->resourceLoader()->fetchImage(u);
+                    consumer->document()->resourceLoader().fetchImage(u);
                 setBackgroundImageResource(res, bgIndex);
                 res->markThisResourceIsDoesNotAffectWindowOnLoad();
                 res->addResourceClient(
@@ -186,7 +186,7 @@ void ComputedStyle::loadResources(
                   ->url()) == *u) {
             consumer->document()
                 ->resourceLoader()
-                ->notifyImageResourceActiveState(
+                .notifyImageResourceActiveState(
                     prevComputedStyleValueForReferenceLoadedResources
                         ->surround()
                         ->border.image()
@@ -198,7 +198,7 @@ void ComputedStyle::loadResources(
             setBorderImageResource(res);
         } else {
             ImageResource* res =
-                consumer->document()->resourceLoader()->fetchImage(u);
+                consumer->document()->resourceLoader().fetchImage(u);
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(
                 new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(

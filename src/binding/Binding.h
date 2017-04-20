@@ -23,6 +23,7 @@
 
 #include "dom/DOM.h"
 #include "extra/Blob.h"
+#include "extra/Console.h"
 #include "extra/History.h"
 #include "extra/Location.h"
 #include "extra/Navigator.h"

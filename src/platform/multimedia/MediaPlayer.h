@@ -20,21 +20,14 @@
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
-#include "util/URL.h"
-#include "extra/MediaSource.h"
-#include "extra/SourceBuffer.h"
-#include "extra/Blob.h"
-#include "extra/TimeRanges.h"
+#include "dom/HTMLMediaElement.h"
 
 namespace StarFish {
 
-class Document;
-class URL;
-class PlayerWindowData;
-class HTMLElement;
-class HTMLMediaElement;
-class MediaPlayer;
 class Canvas;
+class MediaSource;
+class StarFish;
+class URL;
 
 class MediaPlayer : public gc {
 public:

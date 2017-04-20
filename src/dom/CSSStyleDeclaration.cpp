@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "style/CSSStyleLookupTrie.h"
 #include "dom/CSSStyleDeclaration.h"
+#include "dom/Document.h"
+#include "style/CSSStyleLookupTrie.h"
 
 namespace StarFish {
 
@@ -35,11 +35,6 @@ void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
 void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
-}
-
-Document* CSSStyleDeclaration::document()
-{
-    return m_document;
 }
 
 CSSStyleDeclaration* CSSStyleDeclaration::clone(Document* document,

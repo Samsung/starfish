@@ -16,7 +16,6 @@
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/HTMLAnchorElement.h"

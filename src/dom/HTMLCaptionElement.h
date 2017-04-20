@@ -44,8 +44,6 @@ public:
     {
         return true;
     }
-
-protected:
 };
 }
 

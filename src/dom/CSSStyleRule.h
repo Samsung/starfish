@@ -17,6 +17,7 @@
 #ifndef __StarFishCSSStyleRule__
 #define __StarFishCSSStyleRule__
 
+#include "binding/ScriptWrappable.h"
 #include "style/Style.h"
 
 namespace StarFish {

@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameReplaced.h"
-#include "FrameDocument.h"
+#include "StarFish.h"
+#include "layout/FrameReplaced.h"
+#include "layout/FrameDocument.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

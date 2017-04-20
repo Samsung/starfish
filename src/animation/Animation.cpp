@@ -15,10 +15,11 @@
  */
 
 #include "StarFishConfig.h"
-#include "platform/window/Window.h"
 #include "animation/Animation.h"
-#include "dom/Node.h"
 #include "dom/Document.h"
+#include "dom/Node.h"
+#include "style/ComputedStyle.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

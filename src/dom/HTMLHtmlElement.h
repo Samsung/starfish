@@ -35,19 +35,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName()
-    {
-        return document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_htmlTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_htmlTagName;
-    }
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 
@@ -57,20 +46,7 @@ public:
     }
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle)
-    {
-        HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->backgroundColor().isTransparent() ||
-            !newStyle->backgroundImage()->equals(String::emptyString)) {
-            document()->window()->m_hasRootElementBackground = true;
-        } else {
-            document()->window()->m_hasRootElementBackground = false;
-        }
-
-        if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
-            document()->setNeedsFrameTreeBuild();
-        }
-    }
+                                         ComputedStyle* newStyle);
 
     HTMLBodyElement* body()
     {
@@ -78,18 +54,14 @@ public:
         // https://www.w3.org/TR/html-markup/html.html
         Node* n = firstChild();
         while (n) {
-            if (n->isElement() && n->asElement() &&
-                n->asElement()->isHTMLElement() &&
-                n->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                return n->asElement()->asHTMLElement()->asHTMLBodyElement();
+            if (n->isHTMLBodyElement()) {
+                return n->asHTMLBodyElement();
             }
             n = n->nextSibling();
         }
 
         return nullptr;
     }
-
-protected:
 };
 }
 

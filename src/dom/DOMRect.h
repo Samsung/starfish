@@ -17,7 +17,6 @@
 #ifndef __StarFishDOMRect__
 #define __StarFishDOMRect__
 
-#include "util/String.h"
 #include "dom/DOMRectReadOnly.h"
 
 namespace StarFish {

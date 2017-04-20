@@ -14,19 +14,16 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-
-#include "Style.h"
-#include "CSSParser.h"
-#include "ComputedStyle.h"
-#include "NamedColors.h"
-
+#include "StarFish.h"
+#include "animation/Animation.h"
 #include "dom/DOM.h"
-
+#include "style/Style.h"
+#include "style/CSSParser.h"
+#include "style/ComputedStyle.h"
+#include "style/NamedColors.h"
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
-
-#include "animation/Animation.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -244,6 +241,12 @@ bool CSSStyleValuePair::updateValueCommon(GCVector<String*>* tokens)
         return false;
     }
     return true;
+}
+
+String* CSSStyleValuePair::urlValue(URL* urlOfStyleSheet)
+{
+    STARFISH_ASSERT(m_valueKind == UrlValueKind);
+    return URL::getURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
 }
 
 static String* BorderString(String* width, bool isWidthCombined, String* style,
@@ -2605,10 +2608,10 @@ void CSSStyleDeclaration::notifyNeedsStyleRecalc()
     }
 }
 
-StyleResolver::StyleResolver(Document& document)
+StyleResolver::StyleResolver(Document* document)
     : m_document(document)
     , m_mediumFontSize(
-          document.window()->starFish()->defaultFontSizeMultiplier() *
+          document->window()->starFish()->defaultFontSizeMultiplier() *
           DEFAULT_FONT_SIZE)
     , m_usesFirstLineRule(false)
 {
@@ -2617,7 +2620,7 @@ StyleResolver::StyleResolver(Document& document)
 CSSStyleSheet* StyleResolver::allRules()
 {
     if (!m_allRules) {
-        m_allRules = new CSSStyleSheet(&m_document, String::emptyString);
+        m_allRules = new CSSStyleSheet(m_document, String::emptyString);
     }
     return m_allRules;
 }
@@ -4586,7 +4589,7 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
 void StyleResolver::addSheet(CSSStyleSheet* sheet)
 {
     bool originFound = false;
-    if (!traverseAndTryAddSheet(&m_document, sheet, originFound)) {
+    if (!traverseAndTryAddSheet(m_document, sheet, originFound)) {
         m_sheets.push_back(sheet);
     }
 }

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "platform/threading/Thread.h"

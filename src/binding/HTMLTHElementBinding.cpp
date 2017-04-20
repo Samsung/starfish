@@ -15,7 +15,6 @@
  */
 
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/HTMLTHElement.h"
@@ -24,11 +23,11 @@ namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingCDATASection(
+ESFunctionObject* bindingHTMLTHElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* CDATASectionString = ESString::create("CDATASection");
+    ESString* CDATASectionString = ESString::create("HTMLTHElement");
     ESFunctionObject* CDATASectionFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, CDATASectionString, 1, true, true);
     CDATASectionFunction->defineAccessorProperty(

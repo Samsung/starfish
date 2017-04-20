@@ -23,15 +23,7 @@ namespace StarFish {
 
 class HTMLHeadingElement : public HTMLElement {
 public:
-    HTMLHeadingElement(Document* document, AtomicString name)
-        : HTMLElement(document)
-        , m_name(document->window()
-                     ->starFish()
-                     ->staticStrings()
-                     ->m_xhtmlNamespaceURI,
-                 name)
-    {
-    }
+    HTMLHeadingElement(Document* document, AtomicString name);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

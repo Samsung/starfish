@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Event.h"
+#include "dom/Event.h"
 #include "platform/profiling/Profiling.h"
 
 namespace StarFish {

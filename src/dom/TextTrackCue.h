@@ -100,6 +100,9 @@ public:
         return m_timeRange.isInRange(time);
     }
 
+    DECLARE_EVENT_LISTENER(enter);
+    DECLARE_EVENT_LISTENER(exit);
+
 #ifndef NDEBUG
     virtual void dump()
     {

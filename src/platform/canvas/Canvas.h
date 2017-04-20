@@ -17,11 +17,13 @@
 #ifndef __Canvas__
 #define __Canvas__
 
+#include "StarFishConfig.h"
+
 namespace StarFish {
 
 class ImageData;
-class Font;
 class Window;
+
 class CanvasSurface : public gc {
 protected:
     CanvasSurface()

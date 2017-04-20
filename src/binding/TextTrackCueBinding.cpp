@@ -16,10 +16,10 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
+#include "dom/TextTrack.h"
 #include "dom/TextTrackCue.h"
 
 namespace StarFish {
@@ -90,54 +90,36 @@ static ESValue idSetterFunction(ESVMInstance* instance)
 static ESValue onEnterGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_enter;
-    return originalObj->attributeEventListener(eventname);
+
+    return originalObj->onenterEventListener();
 }
 
 static ESValue onEnterSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_enter;
+
     ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (v.isObject() ||
-        (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-        originalObj->setAttributeEventListener(eventname, v);
-    } else {
-        originalObj->clearAttributeEventListener(eventname);
-    }
+
+    originalObj->setOnenterEventListener(v);
+
     return ESValue();
 }
 
 static ESValue onExitGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_exit;
-    return originalObj->attributeEventListener(eventname);
+
+    return originalObj->onexitEventListener();
 }
 
 static ESValue onExitSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    auto eventname = (((Window*)instance->globalObject()->extraPointerData()))
-                         ->starFish()
-                         ->staticStrings()
-                         ->m_exit;
+
     ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (v.isObject() ||
-        (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-        originalObj->setAttributeEventListener(eventname, v);
-    } else {
-        originalObj->clearAttributeEventListener(eventname);
-    }
+
+    originalObj->setOnexitEventListener(v);
+
     return ESValue();
 }
 

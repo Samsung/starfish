@@ -18,7 +18,6 @@
 #define __StarFishHTMLScriptElement__
 
 #include "dom/HTMLElement.h"
-#include "loader/TextResource.h"
 
 namespace StarFish {
 

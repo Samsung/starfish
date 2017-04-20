@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
 #include "dom/Attr.h"
 #include "dom/Document.h"
 #include "dom/Element.h"

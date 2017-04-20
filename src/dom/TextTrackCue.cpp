@@ -16,12 +16,15 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "dom/TextTrackCue.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "dom/HTMLDivElement.h"
 #include "dom/Event.h"
+#include "dom/HTMLDivElement.h"
+#include "dom/HTMLTrackElement.h"
+#include "dom/TextTrack.h"
+#include "dom/TextTrackCue.h"
 #include "dom/parser/HTMLParser.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -80,6 +83,9 @@ DocumentFragment* TextTrackCue::getCueAsHTML(Document* document)
     }
     return m_payloadAsHTML;
 }
+
+DEFINE_EVENT_LISTENER(TextTrackCue, enter);
+DEFINE_EVENT_LISTENER(TextTrackCue, exit);
 }
 
 #endif

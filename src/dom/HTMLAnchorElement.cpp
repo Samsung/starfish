@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
+#include "dom/Event.h"
 #include "dom/HTMLAnchorElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLAnchorElement::localName()

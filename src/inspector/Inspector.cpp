@@ -16,7 +16,7 @@
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "Inspector.h"
 
 #define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseFullPrecisionFlag

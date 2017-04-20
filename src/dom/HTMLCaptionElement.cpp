@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLCaptionElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLCaptionElement::localName()

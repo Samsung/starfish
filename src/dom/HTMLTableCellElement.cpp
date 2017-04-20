@@ -14,8 +14,10 @@
  *    limitations under the License.
  */
 
+#include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLTableCellElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

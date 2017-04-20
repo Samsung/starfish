@@ -189,7 +189,7 @@ protected:
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
                                                                              \
-        return window->attributeEventListener(attr);                         \
+        return attributeEventListener(attr);                                 \
     }                                                                        \
                                                                              \
     void EVENT_TARGET::setOn##EVENT##EventListener(ScriptValue on##EVENT)    \

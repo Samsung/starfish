@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameBlockBoxInlineLayout.h"
-
-#include "FrameBlockBox.h"
-#include "FrameDocument.h"
-#include "FrameInline.h"
-#include "FrameTableBox.h"
+#include "StarFish.h"
+#include "layout/FrameBlockBox.h"
+#include "layout/FrameBlockBoxInlineLayout.h"
+#include "layout/FrameDocument.h"
+#include "layout/FrameInline.h"
+#include "layout/FrameTableBox.h"
+#include "style/ComputedStyle.h"
 
 namespace StarFish {
 

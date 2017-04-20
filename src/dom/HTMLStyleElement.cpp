@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "HTMLStyleElement.h"
+#include "dom/Event.h"
+#include "dom/HTMLStyleElement.h"
 #include "dom/Text.h"
-#include "dom/Traverse.h"
-#include "platform/message_loop/MessageLoop.h"
-
 #include "style/CSSParser.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -127,14 +127,14 @@ void HTMLStyleElement::generateStyleSheet()
 
     CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
     m_generatedSheet = sheet;
-    document()->styleResolver()->addSheet(sheet);
+    document()->styleResolver().addSheet(sheet);
     document()->window()->setWholeDocumentNeedsStyleRecalc();
 }
 
 void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
-        document()->styleResolver()->removeSheet(m_generatedSheet);
+        document()->styleResolver().removeSheet(m_generatedSheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }

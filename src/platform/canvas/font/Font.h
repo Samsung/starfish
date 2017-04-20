@@ -17,7 +17,7 @@
 #ifndef __Font__
 #define __Font__
 
-#include "layout/LayoutUtil.h"
+#include "StarFishConfig.h"
 
 namespace StarFish {
 

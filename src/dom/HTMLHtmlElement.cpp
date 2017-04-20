@@ -14,22 +14,40 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
-#include "dom/HTMLAudioElement.h"
+#include "dom/HTMLHtmlElement.h"
+#include "style/ComputedStyle.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
-String* HTMLAudioElement::localName()
+String* HTMLHtmlElement::localName()
 {
     return document()
         ->window()
         ->starFish()
         ->staticStrings()
-        ->m_audioTagName.localName();
+        ->m_htmlTagName.localName();
 }
 
-QualifiedName HTMLAudioElement::name()
+QualifiedName HTMLHtmlElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_audioTagName;
+    return document()->window()->starFish()->staticStrings()->m_htmlTagName;
+}
+
+void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
+                                              ComputedStyle* newStyle)
+{
+    HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
+    if (!newStyle->backgroundColor().isTransparent() ||
+        !newStyle->backgroundImage()->equals(String::emptyString)) {
+        document()->window()->m_hasRootElementBackground = true;
+    } else {
+        document()->window()->m_hasRootElementBackground = false;
+    }
+
+    if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
+        document()->setNeedsFrameTreeBuild();
+    }
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,8 +14,16 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "HistoryEntry.h"
+#include "style/BorderImage.h"
+#include "loader/ImageResource.h"
+#include "platform/canvas/image/ImageData.h"
 
 namespace StarFish {
+ImageData* BorderImage::imageData()
+{
+    if (!isNull() && data()->m_imageResource) {
+        return data()->m_imageResource->imageData();
+    }
+    return NULL;
+}
 }

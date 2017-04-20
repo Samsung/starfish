@@ -19,8 +19,6 @@
 #define __StarFishAVPLAY__
 
 #include "binding/ScriptWrappable.h"
-#include "platform/window/Window.h"
-#include "dom/Document.h"
 #include <media/player.h>
 
 namespace StarFish {

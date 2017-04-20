@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ElementResourceClient.h"
-
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/Element.h"
+#include "dom/Event.h"
+#include "loader/ElementResourceClient.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/window/Window.h"
-#include "dom/Element.h"
-#include "dom/Document.h"
 
 namespace StarFish {
 

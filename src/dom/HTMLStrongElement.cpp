@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
+#include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLStrongElement.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLStrongElement::localName()

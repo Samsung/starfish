@@ -16,10 +16,10 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"
+#include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
 
 namespace StarFish {

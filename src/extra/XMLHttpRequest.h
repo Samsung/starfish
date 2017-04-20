@@ -17,15 +17,13 @@
 #ifndef __StarFishXMLHttpRequest__
 #define __StarFishXMLHttpRequest__
 
-#include "binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/network/NetworkRequest.h"
-#include "util/TextConverter.h"
-#include "extra/Blob.h"
 
 namespace StarFish {
 
 class Blob;
+class Document;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
@@ -70,9 +68,9 @@ public:
         return true;
     }
 
-    NetworkRequest& networkRequest()
+    NetworkRequest* networkRequest()
     {
-        return *m_networkRequest;
+        return m_networkRequest;
     }
 
     // https://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute

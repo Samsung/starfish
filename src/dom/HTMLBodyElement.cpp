@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Document.h"
-#include "HTMLBodyElement.h"
+#include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/HTMLBodyElement.h"
+#include "platform/window/Window.h"
+#include "style/ComputedStyle.h"
 
 namespace StarFish {
 

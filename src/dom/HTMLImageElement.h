@@ -18,9 +18,11 @@
 #define __StarFishHTMLImageElement__
 
 #include "dom/HTMLElement.h"
-#include "loader/ImageResource.h"
 
 namespace StarFish {
+
+class ImageData;
+class ImageResource;
 
 class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;

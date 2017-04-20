@@ -15,7 +15,6 @@
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
 #include "dom/DOMException.h"

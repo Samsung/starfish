@@ -17,7 +17,6 @@
 #ifndef __StarFishDOMPointReadOnly__
 #define __StarFishDOMPointReadOnly__
 
-#include "util/String.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {

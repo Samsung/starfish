@@ -42,13 +42,14 @@
 #ifndef __StarFishHTMLElementStack__
 #define __StarFishHTMLElementStack__
 
-#include "dom/parser/HTMLStackItem.h"
+#include "StarFishConfig.h"
 
 namespace StarFish {
 
 class DocumentFragment;
 class Element;
-class QualifiedName;
+class Node;
+class HTMLStackItem;
 
 // NOTE: The HTML5 spec uses a backwards (grows downward) stack. We're using
 // more standard (grows upwards) stack terminology here.
@@ -60,14 +61,8 @@ public:
     class ElementRecord : public gc {
     public:
         ~ElementRecord();
-        Element* element() const
-        {
-            return m_item->element();
-        }
-        Node* node() const
-        {
-            return m_item->node();
-        }
+        Element* element() const;
+        Node* node() const;
         HTMLStackItem* stackItem() const
         {
             return m_item;
@@ -104,24 +99,9 @@ public:
 
     // Inlining this function is a (small) performance win on the parsing
     // benchmark.
-    Element* top() const
-    {
-        STARFISH_ASSERT(m_top->element());
-        return m_top->element();
-    }
-
-    Node* topNode() const
-    {
-        ASSERT(m_top->node());
-        return m_top->node();
-    }
-
-    HTMLStackItem* topStackItem() const
-    {
-        ASSERT(m_top->stackItem());
-        return m_top->stackItem();
-    }
-
+    Element* top() const;
+    Node* topNode() const;
+    HTMLStackItem* topStackItem() const;
     HTMLStackItem* oneBelowTop() const;
     ElementRecord* topRecord() const;
     ElementRecord* find(Element*) const;

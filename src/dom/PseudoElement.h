@@ -18,6 +18,8 @@
 #define __StarFishPseudoElement__
 
 #include "Element.h"
+#include "style/ComputedStyle.h"
+#include "style/Style.h"
 
 namespace StarFish {
 
