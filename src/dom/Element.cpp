@@ -190,6 +190,19 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // only few html elements are affected by name attribute changing
         document()->invalidNamedAccessCacheIfNeeded();
     }
+
+    // The 'content' property is used with ::before and ::after pseudo-elements
+    // to generate content in a document. This property supports attr(X)
+    // function and this function returns as a string the value of attribute X.
+    // Since these pseudo-elements are generated during the creation of the
+    // frame tree, if the attribute is changed, the frame tree of the
+    // corresponding node should be rebuilt.
+    if (hasPseudoElement(
+            StyleResolver::PseudoElementType::PseudoElementBefore) ||
+        hasPseudoElement(
+            StyleResolver::PseudoElementType::PseudoElementAfter)) {
+        setNeedsFrameTreeBuild();
+    }
 }
 
 LayoutRect Element::clientRect()

@@ -370,11 +370,12 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
             pseudoFrame = findPseudoFrameForTable(
                 tableRowFrame, pseudoElement->isBeforePseudoElement());
         } else if (ComputedStyle::isDisplayTableValueType(parentDisplay) &&
-                   !ctx.currentBlockContainer()->isFrameTableCellBox()) {
-            // Table has its own frame tree builder.
-            // FrameTreeBuilder::buildTree is called to generate frames that is
-            // not related to the table in FrameTableCellBox.
-            // Thus, duplicated frames for the pseudo-element can be created.
+                   !(ctx.currentBlockContainer()->isFrameTableCaptionBox() ||
+                     ctx.currentBlockContainer()->isFrameTableCellBox())) {
+            // Table has its own frame tree builder. FrameTreeBuilder::buildTree
+            // is called to generate frames that is not related to the table in
+            // FrameTableCellBox and FrameTableCaptionBox. Thus, duplicated
+            // frames for the pseudo-element can be created.
             return;
         } else if (parent->frame()->isFrameBlockBox()) {
             FrameBlockBox* pre = ctx.currentBlockContainer();
