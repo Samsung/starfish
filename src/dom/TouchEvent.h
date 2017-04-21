@@ -24,8 +24,7 @@ namespace StarFish {
 
 class TouchEvent : public UIEvent {
 public:
-    TouchEvent(String* eventType,
-               const EventInit& init = EventInit(false, false))
+    TouchEvent(String* eventType, const UIEventInit& init = UIEventInit())
         : UIEvent(eventType, init)
     {
     }

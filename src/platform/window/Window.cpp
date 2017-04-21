@@ -1497,10 +1497,10 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         Event* e;
         if (isMobile) {
             eventType = starFish()->staticStrings()->m_touchstart.localName();
-            e = new TouchEvent(eventType, EventInit(true, true));
+            e = new TouchEvent(eventType, UIEventInit(true, true));
         } else {
             eventType = starFish()->staticStrings()->m_mousedown.localName();
-            e = new MouseEvent(eventType, EventInit(true, true));
+            e = new MouseEvent(eventType, MouseEventInit(true, true));
         }
 
         if (m_activeNodes.size() > 0) {
@@ -1533,7 +1533,8 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
 
                 String* eventType =
                     starFish()->staticStrings()->m_mouseover.localName();
-                Event* e = new MouseEvent(eventType, EventInit(true, true));
+                Event* e =
+                    new MouseEvent(eventType, MouseEventInit(true, true));
 
                 if (t) {
                     EventTarget::dispatchEvent(t, e);
@@ -1547,10 +1548,10 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         Event* e;
         if (isMobile) {
             eventType = starFish()->staticStrings()->m_touchmove.localName();
-            e = new TouchEvent(eventType, EventInit(true, true));
+            e = new TouchEvent(eventType, UIEventInit(true, true));
         } else {
             eventType = starFish()->staticStrings()->m_mousemove.localName();
-            e = new MouseEvent(eventType, EventInit(true, true));
+            e = new MouseEvent(eventType, MouseEventInit(true, true));
         }
 
         if (t) {
@@ -1583,14 +1584,14 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
             String* eventType2;
             Event* e2;
             if (isMobile) {
-                e = new TouchEvent(eventType, EventInit(true, true));
+                e = new TouchEvent(eventType, UIEventInit(true, true));
                 eventType2 =
                     starFish()->staticStrings()->m_touchend.localName();
-                e2 = new TouchEvent(eventType2, EventInit(true, true));
+                e2 = new TouchEvent(eventType2, UIEventInit(true, true));
             } else {
-                e = new MouseEvent(eventType, EventInit(true, true));
+                e = new MouseEvent(eventType, MouseEventInit(true, true));
                 eventType2 = starFish()->staticStrings()->m_mouseup.localName();
-                e2 = new MouseEvent(eventType2, EventInit(true, true));
+                e2 = new MouseEvent(eventType2, MouseEventInit(true, true));
             }
 
             if (t) {
@@ -1625,7 +1626,8 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
-    KeyboardEvent* e = new KeyboardEvent(eventType, key, EventInit(true, true));
+    KeyboardEvent* e =
+        new KeyboardEvent(eventType, key, KeyboardEventInit(true, true));
 
     if (e->ctrlKey()) {
         m_ctrlKeyDown = kind == KeyEventKind::KeyEventDown ? m_ctrlKeyDown + 1

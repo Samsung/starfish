@@ -1,11 +1,18 @@
-// https://www.w3.org/TR/touch-events/#touchevent-interface
+// https://w3c.github.io/touch-events/#touchevent-interface
+[Unimplemented]
+dictionary TouchEventInit : EventModifierInit {
+    sequence<Touch> touches = [];
+    sequence<Touch> targetTouches = [];
+    sequence<Touch> changedTouches = [];
+};
 
+[UnimplementedConstructor(DOMString type, optional TouchEventInit eventInitDict)]
 interface TouchEvent : UIEvent {
-  [Unimplemented] readonly attribute TouchList touches;
-  [Unimplemented] readonly attribute TouchList targetTouches;
-  [Unimplemented] readonly attribute TouchList changedTouches;
-  [Unimplemented] readonly attribute boolean altKey;
-  [Unimplemented] readonly attribute boolean metaKey;
-  [Unimplemented] readonly attribute boolean ctrlKey;
-  [Unimplemented] readonly attribute boolean shiftKey;
+    [Unimplemented] readonly attribute TouchList touches;
+    [Unimplemented] readonly attribute TouchList targetTouches;
+    [Unimplemented] readonly attribute TouchList changedTouches;
+    [Unimplemented] readonly attribute boolean   altKey;
+    [Unimplemented] readonly attribute boolean   metaKey;
+    [Unimplemented] readonly attribute boolean   ctrlKey;
+    [Unimplemented] readonly attribute boolean   shiftKey;
 };

@@ -20,11 +20,48 @@
 #include "UIEvent.h"
 
 namespace StarFish {
+struct MouseEventInit : EventModifierInit {
+public:
+    MouseEventInit();
+
+    // Constructor for internal use
+    MouseEventInit(bool bubbles);
+    MouseEventInit(bool bubbles, bool cancelable);
+
+    int32_t screenX() const;
+    void setScreenX(int32_t screenX);
+
+    int32_t screenY() const;
+    void setScreenY(int32_t screenY);
+
+    int32_t clientX() const;
+    void setClientX(int32_t clientX);
+
+    int32_t clientY() const;
+    void setClientY(int32_t clientY);
+
+    short button() const;
+    void setButton(short button);
+
+    unsigned short buttons() const;
+    void setButtons(unsigned short buttons);
+
+    EventTarget* relatedTarget() const;
+    void setRelatedTarget(EventTarget* relatedTarget);
+
+private:
+    int32_t m_screenX;
+    int32_t m_screenY;
+    int32_t m_clientX;
+    int32_t m_clientY;
+    short m_button;
+    unsigned short m_buttons;
+    EventTarget* m_relatedTarget;
+};
 
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(String* eventType,
-               const EventInit& init = EventInit(false, false))
+    MouseEvent(String* eventType, const MouseEventInit& init = MouseEventInit())
         : UIEvent(eventType, init)
     {
     }
