@@ -36,9 +36,4 @@ void Attr::setValue(String* value)
         m_standAloneValue = value;
     }
 }
-
-Node* Attr::clone()
-{
-    return (Node*)(new Attr(document(), m_qname, value()));
-}
 }

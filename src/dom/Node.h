@@ -228,7 +228,7 @@ public:
 
     bool isDescendantOf(const Node* other);
 
-    virtual Node* cloneNode(bool deep = false);
+    Node* cloneNode(bool deep = false);
 
     unsigned short compareDocumentPosition(const Node* other);
 

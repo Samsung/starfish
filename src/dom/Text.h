@@ -57,7 +57,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual Node* clone()
+    virtual Node* clone() override
     {
         return new Text(document(), data());
     }

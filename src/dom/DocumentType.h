@@ -59,6 +59,11 @@ public:
         return name();
     }
 
+    virtual Node* clone() override
+    {
+        return new DocumentType(document(), m_name, m_publicId, m_systemId);
+    }
+
     virtual Element* parentElement()
     {
         return nullptr;
@@ -80,13 +85,6 @@ public:
     virtual bool isDocumentType() const override
     {
         return true;
-    }
-
-    virtual Node* clone()
-    {
-        DocumentType* n =
-            new DocumentType(document(), m_name, m_publicId, m_systemId);
-        return n;
     }
 
     void remove()

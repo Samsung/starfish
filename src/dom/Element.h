@@ -73,6 +73,8 @@ public:
         return ELEMENT_NODE;
     }
 
+    virtual Node* clone() override;
+
 #ifdef STARFISH_ENABLE_TEST
     String* innerHTML();
     void setInnerHTML(String*);
@@ -276,7 +278,6 @@ protected:
     {
         return (GCVector<Attribute>*)&m_attributes;
     }
-    virtual Node* clone();
 
     CSSStyleDeclaration* m_inlineStyle;
 
