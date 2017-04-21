@@ -1,0 +1,15 @@
+// https://html.spec.whatwg.org/multipage/#navigatorid
+[PartialInterface,
+ NoInterfaceObject,
+ Exposed=(Window,Worker)]
+interface NavigatorID {
+  readonly attribute DOMString appCodeName; // constant "Mozilla"
+  readonly attribute DOMString appName; // constant "Netscape"
+  readonly attribute DOMString appVersion;
+  [Unimplemented] readonly attribute DOMString platform;
+  [Unimplemented] readonly attribute DOMString product; // constant "Gecko"
+  [Unimplemented, Exposed=Window] readonly attribute DOMString productSub;
+  readonly attribute DOMString userAgent;
+  [Exposed=Window] readonly attribute DOMString vendor;
+  [Unimplemented, Exposed=Window] readonly attribute DOMString vendorSub; // constant ""
+};
