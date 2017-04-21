@@ -22,14 +22,26 @@
 namespace StarFish {
 
 struct EventInit {
+public:
     EventInit();
+
+    // Constructor for internal use
     EventInit(bool bubbles);
     EventInit(bool bubbles, bool cancelable);
-    EventInit(bool bubbles, bool cancelable, bool composed);
 
-    bool bubbles;
-    bool cancelable;
-    bool composed;
+    bool bubbles() const;
+    void setBubbles(bool bubbles);
+
+    bool cancelable() const;
+    void setCancelable(bool cancelable);
+
+    bool composed() const;
+    void setComposed(bool composed);
+
+private:
+    bool m_bubbles;
+    bool m_cancelable;
+    bool m_composed;
 };
 
 class Event : public ScriptWrappable {
@@ -43,7 +55,7 @@ public:
     };
 
     Event();
-    Event(String* eventType, const EventInit& init = EventInit(false, false));
+    Event(String* eventType, const EventInit& init = EventInit());
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

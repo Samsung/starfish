@@ -37,3 +37,12 @@ interface KeyboardEvent : UIEvent {
   readonly attribute unsigned long keyCode;
   [Unimplemented] readonly attribute unsigned long which;
 };
+
+// https://w3c.github.io/uievents/#idl-keyboardeventinit
+dictionary KeyboardEventInit : EventModifierInit {
+  DOMString key = "";
+  DOMString code = "";
+  unsigned long location = 0;
+  boolean repeat = false;
+  boolean isComposing = false;
+};

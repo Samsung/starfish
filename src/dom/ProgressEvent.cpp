@@ -19,27 +19,57 @@
 namespace StarFish {
 
 ProgressEventInit::ProgressEventInit()
-    : lengthComputable(false)
-    , loaded(0)
-    , total(0)
+    : EventInit()
+    , m_lengthComputable(false)
+    , m_loaded(0)
+    , m_total(0)
 {
 }
 
 ProgressEventInit::ProgressEventInit(bool b, bool c, bool lengthComputable,
-                                     unsigned long long loaded,
-                                     unsigned long long total)
+                                     uint64_t loaded, uint64_t total)
     : EventInit(b, c)
-    , lengthComputable(lengthComputable)
-    , loaded(loaded)
-    , total(total)
+    , m_lengthComputable(lengthComputable)
+    , m_loaded(loaded)
+    , m_total(total)
 {
+}
+
+bool ProgressEventInit::lengthComputable() const
+{
+    return m_lengthComputable;
+}
+
+void ProgressEventInit::setLengthComputable(bool lengthComputable)
+{
+    m_lengthComputable = lengthComputable;
+}
+
+uint64_t ProgressEventInit::loaded() const
+{
+    return m_loaded;
+}
+
+void ProgressEventInit::setLoaded(uint64_t loaded)
+{
+    m_loaded = loaded;
+}
+
+uint64_t ProgressEventInit::total() const
+{
+    return m_total;
+}
+
+void ProgressEventInit::setTotal(uint64_t total)
+{
+    m_total = total;
 }
 
 ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
     : Event(eventType, init)
-    , m_lengthComputable(init.lengthComputable)
-    , m_loaded(init.loaded)
-    , m_total(init.total)
+    , m_lengthComputable(init.lengthComputable())
+    , m_loaded(init.loaded())
+    , m_total(init.total())
 {
     initScriptWrappable(this);
 }

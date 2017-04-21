@@ -19,34 +19,28 @@
 namespace StarFish {
 
 FocusEventInit::FocusEventInit()
-    : FocusEventInit(false, false, false, nullptr)
-{
-}
-
-FocusEventInit::FocusEventInit(Node* relatedTarget)
-    : FocusEventInit(false, false, false, relatedTarget)
+    : FocusEventInit(false)
 {
 }
 
 FocusEventInit::FocusEventInit(bool bubbles)
-    : FocusEventInit(bubbles, false, false, nullptr)
+    : FocusEventInit(bubbles, false)
 {
 }
 
 FocusEventInit::FocusEventInit(bool bubbles, bool cancelable)
-    : FocusEventInit(bubbles, cancelable, false, nullptr)
+    : UIEventInit(bubbles, cancelable)
+    , m_relatedTarget(nullptr)
 {
 }
 
-FocusEventInit::FocusEventInit(bool bubbles, bool cancelable, bool composed)
-    : FocusEventInit(bubbles, cancelable, composed, nullptr)
+Node* FocusEventInit::relatedTarget() const
 {
+    return m_relatedTarget;
 }
 
-FocusEventInit::FocusEventInit(bool bubbles, bool cancelable, bool composed,
-                               Node* relatedTarget)
-    : EventInit(bubbles, cancelable, composed)
-    , relatedTarget(relatedTarget)
+void FocusEventInit::setRelatedTarget(Node* relatedTarget)
 {
+    m_relatedTarget = relatedTarget;
 }
 }

@@ -22,20 +22,32 @@
 namespace StarFish {
 
 struct ProgressEventInit : public EventInit {
+public:
     ProgressEventInit();
-    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable,
-                      unsigned long long loaded, unsigned long long total);
 
-    bool lengthComputable;
-    unsigned long long loaded;
-    unsigned long long total;
+    // For internal use
+    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable,
+                      uint64_t loaded, uint64_t total);
+
+    bool lengthComputable() const;
+    void setLengthComputable(bool lengthComputable);
+
+    uint64_t loaded() const;
+    void setLoaded(uint64_t loaded);
+
+    uint64_t total() const;
+    void setTotal(uint64_t total);
+
+private:
+    bool m_lengthComputable;
+    uint64_t m_loaded;
+    uint64_t m_total;
 };
 
 class ProgressEvent : public Event {
 public:
     ProgressEvent(String* eventType,
-                  const ProgressEventInit& init =
-                      ProgressEventInit(false, false, false, 0, 0));
+                  const ProgressEventInit& init = ProgressEventInit());
 
     bool lengthComputable() const
     {

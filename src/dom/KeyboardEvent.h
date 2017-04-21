@@ -38,10 +38,41 @@ namespace StarFish {
 #define KEYBOARD_KEYCODE_0 48
 #define KEYBOARD_KEYCODE_a 65
 
+struct KeyboardEventInit : EventModifierInit {
+public:
+    KeyboardEventInit();
+
+    // Constructor for internal use
+    KeyboardEventInit(bool bubbles);
+    KeyboardEventInit(bool bubbles, bool cancelable);
+
+    String* key() const;
+    void setKey(String* key);
+
+    String* code() const;
+    void setCode(String* code);
+
+    uint32_t location() const;
+    void setLocation(uint32_t location);
+
+    bool repeat() const;
+    void setRepeat(bool repeat);
+
+    bool isComposing() const;
+    void setIsComposing(bool isComposing);
+
+private:
+    String* m_key;
+    String* m_code;
+    uint32_t m_location;
+    bool m_repeat;
+    bool m_isComposing;
+};
+
 class KeyboardEvent : public UIEvent {
 public:
     KeyboardEvent(String* eventType, String* key,
-                  const EventInit& init = EventInit(false, false))
+                  const KeyboardEventInit& init = KeyboardEventInit())
         : UIEvent(eventType, init)
         , m_metaKey(false)
     {

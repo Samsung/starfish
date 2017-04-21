@@ -21,16 +21,19 @@
 
 namespace StarFish {
 
-struct FocusEventInit : EventInit {
+struct FocusEventInit : UIEventInit {
+public:
     FocusEventInit();
-    FocusEventInit(Node* relatedTarget);
+
+    // Constructor for internal use
     FocusEventInit(bool bubbles);
     FocusEventInit(bool bubbles, bool cancelable);
-    FocusEventInit(bool bubbles, bool cancelable, bool composed);
-    FocusEventInit(bool bubbles, bool cancelable, bool composed,
-                   Node* relatedTarget);
 
-    Node* relatedTarget;
+    Node* relatedTarget() const;
+    void setRelatedTarget(Node* relatedTarget);
+
+private:
+    Node* m_relatedTarget;
 };
 
 class FocusEvent : public UIEvent {

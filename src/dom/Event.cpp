@@ -20,25 +20,50 @@
 namespace StarFish {
 
 EventInit::EventInit()
-    : EventInit(false, false, false)
+    : EventInit(false)
 {
 }
 
 EventInit::EventInit(bool bubbles)
-    : EventInit(bubbles, false, false)
+    : EventInit(bubbles, false)
 {
 }
 
 EventInit::EventInit(bool bubbles, bool cancelable)
-    : EventInit(bubbles, cancelable, false)
+    : m_bubbles(bubbles)
+    , m_cancelable(cancelable)
+    , m_composed(false)
 {
 }
 
-EventInit::EventInit(bool bubbles, bool cancelable, bool composed)
-    : bubbles(bubbles)
-    , cancelable(cancelable)
-    , composed(composed)
+bool EventInit::bubbles() const
 {
+    return m_bubbles;
+}
+
+void EventInit::setBubbles(bool bubbles)
+{
+    m_bubbles = bubbles;
+}
+
+bool EventInit::cancelable() const
+{
+    return m_cancelable;
+}
+
+void EventInit::setCancelable(bool cancelable)
+{
+    m_cancelable = cancelable;
+}
+
+bool EventInit::composed() const
+{
+    return m_composed;
+}
+
+void EventInit::setComposed(bool composed)
+{
+    m_composed = composed;
 }
 
 Event::Event()
@@ -55,8 +80,8 @@ Event::Event(String* eventType, const EventInit& init)
     , m_eventPhase(0)
     , m_propagationStopped(false)
     , m_immediatePropagationStopped(false)
-    , m_bubbles(init.bubbles)
-    , m_cancelable(init.cancelable)
+    , m_bubbles(init.bubbles())
+    , m_cancelable(init.cancelable())
     , m_defaultPrevented(false)
     , m_isDispatched(false)
 {
