@@ -278,6 +278,11 @@ public:
     {
     }
 
+    Nullable(nullptr_t value)
+        : m_hasValue(false)
+    {
+    }
+
     T getValue()
     {
         STARFISH_ASSERT(m_hasValue);

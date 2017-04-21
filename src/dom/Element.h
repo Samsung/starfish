@@ -73,8 +73,6 @@ public:
         return ELEMENT_NODE;
     }
 
-    virtual void setTextContent(String* text) override;
-
 #ifdef STARFISH_ENABLE_TEST
     String* innerHTML();
     void setInnerHTML(String*);

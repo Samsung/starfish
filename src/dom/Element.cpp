@@ -300,18 +300,6 @@ DOMRect* Element::getBoundingClientRect()
     return rect;
 }
 
-void Element::setTextContent(String* text)
-{
-    Text* node = new Text(document(), text);
-
-    while (firstChild()) {
-        removeChild(firstChild());
-    }
-    if (!text->equals(String::emptyString)) {
-        appendChild(node);
-    }
-}
-
 #ifdef STARFISH_ENABLE_TEST
 String* Element::innerHTML()
 {

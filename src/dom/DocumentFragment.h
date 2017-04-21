@@ -40,7 +40,6 @@ public:
     }
 
     virtual String* nodeName();
-    virtual void setTextContent(String* val) override;
 
     virtual Node* clone();
 

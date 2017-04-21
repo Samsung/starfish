@@ -4255,10 +4255,15 @@ static bool isEmpty(Element* element)
 {
     Node* child = element->firstChild();
     while (child) {
-        if (child->isElement() ||
-            (child->isText() && child->asText()->textContent()->length() > 0)) {
+        if (child->isElement()) {
             return false;
+        } else if (child->isText()) {
+            STARFISH_ASSERT(child->asText()->textContent().hasValue());
+            if (child->textContent().getValue()->length() > 0) {
+                return false;
+            }
         }
+
         child = child->nextSibling();
     }
 
