@@ -184,6 +184,7 @@ public:
     HTMLHtmlElement* rootElement();
     HTMLHeadElement* head();
     HTMLBodyElement* body();
+    void setBody(HTMLElement* element);
 
     DECLARE_EVENT_LISTENER(click);
     DECLARE_EVENT_LISTENER(mouseover);

@@ -293,22 +293,11 @@ static ESValue containsFunction(ESVMInstance* instance)
 
 static ESValue appendChildFunction(ESVMInstance* instance)
 {
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
     try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF_WITH_ERRCODE(thisValue, Node, instance,
-                                  DOMException::HIERARCHY_REQUEST_ERR);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        Node* child = (Node*)instance->currentExecutionContext()
-                          ->readArgument(0)
-                          .asESPointer()
-                          ->asESObject()
-                          ->extraPointerData();
-        obj->appendChild(child);
-        return child->scriptValue();
+        originalObj->appendChild(val0);
+        return val0->scriptValue();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -317,22 +306,11 @@ static ESValue appendChildFunction(ESVMInstance* instance)
 
 static ESValue removeChildFunction(ESVMInstance* instance)
 {
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
     try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF_WITH_ERRCODE(thisValue, Node, instance,
-                                  DOMException::NOT_FOUND_ERR);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        Node* child = (Node*)instance->currentExecutionContext()
-                          ->readArgument(0)
-                          .asESPointer()
-                          ->asESObject()
-                          ->extraPointerData();
-        Node* n = obj->removeChild(child);
-        return n->scriptValue();
+        Node* result = originalObj->removeChild(val0);
+        return result->scriptValue();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -341,28 +319,12 @@ static ESValue removeChildFunction(ESVMInstance* instance)
 
 static ESValue replaceChildFunction(ESVMInstance* instance)
 {
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
+    GENERATE_ARG_AND_CHECK_TYPE(1, Node);
     try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     Node);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1),
-                     Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        Node* node = (Node*)instance->currentExecutionContext()
-                         ->readArgument(0)
-                         .asESPointer()
-                         ->asESObject()
-                         ->extraPointerData();
-        Node* child = (Node*)instance->currentExecutionContext()
-                          ->readArgument(1)
-                          .asESPointer()
-                          ->asESObject()
-                          ->extraPointerData();
-        Node* n = obj->replaceChild(node, child);
-        return n->scriptValue();
+        Node* result = originalObj->replaceChild(val0, val1);
+        return result->scriptValue();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -371,30 +333,12 @@ static ESValue replaceChildFunction(ESVMInstance* instance)
 
 static ESValue insertBeforeFunction(ESVMInstance* instance)
 {
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
+    GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(1, Node);
     try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0),
-                     Node);
-        Node* node = (Node*)instance->currentExecutionContext()
-                         ->readArgument(0)
-                         .asESPointer()
-                         ->asESObject()
-                         ->extraPointerData();
-
-        ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
-        Node* child = nullptr;
-        if (!arg2.isNull()) {
-            CHECK_TYPEOF(arg2, Node);
-            child = (Node*)arg2.asESPointer()->asESObject()->extraPointerData();
-        }
-
-        Node* n = obj->insertBefore(node, child);
-        return n->scriptValue();
+        Node* result = originalObj->insertBefore(val0, val1);
+        return result->scriptValue();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         return ESValue(ESValue::ESNull);
