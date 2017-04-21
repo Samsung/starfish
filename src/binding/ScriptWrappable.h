@@ -31,6 +31,13 @@ class ScriptBindingInstanceDataEscargot;
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 const uint32_t kEventStringAttributeCheckMagic = 0x0ffe;
 
+// https://heycam.github.io/webidl/#common-DOMTimeStamp
+typedef unsigned long long DOMTimeStamp;
+
+typedef ESValue ScriptValue;
+typedef ESObject* ScriptObject;
+typedef ESFunctionObject* ScriptFunction;
+
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     ESObject* obj, ESString* propertyName, NativeFunctionType getter,
     NativeFunctionType setter, bool isEnumerable = true,
@@ -48,12 +55,19 @@ ESValue toJSString(String* v);
 ESValue defaultFunction(ESVMInstance* instance);
 ESValue errorOnConstructorFunction(ESVMInstance* instance);
 
-// https://heycam.github.io/webidl/#common-DOMTimeStamp
-typedef unsigned long long DOMTimeStamp;
+ScriptValue createScriptString(String* str);
+ScriptValue createScriptFunction(String** argNames, size_t argc,
+                                 String* functionBody, bool& error);
+ScriptValue createAttributeStringEventFunction(Element* target,
+                                               String* functionBody,
+                                               bool& result);
+ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
+                               ScriptValue thisValue);
+ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
+ScriptValue parseJSON(String* jsonData);
+String* jsonStringify(ESValue);
 
-typedef ESValue ScriptValue;
-typedef ESObject* ScriptObject;
-typedef ESFunctionObject* ScriptFunction;
+bool isCallableScriptValue(ScriptValue v);
 
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(Attr)                                         \
@@ -295,118 +309,6 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
         }                                                                  \
     }
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-
-#define DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
-    [](ESVMInstance* instance) -> ESValue {                             \
-        GENERATE_THIS_AND_CHECK_TYPE(Node);                             \
-        Node* nd = originalObj;                                         \
-        if (nd->isElement() && nd->asElement()->isHTMLElement() &&      \
-            nd->asElement()                                             \
-                ->asHTMLElement()                                       \
-                ->isHTML##ElementName##Element()) {                     \
-            HTML##ElementName##Element* __element =                     \
-                nd->asElement()                                         \
-                    ->asHTMLElement()                                   \
-                    ->asHTML##ElementName##Element();                   \
-            RETURN_##TYPE_F(getter)                                     \
-        }                                                               \
-        return ESValue();                                               \
-    }
-
-#define DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F)        \
-    [](ESVMInstance* instance) -> ESValue {                                    \
-        GENERATE_THIS_AND_CHECK_TYPE(Node);                                    \
-        Node* nd = originalObj;                                                \
-        if (nd->isElement() && nd->asElement()->isHTMLElement() &&             \
-            nd->asElement()                                                    \
-                ->asHTMLElement()                                              \
-                ->isHTML##ElementName##Element()) {                            \
-            ESValue v = instance->currentExecutionContext()->readArgument(0);  \
-            HTML##ElementName##Element* __element =                            \
-                nd->asElement()                                                \
-                    ->asHTMLElement()                                          \
-                    ->asHTML##ElementName##Element();                          \
-            try {                                                              \
-                ARG_##TYPE_F(setter) return v;                                 \
-            } catch (DOMException * e) {                                       \
-                ESVMInstance::currentInstance()->throwError(e->scriptValue()); \
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();                         \
-            }                                                                  \
-        }                                                                      \
-        return ESValue();                                                      \
-    }
-
-#define DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(ElementName, getter, setter, \
-                                               TYPE_F)                      \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(                \
-        HTML##ElementName##ElementFunction->protoType()                     \
-            .asESPointer()                                                  \
-            ->asESObject(),                                                 \
-        ESString::create(#getter),                                          \
-        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F),    \
-        DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F));
-
-#define DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(ElementName, getter, TYPE_F) \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(               \
-        HTML##ElementName##ElementFunction->protoType()                    \
-            .asESPointer()                                                 \
-            ->asESObject(),                                                \
-        ESString::create(#getter),                                         \
-        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F),   \
-        nullptr);
-
-#define DEFINE_HTMLELEMENT_EVENT_PROPERTY(ElementName, getter, setter, TYPE_F) \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(                   \
-        HTML##ElementName##ElementFunction->protoType()                        \
-            .asESPointer()                                                     \
-            ->asESObject(),                                                    \
-        ESString::create("on" #getter),                                        \
-        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F),       \
-        DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, getter, TYPE_F));
-
-#define RETURN_TYPE_STRING(getter) return toJSString(__element->getter());
-#define RETURN_TYPE_PRIMITIVE(getter) return ESValue(__element->getter());
-#define RETURN_TYPE_NUMBER(getter) RETURN_TYPE_PRIMITIVE(getter)
-#define RETURN_TYPE_BOOLEAN(getter) RETURN_TYPE_PRIMITIVE(getter)
-#define RETURN_TYPE_SCRIPTVALUE(getter)  \
-    auto __result = __element->getter(); \
-    if (__result) {                      \
-        return __result->scriptValue();  \
-    }
-#define RETURN_TYPE_EVENT(getter)                                  \
-    return __element->attributeEventListener(__element->document() \
-                                                 ->window()        \
-                                                 ->starFish()      \
-                                                 ->staticStrings() \
-                                                 ->m_##getter);
-
-#define ARG_TYPE_STRING(setter) \
-    __element->setter(toBrowserString(v.toString()));
-#define ARG_TYPE_NUMBER(setter)          \
-    double __doubleValue = v.toNumber(); \
-    if (std::isnan(__doubleValue)) {     \
-        THROW_ILLEGAL_INVOCATION();      \
-    }                                    \
-    __element->setter(__doubleValue);
-#define ARG_TYPE_BOOLEAN(setter)          \
-    if (v.isBoolean()) {                  \
-        __element->setter(v.asBoolean()); \
-    }
-#define ARG_TYPE_EVENT(setter)                                        \
-    auto eventType = __element->document()                            \
-                         ->window()                                   \
-                         ->starFish()                                 \
-                         ->staticStrings()                            \
-                         ->m_##setter;                                \
-    if (v.isObject() ||                                               \
-        (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
-        __element->setAttributeEventListener(eventType, v);           \
-    } else {                                                          \
-        __element->clearAttributeEventListener(eventType);            \
-    }
-#endif // STARFISH_ENABLE_MULTIMEDIA
-
 class ScriptWrappable : public gc {
 public:
 #define FOR_EACH_REFLECT_FN(exportName) \
@@ -567,20 +469,6 @@ protected:
     ScriptValue m_scriptValue;
 };
 #endif
-
-ScriptValue createScriptString(String* str);
-ScriptValue createScriptFunction(String** argNames, size_t argc,
-                                 String* functionBody, bool& error);
-ScriptValue createAttributeStringEventFunction(Element* target,
-                                               String* functionBody,
-                                               bool& result);
-ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
-                               ScriptValue thisValue);
-ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
-ScriptValue parseJSON(String* jsonData);
-String* jsonStringify(ESValue);
-
-bool isCallableScriptValue(ScriptValue v);
 }
 
 #endif

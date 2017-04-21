@@ -65,25 +65,27 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-String* HTMLVideoElement::width()
+unsigned long HTMLVideoElement::width()
 {
-    return getAttribute(
+    String* widthStr = getAttribute(
         document()->window()->starFish()->staticStrings()->m_width);
+    return String::parseInt(widthStr);
 }
 
-void HTMLVideoElement::setWidth(int width)
+void HTMLVideoElement::setWidth(unsigned long width)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_width,
                  String::fromInt(width));
 }
 
-String* HTMLVideoElement::height()
+unsigned long HTMLVideoElement::height()
 {
-    return getAttribute(
+    String* heightStr = getAttribute(
         document()->window()->starFish()->staticStrings()->m_height);
+    return String::parseInt(heightStr);
 }
 
-void HTMLVideoElement::setHeight(int height)
+void HTMLVideoElement::setHeight(unsigned long height)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_height,
                  String::fromInt(height));
