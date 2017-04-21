@@ -22,18 +22,6 @@
 
 namespace StarFish {
 
-void DocumentFragment::setTextContent(String* text)
-{
-    Text* node = new Text(document(), text);
-
-    while (firstChild()) {
-        removeChild(firstChild());
-    }
-    if (!text->equals(String::emptyString)) {
-        appendChild(node);
-    }
-}
-
 String* DocumentFragment::nodeName()
 {
     return document()

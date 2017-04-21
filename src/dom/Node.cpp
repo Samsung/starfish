@@ -109,24 +109,95 @@ NodeList* Node::childNodes()
     return rareData->m_childNodeList;
 }
 
-String* Node::textContent()
+Nullable<String*> Node::nodeValue() const
 {
-    if (isDocumentFragment() || isElement()) {
+    switch (nodeType()) {
+    case ATTRIBUTE_NODE:
+        return asAttr()->value();
+    case TEXT_NODE:
+    case COMMENT_NODE:
+        return asCharacterData()->data();
+    default:
+        return nullptr;
+    }
+}
+
+void Node::setNodeValue(Nullable<String*> val)
+{
+    String* str = String::emptyString;
+    if (val.hasValue()) {
+        str = val.getValue();
+    }
+
+    switch (nodeType()) {
+    case ATTRIBUTE_NODE:
+        asAttr()->setValue(str);
+        break;
+    case TEXT_NODE:
+    case COMMENT_NODE:
+        asCharacterData()->setData(str);
+        break;
+    default:
+        break;
+    }
+}
+
+Nullable<String*> Node::textContent() const
+{
+    switch (nodeType()) {
+    case DOCUMENT_FRAGMENT_NODE:
+    case ELEMENT_NODE: {
         String* str = String::emptyString;
         for (Node* child = firstChild(); child != nullptr;
              child = child->nextSibling()) {
             if (child->isText() || child->isElement()) {
-                str = str->concat(child->textContent());
+                STARFISH_ASSERT(child->textContent().hasValue());
+                str = str->concat(child->textContent().getValue());
             }
         }
         return str;
-    } else if (isAttr()) {
+    }
+    case ATTRIBUTE_NODE:
         return asAttr()->value();
-    } else if (isText() || isComment()) {
+    case TEXT_NODE:
+    case COMMENT_NODE:
         return asCharacterData()->data();
+    default:
+        return nullptr;
+    }
+}
+
+void Node::setTextContent(Nullable<String*> val)
+{
+    String* str = String::emptyString;
+    if (val.hasValue()) {
+        str = val.getValue();
     }
 
-    return nullptr;
+    switch (nodeType()) {
+    case DOCUMENT_FRAGMENT_NODE:
+    case ELEMENT_NODE: {
+        Text* node = new Text(document(), str);
+
+        while (firstChild()) {
+            removeChild(firstChild());
+        }
+
+        if (!str->equals(String::emptyString)) {
+            appendChild(node);
+        }
+        break;
+    }
+    case ATTRIBUTE_NODE:
+        asAttr()->setValue(str);
+        break;
+    case TEXT_NODE:
+    case COMMENT_NODE:
+        asCharacterData()->setData(str);
+        break;
+    default:
+        break;
+    }
 }
 
 Node* Node::cloneNode(bool deep)
@@ -180,7 +251,9 @@ bool Node::isEqualNode(Node* other)
         break;
     case TEXT_NODE:
     case COMMENT_NODE:
-        if (!nodeValue()->equals(other->nodeValue())) {
+        STARFISH_ASSERT(nodeValue().hasValue());
+        STARFISH_ASSERT(other->nodeValue().hasValue());
+        if (!nodeValue().getValue()->equals(other->nodeValue().getValue())) {
             return false;
         }
         break;

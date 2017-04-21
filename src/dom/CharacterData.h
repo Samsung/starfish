@@ -37,23 +37,6 @@ public:
         return true;
     }
 
-    /* 4.4 Interface Node */
-
-    virtual String* nodeValue() const override
-    {
-        return data();
-    }
-
-    virtual void setNodeValue(String* val) override
-    {
-        setData(val);
-    }
-
-    virtual void setTextContent(String* val) override
-    {
-        setData(val);
-    }
-
     /* 4.9. Interface CharacterData */
 
     String* data() const
@@ -69,9 +52,7 @@ public:
 
     void setData(String* data)
     {
-        if (data == nullptr) {
-            data = String::emptyString;
-        }
+        STARFISH_ASSERT(data);
         String* oldData = m_data;
         m_data = data;
 
@@ -82,7 +63,7 @@ public:
         });
     }
 
-    size_t length()
+    size_t length() const
     {
         return m_data->length();
     }

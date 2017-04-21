@@ -216,16 +216,13 @@ public:
         return m_nextSibling;
     }
 
-    virtual String* nodeValue() const
-    {
-        return nullptr;
-    }
+    Nullable<String*> nodeValue() const;
 
-    virtual void setNodeValue(String* val){};
+    void setNodeValue(Nullable<String*> newVal);
 
-    String* textContent();
+    Nullable<String*> textContent() const;
 
-    virtual void setTextContent(String* val){};
+    void setTextContent(Nullable<String*> val);
 
     bool isEqualNode(Node* other);
 

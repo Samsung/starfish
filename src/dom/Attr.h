@@ -96,21 +96,6 @@ public:
         return m_qname.localName();
     }
 
-    virtual String* nodeValue() const override
-    {
-        return value();
-    }
-
-    virtual void setNodeValue(String* val) override
-    {
-        setValue(val);
-    }
-
-    virtual void setTextContent(String* val) override
-    {
-        setValue(val);
-    }
-
     virtual Node* clone();
 
     virtual bool isAttr() const override

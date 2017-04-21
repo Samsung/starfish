@@ -26,6 +26,7 @@ namespace StarFish {
 using namespace escargot;
 
 class Document;
+class Element;
 class ScriptBindingInstanceDataEscargot;
 
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;

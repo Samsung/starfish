@@ -155,14 +155,14 @@ static ESValue nodeValueGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     // Declare return value (empty when void)
-    // FIXME temporally use raw String*
-    String* result = String::emptyString;
+    Nullable<String*> result = String::emptyString;
     result = originalObj->nodeValue();
     // Return ESValue from native value
-    if (result == nullptr) {
+    if (!result.hasValue()) {
         return ESValue(ESValue::ESNull);
     }
-    return toJSString(result);
+    String* result_value = result.getValue();
+    return toJSString(result_value);
 }
 
 static ESValue nodeValueSetterFunction(ESVMInstance* instance)
@@ -170,8 +170,7 @@ static ESValue nodeValueSetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
-    // FIXME temporally use raw String*
-    String* value0 = String::emptyString;
+    Nullable<String*> value0;
     if (!arg0.isUndefinedOrNull()) {
         value0 = toBrowserString(arg0);
     }
@@ -183,14 +182,14 @@ static ESValue textContentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     // Declare return value (empty when void)
-    // FIXME temporally use raw String*
-    String* result = String::emptyString;
+    Nullable<String*> result = String::emptyString;
     result = originalObj->textContent();
     // Return ESValue from native value
-    if (result == nullptr) {
+    if (!result.hasValue()) {
         return ESValue(ESValue::ESNull);
     }
-    return toJSString(result);
+    String* result_value = result.getValue();
+    return toJSString(result_value);
 }
 
 static ESValue textContentSetterFunction(ESVMInstance* instance)
@@ -198,8 +197,7 @@ static ESValue textContentSetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
-    // FIXME temporally use raw String*
-    String* value0 = String::emptyString;
+    Nullable<String*> value0;
     if (!arg0.isUndefinedOrNull()) {
         value0 = toBrowserString(arg0);
     }
