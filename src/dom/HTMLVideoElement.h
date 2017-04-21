@@ -46,11 +46,11 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    String* width();
-    void setWidth(int width);
+    unsigned long width();
+    void setWidth(unsigned long width);
 
-    String* height();
-    void setHeight(int height);
+    unsigned long height();
+    void setHeight(unsigned long height);
 
     unsigned long videoWidth();
     unsigned long videoHeight();
