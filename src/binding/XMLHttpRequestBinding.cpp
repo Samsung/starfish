@@ -403,12 +403,12 @@ static ESValue sendFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
-        if (instance->currentExecutionContext()->argumentCount() == 0) {
-            originalObj->send();
-        } else {
-            originalObj->send(toBrowserString(
-                instance->currentExecutionContext()->readArgument(0)));
+        ESValue esbody = instance->currentExecutionContext()->readArgument(0);
+        Nullable<String*> body;
+        if (!esbody.isUndefinedOrNull()) {
+            body = toBrowserString(esbody.toString());
         }
+        originalObj->send(body);
         return ESValue(ESValue::ESNull);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());

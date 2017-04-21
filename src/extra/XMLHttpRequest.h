@@ -80,10 +80,14 @@ public:
     ScriptValue response();
     String* responseText();
 
+    void open(String* method, String* url);
+    void open(String* method, String* url, bool async,
+              Nullable<String*> userName, Nullable<String*> password);
     void open(NetworkRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
-    void send(String* body = String::emptyString);
+    void send(Nullable<String*> body);
+    void send(String* body);
     void abort();
 
     void setTimeout(uint32_t timeout);

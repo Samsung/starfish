@@ -59,6 +59,15 @@ void XMLHttpRequest::initResponseData()
 #endif
 }
 
+void XMLHttpRequest::send(Nullable<String*> body)
+{
+    if (body.hasValue()) {
+        send(body.getValue());
+    } else {
+        send(String::emptyString);
+    }
+}
+
 void XMLHttpRequest::send(String* body)
 {
     if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
@@ -67,6 +76,34 @@ void XMLHttpRequest::send(String* body)
             DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
     m_networkRequest->send(body);
+}
+
+static NetworkRequest::MethodType toMethodType(String* input)
+{
+    String* lowerMethod = input->toLower();
+    if (lowerMethod->equals("post")) {
+        return NetworkRequest::POST_METHOD;
+    } else if (lowerMethod->equals("get")) {
+        return NetworkRequest::GET_METHOD;
+    }
+    return NetworkRequest::UNKNOWN_METHOD;
+}
+
+void XMLHttpRequest::open(String* method, String* url)
+{
+    open(toMethodType(method), url, true, String::emptyString,
+         String::emptyString);
+}
+
+void XMLHttpRequest::open(String* method, String* url, bool async,
+                          Nullable<String*> userName,
+                          Nullable<String*> password)
+{
+    String* uValue =
+        userName.hasValue() ? userName.getValue() : String::emptyString;
+    String* pValue =
+        password.hasValue() ? userName.getValue() : String::emptyString;
+    open(toMethodType(method), url, async, uValue, pValue);
 }
 
 void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url,
@@ -174,6 +211,8 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
 
 void XMLHttpRequest::setRequestHeader(String* h, String* c)
 {
+    h = h->trim();
+    c = c->trim();
     if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
         throw new DOMException(
             m_networkRequest->starFish()->window()->scriptBindingInstance(),

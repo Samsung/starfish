@@ -1,5 +1,11 @@
 // https://w3c.github.io/media-source/#mediasource
 
+enum ReadyState {
+    "closed",
+    "open",
+    "ended"
+};
+
 [STARFISH_ENABLE_MULTIMEDIA, Constructor]
 interface MediaSource : EventTarget {
   readonly attribute SourceBufferList sourceBuffers;

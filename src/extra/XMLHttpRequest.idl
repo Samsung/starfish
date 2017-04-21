@@ -42,13 +42,16 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute unsigned short readyState;
 
   // request
-  void open(ByteString method, DOMString url);
-  void open(ByteString method, DOMString url, boolean async, optional DOMString? username = null, optional DOMString? password = null);
-  void setRequestHeader(ByteString name, ByteString value);
+  [RaisesException] void open(ByteString method, DOMString url);
+  [RaisesException] void open(ByteString method, DOMString url, boolean async, optional DOMString? username = null, optional DOMString? password = null);
+  [RaisesException] void setRequestHeader(ByteString name, ByteString value);
   attribute unsigned long timeout;
   [Unimplemented] attribute boolean withCredentials;
   [Unimplemented, SameObject] readonly attribute XMLHttpRequestUpload upload;
-  void send(optional (Document or BodyInit)? body = null);
+  // NOTE Partial support
+  //      Handle only DOMString
+  // void send(optional (Document or BodyInit)? body = null);
+  [RaisesException] void send(optional DOMString? body = null);
   void abort();
 
   // response
