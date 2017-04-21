@@ -39,22 +39,23 @@ public:
         return m_starFish;
     }
 
-    Error code()
+    Error code() const
     {
         return m_code;
     }
 
-    const char* message()
+    String* message() const
     {
-        if (m_code == 1) {
-            return "Permission denied";
-        } else if (m_code == 2) {
-            return "Position unavailable";
-        } else if (m_code == 3) {
-            return "Timeout expired";
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        switch (m_code) {
+        case PERMISSION_DENIED:
+            return String::createASCIIString("Permission denied");
+        case POSITION_UNAVAILABLE:
+            return String::createASCIIString("Position unavailable");
+        case TIMEOUT:
+            return String::createASCIIString("Timeout expired");
         }
+
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
