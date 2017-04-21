@@ -32,23 +32,15 @@ using namespace escargot;
 ESValue bodyDocumentSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(v, HTMLElement);
-    CHECK_TYPEOF_WITH_ERRCODE(v, HTMLBodyElement, instance,
-                              DOMException::HIERARCHY_REQUEST_ERR);
+    GENERATE_ARG_AND_CHECK_TYPE(0, HTMLElement);
 
-    HTMLBodyElement* body = originalObj->body();
-    HTMLHtmlElement* html = originalObj->rootElement();
-    HTMLBodyElement* newBody =
-        ((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData())
-            ->asHTMLBodyElement();
-
-    if (body) {
-        html->removeChild(body);
+    try {
+        originalObj->setBody(val0);
+        return ESValue();
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    html->appendChild(newBody);
-
-    return ESValue();
 }
 
 ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance)

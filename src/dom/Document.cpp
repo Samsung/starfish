@@ -1104,10 +1104,8 @@ HTMLHtmlElement* Document::rootElement()
     // https://www.w3.org/TR/html-markup/html.html
     Node* n = firstChild();
     while (n) {
-        if (n->isElement() && n->asElement() &&
-            n->asElement()->isHTMLElement() &&
-            n->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
-            return n->asElement()->asHTMLElement()->asHTMLHtmlElement();
+        if (n->isHTMLHtmlElement()) {
+            return n->asHTMLHtmlElement();
         }
         n = n->nextSibling();
     }
@@ -1131,31 +1129,45 @@ Element* Document::documentElement()
 HTMLHeadElement* Document::head()
 {
     Node* head = childMatchedBy(this, [](Node* nd) -> bool {
-        if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-            nd->asElement()->asHTMLElement()->isHTMLHeadElement()) {
+        if (nd->isHTMLHeadElement()) {
             return true;
         }
         return false;
     });
     if (head) {
-        return head->asElement()->asHTMLElement()->asHTMLHeadElement();
+        return head->asHTMLHeadElement();
     }
     return nullptr;
 }
 
 HTMLBodyElement* Document::body()
 {
-    Node* body = childMatchedBy(this, [](Node* nd) -> bool {
-        if (nd->isElement() && nd->asElement()->isHTMLElement() &&
-            nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-            return true;
-        }
-        return false;
-    });
+    Node* body = childMatchedBy(
+        this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     if (body) {
-        return body->asElement()->asHTMLElement()->asHTMLBodyElement();
+        return body->asHTMLBodyElement();
     }
     return nullptr;
+}
+
+void Document::setBody(HTMLElement* element)
+{
+    if (!element->isHTMLBodyElement()) {
+        throw new DOMException(m_document->scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Failed to set the 'body' property on "
+                               "'Document'. It must be either a 'BODY' or "
+                               "'FRAMESET' element.");
+    }
+
+    HTMLBodyElement* body = this->body();
+    HTMLHtmlElement* html = rootElement();
+    HTMLBodyElement* newBody = element->asHTMLBodyElement();
+
+    if (body) {
+        html->removeChild(body);
+    }
+    html->appendChild(newBody);
 }
 
 bool Document::hidden() const

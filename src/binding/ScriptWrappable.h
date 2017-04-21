@@ -253,54 +253,47 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();                           \
     }
 
-#define THROW_DOM_EXCEPTION(instance, errcode)                                 \
-    {                                                                          \
-        auto __sf = ((Window*)instance->globalObject()->extraPointerData());   \
-        auto __err =                                                           \
-            new DOMException(__sf->scriptBindingInstance(), errcode, nullptr); \
-        ESVMInstance::currentInstance()->throwError(__err->scriptValue());     \
+#define CHECK_TYPEOF_INNER(v, type)                                         \
+    (v.isObject() && (v.asESPointer()->asESObject()->extraData() ==         \
+                      kEscargotObjectCheckMagic) &&                         \
+     (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData()) \
+          ->is##type()))
+
+#define CHECK_TYPEOF(v, type)               \
+    {                                       \
+        if (!CHECK_TYPEOF_INNER(v, type)) { \
+            THROW_ILLEGAL_INVOCATION()      \
+        }                                   \
     }
 
-#define CHECK_TYPEOF(v, type)                                                \
-    {                                                                        \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
-                               kEscargotObjectCheckMagic) &&                 \
-              (((ScriptWrappable*)v.asESPointer()                            \
-                    ->asESObject()                                           \
-                    ->extraPointerData())                                    \
-                   ->is##type()))) {                                         \
-            THROW_ILLEGAL_INVOCATION()                                       \
-        }                                                                    \
-    }
-
-#define CHECK_TYPEOF_WITH_ERRCODE(v, type, instance, errcode)                \
-    {                                                                        \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
-                               kEscargotObjectCheckMagic) &&                 \
-              (((ScriptWrappable*)v.asESPointer()                            \
-                    ->asESObject()                                           \
-                    ->extraPointerData())                                    \
-                   ->is##type()))) {                                         \
-            THROW_DOM_EXCEPTION(instance, errcode);                          \
-        }                                                                    \
-    }
-
-#define GENERATE_THIS_AND_CHECK_TYPE(type)                                   \
-    ESValue thisValue =                                                      \
-        instance->currentExecutionContext()->resolveThisBinding();           \
-    {                                                                        \
-        ESValue v = thisValue;                                               \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == \
-                               kEscargotObjectCheckMagic) &&                 \
-              (((ScriptWrappable*)v.asESPointer()                            \
-                    ->asESObject()                                           \
-                    ->extraPointerData())                                    \
-                   ->is##type()))) {                                         \
-            THROW_ILLEGAL_INVOCATION()                                       \
-        }                                                                    \
-    }                                                                        \
-    type* originalObj =                                                      \
+#define GENERATE_THIS_AND_CHECK_TYPE(type)                         \
+    ESValue thisValue =                                            \
+        instance->currentExecutionContext()->resolveThisBinding(); \
+    {                                                              \
+        CHECK_TYPEOF(thisValue, type);                             \
+    }                                                              \
+    type* originalObj =                                            \
         (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());
+
+#define GENERATE_ARG_AND_CHECK_TYPE(i, type)                               \
+    ESValue arg##i = instance->currentExecutionContext()->readArgument(i); \
+    {                                                                      \
+        CHECK_TYPEOF(arg##i, type)                                         \
+    }                                                                      \
+    type* val##i =                                                         \
+        (type*)(arg##i.asESPointer()->asESObject()->extraPointerData());
+
+#define GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(i, type)                      \
+    ESValue arg##i = instance->currentExecutionContext()->readArgument(i); \
+    type* val##i = nullptr;                                                \
+    {                                                                      \
+        if (!arg##i.isUndefinedOrNull()) {                                 \
+            CHECK_TYPEOF(arg##i, type)                                     \
+            val##i = (type*)(arg##i.asESPointer()                          \
+                                 ->asESObject()                            \
+                                 ->extraPointerData());                    \
+        }                                                                  \
+    }
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
