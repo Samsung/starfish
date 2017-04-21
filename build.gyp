@@ -1,18 +1,19 @@
 # To generate ninja config file, type
-# GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0
+# GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=[executable|static_library|shared_library]
 #
 # To compile, type
 # ninja -C out/[debug|release] starfish.x64.[debug|release]
 #
 # e.g.,
+# GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
 # ninja -C out/debug starfish.x64.debug
-# ninja -C out/release starfish.x64.release
 
 {
     'variables' : {
         'starfish_root': '<!(pwd)',
         'escargot_root': '<(starfish_root)/third_party/escargot',
-        'libav_root': '<(starfish_root)/third_party/libav/out/linux/x64/release',
+        'libav_root': '<(starfish_root)/third_party/libav',
+        'libav_lib': '<(libav_root)/out/linux/x64/release',
         'third_party_libs': 'elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n',
         'defines_x64': [
             'STARFISH_ENABLE_MULTIMEDIA',
@@ -31,6 +32,11 @@
             '<(escargot_root)/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.a',
             '<(starfish_root)/third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.a',
         ],
+        'main_file' : 'src/shell/shell.cpp',
+        'variables': {
+            'component%': 'static_library',
+        },
+        'component%':'<(component)',
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
@@ -51,6 +57,8 @@
            '<(escargot_root)/third_party/checked_arithmetic',
            '<(escargot_root)/third_party/double_conversion',
            '<(escargot_root)/third_party/rapidjson/include',
+           '<(libav_root)',
+           '<(libav_lib)',
            '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
        ],
        'sources': [
@@ -78,16 +86,16 @@
        'link_settings': {
            'ldflags' : [
                '-L/usr/local/lib',
-               '-L<(libav_root)/libavformat',
-               '-L<(libav_root)/libavcodec',
-               '-L<(libav_root)/libavutil',
-               '-L<(starfish_root)',
+               '-L<(libav_lib)/libavformat',
+               '-L<(libav_lib)/libavcodec',
+               '-L<(libav_lib)/libavutil',
            ],
            'libraries': [
                '<!@(pkg-config --libs-only-l <(third_party_libs))',
-               '-Wl,-rpath <(libav_root)/libavformat -lavformat',
-               '-Wl,-rpath <(libav_root)/libavcodec -lavcodec',
-               '-Wl,-rpath <(libav_root)/libavutil -lavutil',
+               '-Wl,-rpath <(libav_lib)/libavformat -lavformat',
+               '-Wl,-rpath <(libav_lib)/libavcodec -lavcodec',
+               '-Wl,-rpath <(libav_lib)/libavutil -lavutil',
+               '-Wl,-rpath /usr/local/lib',
                '-lpthread',
                '-lcurl',
            ],
@@ -158,25 +166,16 @@
     'targets': [
         {
             'target_name': 'starfish.x64.debug',
-            'type': 'executable',
+            'type': '<(component)',
+            'product_name': 'StarFish.x64.debug',
             'dependencies': [
             ],
-            'sources' : [
-                'src/shell/shell.cpp',
-            ],
-            'defines': [
-                '<@(defines_x64)',
-            ],
-            'cflags' : [
-            ],
-            'libraries': [
-                '<@(libraries_x64_debug)',
-            ],
-        },
-        {
-            'target_name': 'starfish.x64.lib.debug',
-            'type': 'static_library',
-            'dependencies': [
+            'conditions': [
+                ['component=="executable"', {
+                    'sources' : [
+                        '<(main_file)',
+                    ]
+                }],
             ],
             'defines': [
                 '<@(defines_x64)',
@@ -189,11 +188,16 @@
         },
         {
             'target_name': 'starfish.x64.release',
-            'type': 'executable',
+            'type': '<(component)',
+            'product_name': 'StarFish.x64.release',
             'dependencies': [
             ],
-            'sources' : [
-                'src/shell/shell.cpp',
+            'conditions': [
+                ['component=="executable"', {
+                    'sources' : [
+                        '<(main_file)',
+                    ]
+                }],
             ],
             'defines': [
                 '<@(defines_x64)',
@@ -204,19 +208,5 @@
                 '<@(libraries_x64_release)',
             ],
         },
-        {
-            'target_name': 'starfish.x64.lib.release',
-            'type': 'static_library',
-            'dependencies': [
-            ],
-            'defines': [
-                '<@(defines_x64)',
-            ],
-            'cflags' : [
-            ],
-            'libraries': [
-                '<@(libraries_x64_release)',
-            ],
-        }
     ],
 }
