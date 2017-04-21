@@ -159,7 +159,10 @@ public:
         return true;
     }
 
-    virtual Node* clone();
+    virtual Node* clone() override
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     Window* window()
     {

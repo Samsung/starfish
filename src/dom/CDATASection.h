@@ -41,7 +41,7 @@ public:
     virtual String* nodeName();
     virtual String* localName();
 
-    virtual Node* clone()
+    virtual Node* clone() override
     {
         return new CDATASection(document(), data());
     }

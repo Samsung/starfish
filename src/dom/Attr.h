@@ -96,7 +96,10 @@ public:
         return m_qname.localName();
     }
 
-    virtual Node* clone();
+    virtual Node* clone() override
+    {
+        return new Attr(document(), m_qname, value());
+    }
 
     virtual bool isAttr() const override
     {
