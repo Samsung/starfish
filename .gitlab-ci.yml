@@ -13,9 +13,13 @@ build:
     - git submodule update
     - ./build_third_party.sh
   script:
-    - make x64.exe.debug -j
+    #- make x64.exe.debug -j
+    #- strip StarFish
+    #- strip out/x64/exe/debug/StarFish
+    - GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
+    - ninja -C out/debug starfish.x64.debug
+    - cp out/debug/StarFish.x64.debug StarFish
     - strip StarFish
-    - strip out/x64/exe/debug/StarFish
   artifacts:
     paths:
       - StarFish
