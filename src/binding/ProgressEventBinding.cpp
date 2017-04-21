@@ -24,7 +24,7 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue progressEventFunction(ESVMInstance* instance)
+static ESValue progresseventConstructor(ESVMInstance* instance)
 {
     int argCount = instance->currentExecutionContext()->argumentCount();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
@@ -102,77 +102,76 @@ static ESValue progressEventFunction(ESVMInstance* instance)
     }
 }
 
+// Implement for attributes
 static ESValue lengthComputableGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    Event* e = originalObj;
-    if (e->isProgressEvent()) {
-        bool lengthComputable = e->asProgressEvent()->lengthComputable();
-        return ESValue(lengthComputable);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
+    // Declare return value (empty when void)
+    bool result;
+    result = originalObj->lengthComputable();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue loadedGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    Event* e = originalObj;
-    if (e->isProgressEvent()) {
-        unsigned long long loaded = e->asProgressEvent()->loaded();
-        return ESValue(loaded);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
+    // Declare return value (empty when void)
+    double result;
+    result = originalObj->loaded();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue totalGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Event);
-    Event* e = originalObj;
-    if (e->isProgressEvent()) {
-        unsigned long long total = e->asProgressEvent()->total();
-        return ESValue(total);
-    } else {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
+    // Declare return value (empty when void)
+    double result;
+    result = originalObj->total();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 ESFunctionObject* bindingProgressEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    /* Progress Events */
-    auto fnProgressEvent = ESFunctionObject::create(
-        NULL, progressEventFunction, ESString::create("ProgressEvent"), 1, true,
-        true);
-    fnProgressEvent->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    fnProgressEvent->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->fnEvent()->protoType());
-    fnProgressEvent->defineAccessorProperty(
+    // Bind for constructor
+    ESString* ProgressEventString = ESString::create("ProgressEvent");
+    ESFunctionObject* ProgressEventFunction = ESFunctionObject::create(
+        nullptr, progresseventConstructor, ProgressEventString, 1, true, true);
+    ProgressEventFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    // fetchData(scriptBindingInstance)->m_instance->globalObject()
-    //                                 ->defineDataProperty
-    //           (ESString::create("ProgressEvent"), true, false,
-    //           true, progressEventFunction);
+    ProgressEventFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    ProgressEventFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnEvent()->protoType());
+    ProgressEventFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEvent());
 
+    // Bind for attributes
+    ESString* lengthComputableString = ESString::create("lengthComputable");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnProgressEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("lengthComputable"), lengthComputableGetterFunction,
-        nullptr);
+        ProgressEventFunction->protoType().asESPointer()->asESObject(),
+        lengthComputableString, lengthComputableGetterFunction, nullptr);
 
+    ESString* loadedString = ESString::create("loaded");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnProgressEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("loaded"), loadedGetterFunction, nullptr);
+        ProgressEventFunction->protoType().asESPointer()->asESObject(),
+        loadedString, loadedGetterFunction, nullptr);
 
+    ESString* totalString = ESString::create("total");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnProgressEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("total"), totalGetterFunction, nullptr);
+        ProgressEventFunction->protoType().asESPointer()->asESObject(),
+        totalString, totalGetterFunction, nullptr);
 
-    return fnProgressEvent;
+    return ProgressEventFunction;
 }
 }
