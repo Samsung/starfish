@@ -32,11 +32,8 @@ static ESValue eventFunction(ESVMInstance* instance)
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
 
     if (argCount == 0) {
-        auto msg = ESString::create(
-            "Failed to construct 'Event': 1 argument required, but "
-            "only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "Event",
+                        "1", "0");
     } else if (argCount == 1) {
         ESString* type = firstArg.toString();
         auto event = new Event(String::fromUTF8(type->utf8Data()));
@@ -68,11 +65,8 @@ static ESValue eventFunction(ESVMInstance* instance)
                                    EventInit(canBubbles, canCancelable));
             return event->scriptValue();
         } else {
-            ESString* msg = ESString::create(
-                "Failed to construct 'Event': parameter 2 "
-                "('eventInitDict') is not an object.");
-            instance->throwError(ESValue(TypeError::create(msg)));
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH,
+                            "Event", "2", "eventInitDict", "object");
         }
     }
 }

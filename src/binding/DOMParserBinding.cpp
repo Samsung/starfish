@@ -37,14 +37,13 @@ static ESValue parseFromStringFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMParser);
 
-    if (instance->currentInstance()
-            ->currentExecutionContext()
-            ->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'parseFromString' on "
-            "'DOMParser': "
-            "needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc =
+        instance->currentInstance()->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "parseFromString", "DOMParser", "2", buffer);
     }
 
     try {

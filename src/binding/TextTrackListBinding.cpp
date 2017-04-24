@@ -39,11 +39,12 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
 static ESValue getTrackByIdFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    size_t argc = instance->currentExecutionContext()->argumentCount();
+    if (argc < 1) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getTrackById", "TextTrackList", "2", buffer);
     }
     // Declare return value (empty when void)
     TextTrack* result = nullptr;

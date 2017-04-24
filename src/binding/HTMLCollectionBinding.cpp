@@ -55,11 +55,8 @@ static ESValue itemFunction(ESVMInstance* instance)
         }
         return ESValue(ESValue::ESNull);
     } else {
-        auto msg = ESString::create(
-            "Failed to execute 'hasAttribute' on Element: 1 "
-            "argument required, but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
+                        "HTMLCollection", "1", "0");
     }
 }
 
@@ -82,11 +79,8 @@ static ESValue namedItemFunction(ESVMInstance* instance)
         }
         return ESValue(ESValue::ESNull);
     } else {
-        auto msg = ESString::create(
-            "Failed to execute 'namedItem' on 'HTMLCollection': 1 "
-            "argument required, but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "namedItem",
+                        "HTMLCollection", "1", "0");
     }
 }
 

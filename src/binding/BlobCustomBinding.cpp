@@ -43,11 +43,9 @@ ESValue blobConstructor(ESVMInstance* instance)
     if (!firstArg.isObject() ||
         (lengthValue = (obj = firstArg.toObject())->get(lengthString))
             .isUndefinedOrNull()) {
-        auto msg = ESString::create(
-            "Failed to construct 'Blob': The 1st argument is "
-            "neither "
-            "an array, nor does it have indexed properties.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+        THROW_EXCEPTION(
+            FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE,
+            "Blob", "1st");
     }
 
     size_t length = (size_t)lengthValue.toNumber();

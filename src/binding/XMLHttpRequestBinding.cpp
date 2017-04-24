@@ -306,12 +306,13 @@ static ESValue responseTypeSetterFunction(ESVMInstance* instance)
 static ESValue setRequestHeaderFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'setRequestHeader' on "
-            "'XMLHttpRequest': setRequestHeader needs 2 "
-            "parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc =
+        instance->currentInstance()->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "setRequestHeader", "XMLHttpRequest", "2", buffer);
     }
     try {
         String* s1 = toBrowserString(
@@ -332,7 +333,15 @@ static ESValue openFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     try {
-        if (instance->currentExecutionContext()->argumentCount() >= 2) {
+        size_t argc = instance->currentInstance()
+                          ->currentExecutionContext()
+                          ->argumentCount();
+        if (argc < 2) {
+            char buffer[1];
+            snprintf(buffer, 1, "%zd", argc);
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open",
+                            "XMLHttpRequest", "2", buffer);
+        } else {
             // https://xhr.spec.whatwg.org/#the-open()-method
             // TOOD If method is not a method, throw a
             // SyntaxError
@@ -362,7 +371,7 @@ static ESValue openFunction(ESVMInstance* instance)
             }
 
             bool async = true;
-            if (instance->currentExecutionContext()->argumentCount() >= 3) {
+            if (argc >= 3) {
                 async = instance->currentExecutionContext()
                             ->readArgument(2)
                             .toBoolean();
@@ -371,11 +380,10 @@ static ESValue openFunction(ESVMInstance* instance)
             String* userName = String::emptyString;
             String* password = String::emptyString;
 
-            if (instance->currentExecutionContext()->argumentCount() == 4) {
+            if (argc == 4) {
                 userName = toBrowserString(
                     instance->currentExecutionContext()->readArgument(3));
-            } else if (instance->currentExecutionContext()->argumentCount() >=
-                       5) {
+            } else if (argc >= 5) {
                 userName = toBrowserString(
                     instance->currentExecutionContext()->readArgument(3));
                 password = toBrowserString(
@@ -385,12 +393,6 @@ static ESValue openFunction(ESVMInstance* instance)
                 mt, toBrowserString(
                         instance->currentExecutionContext()->readArgument(1)),
                 async, userName, password);
-        } else {
-            auto msg = ESString::create(
-                "Failed to execute 'open' on 'XMLHttpRequest': "
-                "2 "
-                "arguments required.");
-            instance->throwError(ESValue(TypeError::create(msg)));
         }
         return ESValue(ESValue::ESNull);
     } catch (DOMException* e) {

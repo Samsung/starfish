@@ -27,9 +27,7 @@ using namespace escargot;
 static ESValue dompointConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        auto msg = ESString::create("Please use the 'new' operator");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMPoint");
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);

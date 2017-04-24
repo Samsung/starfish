@@ -261,53 +261,52 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
     }
 
 // TypeError: Illegal invocation
-#define THROW_ILLEGAL_INVOCATION()                                       \
-    {                                                                    \
-        ESVMInstance::currentInstance()->throwError(ESValue(             \
-            TypeError::create(ESString::create("Illegal invocation")))); \
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();                           \
+#define _THROW_EXCEPTION(MSG)                               \
+    ESVMInstance::currentInstance()->throwError(            \
+        ESValue(TypeError::create(ESString::create(MSG)))); \
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+
+#define THROW_ILLEGAL_INVOCATION() _THROW_EXCEPTION("Illegal invocation");
+
+#define THROW_EXCEPTION(TEMPLATE_STR, ...)                      \
+    {                                                           \
+        size_t siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
+        char errorMsg[siz + 1];                                 \
+        snprintf(errorMsg, siz, TEMPLATE_STR, __VA_ARGS__);     \
+        _THROW_EXCEPTION(errorMsg);                             \
     }
 
-#define CHECK_TYPEOF_INNER(v, type)                                         \
+#define _CHECK_TYPEOF(v, type)                                              \
     (v.isObject() && (v.asESPointer()->asESObject()->extraData() ==         \
                       kEscargotObjectCheckMagic) &&                         \
      (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData()) \
           ->is##type()))
 
-#define CHECK_TYPEOF(v, type)               \
-    {                                       \
-        if (!CHECK_TYPEOF_INNER(v, type)) { \
-            THROW_ILLEGAL_INVOCATION()      \
-        }                                   \
+#define CHECK_TYPEOF(v, type)      \
+    if (!_CHECK_TYPEOF(v, type)) { \
+        THROW_ILLEGAL_INVOCATION() \
     }
 
 #define GENERATE_THIS_AND_CHECK_TYPE(type)                         \
     ESValue thisValue =                                            \
         instance->currentExecutionContext()->resolveThisBinding(); \
-    {                                                              \
-        CHECK_TYPEOF(thisValue, type);                             \
-    }                                                              \
+    CHECK_TYPEOF(thisValue, type);                                 \
     type* originalObj =                                            \
         (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());
 
 #define GENERATE_ARG_AND_CHECK_TYPE(i, type)                               \
     ESValue arg##i = instance->currentExecutionContext()->readArgument(i); \
-    {                                                                      \
-        CHECK_TYPEOF(arg##i, type)                                         \
-    }                                                                      \
+    CHECK_TYPEOF(arg##i, type)                                             \
     type* val##i =                                                         \
         (type*)(arg##i.asESPointer()->asESObject()->extraPointerData());
 
-#define GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(i, type)                      \
-    ESValue arg##i = instance->currentExecutionContext()->readArgument(i); \
-    type* val##i = nullptr;                                                \
-    {                                                                      \
-        if (!arg##i.isUndefinedOrNull()) {                                 \
-            CHECK_TYPEOF(arg##i, type)                                     \
-            val##i = (type*)(arg##i.asESPointer()                          \
-                                 ->asESObject()                            \
-                                 ->extraPointerData());                    \
-        }                                                                  \
+#define GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(i, type)                        \
+    ESValue arg##i = instance->currentExecutionContext()->readArgument(i);   \
+    type* val##i = nullptr;                                                  \
+    if (!arg##i.isUndefinedOrNull()) {                                       \
+        CHECK_TYPEOF(arg##i, type)                                           \
+        val##i =                                                             \
+            (type*)(arg##i.asESPointer()->asESObject()->extraPointerData()); \
     }
 
 class ScriptWrappable : public gc {

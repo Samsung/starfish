@@ -497,11 +497,8 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
                 ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
-            auto msg = ESString::create(
-                "Failed to execute 'querySelector' on "
-                "'Element': 1 argument required, but only 0 "
-                "present.");
-            instance->throwError(ESValue(TypeError::create(msg)));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelector", "Element", "1", "0");
         }
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("Element&&&querySelector\n");
@@ -548,11 +545,8 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
                 ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
-            auto msg = ESString::create(
-                "Failed to execute 'querySelectorAll' on "
-                "'Element': 1 argument required, but only 0 "
-                "present.");
-            instance->throwError(ESValue(TypeError::create(msg)));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelectorAll", "Element", "1", "0");
         }
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("Element&&&querySelectorAll\n");
@@ -587,11 +581,8 @@ static ESValue hasAttributeFunction(ESVMInstance* instance)
             return ESValue(false);
         }
     } else {
-        auto msg = ESString::create(
-            "Failed to execute 'hasAttribute' on Element: 1 "
-            "argument required, but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "hasAttribute", "Element", "1", "0");
     }
 }
 

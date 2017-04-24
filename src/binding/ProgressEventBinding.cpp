@@ -31,11 +31,8 @@ static ESValue progresseventConstructor(ESVMInstance* instance)
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
 
     if (argCount == 0) {
-        auto msg = ESString::create(
-            "Failed to construct 'ProgressEvent': 1 argument required, "
-            "but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
+                        "ProgressEvent", "1", "0");
     } else if (argCount == 1) {
         ESString* type = firstArg.toString();
         auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
@@ -93,11 +90,8 @@ static ESValue progresseventConstructor(ESVMInstance* instance)
                                                     loadedValue, totalValue));
             return event->scriptValue();
         } else {
-            ESString* msg = ESString::create(
-                "Failed to construct 'ProgressEvent': parameter 2 "
-                "('eventInitDict') is not an object.");
-            instance->throwError(ESValue(TypeError::create(msg)));
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH,
+                            "ProgressEvent", "2", "eventInitDict", "object");
         }
     }
 }
