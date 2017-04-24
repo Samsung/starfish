@@ -26,11 +26,15 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBufferList);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare return value (empty when void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
@@ -48,17 +52,36 @@ static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
 ESFunctionObject* bindingSourceBufferList(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        SourceBufferList, fetchData(scriptBindingInstance)->m_fnEventTarget);
+    // Bind for constructor
+    ESString* SourceBufferListString = ESString::create("SourceBufferList");
+    ESFunctionObject* SourceBufferListFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 SourceBufferListString, 0, true, true);
+    SourceBufferListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    SourceBufferListFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    SourceBufferListFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    SourceBufferListFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
+    ESObject* SourceBufferListPrototypeObj =
+        SourceBufferListFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        SourceBufferListPrototypeObj, lengthString, lengthGetterFunction,
+        nullptr);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("SourceBuffer"), sourceBufferGetterFunction, nullptr);
-
+    // Bind for functions
     return SourceBufferListFunction;
 }
 }
