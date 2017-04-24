@@ -281,7 +281,7 @@ public:
 
     String* currentSrc();
     NetworkState networkState();
-    PreloadState preloadEnum();
+    PreloadState preloadValue();
     String* preload();
     TimeRanges* buffered();
     String* canPlayType(String* type);

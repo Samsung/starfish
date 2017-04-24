@@ -313,6 +313,7 @@ protected:
 #include "util/String.h"
 #include "util/AtomicString.h"
 #include "util/QualifiedName.h"
+#include "util/ErrorMessages.h"
 #include "style/Length.h"
 #include "style/Unit.h"
 #include "style/UnitHelper.h"

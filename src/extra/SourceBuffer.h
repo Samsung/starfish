@@ -138,7 +138,20 @@ public:
 
     void setMode(AppendMode mode);
 
-    AppendMode mode()
+    void setMode(String* modeStr);
+
+    String* mode() const
+    {
+        switch (m_mode) {
+        case Segments:
+            return String::createASCIIString("segments");
+        case Sequence:
+            return String::createASCIIString("sequence");
+        }
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    AppendMode modeValue() const
     {
         return m_mode;
     }

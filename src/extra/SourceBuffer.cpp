@@ -1276,6 +1276,19 @@ void SourceBuffer::setMode(AppendMode mode)
     m_mode = mode;
 }
 
+void SourceBuffer::setMode(String* modeStr)
+{
+    if (modeStr->equals("segments")) {
+        setMode(Segments);
+    } else if (modeStr->equals("sequence")) {
+        setMode(Sequence);
+    } else {
+        // TODO: Should generate warning messages, says the input string should
+        // be segments or sequence.
+        setMode(Segments);
+    }
+}
+
 void SourceBuffer::setTimestampOffset(double timeoffset)
 {
     // If this object has been removed from the sourceBuffers attribute of the
