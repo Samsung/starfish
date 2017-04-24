@@ -37,36 +37,45 @@ static ESValue textFunction(ESVMInstance* instance)
     return ESValue();
 }
 
+// Implement for attributes
 static ESValue wholeTextGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!nd->isText()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    String* text = (nd->asText())->wholeText();
-    return toJSString(text);
+    GENERATE_THIS_AND_CHECK_TYPE(Text);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->wholeText();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
+// Implement for functions
 ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* 4.10 Interface Text */
-    auto text = ESFunctionObject::create(
-        NULL, textFunction, ESString::create("Text"), 0, true, true);
-    text->defineAccessorProperty(
+    // Bind for constructor
+    ESString* TextString = ESString::create("Text");
+    ESFunctionObject* TextFunction = ESFunctionObject::create(
+        nullptr, textFunction, TextString, 0, true, true);
+    TextFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    text->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
-        false);
-    text->protoType().asESPointer()->asESObject()->set__proto__(
+    TextFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    TextFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
-    text->set__proto__(fetchData(scriptBindingInstance)->fnCharacterData());
+    TextFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnCharacterData());
+    ESObject* TextPrototypeObj =
+        TextFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* wholeTextString = ESString::create("wholeText");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        text->protoType().asESPointer()->asESObject(),
-        ESString::create("wholeText"), wholeTextGetterFunction, nullptr);
+        TextPrototypeObj, wholeTextString, wholeTextGetterFunction, nullptr);
 
-    return text;
+    // Bind for functions
+    return TextFunction;
 }
 }
