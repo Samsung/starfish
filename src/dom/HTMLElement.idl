@@ -1,13 +1,7 @@
-// REF1. https://html.spec.whatwg.org/multipage/dom.html#htmlelement
-// REF2. https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
-// REF3. https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
-// REF4.  https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
-// REF5. https://html.spec.whatwg.org/multipage/interaction.html#elementcontenteditable
-
 
 [HTMLConstructor]
 interface HTMLElement : Element {
-  // [REF1]----------------------------------------------------------------
+  // https://html.spec.whatwg.org/multipage/dom.html#htmlelement
   // metadata attributes
   [Unimplemented, CEReactions] attribute DOMString title;
   [Unimplemented, CEReactions] attribute DOMString lang;
@@ -31,101 +25,18 @@ interface HTMLElement : Element {
   [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString innerText;
 
 
-  // [REF2]----------------------------------------------------------------
+  // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
   [Unimplemented] readonly attribute Element? offsetParent;
   [Unimplemented] readonly attribute long offsetTop;
   [Unimplemented] readonly attribute long offsetLeft;
   readonly attribute long offsetWidth;
   readonly attribute long offsetHeight;
-
-
-  // TODO Support implements
-  // [REF3]----------------------------------------------------------------
-  // HTMLElement implements GlobalEventHandlers;
-  [Unimplemented] attribute EventHandler onabort;
-  [Unimplemented] attribute EventHandler onauxclick;
-  [Unimplemented] attribute EventHandler onblur;
-  [Unimplemented] attribute EventHandler oncancel;
-  [Unimplemented] attribute EventHandler oncanplay;
-  [Unimplemented] attribute EventHandler oncanplaythrough;
-  [Unimplemented] attribute EventHandler onchange;
-  [CustomGetter, CustomSetter] attribute EventHandler onclick;
-  [Unimplemented] attribute EventHandler onclose;
-  [Unimplemented] attribute EventHandler oncontextmenu;
-  [Unimplemented] attribute EventHandler oncuechange;
-  [Unimplemented] attribute EventHandler ondblclick;
-  [Unimplemented] attribute EventHandler ondrag;
-  [Unimplemented] attribute EventHandler ondragend;
-  [Unimplemented] attribute EventHandler ondragenter;
-  [Unimplemented] attribute EventHandler ondragexit;
-  [Unimplemented] attribute EventHandler ondragleave;
-  [Unimplemented] attribute EventHandler ondragover;
-  [Unimplemented] attribute EventHandler ondragstart;
-  [Unimplemented] attribute EventHandler ondrop;
-  [Unimplemented] attribute EventHandler ondurationchange;
-  [Unimplemented] attribute EventHandler onemptied;
-  [Unimplemented] attribute EventHandler onended;
-  [CustomGetter, CustomSetter] attribute OnErrorEventHandler onerror;
-  [CustomGetter, CustomSetter] attribute EventHandler onfocus;
-  [Unimplemented] attribute EventHandler oninput;
-  [Unimplemented] attribute EventHandler oninvalid;
-  [CustomGetter, CustomSetter] attribute EventHandler onkeydown;
-  [Unimplemented] attribute EventHandler onkeypress;
-  [CustomGetter, CustomSetter] attribute EventHandler onkeyup;
-  [CustomGetter, CustomSetter] attribute EventHandler onload;
-  [Unimplemented] attribute EventHandler onloadeddata;
-  [Unimplemented] attribute EventHandler onloadedmetadata;
-  [Unimplemented] attribute EventHandler onloadend;
-  [Unimplemented] attribute EventHandler onloadstart;
-  [Unimplemented] attribute EventHandler onmousedown;
-  [Unimplemented, LenientThis] attribute EventHandler onmouseenter;
-  [Unimplemented, LenientThis] attribute EventHandler onmouseleave;
-  [Unimplemented] attribute EventHandler onmousemove;
-  [Unimplemented] attribute EventHandler onmouseout;
-  [CustomGetter, CustomSetter] attribute EventHandler onmouseover;
-  [Unimplemented] attribute EventHandler onmouseup;
-  [Unimplemented] attribute EventHandler onwheel;
-  [Unimplemented] attribute EventHandler onpause;
-  [Unimplemented] attribute EventHandler onplay;
-  [Unimplemented] attribute EventHandler onplaying;
-  [Unimplemented] attribute EventHandler onprogress;
-  [Unimplemented] attribute EventHandler onratechange;
-  [Unimplemented] attribute EventHandler onreset;
-  [Unimplemented] attribute EventHandler onresize;
-  [Unimplemented] attribute EventHandler onscroll;
-  [Unimplemented] attribute EventHandler onseeked;
-  [Unimplemented] attribute EventHandler onseeking;
-  [Unimplemented] attribute EventHandler onselect;
-  [Unimplemented] attribute EventHandler onshow;
-  [Unimplemented] attribute EventHandler onstalled;
-  [Unimplemented] attribute EventHandler onsubmit;
-  [Unimplemented] attribute EventHandler onsuspend;
-  [Unimplemented] attribute EventHandler ontimeupdate;
-  [Unimplemented] attribute EventHandler ontoggle;
-  [Unimplemented] attribute EventHandler onvolumechange;
-  [Unimplemented] attribute EventHandler onwaiting;
-
-
-  // TODO Support implements
-  // [REF4]----------------------------------------------------------------
-  // HTMLElement implements DocumentAndElementEventHandlers;
-  [Unimplemented] attribute EventHandler oncopy;
-  [Unimplemented] attribute EventHandler oncut;
-  [Unimplemented] attribute EventHandler onpaste;
-
-
-  // TODO Support implements
-  // [REF5]----------------------------------------------------------------
-  // HTMLElement implements ElementContentEditable;
-  [Unimplemented, CEReactions] attribute DOMString contentEditable;
-  [Unimplemented] readonly attribute boolean isContentEditable;
 };
 
 // Note: intentionally not [HTMLConstructor]
 interface HTMLUnknownElement : HTMLElement { };
 
-
-// TODO Support implements
 HTMLElement implements GlobalEventHandlers;
 HTMLElement implements DocumentAndElementEventHandlers;
 HTMLElement implements ElementContentEditable;
+HTMLElement implements ElementCSSInlineStyle;

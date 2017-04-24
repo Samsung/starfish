@@ -1,0 +1,9 @@
+// https://drafts.csswg.org/cssom/#elementcssinlinestyle
+
+[PartialInterface,
+ NoInterfaceObject]
+interface ElementCSSInlineStyle {
+  // FIXME readonly property but seems to have a Setter
+  // [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+  [CustomGetter, CustomSetter] attribute CSSStyleDeclaration style;
+};
