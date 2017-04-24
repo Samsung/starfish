@@ -28,6 +28,12 @@ test/reftest/csswg-test/selectors3_original/html/css3-modsel-34.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-35.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-36.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-37.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-39a.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-39c.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-41.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-41a.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-42.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-42a.html
 #test/reftest/csswg-test/selectors3_original/html/css3-modsel-43.html
 #test/reftest/csswg-test/selectors3_original/html/css3-modsel-43b.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-44.html
@@ -91,6 +97,10 @@ test/reftest/csswg-test/selectors3_original/html/css3-modsel-157.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-158.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-160.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-161.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-168.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-168a.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-169.html
+test/reftest/csswg-test/selectors3_original/html/css3-modsel-169a.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-170.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-170a.html
 test/reftest/csswg-test/selectors3_original/html/css3-modsel-170b.html
