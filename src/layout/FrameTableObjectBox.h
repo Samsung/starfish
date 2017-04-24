@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class FrameTreeBuilderContext;
+
 // FrameTableObjectBox is an abstract class where
 // common table-related methods are implemented
 
@@ -32,7 +34,8 @@ public:
     {
         return true;
     }
-
+    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
+                          bool force) = 0;
     bool bgColorFromAttribute(Color* ret)
     {
         if (!(node() && node()->isElement() &&

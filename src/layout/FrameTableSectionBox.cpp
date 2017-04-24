@@ -75,85 +75,6 @@ FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
 {
 }
 
-FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(
-    Node* current, FrameTreeBuilderContext& ctx, bool force)
-{
-    FrameTableSectionBox* currentFrame = nullptr;
-    FrameBlockBox* parent = ctx.currentBlockContainer();
-    bool isTableSection = (current->style()->display() ==
-                           DisplayValue::TableRowGroupDisplayValue) ||
-                          (current->style()->display() ==
-                           DisplayValue::TableHeaderGroupDisplayValue) ||
-                          (current->style()->display() ==
-                           DisplayValue::TableFooterGroupDisplayValue);
-
-    if (isTableSection) {
-        if (current->needsFrameTreeBuild() && !current->frame()) {
-            currentFrame = new FrameTableSectionBox(current, nullptr);
-            current->setFrame(currentFrame);
-        } else {
-            STARFISH_ASSERT(current->frame());
-            currentFrame = current->frame()->asFrameTableSectionBox();
-        }
-
-        ctx.setCurrentBlockContainer(currentFrame);
-        ctx.mergeTextDecorationData(currentFrame->style());
-
-        if (current->childNeedsFrameTreeBuild() || force) {
-            for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-                currentFrame->addChild(c, ctx, force);
-            }
-        }
-        current->clearNeedsFrameTreeBuild();
-        current->clearChildNeedsFrameTreeBuild();
-    } else {
-        if (current->needsFrameTreeBuild()) {
-            // please read comment in FrameTableBox::buildFrameTable
-            Frame* before = parent->lastChild();
-
-            if (before && before->isAnonymous() &&
-                before->isFrameTableSectionBox()) {
-                currentFrame = before->asFrameTableSectionBox();
-            } else {
-                currentFrame = FrameTableSectionBox::createAnonymousWithParent(
-                    parent, current);
-            }
-            ctx.setCurrentBlockContainer(currentFrame);
-            ctx.mergeTextDecorationData(currentFrame->style());
-            currentFrame->addChild(current, ctx, force);
-        } else if (current->childNeedsFrameTreeBuild()) {
-            for (Frame* f = current->frame(); f; f = f->parent()) {
-                if (f->parent() == parent) {
-                    STARFISH_ASSERT(f->isAnonymous());
-                    STARFISH_ASSERT(f->isFrameTableSectionBox());
-                    currentFrame = f->asFrameTableSectionBox();
-                    break;
-                }
-            }
-            ctx.setCurrentBlockContainer(currentFrame);
-            ctx.mergeTextDecorationData(currentFrame->style());
-            currentFrame->addChild(current, ctx, force);
-        } else {
-            STARFISH_ASSERT_NOT_REACHED();
-        }
-    }
-
-    ctx.setCurrentBlockContainer(parent);
-    STARFISH_ASSERT(currentFrame);
-    return currentFrame;
-}
-
-FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(
-    FrameBlockBox* parent, Node* node)
-{
-    ComputedStyle* style = new ComputedStyle(parent->style());
-    style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
-    style->loadResources(node);
-    style->arrangeStyleValues(parent->style(), node);
-
-    return new FrameTableSectionBox(nullptr, style);
-}
-
 void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     for (auto& rowStruct : m_grid) {
@@ -183,32 +104,6 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
     // supported.
     paintBorders(canvas, m_frameRect);
     return;
-}
-
-void FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
-                                    bool force)
-{
-    STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableSectionBox());
-    if (child->isComment() ||
-        (child->isCharacterData() &&
-         child->textContent()->containsOnlyWhitespace())) {
-        // TODO, do not use assert!
-        return;
-    } else {
-        FrameTableSectionBox* parentSection =
-            ctx.currentBlockContainer()->asFrameTableSectionBox();
-        FrameTableRowBox* childFrame =
-            FrameTableRowBox::buildFrameTableRow(child, ctx, force);
-
-        if (!childFrame->parent()) {
-            childFrame->setRowIndex(parentSection->grid().size());
-            RowStruct row(childFrame);
-            parentSection->grid().push_back(row);
-            ctx.currentBlockContainer()->appendChild(childFrame);
-        }
-        STARFISH_ASSERT(childFrame->parent());
-        return;
-    }
 }
 
 void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)

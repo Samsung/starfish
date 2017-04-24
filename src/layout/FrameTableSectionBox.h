@@ -100,11 +100,6 @@ class FrameTableSectionBox : public FrameTableObjectBox {
 public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 
-    static FrameTableSectionBox* buildFrameTableSectionBox(
-        Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableSectionBox* createAnonymousWithParent(
-        FrameBlockBox* parent, Node* node);
-
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
     void layoutWidth(LayoutContext& ctx);
@@ -114,8 +109,8 @@ public:
     void applyVerticalAlign();
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
-
-    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
+                          bool force);
 
     virtual const char* name()
     {

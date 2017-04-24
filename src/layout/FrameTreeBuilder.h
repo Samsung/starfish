@@ -17,6 +17,8 @@
 #ifndef __StarFishFrameTreeBuilder__
 #define __StarFishFrameTreeBuilder__
 
+#include "style/Style.h"
+
 namespace StarFish {
 
 class Node;
@@ -29,11 +31,7 @@ class Frame;
 class ComputedStyle;
 class FrameTextTextDecorationData;
 class FrameInline;
-
-class FrameTableBox;
 class FrameTableCaptionBox;
-class FrameTableSectionBox;
-class FrameTableRowBox;
 class FrameTableCellBox;
 
 class FrameTreeBuilderContext {
@@ -63,10 +61,7 @@ class FrameTreeBuilder {
     // in separate FrameTableXXX files. To reuse the FrameTree building
     // algorithm, the following FrameTableXXX classes need to access
     // buildTree(). Hence, they are declared as friends of FrameTreeBuilder.
-    friend FrameTableBox;
     friend FrameTableCaptionBox;
-    friend FrameTableSectionBox;
-    friend FrameTableRowBox;
     friend FrameTableCellBox;
 
 public:
