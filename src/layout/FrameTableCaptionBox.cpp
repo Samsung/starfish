@@ -26,49 +26,6 @@ FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
 {
 }
 
-FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(
-    Node* current, FrameTreeBuilderContext& ctx, bool force)
-{
-    FrameTableCaptionBox* currentFrame = nullptr;
-
-    if (current->needsFrameTreeBuild() && !current->frame()) {
-        currentFrame = new FrameTableCaptionBox(current, nullptr);
-        current->setFrame(currentFrame);
-    } else {
-        STARFISH_ASSERT(current->frame());
-        currentFrame = current->frame()->asFrameTableCaptionBox();
-    }
-
-    // Caption establishes a new block context
-    FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(currentFrame);
-    ctx.mergeTextDecorationData(currentFrame->style());
-
-    FrameTreeBuilder::createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementBefore,
-        ctx);
-
-    if (current->childNeedsFrameTreeBuild() || force) {
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            FrameTreeBuilder::buildTree(c, ctx, force);
-        }
-    }
-
-    current->clearNeedsFrameTreeBuild();
-    current->clearChildNeedsFrameTreeBuild();
-
-    FrameTreeBuilder::createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
-
-    ctx.setCurrentBlockContainer(lastContext);
-
-    FrameTreeBuilder::createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
-        ctx);
-
-    return currentFrame;
-}
-
 void FrameTableCaptionBox::layout(LayoutContext& ctx,
                                   Frame::LayoutWantToResolve resolveWhat)
 {

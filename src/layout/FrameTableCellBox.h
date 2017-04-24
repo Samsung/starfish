@@ -28,12 +28,6 @@ class FrameTableCellBox : public FrameTableObjectBox {
 public:
     FrameTableCellBox(Node* node, ComputedStyle* style);
 
-    static FrameTableCellBox* buildFrameTableCell(Node* current,
-                                                  FrameTreeBuilderContext& ctx,
-                                                  bool force = false);
-    static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent,
-                                                        Node* node);
-
     void calCellWidth(LayoutContext& ctx,
                       Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
@@ -55,6 +49,9 @@ public:
     {
         return true;
     }
+
+    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
+                          bool force);
 
     void setAbsoluteColumnIndex(unsigned column)
     {

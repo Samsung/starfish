@@ -35,6 +35,7 @@
 #endif
 #include "FrameReplacedObject.h"
 #include "FrameLineBreak.h"
+#include "FrameTableTreeBuilder.h"
 
 namespace StarFish {
 void dump(Frame* frm, unsigned depth);
@@ -528,7 +529,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                   current->childNeedsFrameTreeBuild())) {
                 return nullptr;
             }
-            currentFrame = FrameTableBox::buildFrameTable(current, ctx, force);
+            currentFrame =
+                FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
+            STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
+                currentFrame->style()->display()));
             if (!currentFrame->parent()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(
                     ctx.currentBlockContainer(), currentFrame, current, ctx);

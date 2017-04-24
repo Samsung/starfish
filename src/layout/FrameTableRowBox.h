@@ -39,12 +39,6 @@ public:
         return true;
     }
 
-    static FrameTableRowBox* buildFrameTableRow(Node* current,
-                                                FrameTreeBuilderContext& ctx,
-                                                bool force = false);
-    static FrameTableRowBox* createAnonymousWithParent(FrameBlockBox* parent,
-                                                       Node* node);
-
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
@@ -65,7 +59,8 @@ public:
         return m_baseline;
     }
 
-    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
+                          bool force);
 
     FrameTableSectionBox* sectionBox()
     {

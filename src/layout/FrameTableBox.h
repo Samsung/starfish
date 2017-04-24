@@ -107,18 +107,11 @@ class FrameTableBox : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
-    static FrameTableBox* buildFrameTable(Node* current,
-                                          FrameTreeBuilderContext& ctx,
-                                          bool force = false);
-    static FrameTableBox* createAnonymousWithParent(FrameBlockBox* parent,
-                                                    Node* node);
-
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
-
-    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
-
+    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
+                          bool force);
     virtual const char* name()
     {
         return "FrameTable";
