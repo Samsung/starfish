@@ -238,10 +238,8 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
                 ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
-            auto msg = ESString::create(
-                "Failed to execute 'querySelector' on 'Document': "
-                "1 argument required, but only 0 present.");
-            instance->throwError(ESValue(TypeError::create(msg)));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelector", "Document", "1", "0");
         }
     } else {
         THROW_ILLEGAL_INVOCATION()
@@ -284,11 +282,8 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
                 ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
-            auto msg = ESString::create(
-                "Failed to execute 'querySelectorAll' on "
-                "'Document': 1 argument required, but only 0 "
-                "present.");
-            instance->throwError(ESValue(TypeError::create(msg)));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelectorAll", "Document", "1", "0")
         }
     } else {
         THROW_ILLEGAL_INVOCATION()

@@ -20,7 +20,24 @@
 #include "StarFishConfig.h"
 
 namespace StarFish {
-static const char* SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE =
+static const char* CALLED_CONSTRUCTOR_WITHOUT_NEW =
+    "Constructor %s requires 'new'";
+static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH =
+    "Failed to construct '%s': %s argument required, but only %s present.";
+static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH =
+    "Failed to construct '%s': parameter %d ('%s') is not a(n) %s.";
+static const char*
+    FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE =
+        "Failed to construct '%s': The %s argument is neither an array, nor "
+        "does it have indexed properties.";
+static const char* FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH =
+    "Failed to execute '%s' on '%s': needs %s parameter, but only %s present.";
+static const char* FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH =
+    "Failed to execute '%s' on '%s': parameter %d is not of type '%s'.";
+static const char* FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND =
+    "Failed to execute '%s' on '%s': No function was found that matched the "
+    "signature provided.";
+static const char* FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE =
     "Failed to set the '%s' property on '%s': The provided double value is "
     "non-finite.";
 

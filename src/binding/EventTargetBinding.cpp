@@ -29,11 +29,12 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
     CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'addEventListener' on 'EventTaraget': "
-            "needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc = instance->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "addEventListener", "EventTarget", "2", buffer);
     }
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
@@ -60,11 +61,12 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
     CHECK_TYPEOF(thisValue, EventTarget);
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        auto msg = ESString::create(
-            "Failed to execute 'removeEventListener' on "
-            "'EventTaraget': needs 2 parameter.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc = instance->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "removeEventListener", "EventTarget", "2", buffer);
     }
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
@@ -89,14 +91,11 @@ static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
     ESValue thisValue =
         instance->currentExecutionContext()->resolveThisBinding();
     CHECK_TYPEOF(thisValue, EventTarget);
-    int argCount = instance->currentExecutionContext()->argumentCount();
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     if (firstArg.isUndefinedOrNull()) {
-        ESString* msg = ESString::create(
-            "Failed to execute 'dispatchEvent' on 'EventTarget': "
-            "parameter 1 is not of type 'Event'.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH,
+                        "dispatchEvent", "EventTarget", "1", "Event");
     }
     bool ret = false;
     if (argCount == 1 && firstArg.isObject()) {
@@ -107,10 +106,8 @@ static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
                    ->asESObject()
                    ->extraPointerData())
                   ->isEvent())) {
-            auto msg = ESString::create(
-                "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                "parameter 1 is not of type 'Event'.");
-            instance->throwError(ESValue(TypeError::create(msg)));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH,
+                            "dispatchEvent", "EventTarget", "1", "Event");
         }
         Event* event =
             (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();

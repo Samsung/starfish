@@ -72,12 +72,8 @@ static ESValue createObjectURLFunction(ESVMInstance* instance)
         return toJSString(url);
 #endif
     } else {
-        ESString* msg = ESString::create(
-            "Failed to execute 'createObjectURL' on 'URL': No "
-            "function was found that matched the signature "
-            "provided.");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
+                        "createObjectURL", "URL");
     }
 }
 

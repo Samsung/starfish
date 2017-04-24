@@ -28,15 +28,14 @@ using namespace escargot;
 static ESValue vttcueConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        auto msg = ESString::create("Please use the 'new' operator");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "VTTCue");
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 3) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "VTTCue",
+                        "3", buffer);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);

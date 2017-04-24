@@ -88,11 +88,8 @@ static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        COMPOSE_ERROR_MESSAGE(SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                              "timestampOffset", "SourceBuffer");
-        ESVMInstance::currentInstance()->throwError(
-            ESValue(TypeError::create(ESString::create(errorMsg))));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
+                        "timestampOffset", "SourceBuffer");
     }
     originalObj->setTimestampOffset(value0);
     return ESValue();
@@ -127,11 +124,8 @@ static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        COMPOSE_ERROR_MESSAGE(SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                              "appendWindowStart", "SourceBuffer");
-        ESVMInstance::currentInstance()->throwError(
-            ESValue(TypeError::create(ESString::create(errorMsg))));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
+                        "appendWindowStart", "SourceBuffer");
     }
     originalObj->setAppendWindowStart(value0);
     return ESValue();

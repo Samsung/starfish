@@ -74,12 +74,12 @@ static ESValue forwardFunction(ESVMInstance* instance)
 static ESValue pushStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        ESString* msg = ESString::create(
-            "Failed to execute 'pushState' on 'History': 2 "
-            "arguments required, but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc = instance->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "pushState",
+                        "History", "2", buffer);
     }
 
     // TODO: State value must be stored to form of StructuredClone
@@ -106,12 +106,12 @@ static ESValue pushStateFunction(ESVMInstance* instance)
 static ESValue replaceStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-
-    if (instance->currentExecutionContext()->argumentCount() < 2) {
-        ESString* msg = ESString::create(
-            "Failed to execute 'replaceState' on 'History': 2 "
-            "arguments required, but only 0 present.");
-        instance->throwError(ESValue(TypeError::create(msg)));
+    size_t argc = instance->currentExecutionContext()->argumentCount();
+    if (argc < 2) {
+        char buffer[1];
+        snprintf(buffer, 1, "%zd", argc);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "replaceState", "History", "2", buffer);
     }
 
     // TODO: State value must be stored to form of StructuredClone

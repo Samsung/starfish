@@ -111,8 +111,8 @@ static ESValue toggleFunction(ESVMInstance* instance)
         ESValue forceValue;
 
         if (argCount == 0) {
-            instance->throwError(ESValue(
-                TypeError::create(ESString::create("Not enough arguments"))));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "toggle",
+                            "DOMTokenList", "1", "0")
         }
         if (argCount >= 2) {
             forceValue = instance->currentExecutionContext()->readArgument(1);

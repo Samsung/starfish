@@ -38,12 +38,8 @@ ESValue appendBufferSourceBufferFunction(ESVMInstance* instance)
         }
 #endif
         else {
-            ESVMInstance::currentInstance()->throwError(
-                ESValue(TypeError::create(
-                    ESString::create("Failed to execute 'appendBuffer' "
-                                     "on 'SourceBuffer': No function "
-                                     "was found that matched the "
-                                     "signature provided."))));
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
+                            "appendBuffer", "SourceBuffer");
         }
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
