@@ -13,101 +13,123 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DocumentFragment.h"
-#include "dom/DOMException.h"
 #include "dom/VTTCue.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-static ESValue vttCueTextFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue vttcueConstructor(ESVMInstance* instance)
 {
-    int argCount = instance->currentExecutionContext()->argumentCount();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        auto msg = ESString::create("Please use the 'new' operator");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 3) {
-        THROW_ILLEGAL_INVOCATION();
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    double startTime = firstArg.toNumber();
-    double endTime = secondArg.toNumber();
-    if (std::isnan(startTime) || std::isnan(endTime)) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    VTTCue* cue = new VTTCue(fetchDocument(instance), startTime, endTime,
-                             String::fromUTF8(thirdArg.toString()->utf8Data()));
-    return cue->scriptValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+
+    // Handle argument arg1
+    double value1;
+    value1 = arg1.toNumber();
+
+    // Handle argument arg2
+    String* value2 = String::emptyString;
+    value2 = toBrowserString(arg2);
+
+    VTTCue* result = nullptr;
+    Document* callWith = fetchDocument(instance);
+    // Call native function (nargs: 3)
+    result = new VTTCue(callWith, value0, value1, value2);
+    return result->scriptValue();
 }
 
+// Implement for attributes
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    if (!originalObj->isVTTCue()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    VTTCue* cue = (VTTCue*)originalObj;
-    return toJSString(cue->text());
+    GENERATE_THIS_AND_CHECK_TYPE(VTTCue);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->text();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue textSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (!originalObj->isVTTCue() || !firstArg.isESString()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    VTTCue* cue = (VTTCue*)originalObj;
-    cue->setText(toBrowserString(firstArg.toString()));
-    return firstArg;
+    GENERATE_THIS_AND_CHECK_TYPE(VTTCue);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setText(value0);
+    return ESValue();
 }
 
+// Implement for functions
 static ESValue getCueAsHTMLFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    if (!originalObj->isVTTCue()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    VTTCue* cue = (VTTCue*)originalObj;
-    Document* document = fetchDocument(instance);
-    DocumentFragment* df = cue->getCueAsHTML(document);
-    if (df) {
-        return df->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
+    GENERATE_THIS_AND_CHECK_TYPE(VTTCue);
+    // Declare return value (empty when void)
+    DocumentFragment* result = nullptr;
+    // Call native function (nargs: 0)
+    result = originalObj->getCueAsHTML();
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
 {
-    auto vttCueFun = ESFunctionObject::create(
-        NULL, vttCueTextFunction, ESString::create("VTTCue"), 3, true, true);
-    vttCueFun->defineAccessorProperty(
+    // Bind for constructor
+    ESString* VTTCueString = ESString::create("VTTCue");
+    ESFunctionObject* VTTCueFunction = ESFunctionObject::create(
+        nullptr, vttcueConstructor, VTTCueString, 3, true, true);
+    VTTCueFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    vttCueFun->protoType()
+    VTTCueFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    vttCueFun->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
-    vttCueFun->set__proto__(fetchData(scriptBindingInstance)->fnTextTrackCue());
+    VTTCueFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnTextTrackCue()->protoType());
+    VTTCueFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnTextTrackCue());
+    ESObject* VTTCuePrototypeObj =
+        VTTCueFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* textString = ESString::create("text");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        vttCueFun->protoType().asESPointer()->asESObject(),
-        ESString::create("text"), textGetterFunction, textSetterFunction);
+        VTTCuePrototypeObj, textString, textGetterFunction, textSetterFunction);
 
-    vttCueFun->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("getCueAsHTML"), true, true, true,
-        ESFunctionObject::create(NULL, getCueAsHTMLFunction,
-                                 ESString::create("getCueAsHTML"), 0, false));
+    // Bind for functions
+    ESString* getCueAsHTMLString = ESString::create("getCueAsHTML");
+    ESFunctionObject* getCueAsHTMLESFn = ESFunctionObject::create(
+        nullptr, getCueAsHTMLFunction, getCueAsHTMLString, 0, false);
+    VTTCuePrototypeObj->defineDataProperty(getCueAsHTMLString, true, true, true,
+                                           getCueAsHTMLESFn);
 
-    return vttCueFun;
+    return VTTCueFunction;
 }
 }
 #endif
