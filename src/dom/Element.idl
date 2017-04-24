@@ -79,12 +79,8 @@ interface Element : Node {
   readonly attribute long clientLeft;
   readonly attribute long clientWidth;
   readonly attribute long clientHeight;
-
-  // FIXME added style forcely, I didn't find any explanation or mention about style attribute
-  [CustomGetter, CustomSetter] attribute CSSStyleDeclaration style;
 };
 
-// TODO Support implements
 Element implements ParentNode;
 Element implements NonDocumentTypeChildNode;
 Element implements ChildNode;

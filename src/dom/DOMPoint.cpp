@@ -18,11 +18,51 @@
 
 namespace StarFish {
 DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
-    : x(inX)
-    , y(inY)
-    , z(inZ)
-    , w(inW)
+    : m_x(inX)
+    , m_y(inY)
+    , m_z(inZ)
+    , m_w(inW)
 {
+}
+
+double DOMPointInit::x() const
+{
+    return m_x;
+}
+
+void DOMPointInit::setX(double x)
+{
+    m_x = x;
+}
+
+double DOMPointInit::y() const
+{
+    return m_y;
+}
+
+void DOMPointInit::setY(double y)
+{
+    m_y = y;
+}
+
+double DOMPointInit::z() const
+{
+    return m_z;
+}
+
+void DOMPointInit::setZ(double z)
+{
+    m_z = z;
+}
+
+double DOMPointInit::w() const
+{
+    return m_w;
+}
+
+void DOMPointInit::setW(double w)
+{
+    m_w = w;
 }
 
 DOMPoint::DOMPoint(double x, double y, double z, double w)
@@ -31,7 +71,7 @@ DOMPoint::DOMPoint(double x, double y, double z, double w)
 }
 
 DOMPoint::DOMPoint(const DOMPointInit& pi)
-    : DOMPointReadOnly(pi.x, pi.y, pi.z, pi.w)
+    : DOMPointReadOnly(pi.x(), pi.y(), pi.z(), pi.w())
 {
 }
 }

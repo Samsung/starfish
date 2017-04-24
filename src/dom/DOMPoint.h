@@ -22,13 +22,27 @@
 namespace StarFish {
 
 struct DOMPointInit {
+public:
     DOMPointInit(double inX = 0, double inY = 0, double inZ = 0,
                  double inW = 1);
 
-    double x;
-    double y;
-    double z;
-    double w;
+    double x() const;
+    void setX(double x);
+
+    double y() const;
+    void setY(double y);
+
+    double z() const;
+    void setZ(double z);
+
+    double w() const;
+    void setW(double w);
+
+private:
+    double m_x;
+    double m_y;
+    double m_z;
+    double m_w;
 };
 
 class DOMPoint : public DOMPointReadOnly {
