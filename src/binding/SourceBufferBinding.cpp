@@ -27,6 +27,137 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue modeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->mode();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue modeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setMode(value0);
+    return ESValue();
+}
+
+static ESValue updatingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    bool result;
+    result = originalObj->updating();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue bufferedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    TimeRanges* result = nullptr;
+    result = originalObj->buffered();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue timestampOffsetGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    double result;
+    result = originalObj->timestampOffset();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_ERROR_MESSAGE(SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
+                              "timestampOffset", "SourceBuffer");
+        ESVMInstance::currentInstance()->throwError(
+            ESValue(TypeError::create(ESString::create(errorMsg))));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    originalObj->setTimestampOffset(value0);
+    return ESValue();
+}
+
+static ESValue textTracksGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    TextTrackList* result = nullptr;
+    result = originalObj->textTracks();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue appendWindowStartGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    double result;
+    result = originalObj->appendWindowStart();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_ERROR_MESSAGE(SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
+                              "appendWindowStart", "SourceBuffer");
+        ESVMInstance::currentInstance()->throwError(
+            ESValue(TypeError::create(ESString::create(errorMsg))));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    originalObj->setAppendWindowStart(value0);
+    return ESValue();
+}
+
+static ESValue appendWindowEndGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare return value (empty when void)
+    double result;
+    result = originalObj->appendWindowEnd();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setAppendWindowEnd(value0);
+    return ESValue();
+}
+
 extern ESValue appendBufferSourceBufferFunction(ESVMInstance* instance);
 
 static ESValue removeFunction(ESVMInstance* instance)
@@ -66,133 +197,6 @@ static ESValue abortFunction(ESVMInstance* instance)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue modeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    return ESValue(originalObj->mode());
-}
-
-static ESValue modeSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    double mode = firstArg.toNumber();
-    if (std::isnan(mode)) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    try {
-        if (mode == SourceBuffer::AppendMode::Segments) {
-            originalObj->setMode(SourceBuffer::AppendMode::Segments);
-        } else if (mode == SourceBuffer::AppendMode::Sequence) {
-            originalObj->setMode(SourceBuffer::AppendMode::Sequence);
-        }
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue updatingGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    return ESValue(originalObj->updating());
-}
-
-static ESValue bufferedGetterFunction(ESVMInstance* instance)
-{
-    try {
-        GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-        TimeRanges* timeRanges = originalObj->buffered();
-        if (timeRanges) {
-            return timeRanges->scriptValue();
-        }
-        return ESValue(ESValue::ESUndefined);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-static ESValue timestampOffsetGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    return ESValue(originalObj->timestampOffset());
-}
-
-static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    double timeStampOffset = firstArg.toNumber();
-    if (std::isnan(timeStampOffset)) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    try {
-        originalObj->setTimestampOffset(timeStampOffset);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue textTracksGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    TextTrackList* textTracks = originalObj->textTracks();
-    if (textTracks) {
-        return textTracks->scriptValue();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue appendWindowStartGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    return ESValue(originalObj->appendWindowStart());
-}
-
-static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    double timeStamp = firstArg.toNumber();
-    if (std::isnan(timeStamp)) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    try {
-        originalObj->setAppendWindowStart(timeStamp);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue appendWindowEndGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    return ESValue(originalObj->appendWindowEnd());
-}
-
-static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    double timeStamp = firstArg.toNumber();
-    if (std::isnan(timeStamp)) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    try {
-        originalObj->setAppendWindowEnd(timeStamp);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
     return ESValue(ESValue::ESUndefined);
 }
 
@@ -289,15 +293,85 @@ static ESValue onabortSetterFunction(ESVMInstance* instance)
 ESFunctionObject* bindingSourceBuffer(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        SourceBuffer, fetchData(scriptBindingInstance)->m_fnEventTarget);
+    // Bind for constructor
+    ESString* SourceBufferString = ESString::create("SourceBuffer");
+    ESFunctionObject* SourceBufferFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, SourceBufferString, 0, true, true);
+    SourceBufferFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     SourceBufferFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("appendBuffer"), true, true, true,
-                             ESFunctionObject::create(
-                                 NULL, appendBufferSourceBufferFunction,
-                                 ESString::create("appendBuffer"), 1, false));
+        ->forceNonVectorHiddenClass(false);
+    SourceBufferFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    SourceBufferFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
+    ESObject* SourceBufferPrototypeObj =
+        SourceBufferFunction->protoType().asESPointer()->asESObject();
+
+    // Bind for attributes
+    ESString* modeString = ESString::create("mode");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, modeString, modeGetterFunction,
+        modeSetterFunction);
+
+    ESString* updatingString = ESString::create("updating");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, updatingString, updatingGetterFunction,
+        nullptr);
+
+    ESString* bufferedString = ESString::create("buffered");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, bufferedString, bufferedGetterFunction,
+        nullptr);
+
+    ESString* timestampOffsetString = ESString::create("timestampOffset");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, timestampOffsetString,
+        timestampOffsetGetterFunction, timestampOffsetSetterFunction);
+
+    ESString* textTracksString = ESString::create("textTracks");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, textTracksString, textTracksGetterFunction,
+        nullptr);
+
+    ESString* appendWindowStartString = ESString::create("appendWindowStart");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, appendWindowStartString,
+        appendWindowStartGetterFunction, appendWindowStartSetterFunction);
+
+    ESString* appendWindowEndString = ESString::create("appendWindowEnd");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, appendWindowEndString,
+        appendWindowEndGetterFunction, appendWindowEndSetterFunction);
+
+    ESString* onupdatestartString = ESString::create("onupdatestart");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, onupdatestartString,
+        onupdatestartGetterFunction, onupdatestartSetterFunction);
+
+    ESString* onupdateString = ESString::create("onupdate");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, onupdateString, onupdateGetterFunction,
+        onupdateSetterFunction);
+
+    ESString* onupdateendString = ESString::create("onupdateend");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, onupdateendString, onupdateendGetterFunction,
+        onupdateendSetterFunction);
+
+    ESString* onerrorString = ESString::create("onerror");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, onerrorString, onerrorGetterFunction,
+        onerrorSetterFunction);
+
+    ESString* onabortString = ESString::create("onabort");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferPrototypeObj, onabortString, onabortGetterFunction,
+        onabortSetterFunction);
 
     SourceBufferFunction->protoType()
         .asESPointer()
@@ -314,64 +388,6 @@ ESFunctionObject* bindingSourceBuffer(
                              ESFunctionObject::create(NULL, abortFunction,
                                                       ESString::create("abort"),
                                                       0, false));
-
-    // TODO: appendStream
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("mode"), modeGetterFunction, modeSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("updating"), updatingGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("buffered"), bufferedGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("timestampOffset"), timestampOffsetGetterFunction,
-        timestampOffsetSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("textTracks"), textTracksGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appendWindowStart"), appendWindowStartGetterFunction,
-        appendWindowStartSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("appendWindowEnd"), appendWindowEndGetterFunction,
-        appendWindowEndSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onupdatestart"), onupdatestartGetterFunction,
-        onupdatestartSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onupdate"), onupdateGetterFunction,
-        onupdateSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onupdateend"), onupdateendGetterFunction,
-        onupdateendSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onerror"), onerrorGetterFunction,
-        onerrorSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onabort"), onabortGetterFunction,
-        onabortSetterFunction);
 
     return SourceBufferFunction;
 }

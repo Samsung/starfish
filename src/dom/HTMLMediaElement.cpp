@@ -64,7 +64,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
 void HTMLMediaElement::onDOMContentLoaded()
 {
     if (!document()->inParsing() &&
-        (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+        (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
         // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes
         // content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" :
         // "false", preload()->utf8Data());
@@ -85,7 +85,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         if (!document()->inParsing() &&
-            (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+            (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
             // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute
             // causes content load (autoplay:%s, preload:%s)\n", autoplay() ?
             // "true" : "false", preload()->utf8Data());
@@ -478,7 +478,7 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
-HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
+HTMLMediaElement::PreloadState HTMLMediaElement::preloadValue()
 {
     QualifiedName preload =
         document()->window()->starFish()->staticStrings()->m_preload;
@@ -515,7 +515,7 @@ HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
 String* HTMLMediaElement::preload()
 {
     return HTMLMediaElement::preloadToString(document()->window()->starFish(),
-                                             preloadEnum());
+                                             preloadValue());
 }
 
 TimeRanges* HTMLMediaElement::buffered()
