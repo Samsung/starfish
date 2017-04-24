@@ -119,7 +119,7 @@ public:
     }
 
     void setPayload(String* payload);
-    DocumentFragment* getCueAsHTML(Document* document);
+    DocumentFragment* getCueAsHTML();
 
     void dispatchEnterEvent();
     void dispatchExitEvent();

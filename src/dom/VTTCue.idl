@@ -18,7 +18,9 @@ enum PositionAlignSetting { "line-left", "center", "line-right", "auto" };
 [STARFISH_ENABLE_MULTIMEDIA]
 enum AlignSetting { "start", "center", "end", "left", "right" };
 
-[STARFISH_ENABLE_MULTIMEDIA, Constructor(double startTime, double endTime, DOMString text)]
+[STARFISH_ENABLE_MULTIMEDIA,
+ Constructor(double startTime, double endTime, DOMString text),
+ ConstructorCallWith=Document]
 interface VTTCue : TextTrackCue {
   [Unimplemented] attribute VTTRegion? region;
   [Unimplemented] attribute DirectionSetting vertical;

@@ -13,57 +13,92 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "dom/TextTrack.h"
 #include "dom/TextTrackList.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
-    uint32_t len = originalObj->size();
-    return ESValue(len);
+    // Declare return value (empty when void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
-static ESValue getTrackByIdGetterFunction(ESVMInstance* instance)
+// Implement for functions
+static ESValue getTrackByIdFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    String* id = toBrowserString(v.toString());
-    auto iter = std::find_if(
-        originalObj->begin(), originalObj->end(),
-        [&id](TextTrack* track) { return track->id()->equals(id); });
-
-    if (iter != originalObj->end()) {
-        return (*iter)->scriptValue();
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue(ESValue::ESNull);
+    // Declare return value (empty when void)
+    TextTrack* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->getTrackById(value0);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingTextTrackList(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        TextTrackList, fetchData(scriptBindingInstance)->m_fnEventTarget);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
-
+    // Bind for constructor
+    ESString* TextTrackListString = ESString::create("TextTrackList");
+    ESFunctionObject* TextTrackListFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 TextTrackListString, 0, true, true);
+    TextTrackListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     TextTrackListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("getTrackById"), true, true, true,
-                             ESFunctionObject::create(
-                                 NULL, getTrackByIdGetterFunction,
-                                 ESString::create("getTrackById"), 0, false));
+        ->forceNonVectorHiddenClass(false);
+    TextTrackListFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    TextTrackListFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
+    ESObject* TextTrackListPrototypeObj =
+        TextTrackListFunction->protoType().asESPointer()->asESObject();
+
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackListPrototypeObj, lengthString, lengthGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* getTrackByIdString = ESString::create("getTrackById");
+    ESFunctionObject* getTrackByIdESFn = ESFunctionObject::create(
+        nullptr, getTrackByIdFunction, getTrackByIdString, 1, false);
+    TextTrackListPrototypeObj->defineDataProperty(getTrackByIdString, true,
+                                                  true, true, getTrackByIdESFn);
 
     return TextTrackListFunction;
 }

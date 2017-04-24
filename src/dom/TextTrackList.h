@@ -38,6 +38,23 @@ public:
     {
         return true;
     }
+
+    // JS Bindings
+    uint32_t length()
+    {
+        return size();
+    }
+
+    TextTrack* getTrackById(String* id)
+    {
+        auto iter = std::find_if(begin(), end(), [&id](TextTrack* track) {
+            return track->id()->equals(id);
+        });
+        if (iter != end()) {
+            return (*iter);
+        }
+        return nullptr;
+    }
 };
 }
 
