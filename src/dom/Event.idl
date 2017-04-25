@@ -14,7 +14,7 @@ interface Event {
   const unsigned short BUBBLING_PHASE = 3;
   readonly attribute unsigned short eventPhase;
 
-  void stopPropagation();
+  [Rename=setStopPropagation] void stopPropagation();
   [Unimplemented] attribute boolean cancelBubble;
   void stopImmediatePropagation();
 

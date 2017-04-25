@@ -111,7 +111,7 @@ private:
 };
 
 class UIEvent : public Event {
-protected:
+public:
     UIEvent(String* eventType, const UIEventInit& init = UIEventInit())
         : Event(eventType, init)
     {
