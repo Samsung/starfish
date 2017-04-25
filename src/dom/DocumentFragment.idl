@@ -5,5 +5,6 @@
 interface DocumentFragment : Node {
 };
 
-DocumentFragment implements NonElementParentNode;
-DocumentFragment implements ParentNode;
+// NOTE current version of Starfish does not fully support DocumentFragment
+// DocumentFragment implements NonElementParentNode;
+// DocumentFragment implements ParentNode;

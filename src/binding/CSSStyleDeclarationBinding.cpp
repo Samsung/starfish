@@ -15,142 +15,173 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/CSSStyleDeclaration.h"
 #include "dom/DOMException.h"
-#include "style/CSSStyleLookupTrie.h"
+#include "dom/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+// Implement for functions
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        auto msg = ESString::create(
+            "At least 1 argument required, but only 0 present");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 #ifdef STARFISH_ENABLE_TEST
 static ESValue getPropertyValueFunction(ESVMInstance* instance)
 {
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, CSSStyleDeclaration);
-        CSSStyleDeclaration* decl =
-            (CSSStyleDeclaration*)thisValue.asESPointer()
-                ->asESObject()
-                ->extraPointerData();
-        ESValue prop = instance->currentExecutionContext()->readArgument(0);
-
-        if (prop.isESString()) {
-            String* name = toBrowserString(prop);
-            const char* c = name->utf8Data();
-            CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
-            String* val = String::emptyString;
-            switch (kind) {
-#define MATCH_KEY(Name, ...) \
-    case CSSStyleKind::Name: \
-        val = decl->Name();  \
-        break;
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
-#undef MATCH_KEY
-            default:
-                break;
-            }
-            return toJSString(val);
-        } else {
-            return ESString::create("");
-        }
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getPropertyValue", "CSSStyleDeclaration", "1", buffer);
     }
-}
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
+    // Call native function (nargs: 1)
+    result = originalObj->getPropertyValue(value0);
+
+    // Return ESValue from native value
+    return toJSString(result);
+}
+#endif
+
+#ifdef STARFISH_ENABLE_TEST
 static ESValue setPropertyFunction(ESVMInstance* instance)
 {
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, CSSStyleDeclaration);
-        CSSStyleDeclaration* decl =
-            (CSSStyleDeclaration*)thisValue.asESPointer()
-                ->asESObject()
-                ->extraPointerData();
-        ESValue prop = instance->currentExecutionContext()->readArgument(0);
-        ESValue val = instance->currentExecutionContext()->readArgument(1);
-
-        String* name = toBrowserString(prop.toString())->toLower();
-        const char* c = name->utf8Data();
-        CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
-
-        bool isImportant = false;
-        if (instance->currentExecutionContext()->argumentCount() == 3) {
-            String* pri = toBrowserString(instance->currentExecutionContext()
-                                              ->readArgument(2)
-                                              .toString())
-                              ->toLower();
-            if (!pri->equals(String::emptyString)) {
-                if (pri->equals(String::fromUTF8("important"))) {
-                    isImportant = true;
-                } else {
-                    return ESValue();
-                }
-            }
-
-            if (kind == CSSStyleKind::Unknown) {
-            } else {
-                if (false) {
-                }
-#define SET_ATTR(name, nameLower, nameCSSCase)              \
-    else if (kind == CSSStyleKind::name)                    \
-    {                                                       \
-        decl->set##name(toBrowserString(val), isImportant); \
+    GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "setProperty", "CSSStyleDeclaration", "2", buffer);
     }
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-            }
-        }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = toBrowserString(arg1);
+    }
+    // Handle argument arg2
+    String* value2 = String::fromUTF8("");
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = toBrowserString(arg2);
+    }
+    // Call native function (nargs: 3)
+    try {
+        originalObj->setProperty(value0, value1, value2);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue();
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 #endif
 
 ESFunctionObject* bindingCSSStyleDeclaration(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    /* style-related getter/setter start here */
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* CSSStyleDeclarationString =
+        ESString::create("CSSStyleDeclaration");
+    ESFunctionObject* CSSStyleDeclarationFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 CSSStyleDeclarationString, 0, true, true);
+    CSSStyleDeclarationFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    CSSStyleDeclarationFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    CSSStyleDeclarationFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)
+                           ->m_instance->globalObject()
+                           ->objectPrototype());
+    ESObject* CSSStyleDeclarationPrototypeObj =
+        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        CSSStyleDeclarationPrototypeObj, lengthString, lengthGetterFunction,
+        nullptr);
+
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    CSSStyleDeclarationPrototypeObj->defineDataProperty(itemString, true, true,
+                                                        true, itemESFn);
 
 #ifdef STARFISH_ENABLE_TEST
-    CSSStyleDeclarationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getPropertyValue"), true, true, true,
-            ESFunctionObject::create(nullptr, getPropertyValueFunction,
-                                     ESString::create("getPropertyValue"), 2,
-                                     false));
+    ESString* getPropertyValueString = ESString::create("getPropertyValue");
+    ESFunctionObject* getPropertyValueESFn = ESFunctionObject::create(
+        nullptr, getPropertyValueFunction, getPropertyValueString, 1, false);
+    CSSStyleDeclarationPrototypeObj->defineDataProperty(
+        getPropertyValueString, true, true, true, getPropertyValueESFn);
+#endif
 
-    CSSStyleDeclarationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("setProperty"), true, true, true,
-                             ESFunctionObject::create(
-                                 nullptr, setPropertyFunction,
-                                 ESString::create("setProperty"), 3, false));
+#ifdef STARFISH_ENABLE_TEST
+    ESString* setPropertyString = ESString::create("setProperty");
+    ESFunctionObject* setPropertyESFn = ESFunctionObject::create(
+        nullptr, setPropertyFunction, setPropertyString, 2, false);
+    CSSStyleDeclarationPrototypeObj->defineDataProperty(
+        setPropertyString, true, true, true, setPropertyESFn);
 #endif
 
     return CSSStyleDeclarationFunction;

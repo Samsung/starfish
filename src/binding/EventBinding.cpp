@@ -25,50 +25,43 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue eventFunction(ESVMInstance* instance)
-{
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+extern EventInit toEventInitFromESValue(ESVMInstance* instance, ESValue& from);
+extern ESValue toESValueFromEventInit(ESVMInstance* instance, EventInit& from);
 
-    if (argCount == 0) {
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "Event",
-                        "1", "0");
-    } else if (argCount == 1) {
-        ESString* type = firstArg.toString();
-        auto event = new Event(String::fromUTF8(type->utf8Data()));
-        return event->scriptValue();
-    } else {
-        if (secondArg.isObject() || secondArg.isUndefinedOrNull()) {
-            ESString* type = firstArg.toString();
-            bool canBubbles = false;
-            bool canCancelable = false;
-            if (!secondArg.isUndefinedOrNull()) {
-                ESValue bubbles = secondArg.asESPointer()->asESObject()->get(
-                    ESString::create("bubbles"));
-                ESValue cancelable = secondArg.asESPointer()->asESObject()->get(
-                    ESString::create("cancelable"));
-                canBubbles =
-                    bubbles.isBoolean() ? bubbles.asBoolean() : canBubbles;
-                canCancelable = cancelable.isBoolean() ? cancelable.asBoolean()
-                                                       : canCancelable;
-            }
-#ifdef STARFISH_TC_COVERAGE
-            if (canBubbles) {
-                STARFISH_LOG_INFO("&&&EventInit::bubbles\n");
-            }
-            if (canCancelable) {
-                STARFISH_LOG_INFO("&&&EventInit::cancelable\n");
-            }
-#endif
-            auto event = new Event(String::fromUTF8(type->utf8Data()),
-                                   EventInit(canBubbles, canCancelable));
-            return event->scriptValue();
-        } else {
-            THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH,
-                            "Event", "2", "eventInitDict", "object");
-        }
+static ESValue eventConstructor(ESVMInstance* instance)
+{
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "Event");
     }
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "Event",
+                        "1", buffer);
+    }
+    size_t validArgCount = 2;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    EventInit value1;
+    if (arg1.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value1 = toEventInitFromESValue(instance, arg1);
+    }
+    Event* result = nullptr;
+    // Call native function (nargs: 1-2)
+    if (validArgCount == 1) {
+        result = new Event(value0);
+    } else if (validArgCount == 2) {
+        result = new Event(value0, value1);
+    }
+    return result->scriptValue();
 }
 
 // Implement for attributes
@@ -134,42 +127,37 @@ static ESValue timeStampGetterFunction(ESVMInstance* instance)
     return ESValue(v);
 }
 
+// Implement for functions
 static ESValue stopPropagationFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Event);
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount == 0) {
-        ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
-            ->setStopPropagation();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->setStopPropagation();
+
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Event);
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount == 0) {
-        ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
-            ->setStopImmediatePropagation();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->stopImmediatePropagation();
+
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue preventDefaultFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Event);
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount == 0) {
-        ((Event*)thisValue.asESPointer()->asESObject()->extraPointerData())
-            ->preventDefault();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(Event);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->preventDefault();
+
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
 
@@ -177,7 +165,7 @@ ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
 {
     /* 3.2 Interface Event */
     auto fnEvent = ESFunctionObject::create(
-        NULL, eventFunction, ESString::create("Event"), 1, true, true);
+        NULL, eventConstructor, ESString::create("Event"), 1, true, true);
     fnEvent->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
         false);
     fnEvent->protoType().asESPointer()->asESObject()->set__proto__(
