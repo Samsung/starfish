@@ -21,7 +21,7 @@
 
 namespace StarFish {
 static const char* CALLED_CONSTRUCTOR_WITHOUT_NEW =
-    "Constructor %s requires 'new'";
+    "Constructor '%s' requires 'new'";
 static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH =
     "Failed to construct '%s': %s argument required, but only %s present.";
 static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH =

@@ -40,7 +40,7 @@ public:
     }
 
     // JS Bindings
-    uint32_t length()
+    size_t length()
     {
         return size();
     }
