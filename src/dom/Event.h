@@ -98,19 +98,22 @@ public:
         m_eventPhase = phase;
     }
 
-    bool stopPropagation()
+    bool stopPropagationValue()
     {
         return m_propagationStopped || m_immediatePropagationStopped;
     }
-    void setStopPropagation()
+
+    void stopPropagation()
     {
         m_propagationStopped = true;
     }
-    bool stopImmediatePropagation()
+
+    bool stopImmediatePropagationValue()
     {
         return m_immediatePropagationStopped;
     }
-    void setStopImmediatePropagation()
+
+    void stopImmediatePropagation()
     {
         m_propagationStopped = true;
         m_immediatePropagationStopped = true;

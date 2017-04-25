@@ -135,7 +135,7 @@ static ESValue stopPropagationFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Event);
     // Declare return value (empty when void)
     // Call native function (nargs: 0)
-    originalObj->setStopPropagation();
+    originalObj->stopPropagation();
 
     // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);

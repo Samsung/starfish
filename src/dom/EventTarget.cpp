@@ -185,7 +185,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // event, as long as event's stop propagation flag is unset.
     event->setEventPhase(Event::CAPTURING_PHASE);
     for (size_t i = eventPath.size(); i > 1; i--) {
-        if (event->stopPropagation()) {
+        if (event->stopPropagationValue()) {
             break;
         }
         EventTarget* eventTarget = eventPath[i - 1];
@@ -197,7 +197,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 GCVector<EventListener*>(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
-                if (event->stopImmediatePropagation()) {
+                if (event->stopImmediatePropagationValue()) {
                     break;
                 }
                 if (listener->capture() &&
@@ -220,7 +220,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     GCVector<EventListener*>* originals =
         origin->getEventListeners(event->type());
     if (originals) {
-        if (!event->stopPropagation()) {
+        if (!event->stopPropagationValue()) {
             // Iterate Copied Vector : listeners can be removed during iteration
             GCVector<EventListener*> copies =
                 GCVector<EventListener*>(*originals);
@@ -245,7 +245,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     if (event->bubbles()) {
         event->setEventPhase(Event::BUBBLING_PHASE);
         for (size_t i = 1; i < eventPath.size(); i++) {
-            if (event->stopPropagation()) {
+            if (event->stopPropagationValue()) {
                 break;
             }
             EventTarget* eventTarget = eventPath[i];
@@ -258,7 +258,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     GCVector<EventListener*>(*originals);
                 for (auto listener : copies) {
                     STARFISH_ASSERT(listener);
-                    if (event->stopImmediatePropagation()) {
+                    if (event->stopImmediatePropagationValue()) {
                         break;
                     }
                     if (!listener->capture() &&
