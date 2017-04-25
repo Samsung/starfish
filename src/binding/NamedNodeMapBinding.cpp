@@ -35,118 +35,120 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
     return ESValue(len);
 }
 
+// Implement for functions
 static ESValue itemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, NamedNodeMap);
-    NamedNodeMap* self = (NamedNodeMap*)thisValue.asESPointer()
-                             ->asESObject()
-                             ->extraPointerData();
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(argValue, idx);
-    if (idx != INVALID_INDEX && idx < self->length()) {
-        Attr* elem = self->item(idx);
-        if (elem != nullptr) {
-            return elem->scriptValue();
-        }
+    GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        auto msg = ESString::create(
+            "At least 1 argument required, but only 0 present");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue(ESValue::ESNull);
+    // Declare return value (empty when void)
+    Attr* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue getNamedItemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, NamedNodeMap);
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    if (argValue.isESString()) {
-        NamedNodeMap* t = ((NamedNodeMap*)thisValue.asESPointer()
-                               ->asESObject()
-                               ->extraPointerData());
-        String* key = toBrowserString(argValue);
-        auto attrName = t->element()->document()->createAttributeName(key);
-        Attr* elem = t->getNamedItem(attrName);
-        if (elem != nullptr) {
-            return elem->scriptValue();
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue(ESValue::ESNull);
+    // Declare return value (empty when void)
+    Attr* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->getNamedItem(value0);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue setNamedItemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, NamedNodeMap);
-    NamedNodeMap* namedNodeMap = (NamedNodeMap*)thisValue.asESPointer()
-                                     ->asESObject()
-                                     ->extraPointerData();
-    STARFISH_ASSERT(namedNodeMap->element());
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(argValue, Node);
-    if (!((Node*)argValue.asESPointer()->asESObject()->extraPointerData())
-             ->isAttr()) {
-        THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    Attr* passedAttr =
-        (Attr*)argValue.asESPointer()->asESObject()->extraPointerData();
-    Attr* toReturn = namedNodeMap->setNamedItem(passedAttr);
-    if (toReturn) {
-        return toReturn->scriptValue();
+    // Declare return value (empty when void)
+    Attr* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Attr* value0 = nullptr;
+    if (arg0.isUndefinedOrNull()) {
+        instance->throwError(
+            ESValue(TypeError::create(ESString::create("Wrong argument"))));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     } else {
+        CHECK_TYPEOF(arg0, Attr);
+        value0 = (Attr*)(arg0.asESPointer()->asESObject()->extraPointerData());
+    }
+    // Call native function (nargs: 1)
+    result = originalObj->setNamedItem(value0);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
         return ESValue(ESValue::ESNull);
     }
+    return result->scriptValue();
 }
 
 static ESValue removeNamedItemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, NamedNodeMap);
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    if (argValue.isESString()) {
-        try {
-            QualifiedName name(
-                AtomicString::emptyAtomicString(),
-                AtomicString::createAttrAtomicString(
-                    ((Window*)instance->globalObject()->extraPointerData())
-                        ->starFish(),
-                    argValue.asESString()->utf8Data()));
-            Attr* old = ((NamedNodeMap*)thisValue.asESPointer()
-                             ->asESObject()
-                             ->extraPointerData())
-                            ->getNamedItem(name);
-            if (old == nullptr) {
-                throw new DOMException(((NamedNodeMap*)thisValue.asESPointer()
-                                            ->asESObject()
-                                            ->extraPointerData())
-                                           ->striptBindingInstance(),
-                                       DOMException::Code::NOT_FOUND_ERR,
-                                       nullptr);
-            }
-            Attr* toReturn = new Attr(old->document(), name, old->value());
-            ((NamedNodeMap*)thisValue.asESPointer()
-                 ->asESObject()
-                 ->extraPointerData())
-                ->removeNamedItem(name);
-            if (toReturn != nullptr) {
-                return toReturn->scriptValue();
-            }
-        } catch (DOMException* e) {
-            ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-    } else {
-        THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue(ESValue::ESNull);
+    // Declare return value (empty when void)
+    Attr* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->removeNamedItem(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingNamedNodeMap(

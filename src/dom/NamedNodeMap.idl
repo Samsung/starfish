@@ -9,6 +9,6 @@ interface NamedNodeMap {
   [Unimplemented] Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
   [CEReactions] Attr? setNamedItem(Attr attr);
   [Unimplemented, CEReactions] Attr? setNamedItemNS(Attr attr);
-  [CEReactions] Attr removeNamedItem(DOMString qualifiedName);
+  [CEReactions, RaisesException] Attr removeNamedItem(DOMString qualifiedName);
   [Unimplemented, CEReactions] Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
 };

@@ -13,9 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#include "platform/window/Window.h"
 #include "dom/Attr.h"
 #include "dom/Attribute.h"
 #include "dom/Document.h"
+#include "dom/DOMException.h"
 #include "dom/Element.h"
 #include "dom/NamedNodeMap.h"
 
@@ -34,6 +36,11 @@ Attr* NamedNodeMap::item(unsigned long index)
     } else {
         return nullptr;
     }
+}
+
+Attr* NamedNodeMap::getNamedItem(String* name)
+{
+    return getNamedItem(element()->document()->createAttributeName(name));
 }
 
 Attr* NamedNodeMap::getNamedItem(QualifiedName name)
@@ -55,8 +62,22 @@ Attr* NamedNodeMap::setNamedItem(Attr* attr)
     return storedAttr;
 }
 
-void NamedNodeMap::removeNamedItem(QualifiedName name)
+Attr* NamedNodeMap::removeNamedItem(String* name)
 {
-    m_element->removeAttribute(name);
+    STARFISH_ASSERT(element());
+    STARFISH_ASSERT(element()->document());
+    STARFISH_ASSERT(element()->document()->window());
+    STARFISH_ASSERT(element()->document()->window()->starFish());
+    StarFish* starfish = element()->document()->window()->starFish();
+    QualifiedName qname(AtomicString::emptyAtomicString(),
+                        AtomicString::createAttrAtomicString(starfish, name));
+    Attr* old = getNamedItem(qname);
+    if (old == nullptr) {
+        throw new DOMException(striptBindingInstance(),
+                               DOMException::Code::NOT_FOUND_ERR, nullptr);
+    }
+    Attr* toReturn = new Attr(old->document(), qname, old->value());
+    m_element->removeAttribute(qname);
+    return toReturn;
 }
 }
