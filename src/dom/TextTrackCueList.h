@@ -41,7 +41,7 @@ public:
         return true;
     }
 
-    unsigned long length()
+    size_t length()
     {
         return size();
     }
