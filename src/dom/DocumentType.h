@@ -37,9 +37,10 @@ public:
 #endif
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDocumentType()->protoType());
     }
 
     String* name() const

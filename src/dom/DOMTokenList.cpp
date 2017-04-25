@@ -21,6 +21,51 @@
 
 namespace StarFish {
 
+static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isDOMTokenList());
+    uint32_t idx = key.toIndex();
+    if (idx < self->length()) {
+        Nullable<String*> result = self->item(idx);
+        if (result.hasValue()) {
+            return createScriptString(result.getValue());
+        }
+    }
+    return ESValue(ESValue::ESDeletedValue);
+}
+
+static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
+                                  ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    return false;
+}
+
+static ESValueVector enumerateCallbackFunction(ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isDOMTokenList());
+    size_t len = self->length();
+    ESValueVector v(len);
+    for (size_t i = 0; i < len; i++) {
+        v[i] = ESValue(i);
+    }
+    return v;
+}
+
+void DOMTokenList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMTokenList()->protoType());
+
+    scriptObject()->setPropertyInterceptor(readCallbackFunction,
+                                           writeCallbackFunction,
+                                           enumerateCallbackFunction, true);
+}
+
 void DOMTokenList::tokenize(GCVector<String*>* tokens, String* src)
 {
     tokens->clear();

@@ -118,6 +118,12 @@ public:
     }
 
 public:
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnUIEvent()->protoType());
+    }
+
     virtual bool isUIEvent() const override
     {
         return true;

@@ -114,6 +114,12 @@ public:
         return true;
     }
 
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnEventTarget()->protoType());
+    }
+
     GCVector<EventListener*>* getEventListeners(const String* eventType);
 
     bool addEventListener(const String* eventType, EventListener* listener,

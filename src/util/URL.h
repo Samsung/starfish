@@ -49,9 +49,9 @@ public:
         return new URL(baseURL, url);
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(fetchData(instance)->fnURL()->protoType());
     }
 
     String* baseURI() const;

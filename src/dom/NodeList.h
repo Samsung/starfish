@@ -32,17 +32,13 @@ public:
 
     NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this, instance);
-    }
-
+    virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isNodeList() const override
     {
         return true;
     }
 
-    unsigned long length() const;
+    size_t length() const;
     Node* item(unsigned long index);
     NodeListImpl& getNodeListImpl()
     {

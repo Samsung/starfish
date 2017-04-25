@@ -23,7 +23,56 @@
 
 namespace StarFish {
 
-unsigned long NamedNodeMap::length()
+static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNamedNodeMap());
+    uint32_t idx = key.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        String* str = toBrowserString(key);
+        auto attrName = self->element()->document()->createAttributeName(str);
+        Attr* e = self->getNamedItem(attrName);
+        if (e != nullptr) {
+            return e->scriptValue();
+        }
+    } else if (idx < self->length()) {
+        return self->item(idx)->scriptValue();
+    }
+    return ESValue(ESValue::ESDeletedValue);
+}
+
+static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
+                                  ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    return false;
+}
+
+static ESValueVector enumerateCallbackFunction(ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNamedNodeMap());
+    size_t len = self->length();
+    ESValueVector v(len);
+    for (size_t i = 0; i < len; i++) {
+        v[i] = ESValue(i);
+    }
+    return v;
+}
+
+void NamedNodeMap::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnNamedNodeMap()->protoType());
+
+    scriptObject()->setPropertyInterceptor(readCallbackFunction,
+                                           writeCallbackFunction,
+                                           enumerateCallbackFunction, true);
+}
+
+size_t NamedNodeMap::length()
 {
     return m_element->attributeCount(); // The localName have to be excepted
 }

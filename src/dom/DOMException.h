@@ -63,9 +63,12 @@ public:
     // Constructor exposed to script.
     DOMException(Document* document, String* message, String* name);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMException()->protoType());
+        scriptObject()->defineDataProperty(ESString::create("code"), false,
+                                           false, false, ESValue(m_code));
     }
 
     virtual bool isDOMException() const override
@@ -77,6 +80,7 @@ public:
     {
         return m_message;
     }
+
     const char* charname()
     {
         if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
@@ -84,6 +88,7 @@ public:
         }
         return s_names[m_code];
     }
+
     String* name()
     {
         if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
@@ -91,6 +96,7 @@ public:
         }
         return String::fromUTF8(s_names[m_code]);
     }
+
     int code()
     {
         return m_code;

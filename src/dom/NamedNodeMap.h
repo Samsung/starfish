@@ -32,17 +32,14 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this, instance);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isNamedNodeMap() const override
     {
         return true;
     }
 
-    unsigned long length();
+    size_t length();
     Attr* item(unsigned long index);
     Attr* getNamedItem(String* name);
     Attr* getNamedItem(QualifiedName name);

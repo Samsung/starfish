@@ -32,17 +32,14 @@ public:
                    NodeListImpl::FilterFunctionType filterType, void* data,
                    bool canCache = false);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this, instance);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isHTMLCollection() const
     {
         return true;
     }
 
-    unsigned long length() const;
+    size_t length() const;
     Element* item(unsigned long index);
     Element* namedItem(String* name);
     NodeListImpl& getNodeListImpl()

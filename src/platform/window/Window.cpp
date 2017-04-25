@@ -542,6 +542,1137 @@ Window::~Window()
 #endif
 }
 
+#ifdef STARFISH_ENABLE_TEST
+static ESValue debugPauseFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+            [](size_t, void* data, void*) {
+                StarFish* sf = (StarFish*)data;
+                sf->pause();
+            },
+            wnd->starFish(), nullptr);
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue debugResumeFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+            [](size_t, void* data, void*) {
+                StarFish* sf = (StarFish*)data;
+                sf->resume();
+            },
+            wnd->starFish(), nullptr);
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue networkEnableFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->setNetworkState(true);
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue networkDisableFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->setNetworkState(false);
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue isPixelTestFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
+            return ESValue(ESValue::ESTrue);
+        } else {
+            return ESValue(ESValue::ESFalse);
+        }
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static void screenShotTimeoutHandler(Window* wnd, void* data)
+{
+    ESFunctionObject* p = (ESFunctionObject*)data;
+    callScriptFunction(p, {}, 0,
+                       ESVMInstance::currentInstance()->globalObject());
+}
+
+static ESValue screenShotFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        std::string path =
+            wnd->document()->documentURI()->baseURI()->utf8Data();
+        path = path.substr(strlen("file://"));
+        path += ESVMInstance::currentInstance()
+                    ->currentExecutionContext()
+                    ->readArgument(0)
+                    .toString()
+                    ->utf8Data();
+        wnd->screenShot(path);
+        wnd->setTimeout(
+            screenShotTimeoutHandler, 100,
+            instance->currentExecutionContext()->readArgument(1).asESPointer());
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue screenShotRelativePathFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        char buff[1024];
+        getcwd(buff, 1024);
+        String* path =
+            String::fromUTF8(buff)
+                ->concat(String::fromUTF8("/"))
+                ->concat(String::fromUTF8(getenv("SCREEN_SHOT_FILE")
+                                              ? getenv("SCREEN_SHOT_FILE")
+                                              : ""));
+        wnd->screenShot(path->utf8Data());
+        callScriptFunction(instance->currentExecutionContext()->readArgument(0),
+                           {}, 0, instance->globalObject());
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue forceDisableOnloadCaptureFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->forceDisableOnloadCapture();
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue getXYWHFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->renderingIfNeeds();
+        Node* node = (Node*)instance->currentExecutionContext()
+                         ->readArgument(0)
+                         .asESPointer()
+                         ->asESObject()
+                         ->extraPointerData();
+        Frame* fr = (Frame*)node->frame();
+        if (!fr) {
+            return ESValue(ESValue::ESNull);
+        } else if (fr->isFrameBox()) {
+            LayoutRect rect = fr->asFrameBox()->absoluteRect(
+                node->document()->frame()->asFrameBox());
+            ESObject* result = ESObject::create();
+            result->set(ESString::create("x"), ESValue(rect.x().toFloat()));
+            result->set(ESString::create("y"), ESValue(rect.y().toFloat()));
+            result->set(ESString::create("width"),
+                        ESValue(rect.width().toFloat()));
+            result->set(ESString::create("height"),
+                        ESValue(rect.height().toFloat()));
+            return ESValue(result);
+        } else {
+            // TODO
+        }
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue simulateClickFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->simulateClick(ESVMInstance::currentInstance()
+                               ->currentExecutionContext()
+                               ->readArgument(0)
+                               .toNumber(),
+                           ESVMInstance::currentInstance()
+                               ->currentExecutionContext()
+                               ->readArgument(1)
+                               .toNumber());
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue simulateVisibilityChangeFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        wnd->simulateVisibilitychange(ESVMInstance::currentInstance()
+                                          ->currentExecutionContext()
+                                          ->readArgument(0)
+                                          .toBoolean());
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue testAssertFunction(ESVMInstance* instance)
+{
+    if (instance->currentExecutionContext()->readArgument(0).isESString()) {
+        std::jmp_buf tryPosition;
+        if (setjmp(ESVMInstance::currentInstance()->registerTryPos(
+                &tryPosition)) == 0) {
+            ESValue result =
+                instance->evaluate(instance->currentExecutionContext()
+                                       ->readArgument(0)
+                                       .asESString());
+            ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+            ESVMInstance::currentInstance()->unregisterCheckedObjectAll();
+            if (result.toBoolean()) {
+            } else {
+                ESStringBuilder builder;
+                builder.appendString("[FAIL]assertion fail : ");
+                builder.appendString(instance->currentExecutionContext()
+                                         ->readArgument(0)
+                                         .asESString());
+                ESString* s = builder.finalize();
+                puts(s->utf8Data());
+                STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+                exit(-1);
+            }
+        } else {
+            ESStringBuilder builder;
+            builder.appendString("[FAIL]got exception while eval : ");
+            builder.appendString(instance->currentExecutionContext()
+                                     ->readArgument(0)
+                                     .asESString());
+            ESString* s = builder.finalize();
+            puts(s->utf8Data());
+            STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+            exit(-1);
+        }
+    } else {
+        if (instance->currentExecutionContext()->readArgument(0).toBoolean()) {
+        } else {
+            ESStringBuilder builder;
+            builder.appendString("[FAIL]testAssert fail");
+            ESString* s = builder.finalize();
+            puts(s->utf8Data());
+            STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+            exit(-1);
+        }
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue testEndFunction(ESVMInstance* instance)
+{
+    puts("[PASS]");
+    STARFISH_LOG_ERROR("%s\n", "[PASS]");
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    exit(0);
+    return ESValue(ESValue::ESUndefined);
+}
+#endif
+
+static ESValue testImgDiffFunction(ESVMInstance* instance)
+{
+    std::string cmd = "./tool/imgdiff/imgdiff ";
+
+    Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+    std::string path = wnd->document()->documentURI()->baseURI()->utf8Data();
+    path = path.substr(strlen("file://"));
+
+    cmd += path;
+    cmd += instance->currentExecutionContext()
+               ->readArgument(0)
+               .toString()
+               ->utf8Data();
+    cmd += " ";
+    cmd += path;
+    cmd += instance->currentExecutionContext()
+               ->readArgument(1)
+               .toString()
+               ->utf8Data();
+
+    STARFISH_LOG_INFO("%s\n", cmd.c_str());
+    FILE* fp = popen(cmd.c_str(), "r");
+    int ch;
+
+    if (!fp) {
+        RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    std::string output;
+    while ((ch = fgetc(fp)) != EOF) {
+        output += ch;
+    }
+
+    STARFISH_LOG_INFO("%s", output.c_str());
+
+    if (output.find("failed") != std::string::npos) {
+        cmd = "test/tool/image_diff --diff ";
+        cmd += path;
+        cmd += instance->currentExecutionContext()
+                   ->readArgument(0)
+                   .toString()
+                   ->utf8Data();
+        cmd += " ";
+        cmd += path;
+        cmd += instance->currentExecutionContext()
+                   ->readArgument(1)
+                   .toString()
+                   ->utf8Data();
+        cmd += " ";
+        cmd += path;
+        cmd += std::string(instance->currentExecutionContext()
+                               ->readArgument(0)
+                               .toString()
+                               ->utf8Data()) +
+               "_diff.png";
+        puts(cmd.c_str());
+
+        FILE* fp = popen(cmd.c_str(), "r");
+        int ch;
+
+        if (!fp) {
+            RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        std::string output;
+        while ((ch = fgetc(fp)) != EOF) {
+            output += ch;
+        }
+
+        ESStringBuilder builder;
+        builder.appendString("[FAIL]testImgDiff fail");
+        ESString* s = builder.finalize();
+        puts(s->utf8Data());
+        STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+        exit(-1);
+    }
+
+    pclose(fp);
+    return ESValue(ESValue::ESUndefined);
+}
+
+static void timeoutHandler(Window* wnd, void* data)
+{
+    ESFunctionObject* fn = (ESFunctionObject*)data;
+    std::jmp_buf tryPosition;
+    if (setjmp(ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) ==
+        0) {
+        ESFunctionObject::call(ESVMInstance::currentInstance(), fn, ESValue(),
+                               NULL, 0, false);
+        ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+    } else {
+        ESValue err = ESVMInstance::currentInstance()->getCatchedError();
+        STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
+    }
+}
+
+// TODO : Pass "any... arguments" if exist
+static ESValue setTimeoutFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()
+                ->readArgument(0)
+                .isESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer()
+                ->isESFunctionObject()) {
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            if (instance->currentExecutionContext()
+                    ->readArgument(1)
+                    .isUndefinedOrNull()) {
+                return ESValue(wnd->setTimeout(
+                    timeoutHandler, 0, instance->currentExecutionContext()
+                                           ->readArgument(0)
+                                           .asESPointer()));
+            } else if (instance->currentExecutionContext()
+                           ->readArgument(1)
+                           .isNumber()) {
+                return ESValue(wnd->setTimeout(
+                    timeoutHandler, instance->currentExecutionContext()
+                                        ->readArgument(1)
+                                        .toUint32(),
+                    instance->currentExecutionContext()
+                        ->readArgument(0)
+                        .asESPointer()));
+            }
+        } else {
+            String* bodyStr =
+                toBrowserString(instance->currentExecutionContext()
+                                    ->readArgument(0)
+                                    .toString());
+            String* name[] = { String::emptyString };
+            bool error = false;
+            ScriptValue m_listener =
+                createScriptFunction(name, 1, bodyStr, error);
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            if (instance->currentExecutionContext()
+                    ->readArgument(1)
+                    .isUndefinedOrNull()) {
+                return ESValue(wnd->setTimeout(timeoutHandler, 0,
+                                               m_listener.asESPointer()));
+            } else if (instance->currentExecutionContext()
+                           ->readArgument(1)
+                           .isNumber()) {
+                return ESValue(wnd->setTimeout(
+                    timeoutHandler, instance->currentExecutionContext()
+                                        ->readArgument(1)
+                                        .toUint32(),
+                    m_listener.asESPointer()));
+            }
+        }
+    }
+    return ESValue();
+}
+
+static ESValue clearTimeoutFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            wnd->clearTimeout(instance->currentExecutionContext()
+                                  ->readArgument(0)
+                                  .toUint32());
+        }
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue setIntervalFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()
+                ->readArgument(0)
+                .isESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer()
+                ->isESFunctionObject()) {
+            if (instance->currentExecutionContext()
+                    ->readArgument(1)
+                    .isNumber()) {
+                Window* wnd = (Window*)ESVMInstance::currentInstance()
+                                  ->globalObject()
+                                  ->extraPointerData();
+                return ESValue(wnd->setInterval(
+                    timeoutHandler, instance->currentExecutionContext()
+                                        ->readArgument(1)
+                                        .toUint32(),
+                    instance->currentExecutionContext()
+                        ->readArgument(0)
+                        .asESPointer()));
+            }
+        } else {
+            String* bodyStr =
+                toBrowserString(instance->currentExecutionContext()
+                                    ->readArgument(0)
+                                    .toString());
+            String* name[] = { String::emptyString };
+            bool error = false;
+            ScriptValue m_listener =
+                createScriptFunction(name, 1, bodyStr, error);
+
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            if (instance->currentExecutionContext()
+                    ->readArgument(1)
+                    .isNumber()) {
+                return ESValue(wnd->setInterval(
+                    timeoutHandler, instance->currentExecutionContext()
+                                        ->readArgument(1)
+                                        .toUint32(),
+                    m_listener.asESPointer()));
+            }
+        }
+    }
+    return ESValue();
+}
+
+static ESValue clearIntervalFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            wnd->clearInterval(instance->currentExecutionContext()
+                                   ->readArgument(0)
+                                   .toUint32());
+        }
+    }
+    return ESValue(ESValue::ESUndefined);
+}
+
+static void animationFrameTimeoutHandler(Window* wnd, void* data)
+{
+    ESFunctionObject* fn = (ESFunctionObject*)data;
+    std::jmp_buf tryPosition;
+    if (setjmp(ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) ==
+        0) {
+        ESFunctionObject::call(ESVMInstance::currentInstance(), fn, ESValue(),
+                               NULL, 0, false);
+        ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+    } else {
+        std::jmp_buf tryPosition;
+        ESValue err = ESVMInstance::currentInstance()->getCatchedError();
+        if (setjmp(ESVMInstance::currentInstance()->registerTryPos(
+                &tryPosition)) == 0) {
+            STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
+            ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+        } else {
+            STARFISH_LOG_INFO("Uncaught Error\n");
+        }
+    }
+}
+
+// TODO : Pass "any... arguments" if exist
+// TODO : First argument can be function or script source (currently allow
+// function only)
+static ESValue requestAnimationFrameFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()
+                ->readArgument(0)
+                .isESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer() &&
+            instance->currentExecutionContext()
+                ->readArgument(0)
+                .asESPointer()
+                ->isESFunctionObject()) {
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            return ESValue(
+                wnd->requestAnimationFrame(animationFrameTimeoutHandler,
+                                           instance->currentExecutionContext()
+                                               ->readArgument(0)
+                                               .asESPointer()));
+        }
+    }
+    return ESValue();
+}
+
+static ESValue cancelAnimationFrameFunction(ESVMInstance* instance)
+{
+    ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() == instance->globalObject()) {
+        if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+            Window* wnd = (Window*)ESVMInstance::currentInstance()
+                              ->globalObject()
+                              ->extraPointerData();
+            wnd->cancelAnimationFrame(instance->currentExecutionContext()
+                                          ->readArgument(0)
+                                          .toUint32());
+        }
+    }
+    return ESValue();
+}
+
+static ESValue innerWidthGetterFunction(ESObject* obj, ESObject* originalObj,
+                                        ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double innerWidth =
+            ((Window*)originalObj->extraPointerData())->innerWidth();
+        return ESValue(innerWidth);
+    }
+    return ESValue(0);
+}
+
+static ESValue innerHeightGetterFunction(ESObject* obj, ESObject* originalObj,
+                                         ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double innerHeight =
+            ((Window*)originalObj->extraPointerData())->innerHeight();
+        return ESValue(innerHeight);
+    }
+    return ESValue(0);
+}
+
+static ESValue scrollXGetterFunction(ESObject* obj, ESObject* originalObj,
+                                     ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double scrollX = ((Window*)originalObj->extraPointerData())->scrollX();
+        return ESValue(scrollX);
+    }
+    return ESValue(0);
+}
+
+static ESValue pageXOffsetGetterFunction(ESObject* obj, ESObject* originalObj,
+                                         ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double scrollX = ((Window*)originalObj->extraPointerData())->scrollX();
+        return ESValue(scrollX);
+    }
+    return ESValue(0);
+}
+
+static ESValue scrollYGetterFunction(ESObject* obj, ESObject* originalObj,
+                                     ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double scrollX = ((Window*)originalObj->extraPointerData())->scrollY();
+        return ESValue(scrollX);
+    }
+    return ESValue(0);
+}
+
+static ESValue pageYOffsetGetterFunction(ESObject* obj, ESObject* originalObj,
+                                         ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        double scrollX = ((Window*)originalObj->extraPointerData())->scrollY();
+        return ESValue(scrollX);
+    }
+    return ESValue(0);
+}
+
+static ESValue onclickGetterFunction(ESObject* obj, ESObject* originalObj,
+                                     ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_click;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onclickSetterFunction(ESObject* obj, ESObject* originalObj,
+                                  ESString* propertyName, const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_click;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue onmouseoverGetterFunction(ESObject* obj, ESObject* originalObj,
+                                         ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_mouseover;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onmouseoverSetterFunction(ESObject* obj, ESObject* originalObj,
+                                      ESString* propertyName,
+                                      const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_mouseover;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue onkeydownGetterFunction(ESObject* obj, ESObject* originalObj,
+                                       ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_keydown;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onkeydownSetterFunction(ESObject* obj, ESObject* originalObj,
+                                    ESString* propertyName,
+                                    const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_keydown;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue onfocusGetterFunction(ESObject* obj, ESObject* originalObj,
+                                     ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_focus;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onfocusSetterFunction(ESObject* obj, ESObject* originalObj,
+                                  ESString* propertyName, const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_focus;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue onloadGetterFunction(ESObject* obj, ESObject* originalObj,
+                                    ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isUndefinedOrNull() ||
+        v.asESPointer()->asESObject() ==
+            ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_load;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onloadSetterFunction(ESObject* obj, ESObject* originalObj,
+                                 ESString* propertyName, const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isObject() &&
+        v.asESPointer() == ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_load;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue onunloadGetterFunction(ESObject* obj, ESObject* originalObj,
+                                      ESString* propertyName)
+{
+    ESValue v = originalObj;
+    if (v.isObject() &&
+        v.asESPointer() == ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_unload;
+        return wnd->attributeEventListener(eventType);
+    }
+    return ESValue();
+}
+
+static void onunloadSetterFunction(ESObject* obj, ESObject* originalObj,
+                                   ESString* propertyName, const ESValue& value)
+{
+    ESValue v = originalObj;
+    if (v.isObject() &&
+        v.asESPointer() == ESVMInstance::currentInstance()->globalObject()) {
+        Window* wnd = (Window*)ESVMInstance::currentInstance()
+                          ->globalObject()
+                          ->extraPointerData();
+        auto eventType = wnd->starFish()->staticStrings()->m_unload;
+        if (value.isObject() || (value.isESPointer() &&
+                                 value.asESPointer()->isESFunctionObject())) {
+            wnd->setAttributeEventListener(eventType, value);
+        } else {
+            wnd->clearAttributeEventListener(eventType);
+        }
+    }
+}
+
+static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+{
+    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
+    Window* self = (Window*)obj->extraPointerData();
+
+    if (self->document()
+            ->elementExecutionStackForAttributeStringEventFunctionObject()
+            .size()) {
+        ScriptValue v =
+            self->document()
+                ->elementExecutionStackForAttributeStringEventFunctionObject()
+                .back()
+                ->scriptValue();
+        bool t = v.asESPointer()->asESObject()->hasOwnProperty(key);
+        if (t) {
+            return v.asESPointer()->asESObject()->get(key);
+        }
+    }
+
+    String* name = toBrowserString(key);
+    HTMLCollection* coll = self->namedAccess(name);
+    if (coll) {
+        if (coll->length()) {
+            if (coll->length() > 1) {
+                return coll->scriptValue();
+            } else {
+                return coll->item(0)->scriptObject();
+            }
+        }
+    }
+    return ESValue(ESValue::ESDeletedValue);
+}
+
+static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
+                                  ESObject* obj)
+{
+    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
+    return false;
+}
+
+static ESValueVector enumerateCallbackFunction(ESObject* obj)
+{
+    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
+    size_t len = 0;
+    ESValueVector v(len);
+    return v;
+}
+
+void Window::init(ScriptBindingInstance* instance)
+{
+    m_object = ESVMInstance::currentInstance()->globalObject();
+    m_object->setExtraData(kEscargotObjectCheckMagic);
+    m_object->setExtraPointerData(this);
+    m_object->set__proto__(
+        fetchData(m_scriptBindingInstance)->m_fnWindow->protoType());
+
+#ifdef STARFISH_ENABLE_TEST
+    m_object->defineDataProperty(
+        ESString::create("debugPause"), true, true, true,
+        ESFunctionObject::create(NULL, debugPauseFunction,
+                                 ESString::create("debugPause"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("debugResume"), true, true, true,
+        ESFunctionObject::create(NULL, debugResumeFunction,
+                                 ESString::create("debugResume"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("networkEnable"), true, true, true,
+        ESFunctionObject::create(NULL, networkEnableFunction,
+                                 ESString::create("networkEnable"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("networkDisable"), true, true, true,
+        ESFunctionObject::create(NULL, networkDisableFunction,
+                                 ESString::create("networkDisable"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("isPixelTest"), true, true, true,
+        ESFunctionObject::create(NULL, isPixelTestFunction,
+                                 ESString::create("isPixelTest"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("screenShot"), true, true, true,
+        ESFunctionObject::create(NULL, screenShotFunction,
+                                 ESString::create("screenShot"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("screenShotRelativePath"), true, true, true,
+        ESFunctionObject::create(NULL, screenShotRelativePathFunction,
+                                 ESString::create("screenShotRelativePath"), 0,
+                                 false));
+
+    m_object->defineDataProperty(
+        ESString::create("forceDisableOnloadCapture"), true, true, true,
+        ESFunctionObject::create(NULL, forceDisableOnloadCaptureFunction,
+                                 ESString::create("forceDisableOnloadCapture"),
+                                 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("getXYWH"), true, true, true,
+        ESFunctionObject::create(NULL, getXYWHFunction,
+                                 ESString::create("getXYWH"), 2, false));
+
+    m_object->defineDataProperty(
+        ESString::create("simulateClick"), true, true, true,
+        ESFunctionObject::create(NULL, simulateClickFunction,
+                                 ESString::create("simulateClick"), 2, false));
+
+    m_object->defineDataProperty(
+        ESString::create("simulateVisibilitychange"), true, true, true,
+        ESFunctionObject::create(NULL, simulateVisibilityChangeFunction,
+                                 ESString::create("simulateVisibilitychange"),
+                                 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("testAssert"), true, true, true,
+        ESFunctionObject::create(NULL, testAssertFunction,
+                                 ESString::create("testAssert"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("testEnd"), true, true, true,
+        ESFunctionObject::create(NULL, testEndFunction,
+                                 ESString::create("testEnd"), 0, false));
+
+#endif
+
+    m_object->defineDataProperty(
+        ESString::create("testImgDiff"), true, true, true,
+        ESFunctionObject::create(NULL, testImgDiffFunction,
+                                 ESString::create("testEnd"), 0, false));
+
+    // [setTimeout]
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-settimeout
+    // long setTimeout(Function handler, optional long timeout, any...
+    // arguments);
+
+    m_object->defineDataProperty(
+        ESString::create("setTimeout"), true, true, true,
+        ESFunctionObject::create(NULL, setTimeoutFunction,
+                                 ESString::create("setTimeout"), 1, false));
+
+    // [clearTimeout]
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-cleartimeout
+    m_object->defineDataProperty(
+        ESString::create("clearTimeout"), true, true, true,
+        ESFunctionObject::create(NULL, clearTimeoutFunction,
+                                 ESString::create("clearTimeout"), 0, false));
+
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-setinterval
+    m_object->defineDataProperty(
+        ESString::create("setInterval"), true, true, true,
+        ESFunctionObject::create(NULL, setIntervalFunction,
+                                 ESString::create("setInterval"), 1, false));
+
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-clearinterval
+    m_object->defineDataProperty(
+        ESString::create("clearInterval"), true, true, true,
+        ESFunctionObject::create(NULL, clearIntervalFunction,
+                                 ESString::create("clearInterval"), 0, false));
+
+    m_object->defineDataProperty(
+        ESString::create("requestAnimationFrame"), false, false, false,
+        ESFunctionObject::create(NULL, requestAnimationFrameFunction,
+                                 ESString::create("requestAnimationFrame"), 1,
+                                 false));
+
+    // https://www.w3.org/TR/html5/webappapis.html
+    m_object->defineDataProperty(
+        ESString::create("cancelAnimationFrame"), false, false, false,
+        ESFunctionObject::create(NULL, cancelAnimationFrameFunction,
+                                 ESString::create("cancelAnimationFrame"), 1,
+                                 false));
+
+    // https://www.w3.org/TR/cssom-view/#dom-window-innerwidth
+    m_object->defineAccessorProperty(ESString::create("innerWidth"),
+                                     innerWidthGetterFunction, NULL, true, true,
+                                     true);
+
+    // https://www.w3.org/TR/cssom-view/#dom-window-innerheight
+    m_object->defineAccessorProperty(ESString::create("innerHeight"),
+                                     innerHeightGetterFunction, NULL, true,
+                                     true, true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-scrollx
+    m_object->defineAccessorProperty(ESString::create("scrollX"),
+                                     scrollXGetterFunction, NULL, true, true,
+                                     true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-pagexoffset
+    m_object->defineAccessorProperty(ESString::create("pageXOffset"),
+                                     pageXOffsetGetterFunction, NULL, true,
+                                     true, true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-scrolly
+    m_object->defineAccessorProperty(ESString::create("scrollY"),
+                                     scrollYGetterFunction, NULL, true, true,
+                                     true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-pageyoffset
+    m_object->defineAccessorProperty(ESString::create("pageYOffset"),
+                                     pageYOffsetGetterFunction, NULL, true,
+                                     true, true);
+
+    m_object->defineAccessorProperty(ESString::create("onclick"),
+                                     onclickGetterFunction,
+                                     onclickSetterFunction, true, true, true);
+
+    m_object->defineAccessorProperty(
+        ESString::create("onmouseover"), onmouseoverGetterFunction,
+        onmouseoverSetterFunction, true, true, true);
+
+    m_object->defineAccessorProperty(ESString::create("onkeydown"),
+                                     onkeydownGetterFunction,
+                                     onkeydownSetterFunction, true, true, true);
+
+    m_object->defineAccessorProperty(ESString::create("onfocus"),
+                                     onfocusGetterFunction,
+                                     onfocusSetterFunction, true, true, true);
+
+    m_object->defineAccessorProperty(ESString::create("onload"),
+                                     onloadGetterFunction, onloadSetterFunction,
+                                     true, true, true);
+
+    m_object->defineAccessorProperty(ESString::create("onunload"),
+                                     onunloadGetterFunction,
+                                     onunloadSetterFunction, true, true, true);
+
+    scriptObject()->setPropertyInterceptor(
+        readCallbackFunction, writeCallbackFunction, enumerateCallbackFunction);
+}
+
 void Window::navigate(URL* url)
 {
     close();
@@ -554,7 +1685,7 @@ void Window::navigate(URL* url)
     m_scriptBindingInstance = new ScriptBindingInstance();
     StarFishEnterer enter(m_starFish);
     m_scriptBindingInstance->initBinding(m_starFish);
-    initScriptWrappable(this);
+    init(m_scriptBindingInstance);
 
     m_history = new History(m_starFish);
     m_navigator = new Navigator(m_starFish);
@@ -1106,6 +2237,16 @@ void Window::simulateVisibilitychange(bool show)
         m_starFish->resume();
     } else {
         m_starFish->pause();
+    }
+}
+
+void Window::testStart()
+{
+    ESValue v = ESVMInstance::currentInstance()->globalObject()->get(
+        ESString::create("testStart"));
+    if (!v.isUndefined()) {
+        callScriptFunction(v, {}, 0,
+                           ESVMInstance::currentInstance()->globalObject());
     }
 }
 #endif

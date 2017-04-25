@@ -58,9 +58,10 @@ public:
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnPositionError()->protoType());
     }
 
     virtual bool isPositionError() const override

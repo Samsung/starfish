@@ -28,7 +28,7 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
+    virtual void init(ScriptBindingInstance* instance) override = 0;
 
     /* 4.4 Interface Node */
 

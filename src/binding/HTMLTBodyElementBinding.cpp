@@ -42,9 +42,10 @@ ESFunctionObject* bindingHTMLTBodyElement(
     HTMLTBodyElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)->fnText()->protoType());
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLTBodyElementFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnText());
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return HTMLTBodyElementFunction;
 }

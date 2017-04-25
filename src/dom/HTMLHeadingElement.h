@@ -25,9 +25,10 @@ class HTMLHeadingElement : public HTMLElement {
 public:
     HTMLHeadingElement(Document* document, AtomicString name);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnHTMLHeadingElement()->protoType());
     }
 
     /* 4.4 Interface Node */

@@ -32,6 +32,50 @@ SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
 {
 }
 
+static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isSourceBufferList());
+    uint32_t idx = key.toIndex();
+    if (idx != ESValue::ESInvalidIndexValue && idx < self->length()) {
+        SourceBuffer* e = (*self)[idx];
+        STARFISH_ASSERT(e);
+        return e->scriptValue();
+    }
+    return ESValue(ESValue::ESDeletedValue);
+}
+
+static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
+                                  ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    return false;
+}
+
+static ESValueVector enumerateCallbackFunction(ESObject* obj)
+{
+    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isSourceBufferList());
+    size_t len = self->length();
+    ESValueVector v(len);
+    for (size_t i = 0; i < len; i++) {
+        v[i] = ESValue(i);
+    }
+    return v;
+}
+
+void SourceBufferList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnSourceBufferList()->protoType());
+
+    scriptObject()->setPropertyInterceptor(readCallbackFunction,
+                                           writeCallbackFunction,
+                                           enumerateCallbackFunction, true);
+}
+
 void SourceBufferList::add(SourceBuffer* buffer, MediaSource* ms)
 {
     m_list.push_back(buffer);

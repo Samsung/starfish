@@ -34,140 +34,140 @@ class Inspector;
 class HistoryEntry;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
+    F(a)                                \
     F(abbr)                             \
     F(acronym)                          \
     F(address)                          \
+    F(applet)                           \
+    F(area)                             \
     F(article)                          \
     F(aside)                            \
+    F(audio)                            \
     F(b)                                \
+    F(base)                             \
     F(basefont)                         \
+    F(bdi)                              \
     F(bdo)                              \
     F(bgsound)                          \
     F(big)                              \
+    F(blockquote)                       \
+    F(body)                             \
+    F(br)                               \
+    F(button)                           \
+    F(canvas)                           \
+    F(caption)                          \
     F(center)                           \
     F(cite)                             \
     F(code)                             \
+    F(col)                              \
+    F(colgroup)                         \
     F(command)                          \
-    F(dd)                               \
-    F(dfn)                              \
-    F(dt)                               \
-    F(em)                               \
-    F(figcaption)                       \
-    F(figure)                           \
-    F(footer)                           \
-    F(header)                           \
-    F(hgroup)                           \
-    F(i)                                \
-    F(kbd)                              \
-    F(layer)                            \
-    F(main)                             \
-    F(mark)                             \
-    F(nav)                              \
-    F(nobr)                             \
-    F(noframes)                         \
-    F(nolayer)                          \
-    F(plaintext)                        \
-    F(rp)                               \
-    F(s)                                \
-    F(samp)                             \
-    F(section)                          \
-    F(small)                            \
-    F(strike)                           \
-    F(strong)                           \
-    F(sub)                              \
-    F(sup)                              \
-    F(tt)                               \
-    F(u)                                \
-    F(var)                              \
-    F(a)                                \
-    F(area)                             \
-    F(audio)                            \
-    F(br)                               \
-    F(base)                             \
-    F(body)                             \
-    F(canvas)                           \
     F(content)                          \
-    F(dl)                               \
     F(datalist)                         \
+    F(dd)                               \
+    F(del)                              \
     F(details)                          \
+    F(dfn)                              \
+    F(dialog)                           \
     F(dir)                              \
     F(div)                              \
+    F(dl)                               \
+    F(dt)                               \
+    F(em)                               \
+    F(embed)                            \
+    F(fieldset)                         \
+    F(figcaption)                       \
+    F(figure)                           \
     F(font)                             \
+    F(footer)                           \
     F(form)                             \
     F(frame)                            \
     F(frameset)                         \
-    F(hr)                               \
-    F(head)                             \
     F(h1)                               \
     F(h2)                               \
     F(h3)                               \
     F(h4)                               \
     F(h5)                               \
     F(h6)                               \
+    F(head)                             \
+    F(header)                           \
+    F(hgroup)                           \
+    F(hr)                               \
     F(html)                             \
+    F(i)                                \
     F(iframe)                           \
-    F(li)                               \
+    F(image)                            \
+    F(img)                              \
+    F(input)                            \
+    F(ins)                              \
+    F(kbd)                              \
+    F(keygen)                           \
     F(label)                            \
+    F(layer)                            \
     F(legend)                           \
+    F(li)                               \
+    F(link)                             \
+    F(listing)                          \
+    F(main)                             \
     F(map)                              \
+    F(mark)                             \
     F(marquee)                          \
     F(menu)                             \
     F(meta)                             \
     F(meter)                            \
-    F(del)                              \
-    F(ins)                              \
+    F(nav)                              \
+    F(nobr)                             \
+    F(noembed)                          \
+    F(noframes)                         \
+    F(nolayer)                          \
+    F(noscript)                         \
+    F(object)                           \
     F(ol)                               \
     F(optgroup)                         \
     F(option)                           \
+    F(output)                           \
     F(p)                                \
     F(param)                            \
+    F(plaintext)                        \
     F(pre)                              \
-    F(listing)                          \
-    F(xmp)                              \
     F(progress)                         \
-    F(blockquote)                       \
     F(q)                                \
-    F(shadow)                           \
-    F(source)                           \
-    F(span)                             \
-    F(caption)                          \
-    F(td)                               \
-    F(th)                               \
-    F(col)                              \
-    F(colgroup)                         \
-    F(table)                            \
-    F(tr)                               \
-    F(tbody)                            \
-    F(tfoot)                            \
-    F(thead)                            \
-    F(template)                         \
-    F(title)                            \
-    F(track)                            \
-    F(ul)                               \
-    F(img)                              \
-    F(image)                            \
-    F(video)                            \
-    F(dialog)                           \
-    F(button)                           \
-    F(fieldset)                         \
-    F(keygen)                           \
-    F(output)                           \
-    F(select)                           \
-    F(textarea)                         \
-    F(applet)                           \
-    F(embed)                            \
-    F(link)                             \
-    F(script)                           \
-    F(style)                            \
-    F(input)                            \
-    F(object)                           \
-    F(bdi)                              \
-    F(noembed)                          \
-    F(noscript)                         \
+    F(rp)                               \
     F(rt)                               \
     F(ruby)                             \
+    F(s)                                \
+    F(samp)                             \
+    F(script)                           \
+    F(section)                          \
+    F(select)                           \
+    F(shadow)                           \
+    F(small)                            \
+    F(source)                           \
+    F(span)                             \
+    F(strike)                           \
+    F(strong)                           \
+    F(style)                            \
+    F(sub)                              \
     F(summary)                          \
-    F(wbr)
+    F(sup)                              \
+    F(table)                            \
+    F(tbody)                            \
+    F(td)                               \
+    F(template)                         \
+    F(textarea)                         \
+    F(tfoot)                            \
+    F(th)                               \
+    F(thead)                            \
+    F(title)                            \
+    F(tr)                               \
+    F(track)                            \
+    F(tt)                               \
+    F(u)                                \
+    F(ul)                               \
+    F(var)                              \
+    F(video)                            \
+    F(wbr)                              \
+    F(xmp)
 
 class StaticStrings : public gc {
     friend class QualifiedName;

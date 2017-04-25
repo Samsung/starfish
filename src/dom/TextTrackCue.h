@@ -40,9 +40,10 @@ public:
         setPayload(payload);
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnTextTrackCue()->protoType());
     }
 
     virtual bool isTextTrackCue() const override

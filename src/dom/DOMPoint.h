@@ -54,22 +54,26 @@ public:
     {
         m_x = x;
     }
+
     void setY(double y)
     {
         m_y = y;
     }
+
     void setZ(double z)
     {
         m_z = z;
     }
+
     void setW(double w)
     {
         m_w = w;
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMPoint()->protoType());
     }
 
     virtual bool isDOMPoint() const override

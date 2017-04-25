@@ -63,6 +63,13 @@ public:
     }
 
     /* Other methods (not in ProgressEvent interface) */
+
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnProgressEvent()->protoType());
+    }
+
     virtual bool isProgressEvent() const override
     {
         return true;

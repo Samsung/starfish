@@ -22,14 +22,22 @@
 
 namespace StarFish {
 
-class Blob;
-class Document;
-
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
     XMLHttpRequestEventTarget(Document* document)
         : EventTarget(document)
     {
+    }
+
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnXMLHttpRequestEventTarget()->protoType());
+    }
+
+    virtual bool isXMLHttpRequestEventTarget() const override
+    {
+        return true;
     }
 
     DECLARE_EVENT_LISTENER(loadstart);
@@ -47,20 +55,14 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget,
     friend class XMLHttpRequestEventEmitter;
 
 public:
-    XMLHttpRequest(Document* document);
+    XMLHttpRequest(::StarFish::Document* document);
 
-    enum ResponseType {
-        Unspecified,
-        Text,
-        ArrayBuffer,
-        DocumentType, // TODO
-        BlobType,
-        Json
-    };
+    enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnXMLHttpRequest()->protoType());
     }
 
     virtual bool isXMLHttpRequest() const override
@@ -75,10 +77,15 @@ public:
 
     // https://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute
     void setResponseType(ResponseType type);
-    ResponseType responseType();
+    void setResponseType(String* typeStr);
+    ResponseType responseTypeValue() const;
+    String* responseType() const;
 
-    ScriptValue response();
-    String* responseText();
+    ScriptValue response() const;
+    String* responseText() const;
+
+    uint8_t readyState() const;
+    uint16_t status() const;
 
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,
@@ -90,6 +97,7 @@ public:
     void send(String* body);
     void abort();
 
+    uint32_t timeout() const;
     void setTimeout(uint32_t timeout);
     void setRequestHeader(String* h, String* c);
 
@@ -109,7 +117,7 @@ protected:
     ScriptValue m_responseJsonObject;
 
     // for responseType = "blob
-    Blob* m_responseBlob;
+    ::StarFish::Blob* m_responseBlob;
 
 #ifdef USE_ES6_FEATURE
     // for responseType = "arraybuffer"

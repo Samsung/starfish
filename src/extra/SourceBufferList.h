@@ -29,10 +29,7 @@ class SourceBufferList : public EventTarget {
 public:
     SourceBufferList(Document* document, MediaSource* sb);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isSourceBufferList() const override
     {

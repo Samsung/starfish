@@ -29,17 +29,16 @@ public:
     {
         return new DOMRectList;
     }
+
     static DOMRectList* create(const std::vector<DOMQuad>& quads)
     {
         return new DOMRectList(quads);
     }
-    unsigned long length() const;
+
+    size_t length() const;
     DOMRect* item(unsigned long index);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this, instance);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isDOMRectList() const override
     {

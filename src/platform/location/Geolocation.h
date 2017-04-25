@@ -38,9 +38,10 @@ public:
         return m_starFish;
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnGeolocation()->protoType());
     }
 
     virtual bool isGeolocation() const override

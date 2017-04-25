@@ -57,9 +57,10 @@ public:
     Event();
     Event(String* eventType, const EventInit& init = EventInit());
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnEvent()->protoType());
     }
 
     virtual bool isEvent() const override

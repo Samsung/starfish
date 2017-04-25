@@ -25,9 +25,10 @@ class DOMRectReadOnly : public ScriptWrappable {
 public:
     DOMRectReadOnly(double x, double y, double width, double height);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMRectReadOnly()->protoType());
     }
 
     virtual bool isDOMRectReadOnly() const override
@@ -39,14 +40,17 @@ public:
     {
         return m_x;
     }
+
     double y() const
     {
         return m_y;
     }
+
     double width() const
     {
         return m_width;
     }
+
     double height() const
     {
         return m_height;
@@ -56,14 +60,17 @@ public:
     {
         return std::min(m_y, m_y + m_height);
     }
+
     double right() const
     {
         return std::max(m_x, m_x + m_width);
     }
+
     double bottom() const
     {
         return std::max(m_y, m_y + m_height);
     }
+
     double left() const
     {
         return std::min(m_x, m_x + m_width);
