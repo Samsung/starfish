@@ -5,9 +5,9 @@ interface EventTarget {
   // NOTE Starfish only support boolean type for third argument
   // void addEventListener(DOMString type, EventListener? callback, optional (AddEventListenerOptions or boolean) options);
   // void removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options);
-  void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
-  void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
-  boolean dispatchEvent(Event event);
+  [ForceDenyStrictMode] void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
+  [ForceDenyStrictMode] void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
+  [ForceDenyStrictMode] boolean dispatchEvent(Event event);
 };
 
 

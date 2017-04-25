@@ -36,7 +36,7 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
                         "addEventListener", "EventTarget", "2", buffer);
     }
     size_t validArgCount = 3;
-    // Declare return value (empty when void)
+    // Native value to ESValue (empty when void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
@@ -78,7 +78,7 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
                         "removeEventListener", "EventTarget", "2", buffer);
     }
     size_t validArgCount = 3;
-    // Declare return value (empty when void)
+    // Native value to ESValue (empty when void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
@@ -119,7 +119,7 @@ static ESValue dispatchEventFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "dispatchEvent", "EventTarget", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Native value to ESValue (empty when void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -160,6 +160,7 @@ ESFunctionObject* bindingEventTarget(
     ESString* addEventListenerString = ESString::create("addEventListener");
     ESFunctionObject* addEventListenerESFn = ESFunctionObject::create(
         nullptr, addEventListenerFunction, addEventListenerString, 2, false);
+    addEventListenerESFn->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetPrototypeObj->defineDataProperty(
         addEventListenerString, true, true, true, addEventListenerESFn);
 
@@ -168,12 +169,14 @@ ESFunctionObject* bindingEventTarget(
     ESFunctionObject* removeEventListenerESFn =
         ESFunctionObject::create(nullptr, removeEventListenerFunction,
                                  removeEventListenerString, 2, false);
+    removeEventListenerESFn->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetPrototypeObj->defineDataProperty(
         removeEventListenerString, true, true, true, removeEventListenerESFn);
 
     ESString* dispatchEventString = ESString::create("dispatchEvent");
     ESFunctionObject* dispatchEventESFn = ESFunctionObject::create(
         nullptr, dispatchEventFunction, dispatchEventString, 1, false);
+    dispatchEventESFn->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetPrototypeObj->defineDataProperty(dispatchEventString, true, true,
                                                 true, dispatchEventESFn);
 
