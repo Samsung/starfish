@@ -245,61 +245,15 @@ static ESValue responseGetterFunction(ESVMInstance* instance)
 static ESValue responseTypeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    XMLHttpRequest::ResponseType type = originalObj->responseType();
-    if (type == XMLHttpRequest::ResponseType::Unspecified) {
-        return ESString::create("");
-    } else if (type == XMLHttpRequest::ResponseType::ArrayBuffer) {
-        return ESString::create("arraybuffer");
-    } else if (type == XMLHttpRequest::ResponseType::BlobType) {
-        return ESString::create("blob");
-    } else if (type == XMLHttpRequest::ResponseType::DocumentType) {
-        return ESString::create("document");
-    } else if (type == XMLHttpRequest::ResponseType::Json) {
-        return ESString::create("json");
-    } else if (type == XMLHttpRequest::ResponseType::Text) {
-        return ESString::create("text");
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    String* str = originalObj->responseType();
+    return toJSString(str);
 }
 
 static ESValue responseTypeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    try {
-        ESString* str =
-            instance->currentExecutionContext()->readArgument(0).toString();
-        if (*str == "") {
-            originalObj->setResponseType(
-                XMLHttpRequest::ResponseType::Unspecified);
-            return ESValue();
-        } else if (*str == "arraybuffer") {
-#ifdef USE_ES6_FEATURE
-            originalObj->setResponseType(
-                XMLHttpRequest::ResponseType::ArrayBuffer);
-            return ESValue();
-#endif
-        } else if (*str == "blob") {
-            originalObj->setResponseType(
-                XMLHttpRequest::ResponseType::BlobType);
-            return ESValue();
-        } else if (*str == "document") {
-        } else if (*str == "json") {
-            originalObj->setResponseType(XMLHttpRequest::ResponseType::Json);
-            return ESValue();
-        } else if (*str == "text") {
-            originalObj->setResponseType(XMLHttpRequest::ResponseType::Text);
-            return ESValue();
-        }
-        STARFISH_LOG_ERROR(
-            "The provided value '%s' is not a valid enum value of "
-            "type "
-            "XMLHttpRequestResponseType.",
-            str->utf8Data());
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    ESValue v = instance->currentExecutionContext()->readArgument(0);
+    originalObj->setResponseType(toBrowserString(v.toString()));
     return ESValue();
 }
 
@@ -430,149 +384,179 @@ static ESValue abortFunction(ESVMInstance* instance)
     }
 }
 
-ESFunctionObject* bindingXMLHttpRequest(
+ESFunctionObject* bindingXMLHttpRequestEventTarget(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    /* XMLHttpRequestEventTarget */
-
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
         XMLHttpRequestEventTarget,
         fetchData(scriptBindingInstance)->m_fnEventTarget);
-    fetchData(scriptBindingInstance)
-        ->m_instance->globalObject()
-        ->defineDataProperty(XMLHttpRequestEventTargetString, true, false, true,
-                             XMLHttpRequestEventTargetFunction);
 
-    /* XMLHttpRequest */
-    ESFunctionObject* fnXhrElement = ESFunctionObject::create(
+    return XMLHttpRequestEventTargetFunction;
+}
+
+ESFunctionObject* bindingXMLHttpRequest(
+    ScriptBindingInstance* scriptBindingInstance)
+{
+    ESFunctionObject* XMLHttpRequestFunction = ESFunctionObject::create(
         NULL, xhrElementFunction, ESString::create("XMLHttpRequest"), 0, true,
-        false);
+        true);
 
-    fnXhrElement->protoType()
+    XMLHttpRequestFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+
+    XMLHttpRequestFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->set__proto__(
-        XMLHttpRequestEventTargetFunction->protoType());
-
-    fetchData(scriptBindingInstance)
-        ->m_instance->globalObject()
-        ->defineDataProperty(ESString::create("XMLHttpRequest"), false, false,
-                             false, fnXhrElement);
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)
+                           ->fnXMLHttpRequestEventTarget()
+                           ->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onloadstart"), onloadstartGetterFunction,
         onloadstartSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onprogress"), onprogressGetterFunction,
         onprogressSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onabort"), onabortGetterFunction,
         onabortSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onerror"), onerrorGetterFunction,
         onerrorSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onload"), onloadGetterFunction, onloadSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("ontimeout"), ontimeoutGetterFunction,
         ontimeoutSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onloadend"), onloadendGetterFunction,
         onloadendSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("onreadystatechange"),
         onreadystatechangeGetterFunction, onreadystatechangeSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("timeout"), timeoutGetterFunction,
         timeoutSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("readyState"), readyStateGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("status"), statusGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("responseText"), responseTextGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("response"), responseGetterFunction, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnXhrElement->protoType().asESPointer()->asESObject(),
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
         ESString::create("responseType"), responseTypeGetterFunction,
         responseTypeSetterFunction);
 
-    fnXhrElement->asESObject()->defineDataProperty(
+    XMLHttpRequestFunction->asESObject()->defineDataProperty(
         ESString::create("UNSENT"), false, true, false, ESValue(0));
 
-    fnXhrElement->asESObject()->defineDataProperty(
+    XMLHttpRequestFunction->asESObject()->defineDataProperty(
         ESString::create("OPENED"), false, true, false, ESValue(1));
 
-    fnXhrElement->asESObject()->defineDataProperty(
+    XMLHttpRequestFunction->asESObject()->defineDataProperty(
         ESString::create("HEADERS_RECEIVED"), false, true, false, ESValue(2));
 
-    fnXhrElement->asESObject()->defineDataProperty(
+    XMLHttpRequestFunction->asESObject()->defineDataProperty(
         ESString::create("LOADING"), false, true, false, ESValue(3));
 
-    fnXhrElement->asESObject()->defineDataProperty(
+    XMLHttpRequestFunction->asESObject()->defineDataProperty(
         ESString::create("DONE"), false, true, false, ESValue(4));
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("UNSENT"), false, true, false, ESValue(0));
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("OPENED"), false, true, false, ESValue(1));
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("HEADERS_RECEIVED"), false, true, false, ESValue(2));
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("LOADING"), false, true, false, ESValue(3));
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("DONE"), false, true, false, ESValue(4));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("UNSENT"), false, true, false,
+                             ESValue(0));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("OPENED"), false, true, false,
+                             ESValue(1));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("HEADERS_RECEIVED"), false, true,
+                             false, ESValue(2));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("LOADING"), false, true, false,
+                             ESValue(3));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("DONE"), false, true, false,
+                             ESValue(4));
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("setRequestHeader"), false, false, false,
-        ESFunctionObject::create(NULL, setRequestHeaderFunction,
-                                 ESString::create("setRequestHeader"), 2,
-                                 false));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(
+            ESString::create("setRequestHeader"), false, false, false,
+            ESFunctionObject::create(NULL, setRequestHeaderFunction,
+                                     ESString::create("setRequestHeader"), 2,
+                                     false));
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("open"), false, false, false,
-        ESFunctionObject::create(NULL, openFunction, ESString::create("open"),
-                                 1, false));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("open"), false, false, false,
+                             ESFunctionObject::create(NULL, openFunction,
+                                                      ESString::create("open"),
+                                                      1, false));
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("send"), false, false, false,
-        ESFunctionObject::create(NULL, sendFunction, ESString::create("send"),
-                                 1, false));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("send"), false, false, false,
+                             ESFunctionObject::create(NULL, sendFunction,
+                                                      ESString::create("send"),
+                                                      1, false));
 
-    fnXhrElement->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("abort"), false, false, false,
-        ESFunctionObject::create(NULL, abortFunction, ESString::create("abort"),
-                                 1, false));
+    XMLHttpRequestFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(ESString::create("abort"), false, false, false,
+                             ESFunctionObject::create(NULL, abortFunction,
+                                                      ESString::create("abort"),
+                                                      1, false));
 
-    return fnXhrElement;
+    return XMLHttpRequestFunction;
 }
 }

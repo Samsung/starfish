@@ -43,9 +43,10 @@ ESFunctionObject* bindingHTMLColGroupElement(
     HTMLColGroupElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)->fnText()->protoType());
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLColGroupElementFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnText());
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return HTMLColGroupElementFunction;
 }

@@ -42,9 +42,10 @@ ESFunctionObject* bindingHTMLTableElement(
     HTMLTableElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)->fnText()->protoType());
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLTableElementFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnText());
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return HTMLTableElementFunction;
 }

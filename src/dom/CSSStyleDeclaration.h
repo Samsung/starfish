@@ -54,10 +54,7 @@ public:
 
     CSSStyleDeclaration* clone(Document* document, Element* element);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isCSSStyleDeclaration() const override
     {

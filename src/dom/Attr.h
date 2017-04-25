@@ -48,9 +48,10 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnAttr()->protoType());
     }
 
     QualifiedName qname() const

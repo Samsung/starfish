@@ -43,9 +43,10 @@ public:
         m_value = value;
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMSettableTokenList()->protoType());
     }
 
     virtual bool isDOMSettableTokenList() const override

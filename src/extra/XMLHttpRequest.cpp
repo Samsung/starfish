@@ -34,7 +34,7 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, readystatechange);
 
-XMLHttpRequest::XMLHttpRequest(Document* document)
+XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_networkRequest(new NetworkRequest(document))
 {
@@ -156,19 +156,74 @@ void XMLHttpRequest::setResponseType(ResponseType type)
     m_responseType = type;
 }
 
-XMLHttpRequest::ResponseType XMLHttpRequest::responseType()
+void XMLHttpRequest::setResponseType(String* typeStr)
+{
+    XMLHttpRequest::ResponseType type = Unspecified;
+
+    if (typeStr->equals("arraybuffer")) {
+#ifdef USE_ES6_FEATURE
+        type = ArrayBuffer;
+#endif
+    } else if (typeStr->equals("blob")) {
+        type = Blob;
+    } else if (typeStr->equals("document")) {
+        type = Document;
+    } else if (typeStr->equals("json")) {
+        type = Json;
+    } else if (typeStr->equals("text")) {
+        type = Text;
+    } else {
+        STARFISH_LOG_ERROR(
+            "The provided value '%s' is not a valid enum value of "
+            "type XMLHttpRequestResponseType.",
+            typeStr->utf8Data());
+    }
+
+    setResponseType(type);
+}
+
+XMLHttpRequest::ResponseType XMLHttpRequest::responseTypeValue() const
 {
     return m_responseType;
 }
 
-ScriptValue XMLHttpRequest::response()
+String* XMLHttpRequest::responseType() const
+{
+    switch (m_responseType) {
+    case Unspecified:
+        return String::emptyString;
+    case ArrayBuffer:
+        return String::createASCIIString("arraybuffer");
+    case Blob:
+        return String::createASCIIString("blob");
+    case Document:
+        return String::createASCIIString("document");
+    case Json:
+        return String::createASCIIString("json");
+    case Text:
+        return String::createASCIIString("text");
+    }
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+uint8_t XMLHttpRequest::readyState() const
+{
+    return m_networkRequest->readyState();
+}
+
+uint16_t XMLHttpRequest::status() const
+{
+    return m_networkRequest->status();
+}
+
+ScriptValue XMLHttpRequest::response() const
 {
     if (m_responseType == ResponseType::Unspecified ||
         m_responseType == ResponseType::Text) {
         return createScriptString(responseText());
     } else if (m_responseType == ResponseType::Json) {
         return m_responseJsonObject;
-    } else if (m_responseType == ResponseType::BlobType) {
+    } else if (m_responseType == ResponseType::Blob) {
         if (m_responseBlob) {
             return m_responseBlob->scriptValue();
         }
@@ -184,7 +239,7 @@ ScriptValue XMLHttpRequest::response()
     }
 }
 
-String* XMLHttpRequest::responseText()
+String* XMLHttpRequest::responseText() const
 {
     if (!(m_responseType == ResponseType::Unspecified ||
           m_responseType == ResponseType::Text)) {
@@ -197,6 +252,11 @@ String* XMLHttpRequest::responseText()
     }
 
     return m_responseText;
+}
+
+uint32_t XMLHttpRequest::timeout() const
+{
+    return m_networkRequest->timeout();
 }
 
 void XMLHttpRequest::setTimeout(uint32_t timeout)
@@ -290,12 +350,12 @@ void XMLHttpRequest::onReadyStateChange(NetworkRequest* request,
                     cvt.convert(m_networkRequest->responseData().data(),
                                 m_networkRequest->responseData().size(), true);
                 m_responseJsonObject = parseJSON(text);
-            } else if (m_responseType == ResponseType::BlobType) {
+            } else if (m_responseType == ResponseType::Blob) {
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
                     m_networkRequest->responseData().size());
                 memcpy(buffer, m_networkRequest->responseData().data(),
                        m_networkRequest->responseData().size());
-                m_responseBlob = new Blob(
+                m_responseBlob = new ::StarFish::Blob(
                     m_networkRequest->starFish(),
                     m_networkRequest->responseData().size(),
                     m_networkRequest->mimeType(), buffer, false, false);

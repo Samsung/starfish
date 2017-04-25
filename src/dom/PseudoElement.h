@@ -32,6 +32,17 @@ public:
     {
     }
 
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnPseudoElement()->protoType());
+    }
+
+    virtual bool isPseudoElement() const
+    {
+        return true;
+    }
+
     virtual QualifiedName name()
     {
         return m_name;

@@ -40,23 +40,28 @@ public:
     {
         m_x = x;
     }
+
     void setY(double y)
     {
         m_y = y;
     }
+
     void setWidth(double width)
     {
         m_width = width;
     }
+
     void setHeight(double height)
     {
         m_height = height;
     }
+
     void unite(const DOMRectReadOnly*);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMRect()->protoType());
     }
 
     virtual bool isDOMRect() const override

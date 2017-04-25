@@ -48,6 +48,12 @@ public:
         return true;
     }
 
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnFocusEvent()->protoType());
+    }
+
     EventTarget* relatedTarget()
     {
         STARFISH_ASSERT_NOT_REACHED();

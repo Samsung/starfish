@@ -80,7 +80,7 @@ public:
     {
     }
 
-    unsigned long length() const;
+    size_t length() const;
     Node* item(unsigned long index) const;
     void invalidateCache() const
     {

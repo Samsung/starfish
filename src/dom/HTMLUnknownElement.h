@@ -25,9 +25,10 @@ class HTMLUnknownElement : public HTMLElement {
 public:
     HTMLUnknownElement(Document* document, AtomicString localName);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnHTMLUnknownElement()->protoType());
     }
 
     /* 4.4 Interface Node */

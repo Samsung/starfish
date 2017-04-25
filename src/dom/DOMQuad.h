@@ -32,9 +32,10 @@ public:
             const DOMPointInit&);
     DOMQuad(const DOMRectInit&);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMQuad()->protoType());
     }
 
     virtual bool isDOMQuad() const override
@@ -46,18 +47,22 @@ public:
     {
         return m_p1;
     }
+
     DOMPoint* p2() const
     {
         return m_p2;
     }
+
     DOMPoint* p3() const
     {
         return m_p3;
     }
+
     DOMPoint* p4() const
     {
         return m_p4;
     }
+
     DOMRectReadOnly* bounds() const;
 
 protected:

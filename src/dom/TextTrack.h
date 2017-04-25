@@ -50,9 +50,10 @@ public:
               String* label = String::emptyString,
               String* language = String::emptyString);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnTextTrack()->protoType());
     }
 
     virtual bool isTextTrack() const override

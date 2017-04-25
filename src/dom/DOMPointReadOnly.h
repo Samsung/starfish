@@ -29,22 +29,26 @@ public:
     {
         return m_x;
     }
+
     double y() const
     {
         return m_y;
     }
+
     double z() const
     {
         return m_z;
     }
+
     double w() const
     {
         return m_w;
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this, instance);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnDOMPointReadOnly()->protoType());
     }
 
     virtual bool isDOMPointReadOnly() const override

@@ -161,7 +161,7 @@ void NodeListImpl::getherDescendant(GCVector<Node*>* collection,
     }
 }
 
-unsigned long NodeListImpl::length() const
+size_t NodeListImpl::length() const
 {
     if (m_canCache) {
         fillCacheIfNeed();

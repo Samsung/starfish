@@ -37,6 +37,12 @@ public:
         return true;
     }
 
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnCharacterData()->protoType());
+    }
+
     /* 4.9. Interface CharacterData */
 
     String* data() const

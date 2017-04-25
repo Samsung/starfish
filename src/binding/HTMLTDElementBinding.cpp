@@ -42,9 +42,10 @@ ESFunctionObject* bindingHTMLTDElement(
     HTMLTDElementFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)->fnText()->protoType());
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLTDElementFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnText());
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return HTMLTDElementFunction;
 }

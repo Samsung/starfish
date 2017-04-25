@@ -35,10 +35,7 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this, instance);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isDOMTokenList() const override
     {

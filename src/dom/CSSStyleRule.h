@@ -33,9 +33,10 @@ public:
     CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document,
                  CSSStyleDeclaration* decl);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnCSSStyleRule()->protoType());
     }
 
     virtual bool isCSSStyleRule() const override

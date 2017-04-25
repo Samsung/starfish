@@ -130,37 +130,37 @@ public:
         m_timeout = ms;
     }
 
-    const uint32_t& timeout()
+    uint32_t timeout() const
     {
         return m_timeout;
     }
 
-    ReadyState readyState()
+    ReadyState readyState() const
     {
         return m_readyState;
     }
 
-    ProgressState progressState()
+    ProgressState progressState() const
     {
         return m_progressState;
     }
 
-    size_t loaded()
+    size_t loaded() const
     {
         return m_loaded;
     }
 
-    size_t total()
+    size_t total() const
     {
         return m_total;
     }
 
-    int status()
+    uint16_t status() const
     {
         return m_status;
     }
 
-    bool isSync()
+    bool isSync() const
     {
         return m_isSync;
     }
@@ -242,7 +242,7 @@ protected:
     ProgressState m_progressState;
     MethodType m_method;
     ResponseType m_responseType;
-    int m_status;
+    uint16_t m_status;
     uint32_t m_timeout;
     NetworkWorkerData* m_activeNetworkWorkerData;
     Mutex* m_mutex;

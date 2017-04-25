@@ -39,9 +39,9 @@ ESFunctionObject* bindingHTMLTHElement(
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
     CDATASectionFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->fnText()->protoType());
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     CDATASectionFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnText());
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return CDATASectionFunction;
 }

@@ -71,6 +71,5 @@ ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
     , m_loaded(init.loaded())
     , m_total(init.total())
 {
-    initScriptWrappable(this);
 }
 }

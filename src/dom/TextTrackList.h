@@ -29,10 +29,7 @@ public:
     {
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
 
     virtual bool isTextTrackList() const override
     {

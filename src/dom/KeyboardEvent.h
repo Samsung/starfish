@@ -84,9 +84,10 @@ public:
                     (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
     }
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnKeyboardEvent()->protoType());
     }
 
     virtual bool isKeyboardEvent() const override

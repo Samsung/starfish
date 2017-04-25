@@ -17,10 +17,144 @@
 #ifndef __StarFishScriptBindingInstanceDataEscargot__
 #define __StarFishScriptBindingInstanceDataEscargot__
 
+#include "StarFishConfig.h"
 #include "binding/ScriptBindingInstance.h"
-#include "binding/ScriptWrappable.h"
 
 #include <Escargot.h>
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
+    F(Attr)                                         \
+    F(Blob)                                         \
+    F(CDATASection)                                 \
+    F(CharacterData)                                \
+    F(Comment)                                      \
+    F(Coordinates)                                  \
+    F(CSSStyleDeclaration)                          \
+    F(CSSStyleRule)                                 \
+    F(Document)                                     \
+    F(DocumentFragment)                             \
+    F(DocumentType)                                 \
+    F(DOMException)                                 \
+    F(DOMTokenList)                                 \
+    F(DOMPoint)                                     \
+    F(DOMPointReadOnly)                             \
+    F(DOMQuad)                                      \
+    F(DOMRect)                                      \
+    F(DOMRectList)                                  \
+    F(DOMRectReadOnly)                              \
+    F(DOMSettableTokenList)                         \
+    F(Element)                                      \
+    F(Event)                                        \
+    F(EventTarget)                                  \
+    F(FocusEvent)                                   \
+    F(Geolocation)                                  \
+    F(Geoposition)                                  \
+    F(History)                                      \
+    F(HTMLBodyElement)                              \
+    F(HTMLBRElement)                                \
+    F(HTMLCaptionElement)                           \
+    F(HTMLColElement)                               \
+    F(HTMLColGroupElement)                          \
+    F(HTMLCollection)                               \
+    F(HTMLDivElement)                               \
+    F(HTMLDocument)                                 \
+    F(HTMLElement)                                  \
+    F(HTMLHeadElement)                              \
+    F(HTMLHeadingElement)                           \
+    F(HTMLHtmlElement)                              \
+    F(HTMLImageElement)                             \
+    F(HTMLLIElement)                                \
+    F(HTMLLinkElement)                              \
+    F(HTMLMetaElement)                              \
+    F(HTMLObjectElement)                            \
+    F(HTMLParagraphElement)                         \
+    F(HTMLPreElement)                               \
+    F(HTMLScriptElement)                            \
+    F(HTMLStrongElement)                            \
+    F(HTMLStyleElement)                             \
+    F(HTMLSpanElement)                              \
+    F(HTMLTableElement)                             \
+    F(HTMLTBodyElement)                             \
+    F(HTMLTDElement)                                \
+    F(HTMLTFootElement)                             \
+    F(HTMLTHeadElement)                             \
+    F(HTMLTHElement)                                \
+    F(HTMLTRElement)                                \
+    F(HTMLUListElement)                             \
+    F(HTMLUnknownElement)                           \
+    F(Image)                                        \
+    F(KeyboardEvent)                                \
+    F(Location)                                     \
+    F(MouseEvent)                                   \
+    F(NamedNodeMap)                                 \
+    F(Navigator)                                    \
+    F(Node)                                         \
+    F(NodeList)                                     \
+    F(PositionError)                                \
+    F(ProgressEvent)                                \
+    F(PseudoElement)                                \
+    F(URL)                                          \
+    F(Text)                                         \
+    F(TouchEvent)                                   \
+    F(UIEvent)                                      \
+    F(Window)                                       \
+    F(XMLHttpRequest)                               \
+    F(XMLHttpRequestEventTarget)
+
+#ifdef STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F) F(DOMImplementation)
+#else // STARFISH_EXP
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)
+#endif // STARFISH_EXP
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
+    F(HTMLAudioElement)                           \
+    F(HTMLMediaElement)                           \
+    F(HTMLSourceElement)                          \
+    F(HTMLTrackElement)                           \
+    F(HTMLVideoElement)                           \
+    F(MediaSource)                                \
+    F(SourceBuffer)                               \
+    F(SourceBufferList)                           \
+    F(TextTrack)                                  \
+    F(TextTrackCue)                               \
+    F(TextTrackCueList)                           \
+    F(TextTrackList)                              \
+    F(TimeRanges)                                 \
+    F(VTTCue)
+
+#else // STARFISH_ENABLE_MULTIMEDIA
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
+#endif // STARFISH_ENABLE_MULTIMEDIA
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) F(HTMLAnchorElement)
+#else // STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#endif // STARFISH_ENABLE_MULTI_PAGE
+
+#ifdef STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) F(DOMParser)
+#else // STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
+#endif // STARFISH_ENABLE_DOMPARSER
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
+    F(Avplay)                                      \
+    F(WebApis)
+#else // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+#endif // STARFISH_TIZEN_TV && STARFISH_ENABLE_AVPLAY
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F)    \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_EXP(F)        \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)      \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)  \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
 namespace StarFish {
 

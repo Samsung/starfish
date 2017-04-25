@@ -17,36 +17,36 @@
 #include "StarFishConfig.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "dom/HTMLTHeadElement.h"
+#include "dom/HTMLTRElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLTHeadElement(
+ESFunctionObject* bindingHTMLTRElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* HTMLTHeadElementString = ESString::create("HTMLTHeadElement");
-    ESFunctionObject* HTMLTHeadElementFunction =
+    ESString* HTMLTRElementString = ESString::create("HTMLTRElement");
+    ESFunctionObject* HTMLTRElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLTHeadElementString, 1, true, true);
-    HTMLTHeadElementFunction->defineAccessorProperty(
+                                 HTMLTRElementString, 1, true, true);
+    HTMLTRElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLTHeadElementFunction->protoType()
+    HTMLTRElementFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    HTMLTHeadElementFunction->protoType()
+    HTMLTRElementFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->set__proto__(
             fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLTHeadElementFunction->set__proto__(
+    HTMLTRElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLTHeadElementFunction;
+    return HTMLTRElementFunction;
 }
 }

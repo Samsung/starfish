@@ -50,9 +50,10 @@ public:
 
     MediaSource(Document* document);
 
-    virtual void initScriptObject(ScriptBindingInstance* instance)
+    virtual void init(ScriptBindingInstance* instance) override
     {
-        initScriptWrappable(this);
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnMediaSource()->protoType());
     }
 
     virtual bool isMediaSource() const override
