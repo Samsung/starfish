@@ -161,406 +161,6 @@ static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
     return toJSString(v);
 }
 
-static ESValue getElementByIdFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-
-        if (argValue.isESString()) {
-            ESString* argStr = argValue.asESString();
-
-            if (*argStr == *(strings->emptyString.string())) {
-                return ESValue(ESValue::ESNull);
-            }
-
-            Element* elem = doc->getElementById(toBrowserString(argStr));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        } else if (argValue.isNull()) {
-            Element* elem =
-                doc->getElementById(toBrowserString(ESString::create("null")));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        } else if (argValue.isUndefined()) {
-            Element* elem = doc->getElementById(
-                toBrowserString(ESString::create("undefined")));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue querySelectorFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        if (instance->currentExecutionContext()->argumentCount() > 0) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (!argValue.isESString()) {
-                argValue = argValue.toString();
-            }
-            try {
-                ESString* argStr = argValue.asESString();
-                if (*argStr == *(strings->emptyString.string())) {
-                    throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
-                        DOMException::Code::DOM_EXCEPTION,
-                        "Failed to execute 'querySelector' on "
-                        "'Document': The provided selector is "
-                        "empty.");
-                }
-
-                Element* elem = doc->querySelector(toBrowserString(argStr));
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-            } catch (DOMException* e) {
-                ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            }
-        } else {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                            "querySelector", "Document", "1", "0");
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue querySelectorAllFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        if (instance->currentExecutionContext()->argumentCount() > 0) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (!argValue.isESString()) {
-                argValue = argValue.toString();
-            }
-            try {
-                ESString* argStr = argValue.asESString();
-                if (*argStr == *(strings->emptyString.string())) {
-                    throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
-                        DOMException::Code::DOM_EXCEPTION,
-                        "Failed to execute 'querySelectorAll' "
-                        "on 'Document': The provided selector "
-                        "is empty.");
-                }
-
-                NodeList* list = doc->querySelectorAll(toBrowserString(argStr));
-                if (list != nullptr) {
-                    return list->scriptValue();
-                }
-            } catch (DOMException* e) {
-                ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            }
-        } else {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                            "querySelectorAll", "Document", "1", "0")
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue createDocumentFragmentFunction(ESVMInstance* instance)
-{
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-        if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            return doc->createDocumentFragment()->scriptValue();
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-static ESValue createElementFunction(ESVMInstance* instance)
-{
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-        if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isUndefined()) {
-                AtomicString name = AtomicString::createAttrAtomicString(
-                    doc->window()->starFish(), "undefined");
-                Element* elem = doc->createElement(name, true);
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-            } else if (argValue.isNull()) {
-                AtomicString name = AtomicString::createAttrAtomicString(
-                    doc->window()->starFish(), "null");
-                Element* elem = doc->createElement(name, true);
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-            } else if (argValue.isESString()) {
-                ESString* argStr = argValue.asESString();
-                auto bStr = toBrowserString(argStr);
-                if (!QualifiedName::checkNameProductionRule(bStr,
-                                                            bStr->length())) {
-                    throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
-                        DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
-                }
-                AtomicString name = AtomicString::createAttrAtomicString(
-                    doc->window()->starFish(), argStr->utf8Data());
-                Element* elem = doc->createElement(name, true);
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-            }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return ESValue(ESValue::ESNull);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-static ESValue createTextNodeFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            ESString* argStr = argValue.asESString();
-            Text* elem = doc->createTextNode(toBrowserString(argStr));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        } else if (argValue.isNull()) {
-            Text* elem =
-                doc->createTextNode(toBrowserString(ESString::create("null")));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        } else if (argValue.isUndefined()) {
-            Text* elem = doc->createTextNode(
-                toBrowserString(ESString::create("undefined")));
-            if (elem != nullptr) {
-                return elem->scriptValue();
-            }
-        } else {
-            THROW_ILLEGAL_INVOCATION();
-        }
-
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue createCommentFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        Comment* elem = nullptr;
-        if (argValue.isUndefined()) {
-            elem = doc->createComment(String::fromUTF8("undefined"));
-        } else if (argValue.isNull()) {
-            elem = doc->createComment(String::fromUTF8("null"));
-        } else if (argValue.isESString()) {
-            ESString* argStr = argValue.asESString();
-            elem = doc->createComment(toBrowserString(argStr));
-        }
-        if (elem != nullptr) {
-            return elem->scriptValue();
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            ESString* argStr = argValue.asESString();
-            HTMLCollection* result = doc->getElementsByTagName(
-                doc->createAttributeName(toBrowserString(argStr)));
-            if (result != nullptr) {
-                return result->scriptValue();
-            }
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString() || argValue.isUndefinedOrNull()) {
-            ESString* argStr;
-            if (argValue.isNull()) {
-                argStr = ESString::create("null");
-            } else if (argValue.isUndefined()) {
-                argStr = ESString::create("undefined");
-            } else {
-                argStr = argValue.asESString();
-            }
-
-            HTMLCollection* result =
-                doc->getElementsByClassName(toBrowserString(argStr));
-            if (result != nullptr) {
-                return result->scriptValue();
-            }
-        } else if (argValue.isObject() &&
-                   argValue.asESPointer()->isESArrayObject()) {
-            ESArrayObject* array = argValue.asESPointer()->asESArrayObject();
-            String* listSoFar = String::createASCIIString("");
-            for (unsigned i = 0; i < array->length(); i++) {
-                ESValue val = array->get(i);
-                if (val.isESString()) {
-                    listSoFar =
-                        listSoFar->concat(toBrowserString(val.asESString()));
-                    if (i < array->length() - 1) {
-                        listSoFar =
-                            listSoFar->concat(String::createASCIIString(","));
-                    }
-                } else {
-                    return ESValue(ESValue::ESNull);
-                }
-            }
-            HTMLCollection* result = doc->getElementsByClassName(listSoFar);
-            if (result) {
-                return result->scriptValue();
-            }
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue createAttributeFunction(ESVMInstance* instance)
-{
-    try {
-        ESValue thisValue =
-            instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, Node);
-        Node* obj =
-            (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-        if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isUndefined()) {
-                Attr* result = doc->createAttribute(
-                    QualifiedName(AtomicString::emptyAtomicString(),
-                                  AtomicString::createAttrAtomicString(
-                                      doc->window()->starFish(), "undefined")));
-                if (result != nullptr) {
-                    return result->scriptValue();
-                }
-            } else if (argValue.isNull()) {
-                Attr* result = doc->createAttribute(
-                    QualifiedName(AtomicString::emptyAtomicString(),
-                                  AtomicString::createAttrAtomicString(
-                                      doc->window()->starFish(), "null")));
-                if (result != nullptr) {
-                    return result->scriptValue();
-                }
-            } else if (argValue.isESString()) {
-                ESString* argStr = argValue.asESString();
-                Attr* result = doc->createAttribute(QualifiedName(
-                    AtomicString::emptyAtomicString(),
-                    AtomicString::createAttrAtomicString(
-                        doc->window()->starFish(), argStr->utf8Data())));
-                if (result != nullptr) {
-                    return result->scriptValue();
-                }
-            }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return ESValue(ESValue::ESNull);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 static ESValue childrenGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
@@ -584,30 +184,6 @@ static ESValue childElementCountGetterFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     uint32_t v = originalObj->childElementCount();
     return ESValue(v);
-}
-
-static ESValue elementFromPointFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    if (obj->isDocument()) {
-        Document* doc = obj->asDocument();
-        ESValue argValue0 =
-            instance->currentExecutionContext()->readArgument(0);
-        ESValue argValue1 =
-            instance->currentExecutionContext()->readArgument(0);
-        Element* element =
-            doc->elementFromPoint(argValue0.toNumber(), argValue1.toNumber());
-        if (element) {
-            return element->scriptValue();
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
-    }
-    return ESValue(ESValue::ESNull);
 }
 
 static ESValue onClickGetterFunction(ESVMInstance* instance)
@@ -680,6 +256,319 @@ static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
     originalObj->setOnkeydownEventListener(arg0);
 
     return ESValue();
+}
+
+// Implement for functions
+static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    HTMLCollection* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->getElementsByTagName(value0);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    HTMLCollection* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->getElementsByClassName(value0);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue createElementFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->createElement(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue createDocumentFragmentFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare return value (empty when void)
+    DocumentFragment* result = nullptr;
+    // Call native function (nargs: 0)
+    try {
+        result = originalObj->createDocumentFragment();
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue createTextNodeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Text* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->createTextNode(value0);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue createCommentFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Comment* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->createComment(value0);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue createAttributeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Attr* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->createAttribute(value0);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue elementFromPointFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+
+    // Handle argument arg1
+    double value1;
+    value1 = arg1.toNumber();
+
+    // Call native function (nargs: 2)
+    result = originalObj->elementFromPoint(value0, value1);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue getElementByIdFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->getElementById(value0);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+// TODO Move throw DOM exception code into querySelector()
+static ESValue querySelectorFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, Node);
+    Node* obj =
+        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+    if (obj->isDocument()) {
+        if (instance->currentExecutionContext()->argumentCount() > 0) {
+            Document* doc = obj->asDocument();
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(0);
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        doc->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute 'querySelector' on "
+                        "'Document': The provided selector is "
+                        "empty.");
+                }
+
+                Element* elem = doc->querySelector(toBrowserString(argStr));
+                if (elem != nullptr) {
+                    return elem->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            }
+        } else {
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelector", "Document", "1", "0");
+        }
+    } else {
+        THROW_ILLEGAL_INVOCATION()
+    }
+    return ESValue(ESValue::ESNull);
+}
+
+// TODO Move throw DOM exception code into querySelectorAll()
+static ESValue querySelectorAllFunction(ESVMInstance* instance)
+{
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, Node);
+    Node* obj =
+        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+    if (obj->isDocument()) {
+        if (instance->currentExecutionContext()->argumentCount() > 0) {
+            Document* doc = obj->asDocument();
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(0);
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        doc->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute 'querySelectorAll' "
+                        "on 'Document': The provided selector "
+                        "is empty.");
+                }
+
+                NodeList* list = doc->querySelectorAll(toBrowserString(argStr));
+                if (list != nullptr) {
+                    return list->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            }
+        } else {
+            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                            "querySelectorAll", "Document", "1", "0")
+        }
+    } else {
+        THROW_ILLEGAL_INVOCATION()
+    }
+    return ESValue(ESValue::ESNull);
 }
 
 ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)

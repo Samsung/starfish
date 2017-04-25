@@ -500,65 +500,69 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
 
 static ESValue loadFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->load();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->load();
+
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue canPlayTypeFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
-        THROW_ILLEGAL_INVOCATION();
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    String* result = originalObj->asElement()
-                         ->asHTMLElement()
-                         ->asHTMLMediaElement()
-                         ->canPlayType(toBrowserString(v.toString()));
-    if (!result) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    return toJSString(result);
-}
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
-static ESValue pauseFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->pause();
-    return ESValue(ESValue::ESUndefined);
+    // Call native function (nargs: 1)
+    result = originalObj->canPlayType(value0);
+
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue playFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
+// Declare return value (empty when void)
 #ifdef USE_ES6_FEATURE
-    return originalObj->asElement()
-        ->asHTMLElement()
-        ->asHTMLMediaElement()
-        ->play()
-        ->scriptValue();
-#else
-    originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->play();
-    return ESValue();
+    Promise* result = nullptr;
 #endif
+// Call native function (nargs: 0)
+#ifdef USE_ES6_FEATURE
+    result = originalObj->play();
+#else
+    originalObj->play();
+#endif
+
+// Return ESValue from native value
+#ifdef USE_ES6_FEATURE
+    return result->scriptValue();
+#else
+    return ESValue(ESValue::ESUndefined);
+#endif
+}
+
+static ESValue pauseFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
+    // Declare return value (empty when void)
+    // Call native function (nargs: 0)
+    originalObj->pause();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingHTMLMediaElement(
