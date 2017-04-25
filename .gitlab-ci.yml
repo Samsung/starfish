@@ -124,6 +124,7 @@ test_regression_test_vendor1:
     - make install_pixel_test_dep
   script:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi   
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_gecko_layout | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
