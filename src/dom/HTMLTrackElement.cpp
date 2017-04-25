@@ -267,7 +267,7 @@ void HTMLTrackElement::generateCues()
 
 String* HTMLTrackElement::kind()
 {
-    return TextTrack::kindToString(m_track->kind());
+    return TextTrack::kindToString(m_track->kindValue());
 }
 
 String* HTMLTrackElement::src()

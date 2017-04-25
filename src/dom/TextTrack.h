@@ -102,10 +102,15 @@ public:
         return m_activeCues;
     }
 
-    Kind kind()
+    Kind kindValue()
     {
         STARFISH_ASSERT(m_kind != TextTrack::Kind::InvalidKind);
         return m_kind;
+    }
+
+    String* kind()
+    {
+        return TextTrack::kindToString(m_kind);
     }
 
     String* label()
@@ -118,9 +123,14 @@ public:
         return m_language;
     }
 
-    Mode mode()
+    Mode modeValue()
     {
         return m_mode;
+    }
+
+    String* mode()
+    {
+        return TextTrack::modeToString(m_mode);
     }
 
     HTMLTrackElement* trackElement()

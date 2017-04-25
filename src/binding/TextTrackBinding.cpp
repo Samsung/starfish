@@ -26,6 +26,94 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue kindGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->kind();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue labelGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->label();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue languageGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->language();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue idGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->id();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue modeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    result = originalObj->mode();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+static ESValue modeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setMode(value0);
+    return ESValue();
+}
+
+static ESValue cuesGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    TextTrackCueList* result = nullptr;
+    result = originalObj->cues();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue activeCuesGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    // Declare return value (empty when void)
+    TextTrackCueList* result = nullptr;
+    result = originalObj->activeCues();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
 static ESValue addCueFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -58,14 +146,14 @@ static ESValue removeCueFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue onCueChangeGetterFunction(ESVMInstance* instance)
+static ESValue oncuechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
 
     return originalObj->oncuechangeEventListener();
 }
 
-static ESValue onCueChangeSetterFunction(ESVMInstance* instance)
+static ESValue oncuechangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
 
@@ -76,119 +164,75 @@ static ESValue onCueChangeSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-static ESValue cuesGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    TextTrackCueList* list = originalObj->cues();
-    if (list) {
-        return list->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue activeCuesGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    TextTrackCueList* list = originalObj->activeCues();
-    if (list) {
-        return list->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
-static ESValue kindGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    return toJSString(TextTrack::kindToString(originalObj->kind()));
-}
-
-static ESValue labelGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    return toJSString(originalObj->label());
-}
-
-static ESValue languageGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    return toJSString(originalObj->language());
-}
-
-static ESValue modeGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    return toJSString(TextTrack::modeToString(originalObj->mode()));
-}
-
-static ESValue modeSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (firstArg.isESString()) {
-        originalObj->setMode(toBrowserString(firstArg.toString()));
-    }
-    return firstArg;
-}
-
-static ESValue idGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    return toJSString(originalObj->id());
-}
-
 ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        TextTrack, fetchData(scriptBindingInstance)->m_fnEventTarget);
-
+    // Bind for constructor
+    ESString* TextTrackString = ESString::create("TextTrack");
+    ESFunctionObject* TextTrackFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, TextTrackString, 0, true, true);
+    TextTrackFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     TextTrackFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("addCue"), false, false, false,
-            ESFunctionObject::create(NULL, addCueFunction,
-                                     ESString::create("addCue"), 1, false));
+        ->forceNonVectorHiddenClass(false);
+    TextTrackFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    TextTrackFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
+    ESObject* TextTrackPrototypeObj =
+        TextTrackFunction->protoType().asESPointer()->asESObject();
 
-    TextTrackFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("removeCue"), false, false, false,
-            ESFunctionObject::create(NULL, removeCueFunction,
-                                     ESString::create("removeCue"), 0, false));
-
+    // Bind for attributes
+    ESString* kindString = ESString::create("kind");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("oncuechange"), onCueChangeGetterFunction,
-        onCueChangeSetterFunction);
+        TextTrackPrototypeObj, kindString, kindGetterFunction, nullptr);
 
+    ESString* labelString = ESString::create("label");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("cues"), cuesGetterFunction, nullptr);
+        TextTrackPrototypeObj, labelString, labelGetterFunction, nullptr);
 
+    ESString* languageString = ESString::create("language");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("activeCues"), activeCuesGetterFunction, nullptr);
+        TextTrackPrototypeObj, languageString, languageGetterFunction, nullptr);
 
+    ESString* idString = ESString::create("id");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("kind"), kindGetterFunction, nullptr);
+        TextTrackPrototypeObj, idString, idGetterFunction, nullptr);
 
+    ESString* modeString = ESString::create("mode");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("label"), labelGetterFunction, nullptr);
+        TextTrackPrototypeObj, modeString, modeGetterFunction,
+        modeSetterFunction);
 
+    ESString* cuesString = ESString::create("cues");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("language"), languageGetterFunction, nullptr);
+        TextTrackPrototypeObj, cuesString, cuesGetterFunction, nullptr);
 
+    ESString* activeCuesString = ESString::create("activeCues");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("mode"), modeGetterFunction, modeSetterFunction);
+        TextTrackPrototypeObj, activeCuesString, activeCuesGetterFunction,
+        nullptr);
 
+    ESString* oncuechangeString = ESString::create("oncuechange");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("id"), idGetterFunction, nullptr);
+        TextTrackPrototypeObj, oncuechangeString, oncuechangeGetterFunction,
+        oncuechangeSetterFunction);
+
+    // Bind for functions
+    ESString* addCueString = ESString::create("addCue");
+    ESFunctionObject* addCueESFn = ESFunctionObject::create(
+        nullptr, addCueFunction, addCueString, 1, false);
+    TextTrackPrototypeObj->defineDataProperty(addCueString, true, true, true,
+                                              addCueESFn);
+
+    ESString* removeCueString = ESString::create("removeCue");
+    ESFunctionObject* removeCueESFn = ESFunctionObject::create(
+        nullptr, removeCueFunction, removeCueString, 1, false);
+    TextTrackPrototypeObj->defineDataProperty(removeCueString, true, true, true,
+                                              removeCueESFn);
 
     return TextTrackFunction;
 }
