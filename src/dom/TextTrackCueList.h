@@ -40,6 +40,11 @@ public:
     {
         return true;
     }
+
+    unsigned long length()
+    {
+        return size();
+    }
 };
 }
 
