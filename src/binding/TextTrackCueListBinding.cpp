@@ -13,37 +13,61 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "dom/TextTrackCue.h"
 #include "dom/TextTrackCueList.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCueList);
-    uint32_t len = originalObj->size();
-    return ESValue(len);
+    // Declare return value (empty when void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
+// Implement for functions
 ESFunctionObject* bindingTextTrackCueList(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(TextTrackCueList,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* TextTrackCueListString = ESString::create("TextTrackCueList");
+    ESFunctionObject* TextTrackCueListFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 TextTrackCueListString, 0, true, true);
+    TextTrackCueListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    TextTrackCueListFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    TextTrackCueListFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)
+                           ->m_instance->globalObject()
+                           ->objectPrototype());
+    ESObject* TextTrackCueListPrototypeObj =
+        TextTrackCueListFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextTrackCueListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        TextTrackCueListPrototypeObj, lengthString, lengthGetterFunction,
+        nullptr);
 
+    // Bind for functions
     return TextTrackCueListFunction;
 }
 }
