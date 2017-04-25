@@ -53,7 +53,7 @@ interface Document : Node {
   [Unimplemented, CEReactions, NewObject] Node importNode(Node node, optional boolean deep = false);
   [Unimplemented, CEReactions] Node adoptNode(Node node);
 
-  [NewObject] Attr createAttribute(DOMString localName);
+  [NewObject, RaisesException] Attr createAttribute(DOMString localName);
   [Unimplemented, NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
 
   [Unimplemented, NewObject] Event createEvent(DOMString type);
