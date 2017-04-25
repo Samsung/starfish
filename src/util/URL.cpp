@@ -406,6 +406,12 @@ String* URL::href()
     return m_urlString;
 }
 
+void URL::setHref(String* newHref)
+{
+    m_urlString = newHref;
+    resolvePositions();
+}
+
 String* URL::protocol()
 {
     return m_urlString->substring(0, m_protocolEnd)->toLower();
@@ -461,7 +467,7 @@ void URL::setUsername(String* newUser)
     }
 }
 
-String* URL::getPassword()
+String* URL::password()
 {
     if (m_passwordEnd != m_userEnd) {
         return m_urlString->substring(m_userEnd + 1,
@@ -535,6 +541,11 @@ String* URL::port()
     } else {
         return String::emptyString;
     }
+}
+
+void URL::setPort(String* newPort)
+{
+    STARFISH_ASSERT_NOT_REACHED();
 }
 
 String* URL::pathname()
