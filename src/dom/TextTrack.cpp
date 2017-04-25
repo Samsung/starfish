@@ -86,7 +86,7 @@ void TextTrack::setKind(String* kind)
 void TextTrack::setMode(String* mode)
 {
     TextTrack::Mode modeEnum = TextTrack::stringToMode(mode);
-    if (!modeEnum == TextTrack::Mode::InvalidMode) {
+    if (modeEnum != TextTrack::Mode::InvalidMode) {
         m_mode = modeEnum;
     }
 }
