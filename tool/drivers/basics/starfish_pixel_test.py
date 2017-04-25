@@ -147,15 +147,17 @@ def default_tc_handler(tc_file, diff_result, show_progress=True):
         print result
     return is_passed
 
+def default_http_expected_namer(tc_file):
+    # Remote test
+    # Ex) http://52.79.162.207/some/directory/tc_some_name.html
+    #  => test/remote-test/some/directory/tc_some_name_expected.png
+    expected = os.path.splitext(tc_file)[0] + "_expected.png"
+    path = urlparse(expected).path
+    return REMOTE_EXP_DIR + path
 
 def default_expected_namer(tc_file):
     if tc_file.startswith("http"):
-        # Remote test
-        # Ex) http://52.79.162.207/some/directory/tc_some_name.html
-        #  => test/remote-test/some/directory/tc_some_name_expected.png
-        expected = os.path.splitext(tc_file)[0] + "_expected.png"
-        path = urlparse(expected).path
-        return REMOTE_EXP_DIR + path
+        return default_http_expected_namer(tc_file)
     return os.path.splitext(tc_file)[0] + "_expected.png"
 
 # standalone version
