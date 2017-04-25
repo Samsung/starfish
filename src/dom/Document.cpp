@@ -1023,6 +1023,9 @@ DEFINE_EVENT_LISTENER(Document, keydown);
 
 Element* Document::getElementById(String* id)
 {
+    if (id->length() == 0) {
+        return nullptr;
+    }
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
         if (child->isElement() && child->asElement()->isHTMLElement() &&
             child->asElement()->asHTMLElement()->id()->equals(id)) {
@@ -1077,7 +1080,7 @@ Attr* Document::createAttribute(String* name)
 {
     QualifiedName qname = QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAttrAtomicString(window()->starFish(), "null"));
+        AtomicString::createAttrAtomicString(window()->starFish(), name));
     return createAttribute(qname);
 }
 

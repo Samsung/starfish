@@ -417,7 +417,12 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
     value0 = toBrowserString(arg0);
 
     // Call native function (nargs: 1)
-    result = originalObj->createAttribute(value0);
+    try {
+        result = originalObj->createAttribute(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     // Return ESValue from native value
     STARFISH_ASSERT(result != nullptr);
