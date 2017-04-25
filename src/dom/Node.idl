@@ -37,7 +37,7 @@ interface Node : EventTarget {
   [CEReactions] attribute DOMString? textContent;
   [Unimplemented, CEReactions] void normalize();
 
-  [CEReactions, NewObject] Node cloneNode(optional boolean deep = false);
+  [CEReactions, NewObject, RaisesException] Node cloneNode(optional boolean deep = false);
   boolean isEqualNode(Node? otherNode);
   [Unimplemented] boolean isSameNode(Node? otherNode); // historical alias of ===
 
@@ -54,12 +54,13 @@ interface Node : EventTarget {
   [Unimplemented] DOMString? lookupNamespaceURI(DOMString? prefix);
   [Unimplemented] boolean isDefaultNamespace(DOMString? namespace);
 
-  [CEReactions] Node insertBefore(Node node, Node? child);
-  [CEReactions] Node appendChild(Node node);
-  [CEReactions] Node replaceChild(Node node, Node child);
-  [CEReactions] Node removeChild(Node child);
+  [CEReactions, RaisesException] Node insertBefore(Node node, Node? child);
+  [CEReactions, RaisesException] Node appendChild(Node node);
+  [CEReactions, RaisesException] Node replaceChild(Node node, Node child);
+  [CEReactions, RaisesException] Node removeChild(Node child);
 };
 
+[Unimplemented]
 dictionary GetRootNodeOptions {
   boolean composed = false;
 };

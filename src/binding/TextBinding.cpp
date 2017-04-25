@@ -24,17 +24,23 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue textFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue textConstructor(ESVMInstance* instance)
 {
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (argCount > 0) {
-        ESString* data = firstArg.toString();
-        Document* document = fetchDocument(instance);
-        Text* text = new Text(document, String::fromUTF8(data->utf8Data()));
-        return text->scriptValue();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "Text");
     }
-    return ESValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::fromUTF8("");
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = toBrowserString(arg0);
+    }
+    Text* result = nullptr;
+    Document* callWith = fetchDocument(instance);
+    // Call native function (nargs: 1)
+    result = new Text(callWith, value0);
+    return result->scriptValue();
 }
 
 // Implement for attributes
@@ -54,7 +60,7 @@ ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
     // Bind for constructor
     ESString* TextString = ESString::create("Text");
     ESFunctionObject* TextFunction = ESFunctionObject::create(
-        nullptr, textFunction, TextString, 0, true, true);
+        nullptr, textConstructor, TextString, 0, true, true);
     TextFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

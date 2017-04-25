@@ -15,147 +15,167 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "dom/Event.h"
 #include "dom/EventTarget.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for functions
 static ESValue addEventListenerFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    size_t argc = instance->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+    GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "addEventListener", "EventTarget", "2", buffer);
     }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->addEventListener(eventTypeName, listener, capture);
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&%s\n", eventTypeName->utf8Data());
-#endif
+    size_t validArgCount = 3;
+    // Declare return value (empty when void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    EventListener* value1 = nullptr;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = new EventListener(arg1);
     }
-    return ESValue();
+    // Handle argument arg2
+    bool value2;
+    if (arg2.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value2 = arg2.toBoolean();
+    }
+    // Call native function (nargs: 2-3)
+    if (validArgCount == 2) {
+        originalObj->addEventListener(value0, value1);
+    } else if (validArgCount == 3) {
+        originalObj->addEventListener(value0, value1, value2);
+    }
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue removeEventListenerFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
-    size_t argc = instance->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+    GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "removeEventListener", "EventTarget", "2", buffer);
     }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-    ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-    if (firstArg.isESString() && secondArg.isESPointer() &&
-        secondArg.asESPointer()->isESFunctionObject()) {
-        // TODO: Verify valid event type. (e.g. click)
-        ESString* argStr = firstArg.asESString();
-        auto eventTypeName = String::fromUTF8(argStr->utf8Data());
-        auto listener = new EventListener(secondArg);
-        bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
-        ((EventTarget*)thisValue.asESPointer()
-             ->asESObject()
-             ->extraPointerData())
-            ->removeEventListener(eventTypeName, listener, capture);
+    size_t validArgCount = 3;
+    // Declare return value (empty when void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    EventListener* value1 = nullptr;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = new EventListener(arg1);
     }
-    return ESValue();
+    // Handle argument arg2
+    bool value2;
+    if (arg2.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value2 = arg2.toBoolean();
+    }
+    // Call native function (nargs: 2-3)
+    if (validArgCount == 2) {
+        originalObj->removeEventListener(value0, value1);
+    } else if (validArgCount == 3) {
+        originalObj->removeEventListener(value0, value1, value2);
+    }
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue dispatchEventListenerFunction(ESVMInstance* instance)
+static ESValue dispatchEventFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, EventTarget);
+    GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (firstArg.isUndefinedOrNull()) {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH,
-                        "dispatchEvent", "EventTarget", "1", "Event");
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "dispatchEvent", "EventTarget", "1", buffer);
     }
-    bool ret = false;
-    if (argCount == 1 && firstArg.isObject()) {
-        if (!(firstArg.isObject() &&
-              (firstArg.asESPointer()->asESObject()->extraData() ==
-               kEscargotObjectCheckMagic) &&
-              ((ScriptWrappable*)firstArg.asESPointer()
-                   ->asESObject()
-                   ->extraPointerData())
-                  ->isEvent())) {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH,
-                            "dispatchEvent", "EventTarget", "1", "Event");
-        }
-        Event* event =
-            (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
-        ret = ((EventTarget*)thisValue.asESPointer()
-                   ->asESObject()
-                   ->extraPointerData())
-                  ->dispatchEvent(event);
-    }
-    return ESValue(ret);
+    // Declare return value (empty when void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Event* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Event);
+    value0 = (Event*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    result = originalObj->dispatchEvent(value0);
+
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 ESFunctionObject* bindingEventTarget(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(EventTarget,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
-
-    auto fnAddEventListener = ESFunctionObject::create(
-        NULL, addEventListenerFunction, ESString::create("addEventListener"), 0,
-        false);
-    fnAddEventListener->codeBlock()->m_forceDenyStrictMode = true;
+    // Bind for constructor
+    ESString* EventTargetString = ESString::create("EventTarget");
+    ESFunctionObject* EventTargetFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, EventTargetString, 0, true, true);
+    EventTargetFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     EventTargetFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("addEventListener"), true, true,
-                             true, fnAddEventListener);
+        ->forceNonVectorHiddenClass(false);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)
+            ->m_instance->globalObject()
+            ->objectPrototype());
+    ESObject* EventTargetPrototypeObj =
+        EventTargetFunction->protoType().asESPointer()->asESObject();
 
-    auto fnRemoveEventListener = ESFunctionObject::create(
-        NULL, removeEventListenerFunction,
-        ESString::create("removeEventListener"), 0, false);
-    fnRemoveEventListener->codeBlock()->m_forceDenyStrictMode = true;
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("removeEventListener"), true,
-                             true, true, fnRemoveEventListener);
+    // Bind for functions
+    ESString* addEventListenerString = ESString::create("addEventListener");
+    ESFunctionObject* addEventListenerESFn = ESFunctionObject::create(
+        nullptr, addEventListenerFunction, addEventListenerString, 2, false);
+    EventTargetPrototypeObj->defineDataProperty(
+        addEventListenerString, true, true, true, addEventListenerESFn);
 
-    auto fnDispatchEvent =
-        ESFunctionObject::create(NULL, dispatchEventListenerFunction,
-                                 ESString::create("dispatchEvent"), 1, false);
-    fnDispatchEvent->codeBlock()->m_forceDenyStrictMode = true;
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("dispatchEvent"), true, true,
-                             true, fnDispatchEvent);
+    ESString* removeEventListenerString =
+        ESString::create("removeEventListener");
+    ESFunctionObject* removeEventListenerESFn =
+        ESFunctionObject::create(nullptr, removeEventListenerFunction,
+                                 removeEventListenerString, 2, false);
+    EventTargetPrototypeObj->defineDataProperty(
+        removeEventListenerString, true, true, true, removeEventListenerESFn);
+
+    ESString* dispatchEventString = ESString::create("dispatchEvent");
+    ESFunctionObject* dispatchEventESFn = ESFunctionObject::create(
+        nullptr, dispatchEventFunction, dispatchEventString, 1, false);
+    EventTargetPrototypeObj->defineDataProperty(dispatchEventString, true, true,
+                                                true, dispatchEventESFn);
 
     return EventTargetFunction;
 }
