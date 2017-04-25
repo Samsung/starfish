@@ -192,29 +192,9 @@ int DOMTokenList::checkMatchedTokens(bool* matchFlags,
 
 void DOMTokenList::remove(String* token)
 {
-    String* src = m_element->getAttribute(m_localName);
-    String* dst = String::createASCIIString("");
-    GCVector<String*> tokens;
-    tokenize(&tokens, src);
-
-    bool* matchFlags = new bool[tokens.size()];
-    int matchCount = checkMatchedTokens(matchFlags, &tokens, token);
-
-    if (matchCount > 0) {
-        bool isEmpty = true;
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            if (!matchFlags[i]) {
-                if (isEmpty) {
-                    dst = tokens[i];
-                    isEmpty = false;
-                } else {
-                    dst = dst->concat(String::spaceString)->concat(tokens[i]);
-                }
-            }
-        }
-        m_element->setAttribute(m_localName, dst);
-    }
-    delete[] matchFlags;
+    GCVector<String*> tokensToRemove;
+    tokensToRemove.push_back(token);
+    remove(&tokensToRemove);
 }
 
 void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
@@ -252,9 +232,9 @@ bool DOMTokenList::toggle(String* token)
     return toggle(token, false, false);
 }
 
-bool DOMTokenList::toggle(String* token, bool isForced)
+bool DOMTokenList::toggle(String* token, bool forceValue)
 {
-    return toggle(token, true, isForced);
+    return toggle(token, true, forceValue);
 }
 
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)

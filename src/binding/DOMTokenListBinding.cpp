@@ -31,135 +31,134 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
     return ESValue(len);
 }
 
+// Implement for functions
 static ESValue itemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
-
-    DOMTokenList* self = (DOMTokenList*)(thisValue.asESPointer()
-                                             ->asESObject()
-                                             ->extraPointerData());
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(argValue, idx);
-    if (idx != INVALID_INDEX && idx < self->length()) {
-        Nullable<String*> elem = self->item(idx);
-        if (elem.hasValue()) {
-            return toJSString(elem.getValue());
-        }
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        auto msg = ESString::create(
+            "At least 1 argument required, but only 0 present");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue(ESValue::ESNull);
+    // Declare return value (empty when void)
+    Nullable<String*> result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    if (!result.hasValue()) {
+        return ESValue(ESValue::ESNull);
+    }
+    String* result_value = result.getValue();
+    return toJSString(result_value);
 }
 
 static ESValue containsFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Declare return value (empty when void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
     try {
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        ESString* argStr = argValue.toString();
-        bool res = ((DOMTokenList*)thisValue.asESPointer()
-                        ->asESObject()
-                        ->extraPointerData())
-                       ->contains(toBrowserString(argStr));
-        return ESValue(res);
+        result = originalObj->contains(value0);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 extern ESValue addDOMTokenListFunction(ESVMInstance* instance);
 
 static ESValue removeFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
     try {
-        GCVector<String*> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(i);
-            ESString* argStr = argValue.toString();
-            String* aa = toBrowserString(argStr);
-            tokens.push_back(aa);
+        for (size_t i = 0; i < argCount; i++) {
+            ESValue arg = instance->currentExecutionContext()->readArgument(i);
+            String* value = toBrowserString(arg);
+            originalObj->remove(value);
         }
-        if (argCount > 0) {
-            ((DOMTokenList*)thisValue.asESPointer()
-                 ->asESObject()
-                 ->extraPointerData())
-                ->remove(&tokens);
-        }
-        return ESValue();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue toggleFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
-    try {
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        ESValue forceValue;
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        auto msg = ESString::create("Not enough arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    size_t validArgCount = 2;
+    // Declare return value (empty when void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
-        if (argCount == 0) {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "toggle",
-                            "DOMTokenList", "1", "0")
+    // Handle argument arg1
+    bool value1;
+    if (arg1.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value1 = arg1.toBoolean();
+    }
+    // Call native function (nargs: 1-2)
+    try {
+        if (validArgCount == 1) {
+            result = originalObj->toggle(value0);
+        } else if (validArgCount == 2) {
+            result = originalObj->toggle(value0, value1);
         }
-        if (argCount >= 2) {
-            forceValue = instance->currentExecutionContext()->readArgument(1);
-        }
-        if (argCount > 0) {
-            ESString* argStr = argValue.toString();
-            bool didAdd;
-            if (argCount == 1) {
-                didAdd = ((DOMTokenList*)thisValue.asESPointer()
-                              ->asESObject()
-                              ->extraPointerData())
-                             ->toggle(toBrowserString(argStr), false, false);
-            } else {
-                if (forceValue.isUndefined()) {
-                    didAdd =
-                        ((DOMTokenList*)thisValue.asESPointer()
-                             ->asESObject()
-                             ->extraPointerData())
-                            ->toggle(toBrowserString(argStr), false, false);
-                } else {
-                    ASSERT(forceValue.isBoolean());
-                    didAdd = ((DOMTokenList*)thisValue.asESPointer()
-                                  ->asESObject()
-                                  ->extraPointerData())
-                                 ->toggle(toBrowserString(argStr), true,
-                                          forceValue.asBoolean());
-                }
-            }
-            return ESValue(didAdd);
-        }
-        return ESValue(ESValue::ESNull);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue toStringFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
-    String* str = ((DOMTokenList*)thisValue.asESPointer()
-                       ->asESObject()
-                       ->extraPointerData())
-                      ->toString();
-    return toJSString(str);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    // Declare return value (empty when void)
+    String* result = String::emptyString;
+    // Call native function (nargs: 0)
+    result = originalObj->toString();
+
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 // https://dom.spec.whatwg.org/#interface-domtokenlist
