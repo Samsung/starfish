@@ -205,142 +205,250 @@ static ESValue textContentSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-static ESValue cloneNodeFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    ESValue arg = instance->currentExecutionContext()->readArgument(0);
-    bool deepClone = false;
-    if (arg.isBoolean()) {
-        deepClone = arg.asBoolean();
-    }
-    Node* node = obj->cloneNode(deepClone);
-    return node->scriptValue();
-}
-
+// Implement for functions
 static ESValue hasChildNodesFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    bool result = obj->hasChildNodes();
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    // Declare return value (empty when void)
+    bool result;
+    // Call native function (nargs: 0)
+    result = originalObj->hasChildNodes();
+
+    // Return ESValue from native value
     return ESValue(result);
+}
+
+static ESValue cloneNodeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    // Declare return value (empty when void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    bool value0 = false;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = arg0.toBoolean();
+    }
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->cloneNode(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue isEqualNodeFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-
-    if (argValue.isUndefinedOrNull()) {
-        return ESValue(false);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "isEqualNode", "Node", "1", buffer);
     }
+    // Declare return value (empty when void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    if (!arg0.isUndefinedOrNull()) {
+        CHECK_TYPEOF(arg0, Node);
+        value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+    }
+    // Call native function (nargs: 1)
+    result = originalObj->isEqualNode(value0);
 
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    Node* node =
-        (Node*)argValue.asESPointer()->asESObject()->extraPointerData();
-    bool found = obj->isEqualNode(node);
-    return ESValue(found);
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
-static ESValue compareDocumentPositionGetterFunction(ESVMInstance* instance)
+static ESValue compareDocumentPositionFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    Node* nodeRef = (Node*)instance->currentExecutionContext()
-                        ->readArgument(0)
-                        .asESPointer()
-                        ->asESObject()
-                        ->extraPointerData();
-    unsigned short pos = obj->compareDocumentPosition(nodeRef);
-    return ESValue(pos);
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "compareDocumentPosition", "Node", "1", buffer);
+    }
+    // Declare return value (empty when void)
+    uint32_t result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    result = originalObj->compareDocumentPosition(value0);
+
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue containsFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    if (instance->currentExecutionContext()->readArgument(0).isNull()) {
-        return ESValue(obj->contains(nullptr));
-    }
-    CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), Node);
-    Node* nodeRef = (Node*)instance->currentExecutionContext()
-                        ->readArgument(0)
-                        .asESPointer()
-                        ->asESObject()
-                        ->extraPointerData();
-    bool found = obj->contains(nodeRef);
-    return ESValue(found);
-}
-
-static ESValue appendChildFunction(ESVMInstance* instance)
-{
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
-    try {
-        originalObj->appendChild(val0);
-        return val0->scriptValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "contains",
+                        "Node", "1", buffer);
     }
-}
+    // Declare return value (empty when void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    if (!arg0.isUndefinedOrNull()) {
+        CHECK_TYPEOF(arg0, Node);
+        value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+    }
+    // Call native function (nargs: 1)
+    result = originalObj->contains(value0);
 
-static ESValue removeChildFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
-    try {
-        Node* result = originalObj->removeChild(val0);
-        return result->scriptValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-static ESValue replaceChildFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
-    GENERATE_ARG_AND_CHECK_TYPE(1, Node);
-    try {
-        Node* result = originalObj->replaceChild(val0, val1);
-        return result->scriptValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue insertBeforeFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    GENERATE_ARG_AND_CHECK_TYPE(0, Node);
-    GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(1, Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "insertBefore", "Node", "2", buffer);
+    }
+    // Declare return value (empty when void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Handle argument arg1
+    Node* value1 = nullptr;
+    if (!arg1.isUndefinedOrNull()) {
+        CHECK_TYPEOF(arg1, Node);
+        value1 = (Node*)(arg1.asESPointer()->asESObject()->extraPointerData());
+    }
+    // Call native function (nargs: 2)
     try {
-        Node* result = originalObj->insertBefore(val0, val1);
-        return result->scriptValue();
+        result = originalObj->insertBefore(value0, value1);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        return ESValue(ESValue::ESNull);
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue appendChildFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "appendChild", "Node", "1", buffer);
+    }
+    // Declare return value (empty when void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->appendChild(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue replaceChildFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "replaceChild", "Node", "2", buffer);
+    }
+    // Declare return value (empty when void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Handle argument arg1
+    Node* value1 = nullptr;
+    CHECK_TYPEOF(arg1, Node);
+    value1 = (Node*)(arg1.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 2)
+    try {
+        result = originalObj->replaceChild(value0, value1);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue removeChildFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Node);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "removeChild", "Node", "1", buffer);
+    }
+    // Declare return value (empty when void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->removeChild(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
@@ -599,7 +707,7 @@ ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
         ESString::create("compareDocumentPosition"), true, true, true,
-        ESFunctionObject::create(nullptr, compareDocumentPositionGetterFunction,
+        ESFunctionObject::create(nullptr, compareDocumentPositionFunction,
                                  ESString::create("compareDocumentPosition"), 1,
                                  false));
 
