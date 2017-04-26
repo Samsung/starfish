@@ -5,5 +5,5 @@
 interface ElementCSSInlineStyle {
   // FIXME readonly property but seems to have a Setter
   // [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
-  [CustomGetter, CustomSetter] attribute CSSStyleDeclaration style;
+  [Custom=(Getter, Setter)] attribute CSSStyleDeclaration style;
 };

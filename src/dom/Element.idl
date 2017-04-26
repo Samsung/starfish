@@ -10,14 +10,14 @@
 [Exposed=Window]
 interface Element : Node {
   // [REF1]--------------------------------------------------------------
-  [CustomGetter] readonly attribute DOMString? namespaceURI;
+  [Custom=Getter] readonly attribute DOMString? namespaceURI;
   [Unimplemented] readonly attribute DOMString? prefix;
   readonly attribute DOMString localName;
   readonly attribute DOMString tagName;
 
   [CEReactions, Rename=idAttr] attribute DOMString id;
   [CEReactions] attribute DOMString className;
-  [CustomGetter, CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+  [Custom=Getter, CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
   [Unimplemented, CEReactions, Unscopable] attribute DOMString slot;
 
   [Unimplemented] boolean hasAttributes();
