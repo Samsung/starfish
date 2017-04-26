@@ -16,7 +16,7 @@
 
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
-#include "dom/DOM.h"
+#include "dom/Document.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "dom/parser/HTMLParser.h"
 #include "platform/window/Window.h"

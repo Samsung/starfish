@@ -18,7 +18,6 @@
 #define __StarFishFrameReplacedObject__
 
 #include "layout/FrameReplaced.h"
-#include "dom/HTMLObjectElement.h"
 
 namespace StarFish {
 
@@ -57,36 +56,13 @@ public:
             didCompsiteStackingContext(canvas);
     }
 
-    virtual IntrinsicSize intrinsicSize()
-    {
-        IntrinsicSize result;
-        result.m_isContentExists = true;
-        auto v = node()->asElement()->asHTMLElement()->asHTMLObjectElement();
-        if (v->content()) {
-            result.m_intrinsicContentSize =
-                LayoutSize(v->content()->width(), v->content()->height());
-        } else {
-            result.m_intrinsicContentSize = LayoutSize(1, 1);
-        }
-        return result;
-    }
+    virtual IntrinsicSize intrinsicSize();
 
     virtual void willCompsiteStackingContext(Canvas* c)
     {
     }
 
-    virtual void didCompsiteStackingContext(Canvas* c)
-    {
-        auto v = node()->asElement()->asHTMLElement()->asHTMLObjectElement();
-        LayoutRect contentRect(borderLeft() + paddingLeft(),
-                               borderTop() + paddingTop(), contentWidth(),
-                               contentHeight());
-        LayoutRect absContentRect(contentRect);
-        c->applyMatrixTo(absContentRect);
-        if (v->content()) {
-            v->content()->drawContent(c, contentRect, absContentRect);
-        }
-    }
+    virtual void didCompsiteStackingContext(Canvas* c);
 
     virtual void compsitingStackingContext(Canvas* c)
     {
@@ -94,8 +70,6 @@ public:
             didCompsiteStackingContext(c);
         }
     }
-
-protected:
 };
 }
 

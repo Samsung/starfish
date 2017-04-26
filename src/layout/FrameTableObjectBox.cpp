@@ -14,14 +14,51 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameTableObjectBox.h"
+#include "dom/HTMLElement.h"
+#include "dom/HTMLTableElement.h"
+#include "dom/HTMLTDElement.h"
+#include "dom/HTMLTHElement.h"
+#include "layout/FrameTableObjectBox.h"
+#include "platform/canvas/Canvas.h"
+#include "platform/canvas/image/ImageData.h"
 
 namespace StarFish {
 
 FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
+}
+
+bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
+{
+    if (!(node() && node()->isElement() &&
+          node()->asElement()->isHTMLElement())) {
+        return false;
+    }
+
+    HTMLElement* elem = node()->asElement()->asHTMLElement();
+    if (!(elem->isHTMLTableElement() || elem->isHTMLTDElement() ||
+          elem->isHTMLTHElement())) {
+        return false;
+    }
+
+    String* color = nullptr;
+    if (elem->isHTMLTableElement()) {
+        color = elem->asHTMLTableElement()->bgColor();
+    } else if (elem->isHTMLTDElement()) {
+        color = elem->asHTMLTDElement()->bgColor();
+    } else if (elem->isHTMLTHElement()) {
+        color = elem->asHTMLTHElement()->bgColor();
+    }
+
+    if (color && (!color->equals(String::emptyString))) {
+        CSSStyleValuePair pair;
+        if (pair.updateValueUnitColor(color)) {
+            *ret = pair.colorValue();
+            return true;
+        }
+    }
+    return false;
 }
 
 // Draws the border around the area defined by "rect"

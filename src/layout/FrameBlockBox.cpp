@@ -14,13 +14,16 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameBlockBox.h"
-#include "FrameText.h"
-#include "FrameInline.h"
-#include "FrameDocument.h"
-#include "FrameTableBox.h"
-#include "FrameTableCellBox.h"
+#include "dom/Node.h"
+#include "dom/Element.h"
+#include "layout/FrameBlockBox.h"
+#include "layout/FrameDocument.h"
+#include "layout/FrameInline.h"
+#include "layout/FrameTableBox.h"
+#include "layout/FrameTableCellBox.h"
+#include "layout/FrameText.h"
+#include "layout/StackingContext.h"
+#include "platform/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -682,6 +685,50 @@ void FrameBlockBox::computeVisibleRect(StackingContext* sCtx,
     }
 }
 
+bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
+{
+    if (isEstablishesBlockFormattingContext()) {
+        return false;
+    }
+
+    if (!isNecessaryBlockBox()) {
+        return true;
+    }
+
+    if (heightComputed()) {
+        return false;
+    }
+
+    if (paddingHeight() || borderHeight()) {
+        return false;
+    }
+
+    Length heightLength = style()->height();
+    // NOTE: In case of percentage height,
+    // if containing blocks' height is fixed, the block is not
+    // self-collapsing block.
+    if (heightLength.isPercent() && !heightLength.isZero() &&
+        ctx.parentHasFixedHeight(this)) {
+        return false;
+    }
+
+    if (heightLength.isAuto() || heightLength.isZero()) {
+        Frame* child = firstChild();
+        while (child) {
+            if (!child->isNormalFlow()) {
+                child = child->next();
+                continue;
+            }
+            if (!child->isSelfCollapsingBlock(ctx)) {
+                return false;
+            }
+            child = child->next();
+        }
+        return true;
+    }
+    return false;
+}
+
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                           HitTestStage s)
 {
@@ -876,6 +923,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
 
     ctx.m_canvas->restore();
 }
+
 #ifdef STARFISH_ENABLE_TEST
 void FrameBlockBox::dump(int depth)
 {

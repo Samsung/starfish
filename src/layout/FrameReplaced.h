@@ -120,44 +120,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void paint(PaintingContext& ctx)
-    {
-        if (isEstablishesStackingContext())
-            return;
-
-        if (isPositioned()) {
-            if (ctx.m_paintingStage == PaintingPositionedElements) {
-                paintBackgroundAndBorders(ctx.m_canvas);
-                paintReplaced(ctx.m_canvas);
-            }
-        } else if (isFloating()) {
-            if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
-                paintBackgroundAndBorders(ctx.m_canvas);
-                paintReplaced(ctx.m_canvas);
-            }
-        } else {
-            if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
-                if (style()->display() != DisplayValue::InlineDisplayValue) {
-                    paintBackgroundAndBorders(ctx.m_canvas);
-                }
-            } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-                if (style()->display() == DisplayValue::InlineDisplayValue) {
-                    if (ctx.m_paintingInlineStage ==
-                        PaintingInlineLevelElements) {
-                        paintBackgroundAndBorders(ctx.m_canvas);
-                        paintReplaced(ctx.m_canvas);
-                    }
-                } else if (style()->display() ==
-                           DisplayValue::InlineBlockDisplayValue) {
-                    if (ctx.m_paintingInlineStage == PaintingInlineBlock) {
-                        paintReplaced(ctx.m_canvas);
-                    }
-                } else {
-                    paintReplaced(ctx.m_canvas);
-                }
-            }
-        }
-    }
+    virtual void paint(PaintingContext& ctx);
 
     virtual void paintStackingContextContent(Canvas* canvas)
     {

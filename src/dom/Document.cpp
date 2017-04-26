@@ -15,11 +15,26 @@
  */
 
 #include "StarFish.h"
+#include "dom/Attr.h"
 #include "dom/Attribute.h"
+#include "dom/CDATASection.h"
+#include "dom/Comment.h"
+#include "dom/CSSStyleDeclaration.h"
+#include "dom/CSSStyleRule.h"
 #include "dom/Document.h"
+#include "dom/DocumentFragment.h"
+#include "dom/DOMException.h"
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"
 #endif
+#include "dom/Event.h"
+#include "dom/HTMLBodyElement.h"
+#include "dom/HTMLCollection.h"
+#include "dom/HTMLHtmlElement.h"
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "dom/HTMLMediaElement.h"
+#endif
+#include "dom/Text.h"
 #include "dom/Traverse.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "layout/FrameDocument.h"

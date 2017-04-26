@@ -18,7 +18,6 @@
 #define __StarFishFrameReplacedVideo__
 
 #include "layout/FrameReplaced.h"
-#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 
@@ -58,37 +57,13 @@ public:
         }
     }
 
-    virtual IntrinsicSize intrinsicSize()
-    {
-        IntrinsicSize result;
-        result.m_isContentExists = true;
-        auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
-        unsigned long videoWidth = v->videoWidth();
-        unsigned long videoHeight = v->videoHeight();
-        result.m_intrinsicContentSize = LayoutSize(videoWidth, videoHeight);
-        return result;
-    }
+    virtual IntrinsicSize intrinsicSize();
 
     virtual void willCompsiteStackingContext(Canvas* c)
     {
     }
 
-    virtual void didCompsiteStackingContext(Canvas* c)
-    {
-        STARFISH_ASSERT(node()->isElement());
-        STARFISH_ASSERT(node()->asElement()->isHTMLElement());
-        STARFISH_ASSERT(
-            node()->asElement()->asHTMLElement()->isHTMLVideoElement());
-        auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
-        LayoutRect videoRect(borderLeft() + paddingLeft(),
-                             borderTop() + paddingTop(), contentWidth(),
-                             contentHeight());
-        LayoutRect absVideoRect(videoRect);
-        c->applyMatrixTo(absVideoRect);
-        if (v->mediaPlayer()) {
-            v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
-        }
-    }
+    virtual void didCompsiteStackingContext(Canvas* c);
 
     virtual void compsitingStackingContext(Canvas* c)
     {

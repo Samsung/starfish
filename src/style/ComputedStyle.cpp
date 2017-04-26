@@ -14,16 +14,15 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ComputedStyle.h"
-
 #include "StarFish.h"
+#include "animation/Animation.h"
 #include "dom/Node.h"
 #include "dom/Document.h"
-#include "platform/window/Window.h"
+#include "dom/Element.h"
 #include "layout/Frame.h"
 #include "layout/FrameBlockBox.h"
-#include "animation/Animation.h"
+#include "platform/window/Window.h"
+#include "style/ComputedStyle.h"
 
 namespace StarFish {
 
@@ -227,9 +226,7 @@ void ComputedStyle::loadResources(
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
                                        Node* current)
 {
-    if (current != nullptr && current->isElement() && current->asElement() &&
-        current->asElement()->isHTMLElement() &&
-        current->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
+    if (current != nullptr && current->isHTMLHtmlElement()) {
         if (m_display == DisplayValue::InlineDisplayValue ||
             m_display == DisplayValue::InlineBlockDisplayValue) {
             m_display = DisplayValue::BlockDisplayValue;

@@ -18,10 +18,10 @@
 #define __StarFishFrameBox__
 
 #include "layout/Frame.h"
-#include "platform/canvas/Canvas.h"
 
 namespace StarFish {
 
+class Canvas;
 class LineBox;
 
 struct MarginCollapseResult {
@@ -365,118 +365,11 @@ public:
         return m_marginCollapseResult;
     }
 
-    virtual void paintChildrenWith(PaintingContext& ctx)
-    {
-        Frame* child = firstChild();
-        while (child) {
-            ctx.m_canvas->save();
-            ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                    child->asFrameBox()->y());
-            child->paint(ctx);
-            ctx.m_canvas->restore();
-            child = child->next();
-        }
-    }
+    virtual void paintChildrenWith(PaintingContext& ctx);
 
     static void paintBackground(Canvas* canvas, ComputedStyle* style,
                                 LayoutRect imageRect, LayoutRect colorRect,
-                                bool isRootElement)
-    {
-        if (!style->backgroundColor().isTransparent() &&
-            style->visibility() == VisibilityValue::VisibleVisibilityValue) {
-            canvas->save();
-            canvas->setColor(style->backgroundColor());
-            canvas->drawRect(colorRect);
-            canvas->restore();
-        }
-
-        ImageData* id = style->backgroundImageData();
-        if (id && id->width() && id->height()) {
-            canvas->save();
-            if (isRootElement) {
-                canvas->translate(0, 0);
-                canvas->clip(
-                    Unit::Rect(0, 0, colorRect.width(), colorRect.height()));
-            } else {
-                canvas->translate(imageRect.x(), imageRect.y());
-                canvas->clip(
-                    Unit::Rect(0, 0, imageRect.width(), imageRect.height()));
-            }
-
-            float bw = imageRect.width();
-            float bh = imageRect.height();
-
-            float w = bw;
-            float h = bh;
-
-            float boxR = bw / bh;
-            float imgR = id->width() / (float)id->height();
-            if (style->bgSizeType() == BackgroundSizeType::Cover) {
-                if (boxR < imgR) {
-                    w = bh * imgR;
-                } else {
-                    h = bw / imgR;
-                }
-            } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
-                if (boxR > imgR) {
-                    w = bh * imgR;
-                } else {
-                    h = bw / imgR;
-                }
-            } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
-                if (style->bgSizeValue().width().isAuto() &&
-                    style->bgSizeValue().height().isAuto()) {
-                    w = id->width();
-                    h = id->height();
-                } else if (style->bgSizeValue().width().isAuto() &&
-                           !style->bgSizeValue().height().isAuto()) {
-                    h = style->bgSizeValue().height().specifiedValue(bh);
-                    w = h * id->width() / id->height();
-                } else if (!style->bgSizeValue().width().isAuto() &&
-                           style->bgSizeValue().height().isAuto()) {
-                    w = style->bgSizeValue().width().specifiedValue(bw);
-                    h = w * id->height() / id->width();
-                } else {
-                    w = style->bgSizeValue().width().specifiedValue(bw);
-                    h = style->bgSizeValue().height().specifiedValue(bh);
-                }
-            } else {
-                STARFISH_ASSERT(style->bgSizeType() ==
-                                BackgroundSizeType::SizeNone);
-                STARFISH_ASSERT_NOT_REACHED();
-            }
-
-            LayoutUnit x = style->backgroundPositionX().specifiedValue(bw - w);
-            LayoutUnit y = style->backgroundPositionY().specifiedValue(bh - h);
-
-            if (isRootElement) {
-                x += imageRect.x();
-                y += imageRect.y();
-                bw = colorRect.width();
-                bh = colorRect.height();
-            }
-
-            auto repeatX = style->backgroundRepeatX();
-            auto repeatY = style->backgroundRepeatY();
-            if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
-                repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Unit::Rect(x, y, bw, bh), w, h,
-                                        true, true, isRootElement);
-            } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
-                       repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Unit::Rect(x, y, w, bh), w, h,
-                                        false, true, isRootElement);
-            } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
-                       repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
-                canvas->drawRepeatImage(id, Unit::Rect(x, y, bw, h), w, h, true,
-                                        false, isRootElement);
-            } else {
-                canvas->drawImage(id, Unit::Rect(x, y, w, h));
-            }
-
-            canvas->restore();
-        }
-    }
+                                bool isRootElement);
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
@@ -523,197 +416,25 @@ public:
         return LayoutRect(absolutePoint(top), frameRect().size());
     }
 
-    void computeBorderMarginPadding(LayoutUnit parentContentWidth)
-    {
-        // padding
-        if (style()->paddingLeft().isSpecified() &&
-            !m_flags.m_isLeftMBPCleared) {
-            setPaddingLeft(
-                style()->paddingLeft().specifiedValue(parentContentWidth));
-        } else {
-            setPaddingLeft(0);
-        }
-        if (style()->paddingTop().isSpecified()) {
-            setPaddingTop(
-                style()->paddingTop().specifiedValue(parentContentWidth));
-        } else {
-            setPaddingTop(0);
-        }
-        if (style()->paddingRight().isSpecified() &&
-            !m_flags.m_isRightMBPCleared) {
-            setPaddingRight(
-                style()->paddingRight().specifiedValue(parentContentWidth));
-        } else {
-            setPaddingRight(0);
-        }
-        if (style()->paddingBottom().isSpecified()) {
-            setPaddingBottom(
-                style()->paddingBottom().specifiedValue(parentContentWidth));
-        } else {
-            setPaddingBottom(0);
-        }
+    void computeBorderMarginPadding(LayoutUnit parentContentWidth);
 
-        // border
-        if (style()->hasBorderStyle()) {
-            if (style()->borderLeftWidth().isSpecified() &&
-                !m_flags.m_isLeftMBPCleared) {
-                setBorderLeft(style()->borderLeftWidth().specifiedValue(
-                    parentContentWidth));
-            } else {
-                setBorderLeft(0);
-            }
-            if (style()->borderTopWidth().isSpecified()) {
-                setBorderTop(style()->borderTopWidth().specifiedValue(
-                    parentContentWidth));
-            } else {
-                setBorderTop(0);
-            }
-            if (style()->borderRightWidth().isSpecified() &&
-                !m_flags.m_isRightMBPCleared) {
-                setBorderRight(style()->borderRightWidth().specifiedValue(
-                    parentContentWidth));
-            } else {
-                setBorderRight(0);
-            }
-            if (style()->borderBottomWidth().isSpecified()) {
-                setBorderBottom(style()->borderBottomWidth().specifiedValue(
-                    parentContentWidth));
-            } else {
-                setBorderBottom(0);
-            }
-        } else {
-            setBorderLeft(0);
-            setBorderTop(0);
-            setBorderRight(0);
-            setBorderBottom(0);
-        }
+    void computeHorizontalMargin(LayoutUnit parentContentWidth);
 
-        // margin
-        if (style()->marginLeft().isSpecified() &&
-            !m_flags.m_isLeftMBPCleared) {
-            setMarginLeft(
-                style()->marginLeft().specifiedValue(parentContentWidth));
-        } else {
-            setMarginLeft(0);
-        }
-        if (style()->marginTop().isSpecified()) {
-            setMarginTop(
-                style()->marginTop().specifiedValue(parentContentWidth));
-        } else {
-            setMarginTop(0);
-        }
-        if (style()->marginRight().isSpecified() &&
-            !m_flags.m_isRightMBPCleared) {
-            setMarginRight(
-                style()->marginRight().specifiedValue(parentContentWidth));
-        } else {
-            setMarginRight(0);
-        }
-        if (style()->marginBottom().isSpecified()) {
-            setMarginBottom(
-                style()->marginBottom().specifiedValue(parentContentWidth));
-        } else {
-            setMarginBottom(0);
-        }
-    }
+    void applyHorizontalMargin(bool isOpposite = false);
 
-    void computeHorizontalMargin(LayoutUnit parentContentWidth)
-    {
-        Length marginLeft = style()->marginLeft();
-        Length marginRight = style()->marginRight();
-
-        LayoutUnit remainedWidth = parentContentWidth - FrameBox::width();
-        if (marginLeft.isAuto() && marginRight.isAuto()) {
-            if (remainedWidth > 0) {
-                setMarginLeft(remainedWidth / 2);
-                setMarginRight(remainedWidth / 2);
-            }
-        } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-            remainedWidth -= FrameBox::marginRight();
-            if (remainedWidth > 0) {
-                setMarginLeft(remainedWidth);
-            }
-        } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-            remainedWidth -= FrameBox::marginLeft();
-            if (remainedWidth > 0) {
-                setMarginRight(remainedWidth);
-            }
-        }
-    }
-
-    void applyHorizontalMargin(bool isOpposite = false)
-    {
-        STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
-        if ((style()->direction() == LtrDirectionValue && !isOpposite) ||
-            (style()->direction() == RtlDirectionValue && isOpposite)) {
-            moveX(marginLeft());
-        } else {
-            moveX(-marginRight());
-        }
-    }
-
-    void applyVerticalMargin()
-    {
-        STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
-        Length marginTop = style()->marginTop();
-        Length marginBottom = style()->marginBottom();
-
-        if (!marginTop.isAuto() && !marginBottom.isAuto()) {
-            moveY(FrameBox::marginTop());
-        } else if (!marginTop.isAuto() && marginBottom.isAuto()) {
-            moveY(FrameBox::marginTop());
-        } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
-            moveY(-FrameBox::marginBottom());
-        }
-    }
+    void applyVerticalMargin();
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
         return nullptr;
     }
 
-    virtual void establishesStackingContextIfNeeds()
-    {
-        if (isEstablishesStackingContext()) {
-            STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
-            if (!isRootElement()) {
-                FrameBox* p = layoutParent()->asFrameBox();
-                while (true) {
-                    if (p->isEstablishesStackingContext()) {
-                        if (p->isRootElement()) {
-                            break;
-                        }
-                        if (p->needsGraphicsBuffer()) {
-                            break;
-                        }
-                        if (!p->isPositioned()) {
-                            break;
-                        }
-                        if (p->style()->IsSpecifiedZIndex()) {
-                            break;
-                        }
-                    }
-                    p = p->layoutParent()->asFrameBox();
-                }
-                m_stackingContext =
-                    new StackingContext(this, p->stackingContext());
-            } else {
-                m_stackingContext = new StackingContext(this, nullptr);
-            }
-        }
-    }
-
+    virtual void establishesStackingContextIfNeeds();
     virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
 
     bool tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
 
-    void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true)
-    {
-        if (m_stackingContext) {
-            m_stackingContext->clearOwnBuffer(shouldDetachNativeBuffer);
-            m_stackingContext = nullptr;
-        }
-    }
+    void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true);
 
     virtual void paintStackingContextContent(Canvas* canvas);
     virtual void willCompsiteStackingContext(Canvas* c)
@@ -743,57 +464,11 @@ public:
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width,
                                          LayoutUnit parentWidth,
-                                         bool parentHasFixedValue)
-    {
-        ComputedStyle* style = Frame::style();
-        if (style->minWidth().isSpecified()) {
-            if (!parentHasFixedValue && style->minWidth().isPercent()) {
-                return width;
-            }
-            LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
-            if (minWidth > width) {
-                return minWidth;
-            }
-        }
-        if (style->maxWidth().isSpecified()) {
-            if (!parentHasFixedValue && style->maxWidth().isPercent()) {
-                return width;
-            }
-            LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
-            if (maxWidth < width) {
-                return maxWidth;
-            }
-        }
-        return width;
-    }
+                                         bool parentHasFixedValue);
 
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,
-                                          bool parentHasFixedValue)
-    {
-        ComputedStyle* style = Frame::style();
-        if (style->minHeight().isSpecified()) {
-            if (!parentHasFixedValue && style->minHeight().isPercent()) {
-                return height;
-            }
-            LayoutUnit minHeight =
-                style->minHeight().specifiedValue(parentHeight);
-            if (minHeight > height) {
-                return minHeight;
-            }
-        }
-        if (style->maxHeight().isSpecified()) {
-            if (!parentHasFixedValue && style->maxHeight().isPercent()) {
-                return height;
-            }
-            LayoutUnit maxHeight =
-                style->maxHeight().specifiedValue(parentHeight);
-            if (maxHeight < height) {
-                return maxHeight;
-            }
-        }
-        return height;
-    }
+                                          bool parentHasFixedValue);
     // content + padding + border
     LayoutRect m_frameRect;
 

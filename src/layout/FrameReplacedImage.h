@@ -18,7 +18,6 @@
 #define __StarFishFrameReplacedImage__
 
 #include "layout/FrameReplaced.h"
-#include "platform/canvas/image/ImageData.h"
 
 namespace StarFish {
 
@@ -39,41 +38,8 @@ public:
         return "FrameReplacedImage";
     }
 
-    virtual void paintReplaced(Canvas* canvas)
-    {
-        ImageData* id = node()
-                            ->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLImageElement()
-                            ->imageData();
-        if (id) {
-            canvas->drawImage(
-                id, Unit::Rect(borderLeft() + paddingLeft(),
-                               borderTop() + paddingTop(),
-                               width() - borderWidth() - paddingWidth(),
-                               height() - borderHeight() - paddingHeight()));
-        }
-    }
-
-    virtual IntrinsicSize intrinsicSize()
-    {
-        IntrinsicSize result;
-        ImageData* id = node()
-                            ->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLImageElement()
-                            ->imageData();
-        if (id) {
-            result.m_isContentExists = true;
-            result.m_intrinsicContentSize =
-                LayoutSize(id->width(), id->height());
-        } else {
-            result.m_isContentExists = false;
-        }
-        return result;
-    }
-
-protected:
+    virtual void paintReplaced(Canvas* canvas);
+    virtual IntrinsicSize intrinsicSize();
 };
 }
 

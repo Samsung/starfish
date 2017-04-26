@@ -14,14 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameTableSectionBox.h"
-
-#include "FrameTreeBuilder.h"
-#include "FrameTableBox.h"
-#include "FrameTableRowBox.h"
-#include "FrameTableCellBox.h"
-#include "FrameTableColBox.h"
+#include "dom/Node.h"
+#include "layout/FrameTableCellBox.h"
+#include "layout/FrameTableColBox.h"
+#include "layout/FrameTableBox.h"
+#include "layout/FrameTableRowBox.h"
+#include "layout/FrameTableSectionBox.h"
+#include "layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 

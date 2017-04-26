@@ -36,37 +36,7 @@ public:
     }
     virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
                           bool force) = 0;
-    bool bgColorFromAttribute(Unit::Color* ret)
-    {
-        if (!(node() && node()->isElement() &&
-              node()->asElement()->isHTMLElement())) {
-            return false;
-        }
-
-        HTMLElement* elem = node()->asElement()->asHTMLElement();
-        if (!(elem->isHTMLTableElement() || elem->isHTMLTDElement() ||
-              elem->isHTMLTHElement())) {
-            return false;
-        }
-
-        String* color = nullptr;
-        if (elem->isHTMLTableElement()) {
-            color = elem->asHTMLTableElement()->bgColor();
-        } else if (elem->isHTMLTDElement()) {
-            color = elem->asHTMLTDElement()->bgColor();
-        } else if (elem->isHTMLTHElement()) {
-            color = elem->asHTMLTHElement()->bgColor();
-        }
-
-        if (color && (!color->equals(String::emptyString))) {
-            CSSStyleValuePair pair;
-            if (pair.updateValueUnitColor(color)) {
-                *ret = pair.colorValue();
-                return true;
-            }
-        }
-        return false;
-    }
+    bool bgColorFromAttribute(Unit::Color* ret);
 
 protected:
     void paintBorders(Canvas* canvas, LayoutRect& rect);

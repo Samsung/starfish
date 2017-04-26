@@ -21,18 +21,17 @@
 
 namespace StarFish {
 
-class Node;
+class ComputedStyle;
 class Document;
 class Element;
-class StyleResolver;
-
-class FrameBlockBox;
 class Frame;
-class ComputedStyle;
-class FrameTextTextDecorationData;
+class FrameBlockBox;
 class FrameInline;
 class FrameTableCaptionBox;
 class FrameTableCellBox;
+class FrameTextTextDecorationData;
+class Node;
+class StyleResolver;
 
 class FrameTreeBuilderContext {
 public:

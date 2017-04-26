@@ -18,15 +18,14 @@
 #define __StarFishFrameTableBox__
 
 #include "layout/FrameTableObjectBox.h"
-#include "style/CSSParser.h"
 
 namespace StarFish {
 
 class FrameTableCaptionBox;
-class FrameTreeBuilderContext;
-class TableFormattingContextBlock;
 class FrameTableCellBox;
 class FrameTableColBox;
+class FrameTreeBuilderContext;
+class TableFormattingContextBlock;
 
 // Table has the following table structure
 //
@@ -176,44 +175,7 @@ private:
 
     // width() is removed from HTML5. But We implement it as it is extensively
     // used in w3c test cases.
-    LayoutUnit widthFromAttribute(LayoutUnit parentContentWidth)
-    {
-        LayoutUnit tableWidth = -1;
-        if (isAnonymous() ||
-            !node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
-            return tableWidth;
-        }
-
-        String* w =
-            node()->asElement()->asHTMLElement()->asHTMLTableElement()->width();
-        if (w && !w->equals(String::emptyString)) {
-            // Use px as the default unit
-            if (!w->contains("px") && !w->contains("%")) {
-                w = w->concat(String::createASCIIString("px"));
-            }
-        }
-
-        CSSStyleValuePair pair;
-        CSSPropertyParser::parseLengthOrPercent(w->utf8Data(), false, &pair);
-
-        switch (pair.valueKind()) {
-        case CSSStyleValuePair::ValueKind::Length: {
-            CSSLength len = pair.lengthValue();
-            tableWidth = LayoutUnit::fromPixel(len.value());
-            break;
-        }
-        case CSSStyleValuePair::ValueKind::Percentage:
-            tableWidth = parentContentWidth * pair.percentageValue();
-            break;
-        default:
-            tableWidth = -1;
-        }
-
-        // It is ok to use -1 to indicate both "doesn't exist" and
-        // actual negative width, as negative width is invalid.
-        // FYI, Blink and Firefox ignore a negative width for table
-        return tableWidth;
-    }
+    LayoutUnit widthFromAttribute(LayoutUnit parentContentWidth);
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;

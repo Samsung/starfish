@@ -18,7 +18,18 @@
 
 #include "animation/Animation.h"
 #include "binding/ScriptBindingInstance.h"
+#include "dom/FocusEvent.h"
+#include "dom/Element.h"
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#include "dom/HTMLAnchorElement.h"
+#endif
 #include "dom/HTMLDocument.h"
+#include "dom/HTMLBodyElement.h"
+#include "dom/HTMLCollection.h"
+#include "dom/HTMLHtmlElement.h"
+#include "dom/MouseEvent.h"
+#include "dom/KeyboardEvent.h"
+#include "dom/TouchEvent.h"
 #include "dom/Traverse.h"
 #include "extra/History.h"
 #include "extra/Navigator.h"
@@ -26,13 +37,14 @@
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "extra/WebApis.h"
 #endif
-#include "platform/canvas/font/Font.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/window/Window.h"
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
 #include "layout/FrameBlockBox.h"
 #include "layout/FrameTreeBuilder.h"
+#include "layout/StackingContext.h"
+#include "platform/canvas/Canvas.h"
+#include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -2582,14 +2594,8 @@ void Window::processUrlFragment(String* name)
     }
 
     Node* anchor = Traverse::findDescendant(document(), [&](Node* child) {
-        if (child->isElement() && child->asElement()->isHTMLElement() &&
-            child->asElement()->asHTMLElement()->isHTMLAnchorElement() &&
-            child->asElement()
-                ->asHTMLElement()
-                ->asHTMLAnchorElement()
-                ->name()
-                .localName()
-                ->equals(name)) {
+        if (child->isHTMLAnchorElement() &&
+            child->asHTMLAnchorElement()->name().localName()->equals(name)) {
             return true;
         } else {
             return false;

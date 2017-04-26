@@ -14,15 +14,16 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameTableBox.h"
-
-#include "FrameTreeBuilder.h"
-#include "FrameTableCaptionBox.h"
-#include "FrameTableSectionBox.h"
-#include "FrameTableRowBox.h"
-#include "FrameTableCellBox.h"
-#include "FrameTableColBox.h"
+#include "dom/Node.h"
+#include "dom/HTMLTableElement.h"
+#include "layout/FrameTableBox.h"
+#include "layout/FrameTableCaptionBox.h"
+#include "layout/FrameTableCellBox.h"
+#include "layout/FrameTableColBox.h"
+#include "layout/FrameTableRowBox.h"
+#include "layout/FrameTableSectionBox.h"
+#include "layout/FrameTreeBuilder.h"
+#include "style/CSSParser.h"
 
 namespace StarFish {
 
@@ -175,8 +176,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // For HTML table, width is the table width INCLUDNIG border and
             // padding.
             // For our implementation, tableWidth refers to CSS table convention
-            if (!isAnonymous() &&
-                node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+            if (!isAnonymous() && node()->isHTMLTableElement()) {
                 tableWidth -= borderWidth() + paddingWidth();
             }
         } else if (style()->width().isPercent()) {
@@ -197,9 +197,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // NOTE: width="0" is handled differently by Blink and Firefox.
     // When width="0" is given, Blink tries to set table width to 0.
     // Firefox ignores width="0". We ignore width="0"
-    if (!isAnonymous() && node()->isElement() &&
-        node()->asElement()->isHTMLElement() &&
-        node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+    if (!isAnonymous() && node()->isHTMLTableElement()) {
         LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
         if (widthAttribute > 0) {
             hasTableWidth = true;
@@ -944,6 +942,43 @@ size_t FrameTableBox::numOfRowsInTheTable()
     }
 
     return rowCount;
+}
+
+LayoutUnit FrameTableBox::widthFromAttribute(LayoutUnit parentContentWidth)
+{
+    LayoutUnit tableWidth = -1;
+    if (isAnonymous() || !node()->isHTMLTableElement()) {
+        return tableWidth;
+    }
+
+    String* w = node()->asHTMLTableElement()->width();
+    if (w && !w->equals(String::emptyString)) {
+        // Use px as the default unit
+        if (!w->contains("px") && !w->contains("%")) {
+            w = w->concat(String::createASCIIString("px"));
+        }
+    }
+
+    CSSStyleValuePair pair;
+    CSSPropertyParser::parseLengthOrPercent(w->utf8Data(), false, &pair);
+
+    switch (pair.valueKind()) {
+    case CSSStyleValuePair::ValueKind::Length: {
+        CSSLength len = pair.lengthValue();
+        tableWidth = LayoutUnit::fromPixel(len.value());
+        break;
+    }
+    case CSSStyleValuePair::ValueKind::Percentage:
+        tableWidth = parentContentWidth * pair.percentageValue();
+        break;
+    default:
+        tableWidth = -1;
+    }
+
+    // It is ok to use -1 to indicate both "doesn't exist" and
+    // actual negative width, as negative width is invalid.
+    // FYI, Blink and Firefox ignore a negative width for table
+    return tableWidth;
 }
 
 // Table draws the border around the TableFrameSections

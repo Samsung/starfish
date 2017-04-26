@@ -14,28 +14,30 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "style/Style.h"
-#include "FrameTreeBuilder.h"
-
-#include "dom/DOM.h"
-
-#include "Frame.h"
-#include "FrameText.h"
-#include "FrameInline.h"
-#include "FrameBlockBox.h"
-#include "FrameDocument.h"
-#include "FrameReplaced.h"
-#include "FrameReplacedImage.h"
-#include "FrameTableBox.h"
-#include "FrameTableRowBox.h"
-#include "FrameTableSectionBox.h"
+#include "dom/Document.h"
+#include "dom/Node.h"
+#include "dom/Element.h"
+#include "dom/HTMLElement.h"
+#include "dom/HTMLHtmlElement.h"
+#include "dom/PseudoElement.h"
+#include "dom/Text.h"
+#include "layout/Frame.h"
+#include "layout/FrameText.h"
+#include "layout/FrameInline.h"
+#include "layout/FrameBlockBox.h"
+#include "layout/FrameDocument.h"
+#include "layout/FrameReplaced.h"
+#include "layout/FrameReplacedImage.h"
+#include "layout/FrameTableBox.h"
+#include "layout/FrameTableRowBox.h"
+#include "layout/FrameTableSectionBox.h"
+#include "layout/FrameTreeBuilder.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "FrameReplacedVideo.h"
+#include "layout/FrameReplacedVideo.h"
 #endif
-#include "FrameReplacedObject.h"
-#include "FrameLineBreak.h"
-#include "FrameTableTreeBuilder.h"
+#include "layout/FrameReplacedObject.h"
+#include "layout/FrameLineBreak.h"
+#include "layout/FrameTableTreeBuilder.h"
 
 namespace StarFish {
 void dump(Frame* frm, unsigned depth);
