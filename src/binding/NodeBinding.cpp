@@ -246,8 +246,8 @@ static ESValue isEqualNodeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "isEqualNode", "Node", "1", buffer);
     }
@@ -272,8 +272,8 @@ static ESValue compareDocumentPositionFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "compareDocumentPosition", "Node", "1", buffer);
     }
@@ -297,8 +297,8 @@ static ESValue containsFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "contains",
                         "Node", "1", buffer);
     }
@@ -323,8 +323,8 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "insertBefore", "Node", "2", buffer);
     }
@@ -360,8 +360,8 @@ static ESValue appendChildFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "appendChild", "Node", "1", buffer);
     }
@@ -390,8 +390,8 @@ static ESValue replaceChildFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "replaceChild", "Node", "2", buffer);
     }
@@ -426,8 +426,8 @@ static ESValue removeChildFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Node);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "removeChild", "Node", "1", buffer);
     }

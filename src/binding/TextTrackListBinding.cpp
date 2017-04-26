@@ -41,8 +41,8 @@ static ESValue getTrackByIdFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "getTrackById", "TextTrackList", "1", buffer);
     }

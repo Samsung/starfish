@@ -149,8 +149,8 @@ static ESValue open1Function(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open1",
                         "XMLHttpRequest", "2", buffer);
     }
@@ -181,8 +181,8 @@ static ESValue open2Function(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 3) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open2",
                         "XMLHttpRequest", "3", buffer);
     }
@@ -245,8 +245,8 @@ static ESValue setRequestHeaderFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "setRequestHeader", "XMLHttpRequest", "2", buffer);
     }

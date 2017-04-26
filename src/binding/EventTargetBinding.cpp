@@ -30,8 +30,8 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "addEventListener", "EventTarget", "2", buffer);
     }
@@ -72,8 +72,8 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "removeEventListener", "EventTarget", "2", buffer);
     }
@@ -114,8 +114,8 @@ static ESValue dispatchEventFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "dispatchEvent", "EventTarget", "1", buffer);
     }

@@ -76,8 +76,8 @@ static ESValue pushStateFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(History);
     size_t argc = instance->currentExecutionContext()->argumentCount();
     if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argc);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "pushState",
                         "History", "2", buffer);
     }
@@ -108,8 +108,8 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(History);
     size_t argc = instance->currentExecutionContext()->argumentCount();
     if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argc);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "replaceState", "History", "2", buffer);
     }

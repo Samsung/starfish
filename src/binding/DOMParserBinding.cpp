@@ -40,8 +40,8 @@ static ESValue parseFromStringFunction(ESVMInstance* instance)
     size_t argc =
         instance->currentInstance()->currentExecutionContext()->argumentCount();
     if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argc);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "parseFromString", "DOMParser", "2", buffer);
     }
