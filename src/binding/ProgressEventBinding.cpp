@@ -15,92 +15,61 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/ProgressEvent.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+extern ProgressEventInit toProgressEventInitFromESValue(ESVMInstance* instance,
+                                                        ESValue& from);
+extern ESValue toESValueFromProgressEventInit(ESVMInstance* instance,
+                                              ProgressEventInit& from);
+
+// Implement for constructor
 static ESValue progresseventConstructor(ESVMInstance* instance)
 {
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-
-    if (argCount == 0) {
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
-                        "ProgressEvent", "1", "0");
-    } else if (argCount == 1) {
-        ESString* type = firstArg.toString();
-        auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
-        return event->scriptValue();
-    } else {
-        if (secondArg.isObject()) {
-            ESString* type = firstArg.toString();
-            ESObject* obj = secondArg.asESPointer()->asESObject();
-            ESValue bubbles = obj->get(ESString::create("bubbles"));
-            ESValue cancelable = obj->get(ESString::create("cancelable"));
-            ESValue lengthComputable =
-                obj->get(ESString::create("lengthComputable"));
-            ESValue loaded = obj->get(ESString::create("loaded"));
-            ESValue total = obj->get(ESString::create("total"));
-            bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
-            bool canCancelable =
-                cancelable.isBoolean() ? cancelable.asBoolean() : false;
-            bool canLengthComputable = false;
-            if (lengthComputable.isBoolean()) {
-                canLengthComputable = lengthComputable.asBoolean();
-            } else if (lengthComputable.isESString()) {
-                canLengthComputable =
-                    lengthComputable.asESString()->length() != 0 ? true : false;
-            }
-            unsigned long long loadedValue = 0;
-            if (loaded.isNumber()) {
-                loadedValue = loaded.asNumber();
-            } else if (loaded.isESString()) {
-                loadedValue = loaded.toUint32();
-            }
-            unsigned long long totalValue = 0;
-            if (total.isNumber()) {
-                totalValue = total.asNumber();
-            } else if (loaded.isESString()) {
-                totalValue = total.toUint32();
-            }
-#ifdef STARFISH_TC_COVERAGE
-            if (type->isESString()) {
-                STARFISH_LOG_INFO("ProgressEventInit&&&type\n");
-            }
-            if (total.isESString()) {
-                STARFISH_LOG_INFO("ProgressEventInit&&&total\n");
-            }
-            if (canLengthComputable) {
-                STARFISH_LOG_INFO("ProgressEventInit&&&lengthComputable\n");
-            }
-            if (loadedValue != 0) {
-                STARFISH_LOG_INFO("ProgressEventInit&&&loaded\n");
-            }
-#endif
-            auto event =
-                new ProgressEvent(String::fromUTF8(type->utf8Data()),
-                                  ProgressEventInit(canBubbles, canCancelable,
-                                                    canLengthComputable,
-                                                    loadedValue, totalValue));
-            return event->scriptValue();
-        } else {
-            THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH,
-                            "ProgressEvent", "2", "eventInitDict", "object");
-        }
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "ProgressEvent");
     }
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
+                        "ProgressEvent", "1", buffer);
+    }
+    size_t validArgCount = 2;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    ProgressEventInit value1;
+    if (arg1.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value1 = toProgressEventInitFromESValue(instance, arg1);
+    }
+    ProgressEvent* result = nullptr;
+    // Call native function (nargs: 1-2)
+    if (validArgCount == 1) {
+        result = new ProgressEvent(value0);
+    } else if (validArgCount == 2) {
+        result = new ProgressEvent(value0, value1);
+    }
+    return result->scriptValue();
 }
 
 // Implement for attributes
 static ESValue lengthComputableGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->lengthComputable();
     // Return ESValue from native value
@@ -110,8 +79,8 @@ static ESValue lengthComputableGetterFunction(ESVMInstance* instance)
 static ESValue loadedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
-    // Declare return value (empty when void)
-    double result;
+    // Declare native value (empty when type is void)
+    uint64_t result;
     result = originalObj->loaded();
     // Return ESValue from native value
     return ESValue(result);
@@ -120,8 +89,8 @@ static ESValue loadedGetterFunction(ESVMInstance* instance)
 static ESValue totalGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(ProgressEvent);
-    // Declare return value (empty when void)
-    double result;
+    // Declare native value (empty when type is void)
+    uint64_t result;
     result = originalObj->total();
     // Return ESValue from native value
     return ESValue(result);
@@ -149,22 +118,22 @@ ESFunctionObject* bindingProgressEvent(
             fetchData(scriptBindingInstance)->fnEvent()->protoType());
     ProgressEventFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEvent());
+    ESObject* ProgressEventPrototypeObj =
+        ProgressEventFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* lengthComputableString = ESString::create("lengthComputable");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ProgressEventFunction->protoType().asESPointer()->asESObject(),
-        lengthComputableString, lengthComputableGetterFunction, nullptr);
+        ProgressEventPrototypeObj, lengthComputableString,
+        lengthComputableGetterFunction, nullptr);
 
     ESString* loadedString = ESString::create("loaded");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ProgressEventFunction->protoType().asESPointer()->asESObject(),
-        loadedString, loadedGetterFunction, nullptr);
+        ProgressEventPrototypeObj, loadedString, loadedGetterFunction, nullptr);
 
     ESString* totalString = ESString::create("total");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ProgressEventFunction->protoType().asESPointer()->asESObject(),
-        totalString, totalGetterFunction, nullptr);
+        ProgressEventPrototypeObj, totalString, totalGetterFunction, nullptr);
 
     return ProgressEventFunction;
 }

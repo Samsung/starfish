@@ -15,160 +15,177 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/DOMRect.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-static ESValue domRectFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue domrectConstructor(ESVMInstance* instance)
 {
-    int cnt = instance->currentExecutionContext()->argumentCount();
-    (cnt > 4) ? cnt = 4 : cnt;
-    DOMRect* rect = nullptr;
-    double args[4] = {
-        0,
-    };
-    if (cnt == 0) {
-        rect = new DOMRect();
-    } else {
-        for (int i = 0; i < cnt; ++i) {
-            args[i] =
-                instance->currentExecutionContext()->readArgument(i).toNumber();
-        }
-        if (cnt == 1) {
-            rect = new DOMRect(args[0]);
-        } else if (cnt == 2) {
-            rect = new DOMRect(args[0], args[1]);
-        } else if (cnt == 3) {
-            rect = new DOMRect(args[0], args[1], args[2]);
-        } else {
-            rect = new DOMRect(args[0], args[1], args[2], args[3]);
-        }
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMRect");
     }
-    return rect->scriptValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
+    // Handle argument arg0
+    double value0 = 0;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = arg0.toNumber();
+    }
+    // Handle argument arg1
+    double value1 = 0;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = arg1.toNumber();
+    }
+    // Handle argument arg2
+    double value2 = 0;
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = arg2.toNumber();
+    }
+    // Handle argument arg3
+    double value3 = 0;
+    if (!arg3.isUndefinedOrNull()) {
+        value3 = arg3.toNumber();
+    }
+    DOMRect* result = nullptr;
+    // Call native function (nargs: 4)
+    result = new DOMRect(value0, value1, value2, value3);
+    return result->scriptValue();
 }
 
+// Implement for attributes
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    return ESValue(rect->x());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->x();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue xSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    if (rect != nullptr) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        rect->setX(v.toNumber());
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setX(value0);
     return ESValue();
 }
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    return ESValue(rect->y());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->y();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue ySetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    if (rect != nullptr) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        rect->setY(v.toNumber());
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setY(value0);
     return ESValue();
 }
 
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    return ESValue(rect->width());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->width();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue widthSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    if (rect != nullptr) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        rect->setWidth(v.toNumber());
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setWidth(value0);
     return ESValue();
 }
 
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    return ESValue(rect->height());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->height();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue heightSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRect);
-    DOMRect* rect = originalObj;
-    if (rect != nullptr) {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        rect->setHeight(v.toNumber());
-        return ESValue();
-    }
-    THROW_ILLEGAL_INVOCATION();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setHeight(value0);
     return ESValue();
 }
 
+// Implement for functions
 ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* DOMRectString = ESString::create("DOMRect");
-    auto fnDOMRect = ESFunctionObject::create(NULL, domRectFunction,
-                                              DOMRectString, 0, true, true);
-
-    fnDOMRect->defineAccessorProperty(
+    ESFunctionObject* DOMRectFunction = ESFunctionObject::create(
+        nullptr, domrectConstructor, DOMRectString, 0, true, true);
+    DOMRectFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    fnDOMRect->protoType()
+    DOMRectFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    fnDOMRect->protoType().asESPointer()->asESObject()->set__proto__(
+    DOMRectFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMRectReadOnly()->protoType());
-    fnDOMRect->set__proto__(
+    DOMRectFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMRectReadOnly());
+    ESObject* DOMRectPrototypeObj =
+        DOMRectFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* xString = ESString::create("x");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnDOMRect->protoType().asESPointer()->asESObject(),
-        ESString::create("x"), xGetterFunction, xSetterFunction, true, true);
+        DOMRectPrototypeObj, xString, xGetterFunction, xSetterFunction);
 
+    ESString* yString = ESString::create("y");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnDOMRect->protoType().asESPointer()->asESObject(),
-        ESString::create("y"), yGetterFunction, ySetterFunction, true, true);
+        DOMRectPrototypeObj, yString, yGetterFunction, ySetterFunction);
 
+    ESString* widthString = ESString::create("width");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnDOMRect->protoType().asESPointer()->asESObject(),
-        ESString::create("width"), widthGetterFunction, widthSetterFunction,
-        true, true);
+        DOMRectPrototypeObj, widthString, widthGetterFunction,
+        widthSetterFunction);
 
+    ESString* heightString = ESString::create("height");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnDOMRect->protoType().asESPointer()->asESObject(),
-        ESString::create("height"), heightGetterFunction, heightSetterFunction,
-        true, true);
+        DOMRectPrototypeObj, heightString, heightGetterFunction,
+        heightSetterFunction);
 
-    return fnDOMRect;
+    // Bind for functions
+    return DOMRectFunction;
 }
 }
