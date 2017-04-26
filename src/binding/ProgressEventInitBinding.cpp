@@ -52,12 +52,12 @@ ProgressEventInit toProgressEventInitFromESValue(ESVMInstance* instance,
     result.setLengthComputable(value0);
     // Handle argument arg1
     uint64_t value1;
-    value1 = arg1.asRawData();
+    value1 = arg1.toNumber();
 
     result.setLoaded(value1);
     // Handle argument arg2
     uint64_t value2;
-    value2 = arg2.asRawData();
+    value2 = arg2.toNumber();
 
     result.setTotal(value2);
     // Handle argument arg3
