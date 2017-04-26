@@ -14,22 +14,36 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/CSSStyleRule.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingCSSStyleRule(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* CSSStyleRuleString = ESString::create("CSSStyleRule");
+    ESFunctionObject* CSSStyleRuleFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, CSSStyleRuleString, 0, true, true);
+    CSSStyleRuleFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    CSSStyleRuleFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    CSSStyleRuleFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnCSSRule()->protoType());
+    CSSStyleRuleFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnCSSRule());
+    ESObject* CSSStyleRulePrototypeObj =
+        CSSStyleRuleFunction->protoType().asESPointer()->asESObject();
+
+    // Bind for attributes
     return CSSStyleRuleFunction;
 }
 }

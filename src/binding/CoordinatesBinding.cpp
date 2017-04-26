@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "platform/location/Coordinates.h"
 
 namespace StarFish {
@@ -28,62 +24,87 @@ using namespace escargot;
 static ESValue latitudeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    double v = originalObj->latitude();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->latitude();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue longitudeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    double v = originalObj->longitude();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->longitude();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue altitudeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    Nullable<double> v = originalObj->altitude();
-    if (v.hasValue()) {
-        return ESValue(v.getValue());
+    // Declare native value (empty when type is void)
+    Nullable<double> result;
+    result = originalObj->altitude();
+    // Return ESValue from native value
+    if (!result.hasValue()) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    double result_value = result.getValue();
+    return ESValue(result_value);
 }
 
 static ESValue accuracyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    double v = originalObj->accuracy();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->accuracy();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue altitudeAccuracyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    Nullable<double> v = originalObj->altitudeAccuracy();
-    if (v.hasValue()) {
-        return ESValue(v.getValue());
+    // Declare native value (empty when type is void)
+    Nullable<double> result;
+    result = originalObj->altitudeAccuracy();
+    // Return ESValue from native value
+    if (!result.hasValue()) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    double result_value = result.getValue();
+    return ESValue(result_value);
 }
 
 static ESValue headingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    Nullable<double> v = originalObj->heading();
-    if (v.hasValue()) {
-        return ESValue(v.getValue());
+    // Declare native value (empty when type is void)
+    Nullable<double> result;
+    result = originalObj->heading();
+    // Return ESValue from native value
+    if (!result.hasValue()) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    double result_value = result.getValue();
+    return ESValue(result_value);
 }
 
 static ESValue speedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Coordinates);
-    Nullable<double> v = originalObj->speed();
-    if (v.hasValue()) {
-        return ESValue(v.getValue());
+    // Declare native value (empty when type is void)
+    Nullable<double> result;
+    result = originalObj->speed();
+    // Return ESValue from native value
+    if (!result.hasValue()) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    double result_value = result.getValue();
+    return ESValue(result_value);
 }
 
 ESFunctionObject* bindingCoordinates(
@@ -92,58 +113,55 @@ ESFunctionObject* bindingCoordinates(
     // Bind for constructor
     ESString* CoordinatesString = ESString::create("Coordinates");
     ESFunctionObject* CoordinatesFunction = ESFunctionObject::create(
-        nullptr, errorOnConstructorFunction, CoordinatesString, 1, true, true);
-
+        nullptr, errorOnConstructorFunction, CoordinatesString, 0, true, true);
     CoordinatesFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-
     CoordinatesFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-
     CoordinatesFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)
             ->m_instance->globalObject()
             ->objectPrototype());
+    ESObject* CoordinatesPrototypeObj =
+        CoordinatesFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* latitudeString = ESString::create("latitude");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        latitudeString, latitudeGetterFunction, nullptr);
+        CoordinatesPrototypeObj, latitudeString, latitudeGetterFunction,
+        nullptr);
 
     ESString* longitudeString = ESString::create("longitude");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        longitudeString, longitudeGetterFunction, nullptr);
+        CoordinatesPrototypeObj, longitudeString, longitudeGetterFunction,
+        nullptr);
 
     ESString* altitudeString = ESString::create("altitude");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        altitudeString, altitudeGetterFunction, nullptr);
+        CoordinatesPrototypeObj, altitudeString, altitudeGetterFunction,
+        nullptr);
 
     ESString* accuracyString = ESString::create("accuracy");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        accuracyString, accuracyGetterFunction, nullptr);
+        CoordinatesPrototypeObj, accuracyString, accuracyGetterFunction,
+        nullptr);
 
     ESString* altitudeAccuracyString = ESString::create("altitudeAccuracy");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        altitudeAccuracyString, altitudeAccuracyGetterFunction, nullptr);
+        CoordinatesPrototypeObj, altitudeAccuracyString,
+        altitudeAccuracyGetterFunction, nullptr);
 
     ESString* headingString = ESString::create("heading");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        headingString, headingGetterFunction, nullptr);
+        CoordinatesPrototypeObj, headingString, headingGetterFunction, nullptr);
 
     ESString* speedString = ESString::create("speed");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CoordinatesFunction->protoType().asESPointer()->asESObject(),
-        speedString, speedGetterFunction, nullptr);
+        CoordinatesPrototypeObj, speedString, speedGetterFunction, nullptr);
 
     return CoordinatesFunction;
 }

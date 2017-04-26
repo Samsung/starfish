@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "dom/CSSRule.h"
 #include "dom/CSSStyleDeclaration.h"
 #include "dom/CSSStyleRule.h"
 #include "style/Style.h"
@@ -22,7 +23,7 @@ namespace StarFish {
 
 CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText,
                            Document* document)
-    : ScriptWrappable(this)
+    : CSSRule(CSSRule::STYLE_RULE)
     , m_styleDeclaration(new CSSStyleDeclaration(document))
     , m_document(document)
 {
@@ -35,7 +36,7 @@ CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText,
 
 CSSStyleRule::CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
                            Document* document, CSSStyleDeclaration* decl)
-    : ScriptWrappable(this)
+    : CSSRule(CSSRule::STYLE_RULE)
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)
     , m_document(document)
