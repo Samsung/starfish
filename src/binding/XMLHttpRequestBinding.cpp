@@ -83,7 +83,12 @@ static ESValue timeoutSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     uint32_t value0;
     value0 = arg0.toUint32();
-    originalObj->setTimeout(value0);
+    try {
+        originalObj->setTimeout(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
     return ESValue();
 }
 
