@@ -43,32 +43,44 @@ static ESValue stateGetterFunction(ESVMInstance* instance)
     return result;
 }
 
+// Implement for functions
 static ESValue goFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    if (v.isUndefinedOrNull()) {
-        originalObj->go(0);
-    } else {
-        originalObj->go(v.toUint32());
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    int32_t value0 = 0;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = arg0.toInt32();
     }
+    // Call native function (nargs: 1)
+    originalObj->go(value0);
 
-    return ESValue();
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue backFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
     originalObj->back();
-    return ESValue();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue forwardFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
     originalObj->forward();
-    return ESValue();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue pushStateFunction(ESVMInstance* instance)
@@ -81,26 +93,28 @@ static ESValue pushStateFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "pushState",
                         "History", "2", buffer);
     }
-
-    // TODO: State value must be stored to form of StructuredClone
-    // Therefore, implement StructuredClone() to convert state value
+    // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    ScriptValue value0;
+    value0 = arg0;
 
-    ScriptValue state = arg0;
-    String* title = String::fromUTF8(arg1.toString()->utf8Data());
-    String* url;
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
 
-    if (arg2.isUndefined()) {
-        url = String::emptyString;
-    } else {
-        url = String::fromUTF8(arg1.toString()->utf8Data());
+    // Handle argument arg2
+    Nullable<String*> value2;
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = toBrowserString(arg2);
     }
+    // Call native function (nargs: 3)
+    originalObj->pushState(value0, value1, value2);
 
-    originalObj->pushState(state, title, url);
-
-    return ESValue();
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue replaceStateFunction(ESVMInstance* instance)
@@ -113,25 +127,28 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "replaceState", "History", "2", buffer);
     }
-
-    // TODO: State value must be stored to form of StructuredClone
-    // Therefore, implement StructuredClone() to convert state value
+    // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg0
+    ScriptValue value0;
+    value0 = arg0;
 
-    ScriptValue state = arg0;
-    String* title = String::fromUTF8(arg1.toString()->utf8Data());
-    String* url;
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
 
-    if (arg2.isUndefined()) {
-        url = String::emptyString;
-    } else {
-        url = String::fromUTF8(arg1.toString()->utf8Data());
+    // Handle argument arg2
+    Nullable<String*> value2;
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = toBrowserString(arg2);
     }
+    // Call native function (nargs: 3)
+    originalObj->replaceState(value0, value1, value2);
 
-    originalObj->replaceState(state, title, url);
-    return ESValue();
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)

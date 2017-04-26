@@ -27,81 +27,17 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue mediaSourceFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue mediasourceConstructor(ESVMInstance* instance)
 {
-    MediaSource* b = new MediaSource(fetchDocument(instance));
-    return b->scriptValue();
-}
-
-static ESValue addSourceBufferFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-
-    try {
-        MediaSource* mediaSource = originalObj;
-        String* type = toBrowserString(firstArg);
-        SourceBuffer* buffer = mediaSource->addSourceBuffer(type);
-        return buffer->scriptValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "MediaSource");
     }
-}
-
-static ESValue removeSourceBufferFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(firstArg, SourceBuffer);
-
-    try {
-        MediaSource* mediaSource = (MediaSource*)originalObj;
-        SourceBuffer* sourceBuffer = (SourceBuffer*)firstArg.asESPointer()
-                                         ->asESObject()
-                                         ->extraPointerData();
-        mediaSource->removeSourceBuffer(sourceBuffer);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue endOfStreamFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, MediaSource);
-    MediaSource* mediaSource =
-        (MediaSource*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    if (!firstArg.isUndefinedOrNull() && !firstArg.isESString()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    String* error = String::emptyString;
-    if (!firstArg.isUndefinedOrNull()) {
-        error = toBrowserString(firstArg.toString());
-    }
-    try {
-        mediaSource->endOfStream(error);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue isTypeSupportedFunction(ESVMInstance* instance)
-{
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    String* type = toBrowserString(firstArg);
-    bool res = MediaSource::isTypeSupported(type);
-    if (res) {
-        return ESValue(ESValue::ESTrueTag::ESTrue);
-    } else {
-        return ESValue(ESValue::ESFalseTag::ESFalse);
-    }
+    MediaSource* result = nullptr;
+    Document* callWith = fetchDocument(instance);
+    // Call native function (nargs: 0)
+    result = new MediaSource(callWith);
+    return result->scriptValue();
 }
 
 static ESValue sourceBuffersFunction(ESVMInstance* instance)
@@ -146,13 +82,125 @@ static ESValue durationSetterFunction(ESVMInstance* instance)
     }
     return ESValue(ESValue::ESUndefined);
 }
+
+// Implement for functions
+static ESValue addSourceBufferFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "addSourceBuffer", "MediaSource", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    SourceBuffer* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->addSourceBuffer(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue removeSourceBufferFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "removeSourceBuffer", "MediaSource", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    SourceBuffer* value0 = nullptr;
+    CHECK_TYPEOF(arg0, SourceBuffer);
+    value0 =
+        (SourceBuffer*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    try {
+        originalObj->removeSourceBuffer(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue endOfStreamFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
+    size_t validArgCount = 1;
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    if (arg0.isUndefinedOrNull()) {
+        validArgCount--;
+    } else {
+        value0 = toBrowserString(arg0);
+    }
+    // Call native function (nargs: 0-1)
+    try {
+        if (validArgCount == 0) {
+            originalObj->endOfStream();
+        } else if (validArgCount == 1) {
+            originalObj->endOfStream(value0);
+        }
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue isTypeSupportedFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "isTypeSupported", "MediaSource", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    bool result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = MediaSource::isTypeSupported(value0);
+
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
 ESFunctionObject* bindingMediaSource(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource,
     // fetchData(scriptBindingInstance)->m_fnEventTarget);
 
-    auto mediaSource = ESFunctionObject::create(NULL, mediaSourceFunction,
+    auto mediaSource = ESFunctionObject::create(NULL, mediasourceConstructor,
                                                 ESString::create("MediaSource"),
                                                 0, true, true);
 

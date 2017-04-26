@@ -152,48 +152,6 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-extern ESValue appendBufferSourceBufferFunction(ESVMInstance* instance);
-
-static ESValue removeFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, SourceBuffer);
-    SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
-                                     ->asESObject()
-                                     ->extraPointerData();
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-
-    try {
-        sourceBuffer->remove(arg0.toNumber(), arg1.toNumber());
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue abortFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, SourceBuffer);
-    SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
-                                     ->asESObject()
-                                     ->extraPointerData();
-
-    try {
-        sourceBuffer->abort();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    return ESValue(ESValue::ESUndefined);
-}
-
 static ESValue onupdatestartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
@@ -282,6 +240,56 @@ static ESValue onabortSetterFunction(ESVMInstance* instance)
     originalObj->setOnabortEventListener(arg0);
 
     return ESValue();
+}
+
+// Implement for functions
+extern ESValue appendBufferSourceBufferFunction(ESVMInstance* instance);
+
+static ESValue abortFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
+    try {
+        originalObj->abort();
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue removeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "remove",
+                        "SourceBuffer", "2", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+
+    // Handle argument arg1
+    double value1;
+    value1 = arg1.toNumber();
+
+    // Call native function (nargs: 2)
+    try {
+        originalObj->remove(value0, value1);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingSourceBuffer(

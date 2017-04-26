@@ -98,18 +98,27 @@ bool History::isPushState()
     return currentHistoryEntry()->isPushState();
 }
 
-void History::pushState(ScriptValue state, String* title, String* url)
+void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
 {
+    String* urlValue = String::emptyString;
+    if (url.hasValue()) {
+        urlValue = url.getValue();
+    }
     URL* newURL =
-        URL::createURL(starFish()->window()->document()->urlString(), url);
+        URL::createURL(starFish()->window()->document()->urlString(), urlValue);
     setHistory(state, title, newURL, true);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
-void History::replaceState(ScriptValue state, String* title, String* url)
+void History::replaceState(ScriptValue state, String* title,
+                           Nullable<String*> url)
 {
+    String* urlValue = String::emptyString;
+    if (url.hasValue()) {
+        urlValue = url.getValue();
+    }
     URL* newURL =
-        URL::createURL(starFish()->window()->document()->urlString(), url);
+        URL::createURL(starFish()->window()->document()->urlString(), urlValue);
     m_historyEntries[m_offset]->replaceState(state, title, newURL);
     starFish()->window()->document()->setDocumentURI(newURL);
 }

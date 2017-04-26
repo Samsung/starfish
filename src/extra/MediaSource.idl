@@ -6,7 +6,14 @@ enum ReadyState {
     "ended"
 };
 
-[STARFISH_ENABLE_MULTIMEDIA, Constructor]
+enum EndOfStreamError {
+    "network",
+    "decode"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA,
+ Constructor,
+ ConstructorCallWith=Document]
 interface MediaSource : EventTarget {
   readonly attribute SourceBufferList sourceBuffers;
   readonly attribute SourceBufferList activeSourceBuffers;
@@ -15,10 +22,10 @@ interface MediaSource : EventTarget {
   [Unimplemented] attribute EventHandler onsourceopen;
   [Unimplemented] attribute EventHandler onsourceended;
   [Unimplemented] attribute EventHandler onsourceclose;
-  SourceBuffer addSourceBuffer(DOMString type);
-  void removeSourceBuffer(SourceBuffer sourceBuffer);
-  void endOfStream(optional EndOfStreamError error);
-  [Unimplemented] void setLiveSeekableRange(double start, double end);
-  [Unimplemented] void clearLiveSeekableRange();
+  [RaisesException] SourceBuffer addSourceBuffer(DOMString type);
+  [RaisesException] void removeSourceBuffer(SourceBuffer sourceBuffer);
+  [RaisesException] void endOfStream(optional EndOfStreamError error);
+  [Unimplemented, RaisesException] void setLiveSeekableRange(double start, double end);
+  [Unimplemented, RaisesException] void clearLiveSeekableRange();
   static boolean isTypeSupported(DOMString type);
 };
