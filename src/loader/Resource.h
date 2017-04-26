@@ -204,8 +204,8 @@ public:
     virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
     {
         if (request->progressState() == NetworkRequest::LOAD) {
-            m_resource->didDataReceived(request->responseData().data(),
-                                        request->responseData().size());
+            m_resource->didDataReceived(request->response().data(),
+                                        request->response().size());
             m_resource->didLoadFinished();
         } else if (request->progressState() == NetworkRequest::ERROR) {
             m_resource->didLoadFailed();

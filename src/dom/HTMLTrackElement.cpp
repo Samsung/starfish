@@ -57,13 +57,13 @@ public:
             return -1;
         }
 
-        unsigned int size = m_resource->networkRequest()->responseData().size();
+        unsigned int size = m_resource->networkRequest()->response().size();
         unsigned int pointer = nextPointer();
         if (pointer >= size) {
             return 1;
         }
 
-        *c = m_resource->networkRequest()->responseData()[pointer];
+        *c = m_resource->networkRequest()->response()[pointer];
         return 0;
     }
 

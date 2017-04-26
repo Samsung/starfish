@@ -14,32 +14,37 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "extra/Blob.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for constructor
 extern ESValue blobConstructor(ESVMInstance* instance);
 
+// Implement for attributes
 static ESValue sizeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
-    double v = originalObj->size();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->size();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
-    String* v = originalObj->mimeType();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->type();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
+// Implement for functions
 static ESValue sliceFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
@@ -66,36 +71,41 @@ static ESValue sliceFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* Blob */
-    auto fnBlob = ESFunctionObject::create(
-        NULL, blobConstructor, ESString::create("Blob"), 0, true, true);
-    fnBlob->defineAccessorProperty(
+    // Bind for constructor
+    ESString* BlobString = ESString::create("Blob");
+    ESFunctionObject* BlobFunction = ESFunctionObject::create(
+        nullptr, blobConstructor, BlobString, 0, true, true);
+    BlobFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    fnBlob->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
-        false);
-    fnBlob->protoType().asESPointer()->asESObject()->set__proto__(
+    BlobFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    BlobFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)
             ->m_instance->globalObject()
             ->objectPrototype());
-    fnBlob->set__proto__(fetchData(scriptBindingInstance)
-                             ->m_instance->globalObject()
-                             ->objectPrototype());
+    ESObject* BlobPrototypeObj =
+        BlobFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* sizeString = ESString::create("size");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnBlob->protoType().asESPointer()->asESObject(),
-        ESString::create("size"), sizeGetterFunction, nullptr);
+        BlobPrototypeObj, sizeString, sizeGetterFunction, nullptr);
 
+    ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnBlob->protoType().asESPointer()->asESObject(),
-        ESString::create("type"), typeGetterFunction, nullptr);
+        BlobPrototypeObj, typeString, typeGetterFunction, nullptr);
 
-    fnBlob->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("slice"), false, false, false,
-        ESFunctionObject::create(NULL, sliceFunction, ESString::create("slice"),
-                                 0, false));
+    // Bind for functions
+    ESString* sliceString = ESString::create("slice");
+    ESFunctionObject* sliceESFn =
+        ESFunctionObject::create(nullptr, sliceFunction, sliceString, 0, false);
+    BlobPrototypeObj->defineDataProperty(sliceString, true, true, true,
+                                         sliceESFn);
 
-    return fnBlob;
+    return BlobFunction;
 }
 }

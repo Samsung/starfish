@@ -14,35 +14,34 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/CharacterData.h"
-#include "dom/DOMException.h"
 #include "dom/Element.h"
 
 namespace StarFish {
 
 using namespace escargot;
+
 // Implement for attributes
 static ESValue dataGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    String* v = originalObj->data();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->data();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue dataSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    ESValue originalV = instance->currentExecutionContext()->readArgument(0);
-    String* v;
-    if (originalV.isNull()) {
-        v = String::emptyString;
-    } else {
-        v = toBrowserString(originalV);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    if (!arg0.isNull()) {
+        value0 = toBrowserString(arg0);
     }
-    originalObj->setData(v);
+    originalObj->setData(value0);
     return ESValue();
 }
 
@@ -51,7 +50,7 @@ extern ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance);
 static ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->previousElementSibling();
     // Return ESValue from native value
@@ -64,7 +63,7 @@ static ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
 static ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->nextElementSibling();
     // Return ESValue from native value
@@ -74,41 +73,71 @@ static ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-extern ESValue removeFunction(ESVMInstance* instance);
+// Implement for functions
+static ESValue removeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
+    originalObj->remove();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
 
 ESFunctionObject* bindingCharacterData(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        CharacterData, fetchData(scriptBindingInstance)->fnNode());
-
-    /* 4.9 Interface CharacterData */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("data"), dataGetterFunction, dataSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthCharacterDataGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("nextElementSibling"),
-        nextElementSiblingGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("previousElementSibling"),
-        previousElementSiblingGetterFunction, nullptr);
-
+    // Bind for constructor
+    ESString* CharacterDataString = ESString::create("CharacterData");
+    ESFunctionObject* CharacterDataFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 CharacterDataString, 0, true, true);
+    CharacterDataFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     CharacterDataFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("remove"), false, false, false,
-            ESFunctionObject::create(NULL, removeFunction,
-                                     ESString::create("remove"), 0, false));
+        ->forceNonVectorHiddenClass(false);
+    CharacterDataFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)->fnNode()->protoType());
+    CharacterDataFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode());
+    ESObject* CharacterDataPrototypeObj =
+        CharacterDataFunction->protoType().asESPointer()->asESObject();
+
+    // Bind for attributes
+    ESString* dataString = ESString::create("data");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataPrototypeObj, dataString, dataGetterFunction,
+        dataSetterFunction);
+
+    ESString* lengthString = ESString::create("length");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataPrototypeObj, lengthString,
+        lengthCharacterDataGetterFunction, nullptr);
+
+    ESString* previousElementSiblingString =
+        ESString::create("previousElementSibling");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataPrototypeObj, previousElementSiblingString,
+        previousElementSiblingGetterFunction, nullptr);
+
+    ESString* nextElementSiblingString = ESString::create("nextElementSibling");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataPrototypeObj, nextElementSiblingString,
+        nextElementSiblingGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* removeString = ESString::create("remove");
+    ESFunctionObject* removeESFn = ESFunctionObject::create(
+        nullptr, removeFunction, removeString, 0, false);
+    CharacterDataPrototypeObj->defineDataProperty(removeString, true, true,
+                                                  true, removeESFn);
 
     return CharacterDataFunction;
 }

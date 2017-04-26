@@ -180,12 +180,12 @@ public:
         return m_responseHeaderData;
     }
 
-    NetworkRequestResponse& responseData()
+    NetworkRequestResponse& response()
     {
         return m_response;
     }
 
-    String* mimeType()
+    String* responseMimeType()
     {
         return m_responseMimeType;
     }
