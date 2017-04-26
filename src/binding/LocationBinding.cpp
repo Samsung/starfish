@@ -172,6 +172,12 @@ static ESValue hashSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
+// Implement for functions
+static ESValue toStringFunction(ESVMInstance* instance)
+{
+    return hrefGetterFunction(instance);
+}
+
 ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Location, fetchData(scriptBindingInstance)
@@ -213,6 +219,15 @@ ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         LocationFunction->protoType().asESPointer()->asESObject(), hashString,
         hashGetterFunction, hashSetterFunction);
+
+    // Bind for functions
+    ESString* toStringString = ESString::create("toString");
+    ESFunctionObject* toStringESFn = ESFunctionObject::create(
+        nullptr, toStringFunction, toStringString, 0, false);
+    LocationFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->defineDataProperty(toStringString, true, true, true, toStringESFn);
 
     return LocationFunction;
 }

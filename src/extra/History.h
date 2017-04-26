@@ -52,8 +52,8 @@ public:
     void forward();
     void go(int delta);
 
-    void pushState(ScriptValue state, String* title, String* url);
-    void replaceState(ScriptValue state, String* title, String* url);
+    void pushState(ScriptValue state, String* title, Nullable<String*> url);
+    void replaceState(ScriptValue state, String* title, Nullable<String*> url);
 
     void setHistory(ScriptValue state, String* title, URL* url,
                     bool isPushState = false);
