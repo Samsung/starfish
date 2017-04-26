@@ -66,14 +66,14 @@ public:
     {
         ResourceClient::didLoadFinished();
         if (isJavaScriptType(m_resource->networkRequest()
-                                 ->mimeType()
+                                 ->responseMimeType()
                                  ->toLower()
                                  ->utf8Data()) ||
-            m_resource->networkRequest()->mimeType()->toLower()->equals(
+            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
                 "text/plain") ||
-            m_resource->networkRequest()->mimeType()->toLower()->equals(
+            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
                 "text/html") ||
-            m_resource->networkRequest()->mimeType()->toLower()->equals(
+            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
                 "application/json")) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->window()->scriptBindingInstance()->evaluate(

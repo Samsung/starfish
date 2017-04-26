@@ -345,43 +345,44 @@ void XMLHttpRequest::onReadyStateChange(NetworkRequest* request,
             if (m_responseType == ResponseType::Unspecified ||
                 m_responseType == ResponseType::Text) {
                 TextConverter textConverter(
-                    m_networkRequest->mimeType(), String::fromUTF8("UTF-8"),
-                    m_networkRequest->responseData().data(),
-                    m_networkRequest->responseData().size());
+                    m_networkRequest->responseMimeType(),
+                    String::fromUTF8("UTF-8"),
+                    m_networkRequest->response().data(),
+                    m_networkRequest->response().size());
                 m_responseText = textConverter.convert(
-                    m_networkRequest->responseData().data(),
-                    m_networkRequest->responseData().size(), true);
-                m_networkRequest->responseData().clear();
+                    m_networkRequest->response().data(),
+                    m_networkRequest->response().size(), true);
+                m_networkRequest->response().clear();
             } else if (m_responseType == ResponseType::Json) {
-                TextConverter cvt(m_networkRequest->mimeType(),
+                TextConverter cvt(m_networkRequest->responseMimeType(),
                                   String::fromUTF8("UTF-8"),
-                                  m_networkRequest->responseData().data(),
-                                  m_networkRequest->responseData().size());
+                                  m_networkRequest->response().data(),
+                                  m_networkRequest->response().size());
                 String* text =
-                    cvt.convert(m_networkRequest->responseData().data(),
-                                m_networkRequest->responseData().size(), true);
+                    cvt.convert(m_networkRequest->response().data(),
+                                m_networkRequest->response().size(), true);
                 m_responseJsonObject = parseJSON(text);
             } else if (m_responseType == ResponseType::Blob) {
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_networkRequest->responseData().size());
-                memcpy(buffer, m_networkRequest->responseData().data(),
-                       m_networkRequest->responseData().size());
+                    m_networkRequest->response().size());
+                memcpy(buffer, m_networkRequest->response().data(),
+                       m_networkRequest->response().size());
                 m_responseBlob = new ::StarFish::Blob(
                     m_networkRequest->starFish(),
-                    m_networkRequest->responseData().size(),
-                    m_networkRequest->mimeType(), buffer, false, false);
-                m_networkRequest->responseData().clear();
-                m_networkRequest->responseData().shrink_to_fit();
+                    m_networkRequest->response().size(),
+                    m_networkRequest->responseMimeType(), buffer, false, false);
+                m_networkRequest->response().clear();
+                m_networkRequest->response().shrink_to_fit();
             } else if (m_responseType == ResponseType::ArrayBuffer) {
 #ifdef USE_ES6_FEATURE
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_networkRequest->responseData().size());
-                memcpy(buffer, m_networkRequest->responseData().data(),
-                       m_networkRequest->responseData().size());
+                    m_networkRequest->response().size());
+                memcpy(buffer, m_networkRequest->response().data(),
+                       m_networkRequest->response().size());
                 m_responseArrayBuffer = createArrayBuffer(
-                    buffer, m_networkRequest->responseData().size());
-                m_networkRequest->responseData().clear();
-                m_networkRequest->responseData().shrink_to_fit();
+                    buffer, m_networkRequest->response().size());
+                m_networkRequest->response().clear();
+                m_networkRequest->response().shrink_to_fit();
 #else
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif

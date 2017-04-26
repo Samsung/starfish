@@ -25,13 +25,13 @@ class StarFish;
 
 class Blob : public ScriptWrappable {
 public:
-    Blob(StarFish* starFish, size_t size, String* mimeType, void* data,
+    Blob(StarFish* starFish, uint64_t size, String* type, void* data,
          bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
     {
         m_starFish = starFish;
         m_size = size;
-        m_mimeType = mimeType;
+        m_type = type;
         m_data = data;
         m_isClosed = isClosed;
         if (isEntryOfBlobURLStore) {
@@ -60,14 +60,14 @@ public:
         return m_data;
     }
 
-    size_t size()
+    uint64_t size()
     {
         return m_size;
     }
 
-    String* mimeType()
+    String* type()
     {
-        return m_mimeType;
+        return m_type;
     }
 
     bool isClosed()
@@ -99,9 +99,9 @@ protected:
     bool m_isEntryOfBlobURLStore;
     bool m_isClosed;
     StarFish* m_starFish;
-    String* m_mimeType;
+    String* m_type;
     void* m_data;
-    size_t m_size;
+    uint64_t m_size;
 };
 }
 

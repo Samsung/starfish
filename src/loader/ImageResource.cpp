@@ -90,17 +90,16 @@ void ImageResource::didLoadFinished()
 {
 #ifdef STARFISH_EFL
     if (!m_url->isFileURL()) {
-        m_imageData =
-            ImageData::create(m_networkRequest->responseData().data(),
-                              m_networkRequest->responseData().size());
+        m_imageData = ImageData::create(m_networkRequest->response().data(),
+                                        m_networkRequest->response().size());
         if (!m_imageData) {
             Resource::didLoadFailed();
             return;
         }
     }
 #else
-    m_imageData = ImageData::create(m_networkRequest->responseData().data(),
-                                    m_networkRequest->responseData().size());
+    m_imageData = ImageData::create(m_networkRequest->response().data(),
+                                    m_networkRequest->response().size());
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;

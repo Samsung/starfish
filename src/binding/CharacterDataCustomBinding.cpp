@@ -14,11 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/CharacterData.h"
-#include "dom/DOMException.h"
 
 namespace StarFish {
 
@@ -27,11 +23,13 @@ using namespace escargot;
 ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
-    if (originalObj->data()->isASCIIString()) {
+    String* data = originalObj->data();
+    if (data->isASCIIString()) {
         return ESValue(originalObj->length());
     } else {
         // TODO: measure length without converting
-        return ESValue(toJSString(originalObj->data()).toString()->length());
+        ESString* data2 = toJSString(data).toString();
+        return ESValue(data2->length());
     }
 }
 }

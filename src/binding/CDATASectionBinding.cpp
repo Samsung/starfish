@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/CDATASection.h"
 
 namespace StarFish {
@@ -29,7 +26,7 @@ ESFunctionObject* bindingCDATASection(
     // Bind for constructor
     ESString* CDATASectionString = ESString::create("CDATASection");
     ESFunctionObject* CDATASectionFunction = ESFunctionObject::create(
-        nullptr, errorOnConstructorFunction, CDATASectionString, 1, true, true);
+        nullptr, errorOnConstructorFunction, CDATASectionString, 0, true, true);
     CDATASectionFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

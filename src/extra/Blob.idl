@@ -8,7 +8,7 @@ Exposed=(Window,Worker)]
 interface Blob {
 
   readonly attribute unsigned long long size;
-  [Rename=mimeType] readonly attribute DOMString type;
+  readonly attribute DOMString type;
 
   // slice Blob into byte-ranged chunks
   Blob slice([Clamp] optional long long start,
