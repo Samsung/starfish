@@ -15,8 +15,8 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLMetaElement.h"
 
 namespace StarFish {
@@ -31,7 +31,7 @@ ESFunctionObject* bindingHTMLMetaElement(
     ESString* HTMLMetaElementString = ESString::create("HTMLMetaElement");
     ESFunctionObject* HTMLMetaElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLMetaElementString, 1, true, true);
+                                 HTMLMetaElementString, 0, true, true);
     HTMLMetaElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
@@ -47,6 +47,8 @@ ESFunctionObject* bindingHTMLMetaElement(
             fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLMetaElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
+    ESObject* HTMLMetaElementPrototypeObj =
+        HTMLMetaElementFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     return HTMLMetaElementFunction;

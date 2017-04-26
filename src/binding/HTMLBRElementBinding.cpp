@@ -15,8 +15,8 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLBRElement.h"
 
 namespace StarFish {
@@ -30,7 +30,7 @@ ESFunctionObject* bindingHTMLBRElement(
     ESString* HTMLBRElementString = ESString::create("HTMLBRElement");
     ESFunctionObject* HTMLBRElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLBRElementString, 1, true, true);
+                                 HTMLBRElementString, 0, true, true);
     HTMLBRElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

@@ -15,11 +15,10 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "dom/Element.h"
 #include "dom/HTMLCollection.h"
-#include "dom/HTMLElement.h"
 
 namespace StarFish {
 
@@ -29,89 +28,113 @@ using namespace escargot;
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->length();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
+// Implement for functions
 static ESValue itemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, HTMLCollection);
-    HTMLCollection* self = (HTMLCollection*)(thisValue.asESPointer()
-                                                 ->asESObject()
-                                                 ->extraPointerData());
-
-    size_t count = instance->currentExecutionContext()->argumentCount();
-    if (count > 0) {
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        TO_INDEX_UINT32(argValue, idx);
-        if (idx != INVALID_INDEX && idx < self->length()) {
-            Element* elem = self->item(idx);
-            STARFISH_ASSERT(elem != nullptr);
-            return elem->scriptValue();
-        }
-        return ESValue(ESValue::ESNull);
-    } else {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
-                        "HTMLCollection", "1", "0");
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        auto msg = ESString::create(
+            "At least 1 argument required, but only 0 present");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue namedItemFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, HTMLCollection);
-
-    size_t count = instance->currentExecutionContext()->argumentCount();
-    if (count > 0) {
-        ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        ESString* argStr = argValue.toString();
-        Element* elem = ((HTMLCollection*)thisValue.asESPointer()
-                             ->asESObject()
-                             ->extraPointerData())
-                            ->namedItem(toBrowserString(argStr));
-        if (elem != nullptr) {
-            return elem->scriptValue();
-        }
-        return ESValue(ESValue::ESNull);
-    } else {
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "namedItem",
-                        "HTMLCollection", "1", "0");
+                        "HTMLCollection", "1", buffer);
     }
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    result = originalObj->namedItem(value0);
+
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingHTMLCollection(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLCollection,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* HTMLCollectionString = ESString::create("HTMLCollection");
+    ESFunctionObject* HTMLCollectionFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLCollectionString, 0, true, true);
+    HTMLCollectionFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLCollectionFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLCollectionFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(fetchData(scriptBindingInstance)
+                           ->m_instance->globalObject()
+                           ->objectPrototype());
+    ESObject* HTMLCollectionPrototypeObj =
+        HTMLCollectionFunction->protoType().asESPointer()->asESObject();
 
-    /* 4.2.7.2 Interface HTMLCollection */
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLCollectionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        HTMLCollectionPrototypeObj, lengthString, lengthGetterFunction,
+        nullptr);
 
-    HTMLCollectionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("item"), true, true, true,
-                             ESFunctionObject::create(NULL, itemFunction,
-                                                      ESString::create("item"),
-                                                      1, false));
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    HTMLCollectionPrototypeObj->defineDataProperty(itemString, true, true, true,
+                                                   itemESFn);
 
-    HTMLCollectionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("namedItem"), true, true, true,
-            ESFunctionObject::create(NULL, namedItemFunction,
-                                     ESString::create("namedItem"), 1, false));
+    ESString* namedItemString = ESString::create("namedItem");
+    ESFunctionObject* namedItemESFn = ESFunctionObject::create(
+        nullptr, namedItemFunction, namedItemString, 1, false);
+    HTMLCollectionPrototypeObj->defineDataProperty(namedItemString, true, false,
+                                                   true, namedItemESFn);
 
     return HTMLCollectionFunction;
 }
