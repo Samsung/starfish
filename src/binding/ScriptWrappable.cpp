@@ -16,8 +16,6 @@
 
 #include "StarFish.h"
 #include "binding/ScriptWrappable.h"
-#include "binding/ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/Document.h"
 #include "dom/Element.h"
 #include "layout/Frame.h"

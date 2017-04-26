@@ -29,6 +29,7 @@
     F(CharacterData)                                \
     F(Comment)                                      \
     F(Coordinates)                                  \
+    F(CSSRule)                                      \
     F(CSSStyleDeclaration)                          \
     F(CSSStyleRule)                                 \
     F(Document)                                     \

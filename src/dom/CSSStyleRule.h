@@ -17,13 +17,13 @@
 #ifndef __StarFishCSSStyleRule__
 #define __StarFishCSSStyleRule__
 
-#include "binding/ScriptWrappable.h"
+#include "dom/CSSRule.h"
 #include "style/Style.h"
 
 namespace StarFish {
 
 class CSSStyleDeclaration;
-class CSSStyleRule : public ScriptWrappable {
+class CSSStyleRule : public CSSRule {
     friend class StyleResolver;
 
 public:
