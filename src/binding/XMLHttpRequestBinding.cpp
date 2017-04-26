@@ -15,8 +15,8 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DOMException.h"
 #include "extra/XMLHttpRequest.h"
 
@@ -24,139 +24,20 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue xhrElementFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue xmlhttprequestConstructor(ESVMInstance* instance)
 {
-    Document* document = fetchDocument(instance);
-    auto xhr = new XMLHttpRequest(document);
-    return xhr->scriptValue();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "XMLHttpRequest");
+    }
+    XMLHttpRequest* result = nullptr;
+    Document* callWith = fetchDocument(instance);
+    // Call native function (nargs: 0)
+    result = new XMLHttpRequest(callWith);
+    return result->scriptValue();
 }
 
-static ESValue onloadstartGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onloadstartEventListener();
-}
-
-static ESValue onloadstartSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnloadstartEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue onprogressGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onprogressEventListener();
-}
-
-static ESValue onprogressSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnprogressEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue onabortGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onabortEventListener();
-}
-
-static ESValue onabortSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnabortEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue onerrorGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onerrorEventListener();
-}
-
-static ESValue onerrorSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnerrorEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue onloadGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onloadEventListener();
-}
-
-static ESValue onloadSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnloadEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue ontimeoutGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->ontimeoutEventListener();
-}
-
-static ESValue ontimeoutSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOntimeoutEventListener(arg0);
-
-    return ESValue();
-}
-
-static ESValue onloadendGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onloadendEventListener();
-}
-
-static ESValue onloadendSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnloadendEventListener(arg0);
-
-    return ESValue();
-}
-
+// Implement for attributes
 static ESValue onreadystatechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
@@ -168,394 +49,389 @@ static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
 
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue v = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnreadystatechangeEventListener(arg0);
+    originalObj->setOnreadystatechangeEventListener(v);
 
-    return ESValue();
-}
-
-static ESValue timeoutGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    uint32_t c = originalObj->networkRequest()->timeout();
-    return ESValue(c);
-}
-
-static ESValue timeoutSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    try {
-        ESValue v = instance->currentExecutionContext()->readArgument(0);
-        originalObj->setTimeout(v.toUint32());
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
     return ESValue();
 }
 
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    int c = originalObj->networkRequest()->readyState();
-    return ESValue(c);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->readyState();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue timeoutGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->timeout();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+static ESValue timeoutSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    uint32_t value0;
+    value0 = arg0.toUint32();
+    originalObj->setTimeout(value0);
+    return ESValue();
 }
 
 static ESValue statusGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    int c = originalObj->networkRequest()->status();
-    return ESValue(c);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->status();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
-static ESValue responseTextGetterFunction(ESVMInstance* instance)
+static ESValue responseTypeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    try {
-        String* c = originalObj->responseText();
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->responseType();
+    // Return ESValue from native value
+    return toJSString(result);
+}
 
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&responseText\n");
-#endif
-        return toJSString(c);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+static ESValue responseTypeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    originalObj->setResponseType(value0);
     return ESValue();
 }
 
 static ESValue responseGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    // Declare native value (empty when type is void)
+    ScriptValue result;
+    result = originalObj->response();
+    // Return ESValue from native value
+    return result;
+}
+
+static ESValue responseTextGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
     try {
-        ESValue c = originalObj->response();
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&response\n");
-#endif
-        return c;
+        result = originalObj->responseText();
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    return ESValue();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
-static ESValue responseTypeGetterFunction(ESVMInstance* instance)
+// Implement for functions
+static ESValue open1Function(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    String* str = originalObj->responseType();
-    return toJSString(str);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open1",
+                        "XMLHttpRequest", "2", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Call native function (nargs: 2)
+    try {
+        originalObj->open(value0, value1);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
-static ESValue responseTypeSetterFunction(ESVMInstance* instance)
+static ESValue open2Function(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-    originalObj->setResponseType(toBrowserString(v.toString()));
-    return ESValue();
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 3) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open2",
+                        "XMLHttpRequest", "3", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
+    ESValue arg4 = instance->currentExecutionContext()->readArgument(4);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Handle argument arg2
+    bool value2;
+    value2 = arg2.toBoolean();
+
+    // Handle argument arg3
+    Nullable<String*> value3;
+    if (!arg3.isUndefinedOrNull()) {
+        value3 = toBrowserString(arg3);
+    }
+    // Handle argument arg4
+    Nullable<String*> value4;
+    if (!arg4.isUndefinedOrNull()) {
+        value4 = toBrowserString(arg4);
+    }
+    // Call native function (nargs: 5)
+    try {
+        originalObj->open(value0, value1, value2, value3, value4);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue openFunction(ESVMInstance* instance)
+{
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (false) {
+    } else if (argCount == 2) {
+        return open1Function(instance);
+    } else if (argCount >= 3 && argCount <= 5) {
+        return open2Function(instance);
+    } else {
+        auto msg = ESString::create("Invalid arguments");
+        instance->throwError(ESValue(TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 }
 
 static ESValue setRequestHeaderFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    size_t argc =
-        instance->currentInstance()->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
-        char buffer[1];
-        snprintf(buffer, 1, "%zd", argc);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
+        char buffer[1 + 1];
+        snprintf(buffer, 1, "%zd", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "setRequestHeader", "XMLHttpRequest", "2", buffer);
     }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Call native function (nargs: 2)
     try {
-        String* s1 = toBrowserString(
-                         instance->currentExecutionContext()->readArgument(0))
-                         ->trim();
-        String* s2 = toBrowserString(
-                         instance->currentExecutionContext()->readArgument(1))
-                         ->trim();
-        originalObj->setRequestHeader(s1, s2);
-        return ESValue(ESValue::ESNull);
+        originalObj->setRequestHeader(value0, value1);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-}
-
-static ESValue openFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    try {
-        size_t argc = instance->currentInstance()
-                          ->currentExecutionContext()
-                          ->argumentCount();
-        if (argc < 2) {
-            char buffer[1];
-            snprintf(buffer, 1, "%zd", argc);
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open",
-                            "XMLHttpRequest", "2", buffer);
-        } else {
-            // https://xhr.spec.whatwg.org/#the-open()-method
-            // TOOD If method is not a method, throw a
-            // SyntaxError
-            // exception.
-            // TODO If method is a forbidden method, throw a
-            // SecurityError exception.
-            // Let parsedURL be the result of parsing url with
-            // context object's relevant settings object's API
-            // base
-            // URL.
-            // If parsedURL is failure, throw a SyntaxError
-            // exception.
-            std::string method = instance->currentExecutionContext()
-                                     ->readArgument(0)
-                                     .toString()
-                                     ->utf8Data();
-            std::transform(method.begin(), method.end(), method.begin(),
-                           ::tolower);
-            NetworkRequest::MethodType mt;
-            if (method == "post") {
-                mt = NetworkRequest::POST_METHOD;
-            } else if (method == "get") {
-                mt = NetworkRequest::GET_METHOD;
-            } else {
-                mt = NetworkRequest::UNKNOWN_METHOD;
-                STARFISH_LOG_ERROR("Unsupported method : %s\n", method.c_str());
-            }
-
-            bool async = true;
-            if (argc >= 3) {
-                async = instance->currentExecutionContext()
-                            ->readArgument(2)
-                            .toBoolean();
-            }
-
-            String* userName = String::emptyString;
-            String* password = String::emptyString;
-
-            if (argc == 4) {
-                userName = toBrowserString(
-                    instance->currentExecutionContext()->readArgument(3));
-            } else if (argc >= 5) {
-                userName = toBrowserString(
-                    instance->currentExecutionContext()->readArgument(3));
-                password = toBrowserString(
-                    instance->currentExecutionContext()->readArgument(4));
-            }
-            originalObj->open(
-                mt, toBrowserString(
-                        instance->currentExecutionContext()->readArgument(1)),
-                async, userName, password);
-        }
-        return ESValue(ESValue::ESNull);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue sendFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Nullable<String*> value0;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = toBrowserString(arg0);
+    }
+    // Call native function (nargs: 1)
     try {
-        ESValue esbody = instance->currentExecutionContext()->readArgument(0);
-        Nullable<String*> body;
-        if (!esbody.isUndefinedOrNull()) {
-            body = toBrowserString(esbody.toString());
-        }
-        originalObj->send(body);
-        return ESValue(ESValue::ESNull);
+        originalObj->send(value0);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 static ESValue abortFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    try {
-        originalObj->abort();
-        return ESValue(ESValue::ESNull);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
+    originalObj->abort();
 
-ESFunctionObject* bindingXMLHttpRequestEventTarget(
-    ScriptBindingInstance* scriptBindingInstance)
-{
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        XMLHttpRequestEventTarget,
-        fetchData(scriptBindingInstance)->m_fnEventTarget);
-
-    return XMLHttpRequestEventTargetFunction;
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingXMLHttpRequest(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    ESFunctionObject* XMLHttpRequestFunction = ESFunctionObject::create(
-        NULL, xhrElementFunction, ESString::create("XMLHttpRequest"), 0, true,
-        true);
-
+    // Bind for constructor
+    ESString* XMLHttpRequestString = ESString::create("XMLHttpRequest");
+    ESFunctionObject* XMLHttpRequestFunction =
+        ESFunctionObject::create(nullptr, xmlhttprequestConstructor,
+                                 XMLHttpRequestString, 0, true, true);
     XMLHttpRequestFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-
     XMLHttpRequestFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-
     XMLHttpRequestFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->set__proto__(fetchData(scriptBindingInstance)
                            ->fnXMLHttpRequestEventTarget()
                            ->protoType());
+    XMLHttpRequestFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnXMLHttpRequestEventTarget());
+    ESObject* XMLHttpRequestPrototypeObj =
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject();
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onloadstart"), onloadstartGetterFunction,
-        onloadstartSetterFunction);
+    // Bind for constants
+    ESString* UNSENTString = ESString::create("UNSENT");
+    ESValue UNSENTValue = ESValue(0);
+    XMLHttpRequestPrototypeObj->defineDataProperty(UNSENTString, false, true,
+                                                   false, UNSENTValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onprogress"), onprogressGetterFunction,
-        onprogressSetterFunction);
+    XMLHttpRequestFunction->defineDataProperty(UNSENTString, false, true, false,
+                                               UNSENTValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onabort"), onabortGetterFunction,
-        onabortSetterFunction);
+    ESString* OPENEDString = ESString::create("OPENED");
+    ESValue OPENEDValue = ESValue(1);
+    XMLHttpRequestPrototypeObj->defineDataProperty(OPENEDString, false, true,
+                                                   false, OPENEDValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onerror"), onerrorGetterFunction,
-        onerrorSetterFunction);
+    XMLHttpRequestFunction->defineDataProperty(OPENEDString, false, true, false,
+                                               OPENEDValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"), onloadGetterFunction, onloadSetterFunction);
+    ESString* HEADERS_RECEIVEDString = ESString::create("HEADERS_RECEIVED");
+    ESValue HEADERS_RECEIVEDValue = ESValue(2);
+    XMLHttpRequestPrototypeObj->defineDataProperty(
+        HEADERS_RECEIVEDString, false, true, false, HEADERS_RECEIVEDValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("ontimeout"), ontimeoutGetterFunction,
-        ontimeoutSetterFunction);
+    XMLHttpRequestFunction->defineDataProperty(
+        HEADERS_RECEIVEDString, false, true, false, HEADERS_RECEIVEDValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onloadend"), onloadendGetterFunction,
-        onloadendSetterFunction);
+    ESString* LOADINGString = ESString::create("LOADING");
+    ESValue LOADINGValue = ESValue(3);
+    XMLHttpRequestPrototypeObj->defineDataProperty(LOADINGString, false, true,
+                                                   false, LOADINGValue);
 
+    XMLHttpRequestFunction->defineDataProperty(LOADINGString, false, true,
+                                               false, LOADINGValue);
+
+    ESString* DONEString = ESString::create("DONE");
+    ESValue DONEValue = ESValue(4);
+    XMLHttpRequestPrototypeObj->defineDataProperty(DONEString, false, true,
+                                                   false, DONEValue);
+
+    XMLHttpRequestFunction->defineDataProperty(DONEString, false, true, false,
+                                               DONEValue);
+
+    // Bind for attributes
+    ESString* onreadystatechangeString = ESString::create("onreadystatechange");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onreadystatechange"),
+        XMLHttpRequestPrototypeObj, onreadystatechangeString,
         onreadystatechangeGetterFunction, onreadystatechangeSetterFunction);
 
+    ESString* readyStateString = ESString::create("readyState");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("timeout"), timeoutGetterFunction,
+        XMLHttpRequestPrototypeObj, readyStateString, readyStateGetterFunction,
+        nullptr);
+
+    ESString* timeoutString = ESString::create("timeout");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        XMLHttpRequestPrototypeObj, timeoutString, timeoutGetterFunction,
         timeoutSetterFunction);
 
+    ESString* statusString = ESString::create("status");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("readyState"), readyStateGetterFunction, nullptr);
+        XMLHttpRequestPrototypeObj, statusString, statusGetterFunction,
+        nullptr);
 
+    ESString* responseTypeString = ESString::create("responseType");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("status"), statusGetterFunction, nullptr);
+        XMLHttpRequestPrototypeObj, responseTypeString,
+        responseTypeGetterFunction, responseTypeSetterFunction);
 
+    ESString* responseString = ESString::create("response");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("responseText"), responseTextGetterFunction, nullptr);
+        XMLHttpRequestPrototypeObj, responseString, responseGetterFunction,
+        nullptr);
 
+    ESString* responseTextString = ESString::create("responseText");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("response"), responseGetterFunction, nullptr);
+        XMLHttpRequestPrototypeObj, responseTextString,
+        responseTextGetterFunction, nullptr);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("responseType"), responseTypeGetterFunction,
-        responseTypeSetterFunction);
+    // Bind for functions
+    ESString* openString = ESString::create("open");
+    ESFunctionObject* openESFn =
+        ESFunctionObject::create(nullptr, openFunction, openString, 0, false);
+    XMLHttpRequestPrototypeObj->defineDataProperty(openString, true, true, true,
+                                                   openESFn);
 
-    XMLHttpRequestFunction->asESObject()->defineDataProperty(
-        ESString::create("UNSENT"), false, true, false, ESValue(0));
+    ESString* setRequestHeaderString = ESString::create("setRequestHeader");
+    ESFunctionObject* setRequestHeaderESFn = ESFunctionObject::create(
+        nullptr, setRequestHeaderFunction, setRequestHeaderString, 2, false);
+    XMLHttpRequestPrototypeObj->defineDataProperty(
+        setRequestHeaderString, true, true, true, setRequestHeaderESFn);
 
-    XMLHttpRequestFunction->asESObject()->defineDataProperty(
-        ESString::create("OPENED"), false, true, false, ESValue(1));
+    ESString* sendString = ESString::create("send");
+    ESFunctionObject* sendESFn =
+        ESFunctionObject::create(nullptr, sendFunction, sendString, 0, false);
+    XMLHttpRequestPrototypeObj->defineDataProperty(sendString, true, true, true,
+                                                   sendESFn);
 
-    XMLHttpRequestFunction->asESObject()->defineDataProperty(
-        ESString::create("HEADERS_RECEIVED"), false, true, false, ESValue(2));
-
-    XMLHttpRequestFunction->asESObject()->defineDataProperty(
-        ESString::create("LOADING"), false, true, false, ESValue(3));
-
-    XMLHttpRequestFunction->asESObject()->defineDataProperty(
-        ESString::create("DONE"), false, true, false, ESValue(4));
-
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("UNSENT"), false, true, false,
-                             ESValue(0));
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("OPENED"), false, true, false,
-                             ESValue(1));
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("HEADERS_RECEIVED"), false, true,
-                             false, ESValue(2));
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("LOADING"), false, true, false,
-                             ESValue(3));
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("DONE"), false, true, false,
-                             ESValue(4));
-
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("setRequestHeader"), false, false, false,
-            ESFunctionObject::create(NULL, setRequestHeaderFunction,
-                                     ESString::create("setRequestHeader"), 2,
-                                     false));
-
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("open"), false, false, false,
-                             ESFunctionObject::create(NULL, openFunction,
-                                                      ESString::create("open"),
-                                                      1, false));
-
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("send"), false, false, false,
-                             ESFunctionObject::create(NULL, sendFunction,
-                                                      ESString::create("send"),
-                                                      1, false));
-
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("abort"), false, false, false,
-                             ESFunctionObject::create(NULL, abortFunction,
-                                                      ESString::create("abort"),
-                                                      1, false));
+    ESString* abortString = ESString::create("abort");
+    ESFunctionObject* abortESFn =
+        ESFunctionObject::create(nullptr, abortFunction, abortString, 0, false);
+    XMLHttpRequestPrototypeObj->defineDataProperty(abortString, true, true,
+                                                   true, abortESFn);
 
     return XMLHttpRequestFunction;
 }

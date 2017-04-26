@@ -218,25 +218,33 @@ uint16_t XMLHttpRequest::status() const
 
 ScriptValue XMLHttpRequest::response() const
 {
+    ScriptValue result;
+
     if (m_responseType == ResponseType::Unspecified ||
         m_responseType == ResponseType::Text) {
-        return createScriptString(responseText());
+        result = createScriptString(responseText());
     } else if (m_responseType == ResponseType::Json) {
-        return m_responseJsonObject;
+        result = m_responseJsonObject;
     } else if (m_responseType == ResponseType::Blob) {
         if (m_responseBlob) {
-            return m_responseBlob->scriptValue();
+            result = m_responseBlob->scriptValue();
+        } else {
+            result = ESValue(ESValue::ESNull);
         }
-        return ESValue(ESValue::ESNull);
     } else if (m_responseType == ResponseType::ArrayBuffer) {
 #ifdef USE_ES6_FEATURE
-        return m_responseArrayBuffer;
+        result = m_responseArrayBuffer;
 #else
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+#ifdef STARFISH_TC_COVERAGE
+    STARFISH_LOG_INFO("&&&response\n");
+#endif
+
+    return result;
 }
 
 String* XMLHttpRequest::responseText() const
@@ -251,6 +259,9 @@ String* XMLHttpRequest::responseText() const
             "or 'text'");
     }
 
+#ifdef STARFISH_TC_COVERAGE
+    STARFISH_LOG_INFO("&&&responseText\n");
+#endif
     return m_responseText;
 }
 

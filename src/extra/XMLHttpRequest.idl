@@ -14,10 +14,6 @@ interface XMLHttpRequestEventTarget : EventTarget {
   attribute EventHandler onloadend;
 };
 
-[Exposed=(Window,DedicatedWorker,SharedWorker)]
-interface XMLHttpRequestUpload : XMLHttpRequestEventTarget {
-};
-
 enum XMLHttpRequestResponseType {
   "",
   "arraybuffer",
@@ -28,6 +24,7 @@ enum XMLHttpRequestResponseType {
 };
 
 [Constructor,
+ ConstructorCallWith=Document,
  Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
@@ -63,6 +60,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Unimplemented] void overrideMimeType(DOMString mime);
   attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
-  readonly attribute DOMString responseText;
+  [RaisesException] readonly attribute DOMString responseText;
   [Unimplemented, Exposed=Window] readonly attribute Document? responseXML;
 };
