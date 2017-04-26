@@ -16,14 +16,23 @@
 
 #include "StarFish.h"
 #include "animation/Animation.h"
-#include "dom/DOM.h"
+#include "dom/CSSStyleDeclaration.h"
+#include "dom/CSSStyleRule.h"
+#include "dom/Document.h"
+#include "dom/Element.h"
+#include "dom/HTMLDocument.h"
+#include "dom/HTMLElement.h"
+#include "dom/HTMLLinkElement.h"
+#include "dom/HTMLStyleElement.h"
+#include "dom/Text.h"
+#include "layout/Frame.h"
+#include "layout/FrameTreeBuilder.h"
+#include "platform/window/Window.h"
 #include "style/Style.h"
 #include "style/CSSParser.h"
 #include "style/ComputedStyle.h"
 #include "style/NamedColors.h"
-#include "layout/Frame.h"
-#include "layout/FrameTreeBuilder.h"
-#include "platform/window/Window.h"
+#include "util/URL.h"
 
 namespace StarFish {
 

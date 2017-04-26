@@ -13,13 +13,14 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "platform/window/Window.h"
+
 #include "dom/Attr.h"
 #include "dom/Attribute.h"
 #include "dom/Document.h"
 #include "dom/DOMException.h"
 #include "dom/Element.h"
 #include "dom/NamedNodeMap.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 

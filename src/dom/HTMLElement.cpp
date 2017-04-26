@@ -16,6 +16,7 @@
 
 #include "StarFish.h"
 #include "dom/Document.h"
+#include "dom/Event.h"
 #include "dom/HTMLElement.h"
 #include "dom/Text.h"
 #include "layout/FrameBox.h"

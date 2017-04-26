@@ -202,14 +202,7 @@ public:
         return ret;
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
-    {
-        VisibleRectContext ctx(this, &loc);
-
-        for (size_t i = 0; i < m_boxes.size(); i++) {
-            m_boxes[i]->computeVisibleRect(sCtx, loc);
-        }
-    }
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
 
     FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
@@ -317,19 +310,7 @@ public:
 
     virtual void layoutInline(LineFormattingContext& lineFormattingContext);
     virtual void paint(PaintingContext& ctx);
-    virtual void paintChildrenWith(PaintingContext& ctx)
-    {
-        auto iter = boxes().begin();
-        while (iter != boxes().end()) {
-            FrameBox* child = *iter;
-            ctx.m_canvas->save();
-            ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                    child->asFrameBox()->y());
-            child->paint(ctx);
-            ctx.m_canvas->restore();
-            iter++;
-        }
-    }
+    virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
     ComputedStyle* style()
@@ -735,50 +716,7 @@ public:
         return (child->isBlockLevel() && child->isNormalFlow());
     }
 
-    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
-    {
-        if (isEstablishesBlockFormattingContext()) {
-            return false;
-        }
-
-        if (!isNecessaryBlockBox()) {
-            return true;
-        }
-
-        if (heightComputed()) {
-            return false;
-        }
-
-        if (paddingHeight() || borderHeight()) {
-            return false;
-        }
-
-        Length heightLength = style()->height();
-        // NOTE: In case of percentage height,
-        // if containing blocks' height is fixed, the block is not
-        // self-collapsing block.
-        if (heightLength.isPercent() && !heightLength.isZero() &&
-            ctx.parentHasFixedHeight(this)) {
-            return false;
-        }
-
-        if (heightLength.isAuto() || heightLength.isZero()) {
-            Frame* child = firstChild();
-            while (child) {
-                if (!child->isNormalFlow()) {
-                    child = child->next();
-                    continue;
-                }
-                if (!child->isSelfCollapsingBlock(ctx)) {
-                    return false;
-                }
-                child = child->next();
-            }
-            return true;
-        }
-        return false;
-    }
-
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
     GCVector<LineBox*>& lineBoxes()
     {
         return m_lineBoxes;

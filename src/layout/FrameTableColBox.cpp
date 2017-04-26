@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameTableColBox.h"
-#include "FrameTreeBuilder.h"
+#include "dom/Node.h"
+#include "dom/HTMLColElement.h"
+#include "dom/HTMLColGroupElement.h"
+#include "layout/FrameTableColBox.h"
+#include "layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 
@@ -29,12 +31,11 @@ unsigned FrameTableColBox::span()
 {
     int ret = 0;
 
-    if (!(node() && node()->isElement() &&
-          node()->asElement()->isHTMLElement())) {
+    if (!(node() && node()->isHTMLElement())) {
         return ret;
     }
 
-    HTMLElement* e = node()->asElement()->asHTMLElement();
+    HTMLElement* e = node()->asHTMLElement();
     if (e->isHTMLColGroupElement()) {
         String* span = e->asHTMLColGroupElement()->span();
         ret = String::parseInt(span);

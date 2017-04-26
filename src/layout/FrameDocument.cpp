@@ -17,6 +17,8 @@
 #include "StarFish.h"
 #include "dom/Document.h"
 #include "layout/FrameDocument.h"
+#include "layout/StackingContext.h"
+#include "platform/canvas/Canvas.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
@@ -37,5 +39,37 @@ void FrameDocument::layout(LayoutContext& ctx,
         style()->setDirection(firstChild()->style()->direction());
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
+}
+
+void FrameDocument::paint(PaintingContext& ctx)
+{
+    STARFISH_ASSERT(ctx.m_paintingStage == PaintingStageEnd);
+    STARFISH_ASSERT(firstChild() == lastChild());
+    if (!firstChild()) {
+        return;
+    }
+    ctx.m_canvas->save();
+    ctx.m_canvas->translate(firstChild()->asFrameBox()->x(),
+                            firstChild()->asFrameBox()->y());
+    firstChild()->asFrameBox()->stackingContext()->paintStackingContext(
+        ctx.m_canvas);
+    ctx.m_canvas->restore();
+}
+
+Frame* FrameDocument::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+{
+    STARFISH_ASSERT(stage == HitTestStageEnd);
+    STARFISH_ASSERT(firstChild() == lastChild());
+    if (!firstChild()) {
+        return nullptr;
+    }
+
+    Frame* result =
+        firstChild()->asFrameBox()->stackingContext()->hitTestStackingContext(
+            x, y);
+    if (result) {
+        return result;
+    }
+    return this;
 }
 }

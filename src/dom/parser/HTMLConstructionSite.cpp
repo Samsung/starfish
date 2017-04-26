@@ -40,7 +40,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/DOM.h"
+#include "dom/Comment.h"
+#include "dom/Document.h"
+#include "dom/DocumentFragment.h"
+#include "dom/DocumentType.h"
+#include "dom/Element.h"
+#include "dom/Node.h"
+#include "dom/HTMLDocument.h"
+#include "dom/HTMLHtmlElement.h"
+#include "dom/HTMLScriptElement.h"
+#include "dom/Text.h"
 #include "dom/parser/AtomicHTMLToken.h"
 #include "dom/parser/HTMLConstructionSite.h"
 #include "dom/parser/HTMLParserIdioms.h"

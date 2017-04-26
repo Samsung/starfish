@@ -14,10 +14,9 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "FrameTableCaptionBox.h"
-
-#include "FrameTreeBuilder.h"
+#include "dom/Node.h"
+#include "layout/FrameTableCaptionBox.h"
+#include "layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 

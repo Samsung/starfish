@@ -52,15 +52,9 @@ public:
         return m_textDecorationData;
     }
 
-    String* text()
-    {
-        return node()->asCharacterData()->data();
-    }
+    String* text();
 
-    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
-    {
-        return text()->containsOnlyWhitespace();
-    }
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
 
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,

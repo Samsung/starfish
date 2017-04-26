@@ -40,6 +40,10 @@
  */
 
 #include "StarFish.h"
+#include "dom/Document.h"
+#include "dom/DocumentFragment.h"
+#include "dom/Element.h"
+#include "dom/HTMLElement.h"
 // #include "dom/HTMLFormElement.h"
 #include "dom/parser/AtomicHTMLToken.h"
 #include "dom/parser/HTMLParser.h"
@@ -48,7 +52,6 @@
 #include "dom/parser/HTMLToken.h"
 #include "dom/parser/HTMLTokenizer.h"
 #include "dom/parser/HTMLTreeBuilder.h"
-#include "dom/DOM.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {

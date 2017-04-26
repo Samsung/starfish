@@ -15,12 +15,16 @@
  */
 
 #include "StarFish.h"
+#include "dom/CharacterData.h"
+#include "dom/Node.h"
+#include "dom/HTMLTableElement.h"
 #include "layout/FrameBlockBox.h"
 #include "layout/FrameBlockBoxInlineLayout.h"
 #include "layout/FrameDocument.h"
 #include "layout/FrameInline.h"
 #include "layout/FrameTableBox.h"
-#include "style/ComputedStyle.h"
+#include "layout/StackingContext.h"
+#include "platform/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -1001,6 +1005,16 @@ void LineFormattingContext::registerInlineContent()
         if (hasNormalFlowContent) {
             m_layoutContext.registerYPositionPerVAInlineBlock(lb);
         }
+    }
+}
+
+void InlineBoxLayoutParentBox::computeVisibleRect(StackingContext* sCtx,
+                                                  LayoutLocation& loc)
+{
+    VisibleRectContext ctx(this, &loc);
+
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        m_boxes[i]->computeVisibleRect(sCtx, loc);
     }
 }
 
@@ -2934,6 +2948,31 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
+LayoutUnit PreferredWidthContext::computeMinimumWidthDueToMBP(
+    ComputedStyle* style)
+{
+    LayoutUnit minWidth;
+    if (style->borderLeftWidth().isFixed()) {
+        minWidth += style->borderLeftWidth().fixed();
+    }
+    if (style->borderRightWidth().isFixed()) {
+        minWidth += style->borderRightWidth().fixed();
+    }
+    if (style->paddingLeft().isFixed()) {
+        minWidth += style->paddingLeft().fixed();
+    }
+    if (style->paddingRight().isFixed()) {
+        minWidth += style->paddingRight().fixed();
+    }
+    if (style->marginLeft().isFixed()) {
+        minWidth += style->marginLeft().fixed();
+    }
+    if (style->marginRight().isFixed()) {
+        minWidth += style->marginRight().fixed();
+    }
+    return minWidth;
+}
+
 LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
 {
     LayoutUnit mbp =
@@ -2967,6 +3006,16 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 
         f = f->next();
     }
+}
+
+String* FrameText::text()
+{
+    return node()->asCharacterData()->data();
+}
+
+bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)
+{
+    return text()->containsOnlyWhitespace();
 }
 
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
@@ -3128,8 +3177,7 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
             tablePreferredWidth =
                 LayoutUnit::fromPixel(style()->width().fixed());
 
-            if (!isAnonymous() &&
-                node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+            if (!isAnonymous() && node()->isHTMLTableElement()) {
                 tablePreferredWidth -= borderWidth() + paddingWidth();
             }
             tablePreferredMinWidth = tablePreferredWidth;
@@ -3141,8 +3189,7 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
-    if (node() && node()->isElement() && node()->asElement()->isHTMLElement() &&
-        node()->asElement()->asHTMLElement()->isHTMLTableElement()) {
+    if (node() && node()->isHTMLTableElement()) {
         LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
         if (widthAttribute > 0) {
             widthAttribute -= borderWidth() + paddingWidth();
@@ -3271,6 +3318,20 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         paintChildrenWith(ctx);
     } else {
         paintChildrenWith(ctx);
+    }
+}
+
+void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
+{
+    auto iter = boxes().begin();
+    while (iter != boxes().end()) {
+        FrameBox* child = *iter;
+        ctx.m_canvas->save();
+        ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                child->asFrameBox()->y());
+        child->paint(ctx);
+        ctx.m_canvas->restore();
+        iter++;
     }
 }
 

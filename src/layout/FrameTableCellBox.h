@@ -18,11 +18,12 @@
 #define __StarFishFrameTableCellBox__
 
 #include "layout/FrameTableObjectBox.h"
-#include "layout/FrameTableBox.h"
 
 namespace StarFish {
 
+class ComputedStyle;
 class FrameTreeBuilderContext;
+class Node;
 
 class FrameTableCellBox : public FrameTableObjectBox {
 public:

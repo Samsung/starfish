@@ -17,36 +17,37 @@
 #ifndef __StarFishFrame__
 #define __StarFishFrame__
 
-#include "dom/DOM.h"
-
-#include "style/Unit.h"
+#include "StarFishConfig.h"
+#include "style/Style.h"
 #include "style/ComputedStyle.h"
-
-#include "layout/LayoutUtil.h"
-#include "layout/StackingContext.h"
 
 namespace StarFish {
 
-class Node;
-class FrameText;
+class Canvas;
+class ComputedStyle;
+class Document;
+class Frame;
 class FrameBox;
 class FrameBlockBox;
-class FrameReplaced;
 class FrameInline;
 class FrameLineBreak;
+class FrameReplaced;
 class FrameDocument;
 class FrameTableObjectBox;
 class FrameTableBox;
 class FrameTableCaptionBox;
-class FrameTableSectionBox;
-class FrameTableRowBox;
 class FrameTableCellBox;
 class FrameTableColBox;
-class LineBox;
+class FrameTableRowBox;
+class FrameTableSectionBox;
+class FrameText;
 class InlineTextBox;
 class InlineNonReplacedBox;
 class InlineBoxLayoutParentBox;
+class LineBox;
 class LineFormattingContext;
+class Node;
+class StackingContext;
 
 enum PaintingStage {
     PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
@@ -449,30 +450,7 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
-    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style)
-    {
-        LayoutUnit minWidth;
-        if (style->borderLeftWidth().isFixed()) {
-            minWidth += style->borderLeftWidth().fixed();
-        }
-        if (style->borderRightWidth().isFixed()) {
-            minWidth += style->borderRightWidth().fixed();
-        }
-        if (style->paddingLeft().isFixed()) {
-            minWidth += style->paddingLeft().fixed();
-        }
-        if (style->paddingRight().isFixed()) {
-            minWidth += style->paddingRight().fixed();
-        }
-        if (style->marginLeft().isFixed()) {
-            minWidth += style->marginLeft().fixed();
-        }
-        if (style->marginRight().isFixed()) {
-            minWidth += style->marginRight().fixed();
-        }
-        return minWidth;
-    }
-
+    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
@@ -575,53 +553,9 @@ class Frame : public gc {
     friend class LayoutContext;
 
 public:
-    Frame(Node* node, ComputedStyle* s)
-        : m_node(node)
-        , m_styleWhenNodeIsAnonymous(s)
-    {
-        m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
-        m_flags.m_needsLayout = true;
+    Frame(Node* node, ComputedStyle* s);
 
-        bool isRootElement =
-            node && node->isElement() && node->asElement()->isHTMLElement() &&
-            node->asElement()->asHTMLElement()->isHTMLHtmlElement();
-        m_flags.m_isRootElement = isRootElement;
-
-        m_flags.m_isLeftMBPCleared = false;
-        m_flags.m_isRightMBPCleared = false;
-
-        m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
-        m_flags.m_isPositioned = false;
-        m_flags.m_isEstablishesStackingContext = isRootElement;
-        m_flags.m_needsGraphicsBuffer = false;
-        m_flags.m_isNormalFlow = true;
-        m_flags.m_isFloating = false;
-
-        computeStyleFlags();
-    }
-
-    bool isOverflowPropagatedToViewPort()
-    {
-        if (m_node && m_node->isElement() &&
-            m_node->asElement()->isHTMLElement() &&
-            m_node->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
-            HTMLBodyElement* bodyElement = m_node->document()->body();
-            if (bodyElement) {
-                return bodyElement->style()->overflow() != style()->overflow();
-            }
-            return style()->overflow() != OverflowValue::VisibleOverflow;
-        }
-
-        if (m_node && m_node->isElement() &&
-            m_node->asElement()->isHTMLElement() &&
-            m_node->asElement()->asHTMLElement()->isHTMLBodyElement() &&
-            m_node->document()->rootElement()) {
-            HTMLHtmlElement* rootElement = m_node->document()->rootElement();
-            return rootElement->style()->overflow() != style()->overflow();
-        }
-
-        return false;
-    }
+    bool isOverflowPropagatedToViewPort();
 
     bool shouldApplyOverflow()
     {
@@ -913,14 +847,7 @@ public:
         return false;
     }
 
-    virtual ComputedStyle* style()
-    {
-        if (UNLIKELY(isAnonymous())) {
-            return m_styleWhenNodeIsAnonymous;
-        } else {
-            return node()->style();
-        }
-    }
+    virtual ComputedStyle* style();
 
     Frame* enclosingFirstLineStyle();
     ComputedStyle* pseudoStyleForFirstLine(
@@ -929,16 +856,7 @@ public:
                                      ComputedStyle* parentStyle);
     ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
 
-    void updateComputedStyle(Node* refNode)
-    {
-        STARFISH_ASSERT(isAnonymous());
-        STARFISH_ASSERT(m_styleWhenNodeIsAnonymous);
-        ComputedStyle* newStyle = new ComputedStyle(refNode->style());
-        newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
-        newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
-        newStyle->arrangeStyleValues(refNode->style(), refNode);
-        m_styleWhenNodeIsAnonymous = newStyle;
-    }
+    void updateComputedStyle(Node* refNode);
 
     Node* node()
     {
@@ -1230,16 +1148,7 @@ public:
         return m_flags.m_isFloating;
     }
 
-    bool isDocumentElement() const
-    {
-        return m_node->document() == m_node;
-    }
-
-    bool isBodyElement() const
-    {
-        return m_node->isElement() && m_node->asElement()->isHTMLElement() &&
-               m_node->asElement()->asHTMLElement()->isHTMLBodyElement();
-    }
+    bool isDocumentElement() const;
 
     bool isAnonymous() const
     {
@@ -1303,11 +1212,7 @@ public:
         return Frame::style();
     }
 
-    Document* document()
-    {
-        STARFISH_ASSERT(m_node || parent());
-        return m_node ? m_node->document() : parent()->document();
-    }
+    Document* document();
 
 protected:
     struct {

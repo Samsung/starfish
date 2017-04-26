@@ -15,14 +15,22 @@
  */
 
 #include "StarFish.h"
+#include "dom/Attr.h"
+#include "dom/CharacterData.h"
+#include "dom/CSSStyleDeclaration.h"
 #include "dom/Document.h"
 #include "dom/DocumentType.h"
+#include "dom/DOMException.h"
+#include "dom/DOMTokenList.h"
 #include "dom/Element.h"
+#include "dom/HTMLCollection.h"
 #include "dom/Node.h"
 #include "dom/NodeList.h"
 #include "dom/SelectorQuery.h"
+#include "dom/Text.h"
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
+#include "style/ComputedStyle.h"
 #include "style/CSSParser.h"
 #include "platform/window/Window.h"
 

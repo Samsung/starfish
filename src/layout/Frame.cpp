@@ -14,11 +14,15 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "Frame.h"
-#include "FrameBox.h"
-#include "FrameBlockBox.h"
-#include "FrameDocument.h"
+#include "dom/Node.h"
+#include "dom/Document.h"
+#include "dom/Element.h"
+#include "dom/HTMLBodyElement.h"
+#include "dom/HTMLHtmlElement.h"
+#include "layout/Frame.h"
+#include "layout/FrameBlockBox.h"
+#include "layout/FrameBox.h"
+#include "layout/FrameDocument.h"
 
 namespace StarFish {
 
@@ -578,6 +582,57 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     }
 }
 
+Frame::Frame(Node* node, ComputedStyle* s)
+    : m_node(node)
+    , m_styleWhenNodeIsAnonymous(s)
+{
+    m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
+    m_flags.m_needsLayout = true;
+
+    bool isRootElement = node && node->isHTMLHtmlElement();
+    m_flags.m_isRootElement = isRootElement;
+
+    m_flags.m_isLeftMBPCleared = false;
+    m_flags.m_isRightMBPCleared = false;
+
+    m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
+    m_flags.m_isPositioned = false;
+    m_flags.m_isEstablishesStackingContext = isRootElement;
+    m_flags.m_needsGraphicsBuffer = false;
+    m_flags.m_isNormalFlow = true;
+    m_flags.m_isFloating = false;
+
+    computeStyleFlags();
+}
+
+bool Frame::isOverflowPropagatedToViewPort()
+{
+    if (m_node && m_node->isHTMLHtmlElement()) {
+        HTMLBodyElement* bodyElement = m_node->document()->body();
+        if (bodyElement) {
+            return bodyElement->style()->overflow() != style()->overflow();
+        }
+        return style()->overflow() != OverflowValue::VisibleOverflow;
+    }
+
+    if (m_node && m_node->isHTMLBodyElement() &&
+        m_node->document()->rootElement()) {
+        HTMLHtmlElement* rootElement = m_node->document()->rootElement();
+        return rootElement->style()->overflow() != style()->overflow();
+    }
+
+    return false;
+}
+
+ComputedStyle* Frame::style()
+{
+    if (UNLIKELY(isAnonymous())) {
+        return m_styleWhenNodeIsAnonymous;
+    } else {
+        return node()->style();
+    }
+}
+
 Frame* Frame::enclosingFirstLineStyle()
 {
     STARFISH_ASSERT(isFrameBlockBox());
@@ -732,9 +787,25 @@ ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
     return Frame::style();
 }
 
+void Frame::updateComputedStyle(Node* refNode)
+{
+    STARFISH_ASSERT(isAnonymous());
+    STARFISH_ASSERT(m_styleWhenNodeIsAnonymous);
+    ComputedStyle* newStyle = new ComputedStyle(refNode->style());
+    newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
+    newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
+    newStyle->arrangeStyleValues(refNode->style(), refNode);
+    m_styleWhenNodeIsAnonymous = newStyle;
+}
+
+bool Frame::isDocumentElement() const
+{
+    return m_node->document() == m_node;
+}
+
 Element* Frame::offsetParent()
 {
-    if (isDocumentElement() || isBodyElement()) {
+    if (isDocumentElement() || m_node->isHTMLBodyElement()) {
         return nullptr;
     }
 
@@ -751,12 +822,17 @@ Element* Frame::offsetParent()
             break;
         }
 
-        if (node->isElement() && node->asElement()->isHTMLElement() &&
-            node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        if (node->isHTMLBodyElement()) {
             break;
         }
     }
 
     return node && node->isElement() ? node->asElement() : nullptr;
+}
+
+Document* Frame::document()
+{
+    STARFISH_ASSERT(m_node || parent());
+    return m_node ? m_node->document() : parent()->document();
 }
 }

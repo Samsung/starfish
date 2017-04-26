@@ -18,7 +18,6 @@
 #define __StarFish__
 
 #include "StarFishConfig.h"
-#include "platform/canvas/font/Font.h"
 
 namespace StarFish {
 

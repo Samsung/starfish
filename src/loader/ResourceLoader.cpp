@@ -16,6 +16,8 @@
 
 #include "StarFish.h"
 #include "dom/Document.h"
+#include "dom/Event.h"
+#include "dom/HTMLImageElement.h"
 #include "loader/ResourceLoader.h"
 #include "layout/FrameReplacedImage.h"
 #include "platform/network/NetworkRequest.h"
@@ -203,11 +205,7 @@ static void traverseChildFrames(
 
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
         String* u = URL::getURLString(c->node()->document()->urlString(),
-                                      c->node()
-                                          ->asElement()
-                                          ->asHTMLElement()
-                                          ->asHTMLImageElement()
-                                          ->src());
+                                      c->node()->asHTMLImageElement()->src());
         currentUsingResourcePaths.insert(u->utf8Data());
     }
 

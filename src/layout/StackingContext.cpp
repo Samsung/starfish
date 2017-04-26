@@ -14,12 +14,13 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-
+#include "dom/Document.h"
+#include "dom/Node.h"
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
 #include "layout/StackingContext.h"
 #include "platform/canvas/Canvas.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
