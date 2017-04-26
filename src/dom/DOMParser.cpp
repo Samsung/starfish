@@ -164,11 +164,11 @@ Document* DOMParser::parseFromString(String* str, String* type)
                                               String::fromUTF8("text/html"));
         }
     } else {
-        throw new DOMException(starFish()->window()->scriptBindingInstance(),
-                               DOMException::TYPE_ERR,
-                               "Failed to execute 'parseFromString' on "
-                               "'DOMParser': The provided value is not a valid "
-                               "enum value of type SupportedType.");
+        THROW_DOM_EXCEPTION(
+            starFish()->window()->scriptBindingInstance(),
+            DOMException::TYPE_ERR,
+            FAILED_TO_EXECUTE_BECUASE_ARG_TYPE_MISMATCH_WITH_ENUM,
+            "parseFromString", "DOMParser", "SupportedType");
     }
 }
 }

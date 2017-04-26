@@ -126,20 +126,28 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
                            : (std::isnan(__number) ? 0 : (uint32_t)__number); \
     }
 
-// TypeError: Illegal invocation
+#define _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
+    throw new DOMException(INSTANCE, ERR_CODE, MSG);  \
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+
 #define _THROW_EXCEPTION(MSG)                               \
     ESVMInstance::currentInstance()->throwError(            \
         ESValue(TypeError::create(ESString::create(MSG)))); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
+// TypeError: Illegal invocation
 #define THROW_ILLEGAL_INVOCATION() _THROW_EXCEPTION("Illegal invocation");
 
-#define THROW_EXCEPTION(TEMPLATE_STR, ...)                      \
-    {                                                           \
-        size_t siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
-        char errorMsg[siz + 1];                                 \
-        snprintf(errorMsg, siz, TEMPLATE_STR, __VA_ARGS__);     \
-        _THROW_EXCEPTION(errorMsg);                             \
+#define THROW_EXCEPTION(TEMPLATE_STR, ...)                \
+    {                                                     \
+        COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, __VA_ARGS__); \
+        _THROW_EXCEPTION(errorMsg);                       \
+    }
+
+#define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, TEMPLATE_STR, ...) \
+    {                                                              \
+        COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, __VA_ARGS__);          \
+        _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, errorMsg);        \
     }
 
 #define _CHECK_TYPEOF(v, type)                                              \

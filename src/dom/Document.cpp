@@ -1166,11 +1166,10 @@ HTMLBodyElement* Document::body()
 void Document::setBody(HTMLElement* element)
 {
     if (!element->isHTMLBodyElement()) {
-        throw new DOMException(m_document->scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
-                               "Failed to set the 'body' property on "
-                               "'Document'. It must be either a 'BODY' or "
-                               "'FRAMESET' element.");
+        THROW_DOM_EXCEPTION(m_document->window()->scriptBindingInstance(),
+                            DOMException::HIERARCHY_REQUEST_ERR,
+                            FAILED_TO_SET_PROPERTY_BECUASE_ARG_TYPE_MISMATCH_2,
+                            "body", "Document", "BODY", "FRAMESET");
     }
 
     HTMLBodyElement* body = this->body();
