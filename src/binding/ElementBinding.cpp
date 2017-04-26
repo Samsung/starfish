@@ -335,9 +335,9 @@ static ESValue setAttributeFunction(ESVMInstance* instance)
             String* keyStr = toBrowserString(key);
             if (!QualifiedName::checkNameProductionRule(keyStr,
                                                         keyStr->length())) {
-                throw new DOMException(
-                    sf->window()->scriptBindingInstance(),
-                    DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+                throw new DOMException(sf->window()->scriptBindingInstance(),
+                                       DOMException::INVALID_CHARACTER_ERR,
+                                       nullptr);
             }
 
             String* attrVal = toBrowserString(val);
@@ -462,6 +462,7 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESNull);
 }
 
+// TODO Move throw DOM exception code into querySelector()
 static ESValue querySelectorFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -509,6 +510,7 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESNull);
 }
 
+// TODO Move throw DOM exception code into querySelectorAll()
 static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
     ESValue thisValue =

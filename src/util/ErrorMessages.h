@@ -34,19 +34,27 @@ static const char* FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH =
     "Failed to execute '%s' on '%s': needs %s parameter, but only %s present.";
 static const char* FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH =
     "Failed to execute '%s' on '%s': parameter %d is not of type '%s'.";
+static const char* FAILED_TO_EXECUTE_BECUASE_ARG_TYPE_MISMATCH_WITH_ENUM =
+    "Failed to execute '%s' on '%s': The provided value is not a valid "
+    "enum value of type %s.";
 static const char* FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND =
     "Failed to execute '%s' on '%s': No function was found that matched the "
     "signature provided.";
+static const char* FAILED_TO_EXECUTE_QUERY_SELECTOR_BECAUSE_IT_IS_EMPTY =
+    "Failed to execute '%s' on '%s': The provided selector is empty.";
 static const char* FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE =
     "Failed to set the '%s' property on '%s': The provided double value is "
     "non-finite.";
+static const char* FAILED_TO_SET_PROPERTY_BECUASE_ARG_TYPE_MISMATCH_2 =
+    "Failed to set the '%s' property on '%s'. It must be either a '%s' or '%s' "
+    "element.";
 
 size_t bufferSize(std::initializer_list<const char*> args);
 
 #define COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, ...)            \
     size_t siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
     char errorMsg[siz + 1];                                 \
-    snprintf(errorMsg, siz, TEMPLATE_STR, __VA_ARGS__)
+    snprintf(errorMsg, siz + 1, TEMPLATE_STR, __VA_ARGS__)
 }
 
 #endif
