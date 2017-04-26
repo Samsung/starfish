@@ -68,8 +68,8 @@ static ESValue getPropertyValueFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "getPropertyValue", "CSSStyleDeclaration", "1", buffer);
     }
@@ -94,8 +94,8 @@ static ESValue setPropertyFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "setProperty", "CSSStyleDeclaration", "2", buffer);
     }
