@@ -34,12 +34,12 @@ FocusEventInit::FocusEventInit(bool bubbles, bool cancelable)
 {
 }
 
-Node* FocusEventInit::relatedTarget() const
+EventTarget* FocusEventInit::relatedTarget() const
 {
     return m_relatedTarget;
 }
 
-void FocusEventInit::setRelatedTarget(Node* relatedTarget)
+void FocusEventInit::setRelatedTarget(EventTarget* relatedTarget)
 {
     m_relatedTarget = relatedTarget;
 }

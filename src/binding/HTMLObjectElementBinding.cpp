@@ -15,19 +15,44 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLObjectElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+// Implement for functions
 ESFunctionObject* bindingHTMLObjectElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLObjectElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLObjectElementString = ESString::create("HTMLObjectElement");
+    ESFunctionObject* HTMLObjectElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLObjectElementString, 0, true, true);
+    HTMLObjectElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLObjectElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->forceNonVectorHiddenClass(false);
+    HTMLObjectElementFunction->protoType()
+        .asESPointer()
+        ->asESObject()
+        ->set__proto__(
+            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLObjectElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
+    ESObject* HTMLObjectElementPrototypeObj =
+        HTMLObjectElementFunction->protoType().asESPointer()->asESObject();
+
+    // Bind for attributes
+    // Bind for functions
     return HTMLObjectElementFunction;
 }
 }

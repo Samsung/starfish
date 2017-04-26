@@ -29,11 +29,11 @@ public:
     FocusEventInit(bool bubbles);
     FocusEventInit(bool bubbles, bool cancelable);
 
-    Node* relatedTarget() const;
-    void setRelatedTarget(Node* relatedTarget);
+    EventTarget* relatedTarget() const;
+    void setRelatedTarget(EventTarget* relatedTarget);
 
 private:
-    Node* m_relatedTarget;
+    EventTarget* m_relatedTarget;
 };
 
 class FocusEvent : public UIEvent {

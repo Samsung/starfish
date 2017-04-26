@@ -15,8 +15,8 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLSpanElement.h"
 
 namespace StarFish {
@@ -30,7 +30,7 @@ ESFunctionObject* bindingHTMLSpanElement(
     ESString* HTMLSpanElementString = ESString::create("HTMLSpanElement");
     ESFunctionObject* HTMLSpanElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLSpanElementString, 1, true, true);
+                                 HTMLSpanElementString, 0, true, true);
     HTMLSpanElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,

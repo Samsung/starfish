@@ -84,6 +84,9 @@ size_t HTMLCollection::length() const
 
 Element* HTMLCollection::item(unsigned long index)
 {
+    if (index >= length()) {
+        return nullptr;
+    }
     return m_nodeListImpl.item(index)->asElement();
 }
 

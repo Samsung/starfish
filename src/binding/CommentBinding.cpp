@@ -15,46 +15,49 @@
  */
 
 #include "StarFishConfig.h"
+#include "ScriptBindingInstance.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/Comment.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-static ESValue commentFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue commentConstructor(ESVMInstance* instance)
 {
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    if (arg0.isUndefined()) {
-        arg0 = ESString::create("");
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "Comment");
     }
-    String* data0 = String::fromUTF8(arg0.toString()->utf8Data());
-    Document* document = fetchDocument(instance);
-    Comment* comment = new Comment(document, data0);
-
-    return comment->scriptValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::fromUTF8("");
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = toBrowserString(arg0);
+    }
+    Comment* result = nullptr;
+    Document* callWith = fetchDocument(instance);
+    // Call native function (nargs: 1)
+    result = new Comment(callWith, value0);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* CommentString = ESString::create("Comment");
     ESFunctionObject* CommentFunction = ESFunctionObject::create(
-        nullptr, commentFunction, CommentString, 0, true, true);
-
+        nullptr, commentConstructor, CommentString, 0, true, true);
     CommentFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-
     CommentFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-
     CommentFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
-
     CommentFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData());
 
