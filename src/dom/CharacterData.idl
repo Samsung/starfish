@@ -3,7 +3,7 @@
 [Exposed=Window]
 interface CharacterData : Node {
   [TreatNullAs=EmptyString] attribute DOMString data;
-  [CustomGetter] readonly attribute unsigned long length;
+  [Custom=Getter] readonly attribute unsigned long length;
   [Unimplemented] DOMString substringData(unsigned long offset, unsigned long count);
   [Unimplemented] void appendData(DOMString data);
   [Unimplemented] void insertData(unsigned long offset, DOMString data);

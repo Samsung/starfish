@@ -9,7 +9,7 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler oncanplay;
   [Unimplemented] attribute EventHandler oncanplaythrough;
   [Unimplemented] attribute EventHandler onchange;
-  [CustomGetter, CustomSetter] attribute EventHandler onclick;
+  [Custom=(Getter, Setter)] attribute EventHandler onclick;
   [Unimplemented] attribute EventHandler onclose;
   [Unimplemented] attribute EventHandler oncontextmenu;
   [Unimplemented] attribute EventHandler oncuechange;
@@ -25,14 +25,14 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler ondurationchange;
   [Unimplemented] attribute EventHandler onemptied;
   [Unimplemented] attribute EventHandler onended;
-  [CustomGetter, CustomSetter] attribute OnErrorEventHandler onerror;
-  [CustomGetter, CustomSetter] attribute EventHandler onfocus;
+  [Custom=(Getter, Setter)] attribute OnErrorEventHandler onerror;
+  [Custom=(Getter, Setter)] attribute EventHandler onfocus;
   [Unimplemented] attribute EventHandler oninput;
   [Unimplemented] attribute EventHandler oninvalid;
-  [CustomGetter, CustomSetter] attribute EventHandler onkeydown;
+  [Custom=(Getter, Setter)] attribute EventHandler onkeydown;
   [Unimplemented] attribute EventHandler onkeypress;
-  [CustomGetter, CustomSetter] attribute EventHandler onkeyup;
-  [CustomGetter, CustomSetter] attribute EventHandler onload;
+  [Custom=(Getter, Setter)] attribute EventHandler onkeyup;
+  [Custom=(Getter, Setter)] attribute EventHandler onload;
   [Unimplemented] attribute EventHandler onloadeddata;
   [Unimplemented] attribute EventHandler onloadedmetadata;
   [Unimplemented] attribute EventHandler onloadend;
@@ -42,7 +42,7 @@ interface GlobalEventHandlers {
   [Unimplemented, LenientThis] attribute EventHandler onmouseleave;
   [Unimplemented] attribute EventHandler onmousemove;
   [Unimplemented] attribute EventHandler onmouseout;
-  [CustomGetter, CustomSetter] attribute EventHandler onmouseover;
+  [Custom=(Getter, Setter)] attribute EventHandler onmouseover;
   [Unimplemented] attribute EventHandler onmouseup;
   [Unimplemented] attribute EventHandler onwheel;
   [Unimplemented] attribute EventHandler onpause;
