@@ -113,7 +113,7 @@ static ESValue onenterGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
 
-    return originalObj->onenterEventListener();
+    return originalObj->onenter();
 }
 
 static ESValue onenterSetterFunction(ESVMInstance* instance)
@@ -122,7 +122,7 @@ static ESValue onenterSetterFunction(ESVMInstance* instance)
 
     ESValue v = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnenterEventListener(v);
+    originalObj->setOnenter(v);
 
     return ESValue();
 }
@@ -131,7 +131,7 @@ static ESValue onexitGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
 
-    return originalObj->onexitEventListener();
+    return originalObj->onexit();
 }
 
 static ESValue onexitSetterFunction(ESVMInstance* instance)
@@ -140,7 +140,7 @@ static ESValue onexitSetterFunction(ESVMInstance* instance)
 
     ESValue v = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnexitEventListener(v);
+    originalObj->setOnexit(v);
 
     return ESValue();
 }

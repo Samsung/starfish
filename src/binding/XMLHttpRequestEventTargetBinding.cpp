@@ -28,7 +28,7 @@ static ESValue onloadstartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onloadstartEventListener();
+    return originalObj->onloadstart();
 }
 
 static ESValue onloadstartSetterFunction(ESVMInstance* instance)
@@ -37,7 +37,7 @@ static ESValue onloadstartSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadstartEventListener(arg0);
+    originalObj->setOnloadstart(arg0);
 
     return ESValue();
 }
@@ -46,7 +46,7 @@ static ESValue onprogressGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onprogressEventListener();
+    return originalObj->onprogress();
 }
 
 static ESValue onprogressSetterFunction(ESVMInstance* instance)
@@ -55,7 +55,7 @@ static ESValue onprogressSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnprogressEventListener(arg0);
+    originalObj->setOnprogress(arg0);
 
     return ESValue();
 }
@@ -64,7 +64,7 @@ static ESValue onabortGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onabortEventListener();
+    return originalObj->onabort();
 }
 
 static ESValue onabortSetterFunction(ESVMInstance* instance)
@@ -73,7 +73,7 @@ static ESValue onabortSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnabortEventListener(arg0);
+    originalObj->setOnabort(arg0);
 
     return ESValue();
 }
@@ -82,7 +82,7 @@ static ESValue onerrorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onerrorEventListener();
+    return originalObj->onerror();
 }
 
 static ESValue onerrorSetterFunction(ESVMInstance* instance)
@@ -91,7 +91,7 @@ static ESValue onerrorSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnerrorEventListener(arg0);
+    originalObj->setOnerror(arg0);
 
     return ESValue();
 }
@@ -100,7 +100,7 @@ static ESValue onloadGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onloadEventListener();
+    return originalObj->onload();
 }
 
 static ESValue onloadSetterFunction(ESVMInstance* instance)
@@ -109,7 +109,7 @@ static ESValue onloadSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadEventListener(arg0);
+    originalObj->setOnload(arg0);
 
     return ESValue();
 }
@@ -118,7 +118,7 @@ static ESValue ontimeoutGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->ontimeoutEventListener();
+    return originalObj->ontimeout();
 }
 
 static ESValue ontimeoutSetterFunction(ESVMInstance* instance)
@@ -127,7 +127,7 @@ static ESValue ontimeoutSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOntimeoutEventListener(arg0);
+    originalObj->setOntimeout(arg0);
 
     return ESValue();
 }
@@ -136,7 +136,7 @@ static ESValue onloadendGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
 
-    return originalObj->onloadendEventListener();
+    return originalObj->onloadend();
 }
 
 static ESValue onloadendSetterFunction(ESVMInstance* instance)
@@ -145,7 +145,7 @@ static ESValue onloadendSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadendEventListener(arg0);
+    originalObj->setOnloadend(arg0);
 
     return ESValue();
 }

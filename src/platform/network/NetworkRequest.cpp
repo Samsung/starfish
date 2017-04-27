@@ -31,7 +31,8 @@ namespace StarFish {
 
 class ActiveNetworkRequestTracker : public NetworkRequestClient {
 public:
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    virtual void onProgressEvent(NetworkRequest* request,
+                                 bool isExplicitAction) override
     {
         if (request->progressState() == NetworkRequest::LOADSTART) {
             request->document()->m_activeNetworkRequests.push_back(request);

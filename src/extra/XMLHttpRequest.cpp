@@ -32,7 +32,6 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, error);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, load);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
-DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, readystatechange);
 
 XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
     : XMLHttpRequestEventTarget(document)
@@ -88,6 +87,8 @@ static NetworkRequest::MethodType toMethodType(String* input)
     }
     return NetworkRequest::UNKNOWN_METHOD;
 }
+
+DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
 
 void XMLHttpRequest::open(String* method, String* url)
 {

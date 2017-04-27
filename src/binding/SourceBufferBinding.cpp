@@ -156,7 +156,7 @@ static ESValue onupdatestartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-    return originalObj->onupdatestartEventListener();
+    return originalObj->onupdatestart();
 }
 
 static ESValue onupdatestartSetterFunction(ESVMInstance* instance)
@@ -165,7 +165,7 @@ static ESValue onupdatestartSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnupdatestartEventListener(arg0);
+    originalObj->setOnupdatestart(arg0);
 
     return ESValue();
 }
@@ -174,7 +174,7 @@ static ESValue onupdateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-    return originalObj->onupdateEventListener();
+    return originalObj->onupdate();
 }
 
 static ESValue onupdateSetterFunction(ESVMInstance* instance)
@@ -183,7 +183,7 @@ static ESValue onupdateSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnupdateEventListener(arg0);
+    originalObj->setOnupdate(arg0);
 
     return ESValue();
 }
@@ -192,7 +192,7 @@ static ESValue onupdateendGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-    return originalObj->onupdateendEventListener();
+    return originalObj->onupdateend();
 }
 
 static ESValue onupdateendSetterFunction(ESVMInstance* instance)
@@ -201,7 +201,7 @@ static ESValue onupdateendSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnupdateendEventListener(arg0);
+    originalObj->setOnupdateend(arg0);
 
     return ESValue();
 }
@@ -210,7 +210,7 @@ static ESValue onerrorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-    return originalObj->onerrorEventListener();
+    return originalObj->onerror();
 }
 
 static ESValue onerrorSetterFunction(ESVMInstance* instance)
@@ -219,7 +219,7 @@ static ESValue onerrorSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnerrorEventListener(arg0);
+    originalObj->setOnerror(arg0);
 
     return ESValue();
 }
@@ -228,7 +228,7 @@ static ESValue onabortGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
 
-    return originalObj->onabortEventListener();
+    return originalObj->onabort();
 }
 
 static ESValue onabortSetterFunction(ESVMInstance* instance)
@@ -237,7 +237,7 @@ static ESValue onabortSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnabortEventListener(arg0);
+    originalObj->setOnabort(arg0);
 
     return ESValue();
 }

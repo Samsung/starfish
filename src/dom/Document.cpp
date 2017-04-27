@@ -1031,11 +1031,6 @@ String* Document::localName()
     return window()->starFish()->staticStrings()->m_documentLocalName.string();
 }
 
-DEFINE_EVENT_LISTENER(Document, click);
-DEFINE_EVENT_LISTENER(Document, mouseover);
-DEFINE_EVENT_LISTENER(Document, focus);
-DEFINE_EVENT_LISTENER(Document, keydown);
-
 Element* Document::getElementById(String* id)
 {
     if (id->length() == 0) {
@@ -1312,4 +1307,10 @@ bool Document::hasFocus() const
     // TODO
     return true;
 }
+
+DEFINE_EVENT_LISTENER(Document, click);
+DEFINE_EVENT_LISTENER(Document, focus);
+DEFINE_EVENT_LISTENER(Document, keydown);
+DEFINE_EVENT_LISTENER(Document, keyup);
+DEFINE_EVENT_LISTENER(Document, mouseover);
 }

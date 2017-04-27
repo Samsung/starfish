@@ -186,74 +186,74 @@ static ESValue childElementCountGetterFunction(ESVMInstance* instance)
     return ESValue(v);
 }
 
-static ESValue onClickGetterFunction(ESVMInstance* instance)
+static ESValue onclickGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
-    return originalObj->onclickEventListener();
+    return originalObj->onclick();
 }
 
-static ESValue onClickSetterFunction(ESVMInstance* instance)
+static ESValue onclickSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnclickEventListener(arg0);
+    originalObj->setOnclick(arg0);
 
     return ESValue();
 }
 
-static ESValue onMouseOverGetterFunction(ESVMInstance* instance)
+static ESValue onmouseoverGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
-    return originalObj->onmouseoverEventListener();
+    return originalObj->onmouseover();
 }
 
-static ESValue onMouseOverSetterFunction(ESVMInstance* instance)
+static ESValue onmouseoverSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnmouseoverEventListener(arg0);
+    originalObj->setOnmouseover(arg0);
 
     return ESValue();
 }
 
-static ESValue onFocusGetterFunction(ESVMInstance* instance)
+static ESValue onfocusGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
-    return originalObj->onfocusEventListener();
+    return originalObj->onfocus();
 }
 
-static ESValue onFocusSetterFunction(ESVMInstance* instance)
+static ESValue onfocusSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnfocusEventListener(arg0);
+    originalObj->setOnfocus(arg0);
 
     return ESValue();
 }
 
-static ESValue onKeyDownGetterFunction(ESVMInstance* instance)
+static ESValue onkeydownGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
-    return originalObj->onkeydownEventListener();
+    return originalObj->onkeydown();
 }
 
-static ESValue onKeyDownSetterFunction(ESVMInstance* instance)
+static ESValue onkeydownSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnkeydownEventListener(arg0);
+    originalObj->setOnkeydown(arg0);
 
     return ESValue();
 }
@@ -762,23 +762,23 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onclick"), onClickGetterFunction,
-        onClickSetterFunction);
+        ESString::create("onclick"), onclickGetterFunction,
+        onclickSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onmouseover"), onMouseOverGetterFunction,
-        onMouseOverSetterFunction);
+        ESString::create("onmouseover"), onmouseoverGetterFunction,
+        onmouseoverSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onfocus"), onFocusGetterFunction,
-        onFocusSetterFunction);
+        ESString::create("onfocus"), onfocusGetterFunction,
+        onfocusSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeydown"), onKeyDownGetterFunction,
-        onKeyDownSetterFunction);
+        ESString::create("onkeydown"), onkeydownGetterFunction,
+        onkeydownSetterFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),

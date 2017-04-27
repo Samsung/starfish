@@ -42,7 +42,7 @@ static ESValue onreadystatechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
 
-    return originalObj->onreadystatechangeEventListener();
+    return originalObj->onreadystatechange();
 }
 
 static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
@@ -51,7 +51,7 @@ static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
 
     ESValue v = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnreadystatechangeEventListener(v);
+    originalObj->setOnreadystatechange(v);
 
     return ESValue();
 }

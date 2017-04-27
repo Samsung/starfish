@@ -47,7 +47,6 @@ public:
     DECLARE_EVENT_LISTENER(load);
     DECLARE_EVENT_LISTENER(timeout);
     DECLARE_EVENT_LISTENER(loadend);
-    DECLARE_EVENT_LISTENER(readystatechange);
 };
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,
@@ -102,8 +101,11 @@ public:
     void setRequestHeader(String* h, String* c);
 
     virtual void onProgressEvent(NetworkRequest* request,
-                                 bool isExplicitAction);
-    virtual void onReadyStateChange(NetworkRequest* request, bool fromExplicit);
+                                 bool isExplicitAction) override;
+    virtual void onReadyStateChange(NetworkRequest* request,
+                                    bool fromExplicit) override;
+
+    DECLARE_EVENT_LISTENER(readystatechange);
 
 protected:
     void initResponseData();

@@ -28,7 +28,7 @@ ESValue onprogressHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onprogressEventListener();
+    return originalObj->onprogress();
 }
 
 ESValue onprogressHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -37,7 +37,7 @@ ESValue onprogressHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnprogressEventListener(arg0);
+    originalObj->setOnprogress(arg0);
 
     return ESValue();
 }
@@ -46,7 +46,7 @@ ESValue onsuspendHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onsuspendEventListener();
+    return originalObj->onsuspend();
 }
 
 ESValue onsuspendHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -55,7 +55,7 @@ ESValue onsuspendHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnsuspendEventListener(arg0);
+    originalObj->setOnsuspend(arg0);
 
     return ESValue();
 }
@@ -64,7 +64,7 @@ ESValue onabortHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onabortEventListener();
+    return originalObj->onabort();
 }
 
 ESValue onabortHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -73,7 +73,7 @@ ESValue onabortHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnabortEventListener(arg0);
+    originalObj->setOnabort(arg0);
 
     return ESValue();
 }
@@ -82,7 +82,7 @@ ESValue onemptiedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onemptiedEventListener();
+    return originalObj->onemptied();
 }
 
 ESValue onemptiedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -91,7 +91,7 @@ ESValue onemptiedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnemptiedEventListener(arg0);
+    originalObj->setOnemptied(arg0);
 
     return ESValue();
 }
@@ -100,7 +100,7 @@ ESValue onstalledHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onstalledEventListener();
+    return originalObj->onstalled();
 }
 
 ESValue onstalledHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -109,7 +109,7 @@ ESValue onstalledHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnstalledEventListener(arg0);
+    originalObj->setOnstalled(arg0);
 
     return ESValue();
 }
@@ -118,7 +118,7 @@ ESValue onloadedmetadataHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onloadedmetadataEventListener();
+    return originalObj->onloadedmetadata();
 }
 
 ESValue onloadedmetadataHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -127,7 +127,7 @@ ESValue onloadedmetadataHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadedmetadataEventListener(arg0);
+    originalObj->setOnloadedmetadata(arg0);
 
     return ESValue();
 }
@@ -136,7 +136,7 @@ ESValue onloadeddataHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onloadeddataEventListener();
+    return originalObj->onloadeddata();
 }
 
 ESValue onloadeddataHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -145,7 +145,7 @@ ESValue onloadeddataHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadeddataEventListener(arg0);
+    originalObj->setOnloadeddata(arg0);
 
     return ESValue();
 }
@@ -154,7 +154,7 @@ ESValue onloadstartHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onloadstartEventListener();
+    return originalObj->onloadstart();
 }
 
 ESValue onloadstartHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -163,7 +163,7 @@ ESValue onloadstartHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadstartEventListener(arg0);
+    originalObj->setOnloadstart(arg0);
 
     return ESValue();
 }
@@ -172,7 +172,7 @@ ESValue oncanplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->oncanplayEventListener();
+    return originalObj->oncanplay();
 }
 
 ESValue oncanplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -181,7 +181,7 @@ ESValue oncanplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOncanplayEventListener(arg0);
+    originalObj->setOncanplay(arg0);
 
     return ESValue();
 }
@@ -190,7 +190,7 @@ ESValue oncanplaythroughHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->oncanplayEventListener();
+    return originalObj->oncanplay();
 }
 
 ESValue oncanplaythroughHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -199,7 +199,7 @@ ESValue oncanplaythroughHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOncanplaythroughEventListener(arg0);
+    originalObj->setOncanplaythrough(arg0);
 
     return ESValue();
 }
@@ -208,7 +208,7 @@ ESValue onplayingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onplayingEventListener();
+    return originalObj->onplaying();
 }
 
 ESValue onplayingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -217,7 +217,7 @@ ESValue onplayingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnplayingEventListener(arg0);
+    originalObj->setOnplaying(arg0);
 
     return ESValue();
 }
@@ -226,7 +226,7 @@ ESValue onwaitingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onwaitingEventListener();
+    return originalObj->onwaiting();
 }
 
 ESValue onwaitingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -235,7 +235,7 @@ ESValue onwaitingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnwaitingEventListener(arg0);
+    originalObj->setOnwaiting(arg0);
 
     return ESValue();
 }
@@ -244,7 +244,7 @@ ESValue onseekingHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onseekingEventListener();
+    return originalObj->onseeking();
 }
 
 ESValue onseekingHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -253,7 +253,7 @@ ESValue onseekingHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnseekingEventListener(arg0);
+    originalObj->setOnseeking(arg0);
 
     return ESValue();
 }
@@ -262,7 +262,7 @@ ESValue onseekedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onseekedEventListener();
+    return originalObj->onseeked();
 }
 
 ESValue onseekedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -271,7 +271,7 @@ ESValue onseekedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnseekedEventListener(arg0);
+    originalObj->setOnseeked(arg0);
 
     return ESValue();
 }
@@ -280,7 +280,7 @@ ESValue onendedHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onendedEventListener();
+    return originalObj->onended();
 }
 
 ESValue onendedHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -289,7 +289,7 @@ ESValue onendedHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnendedEventListener(arg0);
+    originalObj->setOnended(arg0);
 
     return ESValue();
 }
@@ -298,7 +298,7 @@ ESValue ondurationchangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->ondurationchangeEventListener();
+    return originalObj->ondurationchange();
 }
 
 ESValue ondurationchangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -307,7 +307,7 @@ ESValue ondurationchangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOndurationchangeEventListener(arg0);
+    originalObj->setOndurationchange(arg0);
 
     return ESValue();
 }
@@ -316,7 +316,7 @@ ESValue ontimeupdateHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->ontimeupdateEventListener();
+    return originalObj->ontimeupdate();
 }
 
 ESValue ontimeupdateHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -325,7 +325,7 @@ ESValue ontimeupdateHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOntimeupdateEventListener(arg0);
+    originalObj->setOntimeupdate(arg0);
 
     return ESValue();
 }
@@ -334,7 +334,7 @@ ESValue onplayHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onplayEventListener();
+    return originalObj->onplay();
 }
 
 ESValue onplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -343,7 +343,7 @@ ESValue onplayHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnplayEventListener(arg0);
+    originalObj->setOnplay(arg0);
 
     return ESValue();
 }
@@ -352,7 +352,7 @@ ESValue onpauseHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onpauseEventListener();
+    return originalObj->onpause();
 }
 
 ESValue onpauseHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -361,7 +361,7 @@ ESValue onpauseHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnpauseEventListener(arg0);
+    originalObj->setOnpause(arg0);
 
     return ESValue();
 }
@@ -370,7 +370,7 @@ ESValue onratechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onratechangeEventListener();
+    return originalObj->onratechange();
 }
 
 ESValue onratechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -379,7 +379,7 @@ ESValue onratechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnratechangeEventListener(arg0);
+    originalObj->setOnratechange(arg0);
 
     return ESValue();
 }
@@ -388,7 +388,7 @@ ESValue onvolumechangeHTMLMediaElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
-    return originalObj->onvolumechangeEventListener();
+    return originalObj->onvolumechange();
 }
 
 ESValue onvolumechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
@@ -397,7 +397,7 @@ ESValue onvolumechangeHTMLMediaElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnvolumechangeEventListener(arg0);
+    originalObj->setOnvolumechange(arg0);
 
     return ESValue();
 }
