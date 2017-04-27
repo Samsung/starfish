@@ -35,8 +35,8 @@ public:
         return new DOMRectList(quads);
     }
 
-    size_t length() const;
-    DOMRect* item(unsigned long index);
+    uint32_t length() const;
+    DOMRect* item(uint32_t index);
 
     virtual void init(ScriptBindingInstance* instance) override;
 

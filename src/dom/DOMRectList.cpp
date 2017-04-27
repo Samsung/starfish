@@ -75,12 +75,12 @@ void DOMRectList::init(ScriptBindingInstance* instance)
                                            enumerateCallbackFunction, true);
 }
 
-size_t DOMRectList::length() const
+uint32_t DOMRectList::length() const
 {
     return m_list.size();
 }
 
-DOMRect* DOMRectList::item(unsigned long index)
+DOMRect* DOMRectList::item(uint32_t index)
 {
     if (index >= m_list.size()) {
         return nullptr;

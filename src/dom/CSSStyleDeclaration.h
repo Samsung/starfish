@@ -132,9 +132,9 @@ public:
     static String* combineBoxString(String* t, String* r, String* b, String* l,
                                     bool* isCombined = nullptr);
 
-    unsigned long length() const;
+    uint32_t length() const;
 
-    String* item(unsigned long index);
+    String* item(uint32_t index);
 
     String* getPropertyValue(String* name);
     void setProperty(String* name, String* value, String* priority);

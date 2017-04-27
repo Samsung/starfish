@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/Event.h"
 
 namespace StarFish {
@@ -62,15 +59,15 @@ EventInit toEventInitFromESValue(ESVMInstance* instance, ESValue& from)
 ESValue toESValueFromEventInit(ESVMInstance* instance, EventInit& from)
 {
     ESObject* result = ESObject::create();
-    // Native value to ESValue (empty when void)
+    // Declare native value (empty when type is void)
     bool value0;
     value0 = from.bubbles();
     result->set(ESString::create("bubbles"), ESValue(value0));
-    // Native value to ESValue (empty when void)
+    // Declare native value (empty when type is void)
     bool value1;
     value1 = from.cancelable();
     result->set(ESString::create("cancelable"), ESValue(value1));
-    // Native value to ESValue (empty when void)
+    // Declare native value (empty when type is void)
     bool value2;
     value2 = from.composed();
     result->set(ESString::create("composed"), ESValue(value2));
