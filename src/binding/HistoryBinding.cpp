@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "extra/History.h"
 
 namespace StarFish {
@@ -28,18 +24,20 @@ using namespace escargot;
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->length();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
 static ESValue stateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
+    // Declare native value (empty when type is void)
     ScriptValue result;
     result = originalObj->state();
-
+    // Return ESValue from native value
     return result;
 }
 
@@ -86,10 +84,10 @@ static ESValue forwardFunction(ESVMInstance* instance)
 static ESValue pushStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-    size_t argc = instance->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
         char buffer[2];
-        snprintf(buffer, 2, "%zu", argc);
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "pushState",
                         "History", "2", buffer);
     }
@@ -97,19 +95,19 @@ static ESValue pushStateFunction(ESVMInstance* instance)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
-    // Handle argument arg0
-    ScriptValue value0;
-    value0 = arg0;
-
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    value1 = toBrowserString(arg1);
-
     // Handle argument arg2
     Nullable<String*> value2;
     if (!arg2.isUndefinedOrNull()) {
         value2 = toBrowserString(arg2);
     }
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    ScriptValue value0;
+    value0 = arg0;
+
     // Call native function (nargs: 3)
     originalObj->pushState(value0, value1, value2);
 
@@ -120,10 +118,10 @@ static ESValue pushStateFunction(ESVMInstance* instance)
 static ESValue replaceStateFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(History);
-    size_t argc = instance->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
         char buffer[2];
-        snprintf(buffer, 2, "%zu", argc);
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "replaceState", "History", "2", buffer);
     }
@@ -131,19 +129,19 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
-    // Handle argument arg0
-    ScriptValue value0;
-    value0 = arg0;
-
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    value1 = toBrowserString(arg1);
-
     // Handle argument arg2
     Nullable<String*> value2;
     if (!arg2.isUndefinedOrNull()) {
         value2 = toBrowserString(arg2);
     }
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    ScriptValue value0;
+    value0 = arg0;
+
     // Call native function (nargs: 3)
     originalObj->replaceState(value0, value1, value2);
 
@@ -153,56 +151,60 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(History, fetchData(scriptBindingInstance)
-                                                 ->m_instance->globalObject()
-                                                 ->objectPrototype());
-    HistoryFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("go"), false, false, false,
-                             ESFunctionObject::create(nullptr, goFunction,
-                                                      ESString::create("go"), 1,
-                                                      false));
+    // Bind for constructor
+    ESString* HistoryString = ESString::create("History");
+    ESFunctionObject* HistoryFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, HistoryString, 0, true, true);
+    ESObject* HistoryPrototypeObj =
+        HistoryFunction->protoType().asESPointer()->asESObject();
+    HistoryFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HistoryPrototypeObj->forceNonVectorHiddenClass(false);
+    HistoryPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                          ->m_instance->globalObject()
+                                          ->objectPrototype());
 
-    HistoryFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("back"), false, false, false,
-                             ESFunctionObject::create(nullptr, backFunction,
-                                                      ESString::create("back"),
-                                                      1, false));
-
-    HistoryFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("forward"), false, false, false,
-            ESFunctionObject::create(nullptr, forwardFunction,
-                                     ESString::create("forward"), 1, false));
-
-    HistoryFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("pushState"), false, false, false,
-            ESFunctionObject::create(nullptr, pushStateFunction,
-                                     ESString::create("pushState"), 1, false));
-
-    HistoryFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("replaceState"), false, false, false,
-            ESFunctionObject::create(nullptr, replaceStateFunction,
-                                     ESString::create("pushState"), 1, false));
-
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HistoryFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        HistoryPrototypeObj, lengthString, lengthGetterFunction, nullptr);
 
+    ESString* stateString = ESString::create("state");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HistoryFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("state"), stateGetterFunction, nullptr);
+        HistoryPrototypeObj, stateString, stateGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* goString = ESString::create("go");
+    ESFunctionObject* goESFn =
+        ESFunctionObject::create(nullptr, goFunction, goString, 0, false);
+    HistoryPrototypeObj->defineDataProperty(goString, true, true, true, goESFn);
+
+    ESString* backString = ESString::create("back");
+    ESFunctionObject* backESFn =
+        ESFunctionObject::create(nullptr, backFunction, backString, 0, false);
+    HistoryPrototypeObj->defineDataProperty(backString, true, true, true,
+                                            backESFn);
+
+    ESString* forwardString = ESString::create("forward");
+    ESFunctionObject* forwardESFn = ESFunctionObject::create(
+        nullptr, forwardFunction, forwardString, 0, false);
+    HistoryPrototypeObj->defineDataProperty(forwardString, true, true, true,
+                                            forwardESFn);
+
+    ESString* pushStateString = ESString::create("pushState");
+    ESFunctionObject* pushStateESFn = ESFunctionObject::create(
+        nullptr, pushStateFunction, pushStateString, 2, false);
+    HistoryPrototypeObj->defineDataProperty(pushStateString, true, true, true,
+                                            pushStateESFn);
+
+    ESString* replaceStateString = ESString::create("replaceState");
+    ESFunctionObject* replaceStateESFn = ESFunctionObject::create(
+        nullptr, replaceStateFunction, replaceStateString, 2, false);
+    HistoryPrototypeObj->defineDataProperty(replaceStateString, true, true,
+                                            true, replaceStateESFn);
+
     return HistoryFunction;
 }
 }

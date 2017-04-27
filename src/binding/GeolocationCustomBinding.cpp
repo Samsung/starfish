@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "platform/location/Geolocation.h"
 #include "platform/location/Geoposition.h"
 #include "platform/location/PositionError.h"

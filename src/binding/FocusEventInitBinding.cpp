@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "platform/window/Window.h"
 #include "dom/EventTarget.h"
 #include "dom/FocusEvent.h"
@@ -45,6 +42,12 @@ FocusEventInit toFocusEventInitFromESValue(ESVMInstance* instance,
     ESValue arg4 =
         from.asESPointer()->asESObject()->get(ESString::create("cancelable"));
     ESValue arg5 =
+        from.asESPointer()->asESObject()->get(ESString::create("composed"));
+    ESValue arg6 =
+        from.asESPointer()->asESObject()->get(ESString::create("bubbles"));
+    ESValue arg7 =
+        from.asESPointer()->asESObject()->get(ESString::create("cancelable"));
+    ESValue arg8 =
         from.asESPointer()->asESObject()->get(ESString::create("composed"));
     FocusEventInit result;
     // Handle argument arg0
@@ -88,6 +91,24 @@ FocusEventInit toFocusEventInitFromESValue(ESVMInstance* instance,
         value5 = arg5.toBoolean();
     }
     result.setComposed(value5);
+    // Handle argument arg6
+    bool value6 = false;
+    if (!arg6.isUndefinedOrNull()) {
+        value6 = arg6.toBoolean();
+    }
+    result.setBubbles(value6);
+    // Handle argument arg7
+    bool value7 = false;
+    if (!arg7.isUndefinedOrNull()) {
+        value7 = arg7.toBoolean();
+    }
+    result.setCancelable(value7);
+    // Handle argument arg8
+    bool value8 = false;
+    if (!arg8.isUndefinedOrNull()) {
+        value8 = arg8.toBoolean();
+    }
+    result.setComposed(value8);
     return result;
 }
 
@@ -128,6 +149,18 @@ ESValue toESValueFromFocusEventInit(ESVMInstance* instance,
     bool value5;
     value5 = from.composed();
     result->set(ESString::create("composed"), ESValue(value5));
+    // Declare native value (empty when type is void)
+    bool value6;
+    value6 = from.bubbles();
+    result->set(ESString::create("bubbles"), ESValue(value6));
+    // Declare native value (empty when type is void)
+    bool value7;
+    value7 = from.cancelable();
+    result->set(ESString::create("cancelable"), ESValue(value7));
+    // Declare native value (empty when type is void)
+    bool value8;
+    value8 = from.composed();
+    result->set(ESString::create("composed"), ESValue(value8));
     return ESValue(result);
 }
 }

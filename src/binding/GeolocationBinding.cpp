@@ -14,32 +14,42 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "platform/location/Geolocation.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for functions
 extern ESValue getCurrentPositionGeolocationFunction(ESVMInstance* instance);
 
 ESFunctionObject* bindingGeolocation(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION(Geolocation, fetchData(scriptBindingInstance)
-                                     ->m_instance->globalObject()
-                                     ->objectPrototype());
+    // Bind for constructor
+    ESString* GeolocationString = ESString::create("Geolocation");
+    ESFunctionObject* GeolocationFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, GeolocationString, 0, true, true);
+    ESObject* GeolocationPrototypeObj =
+        GeolocationFunction->protoType().asESPointer()->asESObject();
+    GeolocationFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    GeolocationPrototypeObj->forceNonVectorHiddenClass(false);
+    GeolocationPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                              ->m_instance->globalObject()
+                                              ->objectPrototype());
 
-    GeolocationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("getCurrentPosition"), true, true,
-                             true,
-                             ESFunctionObject::create(
-                                 nullptr, getCurrentPositionGeolocationFunction,
-                                 ESString::create("getCurrentPosition"), 3));
+    // Bind for functions
+    ESString* getCurrentPositionString = ESString::create("getCurrentPosition");
+    ESFunctionObject* getCurrentPositionGeolocationESFn =
+        ESFunctionObject::create(nullptr, getCurrentPositionGeolocationFunction,
+                                 getCurrentPositionString, 1, false);
+    GeolocationPrototypeObj->defineDataProperty(
+        getCurrentPositionString, true, true, true,
+        getCurrentPositionGeolocationESFn);
+
     return GeolocationFunction;
 }
 }

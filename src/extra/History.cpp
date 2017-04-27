@@ -25,8 +25,8 @@ namespace StarFish {
 History::History(StarFish* starFish)
     : ScriptWrappable(this)
     , m_starFish(starFish)
-    , m_offset(SIZE_MAX)
 {
+    m_offset = std::numeric_limits<uint32_t>::max();
 }
 
 void History::back()
@@ -61,12 +61,12 @@ bool History::navigate(int delta)
 
     if (delta > 0) {
         STARFISH_ASSERT(length() - 1 >= m_offset);
-        if (static_cast<size_t>(delta) > length() - m_offset - 1) {
+        if (static_cast<uint32_t>(delta) > length() - m_offset - 1) {
             return false;
         }
     } else {
         // delta < 0
-        if (m_offset < static_cast<size_t>(-delta)) {
+        if (m_offset < static_cast<uint32_t>(-delta)) {
             return false;
         }
     }
@@ -83,7 +83,7 @@ bool History::navigate(int delta)
     return true;
 }
 
-size_t History::length()
+uint32_t History::length()
 {
     return m_historyEntries.size();
 }
