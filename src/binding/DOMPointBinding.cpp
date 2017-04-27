@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/DOMPoint.h"
 
 namespace StarFish {
@@ -63,7 +60,7 @@ static ESValue dompointConstructor(ESVMInstance* instance)
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->x();
     // Return ESValue from native value
@@ -84,7 +81,7 @@ static ESValue xSetterFunction(ESVMInstance* instance)
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->y();
     // Return ESValue from native value
@@ -105,7 +102,7 @@ static ESValue ySetterFunction(ESVMInstance* instance)
 static ESValue zGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->z();
     // Return ESValue from native value
@@ -126,7 +123,7 @@ static ESValue zSetterFunction(ESVMInstance* instance)
 static ESValue wGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPoint);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->w();
     // Return ESValue from native value
@@ -163,29 +160,25 @@ ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBindingInstance)
         fetchData(scriptBindingInstance)->fnDOMPointReadOnly()->protoType());
     DOMPointFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMPointReadOnly());
-    ESObject* DOMPointObj =
+    ESObject* DOMPointPrototypeObj =
         DOMPointFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* xString = ESString::create("x");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(), xString,
-        xGetterFunction, xSetterFunction);
+        DOMPointPrototypeObj, xString, xGetterFunction, xSetterFunction);
 
     ESString* yString = ESString::create("y");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(), yString,
-        yGetterFunction, ySetterFunction);
+        DOMPointPrototypeObj, yString, yGetterFunction, ySetterFunction);
 
     ESString* zString = ESString::create("z");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(), zString,
-        zGetterFunction, zSetterFunction);
+        DOMPointPrototypeObj, zString, zGetterFunction, zSetterFunction);
 
     ESString* wString = ESString::create("w");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointFunction->protoType().asESPointer()->asESObject(), wString,
-        wGetterFunction, wSetterFunction);
+        DOMPointPrototypeObj, wString, wGetterFunction, wSetterFunction);
 
     // Bind for functions
     return DOMPointFunction;

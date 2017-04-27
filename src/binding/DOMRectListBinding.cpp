@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/DOMRect.h"
 #include "dom/DOMRectList.h"
 
@@ -25,49 +21,78 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue itemFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMRectList);
-    DOMRectList* domRectList =
-        (DOMRectList*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(argValue, idx);
-    if (idx != INVALID_INDEX && idx < domRectList->length()) {
-        DOMRect* rect = domRectList->item(idx);
-        return rect->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMRectList);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+// Implement for functions
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(DOMRectList);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
+                        "DOMRectList", "1", "0");
+    }
+    // Declare native value (empty when type is void)
+    DOMRect* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingDOMRectList(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMRectList,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
-
+    // Bind for constructor
+    ESString* DOMRectListString = ESString::create("DOMRectList");
+    ESFunctionObject* DOMRectListFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, DOMRectListString, 0, true, true);
+    DOMRectListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     DOMRectListFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(ESString::create("item"), true, true, true,
-                             ESFunctionObject::create(NULL, itemFunction,
-                                                      ESString::create("item"),
-                                                      1, false));
+        ->forceNonVectorHiddenClass(false);
+    DOMRectListFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)
+            ->m_instance->globalObject()
+            ->objectPrototype());
+    ESObject* DOMRectListPrototypeObj =
+        DOMRectListFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMRectListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        DOMRectListPrototypeObj, lengthString, lengthGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    DOMRectListPrototypeObj->defineDataProperty(itemString, true, true, true,
+                                                itemESFn);
 
     return DOMRectListFunction;
 }

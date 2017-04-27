@@ -41,10 +41,8 @@ static ESValue itemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
     // Class item getter by index
     if (instance->currentExecutionContext()->argumentCount() < 1) {
-        auto msg = ESString::create(
-            "At least 1 argument required, but only 0 present");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
+                        "HTMLCollection", "1", "0");
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
