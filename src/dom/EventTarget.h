@@ -185,12 +185,12 @@ protected:
     Document* m_document;
 };
 
-#define DECLARE_EVENT_LISTENER(EVENT)       \
-    ScriptValue on##EVENT##EventListener(); \
-    void setOn##EVENT##EventListener(ScriptValue on##EVENT);
+#define DECLARE_EVENT_LISTENER(EVENT) \
+    ScriptValue on##EVENT();          \
+    void setOn##EVENT(ScriptValue on##EVENT);
 
 #define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)                    \
-    ScriptValue EVENT_TARGET::on##EVENT##EventListener()                     \
+    ScriptValue EVENT_TARGET::on##EVENT()                                    \
     {                                                                        \
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
@@ -198,7 +198,7 @@ protected:
         return window->attributeEventListener(attr);                         \
     }                                                                        \
                                                                              \
-    void EVENT_TARGET::setOn##EVENT##EventListener(ScriptValue on##EVENT)    \
+    void EVENT_TARGET::setOn##EVENT(ScriptValue on##EVENT)                   \
     {                                                                        \
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
@@ -211,7 +211,7 @@ protected:
     }
 
 #define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)                           \
-    ScriptValue EVENT_TARGET::on##EVENT##EventListener()                     \
+    ScriptValue EVENT_TARGET::on##EVENT()                                    \
     {                                                                        \
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
@@ -219,7 +219,7 @@ protected:
         return attributeEventListener(attr);                                 \
     }                                                                        \
                                                                              \
-    void EVENT_TARGET::setOn##EVENT##EventListener(ScriptValue on##EVENT)    \
+    void EVENT_TARGET::setOn##EVENT(ScriptValue on##EVENT)                   \
     {                                                                        \
         Window* window = document()->window();                               \
         QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \

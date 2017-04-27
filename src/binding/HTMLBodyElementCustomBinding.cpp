@@ -28,7 +28,7 @@ ESValue onloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    return originalObj->onloadEventListener();
+    return originalObj->onload();
 }
 
 ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance)
@@ -37,7 +37,7 @@ ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadEventListener(arg0);
+    originalObj->setOnload(arg0);
 
     return ESValue();
 }
@@ -46,7 +46,7 @@ ESValue onunloadHTMLBodyElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
 
-    return originalObj->onunloadEventListener();
+    return originalObj->onunload();
 }
 
 ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance)
@@ -55,7 +55,7 @@ ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnunloadEventListener(arg0);
+    originalObj->setOnunload(arg0);
 
     return ESValue();
 }

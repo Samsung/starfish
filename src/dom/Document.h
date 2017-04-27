@@ -190,11 +190,6 @@ public:
     HTMLBodyElement* body();
     void setBody(HTMLElement* element);
 
-    DECLARE_EVENT_LISTENER(click);
-    DECLARE_EVENT_LISTENER(mouseover);
-    DECLARE_EVENT_LISTENER(focus);
-    DECLARE_EVENT_LISTENER(keydown);
-
     /* Page Visibility */
     bool hidden() const;
     String* visibilityState()
@@ -292,6 +287,12 @@ public:
     /* Document-level focus APIs */
     Element* activeElement();
     bool hasFocus() const;
+
+    DECLARE_EVENT_LISTENER(click);
+    DECLARE_EVENT_LISTENER(focus);
+    DECLARE_EVENT_LISTENER(keydown);
+    DECLARE_EVENT_LISTENER(keyup);
+    DECLARE_EVENT_LISTENER(mouseover);
 
 protected:
     // only used in html document builder

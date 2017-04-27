@@ -150,7 +150,7 @@ static ESValue oncuechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
 
-    return originalObj->oncuechangeEventListener();
+    return originalObj->oncuechange();
 }
 
 static ESValue oncuechangeSetterFunction(ESVMInstance* instance)
@@ -159,7 +159,7 @@ static ESValue oncuechangeSetterFunction(ESVMInstance* instance)
 
     ESValue v = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOncuechangeEventListener(v);
+    originalObj->setOncuechange(v);
 
     return ESValue();
 }

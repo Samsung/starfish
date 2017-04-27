@@ -192,7 +192,7 @@ public:
     }
 
     virtual void onReadyStateChange(NetworkRequest* request,
-                                    bool isExplicitAction)
+                                    bool isExplicitAction) override
     {
         if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
             m_resource->didHeaderReceived(
@@ -201,7 +201,8 @@ public:
         }
     }
 
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    virtual void onProgressEvent(NetworkRequest* request,
+                                 bool isExplicitAction) override
     {
         if (request->progressState() == NetworkRequest::LOAD) {
             m_resource->didDataReceived(request->response().data(),

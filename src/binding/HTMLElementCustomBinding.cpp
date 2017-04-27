@@ -28,7 +28,7 @@ ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onclickEventListener();
+    return originalObj->onclick();
 }
 
 ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance)
@@ -37,7 +37,7 @@ ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnclickEventListener(arg0);
+    originalObj->setOnclick(arg0);
 
     return ESValue();
 }
@@ -46,7 +46,7 @@ ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onmouseoverEventListener();
+    return originalObj->onmouseover();
 }
 
 ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance)
@@ -55,7 +55,7 @@ ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnmouseoverEventListener(arg0);
+    originalObj->setOnmouseover(arg0);
 
     return ESValue();
 }
@@ -64,7 +64,7 @@ ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onloadEventListener();
+    return originalObj->onload();
 }
 
 ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance)
@@ -73,7 +73,7 @@ ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnloadEventListener(arg0);
+    originalObj->setOnload(arg0);
 
     return ESValue();
 }
@@ -82,7 +82,7 @@ ESValue onunloadHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onunloadEventListener();
+    return originalObj->onunload();
 }
 
 ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance)
@@ -91,7 +91,7 @@ ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnunloadEventListener(arg0);
+    originalObj->setOnunload(arg0);
 
     return ESValue();
 }
@@ -100,7 +100,7 @@ ESValue onkeydownHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onkeydownEventListener();
+    return originalObj->onkeydown();
 }
 
 ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance)
@@ -109,7 +109,7 @@ ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnkeydownEventListener(arg0);
+    originalObj->setOnkeydown(arg0);
 
     return ESValue();
 }
@@ -118,7 +118,7 @@ ESValue onkeyupHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onkeyupEventListener();
+    return originalObj->onkeyup();
 }
 
 ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance)
@@ -127,7 +127,7 @@ ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnkeyupEventListener(arg0);
+    originalObj->setOnkeyup(arg0);
 
     return ESValue();
 }
@@ -136,7 +136,7 @@ ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onfocusEventListener();
+    return originalObj->onfocus();
 }
 
 ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance)
@@ -145,7 +145,7 @@ ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnfocusEventListener(arg0);
+    originalObj->setOnfocus(arg0);
 
     return ESValue();
 }
@@ -154,7 +154,7 @@ ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onerrorEventListener();
+    return originalObj->onerror();
 }
 
 ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance)
@@ -163,7 +163,7 @@ ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance)
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
 
-    originalObj->setOnerrorEventListener(arg0);
+    originalObj->setOnerror(arg0);
 
     return ESValue();
 }

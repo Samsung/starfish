@@ -263,6 +263,14 @@ public:
     void testStart();
 #endif
 
+    DECLARE_EVENT_LISTENER(click);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(focus);
+    DECLARE_EVENT_LISTENER(keydown);
+    DECLARE_EVENT_LISTENER(keyup);
+    DECLARE_EVENT_LISTENER(load);
+    DECLARE_EVENT_LISTENER(mouseover);
+
 protected:
     void setNeedsRendering()
     {
