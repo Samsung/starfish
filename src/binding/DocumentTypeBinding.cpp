@@ -14,73 +14,98 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DocumentType.h"
-#include "dom/DOMException.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-extern ESValue removeFunction(ESVMInstance* instance);
+// Implement for attributes
 static ESValue nameGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    String* s = originalObj->nodeName();
-    return toJSString(s);
+    GENERATE_THIS_AND_CHECK_TYPE(DocumentType);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->name();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue publicIdGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!nd->isDocumentType()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    String* s = nd->asDocumentType()->publicId();
-    return toJSString(s);
+    GENERATE_THIS_AND_CHECK_TYPE(DocumentType);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->publicId();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue systemIdGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!nd->isDocumentType()) {
-        THROW_ILLEGAL_INVOCATION();
-    }
-    String* s = nd->asDocumentType()->systemId();
-    return toJSString(s);
+    GENERATE_THIS_AND_CHECK_TYPE(DocumentType);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->systemId();
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+// Implement for functions
+static ESValue removeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(DocumentType);
+    // Declare native value (empty when type is void)
+    // Call native function (nargs: 0)
+    originalObj->remove();
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingDocumentType(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        DocumentType, fetchData(scriptBindingInstance)->fnNode());
-
+    // Bind for constructor
+    ESString* DocumentTypeString = ESString::create("DocumentType");
+    ESFunctionObject* DocumentTypeFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, DocumentTypeString, 0, true, true);
+    DocumentTypeFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
     DocumentTypeFunction->protoType()
         .asESPointer()
         ->asESObject()
-        ->defineDataProperty(
-            ESString::create("remove"), false, false, false,
-            ESFunctionObject::create(NULL, removeFunction,
-                                     ESString::create("remove"), 0, false));
+        ->forceNonVectorHiddenClass(false);
+    DocumentTypeFunction->protoType().asESPointer()->asESObject()->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode()->protoType());
+    DocumentTypeFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode());
+    ESObject* DocumentTypePrototypeObj =
+        DocumentTypeFunction->protoType().asESPointer()->asESObject();
 
-    /* 4.7 Interface DocumentType */
-
+    // Bind for attributes
+    ESString* nameString = ESString::create("name");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentTypeFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("name"), nameGetterFunction, nullptr);
+        DocumentTypePrototypeObj, nameString, nameGetterFunction, nullptr);
 
+    ESString* publicIdString = ESString::create("publicId");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentTypeFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("publicId"), publicIdGetterFunction, nullptr);
+        DocumentTypePrototypeObj, publicIdString, publicIdGetterFunction,
+        nullptr);
 
+    ESString* systemIdString = ESString::create("systemId");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentTypeFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("systemId"), systemIdGetterFunction, nullptr);
+        DocumentTypePrototypeObj, systemIdString, systemIdGetterFunction,
+        nullptr);
+
+    // Bind for functions
+    ESString* removeString = ESString::create("remove");
+    ESFunctionObject* removeESFn = ESFunctionObject::create(
+        nullptr, removeFunction, removeString, 0, false);
+    DocumentTypePrototypeObj->defineDataProperty(removeString, true, true, true,
+                                                 removeESFn);
 
     return DocumentTypeFunction;
 }

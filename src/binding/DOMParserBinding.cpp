@@ -13,79 +13,92 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_DOMPARSER
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/Document.h"
+#if defined(STARFISH_ENABLE_DOMPARSER)
 #include "dom/DOMException.h"
+#include "dom/Document.h"
 #include "dom/DOMParser.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-static ESValue domParserFunction(ESVMInstance* instance)
+// Implement for constructor
+static ESValue domparserConstructor(ESVMInstance* instance)
 {
-    StarFish* starFish = fetchStarFish(instance);
-    auto v = new DOMParser(starFish);
-    return v->scriptValue();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMParser");
+    }
+    DOMParser* result = nullptr;
+    StarFish* callWith = fetchStarFish(instance);
+    // Call native function (nargs: 0)
+    result = new DOMParser(callWith);
+    return result->scriptValue();
 }
 
+// Implement for functions
 static ESValue parseFromStringFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMParser);
-
-    size_t argc =
-        instance->currentInstance()->currentExecutionContext()->argumentCount();
-    if (argc < 2) {
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 2) {
         char buffer[2];
-        snprintf(buffer, 2, "%zu", argc);
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "parseFromString", "DOMParser", "2", buffer);
     }
+    // Declare native value (empty when type is void)
+    Document* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Call native function (nargs: 2)
     try {
-        Document* doc = originalObj->parseFromString(
-            toBrowserString(instance->currentInstance()
-                                ->currentExecutionContext()
-                                ->readArgument(0)),
-            toBrowserString(instance->currentInstance()
-                                ->currentExecutionContext()
-                                ->readArgument(1)));
-        return doc->scriptValue();
+        result = originalObj->parseFromString(value0, value1);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* XMLHttpRequest */
-    ESFunctionObject* fnDomParser = ESFunctionObject::create(
-        NULL, domParserFunction, ESString::create("DOMParser"), 0, true, false);
-
-    fnDomParser->protoType()
+    // Bind for constructor
+    ESString* DOMParserString = ESString::create("DOMParser");
+    ESFunctionObject* DOMParserFunction = ESFunctionObject::create(
+        nullptr, domparserConstructor, DOMParserString, 0, true, true);
+    DOMParserFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DOMParserFunction->protoType()
         .asESPointer()
         ->asESObject()
         ->forceNonVectorHiddenClass(false);
-    fnDomParser->protoType().asESPointer()->asESObject()->set__proto__(
+    DOMParserFunction->protoType().asESPointer()->asESObject()->set__proto__(
         fetchData(scriptBindingInstance)
             ->m_instance->globalObject()
             ->objectPrototype());
-    fetchData(scriptBindingInstance)
-        ->m_instance->globalObject()
-        ->defineDataProperty(ESString::create("DOMParser"), false, false, false,
-                             fnDomParser);
+    ESObject* DOMParserPrototypeObj =
+        DOMParserFunction->protoType().asESPointer()->asESObject();
 
-    fnDomParser->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("parseFromString"), true, true, true,
-        ESFunctionObject::create(nullptr, parseFromStringFunction,
-                                 ESString::create("parseFromString"), 2));
+    // Bind for functions
+    ESString* parseFromStringString = ESString::create("parseFromString");
+    ESFunctionObject* parseFromStringESFn = ESFunctionObject::create(
+        nullptr, parseFromStringFunction, parseFromStringString, 2, false);
+    DOMParserPrototypeObj->defineDataProperty(parseFromStringString, true, true,
+                                              true, parseFromStringESFn);
 
-    return fnDomParser;
+    return DOMParserFunction;
 }
 }
 #endif
