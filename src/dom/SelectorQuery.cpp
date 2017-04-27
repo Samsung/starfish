@@ -24,34 +24,10 @@
 
 namespace StarFish {
 
-static inline SelectorQuery::SelectorCheckingContext
-prepareNextContextForRelation(
-    const SelectorQuery::SelectorCheckingContext& context)
-{
-    SelectorQuery::SelectorCheckingContext nextContext(context);
-    STARFISH_ASSERT(context.selector[1]);
-    nextContext.selector.assign(context.selector.begin() + 1,
-                                context.selector.end());
-    return nextContext;
-}
-
 static bool contains(const GCVector<String*>& vector, const String* string)
 {
     return std::any_of(vector.begin(), vector.end(),
                        [&string](String* elm) { return string->equals(elm); });
-}
-
-static bool isFirstChild(Element& element)
-{
-    Node* sibling = element.previousSibling();
-    while (sibling) {
-        if (sibling->isElement()) {
-            return false;
-        }
-        sibling = sibling->previousSibling();
-    }
-
-    return true;
 }
 
 enum ClassElementListBehavior { AllElements, OnlyRoots };
@@ -152,19 +128,6 @@ inline bool ancestorHasClassName(Node& rootNode, const String* className)
     return false;
 }
 
-bool SelectorQuery::match(const SelectorQuery::SelectorCheckingContext& context,
-                          SelectorQuery::MatchResult& result)
-{
-    STARFISH_ASSERT(context.selector.size() > 0);
-    return matchSelector(context, result) == SelectorQuery::SelectorMatches;
-}
-
-bool SelectorQuery::match(const SelectorQuery::SelectorCheckingContext& context)
-{
-    SelectorQuery::MatchResult ignoreResult;
-    return match(context, ignoreResult);
-}
-
 CSSSelector* SelectorQuery::selectorForIdLookup(
     GCDeque<CSSSelector*>& selectors)
 {
@@ -236,10 +199,10 @@ void SelectorQuery::traverseDescendants(GCDeque<CSSSelector*>& selectors,
 bool SelectorQuery::selectorMatches(GCDeque<CSSSelector*>& selector,
                                     Element* element, Node& rootNode)
 {
-    SelectorCheckingContext context(element, VisitedMatchDisabled);
-    context.selector = selector;
-    context.scope = &rootNode;
-    return match(context);
+    StyleResolver* resolver = element->document()->styleResolver();
+    StyleResolver::MatchResult result;
+    return resolver->matchSelector(element, &selector, 0, result) ==
+           StyleResolver::Match::SelectorMatches;
 }
 
 void SelectorQuery::executeForTraverseRoot(
@@ -498,227 +461,5 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
     }
 
     findTraverseRootsAndExecute(rootNode, output, shouldOnlyMatchFirstElement);
-}
-
-bool SelectorQuery::checkPseudoClass(const SelectorCheckingContext& context,
-                                     MatchResult& result)
-{
-    Element& element = *context.element;
-    const GCDeque<CSSSelector*>& selector = context.selector;
-
-    switch (selector[0]->pseudoType()) {
-    case CSSSelector::PseudoFirstChild:
-        if (Node* parent = element.parentElement()) {
-            /*if (m_mode == ResolvingStyle) {
-                parent->setChildrenAffectedByFirstChildRules();
-                element.setAffectedByFirstChildRules();
-            }*/
-            return isFirstChild(element);
-        }
-        break;
-    case CSSSelector::PseudoHover:
-        /*if (m_mode == ResolvingStyle) {
-            if (context.inRightmostCompound) {
-                m_elementStyle->setAffectedByHover();
-            } else {
-                m_elementStyle->setUnique();
-                element.setChildrenOrSiblingsAffectedByHover();
-            }
-        }
-
-        if (!shouldMatchHoverOrActive(context)) {
-            return false;
-        }
-        if (InspectorInstrumentation::forcePseudoState(&element,
-            CSSSelector::PseudoHover)) {
-            return true;
-        }
-        */
-        return (element.state() >> 2) & 1;
-    case CSSSelector::PseudoActive:
-        /*if (m_mode == ResolvingStyle) {
-            if (context.inRightmostCompound) {
-                m_elementStyle->setAffectedByActive();
-            } else {
-                m_elementStyle->setUnique();
-                element.setChildrenOrSiblingsAffectedByActive();
-            }
-        }
-
-        if (!shouldMatchHoverOrActive(context)) {
-            return false;
-        }
-        if (InspectorInstrumentation::forcePseudoState(&element,
-            CSSSelector::PseudoActive)) {
-            return true;
-        }
-        */
-        return (element.state() >> 0) & 1;
-    default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        break;
-    }
-    return false;
-}
-
-bool SelectorQuery::checkOne(const SelectorCheckingContext& context,
-                             MatchResult& result)
-{
-    STARFISH_ASSERT(context.element);
-    Element& element = *context.element;
-    STARFISH_ASSERT(context.selector.size() > 0);
-    const GCDeque<CSSSelector*>& selector = context.selector;
-
-    switch (selector[0]->type()) {
-    case CSSSelector::Tag:
-        if (element.tagName()->equals(selector[0]->selectorText()->toUpper())) {
-            if (selector[0]->pseudoType() == CSSSelector::PseudoNone) {
-                return true;
-            } else {
-                return checkPseudoClass(context, result);
-            }
-        }
-        return false;
-    case CSSSelector::Class:
-        return element.hasClass() &&
-               contains(element.classNames(), selector[0]->selectorText());
-    case CSSSelector::Id:
-        return element.hasId() &&
-               element.id()->equals(selector[0]->selectorText());
-
-    // Attribute selectors
-    case CSSSelector::AttributeExact:
-    case CSSSelector::AttributeSet:
-    case CSSSelector::AttributeHyphen:
-    case CSSSelector::AttributeList:
-    case CSSSelector::AttributeContain:
-    case CSSSelector::AttributeBegin:
-    case CSSSelector::AttributeEnd:
-        break;
-    /*
-    return anyAttributeMatches(element, selector.match(), selector);
-    */
-    case CSSSelector::PseudoClass:
-        return checkPseudoClass(context, result);
-    case CSSSelector::PseudoElement:
-        return true;
-    /*    return checkPseudoElement(context, result);
-
-    case CSSSelector::PagePseudoClass:
-        // FIXME: what?
-        return true;
-    */
-    case CSSSelector::Universal:
-    case CSSSelector::UnKnown:
-        // FIXME: what?
-        return true;
-    }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return true;
-}
-
-SelectorQuery::Match SelectorQuery::matchForRelation(
-    const SelectorCheckingContext& context, MatchResult& result)
-{
-    SelectorCheckingContext nextContext =
-        prepareNextContextForRelation(context);
-
-    CSSSelector::RelationType relation = context.selector[0]->relation();
-
-    // Disable :visited matching when we see the first link or try to match
-    // anything else than an ancestors.
-    if (!context.isSubSelector && (/*context.element->isLink() ||*/ (
-                                      relation != CSSSelector::Descendant &&
-                                      relation != CSSSelector::Child)))
-        nextContext.visitedMatchType = VisitedMatchDisabled;
-
-    nextContext.inRightmostCompound = false;
-    nextContext.isSubSelector = false;
-    nextContext.previousElement = context.element;
-
-    switch (relation) {
-    case CSSSelector::RelationType::Descendant:
-        for (nextContext.element = context.element->parentElement();
-             nextContext.element;
-             nextContext.element = nextContext.element->parentElement()) {
-            Match match = matchSelector(nextContext, result);
-            if (match == SelectorMatches || match == SelectorFailsCompletely) {
-                return match;
-            }
-            /*if (nextSelectorExceedsScope(nextContext)) {
-                return SelectorFailsCompletely;
-            }
-            */
-        }
-        return SelectorFailsCompletely;
-    case CSSSelector::RelationType::Child:
-    /*{
-        if (context.selector->relationIsAffectedByPseudoContent()) {
-            return matchForPseudoContent(nextContext, *context.element, result);
-        }
-
-        if (nextContext.selector->getPseudoType() ==
-            CSSSelector::PseudoShadow) {
-            return matchForPseudoShadow(nextContext,
-            context.element->parentNode(), result);
-        }
-
-        nextContext.element = parentElement(context);
-        if (!nextContext.element) {
-            return SelectorFailsCompletely;
-        }
-        return matchSelector(nextContext, result);
-    }*/
-    case CSSSelector::RelationType::AdjacentSibling:
-    case CSSSelector::RelationType::GeneralSibling:
-    case CSSSelector::RelationType::SubSelector:
-    case CSSSelector::RelationType::None:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        break;
-    }
-
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return SelectorFailsCompletely;
-}
-
-// Recursive check of selectors and combinators
-// It can return 4 different values:
-// * SelectorMatches          - the selector matches the element e
-// * SelectorFailsLocally     - the selector fails for the element e
-// * SelectorFailsAllSiblings - the selector fails for e and any sibling of e
-// * SelectorFailsCompletely  - the selector fails for e and any sibling or
-// ancestor of e
-SelectorQuery::Match SelectorQuery::matchSelector(
-    const SelectorCheckingContext& context, MatchResult& result)
-{
-    MatchResult subResult;
-    if (!checkOne(context, subResult)) {
-        return SelectorFailsLocally;
-    }
-
-    if (context.selector[0]->isLastInTagHistory()) {
-        result.specificity += subResult.specificity;
-        return SelectorMatches;
-    }
-
-    Match match;
-    if (context.selector[0]->relation() != CSSSelector::SubSelector) {
-        match = matchForRelation(context, result);
-    } else {
-        match = matchForSubSelector(context, result);
-    }
-    if (match == SelectorMatches) {
-        result.specificity += subResult.specificity;
-    }
-    return match;
-}
-
-SelectorQuery::Match SelectorQuery::matchForSubSelector(
-    const SelectorCheckingContext& context, MatchResult& result)
-{
-    SelectorCheckingContext nextContext =
-        prepareNextContextForRelation(context);
-    nextContext.isSubSelector = true;
-    return matchSelector(nextContext, result);
 }
 }

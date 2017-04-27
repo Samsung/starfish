@@ -290,7 +290,6 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESNull);
 }
 
-#ifdef STARFISH_ENABLE_WASU
 static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -340,7 +339,6 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
     }
     return ESValue(ESValue::ESNull);
 }
-#endif
 
 static ESValue doctypeGetterFunction(ESVMInstance* instance)
 {
@@ -918,7 +916,6 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
                                      ESString::create("querySelector"), 1,
                                      false));
 
-#ifdef STARFISH_ENABLE_WASU
     DocumentFunction->protoType()
         .asESPointer()
         ->asESObject()
@@ -927,7 +924,7 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
             ESFunctionObject::create(NULL, querySelectorAllFunction,
                                      ESString::create("querySelectorAll"), 1,
                                      false));
-#endif
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(),
         ESString::create("doctype"), doctypeGetterFunction, nullptr);
