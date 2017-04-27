@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/DOMPointReadOnly.h"
 
 namespace StarFish {
@@ -28,9 +24,7 @@ using namespace escargot;
 static ESValue dompointreadonlyConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        auto msg = ESString::create("Please use the 'new' operator");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMPointReadOnly");
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
@@ -62,37 +56,52 @@ static ESValue dompointreadonlyConstructor(ESVMInstance* instance)
     return result->scriptValue();
 }
 
+// Implement for attributes
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
-    DOMPointReadOnly* point = originalObj;
-    return ESValue(point->x());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->x();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue yGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
-    DOMPointReadOnly* point = originalObj;
-    return ESValue(point->y());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->y();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue zGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
-    DOMPointReadOnly* point = originalObj;
-    return ESValue(point->z());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->z();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue wGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMPointReadOnly);
-    DOMPointReadOnly* point = originalObj;
-    return ESValue(point->w());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->w();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
+// Implement for functions
 ESFunctionObject* bindingDOMPointReadOnly(
     ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* DOMPointReadOnlyString = ESString::create("DOMPointReadOnly");
     ESFunctionObject* DOMPointReadOnlyFunction =
         ESFunctionObject::create(nullptr, dompointreadonlyConstructor,
@@ -114,22 +123,24 @@ ESFunctionObject* bindingDOMPointReadOnly(
     ESObject* DOMPointReadOnlyPrototypeObj =
         DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* xString = ESString::create("x");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("x"), xGetterFunction, nullptr, true, true);
+        DOMPointReadOnlyPrototypeObj, xString, xGetterFunction, nullptr);
 
+    ESString* yString = ESString::create("y");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("y"), yGetterFunction, nullptr, true, true);
+        DOMPointReadOnlyPrototypeObj, yString, yGetterFunction, nullptr);
 
+    ESString* zString = ESString::create("z");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("z"), zGetterFunction, nullptr, true, true);
+        DOMPointReadOnlyPrototypeObj, zString, zGetterFunction, nullptr);
 
+    ESString* wString = ESString::create("w");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("w"), wGetterFunction, nullptr, true, true);
+        DOMPointReadOnlyPrototypeObj, wString, wGetterFunction, nullptr);
 
+    // Bind for functions
     return DOMPointReadOnlyFunction;
 }
 }

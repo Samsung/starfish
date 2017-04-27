@@ -1,0 +1,7 @@
+// https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webidl
+
+[ArrayClass]
+interface DOMRectList {
+  readonly attribute unsigned long length;
+  getter DOMRect? item(unsigned long index);
+};

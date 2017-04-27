@@ -14,44 +14,57 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/DOMPoint.h"
+#include "dom/DOMRect.h"
 #include "dom/DOMQuad.h"
-#include "dom/DOMRectReadOnly.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue p1GetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
-    DOMQuad* quad = originalObj;
-    return quad->p1()->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMPoint* result = nullptr;
+    result = originalObj->p1();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue p2GetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
-    DOMQuad* quad = originalObj;
-    return quad->p2()->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMPoint* result = nullptr;
+    result = originalObj->p2();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue p3GetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
-    DOMQuad* quad = originalObj;
-    return quad->p3()->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMPoint* result = nullptr;
+    result = originalObj->p3();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue p4GetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
-    DOMQuad* quad = originalObj;
-    return quad->p4()->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMPoint* result = nullptr;
+    result = originalObj->p4();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue boundsGetterFunction(ESVMInstance* instance)
@@ -72,27 +85,31 @@ ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMQuad, fetchData(scriptBindingInstance)
                                                  ->m_instance->globalObject()
                                                  ->objectPrototype());
+    ESObject* DOMQuadPrototypeObj =
+        DOMQuadFunction->protoType().asESPointer()->asESObject();
 
+    // Bind for attributes
+    ESString* p1String = ESString::create("p1");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p1"), p1GetterFunction, nullptr, true, true);
+        DOMQuadPrototypeObj, p1String, p1GetterFunction, nullptr);
 
+    ESString* p2String = ESString::create("p2");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p2"), p2GetterFunction, nullptr, true, true);
+        DOMQuadPrototypeObj, p2String, p2GetterFunction, nullptr);
 
+    ESString* p3String = ESString::create("p3");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p3"), p3GetterFunction, nullptr, true, true);
+        DOMQuadPrototypeObj, p3String, p3GetterFunction, nullptr);
 
+    ESString* p4String = ESString::create("p4");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("p4"), p4GetterFunction, nullptr, true, true);
+        DOMQuadPrototypeObj, p4String, p4GetterFunction, nullptr);
 
+    ESString* boundsString = ESString::create("bounds");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("bounds"), boundsGetterFunction, nullptr, true, true);
+        DOMQuadPrototypeObj, boundsString, boundsGetterFunction, nullptr);
 
+    // Bind for functions
     return DOMQuadFunction;
 }
 }
