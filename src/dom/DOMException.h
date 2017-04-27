@@ -81,14 +81,6 @@ public:
         return m_message;
     }
 
-    const char* charname()
-    {
-        if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
-            return m_name->utf8Data();
-        }
-        return s_names[m_code];
-    }
-
     String* name()
     {
         if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
@@ -97,14 +89,14 @@ public:
         return String::fromUTF8(s_names[m_code]);
     }
 
-    int code()
+    uint16_t code()
     {
         return m_code;
     }
 
 private:
     ScriptBindingInstance* m_instance;
-    uint8_t m_code;
+    uint16_t m_code;
     String* m_message;
     String* m_name;
     static const char* s_names[];
