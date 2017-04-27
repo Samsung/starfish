@@ -2039,6 +2039,9 @@ public:
     }
 
     void resolveDOMStyle(Document* document, bool force = false);
+
+    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
+                        unsigned idx, MatchResult& result);
 #ifdef STARFISH_ENABLE_TEST
     void dumpDOMStyle(Document* document);
 #endif
@@ -2054,8 +2057,6 @@ protected:
                ComputedStyle* style, ComputedStyle* parentStyle,
                bool isImportant = false);
 
-    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
-                        unsigned idx, MatchResult& result);
     Match matchForRelation(Element* element,
                            GCDeque<CSSSelector*>* selectorList,
                            CSSSelector::RelationType relation, unsigned idx,

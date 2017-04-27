@@ -810,7 +810,6 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
                                      ESString::create("querySelector"), 1,
                                      false));
 
-#ifdef STARFISH_ENABLE_WASU
     ElementFunction->protoType()
         .asESPointer()
         ->asESObject()
@@ -819,7 +818,6 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
             ESFunctionObject::create(NULL, querySelectorAllFunction,
                                      ESString::create("querySelectorAll"), 1,
                                      false));
-#endif
 
     ElementFunction->protoType()
         .asESPointer()
