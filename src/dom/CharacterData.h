@@ -69,7 +69,7 @@ public:
         });
     }
 
-    size_t length() const
+    uint32_t length() const
     {
         return m_data->length();
     }

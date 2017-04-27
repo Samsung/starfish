@@ -240,12 +240,12 @@ String* CSSStyleDeclaration::combineBoxString(String* t, String* r, String* b,
     }
 }
 
-unsigned long CSSStyleDeclaration::length() const
+uint32_t CSSStyleDeclaration::length() const
 {
     return m_cssValues.size();
 }
 
-String* CSSStyleDeclaration::item(unsigned long index)
+String* CSSStyleDeclaration::item(uint32_t index)
 {
     if (index < m_cssValues.size()) {
         return m_cssValues[index].keyName();

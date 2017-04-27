@@ -150,7 +150,7 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
     }
 }
 
-unsigned long DOMTokenList::length()
+uint32_t DOMTokenList::length()
 {
     GCVector<String*> tokens;
     String* src = m_element->getAttribute(m_localName);

@@ -14,12 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
-#include "dom/Event.h"
 #include "dom/EventTarget.h"
+#include "dom/Event.h"
 
 namespace StarFish {
 
@@ -28,6 +24,7 @@ using namespace escargot;
 extern EventInit toEventInitFromESValue(ESVMInstance* instance, ESValue& from);
 extern ESValue toESValueFromEventInit(ESVMInstance* instance, EventInit& from);
 
+// Implement for constructor
 static ESValue eventConstructor(ESVMInstance* instance)
 {
     // TODO Following TC need to be fixed to enable this code
@@ -70,70 +67,94 @@ static ESValue eventConstructor(ESVMInstance* instance)
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    String* v = originalObj->type();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->type();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue targetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    EventTarget* v = originalObj->target();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    EventTarget* result = nullptr;
+    result = originalObj->target();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 static ESValue currentTargetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    EventTarget* v = originalObj->currentTarget();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    EventTarget* result = nullptr;
+    result = originalObj->currentTarget();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 static ESValue eventPhaseGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    uint32_t v = originalObj->eventPhase();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->eventPhase();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue bubblesGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool v = originalObj->bubbles();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    bool result;
+    result = originalObj->bubbles();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue cancelableGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool v = originalObj->cancelable();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    bool result;
+    result = originalObj->cancelable();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue defaultPreventedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    bool v = originalObj->defaultPrevented();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    bool result;
+    result = originalObj->defaultPrevented();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue timeStampGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    DOMTimeStamp v = originalObj->timeStamp();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    uint64_t result;
+    result = originalObj->timeStamp();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 // Implement for functions
 static ESValue stopPropagationFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     // Call native function (nargs: 0)
     originalObj->stopPropagation();
 
@@ -144,7 +165,7 @@ static ESValue stopPropagationFunction(ESVMInstance* instance)
 static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     // Call native function (nargs: 0)
     originalObj->stopImmediatePropagation();
 
@@ -155,7 +176,7 @@ static ESValue stopImmediatePropagationFunction(ESVMInstance* instance)
 static ESValue preventDefaultFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Event);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     // Call native function (nargs: 0)
     originalObj->preventDefault();
 
@@ -165,99 +186,111 @@ static ESValue preventDefaultFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
 {
-    /* 3.2 Interface Event */
-    auto fnEvent = ESFunctionObject::create(
-        NULL, eventConstructor, ESString::create("Event"), 1, true, true);
-    fnEvent->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(
-        false);
-    fnEvent->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    fnEvent->defineAccessorProperty(
+    // Bind for constructor
+    ESString* EventString = ESString::create("Event");
+    ESFunctionObject* EventFunction = ESFunctionObject::create(
+        nullptr, eventConstructor, EventString, 1, true, true);
+    ESObject* EventPrototypeObj =
+        EventFunction->protoType().asESPointer()->asESObject();
+    EventFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    // fetchData(scriptBindingInstance)->m_instance->globalObject()
-    //                                 ->defineDataProperty
-    //           (ESString::create("Event"), true, false,
-    //           true, eventFunction);
+    EventPrototypeObj->forceNonVectorHiddenClass(false);
+    EventPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                        ->m_instance->globalObject()
+                                        ->objectPrototype());
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("type"), typeGetterFunction, nullptr);
+    // Bind for constants
+    ESString* NONEString = ESString::create("NONE");
+    ESValue NONEValue = ESValue(0);
+    EventPrototypeObj->defineDataProperty(NONEString, false, true, false,
+                                          NONEValue);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("target"), targetGetterFunction, nullptr);
+    EventFunction->defineDataProperty(NONEString, false, true, false,
+                                      NONEValue);
 
+    ESString* CAPTURING_PHASEString = ESString::create("CAPTURING_PHASE");
+    ESValue CAPTURING_PHASEValue = ESValue(1);
+    EventPrototypeObj->defineDataProperty(CAPTURING_PHASEString, false, true,
+                                          false, CAPTURING_PHASEValue);
+
+    EventFunction->defineDataProperty(CAPTURING_PHASEString, false, true, false,
+                                      CAPTURING_PHASEValue);
+
+    ESString* AT_TARGETString = ESString::create("AT_TARGET");
+    ESValue AT_TARGETValue = ESValue(2);
+    EventPrototypeObj->defineDataProperty(AT_TARGETString, false, true, false,
+                                          AT_TARGETValue);
+
+    EventFunction->defineDataProperty(AT_TARGETString, false, true, false,
+                                      AT_TARGETValue);
+
+    ESString* BUBBLING_PHASEString = ESString::create("BUBBLING_PHASE");
+    ESValue BUBBLING_PHASEValue = ESValue(3);
+    EventPrototypeObj->defineDataProperty(BUBBLING_PHASEString, false, true,
+                                          false, BUBBLING_PHASEValue);
+
+    EventFunction->defineDataProperty(BUBBLING_PHASEString, false, true, false,
+                                      BUBBLING_PHASEValue);
+
+    // Bind for attributes
+    ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("currentTarget"), currentTargetGetterFunction,
+        EventPrototypeObj, typeString, typeGetterFunction, nullptr);
+
+    ESString* targetString = ESString::create("target");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        EventPrototypeObj, targetString, targetGetterFunction, nullptr);
+
+    ESString* currentTargetString = ESString::create("currentTarget");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        EventPrototypeObj, currentTargetString, currentTargetGetterFunction,
         nullptr);
 
-    fnEvent->asESObject()->defineDataProperty(
-        ESString::create("NONE"), false, true, false, ESValue(Event::NONE));
-    fnEvent->asESObject()->defineDataProperty(
-        ESString::create("CAPTURING_PHASE"), false, true, false,
-        ESValue(Event::CAPTURING_PHASE));
-    fnEvent->asESObject()->defineDataProperty(ESString::create("AT_TARGET"),
-                                              false, true, false,
-                                              ESValue(Event::AT_TARGET));
-    fnEvent->asESObject()->defineDataProperty(
-        ESString::create("BUBBLING_PHASE"), false, true, false,
-        ESValue(Event::BUBBLING_PHASE));
-
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("NONE"), false, true, false, ESValue(Event::NONE));
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("CAPTURING_PHASE"), false, true, false,
-        ESValue(Event::CAPTURING_PHASE));
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("AT_TARGET"), false, true, false,
-        ESValue(Event::AT_TARGET));
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("BUBBLING_PHASE"), false, true, false,
-        ESValue(Event::BUBBLING_PHASE));
-
+    ESString* eventPhaseString = ESString::create("eventPhase");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("eventPhase"), eventPhaseGetterFunction, nullptr);
+        EventPrototypeObj, eventPhaseString, eventPhaseGetterFunction, nullptr);
 
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("stopPropagation"), false, false, false,
-        ESFunctionObject::create(NULL, stopPropagationFunction,
-                                 ESString::create("stopPropagation"), 0,
-                                 false));
-
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("stopImmediatePropagation"), false, false, false,
-        ESFunctionObject::create(NULL, stopImmediatePropagationFunction,
-                                 ESString::create("stopImmediatePropagation"),
-                                 0, false));
-
+    ESString* bubblesString = ESString::create("bubbles");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("bubbles"), bubblesGetterFunction, nullptr);
+        EventPrototypeObj, bubblesString, bubblesGetterFunction, nullptr);
 
+    ESString* cancelableString = ESString::create("cancelable");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("cancelable"), cancelableGetterFunction, nullptr);
+        EventPrototypeObj, cancelableString, cancelableGetterFunction, nullptr);
 
-    fnEvent->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("preventDefault"), false, false, false,
-        ESFunctionObject::create(NULL, preventDefaultFunction,
-                                 ESString::create("preventDefault"), 0, false));
-
+    ESString* defaultPreventedString = ESString::create("defaultPrevented");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("defaultPrevented"), defaultPreventedGetterFunction,
-        nullptr);
+        EventPrototypeObj, defaultPreventedString,
+        defaultPreventedGetterFunction, nullptr);
 
+    ESString* timeStampString = ESString::create("timeStamp");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fnEvent->protoType().asESPointer()->asESObject(),
-        ESString::create("timeStamp"), timeStampGetterFunction, nullptr);
+        EventPrototypeObj, timeStampString, timeStampGetterFunction, nullptr);
 
-    return fnEvent;
+    // Bind for functions
+    ESString* stopPropagationString = ESString::create("stopPropagation");
+    ESFunctionObject* stopPropagationESFn = ESFunctionObject::create(
+        nullptr, stopPropagationFunction, stopPropagationString, 0, false);
+    EventPrototypeObj->defineDataProperty(stopPropagationString, true, true,
+                                          true, stopPropagationESFn);
+
+    ESString* stopImmediatePropagationString =
+        ESString::create("stopImmediatePropagation");
+    ESFunctionObject* stopImmediatePropagationESFn =
+        ESFunctionObject::create(nullptr, stopImmediatePropagationFunction,
+                                 stopImmediatePropagationString, 0, false);
+    EventPrototypeObj->defineDataProperty(stopImmediatePropagationString, true,
+                                          true, true,
+                                          stopImmediatePropagationESFn);
+
+    ESString* preventDefaultString = ESString::create("preventDefault");
+    ESFunctionObject* preventDefaultESFn = ESFunctionObject::create(
+        nullptr, preventDefaultFunction, preventDefaultString, 0, false);
+    EventPrototypeObj->defineDataProperty(preventDefaultString, true, true,
+                                          true, preventDefaultESFn);
+
+    return EventFunction;
 }
 }

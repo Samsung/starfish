@@ -32,7 +32,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 const uint32_t kEventStringAttributeCheckMagic = 0x0ffe;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
-typedef unsigned long long DOMTimeStamp;
+typedef uint64_t DOMTimeStamp;
 
 typedef ESValue ScriptValue;
 typedef ESObject* ScriptObject;
