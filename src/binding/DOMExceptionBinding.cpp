@@ -83,20 +83,16 @@ ESFunctionObject* bindingDOMException(
     ESString* DOMExceptionString = ESString::create("DOMException");
     ESFunctionObject* DOMExceptionFunction = ESFunctionObject::create(
         nullptr, domexceptionConstructor, DOMExceptionString, 0, true, true);
+    ESObject* DOMExceptionPrototypeObj =
+        DOMExceptionFunction->protoType().asESPointer()->asESObject();
     DOMExceptionFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMExceptionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMExceptionFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->errorPrototype());
-    ESObject* DOMExceptionPrototypeObj =
-        DOMExceptionFunction->protoType().asESPointer()->asESObject();
+    DOMExceptionPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMExceptionPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                               ->m_instance->globalObject()
+                                               ->errorPrototype());
 
     // Bind for constants
     ESString* INDEX_SIZE_ERRString = ESString::create("INDEX_SIZE_ERR");

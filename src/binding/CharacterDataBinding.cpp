@@ -93,22 +93,17 @@ ESFunctionObject* bindingCharacterData(
     ESFunctionObject* CharacterDataFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  CharacterDataString, 0, true, true);
+    ESObject* CharacterDataPrototypeObj =
+        CharacterDataFunction->protoType().asESPointer()->asESObject();
     CharacterDataFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CharacterDataFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CharacterDataFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)->fnNode()->protoType());
+    CharacterDataPrototypeObj->forceNonVectorHiddenClass(false);
+    CharacterDataPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode()->protoType());
     CharacterDataFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnNode());
-    ESObject* CharacterDataPrototypeObj =
-        CharacterDataFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* dataString = ESString::create("data");

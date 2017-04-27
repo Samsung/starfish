@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "dom/Attr.h"
 #include "dom/Element.h"
+#include "dom/Attr.h"
 
 namespace StarFish {
 
@@ -92,19 +92,16 @@ ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
     ESString* AttrString = ESString::create("Attr");
     ESFunctionObject* AttrFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, AttrString, 0, true, true);
+    ESObject* AttrPrototypeObj =
+        AttrFunction->protoType().asESPointer()->asESObject();
     AttrFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    AttrFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    AttrFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    AttrPrototypeObj->forceNonVectorHiddenClass(false);
+    AttrPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnNode()->protoType());
     AttrFunction->set__proto__(fetchData(scriptBindingInstance)->fnNode());
-    ESObject* AttrPrototypeObj =
-        AttrFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* localNameString = ESString::create("localName");

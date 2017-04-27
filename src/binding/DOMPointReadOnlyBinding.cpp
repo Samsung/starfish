@@ -106,22 +106,16 @@ ESFunctionObject* bindingDOMPointReadOnly(
     ESFunctionObject* DOMPointReadOnlyFunction =
         ESFunctionObject::create(nullptr, dompointreadonlyConstructor,
                                  DOMPointReadOnlyString, 0, true, true);
+    ESObject* DOMPointReadOnlyPrototypeObj =
+        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject();
     DOMPointReadOnlyFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMPointReadOnlyFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMPointReadOnlyFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->m_instance->globalObject()
-                           ->objectPrototype());
-    ESObject* DOMPointReadOnlyPrototypeObj =
-        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject();
+    DOMPointReadOnlyPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMPointReadOnlyPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                   ->m_instance->globalObject()
+                                                   ->objectPrototype());
 
     // Bind for attributes
     ESString* xString = ESString::create("x");

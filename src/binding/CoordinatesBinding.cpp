@@ -114,20 +114,16 @@ ESFunctionObject* bindingCoordinates(
     ESString* CoordinatesString = ESString::create("Coordinates");
     ESFunctionObject* CoordinatesFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, CoordinatesString, 0, true, true);
+    ESObject* CoordinatesPrototypeObj =
+        CoordinatesFunction->protoType().asESPointer()->asESObject();
     CoordinatesFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CoordinatesFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CoordinatesFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* CoordinatesPrototypeObj =
-        CoordinatesFunction->protoType().asESPointer()->asESObject();
+    CoordinatesPrototypeObj->forceNonVectorHiddenClass(false);
+    CoordinatesPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                              ->m_instance->globalObject()
+                                              ->objectPrototype());
 
     // Bind for attributes
     ESString* latitudeString = ESString::create("latitude");

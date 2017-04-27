@@ -75,20 +75,16 @@ ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
     ESString* BlobString = ESString::create("Blob");
     ESFunctionObject* BlobFunction = ESFunctionObject::create(
         nullptr, blobConstructor, BlobString, 0, true, true);
+    ESObject* BlobPrototypeObj =
+        BlobFunction->protoType().asESPointer()->asESObject();
     BlobFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    BlobFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    BlobFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* BlobPrototypeObj =
-        BlobFunction->protoType().asESPointer()->asESObject();
+    BlobPrototypeObj->forceNonVectorHiddenClass(false);
+    BlobPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                       ->m_instance->globalObject()
+                                       ->objectPrototype());
 
     // Bind for attributes
     ESString* sizeString = ESString::create("size");

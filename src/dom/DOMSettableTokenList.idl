@@ -1,0 +1,5 @@
+// https://dev.w3.org/html5/spec-LC/common-dom-interfaces.html#domsettabletokenlist-0
+
+interface DOMSettableTokenList : DOMTokenList {
+  attribute DOMString value;
+};

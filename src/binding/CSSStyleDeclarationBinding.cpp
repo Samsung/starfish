@@ -133,22 +133,17 @@ ESFunctionObject* bindingCSSStyleDeclaration(
     ESFunctionObject* CSSStyleDeclarationFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  CSSStyleDeclarationString, 0, true, true);
+    ESObject* CSSStyleDeclarationPrototypeObj =
+        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject();
     CSSStyleDeclarationFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CSSStyleDeclarationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CSSStyleDeclarationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->m_instance->globalObject()
-                           ->objectPrototype());
-    ESObject* CSSStyleDeclarationPrototypeObj =
-        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject();
+    CSSStyleDeclarationPrototypeObj->forceNonVectorHiddenClass(false);
+    CSSStyleDeclarationPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)
+            ->m_instance->globalObject()
+            ->objectPrototype());
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");

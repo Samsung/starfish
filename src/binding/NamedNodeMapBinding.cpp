@@ -68,9 +68,8 @@ static ESValue getNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getNamedItem", "NamedNodeMap", "1", "0");
     }
     // Declare return value (empty when void)
     Attr* result = nullptr;
@@ -94,9 +93,8 @@ static ESValue setNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "setNamedItem", "NamedNodeMap", "1", "0");
     }
     // Declare return value (empty when void)
     Attr* result = nullptr;
@@ -126,9 +124,8 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "removeNamedItem", "NamedNodeMap", "1", "0");
     }
     // Declare return value (empty when void)
     Attr* result = nullptr;

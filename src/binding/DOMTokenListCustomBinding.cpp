@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DOMException.h"
 #include "dom/DOMTokenList.h"
 
@@ -26,9 +23,7 @@ using namespace escargot;
 
 ESValue addDOMTokenListFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, DOMTokenList);
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
     try {
         GCVector<String*> tokens;
         int argCount = instance->currentExecutionContext()->argumentCount();
@@ -40,10 +35,7 @@ ESValue addDOMTokenListFunction(ESVMInstance* instance)
             tokens.push_back(aa);
         }
         if (argCount > 0) {
-            ((DOMTokenList*)thisValue.asESPointer()
-                 ->asESObject()
-                 ->extraPointerData())
-                ->add(&tokens);
+            originalObj->add(&tokens);
         }
         return ESValue();
     } catch (DOMException* e) {

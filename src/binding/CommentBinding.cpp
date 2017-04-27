@@ -28,7 +28,7 @@ static ESValue commentConstructor(ESVMInstance* instance)
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
-    String* value0 = String::fromUTF8("");
+    String* value0 = String::emptyString;
     if (!arg0.isUndefinedOrNull()) {
         value0 = toBrowserString(arg0);
     }
@@ -45,15 +45,14 @@ ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
     ESString* CommentString = ESString::create("Comment");
     ESFunctionObject* CommentFunction = ESFunctionObject::create(
         nullptr, commentConstructor, CommentString, 0, true, true);
+    ESObject* CommentPrototypeObj =
+        CommentFunction->protoType().asESPointer()->asESObject();
     CommentFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CommentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CommentFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    CommentPrototypeObj->forceNonVectorHiddenClass(false);
+    CommentPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
     CommentFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData());

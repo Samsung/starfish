@@ -70,20 +70,17 @@ ESFunctionObject* bindingDocumentType(
     ESString* DocumentTypeString = ESString::create("DocumentType");
     ESFunctionObject* DocumentTypeFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, DocumentTypeString, 0, true, true);
+    ESObject* DocumentTypePrototypeObj =
+        DocumentTypeFunction->protoType().asESPointer()->asESObject();
     DocumentTypeFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DocumentTypeFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DocumentTypeFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    DocumentTypePrototypeObj->forceNonVectorHiddenClass(false);
+    DocumentTypePrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnNode()->protoType());
     DocumentTypeFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnNode());
-    ESObject* DocumentTypePrototypeObj =
-        DocumentTypeFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* nameString = ESString::create("name");
