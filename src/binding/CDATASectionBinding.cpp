@@ -27,15 +27,14 @@ ESFunctionObject* bindingCDATASection(
     ESString* CDATASectionString = ESString::create("CDATASection");
     ESFunctionObject* CDATASectionFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, CDATASectionString, 0, true, true);
+    ESObject* CDATASectionPrototypeObj =
+        CDATASectionFunction->protoType().asESPointer()->asESObject();
     CDATASectionFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CDATASectionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CDATASectionFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    CDATASectionPrototypeObj->forceNonVectorHiddenClass(false);
+    CDATASectionPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnText()->protoType());
     CDATASectionFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnText());

@@ -76,20 +76,16 @@ ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
     ESString* DOMParserString = ESString::create("DOMParser");
     ESFunctionObject* DOMParserFunction = ESFunctionObject::create(
         nullptr, domparserConstructor, DOMParserString, 0, true, true);
+    ESObject* DOMParserPrototypeObj =
+        DOMParserFunction->protoType().asESPointer()->asESObject();
     DOMParserFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMParserFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMParserFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* DOMParserPrototypeObj =
-        DOMParserFunction->protoType().asESPointer()->asESObject();
+    DOMParserPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMParserPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                            ->m_instance->globalObject()
+                                            ->objectPrototype());
 
     // Bind for functions
     ESString* parseFromStringString = ESString::create("parseFromString");

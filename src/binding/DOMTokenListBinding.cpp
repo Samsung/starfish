@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DOMException.h"
 #include "dom/DOMTokenList.h"
 
@@ -24,11 +21,15 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 // Implement for functions
@@ -40,7 +41,7 @@ static ESValue itemFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
                         "DOMTokenList", "1", "0");
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Nullable<String*> result = String::emptyString;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     uint32_t idx = arg0.toIndex();
@@ -65,11 +66,12 @@ static ESValue containsFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "contains",
+                        "DOMTokenList", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -83,7 +85,6 @@ static ESValue containsFunction(ESVMInstance* instance)
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
     // Return ESValue from native value
     return ESValue(result);
 }
@@ -112,26 +113,29 @@ static ESValue toggleFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "toggle",
+                        "DOMTokenList", "1", buffer);
     }
     size_t validArgCount = 2;
-    // Declare return value (empty when void)
+    bool argCounting = true;
+    // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg1
+    bool value1;
+    if (argCounting && arg1.isUndefined()) {
+        validArgCount--;
+    } else {
+        argCounting = false;
+        value1 = arg1.toBoolean();
+    }
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
 
-    // Handle argument arg1
-    bool value1;
-    if (arg1.isUndefinedOrNull()) {
-        validArgCount--;
-    } else {
-        value1 = arg1.toBoolean();
-    }
     // Call native function (nargs: 1-2)
     try {
         if (validArgCount == 1) {
@@ -150,7 +154,7 @@ static ESValue toggleFunction(ESVMInstance* instance)
 static ESValue toStringFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     // Call native function (nargs: 0)
     result = originalObj->toString();
@@ -159,68 +163,65 @@ static ESValue toStringFunction(ESVMInstance* instance)
     return toJSString(result);
 }
 
-// https://dom.spec.whatwg.org/#interface-domtokenlist
 ESFunctionObject* bindingDOMTokenList(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* DOMTokenListString = ESString::create("DOMTokenList");
+    ESFunctionObject* DOMTokenListFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, DOMTokenListString, 0, true, true);
+    ESObject* DOMTokenListPrototypeObj =
+        DOMTokenListFunction->protoType().asESPointer()->asESObject();
+    DOMTokenListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DOMTokenListPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMTokenListPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                               ->m_instance->globalObject()
+                                               ->objectPrototype());
 
-    /* 7.1 Interface DOMTokenList */
-
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMTokenListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        DOMTokenListPrototypeObj, lengthString, lengthGetterFunction, nullptr);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("item"), false, false, false,
-                             ESFunctionObject::create(NULL, itemFunction,
-                                                      ESString::create("item"),
-                                                      1, false));
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    DOMTokenListPrototypeObj->defineDataProperty(itemString, true, true, true,
+                                                 itemESFn);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("contains"), false, false, false,
-            ESFunctionObject::create(NULL, containsFunction,
-                                     ESString::create("contains"), 1, false));
+    ESString* containsString = ESString::create("contains");
+    ESFunctionObject* containsESFn = ESFunctionObject::create(
+        nullptr, containsFunction, containsString, 1, false);
+    DOMTokenListPrototypeObj->defineDataProperty(containsString, true, true,
+                                                 true, containsESFn);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("add"), false, false, false,
-            ESFunctionObject::create(NULL, addDOMTokenListFunction,
-                                     ESString::create("add"), 1, false));
+    ESString* addString = ESString::create("add");
+    ESFunctionObject* addDOMTokenListESFn = ESFunctionObject::create(
+        nullptr, addDOMTokenListFunction, addString, 1, false);
+    DOMTokenListPrototypeObj->defineDataProperty(addString, true, true, true,
+                                                 addDOMTokenListESFn);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("remove"), false, false, false,
-            ESFunctionObject::create(NULL, removeFunction,
-                                     ESString::create("remove"), 1, false));
+    ESString* removeString = ESString::create("remove");
+    ESFunctionObject* removeESFn = ESFunctionObject::create(
+        nullptr, removeFunction, removeString, 1, false);
+    DOMTokenListPrototypeObj->defineDataProperty(removeString, true, true, true,
+                                                 removeESFn);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("toggle"), false, false, false,
-            ESFunctionObject::create(NULL, toggleFunction,
-                                     ESString::create("toggle"), 1, false));
+    ESString* toggleString = ESString::create("toggle");
+    ESFunctionObject* toggleESFn = ESFunctionObject::create(
+        nullptr, toggleFunction, toggleString, 1, false);
+    DOMTokenListPrototypeObj->defineDataProperty(toggleString, true, true, true,
+                                                 toggleESFn);
 
-    DOMTokenListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("toString"), true, false, true,
-            ESFunctionObject::create(NULL, toStringFunction,
-                                     ESString::create("toString"), 1, false));
+    ESString* toStringString = ESString::create("toString");
+    ESFunctionObject* toStringESFn = ESFunctionObject::create(
+        nullptr, toStringFunction, toStringString, 0, false);
+    DOMTokenListPrototypeObj->defineDataProperty(toStringString, true, true,
+                                                 true, toStringESFn);
 
     return DOMTokenListFunction;
 }

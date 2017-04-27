@@ -264,9 +264,8 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getElementsByTagName", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     HTMLCollection* result = nullptr;
@@ -288,9 +287,8 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getElementsByClassName", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     HTMLCollection* result = nullptr;
@@ -312,9 +310,8 @@ static ESValue createElementFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "createElement", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     Element* result = nullptr;
@@ -357,9 +354,8 @@ static ESValue createTextNodeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "createTextNode", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     Text* result = nullptr;
@@ -381,9 +377,8 @@ static ESValue createCommentFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "createComment", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     Comment* result = nullptr;
@@ -405,9 +400,8 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "createAttribute", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     Attr* result = nullptr;
@@ -434,9 +428,10 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "elementFromPoint", "Document", "2", buffer);
     }
     // Declare return value (empty when void)
     Element* result = nullptr;
@@ -465,9 +460,8 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
-        auto msg = ESString::create("Not enough arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "getElementById", "Document", "1", "0");
     }
     // Declare return value (empty when void)
     Element* result = nullptr;
@@ -486,7 +480,6 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-// TODO Move throw DOM exception code into querySelector()
 static ESValue querySelectorFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -531,7 +524,6 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
     return ESValue(ESValue::ESNull);
 }
 
-// TODO Move throw DOM exception code into querySelectorAll()
 static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
     ESValue thisValue =

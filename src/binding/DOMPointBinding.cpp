@@ -148,20 +148,17 @@ ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBindingInstance)
     ESString* DOMPointString = ESString::create("DOMPoint");
     ESFunctionObject* DOMPointFunction = ESFunctionObject::create(
         nullptr, dompointConstructor, DOMPointString, 0, true, true);
+    ESObject* DOMPointPrototypeObj =
+        DOMPointFunction->protoType().asESPointer()->asESObject();
     DOMPointFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMPointFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMPointFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    DOMPointPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMPointPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMPointReadOnly()->protoType());
     DOMPointFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMPointReadOnly());
-    ESObject* DOMPointPrototypeObj =
-        DOMPointFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* xString = ESString::create("x");

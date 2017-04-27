@@ -148,20 +148,17 @@ ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
     ESString* DOMRectString = ESString::create("DOMRect");
     ESFunctionObject* DOMRectFunction = ESFunctionObject::create(
         nullptr, domrectConstructor, DOMRectString, 0, true, true);
+    ESObject* DOMRectPrototypeObj =
+        DOMRectFunction->protoType().asESPointer()->asESObject();
     DOMRectFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMRectFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMRectFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    DOMRectPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMRectPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMRectReadOnly()->protoType());
     DOMRectFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnDOMRectReadOnly());
-    ESObject* DOMRectPrototypeObj =
-        DOMRectFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* xString = ESString::create("x");

@@ -67,20 +67,16 @@ ESFunctionObject* bindingDOMRectList(
     ESString* DOMRectListString = ESString::create("DOMRectList");
     ESFunctionObject* DOMRectListFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, DOMRectListString, 0, true, true);
+    ESObject* DOMRectListPrototypeObj =
+        DOMRectListFunction->protoType().asESPointer()->asESObject();
     DOMRectListFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    DOMRectListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    DOMRectListFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* DOMRectListPrototypeObj =
-        DOMRectListFunction->protoType().asESPointer()->asESObject();
+    DOMRectListPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMRectListPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                              ->m_instance->globalObject()
+                                              ->objectPrototype());
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");

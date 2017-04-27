@@ -37,20 +37,16 @@ ESFunctionObject* bindingCSSRule(ScriptBindingInstance* scriptBindingInstance)
     ESString* CSSRuleString = ESString::create("CSSRule");
     ESFunctionObject* CSSRuleFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, CSSRuleString, 0, true, true);
+    ESObject* CSSRulePrototypeObj =
+        CSSRuleFunction->protoType().asESPointer()->asESObject();
     CSSRuleFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    CSSRuleFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    CSSRuleFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* CSSRulePrototypeObj =
-        CSSRuleFunction->protoType().asESPointer()->asESObject();
+    CSSRulePrototypeObj->forceNonVectorHiddenClass(false);
+    CSSRulePrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                          ->m_instance->globalObject()
+                                          ->objectPrototype());
 
     // Bind for constants
     ESString* STYLE_RULEString = ESString::create("STYLE_RULE");
