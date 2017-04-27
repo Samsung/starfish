@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/Event.h"
 #include "dom/EventTarget.h"
 
@@ -36,26 +33,28 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
                         "addEventListener", "EventTarget", "2", buffer);
     }
     size_t validArgCount = 3;
-    // Native value to ESValue (empty when void)
+    bool argCounting = true;
+    // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
+    // Handle argument arg2
+    bool value2;
+    if (argCounting && arg2.isUndefined()) {
+        validArgCount--;
+    } else {
+        argCounting = false;
+        value2 = arg2.toBoolean();
+    }
     // Handle argument arg1
     EventListener* value1 = nullptr;
     if (!arg1.isUndefinedOrNull()) {
         value1 = new EventListener(arg1);
     }
-    // Handle argument arg2
-    bool value2;
-    if (arg2.isUndefinedOrNull()) {
-        validArgCount--;
-    } else {
-        value2 = arg2.toBoolean();
-    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     // Call native function (nargs: 2-3)
     if (validArgCount == 2) {
         originalObj->addEventListener(value0, value1);
@@ -78,26 +77,28 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
                         "removeEventListener", "EventTarget", "2", buffer);
     }
     size_t validArgCount = 3;
-    // Native value to ESValue (empty when void)
+    bool argCounting = true;
+    // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
+    // Handle argument arg2
+    bool value2;
+    if (argCounting && arg2.isUndefined()) {
+        validArgCount--;
+    } else {
+        argCounting = false;
+        value2 = arg2.toBoolean();
+    }
     // Handle argument arg1
     EventListener* value1 = nullptr;
     if (!arg1.isUndefinedOrNull()) {
         value1 = new EventListener(arg1);
     }
-    // Handle argument arg2
-    bool value2;
-    if (arg2.isUndefinedOrNull()) {
-        validArgCount--;
-    } else {
-        value2 = arg2.toBoolean();
-    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     // Call native function (nargs: 2-3)
     if (validArgCount == 2) {
         originalObj->removeEventListener(value0, value1);
@@ -119,7 +120,7 @@ static ESValue dispatchEventFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "dispatchEvent", "EventTarget", "1", buffer);
     }
-    // Native value to ESValue (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -141,20 +142,16 @@ ESFunctionObject* bindingEventTarget(
     ESString* EventTargetString = ESString::create("EventTarget");
     ESFunctionObject* EventTargetFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, EventTargetString, 0, true, true);
+    ESObject* EventTargetPrototypeObj =
+        EventTargetFunction->protoType().asESPointer()->asESObject();
     EventTargetFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    EventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* EventTargetPrototypeObj =
-        EventTargetFunction->protoType().asESPointer()->asESObject();
+    EventTargetPrototypeObj->forceNonVectorHiddenClass(false);
+    EventTargetPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                              ->m_instance->globalObject()
+                                              ->objectPrototype());
 
     // Bind for functions
     ESString* addEventListenerString = ESString::create("addEventListener");

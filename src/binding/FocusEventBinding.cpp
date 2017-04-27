@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/EventTarget.h"
 #include "dom/FocusEvent.h"
 
@@ -87,20 +84,17 @@ ESFunctionObject* bindingFocusEvent(
     ESString* FocusEventString = ESString::create("FocusEvent");
     ESFunctionObject* FocusEventFunction = ESFunctionObject::create(
         nullptr, focuseventConstructor, FocusEventString, 1, true, true);
+    ESObject* FocusEventPrototypeObj =
+        FocusEventFunction->protoType().asESPointer()->asESObject();
     FocusEventFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    FocusEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    FocusEventFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    FocusEventPrototypeObj->forceNonVectorHiddenClass(false);
+    FocusEventPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnUIEvent()->protoType());
     FocusEventFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnUIEvent());
-    ESObject* FocusEventPrototypeObj =
-        FocusEventFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* relatedTargetString = ESString::create("relatedTarget");

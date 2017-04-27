@@ -45,7 +45,7 @@ public:
         return true;
     }
 
-    size_t length();
+    uint32_t length();
     ScriptValue state();
 
     void back();
@@ -73,7 +73,7 @@ public:
 protected:
     StarFish* m_starFish;
     GCVector<HistoryEntry*> m_historyEntries;
-    size_t m_offset;
+    uint32_t m_offset;
     URL* getURL();
 
     bool navigate(int offset);

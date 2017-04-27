@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "platform/location/Coordinates.h"
 #include "platform/location/Geoposition.h"
 
@@ -29,31 +25,51 @@ using namespace escargot;
 static ESValue coordsGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
-    Coordinates* v = originalObj->coords();
-    return v->scriptValue();
+    // Declare native value (empty when type is void)
+    Coordinates* result = nullptr;
+    result = originalObj->coords();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue timestampGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Geoposition);
-    DOMTimeStamp v = originalObj->timestamp();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    uint64_t result;
+    result = originalObj->timestamp();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 ESFunctionObject* bindingGeoposition(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION(Geoposition, fetchData(scriptBindingInstance)
-                                     ->m_instance->globalObject()
-                                     ->objectPrototype());
+    // Bind for constructor
+    ESString* GeopositionString = ESString::create("Geoposition");
+    ESFunctionObject* GeopositionFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, GeopositionString, 0, true, true);
+    ESObject* GeopositionPrototypeObj =
+        GeopositionFunction->protoType().asESPointer()->asESObject();
+    GeopositionFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    GeopositionPrototypeObj->forceNonVectorHiddenClass(false);
+    GeopositionPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                              ->m_instance->globalObject()
+                                              ->objectPrototype());
 
+    // Bind for attributes
+    ESString* coordsString = ESString::create("coords");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        GeopositionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("coords"), coordsGetterFunction, nullptr);
+        GeopositionPrototypeObj, coordsString, coordsGetterFunction, nullptr);
 
+    ESString* timestampString = ESString::create("timestamp");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        GeopositionFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("timestamp"), timestampGetterFunction, nullptr);
+        GeopositionPrototypeObj, timestampString, timestampGetterFunction,
+        nullptr);
 
     return GeopositionFunction;
 }
