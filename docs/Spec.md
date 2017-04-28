@@ -19,6 +19,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | |
 | [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element) | type | text/css | &lt;style type="text/css"&gt; | &lt;URL&gt; must be a local path |
 | [body](https://www.w3.org/TR/html5/sections.html#the-body-element) | | | | |
+| [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements) | | | | |
 | [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element) | | | | |
 | [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | | | | |
 | [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element) | | | | |
@@ -29,6 +30,21 @@ This section describes the complete list of supported HTML tags and attributes b
 | [script](https://developer.tizen.org/development/api-references/web-application?redirect=https%3A//developer.tizen.org/dev-guide/2.3.2/org.tizen.web.apireference/html/widget_spec/web_widget.html&langredirect=1#user-content-additional-supported-apis) | src | &lt;URL&gt; | &lt;script src="local_path"&gt; | &lt;URL&gt; must be a local path |
 | | type | text/javascript | &lt;script type="text/javascript"&gt; | |
 | | charset | UTF-8 | &lt;script charset="UTF-8"&gt; | |
+| [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element) | width | pixels &#124; &lt;percentage&gt; | | |
+| | bgcolor | &lt;color&gt; | | |
+| [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) | | | | |
+| [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element) | | | | |
+| [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element) | | | | |
+| [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element) | | | | |
+| [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element) | | | | |
+| [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element) | | | | |
+| [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element) | bgcolor | &lt;color&gt; | | |
+| [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element) | width | pixels &#124; &lt;percentage&gt; | | |
+| | colspan | number | | |
+| | bgcolor | &lt;color&gt; | | |
+| [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element) | width | pixels &#124; &lt;percentage&gt; | | |
+| | bgcolor | &lt;color&gt; | | |
+| [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element) | | | | |
 | [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype) | | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported. |
 
 
