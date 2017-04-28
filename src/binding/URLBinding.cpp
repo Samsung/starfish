@@ -24,33 +24,40 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for constructor
 static ESValue urlConstructor(ESVMInstance* instance)
 {
-    int argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 1) {
-        // throw error
-    } else if (argCount == 1) {
-        ESValue urlString =
-            instance->currentExecutionContext()->readArgument(0);
-        auto url = URL::createURL(
-            String::emptyString,
-            String::fromUTF8(urlString.asESString()->utf8Data()));
-        return url->scriptValue();
-    } else { // ignore redundant arguments
-        ESValue urlString =
-            instance->currentExecutionContext()->readArgument(0);
-        ESValue baseURLString =
-            instance->currentExecutionContext()->readArgument(1);
-        // FIXME second argument can be not only string but also
-        // object
-        STARFISH_ASSERT(baseURLString.isESString());
-
-        auto url = URL::createURL(
-            String::fromUTF8(baseURLString.asESString()->utf8Data()),
-            String::fromUTF8(urlString.asESString()->utf8Data()));
-        return url->scriptValue();
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "URL");
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "URL", "1",
+                        buffer);
+    }
+    size_t validArgCount = 2;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    if (arg1.isUndefined()) {
+        validArgCount--;
+    } else {
+        value1 = toBrowserString(arg1);
+    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    URL* result = nullptr;
+    // Call native function (nargs: 1-2)
+    if (validArgCount == 1) {
+        result = new URL(value0);
+    } else if (validArgCount == 2) {
+        result = new URL(value0, value1);
+    }
+    return result->scriptValue();
 }
 
 // Implement for attributes
@@ -296,37 +303,107 @@ static ESValue hashSetterFunction(ESVMInstance* instance)
 }
 #endif
 
-static ESValue createObjectURLFunction(ESVMInstance* instance)
+// Implement for functions
+#ifdef STARFISH_ENABLE_TEST
+static ESValue toStringFunction(ESVMInstance* instance)
+{
+    return hrefGetterFunction(instance);
+}
+#endif
+
+static bool createObjectURL1Checker(ESVMInstance* instance)
 {
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    if (arg0.isObject() &&
-        (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) &&
-        ((ScriptWrappable*)arg0.asObject()->extraPointerData())->isBlob()) {
-        Blob* b = (Blob*)arg0.toObject()->extraPointerData();
-        String* url = URL::createObjectURL(b);
-        return toJSString(url);
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-    } else if (arg0.isObject() &&
-               (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) &&
-               ((ScriptWrappable*)arg0.asObject()->extraPointerData())
-                   ->isMediaSource()) {
-        MediaSource* m = (MediaSource*)arg0.toObject()->extraPointerData();
-        String* url = URL::createObjectURL(m);
-        return toJSString(url);
-#endif
-    } else {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
-                        "createObjectURL", "URL");
+    if (!_CHECK_TYPEOF(arg0, Blob)) {
+        return false;
     }
+    return true;
+}
+
+static ESValue createObjectURL1Function(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    Blob* value0 = nullptr;
+    value0 = (Blob*)(arg0.asESPointer()->asESObject()->extraPointerData());
+    // Call native function (nargs: 1)
+    result = URL::createObjectURL(value0);
+
+    // Return ESValue from native value
+    return toJSString(result);
+}
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+static bool createObjectURL2Checker(ESVMInstance* instance)
+{
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    if (!_CHECK_TYPEOF(arg0, MediaSource)) {
+        return false;
+    }
+    return true;
+}
+#endif
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+static ESValue createObjectURL2Function(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    MediaSource* value0 = nullptr;
+    value0 =
+        (MediaSource*)(arg0.asESPointer()->asESObject()->extraPointerData());
+    // Call native function (nargs: 1)
+    result = URL::createObjectURL(value0);
+
+    // Return ESValue from native value
+    return toJSString(result);
+}
+#endif
+
+static ESValue createObjectURLFunction(ESVMInstance* instance)
+{
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount >= 1 && createObjectURL1Checker(instance)) {
+        return createObjectURL1Function(instance);
+    }
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    if (argCount >= 1 && createObjectURL2Checker(instance)) {
+        return createObjectURL2Function(instance);
+    }
+#endif
+
+    THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
+                    "createObjectURL", "URL");
 }
 
 static ESValue revokeObjectURLFunction(ESVMInstance* instance)
 {
-    String* arg0 = toBrowserString(
-        instance->currentExecutionContext()->readArgument(0).toString());
-    StarFish* sf = fetchStarFish(instance);
-    URL::revokeObjectURL(sf, arg0);
-    return ESValue();
+    GENERATE_THIS_AND_CHECK_TYPE(URL);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "revokeObjectURL", "URL", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    StarFish* callWith = fetchStarFish(instance);
+    // Call native function (nargs: 1)
+    URL::revokeObjectURL(callWith, value0);
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
@@ -423,7 +500,15 @@ ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
         URLPrototypeObj, hashString, hashGetterFunction, hashSetterFunction);
 #endif
 
-    // Bind for functions
+// Bind for functions
+#ifdef STARFISH_ENABLE_TEST
+    ESString* toStringString = ESString::create("toString");
+    ESFunctionObject* toStringESFn = ESFunctionObject::create(
+        nullptr, toStringFunction, toStringString, 0, false);
+    URLPrototypeObj->defineDataProperty(toStringString, true, true, true,
+                                        toStringESFn);
+#endif
+
     ESString* createObjectURLString = ESString::create("createObjectURL");
     ESFunctionObject* createObjectURLESFn = ESFunctionObject::create(
         nullptr, createObjectURLFunction, createObjectURLString, 1, false);

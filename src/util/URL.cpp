@@ -23,7 +23,12 @@
 
 namespace StarFish {
 
-URL::URL(String* baseURL, String* url)
+URL::URL(String* url)
+    : URL(url, String::emptyString)
+{
+}
+
+URL::URL(String* url, String* baseURL)
     : ScriptWrappable(this)
     , m_string(url)
 {
@@ -307,7 +312,7 @@ void URL::parseURLString(String* baseURL, String* url)
 
 String* URL::getURLString(String* baseURL, String* url)
 {
-    URL* u = new URL(baseURL, url);
+    URL* u = new URL(url, baseURL);
     String* ret = u->href();
     return ret;
 }
