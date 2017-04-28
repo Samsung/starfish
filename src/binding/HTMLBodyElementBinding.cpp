@@ -14,36 +14,91 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLBodyElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-extern ESValue onloadHTMLBodyElementGetterFunction(ESVMInstance* instance);
-extern ESValue onLoadHTMLBodyElementSetterFunction(ESVMInstance* instance);
+// Implement for attributes
+static ESValue onloadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onload();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
 
-extern ESValue onunloadHTMLBodyElementGetterFunction(ESVMInstance* instance);
-extern ESValue onunloadHTMLBodyElementSetterFunction(ESVMInstance* instance);
+static ESValue onloadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnload(value0);
+    return ESValue();
+}
+
+static ESValue onunloadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onunload();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onunloadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLBodyElement);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnunload(value0);
+    return ESValue();
+}
 
 ESFunctionObject* bindingHTMLBodyElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLBodyElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLBodyElementString = ESString::create("HTMLBodyElement");
+    ESFunctionObject* HTMLBodyElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLBodyElementString, 0, true, true);
+    ESObject* HTMLBodyElementPrototypeObj =
+        HTMLBodyElementFunction->protoType().asESPointer()->asESObject();
+    HTMLBodyElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLBodyElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLBodyElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLBodyElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
+    ESString* onloadString = ESString::create("onload");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onload"), onloadHTMLBodyElementGetterFunction,
-        onLoadHTMLBodyElementSetterFunction);
+        HTMLBodyElementPrototypeObj, onloadString, onloadGetterFunction,
+        onloadSetterFunction);
 
+    ESString* onunloadString = ESString::create("onunload");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLBodyElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onunload"), onunloadHTMLBodyElementGetterFunction,
-        onunloadHTMLBodyElementSetterFunction);
+        HTMLBodyElementPrototypeObj, onunloadString, onunloadGetterFunction,
+        onunloadSetterFunction);
 
     return HTMLBodyElementFunction;
 }

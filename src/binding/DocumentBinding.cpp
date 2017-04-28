@@ -13,27 +13,20 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-#include "dom/Attr.h"
-#include "dom/Comment.h"
-#include "dom/Document.h"
-#include "dom/DocumentFragment.h"
-#include "dom/DocumentType.h"
-#include "dom/DOMException.h"
-#ifdef STARFISH_EXP
-#include "dom/DOMImplementation.h"
-#endif
-#include "dom/Element.h"
-#include "dom/HTMLBodyElement.h"
-#include "dom/HTMLCollection.h"
-#include "dom/HTMLElement.h"
 #include "dom/HTMLHeadElement.h"
-#include "dom/Node.h"
 #include "dom/Text.h"
 #include "extra/Location.h"
-#include "platform/window/Window.h"
+#include "dom/DOMException.h"
+#include "dom/HTMLCollection.h"
+#include "dom/Attr.h"
+#include "dom/HTMLElement.h"
+#include "dom/DocumentType.h"
+#include "dom/DocumentFragment.h"
+#include "dom/Comment.h"
+#include "dom/NodeList.h"
+#include "dom/Element.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
@@ -44,81 +37,112 @@ using namespace escargot;
 static ESValue implementationGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    DOMImplementation* v = originalObj->implementation();
-    return v->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMImplementation* result = nullptr;
+    result = originalObj->implementation();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 #endif
 
 static ESValue URLGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->urlString();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->urlString();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue documentURIGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->urlString();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->urlString();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue compatModeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->compatMode();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->compatMode();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue characterSetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->characterSet();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->characterSet();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue charsetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->characterSet();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->characterSet();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue contentTypeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->contentType();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->contentType();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
 static ESValue doctypeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    DocumentType* v = originalObj->doctype();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    DocumentType* result = nullptr;
+    result = originalObj->doctype();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 static ESValue documentElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    Element* v = originalObj->documentElement();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    result = originalObj->documentElement();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 static ESValue locationGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    Location* v = originalObj->location();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    Location* result = nullptr;
+    result = originalObj->location();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 extern ESValue locationDocumentSetterFunction(ESVMInstance* instance);
@@ -126,11 +150,14 @@ extern ESValue locationDocumentSetterFunction(ESVMInstance* instance);
 static ESValue bodyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    HTMLElement* v = originalObj->body();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    HTMLElement* result = nullptr;
+    result = originalObj->body();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 extern ESValue bodyDocumentSetterFunction(ESVMInstance* instance);
@@ -138,11 +165,14 @@ extern ESValue bodyDocumentSetterFunction(ESVMInstance* instance);
 static ESValue headGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    HTMLHeadElement* v = originalObj->head();
-    if (v != nullptr) {
-        return v->scriptValue();
+    // Declare native value (empty when type is void)
+    HTMLHeadElement* result = nullptr;
+    result = originalObj->head();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
     }
-    return ESValue(ESValue::ESNull);
+    return result->scriptValue();
 }
 
 extern ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance);
@@ -150,124 +180,755 @@ extern ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance);
 static ESValue hiddenGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    bool v = originalObj->hidden();
-    return ESValue(v);
+    // Declare native value (empty when type is void)
+    bool result;
+    result = originalObj->hidden();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue visibilityStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    String* v = originalObj->visibilityState();
-    return toJSString(v);
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->visibilityState();
+    // Return ESValue from native value
+    return toJSString(result);
 }
 
-static ESValue childrenGetterFunction(ESVMInstance* instance)
+static ESValue onabortGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    return originalObj->children()->scriptValue();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onabort();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
-static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
+static ESValue onabortSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    return originalObj->firstElementChild()->scriptValue();
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnabort(value0);
+    return ESValue();
 }
 
-static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
+static ESValue oncanplayGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    return originalObj->lastElementChild()->scriptValue();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->oncanplay();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
-static ESValue childElementCountGetterFunction(ESVMInstance* instance)
+static ESValue oncanplaySetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    uint32_t v = originalObj->childElementCount();
-    return ESValue(v);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOncanplay(value0);
+    return ESValue();
+}
+
+static ESValue oncanplaythroughGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->oncanplaythrough();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue oncanplaythroughSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOncanplaythrough(value0);
+    return ESValue();
 }
 
 static ESValue onclickGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
-    return originalObj->onclick();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onclick();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onclickSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnclick(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnclick(value0);
     return ESValue();
 }
 
-static ESValue onmouseoverGetterFunction(ESVMInstance* instance)
+static ESValue ondurationchangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
-    return originalObj->onmouseover();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->ondurationchange();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
-static ESValue onmouseoverSetterFunction(ESVMInstance* instance)
+static ESValue ondurationchangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOndurationchange(value0);
+    return ESValue();
+}
 
-    originalObj->setOnmouseover(arg0);
+static ESValue onemptiedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onemptied();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
 
+static ESValue onemptiedSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnemptied(value0);
+    return ESValue();
+}
+
+static ESValue onendedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onended();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onendedSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnended(value0);
+    return ESValue();
+}
+
+static ESValue onerrorGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onerror();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onerrorSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnerror(value0);
     return ESValue();
 }
 
 static ESValue onfocusGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
-    return originalObj->onfocus();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onfocus();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onfocusSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnfocus(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnfocus(value0);
     return ESValue();
 }
 
 static ESValue onkeydownGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
-    return originalObj->onkeydown();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onkeydown();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onkeydownSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnkeydown(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnkeydown(value0);
     return ESValue();
 }
 
+static ESValue onkeyupGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onkeyup();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onkeyupSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnkeyup(value0);
+    return ESValue();
+}
+
+static ESValue onloadGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onload();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onloadSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnload(value0);
+    return ESValue();
+}
+
+static ESValue onloadeddataGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onloadeddata();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onloadeddataSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnloadeddata(value0);
+    return ESValue();
+}
+
+static ESValue onloadedmetadataGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onloadedmetadata();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onloadedmetadataSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnloadedmetadata(value0);
+    return ESValue();
+}
+
+static ESValue onloadstartGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onloadstart();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onloadstartSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnloadstart(value0);
+    return ESValue();
+}
+
+static ESValue onmouseoverGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onmouseover();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onmouseoverSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnmouseover(value0);
+    return ESValue();
+}
+
+static ESValue onpauseGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onpause();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onpauseSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnpause(value0);
+    return ESValue();
+}
+
+static ESValue onplayGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onplay();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onplaySetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnplay(value0);
+    return ESValue();
+}
+
+static ESValue onplayingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onplaying();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onplayingSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnplaying(value0);
+    return ESValue();
+}
+
+static ESValue onprogressGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onprogress();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onprogressSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnprogress(value0);
+    return ESValue();
+}
+
+static ESValue onratechangeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onratechange();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onratechangeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnratechange(value0);
+    return ESValue();
+}
+
+static ESValue onseekedGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onseeked();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onseekedSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnseeked(value0);
+    return ESValue();
+}
+
+static ESValue onseekingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onseeking();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onseekingSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnseeking(value0);
+    return ESValue();
+}
+
+static ESValue onstalledGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onstalled();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onstalledSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnstalled(value0);
+    return ESValue();
+}
+
+static ESValue onsuspendGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onsuspend();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onsuspendSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnsuspend(value0);
+    return ESValue();
+}
+
+static ESValue ontimeupdateGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->ontimeupdate();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue ontimeupdateSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOntimeupdate(value0);
+    return ESValue();
+}
+
+static ESValue onvolumechangeGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onvolumechange();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onvolumechangeSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnvolumechange(value0);
+    return ESValue();
+}
+
+static ESValue onwaitingGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onwaiting();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue onwaitingSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnwaiting(value0);
+    return ESValue();
+}
+
+static ESValue childrenGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    HTMLCollection* result = nullptr;
+    result = originalObj->children();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    result = originalObj->firstElementChild();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    result = originalObj->lastElementChild();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
+}
+
+static ESValue childElementCountGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->childElementCount();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
 // Implement for functions
+
 static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByTagName", "Document", "1", "0");
+                        "getElementsByTagName", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -287,10 +948,12 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByClassName", "Document", "1", "0");
+                        "getElementsByClassName", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -310,10 +973,12 @@ static ESValue createElementFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createElement", "Document", "1", "0");
+                        "createElement", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -335,7 +1000,7 @@ static ESValue createElementFunction(ESVMInstance* instance)
 static ESValue createDocumentFragmentFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     DocumentFragment* result = nullptr;
     // Call native function (nargs: 0)
     try {
@@ -354,10 +1019,12 @@ static ESValue createTextNodeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createTextNode", "Document", "1", "0");
+                        "createTextNode", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Text* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -377,10 +1044,12 @@ static ESValue createCommentFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createComment", "Document", "1", "0");
+                        "createComment", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Comment* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -400,10 +1069,12 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createAttribute", "Document", "1", "0");
+                        "createAttribute", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Attr* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -417,7 +1088,6 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
     // Return ESValue from native value
     STARFISH_ASSERT(result != nullptr);
     return result->scriptValue();
@@ -433,17 +1103,17 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
                         "elementFromPoint", "Document", "2", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    double value0;
-    value0 = arg0.toNumber();
-
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
+
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
 
     // Call native function (nargs: 2)
     result = originalObj->elementFromPoint(value0, value1);
@@ -460,10 +1130,12 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementById", "Document", "1", "0");
+                        "getElementById", "Document", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -482,305 +1154,383 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
 
 static ESValue querySelectorFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "querySelector", "Document", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    Element* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
-    if (obj->isDocument()) {
-        if (instance->currentExecutionContext()->argumentCount() > 0) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (!argValue.isESString()) {
-                argValue = argValue.toString();
-            }
-            try {
-                ESString* argStr = argValue.asESString();
-                if (*argStr == *(strings->emptyString.string())) {
-                    throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
-                        DOMException::Code::DOM_EXCEPTION,
-                        "Failed to execute 'querySelector' on "
-                        "'Document': The provided selector is "
-                        "empty.");
-                }
-
-                Element* elem = doc->querySelector(toBrowserString(argStr));
-                if (elem != nullptr) {
-                    return elem->scriptValue();
-                }
-            } catch (DOMException* e) {
-                ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            }
-        } else {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                            "querySelector", "Document", "1", "0");
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->querySelector(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return ESValue(ESValue::ESNull);
 }
 
 static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, Node);
-    Node* obj =
-        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    if (obj->isDocument()) {
-        if (instance->currentExecutionContext()->argumentCount() > 0) {
-            Document* doc = obj->asDocument();
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(0);
-            if (!argValue.isESString()) {
-                argValue = argValue.toString();
-            }
-            try {
-                ESString* argStr = argValue.asESString();
-                if (*argStr == *(strings->emptyString.string())) {
-                    throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
-                        DOMException::Code::DOM_EXCEPTION,
-                        "Failed to execute 'querySelectorAll' "
-                        "on 'Document': The provided selector "
-                        "is empty.");
-                }
-
-                NodeList* list = doc->querySelectorAll(toBrowserString(argStr));
-                if (list != nullptr) {
-                    return list->scriptValue();
-                }
-            } catch (DOMException* e) {
-                ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            }
-        } else {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                            "querySelectorAll", "Document", "1", "0")
-        }
-    } else {
-        THROW_ILLEGAL_INVOCATION()
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "querySelectorAll", "Document", "1", buffer);
     }
-    return ESValue(ESValue::ESNull);
+    // Declare native value (empty when type is void)
+    NodeList* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 1)
+    try {
+        result = originalObj->querySelectorAll(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Document, fetchData(scriptBindingInstance)->fnNode());
+    // Bind for constructor
+    ESString* DocumentString = ESString::create("Document");
+    ESFunctionObject* DocumentFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, DocumentString, 0, true, true);
+    ESObject* DocumentPrototypeObj =
+        DocumentFunction->protoType().asESPointer()->asESObject();
+    DocumentFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DocumentPrototypeObj->forceNonVectorHiddenClass(false);
+    DocumentPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode()->protoType());
+    DocumentFunction->set__proto__(fetchData(scriptBindingInstance)->fnNode());
 
-    /* 4.5 Interface Document */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("head"), headGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("body"), bodyGetterFunction,
-        bodyDocumentSetterFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("documentElement"), documentElementGetterFunction,
-        nullptr);
-
+// Bind for attributes
 #ifdef STARFISH_EXP
+    ESString* implementationString = ESString::create("implementation");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("implementation"), implementationGetterFunction,
-        nullptr);
+        DocumentPrototypeObj, implementationString,
+        implementationGetterFunction, nullptr);
 #endif
 
+    ESString* URLString = ESString::create("URL");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("characterSet"), characterSetGetterFunction, nullptr);
+        DocumentPrototypeObj, URLString, URLGetterFunction, nullptr);
 
+    ESString* documentURIString = ESString::create("documentURI");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("charset"), charsetGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("contentType"), contentTypeGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("compatMode"), compatModeGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("documentURI"), documentURIGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("URL"), URLGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("firstElementChild"), firstElementChildGetterFunction,
+        DocumentPrototypeObj, documentURIString, documentURIGetterFunction,
         nullptr);
 
+    ESString* compatModeString = ESString::create("compatMode");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("lastElementChild"), lastElementChildGetterFunction,
+        DocumentPrototypeObj, compatModeString, compatModeGetterFunction,
         nullptr);
 
+    ESString* characterSetString = ESString::create("characterSet");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("childElementCount"), childElementCountGetterFunction,
+        DocumentPrototypeObj, characterSetString, characterSetGetterFunction,
         nullptr);
 
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getElementById"), false, false, false,
-            ESFunctionObject::create(NULL, getElementByIdFunction,
-                                     ESString::create("getElementById"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("querySelector"), true, true, true,
-            ESFunctionObject::create(NULL, querySelectorFunction,
-                                     ESString::create("querySelector"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("querySelectorAll"), true, true, true,
-            ESFunctionObject::create(NULL, querySelectorAllFunction,
-                                     ESString::create("querySelectorAll"), 1,
-                                     false));
-
+    ESString* charsetString = ESString::create("charset");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("doctype"), doctypeGetterFunction, nullptr);
+        DocumentPrototypeObj, charsetString, charsetGetterFunction, nullptr);
 
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createDocumentFragment"), false, false, false,
-            ESFunctionObject::create(NULL, createDocumentFragmentFunction,
-                                     ESString::create("DocumentFragment"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createElement"), false, false, false,
-            ESFunctionObject::create(NULL, createElementFunction,
-                                     ESString::create("createElement"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createTextNode"), false, false, false,
-            ESFunctionObject::create(NULL, createTextNodeFunction,
-                                     ESString::create("createTextNode"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createComment"), false, false, false,
-            ESFunctionObject::create(NULL, createCommentFunction,
-                                     ESString::create("createComment"), 1,
-                                     false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getElementsByTagName"), false, false, false,
-            ESFunctionObject::create(NULL, getElementsByTagNameFunction,
-                                     ESString::create("getElementsByTagName"),
-                                     1, false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getElementsByClassName"), false, false, false,
-            ESFunctionObject::create(NULL, getElementsByClassNameFunction,
-                                     ESString::create("getElementsByClassName"),
-                                     1, false));
-
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createAttribute"), false, false, false,
-            ESFunctionObject::create(NULL, createAttributeFunction,
-                                     ESString::create("createAttribute"), 1,
-                                     false));
-
+    ESString* contentTypeString = ESString::create("contentType");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("children"), childrenGetterFunction, nullptr);
-
-    /* Page Visibility */
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("hidden"), hiddenGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("visibilityState"), visibilityStateGetterFunction,
+        DocumentPrototypeObj, contentTypeString, contentTypeGetterFunction,
         nullptr);
 
-    DocumentFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("elementFromPoint"), false, false, false,
-            ESFunctionObject::create(NULL, elementFromPointFunction,
-                                     ESString::create("elementFromPoint"), 2,
-                                     false));
-
+    ESString* doctypeString = ESString::create("doctype");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onclick"), onclickGetterFunction,
+        DocumentPrototypeObj, doctypeString, doctypeGetterFunction, nullptr);
+
+    ESString* documentElementString = ESString::create("documentElement");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, documentElementString,
+        documentElementGetterFunction, nullptr);
+
+    ESString* locationString = ESString::create("location");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, locationString, locationGetterFunction,
+        locationDocumentSetterFunction);
+
+    ESString* bodyString = ESString::create("body");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, bodyString, bodyGetterFunction,
+        bodyDocumentSetterFunction);
+
+    ESString* headString = ESString::create("head");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, headString, headGetterFunction, nullptr);
+
+    ESString* defaultViewString = ESString::create("defaultView");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, defaultViewString,
+        defaultViewDocumentGetterFunction, nullptr);
+
+    ESString* hiddenString = ESString::create("hidden");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, hiddenString, hiddenGetterFunction, nullptr);
+
+    ESString* visibilityStateString = ESString::create("visibilityState");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, visibilityStateString,
+        visibilityStateGetterFunction, nullptr);
+
+    ESString* onabortString = ESString::create("onabort");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onabortString, onabortGetterFunction,
+        onabortSetterFunction);
+
+    ESString* oncanplayString = ESString::create("oncanplay");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, oncanplayString, oncanplayGetterFunction,
+        oncanplaySetterFunction);
+
+    ESString* oncanplaythroughString = ESString::create("oncanplaythrough");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, oncanplaythroughString,
+        oncanplaythroughGetterFunction, oncanplaythroughSetterFunction);
+
+    ESString* onclickString = ESString::create("onclick");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onclickString, onclickGetterFunction,
         onclickSetterFunction);
 
+    ESString* ondurationchangeString = ESString::create("ondurationchange");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onmouseover"), onmouseoverGetterFunction,
-        onmouseoverSetterFunction);
+        DocumentPrototypeObj, ondurationchangeString,
+        ondurationchangeGetterFunction, ondurationchangeSetterFunction);
 
+    ESString* onemptiedString = ESString::create("onemptied");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onfocus"), onfocusGetterFunction,
+        DocumentPrototypeObj, onemptiedString, onemptiedGetterFunction,
+        onemptiedSetterFunction);
+
+    ESString* onendedString = ESString::create("onended");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onendedString, onendedGetterFunction,
+        onendedSetterFunction);
+
+    ESString* onerrorString = ESString::create("onerror");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onerrorString, onerrorGetterFunction,
+        onerrorSetterFunction);
+
+    ESString* onfocusString = ESString::create("onfocus");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onfocusString, onfocusGetterFunction,
         onfocusSetterFunction);
 
+    ESString* onkeydownString = ESString::create("onkeydown");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("onkeydown"), onkeydownGetterFunction,
+        DocumentPrototypeObj, onkeydownString, onkeydownGetterFunction,
         onkeydownSetterFunction);
 
+    ESString* onkeyupString = ESString::create("onkeyup");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("defaultView"), defaultViewDocumentGetterFunction,
-        nullptr);
+        DocumentPrototypeObj, onkeyupString, onkeyupGetterFunction,
+        onkeyupSetterFunction);
 
+    ESString* onloadString = ESString::create("onload");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("location"), locationGetterFunction,
-        locationDocumentSetterFunction);
+        DocumentPrototypeObj, onloadString, onloadGetterFunction,
+        onloadSetterFunction);
+
+    ESString* onloadeddataString = ESString::create("onloadeddata");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onloadeddataString, onloadeddataGetterFunction,
+        onloadeddataSetterFunction);
+
+    ESString* onloadedmetadataString = ESString::create("onloadedmetadata");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onloadedmetadataString,
+        onloadedmetadataGetterFunction, onloadedmetadataSetterFunction);
+
+    ESString* onloadstartString = ESString::create("onloadstart");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onloadstartString, onloadstartGetterFunction,
+        onloadstartSetterFunction);
+
+    ESString* onmouseoverString = ESString::create("onmouseover");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onmouseoverString, onmouseoverGetterFunction,
+        onmouseoverSetterFunction);
+
+    ESString* onpauseString = ESString::create("onpause");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onpauseString, onpauseGetterFunction,
+        onpauseSetterFunction);
+
+    ESString* onplayString = ESString::create("onplay");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onplayString, onplayGetterFunction,
+        onplaySetterFunction);
+
+    ESString* onplayingString = ESString::create("onplaying");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onplayingString, onplayingGetterFunction,
+        onplayingSetterFunction);
+
+    ESString* onprogressString = ESString::create("onprogress");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onprogressString, onprogressGetterFunction,
+        onprogressSetterFunction);
+
+    ESString* onratechangeString = ESString::create("onratechange");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onratechangeString, onratechangeGetterFunction,
+        onratechangeSetterFunction);
+
+    ESString* onseekedString = ESString::create("onseeked");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onseekedString, onseekedGetterFunction,
+        onseekedSetterFunction);
+
+    ESString* onseekingString = ESString::create("onseeking");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onseekingString, onseekingGetterFunction,
+        onseekingSetterFunction);
+
+    ESString* onstalledString = ESString::create("onstalled");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onstalledString, onstalledGetterFunction,
+        onstalledSetterFunction);
+
+    ESString* onsuspendString = ESString::create("onsuspend");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onsuspendString, onsuspendGetterFunction,
+        onsuspendSetterFunction);
+
+    ESString* ontimeupdateString = ESString::create("ontimeupdate");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, ontimeupdateString, ontimeupdateGetterFunction,
+        ontimeupdateSetterFunction);
+
+    ESString* onvolumechangeString = ESString::create("onvolumechange");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onvolumechangeString,
+        onvolumechangeGetterFunction, onvolumechangeSetterFunction);
+
+    ESString* onwaitingString = ESString::create("onwaiting");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, onwaitingString, onwaitingGetterFunction,
+        onwaitingSetterFunction);
+
+    ESString* childrenString = ESString::create("children");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, childrenString, childrenGetterFunction, nullptr);
+
+    ESString* firstElementChildString = ESString::create("firstElementChild");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, firstElementChildString,
+        firstElementChildGetterFunction, nullptr);
+
+    ESString* lastElementChildString = ESString::create("lastElementChild");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, lastElementChildString,
+        lastElementChildGetterFunction, nullptr);
+
+    ESString* childElementCountString = ESString::create("childElementCount");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentPrototypeObj, childElementCountString,
+        childElementCountGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* getElementsByTagNameString =
+        ESString::create("getElementsByTagName");
+    ESFunctionObject* getElementsByTagNameESFn =
+        ESFunctionObject::create(nullptr, getElementsByTagNameFunction,
+                                 getElementsByTagNameString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(
+        getElementsByTagNameString, true, true, true, getElementsByTagNameESFn);
+
+    ESString* getElementsByClassNameString =
+        ESString::create("getElementsByClassName");
+    ESFunctionObject* getElementsByClassNameESFn =
+        ESFunctionObject::create(nullptr, getElementsByClassNameFunction,
+                                 getElementsByClassNameString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(getElementsByClassNameString, true,
+                                             true, true,
+                                             getElementsByClassNameESFn);
+
+    ESString* createElementString = ESString::create("createElement");
+    ESFunctionObject* createElementESFn = ESFunctionObject::create(
+        nullptr, createElementFunction, createElementString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(createElementString, true, true,
+                                             true, createElementESFn);
+
+    ESString* createDocumentFragmentString =
+        ESString::create("createDocumentFragment");
+    ESFunctionObject* createDocumentFragmentESFn =
+        ESFunctionObject::create(nullptr, createDocumentFragmentFunction,
+                                 createDocumentFragmentString, 0, false);
+    DocumentPrototypeObj->defineDataProperty(createDocumentFragmentString, true,
+                                             true, true,
+                                             createDocumentFragmentESFn);
+
+    ESString* createTextNodeString = ESString::create("createTextNode");
+    ESFunctionObject* createTextNodeESFn = ESFunctionObject::create(
+        nullptr, createTextNodeFunction, createTextNodeString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(createTextNodeString, true, true,
+                                             true, createTextNodeESFn);
+
+    ESString* createCommentString = ESString::create("createComment");
+    ESFunctionObject* createCommentESFn = ESFunctionObject::create(
+        nullptr, createCommentFunction, createCommentString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(createCommentString, true, true,
+                                             true, createCommentESFn);
+
+    ESString* createAttributeString = ESString::create("createAttribute");
+    ESFunctionObject* createAttributeESFn = ESFunctionObject::create(
+        nullptr, createAttributeFunction, createAttributeString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(createAttributeString, true, true,
+                                             true, createAttributeESFn);
+
+    ESString* elementFromPointString = ESString::create("elementFromPoint");
+    ESFunctionObject* elementFromPointESFn = ESFunctionObject::create(
+        nullptr, elementFromPointFunction, elementFromPointString, 2, false);
+    DocumentPrototypeObj->defineDataProperty(elementFromPointString, true, true,
+                                             true, elementFromPointESFn);
+
+    ESString* getElementByIdString = ESString::create("getElementById");
+    ESFunctionObject* getElementByIdESFn = ESFunctionObject::create(
+        nullptr, getElementByIdFunction, getElementByIdString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(getElementByIdString, true, true,
+                                             true, getElementByIdESFn);
+
+    ESString* querySelectorString = ESString::create("querySelector");
+    ESFunctionObject* querySelectorESFn = ESFunctionObject::create(
+        nullptr, querySelectorFunction, querySelectorString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(querySelectorString, true, true,
+                                             true, querySelectorESFn);
+
+    ESString* querySelectorAllString = ESString::create("querySelectorAll");
+    ESFunctionObject* querySelectorAllESFn = ESFunctionObject::create(
+        nullptr, querySelectorAllFunction, querySelectorAllString, 1, false);
+    DocumentPrototypeObj->defineDataProperty(querySelectorAllString, true, true,
+                                             true, querySelectorAllESFn);
 
     return DocumentFunction;
 }

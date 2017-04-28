@@ -122,11 +122,15 @@ public:
         return true;
     }
 
+#define VIRTUAL
+#define OVERRIDE
     DECLARE_EVENT_LISTENER(updatestart);
     DECLARE_EVENT_LISTENER(update);
     DECLARE_EVENT_LISTENER(updateend);
     DECLARE_EVENT_LISTENER(error);
     DECLARE_EVENT_LISTENER(abort);
+#undef VIRTUAL
+#undef OVERRIDE
 
     void appendBuffer(const uint8_t* data, unsigned long length);
     void abort();

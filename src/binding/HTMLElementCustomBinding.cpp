@@ -14,157 +14,29 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "dom/CSSStyleDeclaration.h"
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESValue onclickHTMLElementGetterFunction(ESVMInstance* instance)
+ESValue styleHTMLElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    return originalObj->onclick();
+    CSSStyleDeclaration* result = originalObj->inlineStyle();
+    return result->scriptValue();
 }
 
-ESValue onclickHTMLElementSetterFunction(ESVMInstance* instance)
+ESValue styleHTMLElementSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    String* value0 = toBrowserString(arg0);
 
-    originalObj->setOnclick(arg0);
-
-    return ESValue();
-}
-
-ESValue onmouseoverHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onmouseover();
-}
-
-ESValue onmouseoverHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnmouseover(arg0);
-
-    return ESValue();
-}
-
-ESValue onloadHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onload();
-}
-
-ESValue onloadHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnload(arg0);
-
-    return ESValue();
-}
-
-ESValue onunloadHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onunload();
-}
-
-ESValue onunloadHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnunload(arg0);
-
-    return ESValue();
-}
-
-ESValue onkeydownHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onkeydown();
-}
-
-ESValue onkeydownHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnkeydown(arg0);
-
-    return ESValue();
-}
-
-ESValue onkeyupHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onkeyup();
-}
-
-ESValue onkeyupHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnkeyup(arg0);
-
-    return ESValue();
-}
-
-ESValue onfocusHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onfocus();
-}
-
-ESValue onfocusHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnfocus(arg0);
-
-    return ESValue();
-}
-
-ESValue onerrorHTMLElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    return originalObj->onerror();
-}
-
-ESValue onerrorHTMLElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnerror(arg0);
-
+    originalObj->setStyleAttr(value0);
     return ESValue();
 }
 }

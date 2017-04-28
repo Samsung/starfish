@@ -13,15 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "dom/DOMException.h"
+#include "extra/TimeRanges.h"
 #include "dom/TextTrackList.h"
 #include "extra/SourceBuffer.h"
-#include "extra/TimeRanges.h"
 
 namespace StarFish {
 
@@ -31,7 +27,7 @@ using namespace escargot;
 static ESValue modeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->mode();
     // Return ESValue from native value
@@ -52,7 +48,7 @@ static ESValue modeSetterFunction(ESVMInstance* instance)
 static ESValue updatingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->updating();
     // Return ESValue from native value
@@ -62,7 +58,7 @@ static ESValue updatingGetterFunction(ESVMInstance* instance)
 static ESValue bufferedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TimeRanges* result = nullptr;
     result = originalObj->buffered();
     // Return ESValue from native value
@@ -73,7 +69,7 @@ static ESValue bufferedGetterFunction(ESVMInstance* instance)
 static ESValue timestampOffsetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->timestampOffset();
     // Return ESValue from native value
@@ -98,7 +94,7 @@ static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
 static ESValue textTracksGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrackList* result = nullptr;
     result = originalObj->textTracks();
     // Return ESValue from native value
@@ -109,7 +105,7 @@ static ESValue textTracksGetterFunction(ESVMInstance* instance)
 static ESValue appendWindowStartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->appendWindowStart();
     // Return ESValue from native value
@@ -134,7 +130,7 @@ static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
 static ESValue appendWindowEndGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->appendWindowEnd();
     // Return ESValue from native value
@@ -155,94 +151,125 @@ static ESValue appendWindowEndSetterFunction(ESVMInstance* instance)
 static ESValue onupdatestartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
-    return originalObj->onupdatestart();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onupdatestart();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onupdatestartSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnupdatestart(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnupdatestart(value0);
     return ESValue();
 }
 
 static ESValue onupdateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
-    return originalObj->onupdate();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onupdate();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onupdateSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnupdate(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnupdate(value0);
     return ESValue();
 }
 
 static ESValue onupdateendGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
-    return originalObj->onupdateend();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onupdateend();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onupdateendSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnupdateend(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnupdateend(value0);
     return ESValue();
 }
 
 static ESValue onerrorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
-    return originalObj->onerror();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onerror();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onerrorSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnerror(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnerror(value0);
     return ESValue();
 }
 
 static ESValue onabortGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
-    return originalObj->onabort();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onabort();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onabortSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnabort(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnabort(value0);
     return ESValue();
 }
 
 // Implement for functions
+
 extern ESValue appendBufferSourceBufferFunction(ESVMInstance* instance);
 
 static ESValue abortFunction(ESVMInstance* instance)
@@ -265,21 +292,21 @@ static ESValue removeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(SourceBuffer);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 2) {
-        char buffer[1 + 1];
-        snprintf(buffer, 1, "%zd", argCount);
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "remove",
                         "SourceBuffer", "2", buffer);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    double value0;
-    value0 = arg0.toNumber();
-
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
+
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
 
     // Call native function (nargs: 2)
     try {
@@ -299,20 +326,17 @@ ESFunctionObject* bindingSourceBuffer(
     ESString* SourceBufferString = ESString::create("SourceBuffer");
     ESFunctionObject* SourceBufferFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, SourceBufferString, 0, true, true);
+    ESObject* SourceBufferPrototypeObj =
+        SourceBufferFunction->protoType().asESPointer()->asESObject();
     SourceBufferFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    SourceBufferFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    SourceBufferFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    SourceBufferPrototypeObj->forceNonVectorHiddenClass(false);
+    SourceBufferPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
     SourceBufferFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget());
-    ESObject* SourceBufferPrototypeObj =
-        SourceBufferFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* modeString = ESString::create("mode");
@@ -375,21 +399,25 @@ ESFunctionObject* bindingSourceBuffer(
         SourceBufferPrototypeObj, onabortString, onabortGetterFunction,
         onabortSetterFunction);
 
-    SourceBufferFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("remove"), true, true, true,
-            ESFunctionObject::create(NULL, removeFunction,
-                                     ESString::create("remove"), 2, false));
+    // Bind for functions
+    ESString* appendBufferString = ESString::create("appendBuffer");
+    ESFunctionObject* appendBufferSourceBufferESFn =
+        ESFunctionObject::create(nullptr, appendBufferSourceBufferFunction,
+                                 appendBufferString, 1, false);
+    SourceBufferPrototypeObj->defineDataProperty(
+        appendBufferString, true, true, true, appendBufferSourceBufferESFn);
 
-    SourceBufferFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("abort"), true, true, true,
-                             ESFunctionObject::create(NULL, abortFunction,
-                                                      ESString::create("abort"),
-                                                      0, false));
+    ESString* abortString = ESString::create("abort");
+    ESFunctionObject* abortESFn =
+        ESFunctionObject::create(nullptr, abortFunction, abortString, 0, false);
+    SourceBufferPrototypeObj->defineDataProperty(abortString, true, true, true,
+                                                 abortESFn);
+
+    ESString* removeString = ESString::create("remove");
+    ESFunctionObject* removeESFn = ESFunctionObject::create(
+        nullptr, removeFunction, removeString, 2, false);
+    SourceBufferPrototypeObj->defineDataProperty(removeString, true, true, true,
+                                                 removeESFn);
 
     return SourceBufferFunction;
 }

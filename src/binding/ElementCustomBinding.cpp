@@ -14,11 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/CSSStyleDeclaration.h"
-#include "dom/DOMException.h"
 #include "dom/DOMTokenList.h"
 #include "dom/Element.h"
 
@@ -44,24 +39,5 @@ ESValue classListElementGetterFunction(ESVMInstance* instance)
         return ESValue(ESValue::ESUndefined);
     }
     return nd->scriptValue();
-}
-
-ESValue styleElementGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-
-    CSSStyleDeclaration* result = originalObj->asElement()->inlineStyle();
-    return result->scriptValue();
-}
-
-ESValue styleElementSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    String* value0 = toBrowserString(arg0);
-
-    originalObj->setStyleAttr(value0);
-    return ESValue();
 }
 }

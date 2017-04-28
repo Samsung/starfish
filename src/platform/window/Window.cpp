@@ -1247,7 +1247,13 @@ static ESValue onclickGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->onclick();
+        EventListener* l = wnd->onclick();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1261,8 +1267,13 @@ static void onclickSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
+        EventListener* l = nullptr;
 
-        wnd->setOnclick(value);
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
+        }
+
+        wnd->setOnclick(l);
     }
 }
 
@@ -1275,7 +1286,13 @@ static ESValue onmouseoverGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->onmouseover();
+        EventListener* l = wnd->onmouseover();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1290,7 +1307,13 @@ static void onmouseoverSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        wnd->setOnmouseover(value);
+        EventListener* l = nullptr;
+
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
+        }
+
+        wnd->setOnmouseover(l);
     }
 }
 
@@ -1303,7 +1326,13 @@ static ESValue onkeydownGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->onkeydown();
+        EventListener* l = wnd->onkeydown();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1318,7 +1347,13 @@ static void onkeydownSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->setOnkeydown(value);
+        EventListener* l = nullptr;
+
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
+        }
+
+        wnd->setOnkeydown(l);
     }
 }
 
@@ -1332,7 +1367,13 @@ static ESValue onfocusGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->onfocus();
+        EventListener* l = wnd->onfocus();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1346,7 +1387,13 @@ static void onfocusSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->setOnfocus(value);
+        EventListener* l = nullptr;
+
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
+        }
+
+        wnd->setOnfocus(l);
     }
 }
 
@@ -1359,7 +1406,13 @@ static ESValue onloadGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        return wnd->onload();
+        EventListener* l = wnd->onload();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1373,7 +1426,13 @@ static void onloadSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        wnd->setOnload(value);
+        EventListener* l = nullptr;
+
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
+        }
+
+        wnd->setOnload(l);
     }
 }
 
@@ -1386,8 +1445,13 @@ static ESValue onunloadGetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        auto eventType = wnd->starFish()->staticStrings()->m_unload;
-        return wnd->attributeEventListener(eventType);
+        EventListener* l = wnd->onunload();
+
+        if (l == nullptr) {
+            return ESValue(ESValue::ESNull);
+        }
+
+        return ESValue(l->scriptValue());
     }
     return ESValue();
 }
@@ -1401,13 +1465,13 @@ static void onunloadSetterFunction(ESObject* obj, ESObject* originalObj,
         Window* wnd = (Window*)ESVMInstance::currentInstance()
                           ->globalObject()
                           ->extraPointerData();
-        auto eventType = wnd->starFish()->staticStrings()->m_unload;
-        if (value.isObject() || (value.isESPointer() &&
-                                 value.asESPointer()->isESFunctionObject())) {
-            wnd->setAttributeEventListener(eventType, value);
-        } else {
-            wnd->clearAttributeEventListener(eventType);
+        EventListener* l = nullptr;
+
+        if (value.isObject()) {
+            l = EventListener::toEventListener(value, true);
         }
+
+        wnd->setOnunload(l);
     }
 }
 
@@ -2582,13 +2646,36 @@ void Window::releaseCSSTarget()
     }
 }
 
+DEFINE_EVENT_LISTENER(Window, abort);
+DEFINE_EVENT_LISTENER(Window, canplay);
+DEFINE_EVENT_LISTENER(Window, canplaythrough);
 DEFINE_EVENT_LISTENER(Window, click);
+DEFINE_EVENT_LISTENER(Window, durationchange);
+DEFINE_EVENT_LISTENER(Window, emptied);
+DEFINE_EVENT_LISTENER(Window, ended);
 DEFINE_EVENT_LISTENER(Window, error);
 DEFINE_EVENT_LISTENER(Window, focus);
 DEFINE_EVENT_LISTENER(Window, keydown);
 DEFINE_EVENT_LISTENER(Window, keyup);
 DEFINE_EVENT_LISTENER(Window, load);
+DEFINE_EVENT_LISTENER(Window, loadeddata);
+DEFINE_EVENT_LISTENER(Window, loadedmetadata);
+DEFINE_EVENT_LISTENER(Window, loadstart);
 DEFINE_EVENT_LISTENER(Window, mouseover);
+DEFINE_EVENT_LISTENER(Window, pause);
+DEFINE_EVENT_LISTENER(Window, play);
+DEFINE_EVENT_LISTENER(Window, playing);
+DEFINE_EVENT_LISTENER(Window, progress);
+DEFINE_EVENT_LISTENER(Window, ratechange);
+DEFINE_EVENT_LISTENER(Window, seeked);
+DEFINE_EVENT_LISTENER(Window, seeking);
+DEFINE_EVENT_LISTENER(Window, stalled);
+DEFINE_EVENT_LISTENER(Window, suspend);
+DEFINE_EVENT_LISTENER(Window, timeupdate);
+DEFINE_EVENT_LISTENER(Window, volumechange);
+DEFINE_EVENT_LISTENER(Window, waiting);
+
+DEFINE_EVENT_LISTENER(Window, unload);
 
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
                                 bool isMobile)

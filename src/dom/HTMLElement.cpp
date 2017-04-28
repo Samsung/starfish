@@ -145,12 +145,34 @@ void HTMLElement::focus()
     dispatchEvent(new Event(eventType, EventInit(true, true)));
 }
 
+DEFINE_EVENT_LISTENER(HTMLElement, abort);
+DEFINE_EVENT_LISTENER(HTMLElement, canplay);
+DEFINE_EVENT_LISTENER(HTMLElement, canplaythrough);
 DEFINE_EVENT_LISTENER(HTMLElement, click);
+DEFINE_EVENT_LISTENER(HTMLElement, durationchange);
+DEFINE_EVENT_LISTENER(HTMLElement, emptied);
+DEFINE_EVENT_LISTENER(HTMLElement, ended);
 DEFINE_EVENT_LISTENER(HTMLElement, error);
 DEFINE_EVENT_LISTENER(HTMLElement, focus);
 DEFINE_EVENT_LISTENER(HTMLElement, keydown);
 DEFINE_EVENT_LISTENER(HTMLElement, keyup);
 DEFINE_EVENT_LISTENER(HTMLElement, load);
+DEFINE_EVENT_LISTENER(HTMLElement, loadeddata);
+DEFINE_EVENT_LISTENER(HTMLElement, loadedmetadata);
+DEFINE_EVENT_LISTENER(HTMLElement, loadstart);
 DEFINE_EVENT_LISTENER(HTMLElement, mouseover);
+DEFINE_EVENT_LISTENER(HTMLElement, pause);
+DEFINE_EVENT_LISTENER(HTMLElement, play);
+DEFINE_EVENT_LISTENER(HTMLElement, playing);
+DEFINE_EVENT_LISTENER(HTMLElement, progress);
+DEFINE_EVENT_LISTENER(HTMLElement, ratechange);
+DEFINE_EVENT_LISTENER(HTMLElement, seeked);
+DEFINE_EVENT_LISTENER(HTMLElement, seeking);
+DEFINE_EVENT_LISTENER(HTMLElement, stalled);
+DEFINE_EVENT_LISTENER(HTMLElement, suspend);
+DEFINE_EVENT_LISTENER(HTMLElement, timeupdate);
+DEFINE_EVENT_LISTENER(HTMLElement, volumechange);
+DEFINE_EVENT_LISTENER(HTMLElement, waiting);
+
 DEFINE_EVENT_LISTENER(HTMLElement, unload);
 }

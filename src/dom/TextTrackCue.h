@@ -101,8 +101,12 @@ public:
         return m_timeRange.isInRange(time);
     }
 
+#define VIRTUAL
+#define OVERRIDE
     DECLARE_EVENT_LISTENER(enter);
     DECLARE_EVENT_LISTENER(exit);
+#undef VIRTUAL
+#undef OVERRIDE
 
 #ifndef NDEBUG
     virtual void dump()

@@ -110,7 +110,7 @@ interface Document : Node {
   [Unimplemented] DOMString queryCommandValue(DOMString commandId);
 
   // special event handler IDL attributes that only apply to Document objects
-  [LenientThis] attribute EventHandler onreadystatechange;
+  [Unimplemented, LenientThis] attribute EventHandler onreadystatechange;
 
 
 

@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "extra/XMLHttpRequest.h"
 
 namespace StarFish {
@@ -27,126 +24,168 @@ using namespace escargot;
 static ESValue onloadstartGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onloadstart();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onloadstart();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onloadstartSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnloadstart(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnloadstart(value0);
     return ESValue();
 }
 
 static ESValue onprogressGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onprogress();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onprogress();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onprogressSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnprogress(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnprogress(value0);
     return ESValue();
 }
 
 static ESValue onabortGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onabort();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onabort();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onabortSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnabort(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnabort(value0);
     return ESValue();
 }
 
 static ESValue onerrorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onerror();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onerror();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onerrorSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnerror(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnerror(value0);
     return ESValue();
 }
 
 static ESValue onloadGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onload();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onload();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onloadSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnload(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnload(value0);
     return ESValue();
 }
 
 static ESValue ontimeoutGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->ontimeout();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->ontimeout();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue ontimeoutSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOntimeout(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOntimeout(value0);
     return ESValue();
 }
 
 static ESValue onloadendGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
-    return originalObj->onloadend();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onloadend();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onloadendSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequestEventTarget);
-
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnloadend(arg0);
-
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnloadend(value0);
     return ESValue();
 }
 
@@ -160,25 +199,19 @@ ESFunctionObject* bindingXMLHttpRequestEventTarget(
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  XMLHttpRequestEventTargetString, 0, true,
                                  true);
-    XMLHttpRequestEventTargetFunction->defineAccessorProperty(
-        ESVMInstance::currentInstance()->strings().prototype.string(),
-        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
-        false, false);
-    XMLHttpRequestEventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    XMLHttpRequestEventTargetFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
-    XMLHttpRequestEventTargetFunction->set__proto__(
-        fetchData(scriptBindingInstance)->fnEventTarget());
     ESObject* XMLHttpRequestEventTargetPrototypeObj =
         XMLHttpRequestEventTargetFunction->protoType()
             .asESPointer()
             ->asESObject();
+    XMLHttpRequestEventTargetFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    XMLHttpRequestEventTargetPrototypeObj->forceNonVectorHiddenClass(false);
+    XMLHttpRequestEventTargetPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    XMLHttpRequestEventTargetFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
 
     // Bind for attributes
     ESString* onloadstartString = ESString::create("onloadstart");

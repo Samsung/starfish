@@ -14,10 +14,7 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/HTMLUnknownElement.h"
+#include "dom/HTMLElement.h"
 
 namespace StarFish {
 
@@ -30,20 +27,16 @@ ESFunctionObject* bindingHTMLUnknownElement(
     ESString* HTMLUnknownElementString = ESString::create("HTMLUnknownElement");
     ESFunctionObject* HTMLUnknownElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLUnknownElementString, 1, true, true);
+                                 HTMLUnknownElementString, 0, true, true);
+    ESObject* HTMLUnknownElementPrototypeObj =
+        HTMLUnknownElementFunction->protoType().asESPointer()->asESObject();
     HTMLUnknownElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLUnknownElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLUnknownElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLUnknownElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLUnknownElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLUnknownElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

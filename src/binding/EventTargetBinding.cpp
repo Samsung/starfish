@@ -22,6 +22,7 @@ namespace StarFish {
 using namespace escargot;
 
 // Implement for functions
+
 static ESValue addEventListenerFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
@@ -49,7 +50,7 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
     // Handle argument arg1
     EventListener* value1 = nullptr;
     if (!arg1.isUndefinedOrNull()) {
-        value1 = new EventListener(arg1);
+        value1 = EventListener::toEventListener(arg1);
     }
     // Handle argument arg0
     String* value0 = String::emptyString;
@@ -93,7 +94,7 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
     // Handle argument arg1
     EventListener* value1 = nullptr;
     if (!arg1.isUndefinedOrNull()) {
-        value1 = new EventListener(arg1);
+        value1 = EventListener::toEventListener(arg1);
     }
     // Handle argument arg0
     String* value0 = String::emptyString;

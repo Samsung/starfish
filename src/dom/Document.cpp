@@ -1006,12 +1006,12 @@ void Document::notifyDomContentLoaded()
 
 void Document::close()
 {
-    Element* bodyElem = body();
-    if (bodyElem) {
+    HTMLElement* body = this->body();
+    if (body) {
         String* eventType =
             window()->starFish()->staticStrings()->m_unload.localName();
         Event* e = new Event(eventType, EventInit(false, false));
-        EventTarget::dispatchEvent(bodyElem, e);
+        EventTarget::dispatchEvent(body, e);
     }
 
     resourceLoader().clear();
@@ -1148,12 +1148,12 @@ HTMLHeadElement* Document::head()
     return nullptr;
 }
 
-HTMLBodyElement* Document::body()
+HTMLElement* Document::body()
 {
     Node* body = childMatchedBy(
         this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     if (body) {
-        return body->asHTMLBodyElement();
+        return body->asHTMLElement();
     }
     return nullptr;
 }
@@ -1167,7 +1167,7 @@ void Document::setBody(HTMLElement* element)
                             "body", "Document", "BODY", "FRAMESET");
     }
 
-    HTMLBodyElement* body = this->body();
+    HTMLElement* body = this->body();
     HTMLHtmlElement* html = rootElement();
     HTMLBodyElement* newBody = element->asHTMLBodyElement();
 
@@ -1308,9 +1308,32 @@ bool Document::hasFocus() const
     return true;
 }
 
+DEFINE_EVENT_LISTENER(Document, abort);
+DEFINE_EVENT_LISTENER(Document, canplay);
+DEFINE_EVENT_LISTENER(Document, canplaythrough);
 DEFINE_EVENT_LISTENER(Document, click);
+DEFINE_EVENT_LISTENER(Document, durationchange);
+DEFINE_EVENT_LISTENER(Document, emptied);
+DEFINE_EVENT_LISTENER(Document, ended);
+DEFINE_EVENT_LISTENER(Document, error);
 DEFINE_EVENT_LISTENER(Document, focus);
 DEFINE_EVENT_LISTENER(Document, keydown);
 DEFINE_EVENT_LISTENER(Document, keyup);
+DEFINE_EVENT_LISTENER(Document, load);
+DEFINE_EVENT_LISTENER(Document, loadeddata);
+DEFINE_EVENT_LISTENER(Document, loadedmetadata);
+DEFINE_EVENT_LISTENER(Document, loadstart);
 DEFINE_EVENT_LISTENER(Document, mouseover);
+DEFINE_EVENT_LISTENER(Document, pause);
+DEFINE_EVENT_LISTENER(Document, play);
+DEFINE_EVENT_LISTENER(Document, playing);
+DEFINE_EVENT_LISTENER(Document, progress);
+DEFINE_EVENT_LISTENER(Document, ratechange);
+DEFINE_EVENT_LISTENER(Document, seeked);
+DEFINE_EVENT_LISTENER(Document, seeking);
+DEFINE_EVENT_LISTENER(Document, stalled);
+DEFINE_EVENT_LISTENER(Document, suspend);
+DEFINE_EVENT_LISTENER(Document, timeupdate);
+DEFINE_EVENT_LISTENER(Document, volumechange);
+DEFINE_EVENT_LISTENER(Document, waiting);
 }
