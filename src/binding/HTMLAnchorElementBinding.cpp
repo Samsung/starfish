@@ -13,22 +13,35 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
+#if defined(STARFISH_ENABLE_MULTI_PAGE)
 #include "dom/HTMLAnchorElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingHTMLAnchorElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLAnchorElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLAnchorElementString = ESString::create("HTMLAnchorElement");
+    ESFunctionObject* HTMLAnchorElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLAnchorElementString, 0, true, true);
+    ESObject* HTMLAnchorElementPrototypeObj =
+        HTMLAnchorElementFunction->protoType().asESPointer()->asESObject();
+    HTMLAnchorElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLAnchorElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLAnchorElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLAnchorElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
+
+    // Bind for attributes
     return HTMLAnchorElementFunction;
 }
 }

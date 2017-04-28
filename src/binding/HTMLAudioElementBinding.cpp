@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLAudioElement.h"
 
 namespace StarFish {
@@ -26,6 +23,9 @@ using namespace escargot;
 // Implement for constructor
 static ESValue htmlaudioelementConstructor(ESVMInstance* instance)
 {
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "HTMLAudioElement");
+    }
     size_t validArgCount = 1;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -53,25 +53,19 @@ ESFunctionObject* bindingHTMLAudioElement(
     ESString* HTMLAudioElementString = ESString::create("HTMLAudioElement");
     ESFunctionObject* HTMLAudioElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLAudioElementString, 1, true, true);
+                                 HTMLAudioElementString, 0, true, true);
+    ESObject* HTMLAudioElementPrototypeObj =
+        HTMLAudioElementFunction->protoType().asESPointer()->asESObject();
     HTMLAudioElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLAudioElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLAudioElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->fnHTMLMediaElement()
-                           ->protoType());
+    HTMLAudioElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLAudioElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLMediaElement()->protoType());
     HTMLAudioElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLMediaElement());
-    ESObject* HTMLAudioElementObj =
-        HTMLAudioElementFunction->protoType().asESPointer()->asESObject();
+
     return HTMLAudioElementFunction;
 }
 
