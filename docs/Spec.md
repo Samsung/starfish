@@ -50,8 +50,82 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | Type | Property | Allowed Value | Description | Note |
 |------|----------|---------------|-------------|------|
-| Margin | margin | \<margin-width\>{1,4} | The margin shorthand property sets all the margin properties in one declaration | The margin properties specify the width of the margin area of a box. \<margin-width\> may take one of the following values: \<length\>, \<percentage\>, auto. (Also check [Length](https://www.w3.org/TR/CSS2/syndata.html#length-units)) |
+| [Margin](https://www.w3.org/TR/CSS2/box.html#margin-properties) | margin | \<margin-width\>{1,4} | The margin shorthand property sets all the margin properties in one declaration | The margin properties specify the width of the margin area of a box. \<margin-width\> may take one of the following values: \<length\>, \<percentage\>, auto. (Also check [Length](https://www.w3.org/TR/CSS2/syndata.html#length-units)) |
 | | margin-bottom | \<margin-width\> &#124; \<percentage\> &#124; auto | Sets the bottom margin of an element | |
+| | margin-left	| \<length\> &#124; \<percentage\> &#124; auto | Sets the left margin of an element | |
+| | margin-right | \<length\> &#124; \<percentage\> &#124; auto | Sets the right margin of an element | |
+| | margin-top | \<length\> &#124; \<percentage\> &#124; auto | Sets the top margin of an element | |
+| [Padding](https://www.w3.org/TR/CSS2/box.html#padding-properties) | padding | \<padding-width\>{1,4} | The padding shorthand property sets all the padding properties in one declaration | \<padding-width\> may take one of the following values: \<length\>, \<percentage\> |
+| | padding-bottom | \<length\> &#124; \<percentage\>	| Sets the bottom padding for an element | |
+| | padding-left | \<length\> &#124; \<percentage\>	| Sets the left padding for an element | |
+| | padding-right | \<length\> &#124; \<percentage\> | Sets the right padding for an element | |
+| | padding-top | \<length\> &#124; \<percentage\> | Sets the top padding for an element | |
+| [Border](https://www.w3.org/TR/css3-border/) | border | \<border-width\> \<border-style\> \<border-color\> | Sets all the border properties (shorthand). | The border can either be a predefined style (solid line) or it can be an image. In the former case, various properties define the style (\<border-style\>), color (\<border-color\>), and thickness (\<border-width\>) of the border. \<border-width\> may take one of the following values: thin, medium, thick, \<length\> \<border-color\> may take one of the following values: \<color\>, transparent \<border-style\> may take one of the following values: none, solid (Also check Border Properties) |
+| | border-bottom | \<border-width\>   \<border-style\>   \<border-color\> | Sets all the bottom border properties (shorthand). | |
+| | border-bottom-color | \<color\> &#124; transparent | Sets the color of the bottom border. | |
+| | border-bottom-style | none &#124; solid | Sets the style of the bottom border. | |
+| | border-bottom-width | medium &#124; thin &#124; thick &#124; \<length\> | Sets the width of the bottom border. | |
+| | border-color | \<border-color\>{1,4} | Sets the color of the four borders (shorthand). | |
+| | border-left | \<border-width\>   \<border-style\>   \<border-color\> | Sets all the left border properties (shorthand). | |
+| | border-left-color | \<color\> &#124; transparent | Sets the color of the left border. | |
+| | border-left-style | none &#124; solid | Sets the style of the left border. | |
+| | border-left-width | medium &#124; thin &#124; thick &#124; \<length\> | Sets the width of the left border. | |
+| | border-right | \<border-width\>   \<border-style\>   \<border-color\>	| Sets all the right border properties (shorthand). | |
+| | border-right-color | \<color\> &#124; transparent | Sets the color of the right border. | |
+| | border-right-style | none &#124; solid | Sets the style of the right border. | |
+| | border-right-width | medium &#124; thin &#124; thick &#124; \<length\>	| Sets the width of the left border. | |
+| | border-style | \<border-style\>{1,4} | Sets the style of the four borders (shorthand). | |
+| | border-top | \<border-width\> \<border-style\> \<border-color\>	| Sets all the top border properties (shorthand). | |
+| | border-top-color | \<color\> &#124; transparent | Sets the color of the top border. | |
+| | border-top-style | none &#124; solid | Sets the style of the top border. | |
+| | border-top-width | medium &#124; thin &#124; thick &#124; \<length\>	| Sets the width of the top border. | |
+| | border-width | \<border-width\> | Sets the width of the four borders (shorthand). | |
+| | border-image-source | \<image\> &#124; none | The path to the image is to be used as a border. | |
+| | border-image-slice | \<number\> fill | How to slice the border image. \<number\> value can take only one value and initial value is 0 (not 100%). | |
+| | border-image-width | \<length\> &#124; \<number\>	| Width of the border image. \<number\> value represents multiples of the corresponding border-top-width. | |
+| [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | &#124; block &#124; inline &#124; inline-block &#124; none | Displays elements as inline elements | The display property specifies the type of box used for an HTML element (Also check Visibility) |
+| | visibility | visible &#124; hidden | Specifies whether or not an element should be visible | |
+| [Position](https://www.w3.org/TR/CSS2/visuren.html#positioning-scheme) | position | static &#124; absolute &#124; relative | The position property specifies the type of positioning method used for an element. | Each element in the document tree generates zero or more boxes according to the box model. The layout of these boxes is governed by box dimensions, type, positioning scheme, relationships between in the document tree and external information. \*CSS direction property only accepts "ltr" as a value. To support right-to-left text, the dir attribute in an HTML element should be used, e.g., \<html dir="rtl"\> (Also check Layers, Direction, Visual Formatting Model, and Visual Effects) |
+| | bottom | \<length\> &#124; \<percentage\> &#124; auto | Sets the bottom edge of an element to a unit above/below the bottom edge of its nearest positioned ancestor. | |
+| | content | FILL THIS ONE! | | |
+| | height | \<length\> &#124; \<percentage\> &#124; auto | Sets the height of an element. | |
+| | left | \<length\> &#124; \<percentage\> &#124; auto | Sets the left edge of an element to a unit above/below the left edge of its nearest positioned ancestor. | |
+| | line-height | normal &#124; \<number\> &#124; \<length\> &#124; \<percentage\> | Sets the line height. | |
+| | max-width | \<length\> &#124; \<percentage\> &#124; none | | |
+| | min-width | \<length\> &#124; \<percentage\> | | |
+| | max-height | \<length\> &#124; \<percentage\> &#124; none | | |
+| | min-height | 	\<length\> &#124; \<percentage\> | | |
+| | right | \<length\> &#124; \<percentage\> &#124; auto | Sets the right edge of an element to a unit above/below the right edge of its nearest positioned ancestor. | |
+| | top	| \<length\> &#124; \<percentage\> &#124; auto | Sets the top edge of an element to a unit above/below the top edge of its nearest positioned ancestor. | |
+| | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; \<length\> &#124; \<percentage\> | Sets the vertical alignment of an element. | |
+| | white-space | FILL THIS ONE! | | |
+| | width | \<length\> &#124; \<percentage\> &#124; auto | Sets the width of an element. | |
+| | z-index | auto &#124; \<integer\> | Specifies the stack order of an element. | |
+| | direction | ltr | Specifies the text direction/writing direction. | |
+| | overflow | visible &#124; hidden | Specifies what happens if content overflows an element's box. | |
+| [Color](https://www.w3.org/TR/css3-color/) | color | \<color\> | Sets the color of text. HSL color value is not supported | CSS uses color-related properties and values to color the text, backgrounds, borders, and other parts of elements in a document. |
+| | opacity | alpha value (0.0 ~ 1.0) | Sets the opacity level for an element | |
+| | clear | FILL THIS ONE! | | |
+| | float | FILL THIS ONE! | | |
+| [Background](https://www.w3.org/TR/CSS2/colors.html#background) | background | \<background-color\> \<background-image\> \<background-repeat\> | A shorthand property for setting all the background properties in one declaration | The background property sets all the background properties. (Also check Background) |
+| | background-color | \<color\> &#124; transparent | Specifies the background color of an element. | |
+| | background-image | \<uri\> &#124; none | Specifies one or more background images for an element. Multiple layering is not supported. | |
+| | background-position | FILL THIS ONE! | | |
+| | background-position-x | FILL THIS ONE! | | |
+| | background-position-y | FILL THIS ONE! | | |
+| | background-repeat | repeat &#124; repeat-x &#124; repeat-y &#124; no-repeat | Sets how a background image will be repeated | |
+| | background-size	| \<length\> &#124; \<percentage\> &#124; auto &#124; cover &#124; contain | Specifies the size of the background image(s). | |
+| [Font](https://www.w3.org/TR/CSS2/fonts.html) | font-style | normal &#124; italic &#124; oblique | Specifies the font style for text. | A font provides a resource containing the visual representation of characters. |
+| | font-weight | normal &#124; bold &#124; bolder &#124; lighter &#124; 100 &#124; 200 &#124; 300 &#124; 400 &#124; 500 &#124; 600 &#124; 700 &#124; 800 &#124; 900 | Specifies the weight of a font. | |
+| | font-size | medium &#124; xx-small &#124; x-small &#124; small &#124; large &#124; x-large &#124; xx-large &#124; smaller &#124; larger &#124; \<length\> &#124; \<percentage\> | Specifies the font size of text. | |
+| [Text](https://www.w3.org/TR/CSS2/text.html) | text-align | left &#124; right &#124; center | Specifies the horizontal alignment of text in an element | This CSS3 module defines properties for text manipulation and specifies their processing model. It covers line breaking, justification and alignment, white space handling, and text transformation. |
+| | text-decoration | none &#124; underline &#124; line-through | Specifies the decoration added to the text | |
+| [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
+| | transform-origin | \<percentage\> &#124; \<length\> &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
+| [Table](https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#q17.0) | table-layout | fixed &#124; auto | | |
+| | caption-side | 	top &#124; bottom | | |
+| | border-spacing | 	\<length\> \<length\>? | | |
+| | cellspacing | \<length\> | | |
 
 ## Selectors
 
