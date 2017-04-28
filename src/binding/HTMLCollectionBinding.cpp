@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/Element.h"
 #include "dom/HTMLCollection.h"
 
@@ -36,6 +33,7 @@ static ESValue lengthGetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
+
 static ESValue itemFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLCollection);
@@ -98,22 +96,16 @@ ESFunctionObject* bindingHTMLCollection(
     ESFunctionObject* HTMLCollectionFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  HTMLCollectionString, 0, true, true);
+    ESObject* HTMLCollectionPrototypeObj =
+        HTMLCollectionFunction->protoType().asESPointer()->asESObject();
     HTMLCollectionFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLCollectionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLCollectionFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->m_instance->globalObject()
-                           ->objectPrototype());
-    ESObject* HTMLCollectionPrototypeObj =
-        HTMLCollectionFunction->protoType().asESPointer()->asESObject();
+    HTMLCollectionPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLCollectionPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                 ->m_instance->globalObject()
+                                                 ->objectPrototype());
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");

@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/#htmllielement
+
+[HTMLConstructor]
+interface HTMLLIElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute long value;
+
+  // also has obsolete members
+  [Unimplemented, CEReactions] attribute DOMString type;
+};

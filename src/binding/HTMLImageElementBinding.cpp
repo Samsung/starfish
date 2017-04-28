@@ -14,18 +14,18 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLImageElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for constructor
 static ESValue htmlimageelementConstructor(ESVMInstance* instance)
 {
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "HTMLImageElement");
+    }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
@@ -60,9 +60,10 @@ static ESValue htmlimageelementConstructor(ESVMInstance* instance)
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->src();
-
+    // Return ESValue from native value
     return toJSString(result);
 }
 
@@ -80,9 +81,10 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->width();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
@@ -100,9 +102,10 @@ static ESValue widthSetterFunction(ESVMInstance* instance)
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLImageElement);
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->height();
-
+    // Return ESValue from native value
     return ESValue(result);
 }
 
@@ -120,20 +123,39 @@ static ESValue heightSetterFunction(ESVMInstance* instance)
 ESFunctionObject* bindingHTMLImageElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLImageElement, fetchData(scriptBindingInstance)->fnHTMLElement());
+    // Bind for constructor
+    ESString* HTMLImageElementString = ESString::create("HTMLImageElement");
+    ESFunctionObject* HTMLImageElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLImageElementString, 0, true, true);
+    ESObject* HTMLImageElementPrototypeObj =
+        HTMLImageElementFunction->protoType().asESPointer()->asESObject();
+    HTMLImageElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLImageElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLImageElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLImageElementFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
+    ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("src"), srcGetterFunction, srcSetterFunction);
+        HTMLImageElementPrototypeObj, srcString, srcGetterFunction,
+        srcSetterFunction);
 
+    ESString* widthString = ESString::create("width");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("width"), widthGetterFunction, widthSetterFunction);
+        HTMLImageElementPrototypeObj, widthString, widthGetterFunction,
+        widthSetterFunction);
 
+    ESString* heightString = ESString::create("height");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLImageElementFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("height"), heightGetterFunction, heightSetterFunction);
+        HTMLImageElementPrototypeObj, heightString, heightGetterFunction,
+        heightSetterFunction);
+
     return HTMLImageElementFunction;
 }
 
