@@ -14,38 +14,34 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLHeadingElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingHTMLHeadingElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    ESString* HTMLHeadElementString = ESString::create("HTMLHeadingElement");
+    // Bind for constructor
+    ESString* HTMLHeadingElementString = ESString::create("HTMLHeadingElement");
     ESFunctionObject* HTMLHeadingElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLHeadElementString, 1, true, true);
+                                 HTMLHeadingElementString, 0, true, true);
+    ESObject* HTMLHeadingElementPrototypeObj =
+        HTMLHeadingElementFunction->protoType().asESPointer()->asESObject();
     HTMLHeadingElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLHeadingElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLHeadingElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLHeadingElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLHeadingElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLHeadingElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
     return HTMLHeadingElementFunction;
 }
 }

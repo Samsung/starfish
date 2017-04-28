@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/HTMLBRElement.h"
 
 namespace StarFish {
@@ -31,19 +28,15 @@ ESFunctionObject* bindingHTMLBRElement(
     ESFunctionObject* HTMLBRElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  HTMLBRElementString, 0, true, true);
+    ESObject* HTMLBRElementPrototypeObj =
+        HTMLBRElementFunction->protoType().asESPointer()->asESObject();
     HTMLBRElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLBRElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLBRElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLBRElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLBRElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLBRElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

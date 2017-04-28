@@ -14,38 +14,34 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLLIElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingHTMLLIElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* HTMLLIElementString = ESString::create("HTMLLIElement");
-    ESFunctionObject* HTMLStrongElementFunction =
+    ESFunctionObject* HTMLLIElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLLIElementString, 1, true, true);
-    HTMLStrongElementFunction->defineAccessorProperty(
+                                 HTMLLIElementString, 0, true, true);
+    ESObject* HTMLLIElementPrototypeObj =
+        HTMLLIElementFunction->protoType().asESPointer()->asESObject();
+    HTMLLIElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLStrongElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLStrongElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLStrongElementFunction->set__proto__(
+    HTMLLIElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLLIElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLLIElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLStrongElementFunction;
+    // Bind for attributes
+    return HTMLLIElementFunction;
 }
 }
