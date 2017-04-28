@@ -1,10 +1,11 @@
 // https://dom.spec.whatwg.org/#interface-documentfragment
 
+// NOTE current version of Starfish does not fully support DocumentFragment
+// DocumentFragment implements NonElementParentNode;
+// DocumentFragment implements ParentNode;
+
 [UnimplementedConstructor,
  Exposed=Window]
 interface DocumentFragment : Node {
 };
 
-// NOTE current version of Starfish does not fully support DocumentFragment
-// DocumentFragment implements NonElementParentNode;
-// DocumentFragment implements ParentNode;

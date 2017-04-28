@@ -25,7 +25,6 @@ class Blob;
 class MediaSource;
 
 class URL : public ScriptWrappable {
-    URL(String* baseURL, String* url);
     enum Protocol {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
@@ -38,6 +37,9 @@ class URL : public ScriptWrappable {
     };
 
 public:
+    URL(String* url);
+    URL(String* url, String* baseURL);
+
     static String* getURLString(String* baseURL, String* url);
     static String* createObjectURL(Blob* blob);
     static void revokeObjectURL(StarFish* sf, String* blobURLRef);
@@ -46,7 +48,7 @@ public:
 #endif
     static URL* createURL(String* baseURL, String* url)
     {
-        return new URL(baseURL, url);
+        return new URL(url, baseURL);
     }
 
     virtual void init(ScriptBindingInstance* instance) override
