@@ -143,6 +143,33 @@ This section describes the complete list of supported HTML tags and attributes b
 |-----------|------|------|-------------|------|
 | [Global event handler attribute](https://www.w3.org/TR/html5/webappapis.html#event-handler-attributes) | attribute | onclick | The onclick event occurs when the user clicks on an element | Attributes that are common to all elements in the HTML languages. |
 | |  | onload | The onload event occurs when an object has been loaded | |
+| [DOM Event](https://www.w3.org/TR/domcore/#interface-event) | constant | CAPTURING_PHASE | The current event phase is the capturing phase. | |
+| | | AT_TARGET | The event is currently being evaluated at the target EventTarget. | |
+| | | BUBBLING_PHASE | The current event phase is the bubbling phase. | |
+| | | NONE | Events not currently dispatched are in this phase. | |
+| | attribute	| bubbles | Used to indicate whether or not an event is a bubbling event | |
+| | | cancelable | Used to indicate whether or not an event can have its default action prevented | |
+| | | currentTarget | Used to indicate the EventTarget whose EventListeners are currently being processed | |
+| | | eventPhase | Used to indicate which phase of event flow is currently being evaluated. | |
+| | | target | Used to indicate the EventTarget to which the event was originally dispatched. | |
+| | | timeStamp | Returns the number of milliseconds (after midnight January 1, 1970), when the event occurred | |
+| | | type | Name of the event type (case-insensitive). | |
+| | | defaultPrevented | Checks whether the preventDefault() method was called for the event | |
+| | method | preventDefault() | If an event is cancelable, the preventDefault method is used to signify that the |event is to be canceled | |
+| | | stopPropagation() | Prevents further propagation of the current event in the bubbling phase | |
+| | | stopImmediatePropagation() | Prevents other listeners of the same event from being called | |
+| | | property | EventInit::bubbles | Initializes an Event object with bubbles | |
+| | | EventInit::cancelable | Initializes an Event object with cancelable | |
+| [EventTarget](https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventTarget)	| method | addEventListener(type, listener, useCapture) | Attaches an event handler to the specified element | |
+| | | removeEventListener(type, listener, useCapture) | Removes an event handler that has been attached with the addEventListener() method | |
+| | | dispatchEvent(evt) | Allows the dispatch of events into the implementations event model | |
+| [EventListener](https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventListener)	| method | handleEvent(evt) | This method is called whenever an event occurs of the type for which the EventListener interface was registered. | |
+| [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent)	| attribute | lengthComputable | Progress has started | ProgressEvent is dispatched on XMLHttpRequest object. Events using the ProgressEvent interface indicate some kind of progression. |
+| | | loaded | In progress | |
+| | | total | Progress failed | |
+| | property | ProgressEventInit::lengthComputable | Initialize a ProgressEvent object with lengthComputable | |
+| | | ProgressEventInit::loaded | Initialize a ProgressEvent object with loaded | |
+| | | ProgressEventInit::total | Initialize a ProgressEvent object with total | |
 
 ## CSS
 
