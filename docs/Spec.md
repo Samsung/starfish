@@ -55,6 +55,88 @@ This section describes the complete list of supported HTML tags and attributes b
 | [NonElementParentNode](https://www.w3.org/TR/domcore/#interface-nonelementparentnode) | method | getElementById(elementId) | Returns the first element within node's descendants whose ID is elementId |
 | [ParentNode](https://www.w3.org/TR/domcore/#interface-parentnode) | attribute | children | Returns child elements |
 | | | firstElementChild | Returns the first child element, or null otherwise |
+| | | lastElementChild | Returns the last child that is an element, and null otherwise. |
+| | | childElementCount | Returns the number of children of the context object that are elements |
+| [NonDocumentTypeChildNode](https://www.w3.org/TR/domcore/#interface-nondocumenttypechildnode) | attribute | previousElementSibling | Returns the first preceding sibling that is an element, and null otherwise.|
+|  |  | nextElementSibling | Returns the first following sibling that is an element, and null otherwise.|
+| [ChildNode](https://www.w3.org/TR/domcore/#childnode) | method | remove() | Removes the node |
+| [NodeList](https://www.w3.org/TR/domcore/#nodelist) | method | item(index) (or collection[index]) | Returns the node with index index number from the collection. The nodes are sorted in tree order. |
+|  | attribute | length | Returns the number of elements in the collection. |
+| [HTMLCollection](https://www.w3.org/TR/domcore/#htmlcollection) | attribute | length | Returns the number of elements in the collection. |
+|  | method | item(index) (or collection[index]) | Returns the element with index index number from the collection. The elements are sorted in tree order. |
+|  |  | namedItem(name) (or collection[name]) | Returns the first element with ID or name name from the collection. |
+| [Node](https://www.w3.org/TR/domcore/#interface-node) | attribute | nodeType | Returns the type of node. |
+|  |  | nodeName | Returns a string appropriate for the type of node. |
+|  |  | parentNode | Returns the parent. |
+|  |  | childNodes | Returns the children. |
+|  |  | firstChild | Returns the first child. |
+|  |  | lastChild | Returns the last child. |
+|  |  | previousSibling | Returns the previous sibling. |
+|  |  | nextSibling | Returns the next sibling. |
+|  |  | nodeValue | If node is Text, Comment or ProcessingInstruction, returns the context object's data.  |
+|  |  |  | Otherwise returns Null. |
+|  |  | textContent | If node is Element, returns the concatenation of data of all the Text node descendants of the context object, in tree order.  |
+|  |  |  | If node is Text or Comment, returns the context object's data.  |
+|  |  |  | Otherwise returns Null. |
+|  | method | hasChildNodes | Returns whether node has children. |
+|  |  | cloneNode(deep = false) | Returns a copy of node. If deep is true, the copy also includes the node's descendants. |
+|  |  | isEqualNode(other) | Returns whether node and other have the same properties. |
+|  |  | compareDocumentPosition(other) | Returns a bitmask indicating the position of other relative to node. |
+|  |  | contains(other) | Returns true if other is an inclusive descendant of node, and false otherwise. |
+|  |  | insertBefore(node, child) | Inserts Node before child. |
+|  |  | appendChild(node) | Adds node to the end of child list. |
+|  |  | replaceChild(node, child) | Replaces child to Node. |
+|  |  | removeChild(child) | Removes child. |
+| [Document](https://www.w3.org/TR/domcore/#document) | attribute | compatMode | Returns the string "CSS1Compat". |
+|  |  | characterSet | Returns document's encoding type "UTF8". |
+|  |  | contentType | Returns document's content type "text/html". |
+|  |  | doctype | Returns the doctype or null if there is none. |
+|  |  | documentElement | Returns the document element. |
+|  | method | getElementsByTagName(localName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
+|  |  | getElementsByClassName(classes) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
+|  |  | createElement(localName) | Returns an element in the HTML namespace with localName as local name. |
+|  |  | createTextNode(data) | Returns a Text node whose data is data. |
+|  |  | createComment(data) | Returns a Comment node whose data is data. |
+| [DocumentType](https://www.w3.org/TR/domcore/#interface-documenttype) | attribute | name | Returns the name. |
+| [Element](https://www.w3.org/TR/domcore/#element) | attribute | localName | Return the value of the attribute in element's attribute list whose namespace is namespace and local name is localName, if it has one, and null otherwise. |
+|  |  | tagName | If namespace prefix is not null, returns the concatenation of namespace prefix, ":", and local name. Otherwise it returns the local name. |
+|  |  | id | Reflects the "id" content attribute. |
+|  |  | className | Reflects the "class" content attribute. |
+|  |  | classList | Returns the associated DOMTokenList object representing the context object's classes. |
+|  |  | attributes | Returns a NamedNodeMap. |
+|  |  | clientLeft | Returns the width of the left border of an element in pixels. |
+|  |  | clientTop | Returns the width of the top border of an element in pixels. |
+|  |  | clientWidth | Returns the sum of contents width + padding width. Returns 0 if an element, or an ancestor of an element is set to display: none or display: inline. |
+|  |  | clientHeight | Returns the sum of contents height + padding height. Returns 0 if an element, or an ancestor of an element is set to display: none or display: inline. |
+|  | method | getAttribute(name) | Returns the value of the first attribute in the context object's attribute list whose name is name, and null otherwise. |
+|  |  | setAttribute(name, value) | Changes the attribute whose name is name from context object to value. |
+|  |  | removeAttribute(name) | Removes the first attribute from the context object whose name is name, if any. |
+|  |  | hasAttribute(name) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
+|  |  | getElementsByTagName(localName) | Returns the list of elements with local name localName for the context object. |
+|  |  | getElementsByClassName(classNames) | Returns the list of elements with class names classNames for the context object. |
+| [Attr](https://www.w3.org/TR/domcore/#attr) | attribute | name | Returns the name. |
+|  |  | value | Returns the value. |
+|  |  | specified | Always returns true |
+| [CharacterData](https://www.w3.org/TR/domcore/#characterdata) | attribute | data | Returns data, and on setting, must replace data with node context object offset 0, count length attribute value, and data new value. |
+|  |  | length | Returns the number of code units in data. |
+| [Text](https://www.w3.org/TR/domcore/#text) | attribute | wholeText | Returns a concatenation of the data of the contiguous Text nodes of the context object, in tree order. |
+| [Comment](https://www.w3.org/TR/domcore/#interface-comment) |  |  | Comment does not define neither attributes or methods |
+| [DOMTokenList](https://www.w3.org/TR/domcore/#interface-domtokenlist) | attribute | length | Returns the number of tokens. |
+|  | method | item(index) (or tokenlist[index]) | Returns the token with the index index number. |
+|  |  | contains(token) | Returns true if token is present, and false otherwise. |
+|  |  | add(tokens...) | Adds all arguments passed, except those already present. |
+|  |  | remove(tokens...) | Removes arguments passed, if they are present. |
+|  |  | toggle(token [, force]) | If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).  |
+|  |  |  | Returns true if token is now present, and false otherwise. |
+| Window from [HTML5](https://www.w3.org/TR/html5/browsers.html#the-window-object) and [CSSOM](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface), and [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | attribute | window | Returns window. |
+|  |  | document | Returns the document associated with window. |
+|  |  | innerHeight | Returns the inner height of a window's content area. |
+|  |  | innerWidth | Returns the inner width of a window's content area. |
+|  | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
+| [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | setTimeout(handler [, timeout [, arguments... ]]) | Calls a function or evaluates an expression after a specified number of milliseconds. |
+|  |  | clearTimeout(handle) | Clears a timer set with setTimeout(). |
+|  |  | setInterval(handler [, timeout [, arguments...]]) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
+|  |  | clearInterval(handle) | Clears a timer set with setInterval(). |
 
 ## Event
 | Interface | Type | Name | Description | Note |
