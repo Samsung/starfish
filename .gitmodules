@@ -7,3 +7,6 @@
 [submodule "binding_generator"]
 	path = binding_generator
 	url = git@coding.sec.samsung.net:RS7-webtf/binding_generator.git
+[submodule "third_party/deviceapi"]
+	path = third_party/deviceapi
+	url = git@coding.sec.samsung.net:RS7-webtf/tizen_wearable_device_api_loader.git
