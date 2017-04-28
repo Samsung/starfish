@@ -40,6 +40,8 @@ public:
         return true;
     }
 
+#define VIRTUAL
+#define OVERRIDE
     DECLARE_EVENT_LISTENER(loadstart);
     DECLARE_EVENT_LISTENER(progress);
     DECLARE_EVENT_LISTENER(abort);
@@ -47,6 +49,8 @@ public:
     DECLARE_EVENT_LISTENER(load);
     DECLARE_EVENT_LISTENER(timeout);
     DECLARE_EVENT_LISTENER(loadend);
+#undef VIRTUAL
+#undef OVERRIDE
 };
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,
@@ -105,7 +109,11 @@ public:
     virtual void onReadyStateChange(NetworkRequest* request,
                                     bool fromExplicit) override;
 
+#define VIRTUAL
+#define OVERRIDE
     DECLARE_EVENT_LISTENER(readystatechange);
+#undef VIRTUAL
+#undef OVERRIDE
 
 protected:
     void initResponseData();

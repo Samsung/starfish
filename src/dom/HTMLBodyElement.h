@@ -51,8 +51,12 @@ public:
         return true;
     }
 
+#define VIRTUAL virtual
+#define OVERRIDE override
     DECLARE_EVENT_LISTENER(load);
     DECLARE_EVENT_LISTENER(unload);
+#undef VIRTUAL
+#undef OVERRIDE
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
                                          ComputedStyle* newStyle);

@@ -246,10 +246,6 @@ static ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-extern ESValue styleElementGetterFunction(ESVMInstance* instance);
-
-extern ESValue styleElementSetterFunction(ESVMInstance* instance);
-
 static ESValue getClientRectsGetterFunction(ESVMInstance* instance)
 {
     ESValue nd = instance->currentExecutionContext()->resolveThisBinding();
@@ -700,11 +696,6 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(),
         nextElementSiblingString, nextElementSiblingGetterFunction, nullptr);
-
-    ESString* styleString = ESString::create("style");
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(), styleString,
-        styleElementGetterFunction, styleElementSetterFunction);
 
     ElementFunction->protoType()
         .asESPointer()

@@ -8,7 +8,7 @@ interface Window : EventTarget {
   [Unforgeable] readonly attribute WindowProxy window;
   [Unimplemented, Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
-  [Unimplemented] attribute DOMString name; 
+  [Unimplemented] attribute DOMString name;
   [PutForwards=href, Unforgeable] readonly attribute Location location;
   readonly attribute History history;
   [Unimplemented] readonly attribute CustomElementRegistry customElements;
@@ -39,7 +39,7 @@ interface Window : EventTarget {
   // Indexed access is taken care of by the WindowProxy exotic object.
 
   // the user agent
-  readonly attribute Navigator navigator; 
+  readonly attribute Navigator navigator;
   [Unimplemented] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
@@ -54,7 +54,7 @@ interface Window : EventTarget {
 
   [Unimplemented] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
 
-  
+
 };
 
 // TODO Support implements

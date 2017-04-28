@@ -40,23 +40,21 @@ public:
 
 class EventListener : public gc {
 public:
-    EventListener(ScriptValue fn, bool isAttribute = false,
-                  bool useCapture = false)
-        : m_isAttribute(isAttribute)
-        , m_capture(useCapture)
-        , m_isNeedToParse(false)
-        , m_listener(fn)
+    static EventListener* toEventListener(ScriptValue fn,
+                                          bool isAttribute = false,
+                                          bool useCapture = false)
     {
+        if (isAttribute && !fn.isObject()) {
+            return nullptr;
+        }
+        return new EventListener(fn, isAttribute, useCapture);
     }
 
-    EventListener(String* scriptString, Element* target,
-                  bool isAttribute = false, bool useCapture = false)
-        : m_isAttribute(isAttribute)
-        , m_capture(useCapture)
-        , m_isNeedToParse(true)
-        , m_scriptStringNeedToParse(
-              new AttributeStringEventFunctionData(target, scriptString))
+    static EventListener* toEventListener(String* scriptString, Element* target,
+                                          bool isAttribute = false,
+                                          bool useCapture = false)
     {
+        return new EventListener(scriptString, target, isAttribute, useCapture);
     }
 
     bool isAttribute() const
@@ -98,6 +96,26 @@ protected:
         mutable AttributeStringEventFunctionData* m_scriptStringNeedToParse;
         mutable ScriptValue m_listener;
     };
+
+private:
+    EventListener(ScriptValue fn, bool isAttribute = false,
+                  bool useCapture = false)
+        : m_isAttribute(isAttribute)
+        , m_capture(useCapture)
+        , m_isNeedToParse(false)
+        , m_listener(fn)
+    {
+    }
+
+    EventListener(String* scriptString, Element* target,
+                  bool isAttribute = false, bool useCapture = false)
+        : m_isAttribute(isAttribute)
+        , m_capture(useCapture)
+        , m_isNeedToParse(true)
+        , m_scriptStringNeedToParse(
+              new AttributeStringEventFunctionData(target, scriptString))
+    {
+    }
 };
 
 class EventTarget : public ScriptWrappable {
@@ -133,17 +151,16 @@ public:
     bool dispatchEvent(EventTarget* origin, Event* event);
 
     void setAttributeEventListener(const QualifiedName& eventTypeName,
-                                   ScriptValue f)
+                                   EventListener* l)
     {
-        auto eventType = eventTypeName.localName();
-        EventListener* l = new EventListener(f, true);
+        String* eventType = eventTypeName.localName();
         setAttributeEventListener(eventType, l);
     }
     void setAttributeEventListener(const QualifiedName& eventTypeName,
                                    String* str, Element* target)
     {
         auto eventType = eventTypeName.localName();
-        EventListener* l = new EventListener(str, target, true);
+        EventListener* l = EventListener::toEventListener(str, target, true);
         setAttributeEventListener(eventType, l);
     }
     bool setAttributeEventListener(const String* eventType,
@@ -160,14 +177,10 @@ public:
     }
     bool clearAttributeEventListener(const String* eventType);
 
-    ScriptValue attributeEventListener(const QualifiedName& name)
+    EventListener* attributeEventListener(const QualifiedName& name)
     {
-        auto eventType = name.localName();
-        EventListener* l = getAttributeEventListener(eventType);
-        if (!l) {
-            return ESValue(ESValue::ESNull);
-        }
-        return l->scriptValue();
+        String* eventType = name.localName();
+        return getAttributeEventListener(eventType);
     }
 
     void clearEventListeners()
@@ -185,50 +198,50 @@ protected:
     Document* m_document;
 };
 
-#define DECLARE_EVENT_LISTENER(EVENT) \
-    ScriptValue on##EVENT();          \
-    void setOn##EVENT(ScriptValue on##EVENT);
+#define DECLARE_EVENT_LISTENER(EVENT)            \
+    VIRTUAL EventListener* on##EVENT() OVERRIDE; \
+    VIRTUAL void setOn##EVENT(EventListener* on##EVENT) OVERRIDE;
 
-#define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)                    \
-    ScriptValue EVENT_TARGET::on##EVENT()                                    \
-    {                                                                        \
-        Window* window = document()->window();                               \
-        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
-                                                                             \
-        return window->attributeEventListener(attr);                         \
-    }                                                                        \
-                                                                             \
-    void EVENT_TARGET::setOn##EVENT(ScriptValue on##EVENT)                   \
-    {                                                                        \
-        Window* window = document()->window();                               \
-        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
-                                                                             \
-        if (on##EVENT.isObject()) {                                          \
-            window->setAttributeEventListener(attr, on##EVENT);              \
-        } else {                                                             \
-            window->clearAttributeEventListener(attr);                       \
-        }                                                                    \
+#define GENERATE_ATTR(EVENT)               \
+    Window* window = document()->window(); \
+    QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT;
+
+#define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)       \
+    EventListener* EVENT_TARGET::on##EVENT()                    \
+    {                                                           \
+        GENERATE_ATTR(EVENT);                                   \
+                                                                \
+        return window->attributeEventListener(attr);            \
+    }                                                           \
+                                                                \
+    void EVENT_TARGET::setOn##EVENT(EventListener* on##EVENT)   \
+    {                                                           \
+        GENERATE_ATTR(EVENT);                                   \
+                                                                \
+        if (on##EVENT) {                                        \
+            window->setAttributeEventListener(attr, on##EVENT); \
+        } else {                                                \
+            window->clearAttributeEventListener(attr);          \
+        }                                                       \
     }
 
-#define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)                           \
-    ScriptValue EVENT_TARGET::on##EVENT()                                    \
-    {                                                                        \
-        Window* window = document()->window();                               \
-        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
-                                                                             \
-        return attributeEventListener(attr);                                 \
-    }                                                                        \
-                                                                             \
-    void EVENT_TARGET::setOn##EVENT(ScriptValue on##EVENT)                   \
-    {                                                                        \
-        Window* window = document()->window();                               \
-        QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT; \
-                                                                             \
-        if (on##EVENT.isObject()) {                                          \
-            setAttributeEventListener(attr, on##EVENT);                      \
-        } else {                                                             \
-            clearAttributeEventListener(attr);                               \
-        }                                                                    \
+#define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)            \
+    EventListener* EVENT_TARGET::on##EVENT()                  \
+    {                                                         \
+        GENERATE_ATTR(EVENT);                                 \
+                                                              \
+        return attributeEventListener(attr);                  \
+    }                                                         \
+                                                              \
+    void EVENT_TARGET::setOn##EVENT(EventListener* on##EVENT) \
+    {                                                         \
+        GENERATE_ATTR(EVENT);                                 \
+                                                              \
+        if (on##EVENT) {                                      \
+            setAttributeEventListener(attr, on##EVENT);       \
+        } else {                                              \
+            clearAttributeEventListener(attr);                \
+        }                                                     \
     }
 }
 

@@ -1,5 +1,9 @@
-// https://dom.spec.whatwg.org/#interface-eventtarget
+// REF1. https://dom.spec.whatwg.org/#interface-eventtarget
+// REF2. https://html.spec.whatwg.org/multipage/webappapis.html#eventhandler
+// REF3. https://html.spec.whatwg.org/multipage/webappapis.html#onerroreventhandlernonnull
+// REF4. https://html.spec.whatwg.org/multipage/webappapis.html#onbeforeunloadeventhandlernonnull
 
+// [REF1]----------------------------------------------------------------
 [Exposed=(Window,Worker)]
 interface EventTarget {
   // NOTE Starfish only support boolean type for third argument
@@ -27,3 +31,18 @@ dictionary AddEventListenerOptions : EventListenerOptions {
   boolean passive = false;
   boolean once = false;
 };
+
+// [REF2]----------------------------------------------------------------
+[TreatNonObjectAsNull]
+callback EventHandlerNonNull = any (Event event);
+typedef EventHandlerNonNull? EventHandler;
+
+// [REF3]----------------------------------------------------------------
+[TreatNonObjectAsNull]
+callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long colno, optional any error);
+typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
+
+// [REF4]----------------------------------------------------------------
+[TreatNonObjectAsNull]
+callback OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event);
+typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;

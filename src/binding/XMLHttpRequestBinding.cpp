@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/DOMException.h"
 #include "extra/XMLHttpRequest.h"
 
@@ -41,18 +38,24 @@ static ESValue xmlhttprequestConstructor(ESVMInstance* instance)
 static ESValue onreadystatechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    return originalObj->onreadystatechange();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onreadystatechange();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onreadystatechangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnreadystatechange(v);
-
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnreadystatechange(value0);
     return ESValue();
 }
 
@@ -149,6 +152,7 @@ static ESValue responseTextGetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
+
 static ESValue open1Function(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
@@ -162,13 +166,13 @@ static ESValue open1Function(ESVMInstance* instance)
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
     // Call native function (nargs: 2)
     try {
@@ -197,28 +201,28 @@ static ESValue open2Function(ESVMInstance* instance)
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
     ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
     ESValue arg4 = instance->currentExecutionContext()->readArgument(4);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    value1 = toBrowserString(arg1);
-
-    // Handle argument arg2
-    bool value2;
-    value2 = arg2.toBoolean();
-
-    // Handle argument arg3
-    Nullable<String*> value3;
-    if (!arg3.isUndefinedOrNull()) {
-        value3 = toBrowserString(arg3);
-    }
     // Handle argument arg4
     Nullable<String*> value4;
     if (!arg4.isUndefinedOrNull()) {
         value4 = toBrowserString(arg4);
     }
+    // Handle argument arg3
+    Nullable<String*> value3;
+    if (!arg3.isUndefinedOrNull()) {
+        value3 = toBrowserString(arg3);
+    }
+    // Handle argument arg2
+    bool value2;
+    value2 = arg2.toBoolean();
+
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     // Call native function (nargs: 5)
     try {
         originalObj->open(value0, value1, value2, value3, value4);
@@ -258,13 +262,13 @@ static ESValue setRequestHeaderFunction(ESVMInstance* instance)
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
     // Call native function (nargs: 2)
     try {
@@ -317,24 +321,18 @@ ESFunctionObject* bindingXMLHttpRequest(
     ESFunctionObject* XMLHttpRequestFunction =
         ESFunctionObject::create(nullptr, xmlhttprequestConstructor,
                                  XMLHttpRequestString, 0, true, true);
+    ESObject* XMLHttpRequestPrototypeObj =
+        XMLHttpRequestFunction->protoType().asESPointer()->asESObject();
     XMLHttpRequestFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    XMLHttpRequestFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->fnXMLHttpRequestEventTarget()
-                           ->protoType());
+    XMLHttpRequestPrototypeObj->forceNonVectorHiddenClass(false);
+    XMLHttpRequestPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                 ->fnXMLHttpRequestEventTarget()
+                                                 ->protoType());
     XMLHttpRequestFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnXMLHttpRequestEventTarget());
-    ESObject* XMLHttpRequestPrototypeObj =
-        XMLHttpRequestFunction->protoType().asESPointer()->asESObject();
 
     // Bind for constants
     ESString* UNSENTString = ESString::create("UNSENT");

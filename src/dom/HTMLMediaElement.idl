@@ -64,30 +64,6 @@ interface HTMLMediaElement : HTMLElement {
   [Unimplemented, SameObject] readonly attribute VideoTrackList videoTracks;
   [SameObject] readonly attribute TextTrackList textTracks;
   TextTrack addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "");
-
-  // TODO
-  // Move belows to HTMLElement
-  [Custom=(Getter, Setter)] attribute EventHandler onprogress;
-	[Custom=(Getter, Setter)] attribute EventHandler onsuspend;
-	[Custom=(Getter, Setter)] attribute EventHandler onabort;
-	[Custom=(Getter, Setter)] attribute EventHandler onemptied;
-	[Custom=(Getter, Setter)] attribute EventHandler onstalled;
-	[Custom=(Getter, Setter)] attribute EventHandler onloadedmetadata;
-	[Custom=(Getter, Setter)] attribute EventHandler onloadeddata;
-	[Custom=(Getter, Setter)] attribute EventHandler onloadstart;
-	[Custom=(Getter, Setter)] attribute EventHandler oncanplay;
-	[Custom=(Getter, Setter)] attribute EventHandler oncanplaythrough;
-	[Custom=(Getter, Setter)] attribute EventHandler onplaying;
-	[Custom=(Getter, Setter)] attribute EventHandler onwaiting;
-	[Custom=(Getter, Setter)] attribute EventHandler onseeking;
-	[Custom=(Getter, Setter)] attribute EventHandler onseeked;
-	[Custom=(Getter, Setter)] attribute EventHandler onended;
-	[Custom=(Getter, Setter)] attribute EventHandler ondurationchange;
-	[Custom=(Getter, Setter)] attribute EventHandler ontimeupdate;
-	[Custom=(Getter, Setter)] attribute EventHandler onplay;
-	[Custom=(Getter, Setter)] attribute EventHandler onpause;
-	[Custom=(Getter, Setter)] attribute EventHandler onratechange;
-	[Custom=(Getter, Setter)] attribute EventHandler onvolumechange;
 };
 
 enum TextTrackKind { "subtitles",  "captions",  "descriptions",  "chapters",  "metadata" };

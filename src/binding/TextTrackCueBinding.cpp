@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/TextTrack.h"
 #include "dom/TextTrackCue.h"
 
@@ -28,7 +25,7 @@ using namespace escargot;
 static ESValue trackGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrack* result = nullptr;
     result = originalObj->track();
     // Return ESValue from native value
@@ -41,7 +38,7 @@ static ESValue trackGetterFunction(ESVMInstance* instance)
 static ESValue idGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->id();
     // Return ESValue from native value
@@ -62,7 +59,7 @@ static ESValue idSetterFunction(ESVMInstance* instance)
 static ESValue startTimeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->startTime();
     // Return ESValue from native value
@@ -87,7 +84,7 @@ static ESValue startTimeSetterFunction(ESVMInstance* instance)
 static ESValue endTimeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->endTime();
     // Return ESValue from native value
@@ -112,36 +109,48 @@ static ESValue endTimeSetterFunction(ESVMInstance* instance)
 static ESValue onenterGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-
-    return originalObj->onenter();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onenter();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onenterSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnenter(v);
-
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnenter(value0);
     return ESValue();
 }
 
 static ESValue onexitGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-
-    return originalObj->onexit();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->onexit();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue onexitSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCue);
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOnexit(v);
-
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOnexit(value0);
     return ESValue();
 }
 
@@ -152,20 +161,17 @@ ESFunctionObject* bindingTextTrackCue(
     ESString* TextTrackCueString = ESString::create("TextTrackCue");
     ESFunctionObject* TextTrackCueFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, TextTrackCueString, 0, true, true);
+    ESObject* TextTrackCuePrototypeObj =
+        TextTrackCueFunction->protoType().asESPointer()->asESObject();
     TextTrackCueFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    TextTrackCueFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    TextTrackCueFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    TextTrackCuePrototypeObj->forceNonVectorHiddenClass(false);
+    TextTrackCuePrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
     TextTrackCueFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget());
-    ESObject* TextTrackCuePrototypeObj =
-        TextTrackCueFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* trackString = ESString::create("track");

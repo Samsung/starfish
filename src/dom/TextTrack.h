@@ -61,7 +61,11 @@ public:
         return true;
     }
 
+#define VIRTUAL
+#define OVERRIDE
     DECLARE_EVENT_LISTENER(cuechange);
+#undef VIRTUAL
+#undef OVERRIDE
 
     void dispatchCueChangeEvent();
 

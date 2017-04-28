@@ -13,14 +13,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
-#include "dom/TextTrack.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "dom/TextTrackCueList.h"
+#include "dom/TextTrackCue.h"
+#include "dom/TextTrack.h"
 
 namespace StarFish {
 
@@ -30,7 +26,7 @@ using namespace escargot;
 static ESValue kindGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->kind();
     // Return ESValue from native value
@@ -40,7 +36,7 @@ static ESValue kindGetterFunction(ESVMInstance* instance)
 static ESValue labelGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->label();
     // Return ESValue from native value
@@ -50,7 +46,7 @@ static ESValue labelGetterFunction(ESVMInstance* instance)
 static ESValue languageGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->language();
     // Return ESValue from native value
@@ -60,7 +56,7 @@ static ESValue languageGetterFunction(ESVMInstance* instance)
 static ESValue idGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->id();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue idGetterFunction(ESVMInstance* instance)
 static ESValue modeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->mode();
     // Return ESValue from native value
@@ -91,7 +87,7 @@ static ESValue modeSetterFunction(ESVMInstance* instance)
 static ESValue cuesGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrackCueList* result = nullptr;
     result = originalObj->cues();
     // Return ESValue from native value
@@ -104,7 +100,7 @@ static ESValue cuesGetterFunction(ESVMInstance* instance)
 static ESValue activeCuesGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrackCueList* result = nullptr;
     result = originalObj->activeCues();
     // Return ESValue from native value
@@ -114,54 +110,80 @@ static ESValue activeCuesGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-static ESValue addCueFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(thisValue, TextTrack);
-    CHECK_TYPEOF(firstArg, TextTrackCue);
-
-    TextTrack* textTrack =
-        (TextTrack*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    TextTrackCue* cue =
-        (TextTrackCue*)firstArg.asESPointer()->asESObject()->extraPointerData();
-    textTrack->addCue(cue);
-    return ESValue(ESValue::ESUndefined);
-}
-
-static ESValue removeCueFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    CHECK_TYPEOF(thisValue, TextTrack);
-    CHECK_TYPEOF(firstArg, TextTrackCue);
-
-    TextTrack* textTrack =
-        (TextTrack*)thisValue.asESPointer()->asESObject()->extraPointerData();
-    TextTrackCue* cue =
-        (TextTrackCue*)firstArg.asESPointer()->asESObject()->extraPointerData();
-    textTrack->removeCue(cue);
-    return ESValue(ESValue::ESUndefined);
-}
-
 static ESValue oncuechangeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-
-    return originalObj->oncuechange();
+    // Declare native value (empty when type is void)
+    EventListener* result = nullptr;
+    result = originalObj->oncuechange();
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 static ESValue oncuechangeSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
-
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->setOncuechange(v);
-
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    EventListener* value0 = nullptr;
+    value0 = EventListener::toEventListener(arg0, true);
+    originalObj->setOncuechange(value0);
     return ESValue();
+}
+
+// Implement for functions
+
+static ESValue addCueFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "addCue",
+                        "TextTrack", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    TextTrackCue* value0 = nullptr;
+    CHECK_TYPEOF(arg0, TextTrackCue);
+    value0 =
+        (TextTrackCue*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    originalObj->addCue(value0);
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue removeCueFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "removeCue",
+                        "TextTrack", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    TextTrackCue* value0 = nullptr;
+    CHECK_TYPEOF(arg0, TextTrackCue);
+    value0 =
+        (TextTrackCue*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
+    // Call native function (nargs: 1)
+    originalObj->removeCue(value0);
+
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
 }
 
 ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
@@ -170,20 +192,17 @@ ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
     ESString* TextTrackString = ESString::create("TextTrack");
     ESFunctionObject* TextTrackFunction = ESFunctionObject::create(
         nullptr, errorOnConstructorFunction, TextTrackString, 0, true, true);
+    ESObject* TextTrackPrototypeObj =
+        TextTrackFunction->protoType().asESPointer()->asESObject();
     TextTrackFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    TextTrackFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    TextTrackFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    TextTrackPrototypeObj->forceNonVectorHiddenClass(false);
+    TextTrackPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
     TextTrackFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget());
-    ESObject* TextTrackPrototypeObj =
-        TextTrackFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* kindString = ESString::create("kind");
