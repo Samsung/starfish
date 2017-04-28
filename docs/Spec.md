@@ -149,6 +149,39 @@ This section describes the complete list of supported HTML tags and attributes b
 |-----------|------|---------|-------|-------------|
 | [Selectors](https://www.w3.org/TR/CSS2/selector.html) | Universal Selector | * | * | Selects all elements |
 | | Type Selector | element | p | Selects all \<p\> elements. The 'OR' condition is allowed (e.g., element, element) |
+| | Class Selector | element.class | div.intro | Selects all \<div\> elements with class="intro". A subset matching of "class" values is not allowed (for example, div.class1.class2) |
+| | ID Selector | element#id | div#firstname | Selects an \<div\> element with id="firstname" |
+| | Attribute Selectors | [attr] | [target] | Selects all elements with a target attribute |
+| | | [attr=val] | [lang=en] | Selects all elements with lang="en" |
+| | | [att~=val] | [title~=flower] | Selects all elements with a title attribute containing the word "flower" |
+| | | [att&#124;=val] | [lang&#124;=en] | Selects all elements with a lang attribute value starting with "en" |
+| | | [att^=val] | a[href^="https"] | Selects every \<a\> element whose href attribute value begins with "https" |
+| | | [att$=val] | a[href$=".pdf"] | Selects every \<a\> element whose href attribute value ends with ".pdf" |
+| | | [att*=val] | a[href*="w3schools"] | Selects every \<a\> element whose href attribute value contains the substring "w3schools" |
+| | Pseudo-classes | :hover | a:hover | Selects links on mouse over |
+| | | :active | a:active | Selects the active link |
+| | | :focus | input:focus | Selects the input element which has focus |
+| | | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
+| | | :lang(language) | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
+| | | :root | :root | Selects the document's root element |
+| | | :nth-child(n) | p:nth-child(2) | Selects every \<p\> element that is the second child of its parent |
+| | | :nth-last-child(n) | p:nth-last-child(2) | Selects every \<p\> element that is the second child of its parent, counting from the last child |
+| | | :nth-of-type(n) | p:nth-of-type(2) | Selects every \<p\> element that is the second \<p\> element of its parent |
+| | | :nth-last-of-type(n) | p:nth-last-of-type(2) | 	Selects every \<p\> element that is the second \<p\> element of its parent, counting from the last child |
+| | | :first-child | p:first-child | Selects every \<p\> element that is the first child of its parent |
+| | | :last-child | p:last-child | Selects every \<p\> element that is the last child of its parent |
+| | | :first-of-type | p:first-of-type | Selects every \<p\> element that is the first \<p\> element of its parent |
+| | | :last-of-type | p:last-of-type | Selects every \<p\> element that is the last \<p\> element of its parent |
+| | | :only-child | p:only-child | Selects every \<p\> element that is the only child of its parent |
+| | | :only-of-type | p:only-of-type | Selects every \<p\> element that is the only \<p\> element of its parent |
+| | Pseudo-elements | ::first-line | p::first-line | Selects the first line of every \<p\> element|
+| | | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
+| | | ::before | p::before | Insert something before the content of each \<p\> element |
+| | | ::after | p::after | Insert something after the content of each \<p\> element |
+| | Combinators | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
+| | | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
+| | | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
+| | | selector1 ~ selector2 | div ~ p | Selects all \<p\> elements that are siblings of \<div\> elements |
 
 ## Additional Supported APIs
 
