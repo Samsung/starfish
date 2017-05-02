@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishScaleTransformData__
-#define __StarFishScaleTransformData__
+#ifndef __StarFishScaleTransform__
+#define __StarFishScaleTransform__
 
 #include "style/Style.h"
 

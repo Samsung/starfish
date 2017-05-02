@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSkewTransformData__
-#define __StarFishSkewTransformData__
+#ifndef __StarFishSkewTransform__
+#define __StarFishSkewTransform__
 
 #include "style/Style.h"
 

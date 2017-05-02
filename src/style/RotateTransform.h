@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishRotateTransformData__
-#define __StarFishRotateTransformData__
+#ifndef __StarFishRotateTransform__
+#define __StarFishRotateTransform__
 
 #include "style/Style.h"
 

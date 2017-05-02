@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishErrorMessages__
-#define __StarFishErrorMessages__
+#ifndef __StarFishMessages__
+#define __StarFishMessages__
 
 #include "StarFishConfig.h"
 

@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishBlobObject__
-#define __StarFishBlobObject__
+#ifndef __StarFishBlob__
+#define __StarFishBlob__
 
 #include "binding/ScriptWrappable.h"
 
