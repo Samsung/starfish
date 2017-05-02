@@ -14,21 +14,77 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/MouseEvent.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+extern MouseEventInit toMouseEventInitFromESValue(ESVMInstance* instance,
+                                                  ESValue& from);
+extern ESValue toESValueFromMouseEventInit(ESVMInstance* instance,
+                                           MouseEventInit& from);
+
+// Implement for constructor
+static ESValue mouseeventConstructor(ESVMInstance* instance)
+{
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "MouseEvent");
+    }
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
+                        "MouseEvent", "1", buffer);
+    }
+    size_t validArgCount = 2;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg1
+    MouseEventInit value1;
+    if (arg1.isUndefined()) {
+        validArgCount--;
+    } else {
+        value1 = toMouseEventInitFromESValue(instance, arg1);
+    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    MouseEvent* result = nullptr;
+    // Call native function (nargs: 1-2)
+    if (validArgCount == 1) {
+        result = new MouseEvent(value0);
+    } else if (validArgCount == 2) {
+        result = new MouseEvent(value0, value1);
+    }
+    return result->scriptValue();
+}
+
+// Implement for attributes
+// Implement for functions
 ESFunctionObject* bindingMouseEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    /* Mouse Events */
-    DEFINE_FUNCTION_WITH_PARENTFUNC(
-        MouseEvent, fetchData(scriptBindingInstance)->fnUIEvent());
+    // Bind for constructor
+    ESString* MouseEventString = ESString::create("MouseEvent");
+    ESFunctionObject* MouseEventFunction = ESFunctionObject::create(
+        nullptr, mouseeventConstructor, MouseEventString, 1, true, true);
+    ESObject* MouseEventPrototypeObj =
+        MouseEventFunction->protoType().asESPointer()->asESObject();
+    MouseEventFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    MouseEventPrototypeObj->forceNonVectorHiddenClass(false);
+    MouseEventPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent()->protoType());
+    MouseEventFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent());
+
+    // Bind for attributes
+    // Bind for functions
     return MouseEventFunction;
 }
 }

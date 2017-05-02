@@ -25,28 +25,39 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue itemFunction(ESVMInstance* instance)
-{
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
-    CHECK_TYPEOF(thisValue, NodeList);
-    NodeList* nodeList =
-        (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-    ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(argValue, idx);
-    if (idx != INVALID_INDEX && idx < nodeList->length()) {
-        Node* nd = nodeList->item(idx);
-        return nd->scriptValue();
-    }
-    return ESValue(ESValue::ESNull);
-}
-
 static ESValue lengthFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(NodeList);
     uint32_t len = originalObj->length();
     return ESValue(len);
+}
+
+// Implement for functions
+static ESValue itemFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(NodeList);
+    // Class item getter by index
+    if (instance->currentExecutionContext()->argumentCount() < 1) {
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
+                        "NodeList", "1", "0");
+    }
+    // Declare native value (empty when type is void)
+    Node* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    uint32_t idx = arg0.toIndex();
+    if (idx == ESValue::ESInvalidIndexValue) {
+        double __number = arg0.toNumber();
+        if (__number < 0) {
+            return ESValue(ESValue::ESNull);
+        }
+        idx = std::isnan(__number) ? 0 : (uint32_t)__number;
+    }
+    result = originalObj->item(idx);
+    // Return ESValue from native value
+    if (result == nullptr) {
+        return ESValue(ESValue::ESNull);
+    }
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
