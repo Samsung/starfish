@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarBorderImageLength__
-#define __StarBorderImageLength__
+#ifndef __StarFishBorderImageLength__
+#define __StarFishBorderImageLength__
 
 #include "style/Length.h"
 

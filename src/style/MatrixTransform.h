@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishMatrixTransformData__
-#define __StarFishMatrixTransformData__
+#ifndef __StarFishMatrixTransform__
+#define __StarFishMatrixTransform__
 
 #include "style/Style.h"
 

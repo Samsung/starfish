@@ -15,8 +15,8 @@
  */
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#ifndef __StarFishAVPLAY__
-#define __StarFishAVPLAY__
+#ifndef __StarFishAvplay__
+#define __StarFishAvplay__
 
 #include "binding/ScriptWrappable.h"
 #include <media/player.h>

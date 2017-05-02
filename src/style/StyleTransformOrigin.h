@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef STYLETRANSFORMORIGIN_H_
-#define STYLETRANSFORMORIGIN_H_
+#ifndef __StarFishStyleTransformOrigin__
+#define __StarFishStyleTransformOrigin__
 
 #include "style/Style.h"
 

@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishBlockBox__
-#define __StarFishBlockBox__
+#ifndef __StarFishFrameBlockBox__
+#define __StarFishFrameBlockBox__
 
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
