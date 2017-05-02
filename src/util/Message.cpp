@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "util/ErrorMessages.h"
+#include "Messages.h"
 
 namespace StarFish {
 

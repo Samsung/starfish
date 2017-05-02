@@ -15,30 +15,12 @@
  */
 
 #include "dom/Document.h"
-#include "dom/DOMException.h"
-#include "dom/HTMLBodyElement.h"
-#include "dom/HTMLHeadElement.h"
-#include "dom/HTMLHtmlElement.h"
 #include "extra/Location.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
 
 using namespace escargot;
-
-ESValue bodyDocumentSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Document);
-    GENERATE_ARG_AND_CHECK_TYPE(0, HTMLElement);
-
-    try {
-        originalObj->setBody(val0);
-        return ESValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
 
 ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance)
 {

@@ -430,8 +430,7 @@ String* ScriptBindingInstance::evaluate(String* str)
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) ==
         0) {
-        auto result =
-            fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
+        auto result = fetchData(this)->m_instance->evaluate(toJSString(str));
         String* s = toBrowserString(result);
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
         fetchData(this)->m_instance->unregisterCheckedObjectAll();

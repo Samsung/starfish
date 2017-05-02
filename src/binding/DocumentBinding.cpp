@@ -145,8 +145,6 @@ static ESValue locationGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-extern ESValue locationDocumentSetterFunction(ESVMInstance* instance);
-
 static ESValue bodyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
@@ -160,7 +158,26 @@ static ESValue bodyGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-extern ESValue bodyDocumentSetterFunction(ESVMInstance* instance);
+static ESValue bodySetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    HTMLElement* value0 = nullptr;
+    if (!arg0.isUndefinedOrNull()) {
+        CHECK_TYPEOF(arg0, HTMLElement);
+        value0 = (HTMLElement*)(arg0.asESPointer()
+                                    ->asESObject()
+                                    ->extraPointerData());
+    }
+    try {
+        originalObj->setBody(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return ESValue();
+}
 
 static ESValue headGetterFunction(ESVMInstance* instance)
 {
@@ -1272,13 +1289,12 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     ESString* locationString = ESString::create("location");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentPrototypeObj, locationString, locationGetterFunction,
-        locationDocumentSetterFunction);
+        DocumentPrototypeObj, locationString, locationGetterFunction, nullptr);
 
     ESString* bodyString = ESString::create("body");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentPrototypeObj, bodyString, bodyGetterFunction,
-        bodyDocumentSetterFunction);
+        bodySetterFunction);
 
     ESString* headString = ESString::create("head");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

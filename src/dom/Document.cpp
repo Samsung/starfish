@@ -1160,7 +1160,7 @@ HTMLElement* Document::body()
 
 void Document::setBody(HTMLElement* element)
 {
-    if (!element->isHTMLBodyElement()) {
+    if (!(element && element->isHTMLBodyElement())) {
         THROW_DOM_EXCEPTION(m_document->window()->scriptBindingInstance(),
                             DOMException::HIERARCHY_REQUEST_ERR,
                             FAILED_TO_SET_PROPERTY_BECUASE_ARG_TYPE_MISMATCH_2,

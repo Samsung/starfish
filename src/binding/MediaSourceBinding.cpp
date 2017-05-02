@@ -72,7 +72,7 @@ static ESValue durationSetterFunction(ESVMInstance* instance)
     ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
     double duration = firstArg.toNumber();
     if (std::isnan(duration)) {
-        THROW_ILLEGAL_INVOCATION();
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     try {
         originalObj->setDuration(duration);

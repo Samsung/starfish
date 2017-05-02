@@ -48,13 +48,14 @@ static const char* FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE =
 static const char* FAILED_TO_SET_PROPERTY_BECUASE_ARG_TYPE_MISMATCH_2 =
     "Failed to set the '%s' property on '%s'. It must be either a '%s' or '%s' "
     "element.";
+static const char* ILLEGAL_INVOKE = "Illegal invocation";
 
 size_t bufferSize(std::initializer_list<const char*> args);
 
-#define COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, ...)            \
+#define COMPOSE_MESSAGE(TEMPLATE_STR, ...)                  \
     size_t siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
-    char errorMsg[siz + 1];                                 \
-    snprintf(errorMsg, siz + 1, TEMPLATE_STR, __VA_ARGS__)
+    char msg[siz + 1];                                      \
+    snprintf(msg, siz + 1, TEMPLATE_STR, __VA_ARGS__)
 }
 
 #endif
