@@ -43,8 +43,8 @@ QualifiedName HTMLLinkElement::name()
 
 String* HTMLLinkElement::href()
 {
-    String* url =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    String* url = getAttributeOrEmpty(
+        document()->window()->starFish()->staticStrings()->m_href);
 
     return URL::getURLString(document()->documentURI()->baseURI(), url);
 }
@@ -57,7 +57,7 @@ void HTMLLinkElement::setHref(String* href)
 
 String* HTMLLinkElement::rel()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_rel);
 }
 
@@ -68,7 +68,7 @@ void HTMLLinkElement::setRel(String* rel)
 
 String* HTMLLinkElement::type()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_type);
 }
 
@@ -80,13 +80,13 @@ void HTMLLinkElement::setType(String* type)
 
 URL* HTMLLinkElement::url()
 {
-    String* url =
+    Nullable<String*> url =
         getAttribute(document()->window()->starFish()->staticStrings()->m_href);
 
-    if (url == String::emptyString) {
+    if (!url.hasValue()) {
         return nullptr;
     }
-    return URL::createURL(document()->documentURI()->baseURI(), url);
+    return URL::createURL(document()->documentURI()->baseURI(), url.getValue());
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumenTree()
@@ -108,18 +108,18 @@ void HTMLLinkElement::checkLoadStyleSheet()
         return;
     }
 
-    size_t type =
-        hasAttribute(document()->window()->starFish()->staticStrings()->m_type);
-    size_t href =
-        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
-    size_t rel =
-        hasAttribute(document()->window()->starFish()->staticStrings()->m_rel);
+    Nullable<String*> type =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_type);
+    Nullable<String*> href =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    Nullable<String*> rel =
+        getAttribute(document()->window()->starFish()->staticStrings()->m_rel);
 
-    if (((type != SIZE_MAX &&
-          isCSSType(getAttribute(type)->toLower()->utf8Data())) ||
-         type == SIZE_MAX) &&
-        href != SIZE_MAX && rel != SIZE_MAX &&
-        getAttribute(rel)->toLower()->equals("stylesheet")) {
+    if (((type.hasValue() &&
+          isCSSType(type.getValue()->toLower()->utf8Data())) ||
+         !type.hasValue()) &&
+        href.hasValue() && rel.hasValue() &&
+        rel.getValue()->toLower()->equals("stylesheet")) {
         loadStyleSheet();
     } else {
         unloadStyleSheetIfExists();
@@ -165,10 +165,8 @@ protected:
 void HTMLLinkElement::loadStyleSheet()
 {
     unloadStyleSheetIfExists();
-    size_t href =
-        hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
-
-    String* urlString = getAttribute(href);
+    String* urlString = getAttributeOrEmpty(
+        document()->window()->starFish()->staticStrings()->m_href);
     URL* url = URL::createURL(document()->documentURI()->baseURI(), urlString);
 
     if (m_styleSheetTextResource) {

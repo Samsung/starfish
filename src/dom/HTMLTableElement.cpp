@@ -37,7 +37,7 @@ QualifiedName HTMLTableElement::name()
 
 String* HTMLTableElement::width()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_width);
 }
 
@@ -49,7 +49,7 @@ void HTMLTableElement::setWidth(String* width)
 
 String* HTMLTableElement::bgColor()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_bgColor);
 }
 

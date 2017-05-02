@@ -1914,14 +1914,14 @@ bool StyleResolver::anyAttributeMatches(Element* element,
 
     String* selectorValue = selector->value();
 
-    size_t idx = element->hasAttribute(selectorAttr);
-    if (idx == SIZE_MAX) {
+    Nullable<String*> refAttr = element->getAttribute(selectorAttr);
+    if (!refAttr.hasValue()) {
         return false;
     }
 
     CSSSelector::AttributeMatchType caseSensitivity =
         selector->attributeMatch();
-    if (attributeValueMatches(element->getAttribute(idx), type, selectorValue,
+    if (attributeValueMatches(refAttr.getValue(), type, selectorValue,
                               caseSensitivity)) {
         return true;
     }
@@ -1941,7 +1941,7 @@ bool StyleResolver::anyAttributeMatches(Element* element,
     // If case-insensitive, re-check, and count if result differs.
     // See http://code.google.com/p/chromium/issues/detail?id=327060
     if (legacyCaseInsensitive &&
-        attributeValueMatches(element->getAttribute(idx), type, selectorValue,
+        attributeValueMatches(refAttr.getValue(), type, selectorValue,
                               CSSSelector::CaseInsensitive)) {
         return true;
     }
@@ -2654,12 +2654,12 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 
     if (element->isHTMLElement()) {
         if (element->asHTMLElement()->hasDirAttribute()) {
-            String* str =
-                element->asHTMLElement()->getAttribute(element->document()
-                                                           ->window()
-                                                           ->starFish()
-                                                           ->staticStrings()
-                                                           ->m_dir);
+            String* str = element->asHTMLElement()->getAttributeOrEmpty(
+                element->document()
+                    ->window()
+                    ->starFish()
+                    ->staticStrings()
+                    ->m_dir);
             str = str->toLower();
             if (str->equals("ltr")) {
                 style->m_inheritedStyles.m_direction =
@@ -4017,11 +4017,11 @@ void StyleResolver::apply(Element* element,
                         style->setContentText(item.stringValue());
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::Attr) {
-                        String* attrValue = element->getAttribute(
+                        Nullable<String*> attrValue = element->getAttribute(
                             element->document()->createAttributeName(
                                 item.attrValue()));
-                        if (!attrValue->equals(String::emptyString)) {
-                            style->setContentText(attrValue);
+                        if (attrValue.hasValue()) {
+                            style->setContentText(attrValue.getValue());
                         }
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();

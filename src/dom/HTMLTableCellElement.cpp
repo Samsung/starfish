@@ -23,7 +23,7 @@ namespace StarFish {
 
 String* HTMLTableCellElement::colspan()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_colspan);
 }
 
@@ -35,7 +35,7 @@ void HTMLTableCellElement::setColspan(uint32_t colspan)
 
 String* HTMLTableCellElement::rowspan()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_rowspan);
 }
 
@@ -47,7 +47,7 @@ void HTMLTableCellElement::setRowspan(uint32_t rowspan)
 
 String* HTMLTableCellElement::bgColor()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_bgColor);
 }
 

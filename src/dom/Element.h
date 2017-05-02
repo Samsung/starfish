@@ -92,28 +92,33 @@ public:
     }
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
-    size_t hasAttribute(QualifiedName name);
     size_t attributeCount() const
     {
         return m_attributes.size();
     }
-    QualifiedName getAttributeName(size_t t)
+
+    QualifiedName getAssuredAttributeName(size_t t)
     {
         return m_attributes[t].name();
     }
-    String* getAttribute(QualifiedName name)
+
+    String* getAssuredAttribute(size_t t)
     {
-        size_t siz = hasAttribute(name);
-        return getAttribute(siz);
+        return m_attributes[t].value();
     }
-    String* getAttribute(size_t pos);
-    void setAttribute(QualifiedName name, String* value);
-    void removeAttribute(QualifiedName name);
 
     bool hasAttribute(String* name);
-    String* getAttribute(String* name);
+    size_t hasAttribute(QualifiedName name);
+
+    Nullable<String*> getAttribute(String* name);
+    Nullable<String*> getAttribute(QualifiedName name);
+    String* getAttributeOrEmpty(QualifiedName name);
+
     void setAttribute(String* name, String* value);
+    void setAttribute(QualifiedName name, String* value);
+
     void removeAttribute(String* name);
+    void removeAttribute(QualifiedName name);
 
     // DO NOT MODIFY ATTRIBUTE
     const Attribute& attributeData(QualifiedName name)
@@ -147,8 +152,10 @@ public:
             return false;
         }
 
-        for (const Attribute& attr : *(otherNode->getAttributes())) {
-            if (!getAttribute(attr.name())->equals(attr.value())) {
+        for (const Attribute& otherAttr : *(otherNode->getAttributes())) {
+            Nullable<String*> attr = getAttribute(otherAttr.name());
+            if (!attr.hasValue() ||
+                !attr.getValue()->equals(otherAttr.value())) {
                 return false;
             }
         }

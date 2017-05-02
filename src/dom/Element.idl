@@ -44,9 +44,9 @@ interface Element : Node {
   [Unimplemented] Element? closest(DOMString selectors);
   [Unimplemented] boolean matches(DOMString selectors);
 
-  [STARFISH_TC_COVERAGE] HTMLCollection getElementsByTagName(DOMString qualifiedName);
+  HTMLCollection getElementsByTagName(DOMString qualifiedName);
   [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-  [STARFISH_TC_COVERAGE] HTMLCollection getElementsByClassName(DOMString classNames);
+  HTMLCollection getElementsByClassName(DOMString classNames);
 
   [Unimplemented, CEReactions] Element? insertAdjacentElement(DOMString where, Element element); // historical
   [Unimplemented] void insertAdjacentText(DOMString where, DOMString data); // historical

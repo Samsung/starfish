@@ -63,20 +63,28 @@ size_t Element::hasAttribute(QualifiedName name)
     return SIZE_MAX;
 }
 
-String* Element::getAttribute(String* name)
+Nullable<String*> Element::getAttribute(String* name)
 {
     QualifiedName qName = document()->createAttributeName(name);
-    size_t idx = hasAttribute(qName);
-    return getAttribute(idx);
+    return getAttribute(qName);
 }
 
-String* Element::getAttribute(size_t pos)
+Nullable<String*> Element::getAttribute(QualifiedName name)
 {
-    if (pos == SIZE_MAX) {
-        return String::emptyString;
+    size_t idx = hasAttribute(name);
+    if (idx == SIZE_MAX) {
+        return Nullable<String*>();
     }
+    return Nullable<String*>(m_attributes[idx].value());
+}
 
-    return m_attributes[pos].value();
+String* Element::getAttributeOrEmpty(QualifiedName name)
+{
+    Nullable<String*> result = getAttribute(name);
+    if (result.hasValue()) {
+        return result.getValue();
+    }
+    return String::emptyString;
 }
 
 void Element::setAttribute(String* name, String* value)
@@ -440,7 +448,7 @@ void Element::setPseudoElement(StyleResolver::PseudoElementType type)
 
 String* Element::idAttr()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_id);
 }
 
@@ -451,7 +459,7 @@ void Element::setIdAttr(String* id)
 
 String* Element::className()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_class);
 }
 
@@ -483,7 +491,7 @@ String* Element::getLaunguage()
 
     do {
         if (n->isElement()) {
-            value = n->asElement()->getAttribute(
+            value = n->asElement()->getAttributeOrEmpty(
                 n->document()->window()->starFish()->staticStrings()->m_lang);
         } else if (n->isDocument()) {
             // TODO: checking the MIME content-language

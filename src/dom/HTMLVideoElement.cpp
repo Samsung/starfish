@@ -67,7 +67,7 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
 
 unsigned long HTMLVideoElement::width()
 {
-    String* widthStr = getAttribute(
+    String* widthStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
@@ -80,7 +80,7 @@ void HTMLVideoElement::setWidth(unsigned long width)
 
 unsigned long HTMLVideoElement::height()
 {
-    String* heightStr = getAttribute(
+    String* heightStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }

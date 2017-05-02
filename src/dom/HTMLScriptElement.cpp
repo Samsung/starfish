@@ -104,15 +104,15 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
-        String* typeAttr = getAttribute(
+        Nullable<String*> typeStr = getAttribute(
             document()->window()->starFish()->staticStrings()->m_type);
-        if (!typeAttr->equals(String::emptyString) &&
-            !isJavaScriptType(typeAttr->toLower()->utf8Data())) {
+        if (typeStr.hasValue() &&
+            !isJavaScriptType(typeStr.getValue()->toLower()->utf8Data())) {
             return false;
         }
-        size_t idx = hasAttribute(
+        Nullable<String*> srcStr = getAttribute(
             document()->window()->starFish()->staticStrings()->m_src);
-        if (idx == SIZE_MAX) {
+        if (!srcStr.hasValue()) {
             if (!firstChild()) {
                 return false;
             }
@@ -122,18 +122,18 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             m_didScriptExecuted = true;
             return false;
         } else {
-            String* url = getAttribute(idx);
+            String* url = srcStr.getValue();
             m_isAlreadyStarted = true;
 
             if (!url->length()) {
                 return false;
             }
 
-            String* charset = getAttribute(document()
-                                               ->window()
-                                               ->starFish()
-                                               ->staticStrings()
-                                               ->m_charset)
+            String* charset = getAttributeOrEmpty(document()
+                                                      ->window()
+                                                      ->starFish()
+                                                      ->staticStrings()
+                                                      ->m_charset)
                                   ->trim();
             TextResource* res = document()->resourceLoader().fetchText(
                 URL::createURL(document()->documentURI()->baseURI(), url),
@@ -196,8 +196,8 @@ QualifiedName HTMLScriptElement::name()
 
 String* HTMLScriptElement::src()
 {
-    String* url =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+    String* url = getAttributeOrEmpty(
+        document()->window()->starFish()->staticStrings()->m_src);
 
     return URL::getURLString(document()->documentURI()->baseURI(), url);
 }
@@ -209,7 +209,7 @@ void HTMLScriptElement::setSrc(String* src)
 
 String* HTMLScriptElement::type()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_type);
 }
 
@@ -221,7 +221,7 @@ void HTMLScriptElement::setType(String* type)
 
 String* HTMLScriptElement::charset()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_charset);
 }
 

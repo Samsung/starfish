@@ -36,8 +36,8 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
     size_t attributeCount = e->attributeCount();
     for (size_t i = 0; i < attributeCount; i++) {
         rapidxml::xml_attribute<char>* attr = xmlDocument.allocate_attribute(
-            e->getAttributeName(i).localName()->utf8Data(),
-            e->getAttribute(i)->utf8Data());
+            e->getAssuredAttributeName(i).localName()->utf8Data(),
+            e->getAssuredAttribute(i)->utf8Data());
         xmlNode->append_attribute(attr);
     }
 

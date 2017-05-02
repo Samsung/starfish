@@ -40,18 +40,18 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equals("click")) {
         auto href = document()->window()->starFish()->staticStrings()->m_href;
-        size_t s = hasAttribute(href);
-        if (s != SIZE_MAX) {
-            String* h = getAttribute(s)->trim();
-            if (h->length()) {
-                if (h->startsWith("#")) {
+        Nullable<String*> hrefAttr = getAttribute(href);
+        if (hrefAttr.hasValue()) {
+            String* hrefStr = hrefAttr.getValue()->trim();
+            if (hrefStr->length()) {
+                if (hrefStr->startsWith("#")) {
                     document()->window()->navigateAsync(URL::createURL(
                         document()->urlString()->substring(
                             0, document()->urlString()->indexOf('#')),
-                        h));
+                        hrefStr));
                 } else {
                     document()->window()->navigateAsync(
-                        URL::createURL(document()->urlString(), h));
+                        URL::createURL(document()->urlString(), hrefStr));
                 }
             } else {
                 document()->window()->navigateAsync(document()->documentURI());

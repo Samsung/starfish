@@ -272,7 +272,7 @@ String* HTMLTrackElement::kind()
 
 String* HTMLTrackElement::src()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_src);
 }
 

@@ -28,9 +28,9 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 {
     IntrinsicSize siz = intrinsicSize();
     IntrinsicSizeUsedInLayout result;
-    String* widthString = node()->asElement()->getAttribute(
+    String* widthString = node()->asElement()->getAttributeOrEmpty(
         node()->document()->window()->starFish()->staticStrings()->m_width);
-    String* heightString = node()->asElement()->getAttribute(
+    String* heightString = node()->asElement()->getAttributeOrEmpty(
         node()->document()->window()->starFish()->staticStrings()->m_height);
     if (siz.m_isContentExists) {
         result.m_intrinsicContentSize =
