@@ -176,12 +176,15 @@ Node* NodeListImpl::item(unsigned long index) const
 {
     if (m_canCache) {
         fillCacheIfNeed();
-        return m_cachedNodeList[index];
-    }
-    GCVector<Node*> collection;
-    getherDescendant(&collection, m_root);
-    if (index < collection.size()) {
-        return collection[index];
+        if (index < m_cachedNodeList.size()) {
+            return m_cachedNodeList[index];
+        }
+    } else {
+        GCVector<Node*> collection;
+        getherDescendant(&collection, m_root);
+        if (index < collection.size()) {
+            return collection[index];
+        }
     }
     return nullptr;
 }
