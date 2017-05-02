@@ -179,17 +179,14 @@ LayoutUnit FrameTableCellBox::calBaseline()
 
 unsigned FrameTableCellBox::colspan()
 {
-    if (!(node() && node()->isElement() &&
-          node()->asElement()->isHTMLElement())) {
+    if (!(node() && node()->isHTMLElement())) {
         return 1;
     }
 
-    HTMLElement* e = node()->asElement()->asHTMLElement();
+    HTMLElement* e = node()->asHTMLElement();
     String* colspan = String::emptyString;
-    if (e->isHTMLTDElement()) {
-        colspan = e->asHTMLTDElement()->colspan();
-    } else if (e->isHTMLTHElement()) {
-        colspan = e->asHTMLTHElement()->colspan();
+    if (e->isHTMLTableCellElement()) {
+        colspan = e->asHTMLTableCellElement()->colspan();
     } else {
         // colspan is only accepted when HTML element is either <td> or <th>,
         // hence it is not applied when used in other elements.

@@ -17,34 +17,21 @@
 #ifndef __StarFishHTMLTBodyElement__
 #define __StarFishHTMLTBodyElement__
 
-#include "dom/HTMLElement.h"
+#include "dom/HTMLTableSectionElement.h"
 
 namespace StarFish {
 
-class HTMLTBodyElement : public HTMLElement {
+class HTMLTBodyElement : public HTMLTableSectionElement {
 public:
     HTMLTBodyElement(Document* document)
-        : HTMLElement(document)
+        : HTMLTableSectionElement(document)
     {
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTBodyElement()->protoType());
     }
 
     /* 4.4 Interface Node */
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLTBodyElement() const override
-    {
-        return true;
-    }
 };
 }
 

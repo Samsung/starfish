@@ -14,39 +14,35 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/HTMLTBodyElement.h"
+#include "dom/HTMLTableCellElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLTBodyElement(
+// Implement for attributes
+ESFunctionObject* bindingHTMLTableCellElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* HTMLTBodyElementString = ESString::create("HTMLTBodyElement");
-    ESFunctionObject* HTMLTBodyElementFunction =
+    ESString* HTMLTableCellElementString =
+        ESString::create("HTMLTableCellElement");
+    ESFunctionObject* HTMLTableCellElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLTBodyElementString, 1, true, true);
-    HTMLTBodyElementFunction->defineAccessorProperty(
+                                 HTMLTableCellElementString, 0, true, true);
+    ESObject* HTMLTableCellElementPrototypeObj =
+        HTMLTableCellElementFunction->protoType().asESPointer()->asESObject();
+    HTMLTableCellElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLTBodyElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLTBodyElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLTBodyElementFunction->set__proto__(
+    HTMLTableCellElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTableCellElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLTableCellElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLTBodyElementFunction;
+    // Bind for attributes
+    return HTMLTableCellElementFunction;
 }
 }

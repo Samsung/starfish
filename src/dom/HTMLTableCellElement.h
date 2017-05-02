@@ -28,7 +28,11 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override = 0;
+    virtual void init(ScriptBindingInstance* instance) override
+    {
+        scriptObject()->set__proto__(
+            fetchData(instance)->fnHTMLTableCellElement()->protoType());
+    }
 
     /* 4.4 Interface Node */
 
@@ -38,14 +42,21 @@ public:
     /* table cell related */
 
     String* colspan();
-    void setColspan(int colspan);
+    void setColspan(uint32_t colspan);
 
     String* rowspan();
-    void setRowspan(int rowspan);
+    void setRowspan(uint32_t rowspan);
 
     /* Not in HTML5 */
     String* bgColor();
     void setBgColor(String* bgColor);
+
+    /* Other methods (not in DOM API) */
+
+    virtual bool isHTMLTableCellElement() const override
+    {
+        return true;
+    }
 };
 }
 

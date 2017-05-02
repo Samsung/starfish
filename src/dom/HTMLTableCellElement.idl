@@ -1,0 +1,21 @@
+// https://html.spec.whatwg.org/#htmltablecellelement
+
+[HTMLConstructor]
+interface HTMLTableCellElement : HTMLElement {
+  [CEReactions] attribute unsigned long colSpan;
+  [CEReactions] attribute unsigned long rowSpan;
+  [Unimplemented, CEReactions] attribute DOMString headers;
+  [Unimplemented] readonly attribute long cellIndex;
+
+  [Unimplemented, CEReactions] attribute DOMString scope; // only conforming for th elements
+  [Unimplemented, CEReactions] attribute DOMString abbr;  // only conforming for th elements
+
+  // also has obsolete members
+  // https://html.spec.whatwg.org/#HTMLTableCellElement-partial
+  [Unimplemented, CEReactions] attribute DOMString align;
+  [Unimplemented, CEReactions] attribute DOMString ch;
+  [Unimplemented, CEReactions] attribute DOMString chOff;
+  [Unimplemented, CEReactions] attribute DOMString vAlign;
+
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString bgColor;
+};

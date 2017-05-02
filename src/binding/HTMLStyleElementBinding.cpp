@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLStyleElement.h"
 
 namespace StarFish {
@@ -28,7 +24,7 @@ using namespace escargot;
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLStyleElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->type();
     // Return ESValue from native value
@@ -53,28 +49,24 @@ ESFunctionObject* bindingHTMLStyleElement(
     ESString* HTMLStyleElementString = ESString::create("HTMLStyleElement");
     ESFunctionObject* HTMLStyleElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLStyleElementString, 1, true, true);
+                                 HTMLStyleElementString, 0, true, true);
+    ESObject* HTMLStyleElementPrototypeObj =
+        HTMLStyleElementFunction->protoType().asESPointer()->asESObject();
     HTMLStyleElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLStyleElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLStyleElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLStyleElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLStyleElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLStyleElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
     ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLStyleElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeGetterFunction, typeSetterFunction);
+        HTMLStyleElementPrototypeObj, typeString, typeGetterFunction,
+        typeSetterFunction);
 
     return HTMLStyleElementFunction;
 }

@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/HTMLObjectElement.h"
 
 namespace StarFish {
@@ -33,23 +30,17 @@ ESFunctionObject* bindingHTMLObjectElement(
     ESFunctionObject* HTMLObjectElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  HTMLObjectElementString, 0, true, true);
+    ESObject* HTMLObjectElementPrototypeObj =
+        HTMLObjectElementFunction->protoType().asESPointer()->asESObject();
     HTMLObjectElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLObjectElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLObjectElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLObjectElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLObjectElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLObjectElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
-    ESObject* HTMLObjectElementPrototypeObj =
-        HTMLObjectElementFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     // Bind for functions

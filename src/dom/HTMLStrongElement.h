@@ -28,23 +28,10 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLStrongElement()->protoType());
-    }
-
     /* 4.4 Interface Node */
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLStrongElement() const override
-    {
-        return true;
-    }
 };
 }
 

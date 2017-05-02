@@ -1,0 +1,15 @@
+// https://html.spec.whatwg.org/#htmltablesectionelement
+
+[HTMLConstructor]
+interface HTMLTableSectionElement : HTMLElement {
+  [Unimplemented, SameObject] readonly attribute HTMLCollection rows;
+  [Unimplemented] HTMLElement insertRow(optional long index = -1);
+  [Unimplemented, CEReactions] void deleteRow(long index);
+
+  // also has obsolete members
+  // https://html.spec.whatwg.org/#HTMLTableSectionElement-partial
+  [Unimplemented, CEReactions] attribute DOMString align;
+  [Unimplemented, CEReactions] attribute DOMString ch;
+  [Unimplemented, CEReactions] attribute DOMString chOff;
+  [Unimplemented, CEReactions] attribute DOMString vAlign;
+};

@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLColElement__
-#define __StarFishHTMLColElement__
+#ifndef __StarFishHTMLTableCaptionElement__
+#define __StarFishHTMLTableCaptionElement__
 
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLColElement : public HTMLElement {
+class HTMLTableCaptionElement : public HTMLElement {
 public:
-    HTMLColElement(Document* document)
+    HTMLTableCaptionElement(Document* document)
         : HTMLElement(document)
     {
     }
@@ -31,7 +31,7 @@ public:
     virtual void init(ScriptBindingInstance* instance) override
     {
         scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLColElement()->protoType());
+            fetchData(instance)->fnHTMLTableCaptionElement()->protoType());
     }
 
     /* 4.4 Interface Node */
@@ -41,13 +41,10 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLColElement() const override
+    virtual bool isHTMLTableCaptionElement() const override
     {
         return true;
     }
-
-    void setSpan(int span);
-    String* span();
 };
 }
 

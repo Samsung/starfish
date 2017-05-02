@@ -27,7 +27,7 @@ String* HTMLTableCellElement::colspan()
         document()->window()->starFish()->staticStrings()->m_colspan);
 }
 
-void HTMLTableCellElement::setColspan(int colspan)
+void HTMLTableCellElement::setColspan(uint32_t colspan)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_colspan,
                  String::fromInt(colspan));
@@ -39,7 +39,7 @@ String* HTMLTableCellElement::rowspan()
         document()->window()->starFish()->staticStrings()->m_rowspan);
 }
 
-void HTMLTableCellElement::setRowspan(int rowspan)
+void HTMLTableCellElement::setRowspan(uint32_t rowspan)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_colspan,
                  String::fromInt(rowspan));

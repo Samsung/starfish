@@ -53,9 +53,6 @@
     F(History)                                      \
     F(HTMLBodyElement)                              \
     F(HTMLBRElement)                                \
-    F(HTMLCaptionElement)                           \
-    F(HTMLColElement)                               \
-    F(HTMLColGroupElement)                          \
     F(HTMLCollection)                               \
     F(HTMLDivElement)                               \
     F(HTMLDocument)                                 \
@@ -71,16 +68,14 @@
     F(HTMLParagraphElement)                         \
     F(HTMLPreElement)                               \
     F(HTMLScriptElement)                            \
-    F(HTMLStrongElement)                            \
     F(HTMLStyleElement)                             \
     F(HTMLSpanElement)                              \
+    F(HTMLTableCaptionElement)                      \
+    F(HTMLTableCellElement)                         \
+    F(HTMLTableColElement)                          \
     F(HTMLTableElement)                             \
-    F(HTMLTBodyElement)                             \
-    F(HTMLTDElement)                                \
-    F(HTMLTFootElement)                             \
-    F(HTMLTHeadElement)                             \
-    F(HTMLTHElement)                                \
-    F(HTMLTRElement)                                \
+    F(HTMLTableSectionElement)                      \
+    F(HTMLTableRowElement)                          \
     F(HTMLUListElement)                             \
     F(HTMLUnknownElement)                           \
     F(Image)                                        \

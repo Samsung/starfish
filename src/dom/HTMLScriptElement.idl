@@ -3,10 +3,10 @@
 
 [HTMLConstructor]
 interface HTMLScriptElement : HTMLElement {
-  [Custom=(Getter, Setter), CEReactions] attribute DOMString src;
-  [Custom=(Getter, Setter), CEReactions] attribute DOMString type;
+  [CEReactions] attribute DOMString src;
+  [CEReactions] attribute DOMString type;
   [Unimplemented, CEReactions] attribute boolean noModule;
-  [Custom=(Getter, Setter), CEReactions] attribute DOMString charset;
+  [CEReactions] attribute DOMString charset;
   [Unimplemented, CEReactions] attribute boolean async;
   [Unimplemented, CEReactions] attribute boolean defer;
   [Unimplemented, CEReactions] attribute DOMString? crossOrigin;

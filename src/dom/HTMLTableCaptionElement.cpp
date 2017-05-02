@@ -16,21 +16,21 @@
 
 #include "StarFish.h"
 #include "dom/Document.h"
-#include "dom/HTMLTRElement.h"
+#include "dom/HTMLTableCaptionElement.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
-String* HTMLTRElement::localName()
+String* HTMLTableCaptionElement::localName()
 {
     return document()
         ->window()
         ->starFish()
         ->staticStrings()
-        ->m_trTagName.localName();
+        ->m_captionTagName.localName();
 }
 
-QualifiedName HTMLTRElement::name()
+QualifiedName HTMLTableCaptionElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_trTagName;
+    return document()->window()->starFish()->staticStrings()->m_captionTagName;
 }
 }

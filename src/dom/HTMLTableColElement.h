@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLTRElement__
-#define __StarFishHTMLTRElement__
+#ifndef __StarFishHTMLTableColElement__
+#define __StarFishHTMLTableColElement__
 
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLTRElement : public HTMLElement {
+class HTMLTableColElement : public HTMLElement {
 public:
-    HTMLTRElement(Document* document)
+    HTMLTableColElement(Document* document)
         : HTMLElement(document)
     {
     }
@@ -31,7 +31,7 @@ public:
     virtual void init(ScriptBindingInstance* instance) override
     {
         scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTRElement()->protoType());
+            fetchData(instance)->fnHTMLTableColElement()->protoType());
     }
 
     /* 4.4 Interface Node */
@@ -41,10 +41,13 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLTRElement() const
+    virtual bool isHTMLTableColElement() const override
     {
         return true;
     }
+
+    void setSpan(uint32_t span);
+    uint32_t span();
 };
 }
 

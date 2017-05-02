@@ -37,18 +37,15 @@ bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
     }
 
     HTMLElement* elem = node()->asElement()->asHTMLElement();
-    if (!(elem->isHTMLTableElement() || elem->isHTMLTDElement() ||
-          elem->isHTMLTHElement())) {
+    if (!(elem->isHTMLTableElement() || elem->isHTMLTableCellElement())) {
         return false;
     }
 
     String* color = nullptr;
     if (elem->isHTMLTableElement()) {
         color = elem->asHTMLTableElement()->bgColor();
-    } else if (elem->isHTMLTDElement()) {
-        color = elem->asHTMLTDElement()->bgColor();
-    } else if (elem->isHTMLTHElement()) {
-        color = elem->asHTMLTHElement()->bgColor();
+    } else if (elem->isHTMLTableCellElement()) {
+        color = elem->asHTMLTableCellElement()->bgColor();
     }
 
     if (color && (!color->equals(String::emptyString))) {

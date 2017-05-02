@@ -1,0 +1,36 @@
+// https://html.spec.whatwg.org/#the-table-element
+
+[HTMLConstructor]
+interface HTMLTableElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute HTMLTableCaptionElement? caption;
+  [Unimplemented] HTMLTableCaptionElement createCaption();
+  [Unimplemented, CEReactions] void deleteCaption();
+
+  [Unimplemented, CEReactions] attribute HTMLTableSectionElement? tHead;
+  [Unimplemented] HTMLTableSectionElement createTHead();
+  [Unimplemented, CEReactions] void deleteTHead();
+
+  [Unimplemented, CEReactions] attribute HTMLTableSectionElement? tFoot;
+  [Unimplemented] HTMLTableSectionElement createTFoot();
+  [Unimplemented, CEReactions] void deleteTFoot();
+
+  [Unimplemented, SameObject] readonly attribute HTMLCollection tBodies;
+  [Unimplemented] HTMLTableSectionElement createTBody();
+
+  [Unimplemented, SameObject] readonly attribute HTMLCollection rows;
+  [Unimplemented] HTMLTableRowElement insertRow(optional long index = -1);
+  [Unimplemented, CEReactions] void deleteRow(long index);
+
+  // also has obsolete members
+  // https://html.spec.whatwg.org/#HTMLTableElement-partial
+  [Unimplemented, CEReactions] attribute DOMString align;
+  [Unimplemented, CEReactions] attribute DOMString border;
+  [Unimplemented, CEReactions] attribute DOMString frame;
+  [Unimplemented, CEReactions] attribute DOMString rules;
+  [Unimplemented, CEReactions] attribute DOMString summary;
+  [CEReactions] attribute DOMString width;
+
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString bgColor;
+  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cellPadding;
+  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cellSpacing;
+};

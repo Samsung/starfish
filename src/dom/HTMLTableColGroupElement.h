@@ -14,37 +14,24 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLCaptionElement__
-#define __StarFishHTMLCaptionElement__
+#ifndef __StarFishHTMLTableColGroupElement__
+#define __StarFishHTMLTableColGroupElement__
 
-#include "dom/HTMLElement.h"
+#include "dom/HTMLTableColElement.h"
 
 namespace StarFish {
 
-class HTMLCaptionElement : public HTMLElement {
+class HTMLTableColGroupElement : public HTMLTableColElement {
 public:
-    HTMLCaptionElement(Document* document)
-        : HTMLElement(document)
+    HTMLTableColGroupElement(Document* document)
+        : HTMLTableColElement(document)
     {
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLCaptionElement()->protoType());
     }
 
     /* 4.4 Interface Node */
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLCaptionElement() const override
-    {
-        return true;
-    }
 };
 }
 

@@ -41,10 +41,10 @@ String* HTMLTableElement::width()
         document()->window()->starFish()->staticStrings()->m_width);
 }
 
-void HTMLTableElement::setWidth(int width)
+void HTMLTableElement::setWidth(String* width)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                 String::fromInt(width));
+                 width);
 }
 
 String* HTMLTableElement::bgColor()

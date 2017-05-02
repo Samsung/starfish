@@ -13,16 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
-#include "dom/HTMLMediaElement.h"
-#include "dom/TextTrack.h"
-#include "dom/TextTrackList.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "extra/TimeRanges.h"
+#include "dom/TextTrackList.h"
+#include "dom/TextTrack.h"
+#include "dom/HTMLMediaElement.h"
 
 namespace StarFish {
 
@@ -32,7 +27,7 @@ using namespace escargot;
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->src();
     // Return ESValue from native value
@@ -53,7 +48,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 static ESValue currentSrcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->currentSrc();
     // Return ESValue from native value
@@ -63,7 +58,7 @@ static ESValue currentSrcGetterFunction(ESVMInstance* instance)
 static ESValue networkStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->networkState();
     // Return ESValue from native value
@@ -73,7 +68,7 @@ static ESValue networkStateGetterFunction(ESVMInstance* instance)
 static ESValue preloadGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->preload();
     // Return ESValue from native value
@@ -94,7 +89,7 @@ static ESValue preloadSetterFunction(ESVMInstance* instance)
 static ESValue bufferedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TimeRanges* result = nullptr;
     result = originalObj->buffered();
     // Return ESValue from native value
@@ -105,7 +100,7 @@ static ESValue bufferedGetterFunction(ESVMInstance* instance)
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->readyState();
     // Return ESValue from native value
@@ -115,7 +110,7 @@ static ESValue readyStateGetterFunction(ESVMInstance* instance)
 static ESValue seekingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->seeking();
     // Return ESValue from native value
@@ -125,7 +120,7 @@ static ESValue seekingGetterFunction(ESVMInstance* instance)
 static ESValue currentTimeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->currentTime();
     // Return ESValue from native value
@@ -146,7 +141,7 @@ static ESValue currentTimeSetterFunction(ESVMInstance* instance)
 static ESValue durationGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->duration();
     // Return ESValue from native value
@@ -156,7 +151,7 @@ static ESValue durationGetterFunction(ESVMInstance* instance)
 static ESValue pausedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->paused();
     // Return ESValue from native value
@@ -166,7 +161,7 @@ static ESValue pausedGetterFunction(ESVMInstance* instance)
 static ESValue defaultPlaybackRateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->defaultPlaybackRate();
     // Return ESValue from native value
@@ -187,7 +182,7 @@ static ESValue defaultPlaybackRateSetterFunction(ESVMInstance* instance)
 static ESValue playbackRateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->playbackRate();
     // Return ESValue from native value
@@ -208,7 +203,7 @@ static ESValue playbackRateSetterFunction(ESVMInstance* instance)
 static ESValue playedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TimeRanges* result = nullptr;
     result = originalObj->played();
     // Return ESValue from native value
@@ -219,7 +214,7 @@ static ESValue playedGetterFunction(ESVMInstance* instance)
 static ESValue seekableGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TimeRanges* result = nullptr;
     result = originalObj->seekable();
     // Return ESValue from native value
@@ -230,7 +225,7 @@ static ESValue seekableGetterFunction(ESVMInstance* instance)
 static ESValue endedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->ended();
     // Return ESValue from native value
@@ -240,7 +235,7 @@ static ESValue endedGetterFunction(ESVMInstance* instance)
 static ESValue autoplayGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->autoplay();
     // Return ESValue from native value
@@ -261,7 +256,7 @@ static ESValue autoplaySetterFunction(ESVMInstance* instance)
 static ESValue loopGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->loop();
     // Return ESValue from native value
@@ -282,7 +277,7 @@ static ESValue loopSetterFunction(ESVMInstance* instance)
 static ESValue controlsGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->controls();
     // Return ESValue from native value
@@ -303,7 +298,7 @@ static ESValue controlsSetterFunction(ESVMInstance* instance)
 static ESValue volumeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     double result;
     result = originalObj->volume();
     // Return ESValue from native value
@@ -324,7 +319,7 @@ static ESValue volumeSetterFunction(ESVMInstance* instance)
 static ESValue mutedGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->muted();
     // Return ESValue from native value
@@ -345,7 +340,7 @@ static ESValue mutedSetterFunction(ESVMInstance* instance)
 static ESValue textTracksGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrackList* result = nullptr;
     result = originalObj->textTracks();
     // Return ESValue from native value
@@ -353,50 +348,12 @@ static ESValue textTracksGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-static ESValue addTextTrackFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
-    ESValue arg3 = instance->currentExecutionContext()->readArgument(2);
-    String* kind = String::emptyString;
-    String* label = String::emptyString;
-    String* language = String::emptyString;
-
-    // First Arg : kind
-    if (arg1.isUndefinedOrNull() || !arg1.isESString()) {
-        _THROW_EXCEPTION(ILLEGAL_INVOKE);
-    }
-    kind = toBrowserString(arg1.toString());
-    // Second Arg : label (can be omitted)
-    if (!arg2.isUndefinedOrNull() && !arg2.isESString()) {
-        _THROW_EXCEPTION(ILLEGAL_INVOKE);
-    }
-    if (!arg2.isUndefinedOrNull()) {
-        label = toBrowserString(arg2.toString());
-    }
-    // Third Arg : language (can be omitted)
-    if (!arg3.isUndefinedOrNull() && !arg3.isESString()) {
-        _THROW_EXCEPTION(ILLEGAL_INVOKE);
-    }
-    if (!arg3.isUndefinedOrNull()) {
-        language = toBrowserString(arg3.toString());
-    }
-
-    HTMLMediaElement* element =
-        originalObj->asElement()->asHTMLElement()->asHTMLMediaElement();
-    TextTrack* track = element->addTextTrack(kind, label, language);
-    if (!track) {
-        _THROW_EXCEPTION(ILLEGAL_INVOKE);
-    }
-    return track->scriptValue();
-}
+// Implement for functions
 
 static ESValue loadFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     // Call native function (nargs: 0)
     originalObj->load();
 
@@ -409,10 +366,12 @@ static ESValue canPlayTypeFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "canPlayType", "NamedNodeMap", "1", "0");
+                        "canPlayType", "HTMLMediaElement", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -429,7 +388,7 @@ static ESValue canPlayTypeFunction(ESVMInstance* instance)
 static ESValue playFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-// Declare return value (empty when void)
+// Declare native value (empty when type is void)
 #ifdef USE_ES6_FEATURE
     Promise* result = nullptr;
 #endif
@@ -451,12 +410,49 @@ static ESValue playFunction(ESVMInstance* instance)
 static ESValue pauseFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     // Call native function (nargs: 0)
     originalObj->pause();
 
     // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue addTextTrackFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
+                        "addTextTrack", "HTMLMediaElement", "1", buffer);
+    }
+    // Declare native value (empty when type is void)
+    TextTrack* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg2
+    String* value2 = String::emptyString;
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = toBrowserString(arg2);
+    }
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = toBrowserString(arg1);
+    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 3)
+    result = originalObj->addTextTrack(value0, value1, value2);
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingHTMLMediaElement(
@@ -466,274 +462,229 @@ ESFunctionObject* bindingHTMLMediaElement(
     ESString* HTMLMediaElementString = ESString::create("HTMLMediaElement");
     ESFunctionObject* HTMLMediaElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLMediaElementString, 1, true, true);
+                                 HTMLMediaElementString, 0, true, true);
+    ESObject* HTMLMediaElementPrototypeObj =
+        HTMLMediaElementFunction->protoType().asESPointer()->asESObject();
     HTMLMediaElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLMediaElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLMediaElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLMediaElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
-    ESObject* HTMLMediaElementObj =
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject();
 
     // Bind for constants
     ESString* NETWORK_EMPTYString = ESString::create("NETWORK_EMPTY");
     ESValue NETWORK_EMPTYValue = ESValue(0);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(NETWORK_EMPTYString, false, true, false,
-                             NETWORK_EMPTYValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        NETWORK_EMPTYString, false, true, false, NETWORK_EMPTYValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         NETWORK_EMPTYString, false, true, false, NETWORK_EMPTYValue);
 
     ESString* NETWORK_IDLEString = ESString::create("NETWORK_IDLE");
     ESValue NETWORK_IDLEValue = ESValue(1);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(NETWORK_IDLEString, false, true, false,
-                             NETWORK_IDLEValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        NETWORK_IDLEString, false, true, false, NETWORK_IDLEValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         NETWORK_IDLEString, false, true, false, NETWORK_IDLEValue);
 
     ESString* NETWORK_LOADINGString = ESString::create("NETWORK_LOADING");
     ESValue NETWORK_LOADINGValue = ESValue(2);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(NETWORK_LOADINGString, false, true, false,
-                             NETWORK_LOADINGValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        NETWORK_LOADINGString, false, true, false, NETWORK_LOADINGValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         NETWORK_LOADINGString, false, true, false, NETWORK_LOADINGValue);
 
     ESString* NETWORK_NO_SOURCEString = ESString::create("NETWORK_NO_SOURCE");
     ESValue NETWORK_NO_SOURCEValue = ESValue(3);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(NETWORK_NO_SOURCEString, false, true, false,
-                             NETWORK_NO_SOURCEValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        NETWORK_NO_SOURCEString, false, true, false, NETWORK_NO_SOURCEValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         NETWORK_NO_SOURCEString, false, true, false, NETWORK_NO_SOURCEValue);
 
     ESString* HAVE_NOTHINGString = ESString::create("HAVE_NOTHING");
     ESValue HAVE_NOTHINGValue = ESValue(0);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(HAVE_NOTHINGString, false, true, false,
-                             HAVE_NOTHINGValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        HAVE_NOTHINGString, false, true, false, HAVE_NOTHINGValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         HAVE_NOTHINGString, false, true, false, HAVE_NOTHINGValue);
 
     ESString* HAVE_METADATAString = ESString::create("HAVE_METADATA");
     ESValue HAVE_METADATAValue = ESValue(1);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(HAVE_METADATAString, false, true, false,
-                             HAVE_METADATAValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        HAVE_METADATAString, false, true, false, HAVE_METADATAValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         HAVE_METADATAString, false, true, false, HAVE_METADATAValue);
 
     ESString* HAVE_CURRENT_DATAString = ESString::create("HAVE_CURRENT_DATA");
     ESValue HAVE_CURRENT_DATAValue = ESValue(2);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(HAVE_CURRENT_DATAString, false, true, false,
-                             HAVE_CURRENT_DATAValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        HAVE_CURRENT_DATAString, false, true, false, HAVE_CURRENT_DATAValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         HAVE_CURRENT_DATAString, false, true, false, HAVE_CURRENT_DATAValue);
 
     ESString* HAVE_FUTURE_DATAString = ESString::create("HAVE_FUTURE_DATA");
     ESValue HAVE_FUTURE_DATAValue = ESValue(3);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(HAVE_FUTURE_DATAString, false, true, false,
-                             HAVE_FUTURE_DATAValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        HAVE_FUTURE_DATAString, false, true, false, HAVE_FUTURE_DATAValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         HAVE_FUTURE_DATAString, false, true, false, HAVE_FUTURE_DATAValue);
 
     ESString* HAVE_ENOUGH_DATAString = ESString::create("HAVE_ENOUGH_DATA");
     ESValue HAVE_ENOUGH_DATAValue = ESValue(4);
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(HAVE_ENOUGH_DATAString, false, true, false,
-                             HAVE_ENOUGH_DATAValue);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        HAVE_ENOUGH_DATAString, false, true, false, HAVE_ENOUGH_DATAValue);
 
-    HTMLMediaElementFunction->asESObject()->defineDataProperty(
+    HTMLMediaElementFunction->defineDataProperty(
         HAVE_ENOUGH_DATAString, false, true, false, HAVE_ENOUGH_DATAValue);
 
     // Bind for attributes
     ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        srcString, srcGetterFunction, srcSetterFunction);
+        HTMLMediaElementPrototypeObj, srcString, srcGetterFunction,
+        srcSetterFunction);
 
     ESString* currentSrcString = ESString::create("currentSrc");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        currentSrcString, currentSrcGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, currentSrcString,
+        currentSrcGetterFunction, nullptr);
 
     ESString* networkStateString = ESString::create("networkState");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        networkStateString, networkStateGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, networkStateString,
+        networkStateGetterFunction, nullptr);
 
     ESString* preloadString = ESString::create("preload");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        preloadString, preloadGetterFunction, preloadSetterFunction);
+        HTMLMediaElementPrototypeObj, preloadString, preloadGetterFunction,
+        preloadSetterFunction);
 
     ESString* bufferedString = ESString::create("buffered");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        bufferedString, bufferedGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, bufferedString, bufferedGetterFunction,
+        nullptr);
 
     ESString* readyStateString = ESString::create("readyState");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        readyStateString, readyStateGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, readyStateString,
+        readyStateGetterFunction, nullptr);
 
     ESString* seekingString = ESString::create("seeking");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        seekingString, seekingGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, seekingString, seekingGetterFunction,
+        nullptr);
 
     ESString* currentTimeString = ESString::create("currentTime");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        currentTimeString, currentTimeGetterFunction,
-        currentTimeSetterFunction);
+        HTMLMediaElementPrototypeObj, currentTimeString,
+        currentTimeGetterFunction, currentTimeSetterFunction);
 
     ESString* durationString = ESString::create("duration");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        durationString, durationGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, durationString, durationGetterFunction,
+        nullptr);
 
     ESString* pausedString = ESString::create("paused");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        pausedString, pausedGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, pausedString, pausedGetterFunction,
+        nullptr);
 
     ESString* defaultPlaybackRateString =
         ESString::create("defaultPlaybackRate");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        defaultPlaybackRateString, defaultPlaybackRateGetterFunction,
-        defaultPlaybackRateSetterFunction);
+        HTMLMediaElementPrototypeObj, defaultPlaybackRateString,
+        defaultPlaybackRateGetterFunction, defaultPlaybackRateSetterFunction);
 
     ESString* playbackRateString = ESString::create("playbackRate");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        playbackRateString, playbackRateGetterFunction,
-        playbackRateSetterFunction);
+        HTMLMediaElementPrototypeObj, playbackRateString,
+        playbackRateGetterFunction, playbackRateSetterFunction);
 
     ESString* playedString = ESString::create("played");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        playedString, playedGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, playedString, playedGetterFunction,
+        nullptr);
 
     ESString* seekableString = ESString::create("seekable");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        seekableString, seekableGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, seekableString, seekableGetterFunction,
+        nullptr);
 
     ESString* endedString = ESString::create("ended");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        endedString, endedGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, endedString, endedGetterFunction,
+        nullptr);
 
     ESString* autoplayString = ESString::create("autoplay");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        autoplayString, autoplayGetterFunction, autoplaySetterFunction);
+        HTMLMediaElementPrototypeObj, autoplayString, autoplayGetterFunction,
+        autoplaySetterFunction);
 
     ESString* loopString = ESString::create("loop");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        loopString, loopGetterFunction, loopSetterFunction);
+        HTMLMediaElementPrototypeObj, loopString, loopGetterFunction,
+        loopSetterFunction);
 
     ESString* controlsString = ESString::create("controls");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        controlsString, controlsGetterFunction, controlsSetterFunction);
+        HTMLMediaElementPrototypeObj, controlsString, controlsGetterFunction,
+        controlsSetterFunction);
 
     ESString* volumeString = ESString::create("volume");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        volumeString, volumeGetterFunction, volumeSetterFunction);
+        HTMLMediaElementPrototypeObj, volumeString, volumeGetterFunction,
+        volumeSetterFunction);
 
     ESString* mutedString = ESString::create("muted");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        mutedString, mutedGetterFunction, mutedSetterFunction);
+        HTMLMediaElementPrototypeObj, mutedString, mutedGetterFunction,
+        mutedSetterFunction);
 
     ESString* textTracksString = ESString::create("textTracks");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(),
-        textTracksString, textTracksGetterFunction, nullptr);
+        HTMLMediaElementPrototypeObj, textTracksString,
+        textTracksGetterFunction, nullptr);
 
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("addTextTrack"), true, true, true,
-                             ESFunctionObject::create(
-                                 NULL, addTextTrackFunction,
-                                 ESString::create("addTextTrack"), 3, false));
+    // Bind for functions
+    ESString* loadString = ESString::create("load");
+    ESFunctionObject* loadESFn =
+        ESFunctionObject::create(nullptr, loadFunction, loadString, 0, false);
+    HTMLMediaElementPrototypeObj->defineDataProperty(loadString, true, true,
+                                                     true, loadESFn);
 
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("load"), true, true, true,
-                             ESFunctionObject::create(NULL, loadFunction,
-                                                      ESString::create("load"),
-                                                      0, false));
+    ESString* canPlayTypeString = ESString::create("canPlayType");
+    ESFunctionObject* canPlayTypeESFn = ESFunctionObject::create(
+        nullptr, canPlayTypeFunction, canPlayTypeString, 1, false);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        canPlayTypeString, true, true, true, canPlayTypeESFn);
 
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("canPlayType"), true, true, true,
-                             ESFunctionObject::create(
-                                 NULL, canPlayTypeFunction,
-                                 ESString::create("canPlayType"), 1, false));
+    ESString* playString = ESString::create("play");
+    ESFunctionObject* playESFn =
+        ESFunctionObject::create(nullptr, playFunction, playString, 0, false);
+    HTMLMediaElementPrototypeObj->defineDataProperty(playString, true, true,
+                                                     true, playESFn);
 
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("pause"), true, true, true,
-                             ESFunctionObject::create(NULL, pauseFunction,
-                                                      ESString::create("pause"),
-                                                      0, false));
+    ESString* pauseString = ESString::create("pause");
+    ESFunctionObject* pauseESFn =
+        ESFunctionObject::create(nullptr, pauseFunction, pauseString, 0, false);
+    HTMLMediaElementPrototypeObj->defineDataProperty(pauseString, true, true,
+                                                     true, pauseESFn);
 
-    HTMLMediaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("play"), true, true, true,
-                             ESFunctionObject::create(NULL, playFunction,
-                                                      ESString::create("play"),
-                                                      0, false));
+    ESString* addTextTrackString = ESString::create("addTextTrack");
+    ESFunctionObject* addTextTrackESFn = ESFunctionObject::create(
+        nullptr, addTextTrackFunction, addTextTrackString, 1, false);
+    HTMLMediaElementPrototypeObj->defineDataProperty(
+        addTextTrackString, true, true, true, addTextTrackESFn);
 
     return HTMLMediaElementFunction;
 }

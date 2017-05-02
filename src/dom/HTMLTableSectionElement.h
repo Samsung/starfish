@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLColgroupElement__
-#define __StarFishHTMLColgroupElement__
+#ifndef __StarFishHTMLTableSectionElement__
+#define __StarFishHTMLTableSectionElement__
 
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLColGroupElement : public HTMLElement {
+class HTMLTableSectionElement : public HTMLElement {
 public:
-    HTMLColGroupElement(Document* document)
+    HTMLTableSectionElement(Document* document)
         : HTMLElement(document)
     {
     }
@@ -31,23 +31,20 @@ public:
     virtual void init(ScriptBindingInstance* instance) override
     {
         scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLColGroupElement()->protoType());
+            fetchData(instance)->fnHTMLTableSectionElement()->protoType());
     }
 
     /* 4.4 Interface Node */
 
-    virtual String* localName();
-    virtual QualifiedName name();
+    virtual String* localName() = 0;
+    virtual QualifiedName name() = 0;
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLColGroupElement() const override
+    virtual bool isHTMLTableSectionElement() const
     {
         return true;
     }
-
-    void setSpan(int span);
-    String* span();
 };
 }
 

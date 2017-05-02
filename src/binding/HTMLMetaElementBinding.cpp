@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/HTMLMetaElement.h"
 
 namespace StarFish {
@@ -32,23 +29,17 @@ ESFunctionObject* bindingHTMLMetaElement(
     ESFunctionObject* HTMLMetaElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  HTMLMetaElementString, 0, true, true);
+    ESObject* HTMLMetaElementPrototypeObj =
+        HTMLMetaElementFunction->protoType().asESPointer()->asESObject();
     HTMLMetaElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLMetaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLMetaElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLMetaElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLMetaElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLMetaElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
-    ESObject* HTMLMetaElementPrototypeObj =
-        HTMLMetaElementFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     return HTMLMetaElementFunction;

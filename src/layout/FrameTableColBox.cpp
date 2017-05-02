@@ -15,8 +15,8 @@
  */
 
 #include "dom/Node.h"
-#include "dom/HTMLColElement.h"
-#include "dom/HTMLColGroupElement.h"
+#include "dom/HTMLTableColElement.h"
+#include "dom/HTMLTableColGroupElement.h"
 #include "layout/FrameTableColBox.h"
 #include "layout/FrameTreeBuilder.h"
 
@@ -29,19 +29,15 @@ FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
 
 unsigned FrameTableColBox::span()
 {
-    int ret = 0;
+    uint32_t ret = 0;
 
     if (!(node() && node()->isHTMLElement())) {
         return ret;
     }
 
     HTMLElement* e = node()->asHTMLElement();
-    if (e->isHTMLColGroupElement()) {
-        String* span = e->asHTMLColGroupElement()->span();
-        ret = String::parseInt(span);
-    } else if (e->isHTMLColElement()) {
-        String* span = e->asHTMLColElement()->span();
-        ret = String::parseInt(span);
+    if (e->isHTMLTableColElement()) {
+        ret = e->asHTMLTableColElement()->span();
     }
     // span is only accepted when HTML element is either <col> or <colGroup>,
     // hence it is not applied when used in other elements.

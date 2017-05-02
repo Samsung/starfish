@@ -1,0 +1,7 @@
+// https://html.spec.whatwg.org/#htmltablecaptionelement
+
+interface HTMLTableCaptionElement : HTMLElement {
+  // also has obsolete members
+  // https://html.spec.whatwg.org/#HTMLTableCaptionElement-partial
+  [Unimplemented, CEReactions] attribute DOMString align;
+};
