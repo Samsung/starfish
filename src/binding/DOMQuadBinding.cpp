@@ -22,6 +22,50 @@ namespace StarFish {
 
 using namespace escargot;
 
+extern DOMPointInit toDOMPointInitFromESValue(ESVMInstance* instance,
+                                              ESValue& from);
+extern ESValue toESValueFromDOMPointInit(ESVMInstance* instance,
+                                         DOMPointInit& from);
+
+// Implement for constructor
+static ESValue domquadConstructor(ESVMInstance* instance)
+{
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMQuad");
+    }
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 4) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "DOMQuad",
+                        "4", buffer);
+    }
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
+    // Handle argument arg3
+    DOMPointInit value3;
+    value3 = toDOMPointInitFromESValue(instance, arg3);
+
+    // Handle argument arg2
+    DOMPointInit value2;
+    value2 = toDOMPointInitFromESValue(instance, arg2);
+
+    // Handle argument arg1
+    DOMPointInit value1;
+    value1 = toDOMPointInitFromESValue(instance, arg1);
+
+    // Handle argument arg0
+    DOMPointInit value0;
+    value0 = toDOMPointInitFromESValue(instance, arg0);
+
+    DOMQuad* result = nullptr;
+    // Call native function (nargs: 4)
+    result = new DOMQuad(value0, value1, value2, value3);
+    return result->scriptValue();
+}
+
 // Implement for attributes
 static ESValue p1GetterFunction(ESVMInstance* instance)
 {
@@ -76,17 +120,20 @@ static ESValue boundsGetterFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
 {
-    /*
-        Todo : bind to Constructor of DOMQuad
-        [Constructor(optional DOMPointInit p1, optional DOMPointInit p2,
-       optional DOMPointInit p3, optional DOMPointInit p4),
-         Constructor(optional DOMRectInit rect),Exposed=(Window,Worker)]
-    */
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMQuad, fetchData(scriptBindingInstance)
-                                                 ->m_instance->globalObject()
-                                                 ->objectPrototype());
+    // Bind for constructor
+    ESString* DOMQuadString = ESString::create("DOMQuad");
+    ESFunctionObject* DOMQuadFunction = ESFunctionObject::create(
+        nullptr, domquadConstructor, DOMQuadString, 4, true, true);
     ESObject* DOMQuadPrototypeObj =
         DOMQuadFunction->protoType().asESPointer()->asESObject();
+    DOMQuadFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DOMQuadPrototypeObj->forceNonVectorHiddenClass(false);
+    DOMQuadPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                          ->m_instance->globalObject()
+                                          ->objectPrototype());
 
     // Bind for attributes
     ESString* p1String = ESString::create("p1");
