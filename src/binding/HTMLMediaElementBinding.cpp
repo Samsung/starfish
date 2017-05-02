@@ -355,12 +355,7 @@ static ESValue textTracksGetterFunction(ESVMInstance* instance)
 
 static ESValue addTextTrackFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Node);
-    Node* nd = originalObj;
-    if (!(nd->isElement() && nd->asElement()->isHTMLElement() &&
-          nd->asElement()->asHTMLElement()->isHTMLMediaElement())) {
-        THROW_ILLEGAL_INVOCATION();
-    }
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
 
     ESValue arg1 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
@@ -371,19 +366,19 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
 
     // First Arg : kind
     if (arg1.isUndefinedOrNull() || !arg1.isESString()) {
-        THROW_ILLEGAL_INVOCATION();
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     kind = toBrowserString(arg1.toString());
     // Second Arg : label (can be omitted)
     if (!arg2.isUndefinedOrNull() && !arg2.isESString()) {
-        THROW_ILLEGAL_INVOCATION();
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     if (!arg2.isUndefinedOrNull()) {
         label = toBrowserString(arg2.toString());
     }
     // Third Arg : language (can be omitted)
     if (!arg3.isUndefinedOrNull() && !arg3.isESString()) {
-        THROW_ILLEGAL_INVOCATION();
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     if (!arg3.isUndefinedOrNull()) {
         language = toBrowserString(arg3.toString());
@@ -393,7 +388,7 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
         originalObj->asElement()->asHTMLElement()->asHTMLMediaElement();
     TextTrack* track = element->addTextTrack(kind, label, language);
     if (!track) {
-        THROW_ILLEGAL_INVOCATION();
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return track->scriptValue();
 }

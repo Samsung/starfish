@@ -33,7 +33,7 @@ static ESValue startFunction(ESVMInstance* instance)
     if (idx != INVALID_INDEX && idx < originalObj->length()) {
         return ESValue(originalObj->start(idx));
     }
-    THROW_ILLEGAL_INVOCATION();
+    _THROW_EXCEPTION(ILLEGAL_INVOKE);
 }
 
 static ESValue endFunction(ESVMInstance* instance)
@@ -44,7 +44,7 @@ static ESValue endFunction(ESVMInstance* instance)
     if (idx != INVALID_INDEX && idx < originalObj->length()) {
         return ESValue(originalObj->end(idx));
     }
-    THROW_ILLEGAL_INVOCATION();
+    _THROW_EXCEPTION(ILLEGAL_INVOKE);
 }
 
 static ESValue lengthGetterFunction(ESVMInstance* instance)

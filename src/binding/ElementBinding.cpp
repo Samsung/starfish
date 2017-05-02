@@ -425,7 +425,7 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
         STARFISH_LOG_INFO("Element&&&getElementsByClassName\n");
 #endif
     } else {
-        THROW_ILLEGAL_INVOCATION()
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return ESValue(ESValue::ESNull);
 }
@@ -453,7 +453,7 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
         STARFISH_LOG_INFO("Element&&&getElementsByTagName\n");
 #endif
     } else {
-        THROW_ILLEGAL_INVOCATION()
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return ESValue(ESValue::ESNull);
 }
@@ -501,7 +501,7 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
         STARFISH_LOG_INFO("Element&&&querySelector\n");
 #endif
     } else {
-        THROW_ILLEGAL_INVOCATION()
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return ESValue(ESValue::ESNull);
 }
@@ -550,7 +550,7 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
         STARFISH_LOG_INFO("Element&&&querySelectorAll\n");
 #endif
     } else {
-        THROW_ILLEGAL_INVOCATION()
+        _THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return ESValue(ESValue::ESNull);
 }

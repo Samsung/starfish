@@ -87,7 +87,7 @@ String* toBrowserString(const ESString* v)
     return newStr;
 }
 
-ESValue toJSString(String* v)
+ESString* toJSString(String* v)
 {
     return createScriptString(v);
 }
@@ -149,7 +149,7 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
     }
 }
 
-ScriptValue createScriptString(String* str)
+ESString* createScriptString(String* str)
 {
     if (str->isASCIIString()) {
         escargot::ASCIIString s(str->asASCIIString()->begin(),

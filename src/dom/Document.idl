@@ -79,7 +79,7 @@ interface Document : Node {
   // getter object (DOMString name);
   [Unimplemented, CEReactions] attribute DOMString title;
   [Unimplemented, CEReactions] attribute DOMString dir;
-  [Custom=Setter, CEReactions] attribute HTMLElement? body;
+  [RaisesException=Setter, CEReactions] attribute HTMLElement? body;
   readonly attribute HTMLHeadElement? head;
   [Unimplemented, SameObject] readonly attribute HTMLCollection images;
   [Unimplemented, SameObject] readonly attribute HTMLCollection embeds;

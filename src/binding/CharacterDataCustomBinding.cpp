@@ -28,7 +28,7 @@ ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance)
         return ESValue(originalObj->length());
     } else {
         // TODO: measure length without converting
-        ESString* data2 = toJSString(data).toString();
+        ESString* data2 = toJSString(data);
         return ESValue(data2->length());
     }
 }

@@ -50,12 +50,12 @@ StarFish* fetchStarFish(ESVMInstance* instance);
 
 String* toBrowserString(const ESValue& v);
 String* toBrowserString(const ESString* v);
-ESValue toJSString(String* v);
+ESString* toJSString(String* v);
 
 ESValue defaultFunction(ESVMInstance* instance);
 ESValue errorOnConstructorFunction(ESVMInstance* instance);
 
-ScriptValue createScriptString(String* str);
+ESString* createScriptString(String* str);
 ScriptValue createScriptFunction(String** argNames, size_t argc,
                                  String* functionBody, bool& error);
 ScriptValue createAttributeStringEventFunction(Element* target,
@@ -135,19 +135,16 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
         ESValue(TypeError::create(ESString::create(MSG)))); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-// TypeError: Illegal invocation
-#define THROW_ILLEGAL_INVOCATION() _THROW_EXCEPTION("Illegal invocation");
-
-#define THROW_EXCEPTION(TEMPLATE_STR, ...)                \
-    {                                                     \
-        COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, __VA_ARGS__); \
-        _THROW_EXCEPTION(errorMsg);                       \
+#define THROW_EXCEPTION(TEMPLATE_STR, ...)          \
+    {                                               \
+        COMPOSE_MESSAGE(TEMPLATE_STR, __VA_ARGS__); \
+        _THROW_EXCEPTION(msg);                      \
     }
 
 #define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, TEMPLATE_STR, ...) \
     {                                                              \
-        COMPOSE_ERROR_MESSAGE(TEMPLATE_STR, __VA_ARGS__);          \
-        _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, errorMsg);        \
+        COMPOSE_MESSAGE(TEMPLATE_STR, __VA_ARGS__);                \
+        _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, msg);             \
     }
 
 #define _CHECK_TYPEOF(v, type)                                              \
@@ -156,9 +153,9 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
      (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData()) \
           ->is##type()))
 
-#define CHECK_TYPEOF(v, type)      \
-    if (!_CHECK_TYPEOF(v, type)) { \
-        THROW_ILLEGAL_INVOCATION() \
+#define CHECK_TYPEOF(v, type)             \
+    if (!_CHECK_TYPEOF(v, type)) {        \
+        _THROW_EXCEPTION(ILLEGAL_INVOKE); \
     }
 
 #define GENERATE_THIS_AND_CHECK_TYPE(type)                         \
@@ -167,21 +164,6 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
     CHECK_TYPEOF(thisValue, type);                                 \
     type* originalObj =                                            \
         (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());
-
-#define GENERATE_ARG_AND_CHECK_TYPE(i, type)                               \
-    ESValue arg##i = instance->currentExecutionContext()->readArgument(i); \
-    CHECK_TYPEOF(arg##i, type)                                             \
-    type* val##i =                                                         \
-        (type*)(arg##i.asESPointer()->asESObject()->extraPointerData());
-
-#define GENERATE_NULLABLE_ARG_AND_CHECK_TYPE(i, type)                        \
-    ESValue arg##i = instance->currentExecutionContext()->readArgument(i);   \
-    type* val##i = nullptr;                                                  \
-    if (!arg##i.isUndefinedOrNull()) {                                       \
-        CHECK_TYPEOF(arg##i, type)                                           \
-        val##i =                                                             \
-            (type*)(arg##i.asESPointer()->asESObject()->extraPointerData()); \
-    }
 
 class ScriptWrappable : public gc {
     friend class Window;
