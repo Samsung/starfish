@@ -51,7 +51,7 @@ QualifiedName HTMLStyleElement::name()
 
 String* HTMLStyleElement::type()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_type);
 }
 

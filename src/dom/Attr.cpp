@@ -23,7 +23,7 @@ namespace StarFish {
 String* Attr::value() const
 {
     if (m_element) {
-        return m_element->getAttribute(m_qname);
+        return m_element->getAttributeOrEmpty(m_qname);
     }
     return m_standAloneValue;
 }

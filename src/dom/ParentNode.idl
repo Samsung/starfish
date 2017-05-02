@@ -8,5 +8,5 @@ interface ParentNode {
   readonly attribute unsigned long childElementCount;
 
   [RaisesException] Element? querySelector(DOMString selectors);
-  [STARFISH_ENABLE_WASU, NewObject, RaisesException] NodeList querySelectorAll(DOMString selectors);
+  [NewObject, RaisesException] NodeList querySelectorAll(DOMString selectors);
 };

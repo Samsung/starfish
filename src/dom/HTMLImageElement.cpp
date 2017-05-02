@@ -96,13 +96,13 @@ void HTMLImageElement::setSrc(String* src)
 
 String* HTMLImageElement::src()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_src);
 }
 
 unsigned long HTMLImageElement::width()
 {
-    String* widthStr = getAttribute(
+    String* widthStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
@@ -115,7 +115,7 @@ void HTMLImageElement::setWidth(unsigned long width)
 
 unsigned long HTMLImageElement::height()
 {
-    String* heightStr = getAttribute(
+    String* heightStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }
@@ -157,11 +157,10 @@ void HTMLImageElement::didNodeAdopted()
 {
     HTMLElement::didNodeAdopted();
     if (document()->doesParticipateInRendering()) {
-        if (getAttribute(
-                document()->window()->starFish()->staticStrings()->m_src)
-                ->length()) {
-            loadImage(getAttribute(
-                document()->window()->starFish()->staticStrings()->m_src));
+        Nullable<String*> srcStr = getAttribute(
+            document()->window()->starFish()->staticStrings()->m_src);
+        if (srcStr.hasValue() && srcStr.getValue()->length() > 0) {
+            loadImage(srcStr.getValue());
         }
     } else {
         unloadImage();

@@ -153,18 +153,23 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
 uint32_t DOMTokenList::length()
 {
     GCVector<String*> tokens;
-    String* src = m_element->getAttribute(m_localName);
-    tokenize(&tokens, src);
-    return tokens.size();
+    Nullable<String*> src = m_element->getAttribute(m_localName);
+    if (src.hasValue()) {
+        tokenize(&tokens, src.getValue());
+        return tokens.size();
+    }
+    return 0;
 }
 
 Nullable<String*> DOMTokenList::item(unsigned long index)
 {
     GCVector<String*> tokens;
-    String* src = m_element->getAttribute(m_localName);
-    tokenize(&tokens, src);
-    if (index < tokens.size()) {
-        return Nullable<String*>(tokens[index]);
+    Nullable<String*> src = m_element->getAttribute(m_localName);
+    if (src.hasValue()) {
+        tokenize(&tokens, src.getValue());
+        if (index < tokens.size()) {
+            return Nullable<String*>(tokens[index]);
+        }
     }
     return Nullable<String*>();
 }
@@ -174,11 +179,13 @@ bool DOMTokenList::contains(String* token)
     validateToken(token);
 
     GCVector<String*> tokens;
-    String* src = m_element->getAttribute(m_localName);
-    tokenize(&tokens, src);
-    for (unsigned i = 0; i < tokens.size(); i++) {
-        if (tokens[i]->equals(token)) {
-            return true;
+    Nullable<String*> src = m_element->getAttribute(m_localName);
+    if (src.hasValue()) {
+        tokenize(&tokens, src.getValue());
+        for (unsigned i = 0; i < tokens.size(); i++) {
+            if (tokens[i]->equals(token)) {
+                return true;
+            }
         }
     }
     return false;
@@ -210,7 +217,7 @@ String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens,
 
 void DOMTokenList::add(GCVector<String*>* tokensToAdd)
 {
-    String* str = m_element->getAttribute(m_localName);
+    String* str = m_element->getAttributeOrEmpty(m_localName);
     GCVector<String*> tokens;
     tokenize(&tokens, str);
     for (unsigned i = 0; i < tokensToAdd->size(); i++) {
@@ -244,7 +251,12 @@ void DOMTokenList::remove(String* token)
 
 void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
 {
-    String* src = m_element->getAttribute(m_localName);
+    Nullable<String*> old = m_element->getAttribute(m_localName);
+    if (!old.hasValue()) {
+        // Nothing to remove
+        return;
+    }
+    String* src = old.getValue();
     String* dst = String::createASCIIString("");
     GCVector<String*> tokens;
     tokenize(&tokens, src);
@@ -285,8 +297,8 @@ bool DOMTokenList::toggle(String* token, bool forceValue)
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
     validateToken(token);
+    String* str = m_element->getAttributeOrEmpty(m_localName);
     GCVector<String*> tokens;
-    String* str = m_element->getAttribute(m_localName);
     tokenize(&tokens, str);
     bool needAdd = false;
     if (isForced) {
@@ -312,7 +324,7 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 
 String* DOMTokenList::toString()
 {
-    return m_element->getAttribute(m_localName);
+    return m_element->getAttributeOrEmpty(m_localName);
 }
 
 // Throw Exceptions

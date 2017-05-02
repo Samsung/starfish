@@ -43,7 +43,7 @@ void HTMLTableColElement::setSpan(uint32_t span)
 uint32_t HTMLTableColElement::span()
 {
     String* spanAttr =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_span);
+        getAttributeOrEmpty(document()->window()->starFish()->staticStrings()->m_span);
     return String::parseInt(spanAttr);
 }
 }

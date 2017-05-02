@@ -122,7 +122,7 @@ Element* HTMLElement::offsetParent()
 
 String* HTMLElement::dir()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_dir);
 }
 

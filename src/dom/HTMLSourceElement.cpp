@@ -39,13 +39,13 @@ QualifiedName HTMLSourceElement::name()
 
 String* HTMLSourceElement::src()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_src);
 }
 
 String* HTMLSourceElement::type()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_type);
 }
 

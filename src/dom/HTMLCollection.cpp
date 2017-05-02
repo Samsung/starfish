@@ -98,15 +98,13 @@ Element* HTMLCollection::namedItem(String* key)
             if (elem->asElement()->asHTMLElement()->id()->equals(key)) {
                 return elem;
             }
-            size_t idx = elem->hasAttribute(elem->document()
-                                                ->window()
-                                                ->starFish()
-                                                ->staticStrings()
-                                                ->m_name);
-            if (idx != SIZE_MAX) {
-                if (elem->getAttribute(idx)->equals(key)) {
-                    return elem;
-                }
+            Nullable<String*> attrStr = elem->getAttribute(elem->document()
+                                                               ->window()
+                                                               ->starFish()
+                                                               ->staticStrings()
+                                                               ->m_name);
+            if (attrStr.hasValue() && attrStr.getValue()->equals(key)) {
+                return elem;
             }
         }
     }

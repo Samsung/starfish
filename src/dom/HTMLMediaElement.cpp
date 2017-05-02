@@ -404,7 +404,7 @@ void HTMLMediaElement::setSrc(String* src)
 
 String* HTMLMediaElement::src()
 {
-    return getAttribute(
+    return getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_src);
 }
 
@@ -463,7 +463,7 @@ HTMLMediaElement::PreloadState HTMLMediaElement::preloadValue()
         document()->window()->starFish()->staticStrings()->m_preload;
     size_t siz = hasAttribute(preload);
     if (siz != SIZE_MAX) {
-        String* value = getAttribute(preload);
+        String* value = getAttributeOrEmpty(preload);
         if (value->length() == 0 ||
             (value->length() == 4 &&
              value->equalsWithoutCase(

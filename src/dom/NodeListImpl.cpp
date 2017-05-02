@@ -131,7 +131,7 @@ bool isSameNamedAccess(Node* node, void* data)
         }
 
         if (shouldConsiderNameAttribute) {
-            if (htmlElement->getAttribute(ss->m_name)
+            if (htmlElement->getAttributeOrEmpty(ss->m_name)
                     ->equals(namedAccess->localName())) {
                 return true;
             }
