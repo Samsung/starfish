@@ -14,39 +14,37 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/HTMLTHeadElement.h"
+#include "dom/HTMLTableRowElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLTHeadElement(
+// Implement for attributes
+// Implement for functions
+ESFunctionObject* bindingHTMLTableRowElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* HTMLTHeadElementString = ESString::create("HTMLTHeadElement");
-    ESFunctionObject* HTMLTHeadElementFunction =
+    ESString* HTMLTableRowElementString =
+        ESString::create("HTMLTableRowElement");
+    ESFunctionObject* HTMLTableRowElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLTHeadElementString, 1, true, true);
-    HTMLTHeadElementFunction->defineAccessorProperty(
+                                 HTMLTableRowElementString, 0, true, true);
+    ESObject* HTMLTableRowElementPrototypeObj =
+        HTMLTableRowElementFunction->protoType().asESPointer()->asESObject();
+    HTMLTableRowElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLTHeadElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLTHeadElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLTHeadElementFunction->set__proto__(
+    HTMLTableRowElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTableRowElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLTableRowElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLTHeadElementFunction;
+    // Bind for attributes
+    // Bind for functions
+    return HTMLTableRowElementFunction;
 }
 }

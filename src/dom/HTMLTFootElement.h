@@ -17,34 +17,21 @@
 #ifndef __StarFishHTMLTFootElement__
 #define __StarFishHTMLTFootElement__
 
-#include "dom/HTMLElement.h"
+#include "dom/HTMLTableSectionElement.h"
 
 namespace StarFish {
 
-class HTMLTFootElement : public HTMLElement {
+class HTMLTFootElement : public HTMLTableSectionElement {
 public:
     HTMLTFootElement(Document* document)
-        : HTMLElement(document)
+        : HTMLTableSectionElement(document)
     {
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTFootElement()->protoType());
     }
 
     /* 4.4 Interface Node */
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLTFootElement() const override
-    {
-        return true;
-    }
 };
 }
 

@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLPreElement.h"
 
 namespace StarFish {
@@ -30,20 +27,16 @@ ESFunctionObject* bindingHTMLPreElement(
     ESString* HTMLPreElementString = ESString::create("HTMLPreElement");
     ESFunctionObject* HTMLPreElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLPreElementString, 1, true, true);
+                                 HTMLPreElementString, 0, true, true);
+    ESObject* HTMLPreElementPrototypeObj =
+        HTMLPreElementFunction->protoType().asESPointer()->asESObject();
     HTMLPreElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLPreElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLPreElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLPreElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLPreElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLPreElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

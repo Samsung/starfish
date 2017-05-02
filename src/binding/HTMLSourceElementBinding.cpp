@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLSourceElement.h"
 
 namespace StarFish {
@@ -28,7 +24,7 @@ using namespace escargot;
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLSourceElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->src();
     // Return ESValue from native value
@@ -49,7 +45,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLSourceElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->type();
     // Return ESValue from native value
@@ -74,33 +70,29 @@ ESFunctionObject* bindingHTMLSourceElement(
     ESString* HTMLSourceElementString = ESString::create("HTMLSourceElement");
     ESFunctionObject* HTMLSourceElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLSourceElementString, 1, true, true);
+                                 HTMLSourceElementString, 0, true, true);
+    ESObject* HTMLSourceElementPrototypeObj =
+        HTMLSourceElementFunction->protoType().asESPointer()->asESObject();
     HTMLSourceElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLSourceElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLSourceElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLSourceElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLSourceElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLSourceElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
     ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLSourceElementFunction->protoType().asESPointer()->asESObject(),
-        srcString, srcGetterFunction, srcSetterFunction);
+        HTMLSourceElementPrototypeObj, srcString, srcGetterFunction,
+        srcSetterFunction);
 
     ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLSourceElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeGetterFunction, typeSetterFunction);
+        HTMLSourceElementPrototypeObj, typeString, typeGetterFunction,
+        typeSetterFunction);
 
     return HTMLSourceElementFunction;
 }

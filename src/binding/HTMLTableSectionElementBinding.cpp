@@ -14,38 +14,39 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/HTMLStrongElement.h"
+#include "dom/HTMLTableSectionElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLStrongElement(
+// Implement for attributes
+// Implement for functions
+ESFunctionObject* bindingHTMLTableSectionElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    ESString* HTMLStrongElementString = ESString::create("HTMLStrongElement");
-    ESFunctionObject* HTMLStrongElementFunction =
+    // Bind for constructor
+    ESString* HTMLTableSectionElementString =
+        ESString::create("HTMLTableSectionElement");
+    ESFunctionObject* HTMLTableSectionElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLStrongElementString, 1, true, true);
-    HTMLStrongElementFunction->defineAccessorProperty(
+                                 HTMLTableSectionElementString, 0, true, true);
+    ESObject* HTMLTableSectionElementPrototypeObj =
+        HTMLTableSectionElementFunction->protoType()
+            .asESPointer()
+            ->asESObject();
+    HTMLTableSectionElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLStrongElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLStrongElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLStrongElementFunction->set__proto__(
+    HTMLTableSectionElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTableSectionElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLTableSectionElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLStrongElementFunction;
+    // Bind for attributes
+    // Bind for functions
+    return HTMLTableSectionElementFunction;
 }
 }

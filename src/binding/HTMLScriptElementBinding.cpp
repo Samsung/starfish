@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLScriptElement.h"
 
 namespace StarFish {
@@ -28,7 +24,7 @@ using namespace escargot;
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->src();
     // Return ESValue from native value
@@ -49,7 +45,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->type();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue typeSetterFunction(ESVMInstance* instance)
 static ESValue charsetGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->charset();
     // Return ESValue from native value
@@ -91,7 +87,7 @@ static ESValue charsetSetterFunction(ESVMInstance* instance)
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLScriptElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->text();
     // Return ESValue from native value
@@ -116,43 +112,39 @@ ESFunctionObject* bindingHTMLScriptElement(
     ESString* HTMLScriptElementString = ESString::create("HTMLScriptElement");
     ESFunctionObject* HTMLScriptElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLScriptElementString, 1, true, true);
+                                 HTMLScriptElementString, 0, true, true);
+    ESObject* HTMLScriptElementPrototypeObj =
+        HTMLScriptElementFunction->protoType().asESPointer()->asESObject();
     HTMLScriptElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLScriptElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLScriptElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLScriptElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLScriptElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLScriptElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
     ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        srcString, srcGetterFunction, srcSetterFunction);
+        HTMLScriptElementPrototypeObj, srcString, srcGetterFunction,
+        srcSetterFunction);
 
     ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeGetterFunction, typeSetterFunction);
+        HTMLScriptElementPrototypeObj, typeString, typeGetterFunction,
+        typeSetterFunction);
 
     ESString* charsetString = ESString::create("charset");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        charsetString, charsetGetterFunction, charsetSetterFunction);
+        HTMLScriptElementPrototypeObj, charsetString, charsetGetterFunction,
+        charsetSetterFunction);
 
     ESString* textString = ESString::create("text");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(),
-        textString, textGetterFunction, textSetterFunction);
+        HTMLScriptElementPrototypeObj, textString, textGetterFunction,
+        textSetterFunction);
 
     return HTMLScriptElementFunction;
 }

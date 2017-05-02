@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd
+ * Copyright (c) 2016-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLTableCellElement__
-#define __StarFishHTMLTableCellElement__
+#ifndef __StarFishHTMLTableRowElement__
+#define __StarFishHTMLTableRowElement__
 
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLTableCellElement : public HTMLElement {
+class HTMLTableRowElement : public HTMLElement {
 public:
-    HTMLTableCellElement(Document* document)
+    HTMLTableRowElement(Document* document)
         : HTMLElement(document)
     {
     }
@@ -31,29 +31,17 @@ public:
     virtual void init(ScriptBindingInstance* instance) override
     {
         scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTableCellElement()->protoType());
+            fetchData(instance)->fnHTMLTableRowElement()->protoType());
     }
 
     /* 4.4 Interface Node */
 
-    virtual String* localName() = 0;
-    virtual QualifiedName name() = 0;
-
-    /* table cell related */
-
-    String* colspan();
-    void setColspan(uint32_t colspan);
-
-    String* rowspan();
-    void setRowspan(uint32_t rowspan);
-
-    /* Not in HTML5 */
-    String* bgColor();
-    void setBgColor(String* bgColor);
+    virtual String* localName();
+    virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLTableCellElement() const override
+    virtual bool isHTMLTableRowElement() const override
     {
         return true;
     }

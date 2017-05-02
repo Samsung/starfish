@@ -413,7 +413,8 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
 {
     TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
     if (kindEnum == TextTrack::Kind::InvalidKind) {
-        return nullptr;
+        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECUASE_ARG_TYPE_MISMATCH_WITH_ENUM,
+                        "addTextTrack", "HTMLMediaElement", "TextTrackKind");
     }
     TextTrack* textTrack = new TextTrack(m_document, kindEnum, label, language);
     m_textTracks->push_back(textTrack);

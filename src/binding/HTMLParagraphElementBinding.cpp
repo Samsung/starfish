@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLParagraphElement.h"
 
 namespace StarFish {
@@ -31,20 +28,16 @@ ESFunctionObject* bindingHTMLParagraphElement(
         ESString::create("HTMLParagraphElement");
     ESFunctionObject* HTMLParagraphElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLParagraphElementString, 1, true, true);
+                                 HTMLParagraphElementString, 0, true, true);
+    ESObject* HTMLParagraphElementPrototypeObj =
+        HTMLParagraphElementFunction->protoType().asESPointer()->asESObject();
     HTMLParagraphElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLParagraphElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLParagraphElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLParagraphElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLParagraphElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLParagraphElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

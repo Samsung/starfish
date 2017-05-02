@@ -14,39 +14,37 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/HTMLColElement.h"
+#include "dom/HTMLTableCaptionElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESFunctionObject* bindingHTMLColElement(
+// Implement for attributes
+ESFunctionObject* bindingHTMLTableCaptionElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* HTMLColElementString = ESString::create("HTMLColElement");
-    ESFunctionObject* HTMLColElementFunction =
+    ESString* HTMLTableCaptionElementString =
+        ESString::create("HTMLTableCaptionElement");
+    ESFunctionObject* HTMLTableCaptionElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLColElementString, 1, true, true);
-    HTMLColElementFunction->defineAccessorProperty(
+                                 HTMLTableCaptionElementString, 0, true, true);
+    ESObject* HTMLTableCaptionElementPrototypeObj =
+        HTMLTableCaptionElementFunction->protoType()
+            .asESPointer()
+            ->asESObject();
+    HTMLTableCaptionElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLColElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLColElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLColElementFunction->set__proto__(
+    HTMLTableCaptionElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTableCaptionElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLTableCaptionElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
-    return HTMLColElementFunction;
+    // Bind for attributes
+    return HTMLTableCaptionElementFunction;
 }
 }

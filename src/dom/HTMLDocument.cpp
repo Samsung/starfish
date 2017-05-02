@@ -21,9 +21,6 @@
 #endif
 #include "dom/HTMLBodyElement.h"
 #include "dom/HTMLBRElement.h"
-#include "dom/HTMLCaptionElement.h"
-#include "dom/HTMLColElement.h"
-#include "dom/HTMLColGroupElement.h"
 #include "dom/HTMLDivElement.h"
 #include "dom/HTMLDocument.h"
 #include "dom/HTMLHeadElement.h"
@@ -41,14 +38,17 @@
 #include "dom/HTMLStrongElement.h"
 #include "dom/HTMLStyleElement.h"
 #include "dom/HTMLStyleElement.h"
+#include "dom/HTMLTableCaptionElement.h"
+#include "dom/HTMLTableColElement.h"
+#include "dom/HTMLTableColGroupElement.h"
 #include "dom/HTMLTableElement.h"
+#include "dom/HTMLTableRowElement.h"
 #include "dom/HTMLTBodyElement.h"
 #include "dom/HTMLTDElement.h"
 #include "dom/HTMLTFootElement.h"
 #include "dom/HTMLTHeadElement.h"
 #include "dom/HTMLTHElement.h"
 #include "dom/HTMLTrackElement.h"
-#include "dom/HTMLTRElement.h"
 #include "dom/HTMLUListElement.h"
 #include "dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -110,15 +110,15 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     } else if (name == str->m_thTagName.localNameAtomic()) {
         return new HTMLTHElement(document);
     } else if (name == str->m_trTagName.localNameAtomic()) {
-        return new HTMLTRElement(document);
+        return new HTMLTableRowElement(document);
     } else if (name == str->m_tdTagName.localNameAtomic()) {
         return new HTMLTDElement(document);
     } else if (name == str->m_captionTagName.localNameAtomic()) {
-        return new HTMLCaptionElement(document);
+        return new HTMLTableCaptionElement(document);
     } else if (name == str->m_colgroupTagName.localNameAtomic()) {
-        return new HTMLColGroupElement(document);
+        return new HTMLTableColGroupElement(document);
     } else if (name == str->m_colTagName.localNameAtomic()) {
-        return new HTMLColElement(document);
+        return new HTMLTableColElement(document);
     } else if (name == str->m_theadTagName.localNameAtomic()) {
         return new HTMLTHeadElement(document);
     } else if (name == str->m_tbodyTagName.localNameAtomic()) {

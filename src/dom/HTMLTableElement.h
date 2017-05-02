@@ -41,14 +41,14 @@ public:
 
     /* Not in HTML5 */
     String* width();
-    void setWidth(int width);
+    void setWidth(String* width);
 
     String* bgColor();
     void setBgColor(String* bgColor);
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLTableElement() const
+    virtual bool isHTMLTableElement() const override
     {
         return true;
     }

@@ -1,0 +1,13 @@
+// https://html.spec.whatwg.org/#htmltablecolelement
+
+[HTMLConstructor]
+interface HTMLTableColElement : HTMLElement {
+  [CEReactions] attribute unsigned long span;
+
+  // also has obsolete members
+  [Unimplemented, CEReactions] attribute DOMString align;
+  [Unimplemented, CEReactions] attribute DOMString ch;
+  [Unimplemented, CEReactions] attribute DOMString chOff;
+  [Unimplemented, CEReactions] attribute DOMString vAlign;
+  [Unimplemented, CEReactions] attribute DOMString width;
+};

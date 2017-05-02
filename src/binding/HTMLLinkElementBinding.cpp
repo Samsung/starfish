@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLLinkElement.h"
 
 namespace StarFish {
@@ -28,7 +24,7 @@ using namespace escargot;
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->href();
     // Return ESValue from native value
@@ -49,7 +45,7 @@ static ESValue hrefSetterFunction(ESVMInstance* instance)
 static ESValue relGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->rel();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue relSetterFunction(ESVMInstance* instance)
 static ESValue typeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLLinkElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->type();
     // Return ESValue from native value
@@ -95,38 +91,34 @@ ESFunctionObject* bindingHTMLLinkElement(
     ESString* HTMLLinkElementString = ESString::create("HTMLLinkElement");
     ESFunctionObject* HTMLLinkElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLLinkElementString, 1, true, true);
+                                 HTMLLinkElementString, 0, true, true);
+    ESObject* HTMLLinkElementPrototypeObj =
+        HTMLLinkElementFunction->protoType().asESPointer()->asESObject();
     HTMLLinkElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLLinkElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLLinkElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLLinkElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLLinkElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLLinkElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
     ESString* hrefString = ESString::create("href");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        hrefString, hrefGetterFunction, hrefSetterFunction);
+        HTMLLinkElementPrototypeObj, hrefString, hrefGetterFunction,
+        hrefSetterFunction);
 
     ESString* relString = ESString::create("rel");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        relString, relGetterFunction, relSetterFunction);
+        HTMLLinkElementPrototypeObj, relString, relGetterFunction,
+        relSetterFunction);
 
     ESString* typeString = ESString::create("type");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(),
-        typeString, typeGetterFunction, typeSetterFunction);
+        HTMLLinkElementPrototypeObj, typeString, typeGetterFunction,
+        typeSetterFunction);
 
     return HTMLLinkElementFunction;
 }

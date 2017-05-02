@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/HTMLSpanElement.h"
 
 namespace StarFish {
@@ -31,19 +28,15 @@ ESFunctionObject* bindingHTMLSpanElement(
     ESFunctionObject* HTMLSpanElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  HTMLSpanElementString, 0, true, true);
+    ESObject* HTMLSpanElementPrototypeObj =
+        HTMLSpanElementFunction->protoType().asESPointer()->asESObject();
     HTMLSpanElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLSpanElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLSpanElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLSpanElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLSpanElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLSpanElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

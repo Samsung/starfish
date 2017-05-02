@@ -14,60 +14,61 @@
  *    limitations under the License.
  */
 
-#include "dom/HTMLStyleElement.h"
+#include "dom/HTMLTableColElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
 // Implement for attributes
-static ESValue typeGetterFunction(ESVMInstance* instance)
+static ESValue spanGetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLStyleElement);
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLTableColElement);
     // Declare native value (empty when type is void)
-    String* result = String::emptyString;
-    result = originalObj->type();
+    uint32_t result;
+    result = originalObj->span();
     // Return ESValue from native value
-    return toJSString(result);
+    return ESValue(result);
 }
 
-static ESValue typeSetterFunction(ESVMInstance* instance)
+static ESValue spanSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(HTMLStyleElement);
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLTableColElement);
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-    originalObj->setType(value0);
+    uint32_t value0;
+    value0 = arg0.toUint32();
+    originalObj->setSpan(value0);
     return ESValue();
 }
 
-ESFunctionObject* bindingHTMLStyleElement(
+ESFunctionObject* bindingHTMLTableColElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    ESString* HTMLStyleElementString = ESString::create("HTMLStyleElement");
-    ESFunctionObject* HTMLStyleElementFunction =
+    ESString* HTMLTableColElementString =
+        ESString::create("HTMLTableColElement");
+    ESFunctionObject* HTMLTableColElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLStyleElementString, 0, true, true);
-    ESObject* HTMLStyleElementPrototypeObj =
-        HTMLStyleElementFunction->protoType().asESPointer()->asESObject();
-    HTMLStyleElementFunction->defineAccessorProperty(
+                                 HTMLTableColElementString, 0, true, true);
+    ESObject* HTMLTableColElementPrototypeObj =
+        HTMLTableColElementFunction->protoType().asESPointer()->asESObject();
+    HTMLTableColElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLStyleElementPrototypeObj->forceNonVectorHiddenClass(false);
-    HTMLStyleElementPrototypeObj->set__proto__(
+    HTMLTableColElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTableColElementPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
-    HTMLStyleElementFunction->set__proto__(
+    HTMLTableColElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
-    ESString* typeString = ESString::create("type");
+    ESString* spanString = ESString::create("span");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLStyleElementPrototypeObj, typeString, typeGetterFunction,
-        typeSetterFunction);
+        HTMLTableColElementPrototypeObj, spanString, spanGetterFunction,
+        spanSetterFunction);
 
-    return HTMLStyleElementFunction;
+    return HTMLTableColElementFunction;
 }
 }
