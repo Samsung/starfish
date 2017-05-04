@@ -14,20 +14,17 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/KeyboardEvent.h"
 
 namespace StarFish {
 
 using namespace escargot;
+
 // Implement for attributes
 static ESValue ctrlKeyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(KeyboardEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->ctrlKey();
     // Return ESValue from native value
@@ -37,7 +34,7 @@ static ESValue ctrlKeyGetterFunction(ESVMInstance* instance)
 static ESValue shiftKeyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(KeyboardEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->shiftKey();
     // Return ESValue from native value
@@ -47,7 +44,7 @@ static ESValue shiftKeyGetterFunction(ESVMInstance* instance)
 static ESValue altKeyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(KeyboardEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->altKey();
     // Return ESValue from native value
@@ -57,7 +54,7 @@ static ESValue altKeyGetterFunction(ESVMInstance* instance)
 static ESValue metaKeyGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(KeyboardEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->metaKey();
     // Return ESValue from native value
@@ -67,7 +64,7 @@ static ESValue metaKeyGetterFunction(ESVMInstance* instance)
 static ESValue keyCodeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(KeyboardEvent);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->keyCode();
     // Return ESValue from native value
@@ -79,88 +76,90 @@ ESFunctionObject* bindingKeyboardEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
     // Bind for constructor
-    /* Keyboard Events */
-    DEFINE_FUNCTION_WITH_PARENTFUNC(
-        KeyboardEvent, fetchData(scriptBindingInstance)->fnUIEvent());
+    ESString* KeyboardEventString = ESString::create("KeyboardEvent");
+    ESFunctionObject* KeyboardEventFunction = ESFunctionObject::create(
+        nullptr, defaultFunction, KeyboardEventString, 1, true, true);
+    ESObject* KeyboardEventPrototypeObj =
+        KeyboardEventFunction->protoType().asESPointer()->asESObject();
+    KeyboardEventFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    KeyboardEventPrototypeObj->forceNonVectorHiddenClass(false);
+    KeyboardEventPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent()->protoType());
+    KeyboardEventFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent());
 
     // Bind for constants
     ESString* DOM_KEY_LOCATION_STANDARDString =
         ESString::create("DOM_KEY_LOCATION_STANDARD");
     ESValue DOM_KEY_LOCATION_STANDARDValue = ESValue(0x00);
-    KeyboardEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(DOM_KEY_LOCATION_STANDARDString, false, true,
-                             false, DOM_KEY_LOCATION_STANDARDValue);
-
-    KeyboardEventFunction->asESObject()->defineDataProperty(
+    KeyboardEventPrototypeObj->defineDataProperty(
         DOM_KEY_LOCATION_STANDARDString, false, true, false,
         DOM_KEY_LOCATION_STANDARDValue);
+
+    KeyboardEventFunction->defineDataProperty(DOM_KEY_LOCATION_STANDARDString,
+                                              false, true, false,
+                                              DOM_KEY_LOCATION_STANDARDValue);
 
     ESString* DOM_KEY_LOCATION_LEFTString =
         ESString::create("DOM_KEY_LOCATION_LEFT");
     ESValue DOM_KEY_LOCATION_LEFTValue = ESValue(0x01);
-    KeyboardEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(DOM_KEY_LOCATION_LEFTString, false, true, false,
-                             DOM_KEY_LOCATION_LEFTValue);
+    KeyboardEventPrototypeObj->defineDataProperty(DOM_KEY_LOCATION_LEFTString,
+                                                  false, true, false,
+                                                  DOM_KEY_LOCATION_LEFTValue);
 
-    KeyboardEventFunction->asESObject()->defineDataProperty(
-        DOM_KEY_LOCATION_LEFTString, false, true, false,
-        DOM_KEY_LOCATION_LEFTValue);
+    KeyboardEventFunction->defineDataProperty(DOM_KEY_LOCATION_LEFTString,
+                                              false, true, false,
+                                              DOM_KEY_LOCATION_LEFTValue);
 
     ESString* DOM_KEY_LOCATION_RIGHTString =
         ESString::create("DOM_KEY_LOCATION_RIGHT");
     ESValue DOM_KEY_LOCATION_RIGHTValue = ESValue(0x02);
-    KeyboardEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(DOM_KEY_LOCATION_RIGHTString, false, true, false,
-                             DOM_KEY_LOCATION_RIGHTValue);
+    KeyboardEventPrototypeObj->defineDataProperty(DOM_KEY_LOCATION_RIGHTString,
+                                                  false, true, false,
+                                                  DOM_KEY_LOCATION_RIGHTValue);
 
-    KeyboardEventFunction->asESObject()->defineDataProperty(
-        DOM_KEY_LOCATION_RIGHTString, false, true, false,
-        DOM_KEY_LOCATION_RIGHTValue);
+    KeyboardEventFunction->defineDataProperty(DOM_KEY_LOCATION_RIGHTString,
+                                              false, true, false,
+                                              DOM_KEY_LOCATION_RIGHTValue);
 
     ESString* DOM_KEY_LOCATION_NUMPADString =
         ESString::create("DOM_KEY_LOCATION_NUMPAD");
     ESValue DOM_KEY_LOCATION_NUMPADValue = ESValue(0x03);
-    KeyboardEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(DOM_KEY_LOCATION_NUMPADString, false, true, false,
-                             DOM_KEY_LOCATION_NUMPADValue);
+    KeyboardEventPrototypeObj->defineDataProperty(DOM_KEY_LOCATION_NUMPADString,
+                                                  false, true, false,
+                                                  DOM_KEY_LOCATION_NUMPADValue);
 
-    KeyboardEventFunction->asESObject()->defineDataProperty(
-        DOM_KEY_LOCATION_NUMPADString, false, true, false,
-        DOM_KEY_LOCATION_NUMPADValue);
+    KeyboardEventFunction->defineDataProperty(DOM_KEY_LOCATION_NUMPADString,
+                                              false, true, false,
+                                              DOM_KEY_LOCATION_NUMPADValue);
 
     // Bind for attributes
     ESString* ctrlKeyString = ESString::create("ctrlKey");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        ctrlKeyString, ctrlKeyGetterFunction, nullptr);
+        KeyboardEventPrototypeObj, ctrlKeyString, ctrlKeyGetterFunction,
+        nullptr);
 
     ESString* shiftKeyString = ESString::create("shiftKey");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        shiftKeyString, shiftKeyGetterFunction, nullptr);
+        KeyboardEventPrototypeObj, shiftKeyString, shiftKeyGetterFunction,
+        nullptr);
 
     ESString* altKeyString = ESString::create("altKey");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        altKeyString, altKeyGetterFunction, nullptr);
+        KeyboardEventPrototypeObj, altKeyString, altKeyGetterFunction, nullptr);
 
     ESString* metaKeyString = ESString::create("metaKey");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        metaKeyString, metaKeyGetterFunction, nullptr);
+        KeyboardEventPrototypeObj, metaKeyString, metaKeyGetterFunction,
+        nullptr);
 
     ESString* keyCodeString = ESString::create("keyCode");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        KeyboardEventFunction->protoType().asESPointer()->asESObject(),
-        keyCodeString, keyCodeGetterFunction, nullptr);
+        KeyboardEventPrototypeObj, keyCodeString, keyCodeGetterFunction,
+        nullptr);
 
     // Bind for functions
     return KeyboardEventFunction;

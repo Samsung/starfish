@@ -291,7 +291,7 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     m_attachedMediaElement->dispatchDurationchangeEvent();
 }
 
-String* MediaSource::readyStateAttr()
+String* MediaSource::readyState()
 {
     switch (m_readyState) {
     case MediaSource::Open:
@@ -305,7 +305,7 @@ String* MediaSource::readyStateAttr()
     }
 }
 
-MediaSource::ReadyState MediaSource::readyState()
+MediaSource::ReadyState MediaSource::readyStateValue()
 {
     return m_readyState;
 }

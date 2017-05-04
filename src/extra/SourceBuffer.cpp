@@ -517,7 +517,7 @@ void SourceBuffer::abort()
     // If the readyState attribute of the parent media source is not in the
     // "open" state then throw an InvalidStateError exception and abort these
     // steps.
-    if (m_parentMediaSource->readyState() != MediaSource::Open) {
+    if (m_parentMediaSource->readyStateValue() != MediaSource::Open) {
         throw new DOMException(m_starFish->window()->scriptBindingInstance(),
                                DOMException::INVALID_STATE_ERR,
                                "readyState of parentMediaSource is not open, "
@@ -630,7 +630,7 @@ void SourceBuffer::prepareAppend()
 
     // If the readyState attribute of the parent media source is in the "ended"
     // state then run the following steps:
-    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
+    if (m_parentMediaSource->readyStateValue() == MediaSource::Ended) {
         // Set the readyState attribute of the parent media source to "open"
         // Queue a task to fire a simple event named sourceopen at the parent
         // media source.
@@ -694,7 +694,8 @@ void SourceBuffer::remove(double start, double end)
 
     // If the readyState attribute of the parent media source is in the "ended"
     // state then run the following steps:
-    if (parentMediaSource()->readyState() == MediaSource::ReadyState::Ended) {
+    if (parentMediaSource()->readyStateValue() ==
+        MediaSource::ReadyState::Ended) {
         // Set the readyState attribute of the parent media source to "open"
         // Queue a task to fire a simple event named sourceopen at the parent
         // media source.
@@ -1252,7 +1253,7 @@ void SourceBuffer::setMode(AppendMode mode)
 
     // If the readyState attribute of the parent media source is in the "ended"
     // state then run the following steps:
-    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
+    if (m_parentMediaSource->readyStateValue() == MediaSource::Ended) {
         // Set the readyState attribute of the parent media source to "open"
         // Queue a task to fire a simple event named sourceopen at the parent
         // media source.
@@ -1311,7 +1312,7 @@ void SourceBuffer::setTimestampOffset(double timeoffset)
 
     // If the readyState attribute of the parent media source is in the "ended"
     // state then run the following steps:
-    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
+    if (m_parentMediaSource->readyStateValue() == MediaSource::Ended) {
         // Set the readyState attribute of the parent media source to "open"
         // Queue a task to fire a simple event named sourceopen at the parent
         // media source.
@@ -1499,7 +1500,7 @@ TimeRanges* SourceBuffer::buffered()
         // 4-2. If readyState is "ended", then set the end time on the last
         // range in track ranges to highest end time.
         STARFISH_ASSERT(parentMediaSource());
-        if (parentMediaSource()->readyState() == MediaSource::Ended) {
+        if (parentMediaSource()->readyStateValue() == MediaSource::Ended) {
             (--track.end())->second = highestEndTime;
         }
         // 4-3. Let new intersection ranges equal the intersection between the

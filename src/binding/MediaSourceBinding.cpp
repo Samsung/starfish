@@ -13,15 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "dom/DOMException.h"
-#include "extra/MediaSource.h"
-#include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
+#include "extra/SourceBuffer.h"
+#include "extra/MediaSource.h"
 
 namespace StarFish {
 
@@ -40,47 +36,58 @@ static ESValue mediasourceConstructor(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-static ESValue sourceBuffersFunction(ESVMInstance* instance)
+// Implement for attributes
+static ESValue sourceBuffersGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    return ESValue(originalObj->sourceBuffers()->scriptValue());
+    // Declare native value (empty when type is void)
+    SourceBufferList* result = nullptr;
+    result = originalObj->sourceBuffers();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
-static ESValue activeSourceBuffersFunction(ESVMInstance* instance)
+static ESValue activeSourceBuffersGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    return ESValue(originalObj->activeSourceBuffers()->scriptValue());
+    // Declare native value (empty when type is void)
+    SourceBufferList* result = nullptr;
+    result = originalObj->activeSourceBuffers();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    String* result = originalObj->readyStateAttr();
-
+    // Declare native value (empty when type is void)
+    String* result = String::emptyString;
+    result = originalObj->readyState();
+    // Return ESValue from native value
     return toJSString(result);
 }
 
 static ESValue durationGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    return ESValue(originalObj->duration());
+    // Declare native value (empty when type is void)
+    double result;
+    result = originalObj->duration();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue durationSetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(MediaSource);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    double duration = firstArg.toNumber();
-    if (std::isnan(duration)) {
-        _THROW_EXCEPTION(ILLEGAL_INVOKE);
-    }
-    try {
-        originalObj->setDuration(duration);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ESValue(ESValue::ESUndefined);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    originalObj->setDuration(value0);
+    return ESValue();
 }
 
 // Implement for functions
@@ -150,7 +157,7 @@ static ESValue endOfStreamFunction(ESVMInstance* instance)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
     String* value0 = String::emptyString;
-    if (arg0.isUndefinedOrNull()) {
+    if (arg0.isUndefined()) {
         validArgCount--;
     } else {
         value0 = toBrowserString(arg0);
@@ -197,69 +204,71 @@ static ESValue isTypeSupportedFunction(ESVMInstance* instance)
 ESFunctionObject* bindingMediaSource(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    // DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource,
-    // fetchData(scriptBindingInstance)->m_fnEventTarget);
-
-    auto mediaSource = ESFunctionObject::create(NULL, mediasourceConstructor,
-                                                ESString::create("MediaSource"),
-                                                0, true, true);
-
-    mediaSource->defineAccessorProperty(
+    // Bind for constructor
+    ESString* MediaSourceString = ESString::create("MediaSource");
+    ESFunctionObject* MediaSourceFunction = ESFunctionObject::create(
+        nullptr, mediasourceConstructor, MediaSourceString, 0, true, true);
+    ESObject* MediaSourcePrototypeObj =
+        MediaSourceFunction->protoType().asESPointer()->asESObject();
+    MediaSourceFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    mediaSource->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    mediaSource->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)->m_fnEventTarget->protoType());
-    mediaSource->set__proto__(
-        fetchData(scriptBindingInstance)->m_fnEventTarget);
+    MediaSourcePrototypeObj->forceNonVectorHiddenClass(false);
+    MediaSourcePrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    MediaSourceFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
 
-    mediaSource->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("addSourceBuffer"), true, true, true,
-        ESFunctionObject::create(NULL, addSourceBufferFunction,
-                                 ESString::create("addSourceBuffer"), 1,
-                                 false));
-
-    mediaSource->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("removeSourceBuffer"), true, true, true,
-        ESFunctionObject::create(NULL, removeSourceBufferFunction,
-                                 ESString::create("removeSourceBuffer"), 1,
-                                 false));
-
-    mediaSource->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("endOfStream"), true, true, true,
-        ESFunctionObject::create(NULL, endOfStreamFunction,
-                                 ESString::create("endOfStream"), 1, false));
-
-    // static bool isTypeSupported(type)
-    mediaSource->defineDataProperty(
-        ESString::create("isTypeSupported"), true, true, true,
-        ESFunctionObject::create(NULL, isTypeSupportedFunction,
-                                 ESString::create("isTypeSupported"), 1,
-                                 false));
-
+    // Bind for attributes
+    ESString* sourceBuffersString = ESString::create("sourceBuffers");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        mediaSource->protoType().asESPointer()->asESObject(),
-        ESString::create("sourceBuffers"), sourceBuffersFunction, nullptr);
+        MediaSourcePrototypeObj, sourceBuffersString,
+        sourceBuffersGetterFunction, nullptr);
 
+    ESString* activeSourceBuffersString =
+        ESString::create("activeSourceBuffers");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        mediaSource->protoType().asESPointer()->asESObject(),
-        ESString::create("activeSourceBuffers"), activeSourceBuffersFunction,
+        MediaSourcePrototypeObj, activeSourceBuffersString,
+        activeSourceBuffersGetterFunction, nullptr);
+
+    ESString* readyStateString = ESString::create("readyState");
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        MediaSourcePrototypeObj, readyStateString, readyStateGetterFunction,
         nullptr);
 
+    ESString* durationString = ESString::create("duration");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        mediaSource->protoType().asESPointer()->asESObject(),
-        ESString::create("readyState"), readyStateGetterFunction, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        mediaSource->protoType().asESPointer()->asESObject(),
-        ESString::create("duration"), durationGetterFunction,
+        MediaSourcePrototypeObj, durationString, durationGetterFunction,
         durationSetterFunction);
 
-    return mediaSource;
+    // Bind for functions
+    ESString* addSourceBufferString = ESString::create("addSourceBuffer");
+    ESFunctionObject* addSourceBufferESFn = ESFunctionObject::create(
+        nullptr, addSourceBufferFunction, addSourceBufferString, 1, false);
+    MediaSourcePrototypeObj->defineDataProperty(
+        addSourceBufferString, true, true, true, addSourceBufferESFn);
+
+    ESString* removeSourceBufferString = ESString::create("removeSourceBuffer");
+    ESFunctionObject* removeSourceBufferESFn =
+        ESFunctionObject::create(nullptr, removeSourceBufferFunction,
+                                 removeSourceBufferString, 1, false);
+    MediaSourcePrototypeObj->defineDataProperty(
+        removeSourceBufferString, true, true, true, removeSourceBufferESFn);
+
+    ESString* endOfStreamString = ESString::create("endOfStream");
+    ESFunctionObject* endOfStreamESFn = ESFunctionObject::create(
+        nullptr, endOfStreamFunction, endOfStreamString, 0, false);
+    MediaSourcePrototypeObj->defineDataProperty(endOfStreamString, true, true,
+                                                true, endOfStreamESFn);
+
+    ESString* isTypeSupportedString = ESString::create("isTypeSupported");
+    ESFunctionObject* isTypeSupportedESFn = ESFunctionObject::create(
+        nullptr, isTypeSupportedFunction, isTypeSupportedString, 1, false);
+    MediaSourceFunction->defineDataProperty(isTypeSupportedString, true, true,
+                                            true, isTypeSupportedESFn);
+
+    return MediaSourceFunction;
 }
 }
 #endif

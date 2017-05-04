@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "extra/Location.h"
 
 namespace StarFish {
@@ -28,7 +24,7 @@ using namespace escargot;
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->href();
     // Return ESValue from native value
@@ -49,7 +45,7 @@ static ESValue hrefSetterFunction(ESVMInstance* instance)
 static ESValue protocolGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->protocol();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue protocolSetterFunction(ESVMInstance* instance)
 static ESValue hostGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->host();
     // Return ESValue from native value
@@ -91,7 +87,7 @@ static ESValue hostSetterFunction(ESVMInstance* instance)
 static ESValue hostnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->hostname();
     // Return ESValue from native value
@@ -112,7 +108,7 @@ static ESValue hostnameSetterFunction(ESVMInstance* instance)
 static ESValue pathnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->pathname();
     // Return ESValue from native value
@@ -133,7 +129,7 @@ static ESValue pathnameSetterFunction(ESVMInstance* instance)
 static ESValue searchGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->search();
     // Return ESValue from native value
@@ -154,7 +150,7 @@ static ESValue searchSetterFunction(ESVMInstance* instance)
 static ESValue hashGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Location);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->hash();
     // Return ESValue from native value
@@ -180,54 +176,63 @@ static ESValue toStringFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Location, fetchData(scriptBindingInstance)
-                                                  ->m_instance->globalObject()
-                                                  ->objectPrototype());
+    // Bind for constructor
+    ESString* LocationString = ESString::create("Location");
+    ESFunctionObject* LocationFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, LocationString, 0, true, true);
+    ESObject* LocationPrototypeObj =
+        LocationFunction->protoType().asESPointer()->asESObject();
+    LocationFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    LocationPrototypeObj->forceNonVectorHiddenClass(false);
+    LocationPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                           ->m_instance->globalObject()
+                                           ->objectPrototype());
 
     // Bind for attributes
     ESString* hrefString = ESString::create("href");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(), hrefString,
-        hrefGetterFunction, hrefSetterFunction);
+        LocationPrototypeObj, hrefString, hrefGetterFunction,
+        hrefSetterFunction);
 
     ESString* protocolString = ESString::create("protocol");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(),
-        protocolString, protocolGetterFunction, protocolSetterFunction);
+        LocationPrototypeObj, protocolString, protocolGetterFunction,
+        protocolSetterFunction);
 
     ESString* hostString = ESString::create("host");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(), hostString,
-        hostGetterFunction, hostSetterFunction);
+        LocationPrototypeObj, hostString, hostGetterFunction,
+        hostSetterFunction);
 
     ESString* hostnameString = ESString::create("hostname");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(),
-        hostnameString, hostnameGetterFunction, hostnameSetterFunction);
+        LocationPrototypeObj, hostnameString, hostnameGetterFunction,
+        hostnameSetterFunction);
 
     ESString* pathnameString = ESString::create("pathname");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(),
-        pathnameString, pathnameGetterFunction, pathnameSetterFunction);
+        LocationPrototypeObj, pathnameString, pathnameGetterFunction,
+        pathnameSetterFunction);
 
     ESString* searchString = ESString::create("search");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(), searchString,
-        searchGetterFunction, searchSetterFunction);
+        LocationPrototypeObj, searchString, searchGetterFunction,
+        searchSetterFunction);
 
     ESString* hashString = ESString::create("hash");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        LocationFunction->protoType().asESPointer()->asESObject(), hashString,
-        hashGetterFunction, hashSetterFunction);
+        LocationPrototypeObj, hashString, hashGetterFunction,
+        hashSetterFunction);
 
     // Bind for functions
     ESString* toStringString = ESString::create("toString");
     ESFunctionObject* toStringESFn = ESFunctionObject::create(
         nullptr, toStringFunction, toStringString, 0, false);
-    LocationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(toStringString, true, true, true, toStringESFn);
+    LocationPrototypeObj->defineDataProperty(toStringString, true, true, true,
+                                             toStringESFn);
 
     return LocationFunction;
 }

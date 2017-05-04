@@ -83,16 +83,6 @@ MouseEventInit toMouseEventInitFromESValue(ESVMInstance* instance,
         from.asESPointer()->asESObject()->get(ESString::create("cancelable"));
     ESValue arg25 =
         from.asESPointer()->asESObject()->get(ESString::create("composed"));
-    ESValue arg26 =
-        from.asESPointer()->asESObject()->get(ESString::create("view"));
-    ESValue arg27 =
-        from.asESPointer()->asESObject()->get(ESString::create("detail"));
-    ESValue arg28 =
-        from.asESPointer()->asESObject()->get(ESString::create("bubbles"));
-    ESValue arg29 =
-        from.asESPointer()->asESObject()->get(ESString::create("cancelable"));
-    ESValue arg30 =
-        from.asESPointer()->asESObject()->get(ESString::create("composed"));
     MouseEventInit result;
     // Handle argument arg0
     int32_t value0 = 0;
@@ -255,38 +245,6 @@ MouseEventInit toMouseEventInitFromESValue(ESVMInstance* instance,
         value25 = arg25.toBoolean();
     }
     result.setComposed(value25);
-    // Handle argument arg26
-    Window* value26 = nullptr;
-    if (!arg26.isUndefinedOrNull()) {
-        CHECK_TYPEOF(arg26, Window);
-        value26 =
-            (Window*)(arg26.asESPointer()->asESObject()->extraPointerData());
-    }
-    result.setView(value26);
-    // Handle argument arg27
-    int32_t value27 = 0;
-    if (!arg27.isUndefinedOrNull()) {
-        value27 = arg27.toInt32();
-    }
-    result.setDetail(value27);
-    // Handle argument arg28
-    bool value28 = false;
-    if (!arg28.isUndefinedOrNull()) {
-        value28 = arg28.toBoolean();
-    }
-    result.setBubbles(value28);
-    // Handle argument arg29
-    bool value29 = false;
-    if (!arg29.isUndefinedOrNull()) {
-        value29 = arg29.toBoolean();
-    }
-    result.setCancelable(value29);
-    // Handle argument arg30
-    bool value30 = false;
-    if (!arg30.isUndefinedOrNull()) {
-        value30 = arg30.toBoolean();
-    }
-    result.setComposed(value30);
     return result;
 }
 
@@ -407,30 +365,6 @@ ESValue toESValueFromMouseEventInit(ESVMInstance* instance,
     bool value25;
     value25 = from.composed();
     result->set(ESString::create("composed"), ESValue(value25));
-    // Declare native value (empty when type is void)
-    Window* value26 = nullptr;
-    value26 = from.view();
-    if (value26 == nullptr) {
-        result->set(ESString::create("view"), ESValue(ESValue::ESNull));
-    } else {
-        result->set(ESString::create("view"), value26->scriptValue());
-    }
-    // Declare native value (empty when type is void)
-    int32_t value27;
-    value27 = from.detail();
-    result->set(ESString::create("detail"), ESValue(value27));
-    // Declare native value (empty when type is void)
-    bool value28;
-    value28 = from.bubbles();
-    result->set(ESString::create("bubbles"), ESValue(value28));
-    // Declare native value (empty when type is void)
-    bool value29;
-    value29 = from.cancelable();
-    result->set(ESString::create("cancelable"), ESValue(value29));
-    // Declare native value (empty when type is void)
-    bool value30;
-    value30 = from.composed();
-    result->set(ESString::create("composed"), ESValue(value30));
     return ESValue(result);
 }
 }
