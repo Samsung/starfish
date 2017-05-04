@@ -15,7 +15,6 @@
  */
 
 #include "dom/Document.h"
-#include "extra/Location.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
@@ -30,15 +29,5 @@ ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance)
         return window->scriptValue();
     }
     return ESValue(ESValue::ESNull);
-}
-
-ESValue locationDocumentSetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(Document);
-    ESValue v = instance->currentExecutionContext()->readArgument(0);
-
-    originalObj->location()->setHref(
-        String::fromUTF8(v.toString()->utf8Data()));
-    return ESValue();
 }
 }
