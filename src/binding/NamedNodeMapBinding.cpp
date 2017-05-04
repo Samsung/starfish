@@ -14,25 +14,23 @@
  *    limitations under the License.
  */
 
-#include "StarFish.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/Attr.h"
-#include "dom/Document.h"
 #include "dom/DOMException.h"
-#include "dom/Element.h"
+#include "dom/Attr.h"
 #include "dom/NamedNodeMap.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 // Implement for functions
@@ -44,7 +42,7 @@ static ESValue itemFunction(ESVMInstance* instance)
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
                         "NamedNodeMap", "1", "0");
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Attr* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     uint32_t idx = arg0.toIndex();
@@ -68,10 +66,12 @@ static ESValue getNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getNamedItem", "NamedNodeMap", "1", "0");
+                        "getNamedItem", "NamedNodeMap", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Attr* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -93,22 +93,19 @@ static ESValue setNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "setNamedItem", "NamedNodeMap", "1", "0");
+                        "setNamedItem", "NamedNodeMap", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Attr* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
     Attr* value0 = nullptr;
-    if (arg0.isUndefinedOrNull()) {
-        instance->throwError(
-            ESValue(TypeError::create(ESString::create("Wrong argument"))));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    } else {
-        CHECK_TYPEOF(arg0, Attr);
-        value0 = (Attr*)(arg0.asESPointer()->asESObject()->extraPointerData());
-    }
+    CHECK_TYPEOF(arg0, Attr);
+    value0 = (Attr*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
     // Call native function (nargs: 1)
     result = originalObj->setNamedItem(value0);
 
@@ -124,10 +121,12 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
         THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeNamedItem", "NamedNodeMap", "1", "0");
+                        "removeNamedItem", "NamedNodeMap", "1", buffer);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Attr* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -149,50 +148,50 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
 ESFunctionObject* bindingNamedNodeMap(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NamedNodeMap,
-                                    fetchData(scriptBindingInstance)
-                                        ->m_instance->globalObject()
-                                        ->objectPrototype());
+    // Bind for constructor
+    ESString* NamedNodeMapString = ESString::create("NamedNodeMap");
+    ESFunctionObject* NamedNodeMapFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, NamedNodeMapString, 0, true, true);
+    ESObject* NamedNodeMapPrototypeObj =
+        NamedNodeMapFunction->protoType().asESPointer()->asESObject();
+    NamedNodeMapFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    NamedNodeMapPrototypeObj->forceNonVectorHiddenClass(false);
+    NamedNodeMapPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                               ->m_instance->globalObject()
+                                               ->objectPrototype());
 
-    /* 4.8.1 Interface NamedNodeMap */
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NamedNodeMapFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        NamedNodeMapPrototypeObj, lengthString, lengthGetterFunction, nullptr);
 
-    NamedNodeMapFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("item"), false, false, false,
-                             ESFunctionObject::create(NULL, itemFunction,
-                                                      ESString::create("item"),
-                                                      1, false));
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    NamedNodeMapPrototypeObj->defineDataProperty(itemString, true, true, true,
+                                                 itemESFn);
 
-    NamedNodeMapFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getNamedItem"), false, false, false,
-            ESFunctionObject::create(NULL, getNamedItemFunction,
-                                     ESString::create("getNamedItem"), 1,
-                                     false));
+    ESString* getNamedItemString = ESString::create("getNamedItem");
+    ESFunctionObject* getNamedItemESFn = ESFunctionObject::create(
+        nullptr, getNamedItemFunction, getNamedItemString, 1, false);
+    NamedNodeMapPrototypeObj->defineDataProperty(getNamedItemString, true,
+                                                 false, true, getNamedItemESFn);
 
-    NamedNodeMapFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("setNamedItem"), false, false, false,
-            ESFunctionObject::create(NULL, setNamedItemFunction,
-                                     ESString::create("setNamedItem"), 1,
-                                     false));
+    ESString* setNamedItemString = ESString::create("setNamedItem");
+    ESFunctionObject* setNamedItemESFn = ESFunctionObject::create(
+        nullptr, setNamedItemFunction, setNamedItemString, 1, false);
+    NamedNodeMapPrototypeObj->defineDataProperty(setNamedItemString, true, true,
+                                                 true, setNamedItemESFn);
 
-    NamedNodeMapFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("removeNamedItem"), false, false, false,
-            ESFunctionObject::create(NULL, removeNamedItemFunction,
-                                     ESString::create("removeNamedItem"), 1,
-                                     false));
+    ESString* removeNamedItemString = ESString::create("removeNamedItem");
+    ESFunctionObject* removeNamedItemESFn = ESFunctionObject::create(
+        nullptr, removeNamedItemFunction, removeNamedItemString, 1, false);
+    NamedNodeMapPrototypeObj->defineDataProperty(
+        removeNamedItemString, true, true, true, removeNamedItemESFn);
 
     return NamedNodeMapFunction;
 }

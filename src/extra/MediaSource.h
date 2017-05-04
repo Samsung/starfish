@@ -94,8 +94,8 @@ public:
         return false;
     }
 
-    String* readyStateAttr();
-    ReadyState readyState();
+    String* readyState();
+    ReadyState readyStateValue();
 
     void setReadyState(ReadyState state);
 
