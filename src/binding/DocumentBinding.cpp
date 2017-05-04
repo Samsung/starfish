@@ -16,13 +16,13 @@
 
 #include "dom/HTMLHeadElement.h"
 #include "dom/Text.h"
+#include "dom/DocumentFragment.h"
 #include "extra/Location.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLCollection.h"
 #include "dom/Attr.h"
 #include "dom/HTMLElement.h"
 #include "dom/DocumentType.h"
-#include "dom/DocumentFragment.h"
 #include "dom/Comment.h"
 #include "dom/NodeList.h"
 #include "dom/Element.h"
@@ -143,6 +143,22 @@ static ESValue locationGetterFunction(ESVMInstance* instance)
         return ESValue(ESValue::ESNull);
     }
     return result->scriptValue();
+}
+
+static ESValue locationSetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Document);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    // Declare native value (empty when type is void)
+    Location* forwards = nullptr;
+    forwards = originalObj->location();
+    if (forwards) {
+        forwards->setLocation(value0);
+    }
+    return ESValue();
 }
 
 static ESValue bodyGetterFunction(ESVMInstance* instance)
@@ -934,7 +950,6 @@ static ESValue childElementCountGetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
-
 static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
@@ -1289,7 +1304,8 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     ESString* locationString = ESString::create("location");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentPrototypeObj, locationString, locationGetterFunction, nullptr);
+        DocumentPrototypeObj, locationString, locationGetterFunction,
+        locationSetterFunction);
 
     ESString* bodyString = ESString::create("body");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

@@ -68,7 +68,7 @@ interface Document : Node {
 
   // [REF3]--------------------------------------------------------------
   // resource metadata management
-  [Custom=Setter, PutForwards=href, Unforgeable] readonly attribute Location? location;
+  [PutForwards=href, Unforgeable] readonly attribute Location? location;
   [Unimplemented] attribute DOMString domain;
   [Unimplemented] readonly attribute DOMString referrer;
   [Unimplemented] attribute DOMString cookie;
