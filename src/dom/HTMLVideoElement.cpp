@@ -38,13 +38,13 @@ QualifiedName HTMLVideoElement::name()
     return document()->window()->starFish()->staticStrings()->m_videoTagName;
 }
 
-unsigned long HTMLVideoElement::videoWidth()
+uint32_t HTMLVideoElement::videoWidth()
 {
     return m_mediaPlayer ? m_mediaPlayer->videoWidth()
                          : STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
 }
 
-unsigned long HTMLVideoElement::videoHeight()
+uint32_t HTMLVideoElement::videoHeight()
 {
     return m_mediaPlayer ? m_mediaPlayer->videoHeight()
                          : STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
@@ -65,27 +65,27 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-unsigned long HTMLVideoElement::width()
+uint32_t HTMLVideoElement::width()
 {
     String* widthStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
 
-void HTMLVideoElement::setWidth(unsigned long width)
+void HTMLVideoElement::setWidth(uint32_t width)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_width,
                  String::fromInt(width));
 }
 
-unsigned long HTMLVideoElement::height()
+uint32_t HTMLVideoElement::height()
 {
     String* heightStr = getAttributeOrEmpty(
         document()->window()->starFish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }
 
-void HTMLVideoElement::setHeight(unsigned long height)
+void HTMLVideoElement::setHeight(uint32_t height)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_height,
                  String::fromInt(height));

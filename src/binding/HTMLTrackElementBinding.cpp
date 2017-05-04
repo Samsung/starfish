@@ -14,11 +14,7 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/TextTrack.h"
-#include "dom/DOMException.h"
 #include "dom/HTMLTrackElement.h"
 
 namespace StarFish {
@@ -29,7 +25,7 @@ using namespace escargot;
 static ESValue kindGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->kind();
     // Return ESValue from native value
@@ -50,7 +46,7 @@ static ESValue kindSetterFunction(ESVMInstance* instance)
 static ESValue srcGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->src();
     // Return ESValue from native value
@@ -71,7 +67,7 @@ static ESValue srcSetterFunction(ESVMInstance* instance)
 static ESValue srclangGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->srclang();
     // Return ESValue from native value
@@ -92,7 +88,7 @@ static ESValue srclangSetterFunction(ESVMInstance* instance)
 static ESValue labelGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->label();
     // Return ESValue from native value
@@ -113,7 +109,7 @@ static ESValue labelSetterFunction(ESVMInstance* instance)
 static ESValue defaultGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     result = originalObj->defaultAttr();
     // Return ESValue from native value
@@ -134,7 +130,7 @@ static ESValue defaultSetterFunction(ESVMInstance* instance)
 static ESValue readyStateGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->readyState();
     // Return ESValue from native value
@@ -144,7 +140,7 @@ static ESValue readyStateGetterFunction(ESVMInstance* instance)
 static ESValue trackGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLTrackElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrack* result = nullptr;
     result = originalObj->track();
     // Return ESValue from native value
@@ -159,99 +155,87 @@ ESFunctionObject* bindingHTMLTrackElement(
     ESString* HTMLTrackElementString = ESString::create("HTMLTrackElement");
     ESFunctionObject* HTMLTrackElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLTrackElementString, 1, true, true);
+                                 HTMLTrackElementString, 0, true, true);
+    ESObject* HTMLTrackElementPrototypeObj =
+        HTMLTrackElementFunction->protoType().asESPointer()->asESObject();
     HTMLTrackElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLTrackElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLTrackElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLTrackElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for constants
     ESString* NONEString = ESString::create("NONE");
     ESValue NONEValue = ESValue(0);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(NONEString, false, true, false, NONEValue);
+    HTMLTrackElementPrototypeObj->defineDataProperty(NONEString, false, true,
+                                                     false, NONEValue);
 
-    HTMLTrackElementFunction->asESObject()->defineDataProperty(
-        NONEString, false, true, false, NONEValue);
+    HTMLTrackElementFunction->defineDataProperty(NONEString, false, true, false,
+                                                 NONEValue);
 
     ESString* LOADINGString = ESString::create("LOADING");
     ESValue LOADINGValue = ESValue(1);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(LOADINGString, false, true, false, LOADINGValue);
+    HTMLTrackElementPrototypeObj->defineDataProperty(LOADINGString, false, true,
+                                                     false, LOADINGValue);
 
-    HTMLTrackElementFunction->asESObject()->defineDataProperty(
-        LOADINGString, false, true, false, LOADINGValue);
+    HTMLTrackElementFunction->defineDataProperty(LOADINGString, false, true,
+                                                 false, LOADINGValue);
 
     ESString* LOADEDString = ESString::create("LOADED");
     ESValue LOADEDValue = ESValue(2);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(LOADEDString, false, true, false, LOADEDValue);
+    HTMLTrackElementPrototypeObj->defineDataProperty(LOADEDString, false, true,
+                                                     false, LOADEDValue);
 
-    HTMLTrackElementFunction->asESObject()->defineDataProperty(
-        LOADEDString, false, true, false, LOADEDValue);
+    HTMLTrackElementFunction->defineDataProperty(LOADEDString, false, true,
+                                                 false, LOADEDValue);
 
     ESString* ERRORString = ESString::create("ERROR");
     ESValue ERRORValue = ESValue(3);
-    HTMLTrackElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ERRORString, false, true, false, ERRORValue);
+    HTMLTrackElementPrototypeObj->defineDataProperty(ERRORString, false, true,
+                                                     false, ERRORValue);
 
-    HTMLTrackElementFunction->asESObject()->defineDataProperty(
-        ERRORString, false, true, false, ERRORValue);
+    HTMLTrackElementFunction->defineDataProperty(ERRORString, false, true,
+                                                 false, ERRORValue);
 
     // Bind for attributes
     ESString* kindString = ESString::create("kind");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        kindString, kindGetterFunction, kindSetterFunction);
+        HTMLTrackElementPrototypeObj, kindString, kindGetterFunction,
+        kindSetterFunction);
 
     ESString* srcString = ESString::create("src");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        srcString, srcGetterFunction, srcSetterFunction);
+        HTMLTrackElementPrototypeObj, srcString, srcGetterFunction,
+        srcSetterFunction);
 
     ESString* srclangString = ESString::create("srclang");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        srclangString, srclangGetterFunction, srclangSetterFunction);
+        HTMLTrackElementPrototypeObj, srclangString, srclangGetterFunction,
+        srclangSetterFunction);
 
     ESString* labelString = ESString::create("label");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        labelString, labelGetterFunction, labelSetterFunction);
+        HTMLTrackElementPrototypeObj, labelString, labelGetterFunction,
+        labelSetterFunction);
 
     ESString* defaultString = ESString::create("default");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        defaultString, defaultGetterFunction, defaultSetterFunction);
+        HTMLTrackElementPrototypeObj, defaultString, defaultGetterFunction,
+        defaultSetterFunction);
 
     ESString* readyStateString = ESString::create("readyState");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        readyStateString, readyStateGetterFunction, nullptr);
+        HTMLTrackElementPrototypeObj, readyStateString,
+        readyStateGetterFunction, nullptr);
 
     ESString* trackString = ESString::create("track");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(),
-        trackString, trackGetterFunction, nullptr);
+        HTMLTrackElementPrototypeObj, trackString, trackGetterFunction,
+        nullptr);
 
     return HTMLTrackElementFunction;
 }

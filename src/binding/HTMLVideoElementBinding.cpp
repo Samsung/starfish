@@ -14,21 +14,17 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/HTMLVideoElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 static ESValue widthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLVideoElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->width();
     // Return ESValue from native value
@@ -49,7 +45,7 @@ static ESValue widthSetterFunction(ESVMInstance* instance)
 static ESValue heightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLVideoElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->height();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue heightSetterFunction(ESVMInstance* instance)
 static ESValue videoWidthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLVideoElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->videoWidth();
     // Return ESValue from native value
@@ -80,7 +76,7 @@ static ESValue videoWidthGetterFunction(ESVMInstance* instance)
 static ESValue videoHeightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLVideoElement);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->videoHeight();
     // Return ESValue from native value
@@ -90,9 +86,10 @@ static ESValue videoHeightGetterFunction(ESVMInstance* instance)
 static ESValue posterGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLVideoElement);
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
-    result = originalObj->src();
-
+    result = originalObj->poster();
+    // Return ESValue from native value
     return toJSString(result);
 }
 
@@ -103,43 +100,56 @@ static ESValue posterSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-    originalObj->setSrc(value0);
+    originalObj->setPoster(value0);
     return ESValue();
 }
 
 ESFunctionObject* bindingHTMLVideoElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        HTMLVideoElement,
+    // Bind for constructor
+    ESString* HTMLVideoElementString = ESString::create("HTMLVideoElement");
+    ESFunctionObject* HTMLVideoElementFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 HTMLVideoElementString, 0, true, true);
+    ESObject* HTMLVideoElementPrototypeObj =
+        HTMLVideoElementFunction->protoType().asESPointer()->asESObject();
+    HTMLVideoElementFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    HTMLVideoElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLVideoElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLMediaElement()->protoType());
+    HTMLVideoElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLMediaElement());
 
+    // Bind for attributes
     ESString* widthString = ESString::create("width");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLVideoElementFunction->protoType().asESPointer()->asESObject(),
-        widthString, widthGetterFunction, widthSetterFunction);
+        HTMLVideoElementPrototypeObj, widthString, widthGetterFunction,
+        widthSetterFunction);
 
     ESString* heightString = ESString::create("height");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLVideoElementFunction->protoType().asESPointer()->asESObject(),
-        heightString, heightGetterFunction, heightSetterFunction);
+        HTMLVideoElementPrototypeObj, heightString, heightGetterFunction,
+        heightSetterFunction);
 
     ESString* videoWidthString = ESString::create("videoWidth");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLVideoElementFunction->protoType().asESPointer()->asESObject(),
-        videoWidthString, videoWidthGetterFunction, nullptr);
+        HTMLVideoElementPrototypeObj, videoWidthString,
+        videoWidthGetterFunction, nullptr);
 
     ESString* videoHeightString = ESString::create("videoHeight");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLVideoElementFunction->protoType().asESPointer()->asESObject(),
-        videoHeightString, videoHeightGetterFunction, nullptr);
+        HTMLVideoElementPrototypeObj, videoHeightString,
+        videoHeightGetterFunction, nullptr);
 
     ESString* posterString = ESString::create("poster");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLVideoElementFunction->protoType().asESPointer()->asESObject(),
-        posterString, posterGetterFunction, posterSetterFunction);
+        HTMLVideoElementPrototypeObj, posterString, posterGetterFunction,
+        posterSetterFunction);
 
     return HTMLVideoElementFunction;
 }
 }
-#endif
