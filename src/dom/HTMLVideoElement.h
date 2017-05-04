@@ -47,14 +47,14 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    unsigned long width();
-    void setWidth(unsigned long width);
+    uint32_t width();
+    void setWidth(uint32_t width);
 
-    unsigned long height();
-    void setHeight(unsigned long height);
+    uint32_t height();
+    void setHeight(uint32_t height);
 
-    unsigned long videoWidth();
-    unsigned long videoHeight();
+    uint32_t videoWidth();
+    uint32_t videoHeight();
     String* poster();
     void setPoster(String* poster);
 

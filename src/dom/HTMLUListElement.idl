@@ -1,0 +1,10 @@
+// https://html.spec.whatwg.org/#htmlulistelement
+
+[HTMLConstructor]
+interface HTMLUListElement : HTMLElement {
+  // also has obsolete members
+
+  // https://html.spec.whatwg.org/#HTMLUListElement-partial
+  [Unimplemented, CEReactions] attribute boolean compact;
+  [Unimplemented, CEReactions] attribute DOMString type;
+};

@@ -14,38 +14,34 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLUListElement.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingHTMLUListElement(
     ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* HTMLUListElementString = ESString::create("HTMLUListElement");
     ESFunctionObject* HTMLUListElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLUListElementString, 1, true, true);
+                                 HTMLUListElementString, 0, true, true);
+    ESObject* HTMLUListElementPrototypeObj =
+        HTMLUListElementFunction->protoType().asESPointer()->asESObject();
     HTMLUListElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLUListElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLUListElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLUListElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLUListElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLUListElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
+    // Bind for attributes
     return HTMLUListElementFunction;
 }
 }
