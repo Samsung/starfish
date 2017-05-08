@@ -134,6 +134,12 @@ static ESValue currentTimeSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "currentTime",
+                        "HTMLMediaElement");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
+    }
     originalObj->setCurrentTime(value0);
     return ESValue();
 }
@@ -175,6 +181,12 @@ static ESValue defaultPlaybackRateSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "defaultPlaybackRate",
+                        "HTMLMediaElement");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
+    }
     originalObj->setDefaultPlaybackRate(value0);
     return ESValue();
 }
@@ -196,6 +208,12 @@ static ESValue playbackRateSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "playbackRate",
+                        "HTMLMediaElement");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
+    }
     originalObj->setPlaybackRate(value0);
     return ESValue();
 }
@@ -312,6 +330,12 @@ static ESValue volumeSetterFunction(ESVMInstance* instance)
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "volume",
+                        "HTMLMediaElement");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
+    }
     originalObj->setVolume(value0);
     return ESValue();
 }
@@ -349,7 +373,6 @@ static ESValue textTracksGetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
-
 static ESValue loadFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLMediaElement);
@@ -368,8 +391,10 @@ static ESValue canPlayTypeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "canPlayType", "HTMLMediaElement", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "canPlayType",
+                        "HTMLMediaElement", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     String* result = String::emptyString;
@@ -425,8 +450,10 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "addTextTrack", "HTMLMediaElement", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "addTextTrack",
+                        "HTMLMediaElement", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     TextTrack* result = nullptr;

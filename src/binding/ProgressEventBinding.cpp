@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/ProgressEvent.h"
 
 namespace StarFish {
@@ -32,29 +29,32 @@ extern ESValue toESValueFromProgressEventInit(ESVMInstance* instance,
 static ESValue progresseventConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "ProgressEvent");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "ProgressEvent");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
-                        "ProgressEvent", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString",
+                        "ProgressEvent", reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     ProgressEventInit value1;
-    if (arg1.isUndefinedOrNull()) {
+    if (arg1.isUndefined()) {
         validArgCount--;
     } else {
         value1 = toProgressEventInitFromESValue(instance, arg1);
     }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     ProgressEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -103,23 +103,17 @@ ESFunctionObject* bindingProgressEvent(
     ESString* ProgressEventString = ESString::create("ProgressEvent");
     ESFunctionObject* ProgressEventFunction = ESFunctionObject::create(
         nullptr, progresseventConstructor, ProgressEventString, 1, true, true);
+    ESObject* ProgressEventPrototypeObj =
+        ProgressEventFunction->protoType().asESPointer()->asESObject();
     ProgressEventFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    ProgressEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    ProgressEventFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnEvent()->protoType());
+    ProgressEventPrototypeObj->forceNonVectorHiddenClass(false);
+    ProgressEventPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEvent()->protoType());
     ProgressEventFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEvent());
-    ESObject* ProgressEventPrototypeObj =
-        ProgressEventFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* lengthComputableString = ESString::create("lengthComputable");

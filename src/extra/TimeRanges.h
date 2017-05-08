@@ -39,7 +39,7 @@ public:
         return true;
     }
 
-    double start(unsigned long idx)
+    double start(uint32_t idx)
     {
         if (idx < m_list.size()) {
             return m_list[idx].start();
@@ -47,7 +47,7 @@ public:
         return DBL_MAX;
     }
 
-    double end(unsigned long idx)
+    double end(uint32_t idx)
     {
         if (idx < m_list.size()) {
             return m_list[idx].end();
@@ -65,12 +65,12 @@ public:
         m_list.push_back(TimeRange(start, end));
     }
 
-    unsigned long length()
+    uint32_t length()
     {
         return m_list.size();
     }
 
-    TimeRange& at(unsigned long idx)
+    TimeRange& at(uint32_t idx)
     {
         STARFISH_ASSERT(idx < m_list.size());
         return m_list[idx];

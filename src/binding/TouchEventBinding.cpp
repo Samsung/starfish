@@ -14,21 +14,33 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/TouchEvent.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
 ESFunctionObject* bindingTouchEvent(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    /* Touch Events */
-    DEFINE_FUNCTION_WITH_PARENTFUNC(
-        TouchEvent, fetchData(scriptBindingInstance)->fnUIEvent());
+    // Bind for constructor
+    ESString* TouchEventString = ESString::create("TouchEvent");
+    ESFunctionObject* TouchEventFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, TouchEventString, 0, true, true);
+    ESObject* TouchEventPrototypeObj =
+        TouchEventFunction->protoType().asESPointer()->asESObject();
+    TouchEventFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    TouchEventPrototypeObj->forceNonVectorHiddenClass(false);
+    TouchEventPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent()->protoType());
+    TouchEventFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnUIEvent());
+
+    // Bind for attributes
     return TouchEventFunction;
 }
 }

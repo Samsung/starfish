@@ -41,9 +41,20 @@ static ESValue avplayGetterFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingwebapis(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(webapis, fetchData(scriptBindingInstance)
-                                                 ->m_instance->globalObject()
-                                                 ->objectPrototype());
+    ESString* webapisString = ESString::create("webapis");
+    ESFunctionObject* webapisFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, webapisString, 0, true, true);
+    ESObject* webapisPrototypeObj =
+        webapisFunction->protoType().asESPointer()->asESObject();
+    webapisFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    webapisPrototypeObj->forceNonVectorHiddenClass(false);
+    webapisFunction->set__proto__(fetchData(scriptBindingInstance)
+                                      ->m_instance->globalObject()
+                                      ->objectPrototype());
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         webapisFunction, ESString::create("avplay"), avplayGetterFunction,
         nullptr);

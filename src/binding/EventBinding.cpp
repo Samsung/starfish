@@ -30,29 +30,32 @@ static ESValue eventConstructor(ESVMInstance* instance)
     // TODO Following TC need to be fixed to enable this code
     // test/reftest/web-platform-tests/dom/events/Event-constructors.html
     // if (!instance->currentExecutionContext()->isNewExpression()) {
-    //     THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "Event");
+    //     COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "Event");
+    //     THROW_EXCEPTION(msg);
     // }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "Event",
-                        "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString", "Event",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     EventInit value1;
-    if (arg1.isUndefinedOrNull()) {
+    if (arg1.isUndefined()) {
         validArgCount--;
     } else {
         value1 = toEventInitFromESValue(instance, arg1);
     }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     Event* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {

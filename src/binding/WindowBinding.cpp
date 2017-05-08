@@ -59,15 +59,29 @@ static ESValue getComputedStyleFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingWindow(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Window, fetchData(scriptBindingInstance)->m_fnEventTarget);
-    fetchData(scriptBindingInstance)
-        ->m_instance->globalObject()
-        ->set__proto__(WindowFunction->protoType());
-    fetchData(scriptBindingInstance)
-        ->m_instance->globalObject()
-        ->defineDataProperty(WindowString, true, false, true, WindowFunction);
-
+    // Bind for constructor
+    ESString* WindowString = ESString::create("Window");
+    ESFunctionObject* WindowFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, WindowString, 0, true, true);
+    ESObject* WindowPrototypeObj =
+        WindowFunction->protoType().asESPointer()->asESObject();
+    WindowFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    WindowPrototypeObj->forceNonVectorHiddenClass(false);
+    WindowPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    WindowFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
+/*
+fetchData(scriptBindingInstance)
+    ->m_instance->globalObject()
+    ->set__proto__(WindowFunction->protoType());
+fetchData(scriptBindingInstance)
+    ->m_instance->globalObject()
+    ->defineDataProperty(WindowString, true, false, true, WindowFunction);
+*/
 #ifdef STARFISH_ENABLE_TEST
     WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
         ESString::create("getComputedStyle"), true, true, true,

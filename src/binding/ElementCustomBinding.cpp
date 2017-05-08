@@ -31,13 +31,20 @@ ESValue namespaceURIElementGetterFunction(ESVMInstance* instance)
     return toJSString(originalObj->name().namespaceURI());
 }
 
-ESValue classListElementGetterFunction(ESVMInstance* instance)
+ESValue classListElementSetterFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Element);
-    DOMTokenList* nd = originalObj->classList();
-    if (nd == nullptr) {
-        return ESValue(ESValue::ESUndefined);
+    /* GENERATE_THIS_AND_CHECK_TYPE(Element);
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+    // Declare native value (empty when type is void)
+    DOMTokenList* forwards = nullptr;
+    forwards = originalObj->classList();
+    if (forwards) {
+        forwards->setValue(value0);
     }
-    return nd->scriptValue();
+    return ESValue(); */
+    STARFISH_ASSERT_NOT_REACHED();
 }
 }

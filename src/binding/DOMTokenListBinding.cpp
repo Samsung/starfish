@@ -38,8 +38,9 @@ static ESValue itemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
     // Class item getter by index
     if (instance->currentExecutionContext()->argumentCount() < 1) {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
-                        "DOMTokenList", "1", "0");
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", "0");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "item", "DOMTokenList", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Nullable<String*> result = String::emptyString;
@@ -68,8 +69,10 @@ static ESValue containsFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "contains",
-                        "DOMTokenList", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "contains", "DOMTokenList",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     bool result;
@@ -115,21 +118,21 @@ static ESValue toggleFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "toggle",
-                        "DOMTokenList", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "toggle", "DOMTokenList",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
-    bool argCounting = true;
     // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     // Handle argument arg1
     bool value1;
-    if (argCounting && arg1.isUndefined()) {
+    if (arg1.isUndefined()) {
         validArgCount--;
     } else {
-        argCounting = false;
         value1 = arg1.toBoolean();
     }
     // Handle argument arg0

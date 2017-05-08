@@ -20,42 +20,37 @@
 #include "StarFishConfig.h"
 
 namespace StarFish {
+// Reasons
 static const char* CALLED_CONSTRUCTOR_WITHOUT_NEW =
     "Constructor '%s' requires 'new'";
-static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH =
-    "Failed to construct '%s': %s argument required, but only %s present.";
-static const char* FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH =
-    "Failed to construct '%s': parameter %d ('%s') is not a(n) %s.";
-static const char*
-    FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE =
-        "Failed to construct '%s': The %s argument is neither an array, nor "
-        "does it have indexed properties.";
-static const char* FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH =
-    "Failed to execute '%s' on '%s': needs %s parameter, but only %s present.";
-static const char* FAILED_TO_EXECUTE_BECAUSE_ARG_TYPE_MISMATCH =
-    "Failed to execute '%s' on '%s': parameter %d is not of type '%s'.";
-static const char* FAILED_TO_EXECUTE_BECUASE_ARG_TYPE_MISMATCH_WITH_ENUM =
-    "Failed to execute '%s' on '%s': The provided value is not a valid "
-    "enum value of type %s.";
-static const char* FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND =
-    "Failed to execute '%s' on '%s': No function was found that matched the "
-    "signature provided.";
-static const char* FAILED_TO_EXECUTE_QUERY_SELECTOR_BECAUSE_IT_IS_EMPTY =
-    "Failed to execute '%s' on '%s': The provided selector is empty.";
-static const char* FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE =
-    "Failed to set the '%s' property on '%s': The provided double value is "
-    "non-finite.";
-static const char* FAILED_TO_SET_PROPERTY_BECUASE_ARG_TYPE_MISMATCH_2 =
-    "Failed to set the '%s' property on '%s'. It must be either a '%s' or '%s' "
-    "element.";
+static const char* FAILED_TO_CONSTRUCT = "Failed to construct '%s': %s";
+static const char* FAILED_TO_EXECUTE = "Failed to execute '%s' on '%s': %s";
+static const char* FAILED_TO_SET_PROPERTY =
+    "Failed to set the '%s' property on '%s': %s";
 static const char* ILLEGAL_INVOKE = "Illegal invocation";
+
+// Details
+static const char* ARGS_NOT_ENOUGH = "needs %s parameter, but only %s present.";
+static const char* ARG_TYPE_IS_NONFINITE =
+    "The provided double value is non-finite";
+static const char* ARG_TYPE_MISMATCH = "parameter %d ('%s') is not a(n) %s.";
+static const char* ARG_TYPE_MISMATCH_2 =
+    "parameter %d ('%s') must be either a '%s' or '%s' element.";
+static const char* ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE =
+    "The parameter %d ('%s') is neither an array, nor does it have indexed "
+    "properties.";
+static const char* ARG_TYPE_MISMATCH_WITH_ENUM =
+    "The provided value is not a valid enum value of type %s.";
+static const char* SIGNATURE_NOT_FOUND =
+    "No function was found that matched the signature provided.";
+static const char* QUERY_SELECTOR_IS_EMPTY = "The provided selector is empty.";
 
 size_t bufferSize(std::initializer_list<const char*> args);
 
-#define COMPOSE_MESSAGE(TEMPLATE_STR, ...)                  \
-    size_t siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
-    char msg[siz + 1];                                      \
-    snprintf(msg, siz + 1, TEMPLATE_STR, __VA_ARGS__)
+#define COMPOSE_MESSAGE(MSG, TEMPLATE_STR, ...)                  \
+    size_t MSG##siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
+    char MSG[MSG##siz + 1];                                      \
+    snprintf(MSG, MSG##siz + 1, TEMPLATE_STR, __VA_ARGS__)
 }
 
 #endif

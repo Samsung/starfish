@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/Node.h"
 #include "dom/NodeList.h"
 
@@ -25,11 +21,15 @@ namespace StarFish {
 
 using namespace escargot;
 
-static ESValue lengthFunction(ESVMInstance* instance)
+// Implement for attributes
+static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(NodeList);
-    uint32_t len = originalObj->length();
-    return ESValue(len);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 // Implement for functions
@@ -38,8 +38,9 @@ static ESValue itemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NodeList);
     // Class item getter by index
     if (instance->currentExecutionContext()->argumentCount() < 1) {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
-                        "NodeList", "1", "0");
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", "0");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "item", "NodeList", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Node* result = nullptr;
@@ -62,21 +63,32 @@ static ESValue itemFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(scriptBindingInstance)
-                                                  ->m_instance->globalObject()
-                                                  ->objectPrototype());
+    // Bind for constructor
+    ESString* NodeListString = ESString::create("NodeList");
+    ESFunctionObject* NodeListFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, NodeListString, 0, true, true);
+    ESObject* NodeListPrototypeObj =
+        NodeListFunction->protoType().asESPointer()->asESObject();
+    NodeListFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    NodeListPrototypeObj->forceNonVectorHiddenClass(false);
+    NodeListPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                           ->m_instance->globalObject()
+                                           ->objectPrototype());
 
-    NodeListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("item"), false, false, false,
-                             ESFunctionObject::create(NULL, itemFunction,
-                                                      ESString::create("item"),
-                                                      1, false));
-
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeListFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthFunction, nullptr);
+        NodeListPrototypeObj, lengthString, lengthGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* itemString = ESString::create("item");
+    ESFunctionObject* itemESFn =
+        ESFunctionObject::create(nullptr, itemFunction, itemString, 1, false);
+    NodeListPrototypeObj->defineDataProperty(itemString, true, true, true,
+                                             itemESFn);
 
     return NodeListFunction;
 }

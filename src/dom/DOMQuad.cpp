@@ -40,7 +40,7 @@ static inline double saturateInf(double value)
     return value;
 }
 
-DOMRectReadOnly* DOMQuad::bounds() const
+DOMRect* DOMQuad::getBounds() const
 {
     if (m_bounds == nullptr) {
         double left =
@@ -52,7 +52,7 @@ DOMRectReadOnly* DOMQuad::bounds() const
         double bottom =
             saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
 
-        m_bounds = new DOMRectReadOnly(left, top, right - left, bottom - top);
+        m_bounds = new DOMRect(left, top, right - left, bottom - top);
     }
     return m_bounds;
 }

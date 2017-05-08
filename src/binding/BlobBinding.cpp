@@ -28,7 +28,7 @@ static ESValue sizeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Blob);
     // Declare native value (empty when type is void)
-    double result;
+    uint64_t result;
     result = originalObj->size();
     // Return ESValue from native value
     return ESValue(result);

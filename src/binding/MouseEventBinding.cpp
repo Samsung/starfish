@@ -29,14 +29,17 @@ extern ESValue toESValueFromMouseEventInit(ESVMInstance* instance,
 static ESValue mouseeventConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "MouseEvent");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "MouseEvent");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
-                        "MouseEvent", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString",
+                        "MouseEvent", reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);

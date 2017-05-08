@@ -88,7 +88,6 @@
     F(NodeList)                                     \
     F(PositionError)                                \
     F(ProgressEvent)                                \
-    F(PseudoElement)                                \
     F(URL)                                          \
     F(Text)                                         \
     F(TouchEvent)                                   \

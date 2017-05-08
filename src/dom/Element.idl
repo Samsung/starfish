@@ -17,7 +17,7 @@ interface Element : Node {
 
   [CEReactions, Rename=idAttr] attribute DOMString id;
   [CEReactions] attribute DOMString className;
-  [Custom=Getter, CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+  [CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
   [Unimplemented, CEReactions, Unscopable] attribute DOMString slot;
 
   [Unimplemented] boolean hasAttributes();

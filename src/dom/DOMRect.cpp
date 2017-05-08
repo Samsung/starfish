@@ -35,7 +35,7 @@ DOMRect::DOMRect(const DOMRectReadOnly* rect)
 {
 }
 
-void DOMRect::unite(const DOMRectReadOnly* other)
+void DOMRect::unite(const DOMRect* other)
 {
     if (other->width() <= 0 || other->height() <= 0) {
         return;

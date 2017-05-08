@@ -740,7 +740,6 @@ extern ESValue styleHTMLElementGetterFunction(ESVMInstance* instance);
 extern ESValue styleHTMLElementSetterFunction(ESVMInstance* instance);
 
 // Implement for functions
-
 static ESValue clickFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);

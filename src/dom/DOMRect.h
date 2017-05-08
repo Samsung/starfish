@@ -56,7 +56,7 @@ public:
         m_height = height;
     }
 
-    void unite(const DOMRectReadOnly*);
+    void unite(const DOMRect*);
 
     virtual void init(ScriptBindingInstance* instance) override
     {

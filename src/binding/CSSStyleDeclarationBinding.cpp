@@ -38,8 +38,10 @@ static ESValue itemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(CSSStyleDeclaration);
     // Class item getter by index
     if (instance->currentExecutionContext()->argumentCount() < 1) {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
-                        "CSSStyleDeclaration", "1", "0");
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", "0");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "item", "CSSStyleDeclaration",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     String* result = String::emptyString;
@@ -65,8 +67,10 @@ static ESValue getPropertyValueFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getPropertyValue", "CSSStyleDeclaration", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getPropertyValue",
+                        "CSSStyleDeclaration", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     String* result = String::emptyString;
@@ -91,27 +95,29 @@ static ESValue setPropertyFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "setProperty", "CSSStyleDeclaration", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setProperty",
+                        "CSSStyleDeclaration", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    // Handle argument arg2
+    String* value2 = String::emptyString;
+    if (!arg2.isNull()) {
+        value2 = toBrowserString(arg2);
+    }
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    if (!arg1.isNull()) {
+        value1 = toBrowserString(arg1);
+    }
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
 
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    if (!arg1.isUndefinedOrNull()) {
-        value1 = toBrowserString(arg1);
-    }
-    // Handle argument arg2
-    String* value2 = String::fromUTF8("");
-    if (!arg2.isUndefinedOrNull()) {
-        value2 = toBrowserString(arg2);
-    }
     // Call native function (nargs: 3)
     try {
         originalObj->setProperty(value0, value1, value2);

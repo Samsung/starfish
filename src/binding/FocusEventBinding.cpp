@@ -30,29 +30,32 @@ extern ESValue toESValueFromFocusEventInit(ESVMInstance* instance,
 static ESValue focuseventConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "FocusEvent");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "FocusEvent");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH,
-                        "FocusEvent", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString",
+                        "FocusEvent", reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     FocusEventInit value1;
-    if (arg1.isUndefinedOrNull()) {
+    if (arg1.isUndefined()) {
         validArgCount--;
     } else {
         value1 = toFocusEventInitFromESValue(instance, arg1);
     }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
     FocusEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {

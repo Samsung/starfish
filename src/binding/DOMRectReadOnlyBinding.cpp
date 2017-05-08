@@ -20,6 +20,43 @@ namespace StarFish {
 
 using namespace escargot;
 
+// Implement for constructor
+static ESValue domrectreadonlyConstructor(ESVMInstance* instance)
+{
+    if (!instance->currentExecutionContext()->isNewExpression()) {
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMRectReadOnly");
+        THROW_EXCEPTION(msg);
+    }
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
+    // Handle argument arg3
+    double value3 = 0;
+    if (!arg3.isUndefinedOrNull()) {
+        value3 = arg3.toNumber();
+    }
+    // Handle argument arg2
+    double value2 = 0;
+    if (!arg2.isUndefinedOrNull()) {
+        value2 = arg2.toNumber();
+    }
+    // Handle argument arg1
+    double value1 = 0;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = arg1.toNumber();
+    }
+    // Handle argument arg0
+    double value0 = 0;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = arg0.toNumber();
+    }
+    DOMRectReadOnly* result = nullptr;
+    // Call native function (nargs: 4)
+    result = new DOMRectReadOnly(value0, value1, value2, value3);
+    return result->scriptValue();
+}
+
 // Implement for attributes
 static ESValue xGetterFunction(ESVMInstance* instance)
 {
@@ -108,7 +145,7 @@ ESFunctionObject* bindingDOMRectReadOnly(
     // Bind for constructor
     ESString* DOMRectReadOnlyString = ESString::create("DOMRectReadOnly");
     ESFunctionObject* DOMRectReadOnlyFunction =
-        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+        ESFunctionObject::create(nullptr, domrectreadonlyConstructor,
                                  DOMRectReadOnlyString, 0, true, true);
     ESObject* DOMRectReadOnlyPrototypeObj =
         DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject();

@@ -14,17 +14,15 @@
  *    limitations under the License.
  */
 
-#include "StarFish.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/Document.h"
 #include "dom/DOMException.h"
+#include "dom/HTMLCollection.h"
+#include "dom/DOMTokenList.h"
+#include "dom/NamedNodeMap.h"
 #include "dom/DOMRect.h"
+#include "dom/NodeList.h"
 #include "dom/DOMRectList.h"
 #include "dom/Element.h"
-#include "dom/HTMLCollection.h"
-#include "dom/NamedNodeMap.h"
-#include "platform/window/Window.h"
+#include "dom/Element.h"
 
 namespace StarFish {
 
@@ -36,7 +34,7 @@ extern ESValue namespaceURIElementGetterFunction(ESVMInstance* instance);
 static ESValue localNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->localName();
     // Return ESValue from native value
@@ -46,7 +44,7 @@ static ESValue localNameGetterFunction(ESVMInstance* instance)
 static ESValue tagNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->tagName();
     // Return ESValue from native value
@@ -56,7 +54,7 @@ static ESValue tagNameGetterFunction(ESVMInstance* instance)
 static ESValue idGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->idAttr();
     // Return ESValue from native value
@@ -77,7 +75,7 @@ static ESValue idSetterFunction(ESVMInstance* instance)
 static ESValue classNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->className();
     // Return ESValue from native value
@@ -95,12 +93,23 @@ static ESValue classNameSetterFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-extern ESValue classListElementGetterFunction(ESVMInstance* instance);
+static ESValue classListGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(Element);
+    // Declare native value (empty when type is void)
+    DOMTokenList* result = nullptr;
+    result = originalObj->classList();
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
+}
+
+extern ESValue classListElementSetterFunction(ESVMInstance* instance);
 
 static ESValue attributesGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     NamedNodeMap* result = nullptr;
     result = originalObj->attributes();
     // Return ESValue from native value
@@ -112,7 +121,7 @@ static ESValue attributesGetterFunction(ESVMInstance* instance)
 static ESValue innerHTMLGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->innerHTML();
     // Return ESValue from native value
@@ -125,7 +134,7 @@ static ESValue innerHTMLSetterFunction(ESVMInstance* instance)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
     String* value0 = String::emptyString;
-    if (!arg0.isUndefinedOrNull()) {
+    if (!arg0.isNull()) {
         value0 = toBrowserString(arg0);
     }
     originalObj->setInnerHTML(value0);
@@ -136,7 +145,7 @@ static ESValue innerHTMLSetterFunction(ESVMInstance* instance)
 static ESValue clientTopGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     int32_t result;
     result = originalObj->clientTop();
     // Return ESValue from native value
@@ -146,7 +155,7 @@ static ESValue clientTopGetterFunction(ESVMInstance* instance)
 static ESValue clientLeftGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     int32_t result;
     result = originalObj->clientLeft();
     // Return ESValue from native value
@@ -156,7 +165,7 @@ static ESValue clientLeftGetterFunction(ESVMInstance* instance)
 static ESValue clientWidthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     int32_t result;
     result = originalObj->clientWidth();
     // Return ESValue from native value
@@ -166,7 +175,7 @@ static ESValue clientWidthGetterFunction(ESVMInstance* instance)
 static ESValue clientHeightGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     int32_t result;
     result = originalObj->clientHeight();
     // Return ESValue from native value
@@ -176,7 +185,7 @@ static ESValue clientHeightGetterFunction(ESVMInstance* instance)
 static ESValue childrenGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
     result = originalObj->children();
     // Return ESValue from native value
@@ -187,7 +196,7 @@ static ESValue childrenGetterFunction(ESVMInstance* instance)
 static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->firstElementChild();
     // Return ESValue from native value
@@ -200,7 +209,7 @@ static ESValue firstElementChildGetterFunction(ESVMInstance* instance)
 static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->lastElementChild();
     // Return ESValue from native value
@@ -213,7 +222,7 @@ static ESValue lastElementChildGetterFunction(ESVMInstance* instance)
 static ESValue childElementCountGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->childElementCount();
     // Return ESValue from native value
@@ -223,7 +232,7 @@ static ESValue childElementCountGetterFunction(ESVMInstance* instance)
 static ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->previousElementSibling();
     // Return ESValue from native value
@@ -236,7 +245,7 @@ static ESValue previousElementSiblingGetterFunction(ESVMInstance* instance)
 static ESValue nextElementSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->nextElementSibling();
     // Return ESValue from native value
@@ -254,8 +263,10 @@ static ESValue getAttributeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getAttribute", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getAttribute", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Nullable<String*> result = String::emptyString;
@@ -282,8 +293,10 @@ static ESValue setAttributeFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "setAttribute", "Element", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setAttribute", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -314,8 +327,10 @@ static ESValue removeAttributeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeAttribute", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeAttribute", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -337,8 +352,10 @@ static ESValue hasAttributeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "hasAttribute", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "hasAttribute", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     bool result;
@@ -361,8 +378,10 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByTagName", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getElementsByTagName",
+                        "Element", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
@@ -386,8 +405,10 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByClassName", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getElementsByClassName",
+                        "Element", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
@@ -437,8 +458,10 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "querySelector", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelector", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
@@ -469,8 +492,10 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "querySelectorAll", "Element", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelectorAll", "Element",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     NodeList* result = nullptr;
@@ -507,213 +532,181 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
     // Bind for constructor
     ESString* ElementString = ESString::create("Element");
     ESFunctionObject* ElementFunction = ESFunctionObject::create(
-        nullptr, errorOnConstructorFunction, ElementString, 1, true, true);
+        nullptr, errorOnConstructorFunction, ElementString, 0, true, true);
+    ESObject* ElementPrototypeObj =
+        ElementFunction->protoType().asESPointer()->asESObject();
     ElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    ElementFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    ElementPrototypeObj->forceNonVectorHiddenClass(false);
+    ElementPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnNode()->protoType());
     ElementFunction->set__proto__(fetchData(scriptBindingInstance)->fnNode());
-    ESObject* ElementObj =
-        ElementFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* namespaceURIString = ESString::create("namespaceURI");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        namespaceURIString, namespaceURIElementGetterFunction, nullptr);
+        ElementPrototypeObj, namespaceURIString,
+        namespaceURIElementGetterFunction, nullptr);
 
     ESString* localNameString = ESString::create("localName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        localNameString, localNameGetterFunction, nullptr);
+        ElementPrototypeObj, localNameString, localNameGetterFunction, nullptr);
 
     ESString* tagNameString = ESString::create("tagName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(), tagNameString,
-        tagNameGetterFunction, nullptr);
+        ElementPrototypeObj, tagNameString, tagNameGetterFunction, nullptr);
 
     ESString* idString = ESString::create("id");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(), idString,
-        idGetterFunction, idSetterFunction);
+        ElementPrototypeObj, idString, idGetterFunction, idSetterFunction);
 
     ESString* classNameString = ESString::create("className");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        classNameString, classNameGetterFunction, classNameSetterFunction);
+        ElementPrototypeObj, classNameString, classNameGetterFunction,
+        classNameSetterFunction);
 
     ESString* classListString = ESString::create("classList");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        classListString, classListElementGetterFunction, nullptr);
+        ElementPrototypeObj, classListString, classListGetterFunction,
+        classListElementSetterFunction);
 
     ESString* attributesString = ESString::create("attributes");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        attributesString, attributesGetterFunction, nullptr);
+        ElementPrototypeObj, attributesString, attributesGetterFunction,
+        nullptr);
 
+#ifdef STARFISH_ENABLE_TEST
     ESString* innerHTMLString = ESString::create("innerHTML");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        innerHTMLString, innerHTMLGetterFunction, innerHTMLSetterFunction);
+        ElementPrototypeObj, innerHTMLString, innerHTMLGetterFunction,
+        innerHTMLSetterFunction);
+#endif
 
     ESString* clientTopString = ESString::create("clientTop");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        clientTopString, clientTopGetterFunction, nullptr);
+        ElementPrototypeObj, clientTopString, clientTopGetterFunction, nullptr);
 
     ESString* clientLeftString = ESString::create("clientLeft");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        clientLeftString, clientLeftGetterFunction, nullptr);
+        ElementPrototypeObj, clientLeftString, clientLeftGetterFunction,
+        nullptr);
 
     ESString* clientWidthString = ESString::create("clientWidth");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        clientWidthString, clientWidthGetterFunction, nullptr);
+        ElementPrototypeObj, clientWidthString, clientWidthGetterFunction,
+        nullptr);
 
     ESString* clientHeightString = ESString::create("clientHeight");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        clientHeightString, clientHeightGetterFunction, nullptr);
+        ElementPrototypeObj, clientHeightString, clientHeightGetterFunction,
+        nullptr);
 
     ESString* childrenString = ESString::create("children");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        childrenString, childrenGetterFunction, nullptr);
+        ElementPrototypeObj, childrenString, childrenGetterFunction, nullptr);
 
     ESString* firstElementChildString = ESString::create("firstElementChild");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        firstElementChildString, firstElementChildGetterFunction, nullptr);
+        ElementPrototypeObj, firstElementChildString,
+        firstElementChildGetterFunction, nullptr);
 
     ESString* lastElementChildString = ESString::create("lastElementChild");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        lastElementChildString, lastElementChildGetterFunction, nullptr);
+        ElementPrototypeObj, lastElementChildString,
+        lastElementChildGetterFunction, nullptr);
 
     ESString* childElementCountString = ESString::create("childElementCount");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        childElementCountString, childElementCountGetterFunction, nullptr);
+        ElementPrototypeObj, childElementCountString,
+        childElementCountGetterFunction, nullptr);
 
     ESString* previousElementSiblingString =
         ESString::create("previousElementSibling");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        previousElementSiblingString, previousElementSiblingGetterFunction,
-        nullptr);
+        ElementPrototypeObj, previousElementSiblingString,
+        previousElementSiblingGetterFunction, nullptr);
 
     ESString* nextElementSiblingString = ESString::create("nextElementSibling");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        ElementFunction->protoType().asESPointer()->asESObject(),
-        nextElementSiblingString, nextElementSiblingGetterFunction, nullptr);
+        ElementPrototypeObj, nextElementSiblingString,
+        nextElementSiblingGetterFunction, nullptr);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getClientRects"), true, true, true,
-            ESFunctionObject::create(NULL, getClientRectsFunction,
-                                     ESString::create("getClientRects"), 0,
-                                     false));
+    // Bind for functions
+    ESString* getAttributeString = ESString::create("getAttribute");
+    ESFunctionObject* getAttributeESFn = ESFunctionObject::create(
+        nullptr, getAttributeFunction, getAttributeString, 1, false);
+    ElementPrototypeObj->defineDataProperty(getAttributeString, true, true,
+                                            true, getAttributeESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getBoundingClientRect"), true, true, true,
-            ESFunctionObject::create(NULL, getBoundingClientRectFunction,
-                                     ESString::create("getBoundingClientRect"),
-                                     0, false));
+    ESString* setAttributeString = ESString::create("setAttribute");
+    ESFunctionObject* setAttributeESFn = ESFunctionObject::create(
+        nullptr, setAttributeFunction, setAttributeString, 2, false);
+    ElementPrototypeObj->defineDataProperty(setAttributeString, true, true,
+                                            true, setAttributeESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("remove"), false, false, false,
-            ESFunctionObject::create(NULL, removeFunction,
-                                     ESString::create("remove"), 0, false));
+    ESString* removeAttributeString = ESString::create("removeAttribute");
+    ESFunctionObject* removeAttributeESFn = ESFunctionObject::create(
+        nullptr, removeAttributeFunction, removeAttributeString, 1, false);
+    ElementPrototypeObj->defineDataProperty(removeAttributeString, true, true,
+                                            true, removeAttributeESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getAttribute"), false, false, false,
-            ESFunctionObject::create(NULL, getAttributeFunction,
-                                     ESString::create("getAttribute"), 0,
-                                     false));
+    ESString* hasAttributeString = ESString::create("hasAttribute");
+    ESFunctionObject* hasAttributeESFn = ESFunctionObject::create(
+        nullptr, hasAttributeFunction, hasAttributeString, 1, false);
+    ElementPrototypeObj->defineDataProperty(hasAttributeString, true, true,
+                                            true, hasAttributeESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("setAttribute"), false, false, false,
-            ESFunctionObject::create(NULL, setAttributeFunction,
-                                     ESString::create("setAttribute"), 0,
-                                     false));
+    ESString* getElementsByTagNameString =
+        ESString::create("getElementsByTagName");
+    ESFunctionObject* getElementsByTagNameESFn =
+        ESFunctionObject::create(nullptr, getElementsByTagNameFunction,
+                                 getElementsByTagNameString, 1, false);
+    ElementPrototypeObj->defineDataProperty(
+        getElementsByTagNameString, true, true, true, getElementsByTagNameESFn);
 
-    // spec of removeAttribute
-    // https://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-6D6AC0F9
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("removeAttribute"), false, false, false,
-            ESFunctionObject::create(NULL, removeAttributeFunction,
-                                     ESString::create("removeAttribute"), 0,
-                                     false));
+    ESString* getElementsByClassNameString =
+        ESString::create("getElementsByClassName");
+    ESFunctionObject* getElementsByClassNameESFn =
+        ESFunctionObject::create(nullptr, getElementsByClassNameFunction,
+                                 getElementsByClassNameString, 1, false);
+    ElementPrototypeObj->defineDataProperty(getElementsByClassNameString, true,
+                                            true, true,
+                                            getElementsByClassNameESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getElementsByClassName"), false, false, false,
-            ESFunctionObject::create(NULL, getElementsByClassNameFunction,
-                                     ESString::create("getElementsByClassName"),
-                                     1, false));
+    ESString* getClientRectsString = ESString::create("getClientRects");
+    ESFunctionObject* getClientRectsESFn = ESFunctionObject::create(
+        nullptr, getClientRectsFunction, getClientRectsString, 0, false);
+    ElementPrototypeObj->defineDataProperty(getClientRectsString, true, true,
+                                            true, getClientRectsESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("getElementsByTagName"), false, false, false,
-            ESFunctionObject::create(NULL, getElementsByTagNameFunction,
-                                     ESString::create("getElementsByTagName"),
-                                     1, false));
+    ESString* getBoundingClientRectString =
+        ESString::create("getBoundingClientRect");
+    ESFunctionObject* getBoundingClientRectESFn =
+        ESFunctionObject::create(nullptr, getBoundingClientRectFunction,
+                                 getBoundingClientRectString, 0, false);
+    ElementPrototypeObj->defineDataProperty(getBoundingClientRectString, true,
+                                            true, true,
+                                            getBoundingClientRectESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("querySelector"), true, true, true,
-            ESFunctionObject::create(NULL, querySelectorFunction,
-                                     ESString::create("querySelector"), 1,
-                                     false));
+    ESString* querySelectorString = ESString::create("querySelector");
+    ESFunctionObject* querySelectorESFn = ESFunctionObject::create(
+        nullptr, querySelectorFunction, querySelectorString, 1, false);
+    ElementPrototypeObj->defineDataProperty(querySelectorString, true, true,
+                                            true, querySelectorESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("querySelectorAll"), true, true, true,
-            ESFunctionObject::create(NULL, querySelectorAllFunction,
-                                     ESString::create("querySelectorAll"), 1,
-                                     false));
+    ESString* querySelectorAllString = ESString::create("querySelectorAll");
+    ESFunctionObject* querySelectorAllESFn = ESFunctionObject::create(
+        nullptr, querySelectorAllFunction, querySelectorAllString, 1, false);
+    ElementPrototypeObj->defineDataProperty(querySelectorAllString, true, true,
+                                            true, querySelectorAllESFn);
 
-    ElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("hasAttribute"), false, false, false,
-            ESFunctionObject::create(NULL, hasAttributeFunction,
-                                     ESString::create("hasAttribute"), 1,
-                                     false));
+    ESString* removeString = ESString::create("remove");
+    ESFunctionObject* removeESFn = ESFunctionObject::create(
+        nullptr, removeFunction, removeString, 0, false);
+    ElementPrototypeObj->defineDataProperty(removeString, true, true, true,
+                                            removeESFn);
 
     return ElementFunction;
 }

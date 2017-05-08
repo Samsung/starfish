@@ -24,31 +24,32 @@ using namespace escargot;
 static ESValue dompointConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMPoint");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMPoint");
+        THROW_EXCEPTION(msg);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
     ESValue arg3 = instance->currentExecutionContext()->readArgument(3);
-    // Handle argument arg0
-    double value0 = 0;
-    if (!arg0.isUndefinedOrNull()) {
-        value0 = arg0.toNumber();
-    }
-    // Handle argument arg1
-    double value1 = 0;
-    if (!arg1.isUndefinedOrNull()) {
-        value1 = arg1.toNumber();
+    // Handle argument arg3
+    double value3 = 1;
+    if (!arg3.isUndefinedOrNull()) {
+        value3 = arg3.toNumber();
     }
     // Handle argument arg2
     double value2 = 0;
     if (!arg2.isUndefinedOrNull()) {
         value2 = arg2.toNumber();
     }
-    // Handle argument arg3
-    double value3 = 1;
-    if (!arg3.isUndefinedOrNull()) {
-        value3 = arg3.toNumber();
+    // Handle argument arg1
+    double value1 = 0;
+    if (!arg1.isUndefinedOrNull()) {
+        value1 = arg1.toNumber();
+    }
+    // Handle argument arg0
+    double value0 = 0;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = arg0.toNumber();
     }
     DOMPoint* result = nullptr;
     // Call native function (nargs: 4)

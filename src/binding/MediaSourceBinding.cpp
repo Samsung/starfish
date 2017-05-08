@@ -27,7 +27,8 @@ using namespace escargot;
 static ESValue mediasourceConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "MediaSource");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "MediaSource");
+        THROW_EXCEPTION(msg);
     }
     MediaSource* result = nullptr;
     Document* callWith = fetchDocument(instance);
@@ -98,8 +99,10 @@ static ESValue addSourceBufferFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "addSourceBuffer", "MediaSource", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "addSourceBuffer",
+                        "MediaSource", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     SourceBuffer* result = nullptr;
@@ -127,8 +130,10 @@ static ESValue removeSourceBufferFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeSourceBuffer", "MediaSource", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeSourceBuffer",
+                        "MediaSource", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -184,8 +189,10 @@ static ESValue isTypeSupportedFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "isTypeSupported", "MediaSource", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "isTypeSupported",
+                        "MediaSource", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     bool result;

@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/DocumentFragment.h"
 #include "dom/VTTCue.h"
 
@@ -28,29 +25,42 @@ using namespace escargot;
 static ESValue vttcueConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "VTTCue");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "VTTCue");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 3) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "VTTCue",
-                        "3", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "3", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString", "VTTCue",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
-    // Handle argument arg0
-    double value0;
-    value0 = arg0.toNumber();
+    // Handle argument arg2
+    String* value2 = String::emptyString;
+    value2 = toBrowserString(arg2);
 
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
+    if (!std::isfinite(value1)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "VTTCue");
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, reason);
+        THROW_EXCEPTION(msg);
+    }
 
-    // Handle argument arg2
-    String* value2 = String::emptyString;
-    value2 = toBrowserString(arg2);
+    // Handle argument arg0
+    double value0;
+    value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "VTTCue");
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, reason);
+        THROW_EXCEPTION(msg);
+    }
 
     VTTCue* result = nullptr;
     Document* callWith = fetchDocument(instance);
@@ -63,7 +73,7 @@ static ESValue vttcueConstructor(ESVMInstance* instance)
 static ESValue textGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(VTTCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->text();
     // Return ESValue from native value
@@ -85,7 +95,7 @@ static ESValue textSetterFunction(ESVMInstance* instance)
 static ESValue getCueAsHTMLFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(VTTCue);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     DocumentFragment* result = nullptr;
     // Call native function (nargs: 0)
     result = originalObj->getCueAsHTML();
@@ -101,20 +111,17 @@ ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
     ESString* VTTCueString = ESString::create("VTTCue");
     ESFunctionObject* VTTCueFunction = ESFunctionObject::create(
         nullptr, vttcueConstructor, VTTCueString, 3, true, true);
+    ESObject* VTTCuePrototypeObj =
+        VTTCueFunction->protoType().asESPointer()->asESObject();
     VTTCueFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    VTTCueFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    VTTCueFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    VTTCuePrototypeObj->forceNonVectorHiddenClass(false);
+    VTTCuePrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnTextTrackCue()->protoType());
     VTTCueFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnTextTrackCue());
-    ESObject* VTTCuePrototypeObj =
-        VTTCueFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* textString = ESString::create("text");

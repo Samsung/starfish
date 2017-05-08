@@ -13,12 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
 
@@ -30,14 +25,14 @@ using namespace escargot;
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBufferList);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->length();
     // Return ESValue from native value
     return ESValue(result);
 }
 
-static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
+static ESValue SourceBufferFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(SourceBufferList);
     ESValue v = instance->currentExecutionContext()->readArgument(0);
@@ -49,6 +44,7 @@ static ESValue sourceBufferGetterFunction(ESVMInstance* instance)
     }
 }
 
+// Implement for functions
 ESFunctionObject* bindingSourceBufferList(
     ScriptBindingInstance* scriptBindingInstance)
 {
@@ -57,23 +53,17 @@ ESFunctionObject* bindingSourceBufferList(
     ESFunctionObject* SourceBufferListFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  SourceBufferListString, 0, true, true);
+    ESObject* SourceBufferListPrototypeObj =
+        SourceBufferListFunction->protoType().asESPointer()->asESObject();
     SourceBufferListFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    SourceBufferListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    SourceBufferListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    SourceBufferListPrototypeObj->forceNonVectorHiddenClass(false);
+    SourceBufferListPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
     SourceBufferListFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget());
-    ESObject* SourceBufferListPrototypeObj =
-        SourceBufferListFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");
@@ -82,6 +72,11 @@ ESFunctionObject* bindingSourceBufferList(
         nullptr);
 
     // Bind for functions
+    ESString* SourceBufferString = ESString::create("SourceBuffer");
+    ESFunctionObject* SourceBufferESFn = ESFunctionObject::create(
+        nullptr, SourceBufferFunction, SourceBufferString, 1, false);
+    SourceBufferListPrototypeObj->defineDataProperty(
+        SourceBufferString, true, true, true, SourceBufferESFn);
     return SourceBufferListFunction;
 }
 }

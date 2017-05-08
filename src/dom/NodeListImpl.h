@@ -81,7 +81,7 @@ public:
     }
 
     size_t length() const;
-    Node* item(unsigned long index) const;
+    Node* item(uint32_t index) const;
     void invalidateCache() const
     {
         STARFISH_ASSERT(m_canCache);
