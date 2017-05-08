@@ -63,6 +63,7 @@
        ],
        'sources': [
            'src/StarFish.cpp',
+           '<!@(find src/binding -name *.cpp)',
            '<!@(find src/animation -name *.cpp)',
            '<!@(find src/dom -name *.cpp)',
            '<!@(find src/extra -name *.cpp)',

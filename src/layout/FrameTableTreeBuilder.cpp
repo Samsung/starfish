@@ -15,16 +15,17 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableTreeBuilder.h"
+#include "layout/FrameTableTreeBuilder.h"
 
-#include "FrameTreeBuilder.h"
-#include "FrameTableObjectBox.h"
-#include "FrameTableBox.h"
-#include "FrameTableCaptionBox.h"
-#include "FrameTableSectionBox.h"
-#include "FrameTableRowBox.h"
-#include "FrameTableColBox.h"
-#include "FrameTableCellBox.h"
+#include "dom/Node.h"
+#include "layout/FrameTreeBuilder.h"
+#include "layout/FrameTableObjectBox.h"
+#include "layout/FrameTableBox.h"
+#include "layout/FrameTableCaptionBox.h"
+#include "layout/FrameTableSectionBox.h"
+#include "layout/FrameTableRowBox.h"
+#include "layout/FrameTableColBox.h"
+#include "layout/FrameTableCellBox.h"
 
 namespace StarFish {
 
@@ -310,7 +311,8 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
 
     if (child->isComment() ||
         (child->isCharacterData() &&
-         child->textContent()->containsOnlyWhitespace())) {
+         (!child->textContent().hasValue() ||
+          child->textContent().getValue()->containsOnlyWhitespace()))) {
         // TODO, do not use assert!
         return;
     } else if (wrapInAnnoymousSection) {
@@ -348,7 +350,8 @@ void FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableSectionBox());
     if (child->isComment() ||
         (child->isCharacterData() &&
-         child->textContent()->containsOnlyWhitespace())) {
+         (!child->textContent().hasValue() ||
+          child->textContent().getValue()->containsOnlyWhitespace()))) {
         // TODO, do not use assert!
         return;
     } else {
@@ -376,7 +379,8 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
     STARFISH_ASSERT(ctx.currentBlockContainer()->isFrameTableRowBox());
     if (child->isComment() ||
         (child->isCharacterData() &&
-         child->textContent()->containsOnlyWhitespace())) {
+         (!child->textContent().hasValue() ||
+          child->textContent().getValue()->containsOnlyWhitespace()))) {
         // TODO, do not use assert!
         return;
     } else {
