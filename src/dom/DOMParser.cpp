@@ -164,11 +164,10 @@ Document* DOMParser::parseFromString(String* str, String* type)
                                               String::fromUTF8("text/html"));
         }
     } else {
-        THROW_DOM_EXCEPTION(
-            starFish()->window()->scriptBindingInstance(),
-            DOMException::TYPE_ERR,
-            FAILED_TO_EXECUTE_BECUASE_ARG_TYPE_MISMATCH_WITH_ENUM,
-            "parseFromString", "DOMParser", "SupportedType");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_ENUM, "SupportedType");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser");
+        THROW_DOM_EXCEPTION(starFish()->window()->scriptBindingInstance(),
+                            DOMException::TYPE_ERR, msg);
     }
 }
 }

@@ -135,7 +135,6 @@ static ESValue oncuechangeSetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
-
 static ESValue addCueFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrack);
@@ -143,8 +142,9 @@ static ESValue addCueFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "addCue",
-                        "TextTrack", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "addCue", "TextTrack", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -168,8 +168,10 @@ static ESValue removeCueFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "removeCue",
-                        "TextTrack", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeCue", "TextTrack",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);

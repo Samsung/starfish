@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "dom/Text.h"
 
 namespace StarFish {
@@ -28,11 +24,12 @@ using namespace escargot;
 static ESValue textConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "Text");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "Text");
+        THROW_EXCEPTION(msg);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
-    String* value0 = String::fromUTF8("");
+    String* value0 = String::emptyString;
     if (!arg0.isUndefinedOrNull()) {
         value0 = toBrowserString(arg0);
     }
@@ -47,7 +44,7 @@ static ESValue textConstructor(ESVMInstance* instance)
 static ESValue wholeTextGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Text);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->wholeText();
     // Return ESValue from native value
@@ -61,20 +58,17 @@ ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
     ESString* TextString = ESString::create("Text");
     ESFunctionObject* TextFunction = ESFunctionObject::create(
         nullptr, textConstructor, TextString, 0, true, true);
+    ESObject* TextPrototypeObj =
+        TextFunction->protoType().asESPointer()->asESObject();
     TextFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    TextFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    TextFunction->protoType().asESPointer()->asESObject()->set__proto__(
+    TextPrototypeObj->forceNonVectorHiddenClass(false);
+    TextPrototypeObj->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
     TextFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData());
-    ESObject* TextPrototypeObj =
-        TextFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* wholeTextString = ESString::create("wholeText");

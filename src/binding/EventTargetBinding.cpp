@@ -22,7 +22,6 @@ namespace StarFish {
 using namespace escargot;
 
 // Implement for functions
-
 static ESValue addEventListenerFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(EventTarget);
@@ -30,21 +29,21 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "addEventListener", "EventTarget", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "addEventListener",
+                        "EventTarget", reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 3;
-    bool argCounting = true;
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
     // Handle argument arg2
     bool value2;
-    if (argCounting && arg2.isUndefined()) {
+    if (arg2.isUndefined()) {
         validArgCount--;
     } else {
-        argCounting = false;
         value2 = arg2.toBoolean();
     }
     // Handle argument arg1
@@ -74,21 +73,21 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeEventListener", "EventTarget", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeEventListener",
+                        "EventTarget", reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 3;
-    bool argCounting = true;
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
     ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
     // Handle argument arg2
     bool value2;
-    if (argCounting && arg2.isUndefined()) {
+    if (arg2.isUndefined()) {
         validArgCount--;
     } else {
-        argCounting = false;
         value2 = arg2.toBoolean();
     }
     // Handle argument arg1
@@ -118,8 +117,10 @@ static ESValue dispatchEventFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "dispatchEvent", "EventTarget", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "dispatchEvent", "EventTarget",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     bool result;

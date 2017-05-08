@@ -156,7 +156,7 @@ static ESValue locationSetterFunction(ESVMInstance* instance)
     Location* forwards = nullptr;
     forwards = originalObj->location();
     if (forwards) {
-        forwards->setLocation(value0);
+        forwards->setHref(value0);
     }
     return ESValue();
 }
@@ -182,6 +182,7 @@ static ESValue bodySetterFunction(ESVMInstance* instance)
     HTMLElement* value0 = nullptr;
     if (!arg0.isUndefinedOrNull()) {
         CHECK_TYPEOF(arg0, HTMLElement);
+
         value0 = (HTMLElement*)(arg0.asESPointer()
                                     ->asESObject()
                                     ->extraPointerData());
@@ -957,8 +958,10 @@ static ESValue getElementsByTagNameFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByTagName", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getElementsByTagName",
+                        "Document", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
@@ -982,8 +985,10 @@ static ESValue getElementsByClassNameFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementsByClassName", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getElementsByClassName",
+                        "Document", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     HTMLCollection* result = nullptr;
@@ -1007,8 +1012,10 @@ static ESValue createElementFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createElement", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "createElement", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
@@ -1053,8 +1060,10 @@ static ESValue createTextNodeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createTextNode", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "createTextNode", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Text* result = nullptr;
@@ -1078,8 +1087,10 @@ static ESValue createCommentFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createComment", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "createComment", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Comment* result = nullptr;
@@ -1103,8 +1114,10 @@ static ESValue createAttributeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "createAttribute", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "createAttribute", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Attr* result = nullptr;
@@ -1132,8 +1145,10 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "elementFromPoint", "Document", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "elementFromPoint", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
@@ -1142,10 +1157,22 @@ static ESValue elementFromPointFunction(ESVMInstance* instance)
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
+    if (!std::isfinite(value1)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "elementFromPoint",
+                        "Document");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, reason);
+        THROW_EXCEPTION(msg);
+    }
 
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "elementFromPoint",
+                        "Document");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, reason);
+        THROW_EXCEPTION(msg);
+    }
 
     // Call native function (nargs: 2)
     result = originalObj->elementFromPoint(value0, value1);
@@ -1164,8 +1191,10 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getElementById", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getElementById", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
@@ -1191,8 +1220,10 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "querySelector", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelector", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Element* result = nullptr;
@@ -1218,8 +1249,10 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "querySelectorAll", "Document", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelectorAll", "Document",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     NodeList* result = nullptr;

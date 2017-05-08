@@ -172,7 +172,7 @@ size_t NodeListImpl::length() const
     return collection.size();
 }
 
-Node* NodeListImpl::item(unsigned long index) const
+Node* NodeListImpl::item(uint32_t index) const
 {
     if (m_canCache) {
         fillCacheIfNeed();

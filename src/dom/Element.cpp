@@ -301,10 +301,10 @@ DOMRect* Element::getBoundingClientRect()
         return new DOMRect();
     }
 
-    DOMRect* rect = new DOMRect(quads[0].bounds());
+    DOMRect* rect = quads[0].getBounds();
 
     for (size_t i = 1; i < quads.size(); ++i) {
-        rect->unite(quads[i].bounds());
+        rect->unite(quads[i].getBounds());
     }
 
     // todo : Apply the transforms

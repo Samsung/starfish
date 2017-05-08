@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/TextTrack.h"
 #include "dom/TextTrackList.h"
 
@@ -28,7 +25,7 @@ using namespace escargot;
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackList);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->length();
     // Return ESValue from native value
@@ -43,10 +40,12 @@ static ESValue getTrackByIdFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getTrackById", "TextTrackList", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getTrackById", "TextTrackList",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     TextTrack* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -71,23 +70,17 @@ ESFunctionObject* bindingTextTrackList(
     ESFunctionObject* TextTrackListFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  TextTrackListString, 0, true, true);
+    ESObject* TextTrackListPrototypeObj =
+        TextTrackListFunction->protoType().asESPointer()->asESObject();
     TextTrackListFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    TextTrackListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    TextTrackListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    TextTrackListPrototypeObj->forceNonVectorHiddenClass(false);
+    TextTrackListPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
     TextTrackListFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnEventTarget());
-    ESObject* TextTrackListPrototypeObj =
-        TextTrackListFunction->protoType().asESPointer()->asESObject();
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");

@@ -63,14 +63,14 @@ public:
         return m_p4;
     }
 
-    DOMRectReadOnly* bounds() const;
+    DOMRect* getBounds() const;
 
 protected:
     DOMPoint* m_p1;
     DOMPoint* m_p2;
     DOMPoint* m_p3;
     DOMPoint* m_p4;
-    mutable DOMRectReadOnly* m_bounds; // allocated lazily
+    mutable DOMRect* m_bounds; // allocated lazily
 };
 }
 

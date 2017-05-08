@@ -38,8 +38,9 @@ ESValue appendBufferSourceBufferFunction(ESVMInstance* instance)
         }
 #endif
         else {
-            THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
-                            "appendBuffer", "SourceBuffer");
+            COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "appendBuffer",
+                            "SourceBuffer", SIGNATURE_NOT_FOUND);
+            THROW_EXCEPTION(msg);
         }
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());

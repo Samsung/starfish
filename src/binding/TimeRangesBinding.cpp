@@ -13,72 +13,110 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 #include "extra/TimeRanges.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for attributes
+static ESValue lengthGetterFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
+    // Declare native value (empty when type is void)
+    uint32_t result;
+    result = originalObj->length();
+    // Return ESValue from native value
+    return ESValue(result);
+}
+
+// Implement for functions
 static ESValue startFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(firstArg, idx);
-    if (idx != INVALID_INDEX && idx < originalObj->length()) {
-        return ESValue(originalObj->start(idx));
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "start", "TimeRanges", reason);
+        THROW_EXCEPTION(msg);
     }
-    _THROW_EXCEPTION(ILLEGAL_INVOKE);
+    // Declare native value (empty when type is void)
+    double result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    uint32_t value0;
+    value0 = arg0.toUint32();
+
+    // Call native function (nargs: 1)
+    result = originalObj->start(value0);
+
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 static ESValue endFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-    TO_INDEX_UINT32(firstArg, idx);
-    if (idx != INVALID_INDEX && idx < originalObj->length()) {
-        return ESValue(originalObj->end(idx));
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    if (argCount < 1) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "end", "TimeRanges", reason);
+        THROW_EXCEPTION(msg);
     }
-    _THROW_EXCEPTION(ILLEGAL_INVOKE);
-}
+    // Declare native value (empty when type is void)
+    double result;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    uint32_t value0;
+    value0 = arg0.toUint32();
 
-static ESValue lengthGetterFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(TimeRanges);
-    return ESValue(originalObj->length());
+    // Call native function (nargs: 1)
+    result = originalObj->end(value0);
+
+    // Return ESValue from native value
+    return ESValue(result);
 }
 
 ESFunctionObject* bindingTimeRanges(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(TimeRanges, fetchData(scriptBindingInstance)
-                                                    ->m_instance->globalObject()
-                                                    ->objectPrototype());
+    // Bind for constructor
+    ESString* TimeRangesString = ESString::create("TimeRanges");
+    ESFunctionObject* TimeRangesFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, TimeRangesString, 0, true, true);
+    ESObject* TimeRangesPrototypeObj =
+        TimeRangesFunction->protoType().asESPointer()->asESObject();
+    TimeRangesFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    TimeRangesPrototypeObj->forceNonVectorHiddenClass(false);
+    TimeRangesPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                             ->m_instance->globalObject()
+                                             ->objectPrototype());
 
-    TimeRangesFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("start"), true, true, true,
-                             ESFunctionObject::create(NULL, startFunction,
-                                                      ESString::create("start"),
-                                                      0, false));
-
-    TimeRangesFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(ESString::create("end"), true, true, true,
-                             ESFunctionObject::create(NULL, endFunction,
-                                                      ESString::create("end"),
-                                                      0, false));
-
+    // Bind for attributes
+    ESString* lengthString = ESString::create("length");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TimeRangesFunction->protoType().asESPointer()->asESObject(),
-        ESString::create("length"), lengthGetterFunction, nullptr);
+        TimeRangesPrototypeObj, lengthString, lengthGetterFunction, nullptr);
+
+    // Bind for functions
+    ESString* startString = ESString::create("start");
+    ESFunctionObject* startESFn =
+        ESFunctionObject::create(nullptr, startFunction, startString, 1, false);
+    TimeRangesPrototypeObj->defineDataProperty(startString, true, true, true,
+                                               startESFn);
+
+    ESString* endString = ESString::create("end");
+    ESFunctionObject* endESFn =
+        ESFunctionObject::create(nullptr, endFunction, endString, 1, false);
+    TimeRangesPrototypeObj->defineDataProperty(endString, true, true, true,
+                                               endESFn);
 
     return TimeRangesFunction;
 }

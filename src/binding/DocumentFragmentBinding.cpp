@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/DocumentFragment.h"
 
 namespace StarFish {
@@ -26,8 +23,23 @@ using namespace escargot;
 ESFunctionObject* bindingDocumentFragment(
     ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        DocumentFragment, fetchData(scriptBindingInstance)->fnNode());
+    // Bind for constructor
+    ESString* DocumentFragmentString = ESString::create("DocumentFragment");
+    ESFunctionObject* DocumentFragmentFunction =
+        ESFunctionObject::create(nullptr, errorOnConstructorFunction,
+                                 DocumentFragmentString, 0, true, true);
+    ESObject* DocumentFragmentPrototypeObj =
+        DocumentFragmentFunction->protoType().asESPointer()->asESObject();
+    DocumentFragmentFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    DocumentFragmentPrototypeObj->forceNonVectorHiddenClass(false);
+    DocumentFragmentPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode()->protoType());
+    DocumentFragmentFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnNode());
+
     return DocumentFragmentFunction;
 }
 }

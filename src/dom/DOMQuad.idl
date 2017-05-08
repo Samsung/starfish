@@ -14,7 +14,7 @@ interface DOMQuad {
   [SameObject] readonly attribute DOMPoint p2;
   [SameObject] readonly attribute DOMPoint p3;
   [SameObject] readonly attribute DOMPoint p4;
-  [Unimplemented, NewObject] DOMRect getBounds();
+  [NewObject] DOMRect getBounds();
 
   serializer = { attribute };
 };

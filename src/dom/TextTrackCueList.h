@@ -38,7 +38,7 @@ public:
         return true;
     }
 
-    size_t length()
+    uint32_t length()
     {
         return size();
     }

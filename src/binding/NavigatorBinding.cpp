@@ -14,10 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
 #include "platform/location/Geolocation.h"
 #include "extra/Navigator.h"
 
@@ -29,7 +25,7 @@ using namespace escargot;
 static ESValue geolocationGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Geolocation* result = nullptr;
     result = originalObj->geolocation();
     // Return ESValue from native value
@@ -40,7 +36,7 @@ static ESValue geolocationGetterFunction(ESVMInstance* instance)
 static ESValue appCodeNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->appCodeName();
     // Return ESValue from native value
@@ -50,7 +46,7 @@ static ESValue appCodeNameGetterFunction(ESVMInstance* instance)
 static ESValue appNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->appName();
     // Return ESValue from native value
@@ -60,7 +56,7 @@ static ESValue appNameGetterFunction(ESVMInstance* instance)
 static ESValue appVersionGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->appVersion();
     // Return ESValue from native value
@@ -70,7 +66,7 @@ static ESValue appVersionGetterFunction(ESVMInstance* instance)
 static ESValue userAgentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->userAgent();
     // Return ESValue from native value
@@ -80,7 +76,7 @@ static ESValue userAgentGetterFunction(ESVMInstance* instance)
 static ESValue vendorGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Navigator);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->vendor();
     // Return ESValue from native value
@@ -92,50 +88,46 @@ ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
     // Bind for constructor
     ESString* NavigatorString = ESString::create("Navigator");
     ESFunctionObject* NavigatorFunction = ESFunctionObject::create(
-        nullptr, errorOnConstructorFunction, NavigatorString, 1, true, true);
+        nullptr, errorOnConstructorFunction, NavigatorString, 0, true, true);
+    ESObject* NavigatorPrototypeObj =
+        NavigatorFunction->protoType().asESPointer()->asESObject();
     NavigatorFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    NavigatorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    NavigatorFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
+    NavigatorPrototypeObj->forceNonVectorHiddenClass(false);
+    NavigatorPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                            ->m_instance->globalObject()
+                                            ->objectPrototype());
 
     // Bind for attributes
     ESString* geolocationString = ESString::create("geolocation");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        geolocationString, geolocationGetterFunction, nullptr);
+        NavigatorPrototypeObj, geolocationString, geolocationGetterFunction,
+        nullptr);
 
     ESString* appCodeNameString = ESString::create("appCodeName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        appCodeNameString, appCodeNameGetterFunction, nullptr);
+        NavigatorPrototypeObj, appCodeNameString, appCodeNameGetterFunction,
+        nullptr);
 
     ESString* appNameString = ESString::create("appName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        appNameString, appNameGetterFunction, nullptr);
+        NavigatorPrototypeObj, appNameString, appNameGetterFunction, nullptr);
 
     ESString* appVersionString = ESString::create("appVersion");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        appVersionString, appVersionGetterFunction, nullptr);
+        NavigatorPrototypeObj, appVersionString, appVersionGetterFunction,
+        nullptr);
 
     ESString* userAgentString = ESString::create("userAgent");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        userAgentString, userAgentGetterFunction, nullptr);
+        NavigatorPrototypeObj, userAgentString, userAgentGetterFunction,
+        nullptr);
 
     ESString* vendorString = ESString::create("vendor");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NavigatorFunction->protoType().asESPointer()->asESObject(),
-        vendorString, vendorGetterFunction, nullptr);
+        NavigatorPrototypeObj, vendorString, vendorGetterFunction, nullptr);
 
     return NavigatorFunction;
 }

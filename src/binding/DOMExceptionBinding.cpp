@@ -24,19 +24,20 @@ using namespace escargot;
 static ESValue domexceptionConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMException");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMException");
+        THROW_EXCEPTION(msg);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    if (!arg0.isUndefinedOrNull()) {
-        value0 = toBrowserString(arg0);
-    }
     // Handle argument arg1
     String* value1 = String::fromUTF8("Error");
     if (!arg1.isUndefinedOrNull()) {
         value1 = toBrowserString(arg1);
+    }
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    if (!arg0.isUndefinedOrNull()) {
+        value0 = toBrowserString(arg0);
     }
     DOMException* result = nullptr;
     Document* callWith = fetchDocument(instance);

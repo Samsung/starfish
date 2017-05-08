@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "platform/location/PositionError.h"
 
 namespace StarFish {
@@ -27,7 +24,7 @@ using namespace escargot;
 static ESValue codeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(PositionError);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->code();
     // Return ESValue from native value
@@ -37,7 +34,7 @@ static ESValue codeGetterFunction(ESVMInstance* instance)
 static ESValue messageGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(PositionError);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->message();
     // Return ESValue from native value
@@ -52,66 +49,54 @@ ESFunctionObject* bindingPositionError(
     ESFunctionObject* PositionErrorFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  PositionErrorString, 0, true, true);
+    ESObject* PositionErrorPrototypeObj =
+        PositionErrorFunction->protoType().asESPointer()->asESObject();
     PositionErrorFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    PositionErrorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    PositionErrorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->m_instance->globalObject()
-                           ->objectPrototype());
+    PositionErrorPrototypeObj->forceNonVectorHiddenClass(false);
+    PositionErrorPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                ->m_instance->globalObject()
+                                                ->objectPrototype());
 
     // Bind for constants
     ESString* PERMISSION_DENIEDString = ESString::create("PERMISSION_DENIED");
     ESValue PERMISSION_DENIEDValue = ESValue(1);
-    PositionErrorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(PERMISSION_DENIEDString, false, true, false,
-                             PERMISSION_DENIEDValue);
+    PositionErrorPrototypeObj->defineDataProperty(
+        PERMISSION_DENIEDString, false, true, false, PERMISSION_DENIEDValue);
 
-    PositionErrorFunction->asESObject()->defineDataProperty(
+    PositionErrorFunction->defineDataProperty(
         PERMISSION_DENIEDString, false, true, false, PERMISSION_DENIEDValue);
 
     ESString* POSITION_UNAVAILABLEString =
         ESString::create("POSITION_UNAVAILABLE");
     ESValue POSITION_UNAVAILABLEValue = ESValue(2);
-    PositionErrorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(POSITION_UNAVAILABLEString, false, true, false,
-                             POSITION_UNAVAILABLEValue);
+    PositionErrorPrototypeObj->defineDataProperty(POSITION_UNAVAILABLEString,
+                                                  false, true, false,
+                                                  POSITION_UNAVAILABLEValue);
 
-    PositionErrorFunction->asESObject()->defineDataProperty(
-        POSITION_UNAVAILABLEString, false, true, false,
-        POSITION_UNAVAILABLEValue);
+    PositionErrorFunction->defineDataProperty(POSITION_UNAVAILABLEString, false,
+                                              true, false,
+                                              POSITION_UNAVAILABLEValue);
 
     ESString* TIMEOUTString = ESString::create("TIMEOUT");
     ESValue TIMEOUTValue = ESValue(3);
-    PositionErrorFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(TIMEOUTString, false, true, false, TIMEOUTValue);
+    PositionErrorPrototypeObj->defineDataProperty(TIMEOUTString, false, true,
+                                                  false, TIMEOUTValue);
 
-    PositionErrorFunction->asESObject()->defineDataProperty(
-        TIMEOUTString, false, true, false, TIMEOUTValue);
+    PositionErrorFunction->defineDataProperty(TIMEOUTString, false, true, false,
+                                              TIMEOUTValue);
 
     // Bind for attributes
     ESString* codeString = ESString::create("code");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        PositionErrorFunction->protoType().asESPointer()->asESObject(),
-        codeString, codeGetterFunction, nullptr);
+        PositionErrorPrototypeObj, codeString, codeGetterFunction, nullptr);
 
     ESString* messageString = ESString::create("message");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        PositionErrorFunction->protoType().asESPointer()->asESObject(),
-        messageString, messageGetterFunction, nullptr);
+        PositionErrorPrototypeObj, messageString, messageGetterFunction,
+        nullptr);
 
     return PositionErrorFunction;
 }

@@ -25,7 +25,8 @@ using namespace escargot;
 static ESValue xmlhttprequestConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "XMLHttpRequest");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "XMLHttpRequest");
+        THROW_EXCEPTION(msg);
     }
     XMLHttpRequest* result = nullptr;
     Document* callWith = fetchDocument(instance);
@@ -152,49 +153,9 @@ static ESValue responseTextGetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
-
-static ESValue open1Function(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 2) {
-        char buffer[2];
-        snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open1",
-                        "XMLHttpRequest", "2", buffer);
-    }
-    // Declare native value (empty when type is void)
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    value1 = toBrowserString(arg1);
-
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
-    // Call native function (nargs: 2)
-    try {
-        originalObj->open(value0, value1);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    // Return ESValue from native value
-    return ESValue(ESValue::ESUndefined);
-}
-
 static ESValue open2Function(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 3) {
-        char buffer[2];
-        snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "open2",
-                        "XMLHttpRequest", "3", buffer);
-    }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
@@ -234,19 +195,45 @@ static ESValue open2Function(ESVMInstance* instance)
     return ESValue(ESValue::ESUndefined);
 }
 
+static ESValue open1Function(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(XMLHttpRequest);
+    // Declare native value (empty when type is void)
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
+
+    // Call native function (nargs: 2)
+    try {
+        originalObj->open(value0, value1);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
 static ESValue openFunction(ESVMInstance* instance)
 {
     size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (false) {
-    } else if (argCount == 2) {
-        return open1Function(instance);
-    } else if (argCount >= 3 && argCount <= 5) {
+    if (argCount >= 3) {
         return open2Function(instance);
-    } else {
-        auto msg = ESString::create("Invalid arguments");
-        instance->throwError(ESValue(TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+
+    if (argCount >= 2) {
+        return open1Function(instance);
+    }
+
+    COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "", "XMLHttpRequest",
+                    SIGNATURE_NOT_FOUND);
+    THROW_EXCEPTION(msg);
 }
 
 static ESValue setRequestHeaderFunction(ESVMInstance* instance)
@@ -256,8 +243,10 @@ static ESValue setRequestHeaderFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "setRequestHeader", "XMLHttpRequest", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setRequestHeader",
+                        "XMLHttpRequest", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);

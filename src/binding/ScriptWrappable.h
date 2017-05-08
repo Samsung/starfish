@@ -72,80 +72,14 @@ bool isCallableScriptValue(ScriptValue v);
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
 
-#define DEFINE_FUNCTION(functionName, parentName)                         \
-    ESString* functionName##String = ESString::create(#functionName);     \
-    ESFunctionObject* functionName##Function = ESFunctionObject::create(  \
-        NULL, defaultFunction, functionName##String, 0, true, true);      \
-    functionName##Function->defineAccessorProperty(                       \
-        ESVMInstance::currentInstance()->strings().prototype.string(),    \
-        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), \
-        false, false, false);                                             \
-    functionName##Function->protoType()                                   \
-        .asESPointer()                                                    \
-        ->asESObject()                                                    \
-        ->forceNonVectorHiddenClass(false);                               \
-    functionName##Function->protoType()                                   \
-        .asESPointer()                                                    \
-        ->asESObject()                                                    \
-        ->set__proto__(parentName);
-
-#define DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentName)         \
-    ESString* functionName##String = ESString::create(#functionName);     \
-    ESFunctionObject* functionName##Function =                            \
-        ESFunctionObject::create(NULL, errorOnConstructorFunction,        \
-                                 functionName##String, 0, true, true);    \
-    functionName##Function->defineAccessorProperty(                       \
-        ESVMInstance::currentInstance()->strings().prototype.string(),    \
-        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), \
-        false, false, false);                                             \
-    functionName##Function->protoType()                                   \
-        .asESPointer()                                                    \
-        ->asESObject()                                                    \
-        ->forceNonVectorHiddenClass(false);                               \
-    functionName##Function->protoType()                                   \
-        .asESPointer()                                                    \
-        ->asESObject()                                                    \
-        ->set__proto__(parentName);
-
-#define DEFINE_FUNCTION_WITH_PARENTFUNC(functionName, parentFunction) \
-    DEFINE_FUNCTION(functionName, parentFunction->protoType())        \
-    functionName##Function->set__proto__(parentFunction);
-
-#define DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(functionName,          \
-                                                        parentFunction)        \
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentFunction->protoType()) \
-    functionName##Function->set__proto__(parentFunction);
-
-#define INVALID_INDEX (ESValue::ESInvalidIndexValue)
-#define TO_INDEX_UINT32(argValue, idx)                                        \
-    uint32_t idx;                                                             \
-    idx = argValue.toIndex();                                                 \
-    if (idx == INVALID_INDEX) {                                               \
-        double __number = argValue.toNumber();                                \
-        idx = __number < 0 ? INVALID_INDEX                                    \
-                           : (std::isnan(__number) ? 0 : (uint32_t)__number); \
-    }
-
-#define _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
-    throw new DOMException(INSTANCE, ERR_CODE, MSG);  \
+#define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
+    throw new DOMException(INSTANCE, ERR_CODE, MSG); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-#define _THROW_EXCEPTION(MSG)                               \
+#define THROW_EXCEPTION(MSG)                                \
     ESVMInstance::currentInstance()->throwError(            \
         ESValue(TypeError::create(ESString::create(MSG)))); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-
-#define THROW_EXCEPTION(TEMPLATE_STR, ...)          \
-    {                                               \
-        COMPOSE_MESSAGE(TEMPLATE_STR, __VA_ARGS__); \
-        _THROW_EXCEPTION(msg);                      \
-    }
-
-#define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, TEMPLATE_STR, ...) \
-    {                                                              \
-        COMPOSE_MESSAGE(TEMPLATE_STR, __VA_ARGS__);                \
-        _THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, msg);             \
-    }
 
 #define _CHECK_TYPEOF(v, type)                                              \
     (v.isObject() && (v.asESPointer()->asESObject()->extraData() ==         \
@@ -153,9 +87,9 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
      (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData()) \
           ->is##type()))
 
-#define CHECK_TYPEOF(v, type)             \
-    if (!_CHECK_TYPEOF(v, type)) {        \
-        _THROW_EXCEPTION(ILLEGAL_INVOKE); \
+#define CHECK_TYPEOF(v, type)            \
+    if (!_CHECK_TYPEOF(v, type)) {       \
+        THROW_EXCEPTION(ILLEGAL_INVOKE); \
     }
 
 #define GENERATE_THIS_AND_CHECK_TYPE(type)                         \

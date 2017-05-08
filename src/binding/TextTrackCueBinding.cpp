@@ -74,8 +74,10 @@ static ESValue startTimeSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                        "startTime", "TextTrackCue");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "startTime",
+                        "TextTrackCue");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
     }
     originalObj->setStartTime(value0);
     return ESValue();
@@ -99,8 +101,10 @@ static ESValue endTimeSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                        "endTime", "TextTrackCue");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "endTime",
+                        "TextTrackCue");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
     }
     originalObj->setEndTime(value0);
     return ESValue();

@@ -24,13 +24,15 @@ using namespace escargot;
 static ESValue htmlaudioelementConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "HTMLAudioElement");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW,
+                        "HTMLAudioElement");
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 1;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
     String* value0 = String::emptyString;
-    if (arg0.isUndefinedOrNull()) {
+    if (arg0.isUndefined()) {
         validArgCount--;
     } else {
         value0 = toBrowserString(arg0);

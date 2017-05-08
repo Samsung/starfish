@@ -293,21 +293,6 @@ static ESValue navigatorGetterFunction(ESVMInstance* instance)
 STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_FUNC_FOR_BINDING)
 #undef DECLARE_FUNC_FOR_BINDING
 
-#ifdef STARFISH_EXP
-static ESValue createHTMLDocumentFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(DOMImplementation);
-    DOMImplementation* impl = originalObj;
-    if (impl) {
-        Document* doc = impl->createHTMLDocument();
-        if (doc) {
-            return doc->scriptValue();
-        }
-    }
-    return ESValue(ESValue::ESNull);
-}
-#endif
-
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
     fetchData(this)->m_instance->setlocale(sf->locale());
@@ -390,40 +375,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         ESString::create("navigator"), navigatorGetterFunction, nullptr, true,
         false);
 
-/* 4.5.1 Interface DOMImplementation */
-#ifdef STARFISH_EXP
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(
-        DOMImplementation,
-        fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_fnDOMImplementation = DOMImplementationFunction;
-
-    DOMImplementationFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->defineDataProperty(
-            ESString::create("createHTMLDocument"), false, false, false,
-            ESFunctionObject::create(nullptr, createHTMLDocumentFunction,
-                                     ESString::create("createHTMLDocument"), 2,
-                                     false));
-#endif
-
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::initialize(fetchData(this)->m_instance);
 #endif
 }
-
-#define IMPL_EMPTY_BINDING(exportName, parentName)                           \
-    ESFunctionObject* binding##exportName(                                   \
-        ScriptBindingInstance* scriptBindingInstance)                        \
-    {                                                                        \
-        DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(                     \
-            exportName, fetchData(scriptBindingInstance)->fn##parentName()); \
-        return exportName##Function;                                         \
-    }
-
-// TODO PseudoElement may not be a binding target
-IMPL_EMPTY_BINDING(PseudoElement, Element);
-#undef IMPL_EMPTY_BINDING
 
 String* ScriptBindingInstance::evaluate(String* str)
 {

@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "StarFishConfig.h"
-#include "ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
 #include "dom/TextTrackCue.h"
 #include "dom/TextTrackCueList.h"
 
@@ -28,7 +25,7 @@ using namespace escargot;
 static ESValue lengthGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(TextTrackCueList);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->length();
     // Return ESValue from native value
@@ -44,22 +41,16 @@ ESFunctionObject* bindingTextTrackCueList(
     ESFunctionObject* TextTrackCueListFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
                                  TextTrackCueListString, 0, true, true);
+    ESObject* TextTrackCueListPrototypeObj =
+        TextTrackCueListFunction->protoType().asESPointer()->asESObject();
     TextTrackCueListFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    TextTrackCueListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    TextTrackCueListFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(fetchData(scriptBindingInstance)
-                           ->m_instance->globalObject()
-                           ->objectPrototype());
-    ESObject* TextTrackCueListPrototypeObj =
-        TextTrackCueListFunction->protoType().asESPointer()->asESObject();
+    TextTrackCueListPrototypeObj->forceNonVectorHiddenClass(false);
+    TextTrackCueListPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                   ->m_instance->globalObject()
+                                                   ->objectPrototype());
 
     // Bind for attributes
     ESString* lengthString = ESString::create("length");

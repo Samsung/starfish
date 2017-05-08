@@ -14,15 +14,11 @@
  *    limitations under the License.
  */
 
-#include "StarFish.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/Document.h"
 #include "dom/DOMException.h"
 #include "dom/Element.h"
-#include "dom/Node.h"
+#include "dom/Document.h"
 #include "dom/NodeList.h"
-#include "platform/window/Window.h"
+#include "dom/Node.h"
 
 namespace StarFish {
 
@@ -32,7 +28,7 @@ using namespace escargot;
 static ESValue nodeTypeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     result = originalObj->nodeType();
     // Return ESValue from native value
@@ -42,7 +38,7 @@ static ESValue nodeTypeGetterFunction(ESVMInstance* instance)
 static ESValue nodeNameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->nodeName();
     // Return ESValue from native value
@@ -52,7 +48,7 @@ static ESValue nodeNameGetterFunction(ESVMInstance* instance)
 static ESValue ownerDocumentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Document* result = nullptr;
     result = originalObj->ownerDocument();
     // Return ESValue from native value
@@ -65,7 +61,7 @@ static ESValue ownerDocumentGetterFunction(ESVMInstance* instance)
 static ESValue parentNodeGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     result = originalObj->parentNode();
     // Return ESValue from native value
@@ -78,7 +74,7 @@ static ESValue parentNodeGetterFunction(ESVMInstance* instance)
 static ESValue parentElementGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Element* result = nullptr;
     result = originalObj->parentElement();
     // Return ESValue from native value
@@ -91,7 +87,7 @@ static ESValue parentElementGetterFunction(ESVMInstance* instance)
 static ESValue childNodesGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     NodeList* result = nullptr;
     result = originalObj->childNodes();
     // Return ESValue from native value
@@ -102,7 +98,7 @@ static ESValue childNodesGetterFunction(ESVMInstance* instance)
 static ESValue firstChildGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     result = originalObj->firstChild();
     // Return ESValue from native value
@@ -115,7 +111,7 @@ static ESValue firstChildGetterFunction(ESVMInstance* instance)
 static ESValue lastChildGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     result = originalObj->lastChild();
     // Return ESValue from native value
@@ -128,7 +124,7 @@ static ESValue lastChildGetterFunction(ESVMInstance* instance)
 static ESValue previousSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     result = originalObj->previousSibling();
     // Return ESValue from native value
@@ -141,7 +137,7 @@ static ESValue previousSiblingGetterFunction(ESVMInstance* instance)
 static ESValue nextSiblingGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     result = originalObj->nextSibling();
     // Return ESValue from native value
@@ -154,7 +150,7 @@ static ESValue nextSiblingGetterFunction(ESVMInstance* instance)
 static ESValue nodeValueGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Nullable<String*> result = String::emptyString;
     result = originalObj->nodeValue();
     // Return ESValue from native value
@@ -181,7 +177,7 @@ static ESValue nodeValueSetterFunction(ESVMInstance* instance)
 static ESValue textContentGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Nullable<String*> result = String::emptyString;
     result = originalObj->textContent();
     // Return ESValue from native value
@@ -209,7 +205,7 @@ static ESValue textContentSetterFunction(ESVMInstance* instance)
 static ESValue hasChildNodesFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     // Call native function (nargs: 0)
     result = originalObj->hasChildNodes();
@@ -221,7 +217,7 @@ static ESValue hasChildNodesFunction(ESVMInstance* instance)
 static ESValue cloneNodeFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Node);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -248,10 +244,11 @@ static ESValue isEqualNodeFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "isEqualNode", "Node", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "isEqualNode", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -274,10 +271,12 @@ static ESValue compareDocumentPositionFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "compareDocumentPosition", "Node", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "compareDocumentPosition",
+                        "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     uint32_t result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -299,10 +298,11 @@ static ESValue containsFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "contains",
-                        "Node", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "contains", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     bool result;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -325,24 +325,25 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "insertBefore", "Node", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "insertBefore", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    Node* value0 = nullptr;
-    CHECK_TYPEOF(arg0, Node);
-    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Handle argument arg1
     Node* value1 = nullptr;
     if (!arg1.isUndefinedOrNull()) {
         CHECK_TYPEOF(arg1, Node);
         value1 = (Node*)(arg1.asESPointer()->asESObject()->extraPointerData());
     }
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
     // Call native function (nargs: 2)
     try {
         result = originalObj->insertBefore(value0, value1);
@@ -362,10 +363,11 @@ static ESValue appendChildFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "appendChild", "Node", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "appendChild", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -392,22 +394,23 @@ static ESValue replaceChildFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "replaceChild", "Node", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "replaceChild", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    Node* value0 = nullptr;
-    CHECK_TYPEOF(arg0, Node);
-    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Handle argument arg1
     Node* value1 = nullptr;
     CHECK_TYPEOF(arg1, Node);
     value1 = (Node*)(arg1.asESPointer()->asESObject()->extraPointerData());
+
+    // Handle argument arg0
+    Node* value0 = nullptr;
+    CHECK_TYPEOF(arg0, Node);
+    value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
 
     // Call native function (nargs: 2)
     try {
@@ -428,10 +431,11 @@ static ESValue removeChildFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeChild", "Node", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeChild", "Node", reason);
+        THROW_EXCEPTION(msg);
     }
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     Node* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
@@ -453,288 +457,305 @@ static ESValue removeChildFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(
-        Node, fetchData(scriptBindingInstance)->m_fnEventTarget);
+    // Bind for constructor
+    ESString* NodeString = ESString::create("Node");
+    ESFunctionObject* NodeFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, NodeString, 0, true, true);
+    ESObject* NodePrototypeObj =
+        NodeFunction->protoType().asESPointer()->asESObject();
+    NodeFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    NodePrototypeObj->forceNonVectorHiddenClass(false);
+    NodePrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget()->protoType());
+    NodeFunction->set__proto__(
+        fetchData(scriptBindingInstance)->fnEventTarget());
 
     // Bind for constants
     ESString* ELEMENT_NODEString = ESString::create("ELEMENT_NODE");
     ESValue ELEMENT_NODEValue = ESValue(1);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ELEMENT_NODEString, false, true, false, ELEMENT_NODEValue);
+    NodePrototypeObj->defineDataProperty(ELEMENT_NODEString, false, true, false,
+                                         ELEMENT_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        ELEMENT_NODEString, false, true, false, ELEMENT_NODEValue);
+    NodeFunction->defineDataProperty(ELEMENT_NODEString, false, true, false,
+                                     ELEMENT_NODEValue);
 
     ESString* ATTRIBUTE_NODEString = ESString::create("ATTRIBUTE_NODE");
     ESValue ATTRIBUTE_NODEValue = ESValue(2);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ATTRIBUTE_NODEString, false, true, false, ATTRIBUTE_NODEValue);
+    NodePrototypeObj->defineDataProperty(ATTRIBUTE_NODEString, false, true,
+                                         false, ATTRIBUTE_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        ATTRIBUTE_NODEString, false, true, false, ATTRIBUTE_NODEValue);
+    NodeFunction->defineDataProperty(ATTRIBUTE_NODEString, false, true, false,
+                                     ATTRIBUTE_NODEValue);
 
     ESString* TEXT_NODEString = ESString::create("TEXT_NODE");
     ESValue TEXT_NODEValue = ESValue(3);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        TEXT_NODEString, false, true, false, TEXT_NODEValue);
+    NodePrototypeObj->defineDataProperty(TEXT_NODEString, false, true, false,
+                                         TEXT_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(TEXT_NODEString, false, true,
-                                                   false, TEXT_NODEValue);
+    NodeFunction->defineDataProperty(TEXT_NODEString, false, true, false,
+                                     TEXT_NODEValue);
 
     ESString* CDATA_SECTION_NODEString = ESString::create("CDATA_SECTION_NODE");
     ESValue CDATA_SECTION_NODEValue = ESValue(4);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        CDATA_SECTION_NODEString, false, true, false, CDATA_SECTION_NODEValue);
+    NodePrototypeObj->defineDataProperty(CDATA_SECTION_NODEString, false, true,
+                                         false, CDATA_SECTION_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        CDATA_SECTION_NODEString, false, true, false, CDATA_SECTION_NODEValue);
+    NodeFunction->defineDataProperty(CDATA_SECTION_NODEString, false, true,
+                                     false, CDATA_SECTION_NODEValue);
 
     ESString* ENTITY_REFERENCE_NODEString =
         ESString::create("ENTITY_REFERENCE_NODE");
     ESValue ENTITY_REFERENCE_NODEValue = ESValue(5);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ENTITY_REFERENCE_NODEString, false, true, false,
-        ENTITY_REFERENCE_NODEValue);
+    NodePrototypeObj->defineDataProperty(ENTITY_REFERENCE_NODEString, false,
+                                         true, false,
+                                         ENTITY_REFERENCE_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(ENTITY_REFERENCE_NODEString,
-                                                   false, true, false,
-                                                   ENTITY_REFERENCE_NODEValue);
+    NodeFunction->defineDataProperty(ENTITY_REFERENCE_NODEString, false, true,
+                                     false, ENTITY_REFERENCE_NODEValue);
 
     ESString* ENTITY_NODEString = ESString::create("ENTITY_NODE");
     ESValue ENTITY_NODEValue = ESValue(6);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ENTITY_NODEString, false, true, false, ENTITY_NODEValue);
+    NodePrototypeObj->defineDataProperty(ENTITY_NODEString, false, true, false,
+                                         ENTITY_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        ENTITY_NODEString, false, true, false, ENTITY_NODEValue);
+    NodeFunction->defineDataProperty(ENTITY_NODEString, false, true, false,
+                                     ENTITY_NODEValue);
 
     ESString* PROCESSING_INSTRUCTION_NODEString =
         ESString::create("PROCESSING_INSTRUCTION_NODE");
     ESValue PROCESSING_INSTRUCTION_NODEValue = ESValue(7);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        PROCESSING_INSTRUCTION_NODEString, false, true, false,
-        PROCESSING_INSTRUCTION_NODEValue);
+    NodePrototypeObj->defineDataProperty(PROCESSING_INSTRUCTION_NODEString,
+                                         false, true, false,
+                                         PROCESSING_INSTRUCTION_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        PROCESSING_INSTRUCTION_NODEString, false, true, false,
-        PROCESSING_INSTRUCTION_NODEValue);
+    NodeFunction->defineDataProperty(PROCESSING_INSTRUCTION_NODEString, false,
+                                     true, false,
+                                     PROCESSING_INSTRUCTION_NODEValue);
 
     ESString* COMMENT_NODEString = ESString::create("COMMENT_NODE");
     ESValue COMMENT_NODEValue = ESValue(8);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        COMMENT_NODEString, false, true, false, COMMENT_NODEValue);
+    NodePrototypeObj->defineDataProperty(COMMENT_NODEString, false, true, false,
+                                         COMMENT_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        COMMENT_NODEString, false, true, false, COMMENT_NODEValue);
+    NodeFunction->defineDataProperty(COMMENT_NODEString, false, true, false,
+                                     COMMENT_NODEValue);
 
     ESString* DOCUMENT_NODEString = ESString::create("DOCUMENT_NODE");
     ESValue DOCUMENT_NODEValue = ESValue(9);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_NODEString, false, true, false, DOCUMENT_NODEValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_NODEString, false, true,
+                                         false, DOCUMENT_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_NODEString, false, true, false, DOCUMENT_NODEValue);
+    NodeFunction->defineDataProperty(DOCUMENT_NODEString, false, true, false,
+                                     DOCUMENT_NODEValue);
 
     ESString* DOCUMENT_TYPE_NODEString = ESString::create("DOCUMENT_TYPE_NODE");
     ESValue DOCUMENT_TYPE_NODEValue = ESValue(10);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_TYPE_NODEString, false, true, false, DOCUMENT_TYPE_NODEValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_TYPE_NODEString, false, true,
+                                         false, DOCUMENT_TYPE_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_TYPE_NODEString, false, true, false, DOCUMENT_TYPE_NODEValue);
+    NodeFunction->defineDataProperty(DOCUMENT_TYPE_NODEString, false, true,
+                                     false, DOCUMENT_TYPE_NODEValue);
 
     ESString* DOCUMENT_FRAGMENT_NODEString =
         ESString::create("DOCUMENT_FRAGMENT_NODE");
     ESValue DOCUMENT_FRAGMENT_NODEValue = ESValue(11);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_FRAGMENT_NODEString, false, true, false,
-        DOCUMENT_FRAGMENT_NODEValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_FRAGMENT_NODEString, false,
+                                         true, false,
+                                         DOCUMENT_FRAGMENT_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(DOCUMENT_FRAGMENT_NODEString,
-                                                   false, true, false,
-                                                   DOCUMENT_FRAGMENT_NODEValue);
+    NodeFunction->defineDataProperty(DOCUMENT_FRAGMENT_NODEString, false, true,
+                                     false, DOCUMENT_FRAGMENT_NODEValue);
 
     ESString* NOTATION_NODEString = ESString::create("NOTATION_NODE");
     ESValue NOTATION_NODEValue = ESValue(12);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        NOTATION_NODEString, false, true, false, NOTATION_NODEValue);
+    NodePrototypeObj->defineDataProperty(NOTATION_NODEString, false, true,
+                                         false, NOTATION_NODEValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        NOTATION_NODEString, false, true, false, NOTATION_NODEValue);
+    NodeFunction->defineDataProperty(NOTATION_NODEString, false, true, false,
+                                     NOTATION_NODEValue);
 
     ESString* DOCUMENT_POSITION_DISCONNECTEDString =
         ESString::create("DOCUMENT_POSITION_DISCONNECTED");
     ESValue DOCUMENT_POSITION_DISCONNECTEDValue = ESValue(0x01);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_DISCONNECTEDString, false, true, false,
-        DOCUMENT_POSITION_DISCONNECTEDValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_POSITION_DISCONNECTEDString,
+                                         false, true, false,
+                                         DOCUMENT_POSITION_DISCONNECTEDValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_DISCONNECTEDString, false, true, false,
-        DOCUMENT_POSITION_DISCONNECTEDValue);
+    NodeFunction->defineDataProperty(DOCUMENT_POSITION_DISCONNECTEDString,
+                                     false, true, false,
+                                     DOCUMENT_POSITION_DISCONNECTEDValue);
 
     ESString* DOCUMENT_POSITION_PRECEDINGString =
         ESString::create("DOCUMENT_POSITION_PRECEDING");
     ESValue DOCUMENT_POSITION_PRECEDINGValue = ESValue(0x02);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_PRECEDINGString, false, true, false,
-        DOCUMENT_POSITION_PRECEDINGValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_POSITION_PRECEDINGString,
+                                         false, true, false,
+                                         DOCUMENT_POSITION_PRECEDINGValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_PRECEDINGString, false, true, false,
-        DOCUMENT_POSITION_PRECEDINGValue);
+    NodeFunction->defineDataProperty(DOCUMENT_POSITION_PRECEDINGString, false,
+                                     true, false,
+                                     DOCUMENT_POSITION_PRECEDINGValue);
 
     ESString* DOCUMENT_POSITION_FOLLOWINGString =
         ESString::create("DOCUMENT_POSITION_FOLLOWING");
     ESValue DOCUMENT_POSITION_FOLLOWINGValue = ESValue(0x04);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_FOLLOWINGString, false, true, false,
-        DOCUMENT_POSITION_FOLLOWINGValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_POSITION_FOLLOWINGString,
+                                         false, true, false,
+                                         DOCUMENT_POSITION_FOLLOWINGValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_FOLLOWINGString, false, true, false,
-        DOCUMENT_POSITION_FOLLOWINGValue);
+    NodeFunction->defineDataProperty(DOCUMENT_POSITION_FOLLOWINGString, false,
+                                     true, false,
+                                     DOCUMENT_POSITION_FOLLOWINGValue);
 
     ESString* DOCUMENT_POSITION_CONTAINSString =
         ESString::create("DOCUMENT_POSITION_CONTAINS");
     ESValue DOCUMENT_POSITION_CONTAINSValue = ESValue(0x08);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_CONTAINSString, false, true, false,
-        DOCUMENT_POSITION_CONTAINSValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_POSITION_CONTAINSString,
+                                         false, true, false,
+                                         DOCUMENT_POSITION_CONTAINSValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_CONTAINSString, false, true, false,
-        DOCUMENT_POSITION_CONTAINSValue);
+    NodeFunction->defineDataProperty(DOCUMENT_POSITION_CONTAINSString, false,
+                                     true, false,
+                                     DOCUMENT_POSITION_CONTAINSValue);
 
     ESString* DOCUMENT_POSITION_CONTAINED_BYString =
         ESString::create("DOCUMENT_POSITION_CONTAINED_BY");
     ESValue DOCUMENT_POSITION_CONTAINED_BYValue = ESValue(0x10);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_CONTAINED_BYString, false, true, false,
-        DOCUMENT_POSITION_CONTAINED_BYValue);
+    NodePrototypeObj->defineDataProperty(DOCUMENT_POSITION_CONTAINED_BYString,
+                                         false, true, false,
+                                         DOCUMENT_POSITION_CONTAINED_BYValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
-        DOCUMENT_POSITION_CONTAINED_BYString, false, true, false,
-        DOCUMENT_POSITION_CONTAINED_BYValue);
+    NodeFunction->defineDataProperty(DOCUMENT_POSITION_CONTAINED_BYString,
+                                     false, true, false,
+                                     DOCUMENT_POSITION_CONTAINED_BYValue);
 
     ESString* DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICString =
         ESString::create("DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC");
     ESValue DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICValue = ESValue(0x20);
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
+    NodePrototypeObj->defineDataProperty(
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICString, false, true, false,
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICValue);
 
-    NodeFunction->asESObject()->defineDataProperty(
+    NodeFunction->defineDataProperty(
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICString, false, true, false,
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFICValue);
 
     // Bind for attributes
     ESString* nodeTypeString = ESString::create("nodeType");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), nodeTypeString,
-        nodeTypeGetterFunction, nullptr);
+        NodePrototypeObj, nodeTypeString, nodeTypeGetterFunction, nullptr);
 
     ESString* nodeNameString = ESString::create("nodeName");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), nodeNameString,
-        nodeNameGetterFunction, nullptr);
+        NodePrototypeObj, nodeNameString, nodeNameGetterFunction, nullptr);
 
     ESString* ownerDocumentString = ESString::create("ownerDocument");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(),
-        ownerDocumentString, ownerDocumentGetterFunction, nullptr);
+        NodePrototypeObj, ownerDocumentString, ownerDocumentGetterFunction,
+        nullptr);
 
     ESString* parentNodeString = ESString::create("parentNode");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), parentNodeString,
-        parentNodeGetterFunction, nullptr);
+        NodePrototypeObj, parentNodeString, parentNodeGetterFunction, nullptr);
 
     ESString* parentElementString = ESString::create("parentElement");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(),
-        parentElementString, parentElementGetterFunction, nullptr);
+        NodePrototypeObj, parentElementString, parentElementGetterFunction,
+        nullptr);
 
     ESString* childNodesString = ESString::create("childNodes");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), childNodesString,
-        childNodesGetterFunction, nullptr);
+        NodePrototypeObj, childNodesString, childNodesGetterFunction, nullptr);
 
     ESString* firstChildString = ESString::create("firstChild");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), firstChildString,
-        firstChildGetterFunction, nullptr);
+        NodePrototypeObj, firstChildString, firstChildGetterFunction, nullptr);
 
     ESString* lastChildString = ESString::create("lastChild");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), lastChildString,
-        lastChildGetterFunction, nullptr);
+        NodePrototypeObj, lastChildString, lastChildGetterFunction, nullptr);
 
     ESString* previousSiblingString = ESString::create("previousSibling");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(),
-        previousSiblingString, previousSiblingGetterFunction, nullptr);
+        NodePrototypeObj, previousSiblingString, previousSiblingGetterFunction,
+        nullptr);
 
     ESString* nextSiblingString = ESString::create("nextSibling");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(),
-        nextSiblingString, nextSiblingGetterFunction, nullptr);
+        NodePrototypeObj, nextSiblingString, nextSiblingGetterFunction,
+        nullptr);
 
     ESString* nodeValueString = ESString::create("nodeValue");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), nodeValueString,
-        nodeValueGetterFunction, nodeValueSetterFunction);
+        NodePrototypeObj, nodeValueString, nodeValueGetterFunction,
+        nodeValueSetterFunction);
 
     ESString* textContentString = ESString::create("textContent");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(),
-        textContentString, textContentGetterFunction,
+        NodePrototypeObj, textContentString, textContentGetterFunction,
         textContentSetterFunction);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("cloneNode"), true, true, true,
-        ESFunctionObject::create(nullptr, cloneNodeFunction,
-                                 ESString::create("cloneNode"), 0, false));
+    // Bind for functions
+    ESString* hasChildNodesString = ESString::create("hasChildNodes");
+    ESFunctionObject* hasChildNodesESFn = ESFunctionObject::create(
+        nullptr, hasChildNodesFunction, hasChildNodesString, 0, false);
+    NodePrototypeObj->defineDataProperty(hasChildNodesString, true, true, true,
+                                         hasChildNodesESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("hasChildNodes"), true, true, true,
-        ESFunctionObject::create(nullptr, hasChildNodesFunction,
-                                 ESString::create("hasChildNodes"), 0, false));
+    ESString* cloneNodeString = ESString::create("cloneNode");
+    ESFunctionObject* cloneNodeESFn = ESFunctionObject::create(
+        nullptr, cloneNodeFunction, cloneNodeString, 0, false);
+    NodePrototypeObj->defineDataProperty(cloneNodeString, true, true, true,
+                                         cloneNodeESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("isEqualNode"), true, true, true,
-        ESFunctionObject::create(nullptr, isEqualNodeFunction,
-                                 ESString::create("isEqualNode"), 1, false));
+    ESString* isEqualNodeString = ESString::create("isEqualNode");
+    ESFunctionObject* isEqualNodeESFn = ESFunctionObject::create(
+        nullptr, isEqualNodeFunction, isEqualNodeString, 1, false);
+    NodePrototypeObj->defineDataProperty(isEqualNodeString, true, true, true,
+                                         isEqualNodeESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("compareDocumentPosition"), true, true, true,
+    ESString* compareDocumentPositionString =
+        ESString::create("compareDocumentPosition");
+    ESFunctionObject* compareDocumentPositionESFn =
         ESFunctionObject::create(nullptr, compareDocumentPositionFunction,
-                                 ESString::create("compareDocumentPosition"), 1,
-                                 false));
+                                 compareDocumentPositionString, 1, false);
+    NodePrototypeObj->defineDataProperty(compareDocumentPositionString, true,
+                                         true, true,
+                                         compareDocumentPositionESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("contains"), true, true, true,
-        ESFunctionObject::create(nullptr, containsFunction,
-                                 ESString::create("contains"), 1, false));
+    ESString* containsString = ESString::create("contains");
+    ESFunctionObject* containsESFn = ESFunctionObject::create(
+        nullptr, containsFunction, containsString, 1, false);
+    NodePrototypeObj->defineDataProperty(containsString, true, true, true,
+                                         containsESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("appendChild"), true, true, true,
-        ESFunctionObject::create(nullptr, appendChildFunction,
-                                 ESString::create("appendChild"), 1, false));
+    ESString* insertBeforeString = ESString::create("insertBefore");
+    ESFunctionObject* insertBeforeESFn = ESFunctionObject::create(
+        nullptr, insertBeforeFunction, insertBeforeString, 2, false);
+    NodePrototypeObj->defineDataProperty(insertBeforeString, true, true, true,
+                                         insertBeforeESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("removeChild"), true, true, true,
-        ESFunctionObject::create(nullptr, removeChildFunction,
-                                 ESString::create("removeChild"), 1, false));
+    ESString* appendChildString = ESString::create("appendChild");
+    ESFunctionObject* appendChildESFn = ESFunctionObject::create(
+        nullptr, appendChildFunction, appendChildString, 1, false);
+    NodePrototypeObj->defineDataProperty(appendChildString, true, true, true,
+                                         appendChildESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("replaceChild"), true, true, true,
-        ESFunctionObject::create(nullptr, replaceChildFunction,
-                                 ESString::create("replaceChild"), 2, false));
+    ESString* replaceChildString = ESString::create("replaceChild");
+    ESFunctionObject* replaceChildESFn = ESFunctionObject::create(
+        nullptr, replaceChildFunction, replaceChildString, 2, false);
+    NodePrototypeObj->defineDataProperty(replaceChildString, true, true, true,
+                                         replaceChildESFn);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
-        ESString::create("insertBefore"), true, true, true,
-        ESFunctionObject::create(nullptr, insertBeforeFunction,
-                                 ESString::create("insertBefore"), 2, false));
+    ESString* removeChildString = ESString::create("removeChild");
+    ESFunctionObject* removeChildESFn = ESFunctionObject::create(
+        nullptr, removeChildFunction, removeChildString, 1, false);
+    NodePrototypeObj->defineDataProperty(removeChildString, true, true, true,
+                                         removeChildESFn);
+
     return NodeFunction;
 }
 }

@@ -26,7 +26,8 @@ using namespace escargot;
 static ESValue domparserConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMParser");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMParser");
+        THROW_EXCEPTION(msg);
     }
     DOMParser* result = nullptr;
     StarFish* callWith = fetchStarFish(instance);
@@ -43,20 +44,22 @@ static ESValue parseFromStringFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "parseFromString", "DOMParser", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Document* result = nullptr;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
+
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    value0 = toBrowserString(arg0);
 
     // Call native function (nargs: 2)
     try {

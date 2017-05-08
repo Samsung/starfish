@@ -14,9 +14,6 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
 #include "dom/HTMLHtmlElement.h"
 
 namespace StarFish {
@@ -30,20 +27,16 @@ ESFunctionObject* bindingHTMLHtmlElement(
     ESString* HTMLHtmlElementString = ESString::create("HTMLHtmlElement");
     ESFunctionObject* HTMLHtmlElementFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
-                                 HTMLHtmlElementString, 1, true, true);
+                                 HTMLHtmlElementString, 0, true, true);
+    ESObject* HTMLHtmlElementPrototypeObj =
+        HTMLHtmlElementFunction->protoType().asESPointer()->asESObject();
     HTMLHtmlElementFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    HTMLHtmlElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    HTMLHtmlElementFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->set__proto__(
-            fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
+    HTMLHtmlElementPrototypeObj->forceNonVectorHiddenClass(false);
+    HTMLHtmlElementPrototypeObj->set__proto__(
+        fetchData(scriptBindingInstance)->fnHTMLElement()->protoType());
     HTMLHtmlElementFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 

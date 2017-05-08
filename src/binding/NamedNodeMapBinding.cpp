@@ -39,8 +39,9 @@ static ESValue itemFunction(ESVMInstance* instance)
     GENERATE_THIS_AND_CHECK_TYPE(NamedNodeMap);
     // Class item getter by index
     if (instance->currentExecutionContext()->argumentCount() < 1) {
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "item",
-                        "NamedNodeMap", "1", "0");
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", "0");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "item", "NamedNodeMap", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Attr* result = nullptr;
@@ -68,8 +69,10 @@ static ESValue getNamedItemFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "getNamedItem", "NamedNodeMap", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "getNamedItem", "NamedNodeMap",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Attr* result = nullptr;
@@ -95,8 +98,10 @@ static ESValue setNamedItemFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "setNamedItem", "NamedNodeMap", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setNamedItem", "NamedNodeMap",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Attr* result = nullptr;
@@ -123,8 +128,10 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "removeNamedItem", "NamedNodeMap", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "removeNamedItem",
+                        "NamedNodeMap", reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     Attr* result = nullptr;

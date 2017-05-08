@@ -84,8 +84,10 @@ static ESValue timestampOffsetSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                        "timestampOffset", "SourceBuffer");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "timestampOffset",
+                        "SourceBuffer");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
     }
     originalObj->setTimestampOffset(value0);
     return ESValue();
@@ -120,8 +122,10 @@ static ESValue appendWindowStartSetterFunction(ESVMInstance* instance)
     double value0;
     value0 = arg0.toNumber();
     if (!std::isfinite(value0)) {
-        THROW_EXCEPTION(FAILED_TO_SET_NONFINITE_PROPERTY_WHERE_EXPECTED_DOUBLE,
-                        "appendWindowStart", "SourceBuffer");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "appendWindowStart",
+                        "SourceBuffer");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, reason);
+        THROW_EXCEPTION(msg);
     }
     originalObj->setAppendWindowStart(value0);
     return ESValue();
@@ -269,7 +273,6 @@ static ESValue onabortSetterFunction(ESVMInstance* instance)
 }
 
 // Implement for functions
-
 extern ESValue appendBufferSourceBufferFunction(ESVMInstance* instance);
 
 static ESValue abortFunction(ESVMInstance* instance)
@@ -294,8 +297,10 @@ static ESValue removeFunction(ESVMInstance* instance)
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH, "remove",
-                        "SourceBuffer", "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "remove", "SourceBuffer",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -307,6 +312,12 @@ static ESValue removeFunction(ESVMInstance* instance)
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
+    if (!std::isfinite(value0)) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_IS_NONFINITE, "remove",
+                        "SourceBuffer");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, reason);
+        THROW_EXCEPTION(msg);
+    }
 
     // Call native function (nargs: 2)
     try {

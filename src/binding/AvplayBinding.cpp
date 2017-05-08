@@ -165,9 +165,19 @@ static ESValue seekToFunction(ESVMInstance* instance)
 
 ESFunctionObject* bindingavplay(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(avplay, fetchData(scriptBindingInstance)
-                                                ->m_instance->globalObject()
-                                                ->objectPrototype());
+    ESString* avplayString = ESString::create("avplay");
+    ESFunctionObject* avplayFunction = ESFunctionObject::create(
+        nullptr, errorOnConstructorFunction, avplayString, 0, true, true);
+    ESObject* avplayPrototypeObj =
+        avplayFunction->protoType().asESPointer()->asESObject();
+    avplayFunction->defineAccessorProperty(
+        ESVMInstance::currentInstance()->strings().prototype.string(),
+        ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
+        false, false);
+    avplayPrototypeObj->forceNonVectorHiddenClass(false);
+    avplayFunction->set__proto__(fetchData(scriptBindingInstance)
+                                     ->m_instance->globalObject()
+                                     ->objectPrototype());
 
     avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(
         ESString::create("open"), true, true, true,

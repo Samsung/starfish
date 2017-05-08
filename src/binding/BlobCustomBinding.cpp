@@ -40,9 +40,10 @@ ESValue blobConstructor(ESVMInstance* instance)
     if (!firstArg.isObject() ||
         (lengthValue = (obj = firstArg.toObject())->get(lengthString))
             .isUndefinedOrNull()) {
-        THROW_EXCEPTION(
-            FAILED_TO_CONSTRUCT_BECAUSE_ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE,
-            "Blob", "1st");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE, "0",
+                        "blobParts");
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "Blob", reason);
+        THROW_EXCEPTION(msg);
     }
 
     size_t length = (size_t)lengthValue.toNumber();

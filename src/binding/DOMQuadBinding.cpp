@@ -31,14 +31,17 @@ extern ESValue toESValueFromDOMPointInit(ESVMInstance* instance,
 static ESValue domquadConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMQuad");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "DOMQuad");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 4) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "DOMQuad",
-                        "4", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "4", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString", "DOMQuad",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
@@ -111,11 +114,18 @@ static ESValue p4GetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-static ESValue boundsGetterFunction(ESVMInstance* instance)
+// Implement for functions
+static ESValue getBoundsFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMQuad);
-    DOMQuad* quad = originalObj;
-    return quad->bounds()->scriptValue();
+    // Declare native value (empty when type is void)
+    DOMRect* result = nullptr;
+    // Call native function (nargs: 0)
+    result = originalObj->getBounds();
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
 ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
@@ -152,11 +162,13 @@ ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DOMQuadPrototypeObj, p4String, p4GetterFunction, nullptr);
 
-    ESString* boundsString = ESString::create("bounds");
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMQuadPrototypeObj, boundsString, boundsGetterFunction, nullptr);
-
     // Bind for functions
+    ESString* getBoundsString = ESString::create("getBounds");
+    ESFunctionObject* getBoundsESFn = ESFunctionObject::create(
+        nullptr, getBoundsFunction, getBoundsString, 0, false);
+    DOMQuadPrototypeObj->defineDataProperty(getBoundsString, true, true, true,
+                                            getBoundsESFn);
+
     return DOMQuadFunction;
 }
 }

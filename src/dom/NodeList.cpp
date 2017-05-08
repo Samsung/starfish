@@ -76,12 +76,12 @@ void NodeList::init(ScriptBindingInstance* instance)
                                            enumerateCallbackFunction, true);
 }
 
-size_t NodeList::length() const
+uint32_t NodeList::length() const
 {
     return m_nodeListImpl.length();
 }
 
-Node* NodeList::item(unsigned long index)
+Node* NodeList::item(uint32_t index)
 {
     return m_nodeListImpl.item(index);
 }

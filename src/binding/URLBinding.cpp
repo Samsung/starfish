@@ -14,10 +14,8 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-
-#include "dom/DOMException.h"
+#include "extra/MediaSource.h"
+#include "extra/Blob.h"
 #include "util/URL.h"
 
 namespace StarFish {
@@ -28,14 +26,17 @@ using namespace escargot;
 static ESValue urlConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "URL");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "URL");
+        THROW_EXCEPTION(msg);
     }
     size_t argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_CONSTRUCT_BECAUSE_ARGS_NOT_ENOUGH, "URL", "1",
-                        buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "parseFromString", "URL",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -50,6 +51,7 @@ static ESValue urlConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
+
     URL* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -65,7 +67,7 @@ static ESValue urlConstructor(ESVMInstance* instance)
 static ESValue hrefGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->href();
     // Return ESValue from native value
@@ -88,7 +90,7 @@ static ESValue hrefSetterFunction(ESVMInstance* instance)
 static ESValue originGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->origin();
     // Return ESValue from native value
@@ -100,7 +102,7 @@ static ESValue originGetterFunction(ESVMInstance* instance)
 static ESValue protocolGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->protocol();
     // Return ESValue from native value
@@ -123,7 +125,7 @@ static ESValue protocolSetterFunction(ESVMInstance* instance)
 static ESValue usernameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->username();
     // Return ESValue from native value
@@ -146,7 +148,7 @@ static ESValue usernameSetterFunction(ESVMInstance* instance)
 static ESValue passwordGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->password();
     // Return ESValue from native value
@@ -169,7 +171,7 @@ static ESValue passwordSetterFunction(ESVMInstance* instance)
 static ESValue hostGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->host();
     // Return ESValue from native value
@@ -192,7 +194,7 @@ static ESValue hostSetterFunction(ESVMInstance* instance)
 static ESValue hostnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->hostname();
     // Return ESValue from native value
@@ -215,7 +217,7 @@ static ESValue hostnameSetterFunction(ESVMInstance* instance)
 static ESValue portGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->port();
     // Return ESValue from native value
@@ -238,7 +240,7 @@ static ESValue portSetterFunction(ESVMInstance* instance)
 static ESValue pathnameGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->pathname();
     // Return ESValue from native value
@@ -261,7 +263,7 @@ static ESValue pathnameSetterFunction(ESVMInstance* instance)
 static ESValue searchGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->search();
     // Return ESValue from native value
@@ -284,7 +286,7 @@ static ESValue searchSetterFunction(ESVMInstance* instance)
 static ESValue hashGetterFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(URL);
-    // Declare return value (empty when void)
+    // Declare native value (empty when type is void)
     String* result = String::emptyString;
     result = originalObj->hash();
     // Return ESValue from native value
@@ -329,6 +331,7 @@ static ESValue createObjectURL1Function(ESVMInstance* instance)
     // Handle argument arg0
     Blob* value0 = nullptr;
     value0 = (Blob*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
     // Call native function (nargs: 1)
     result = URL::createObjectURL(value0);
 
@@ -358,6 +361,7 @@ static ESValue createObjectURL2Function(ESVMInstance* instance)
     MediaSource* value0 = nullptr;
     value0 =
         (MediaSource*)(arg0.asESPointer()->asESObject()->extraPointerData());
+
     // Call native function (nargs: 1)
     result = URL::createObjectURL(value0);
 
@@ -379,8 +383,8 @@ static ESValue createObjectURLFunction(ESVMInstance* instance)
     }
 #endif
 
-    THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_SIGNATURE_NOT_FOUND,
-                    "createObjectURL", "URL");
+    COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "", "URL", SIGNATURE_NOT_FOUND);
+    THROW_EXCEPTION(msg);
 }
 
 static ESValue revokeObjectURLFunction(ESVMInstance* instance)
@@ -390,14 +394,17 @@ static ESValue revokeObjectURLFunction(ESVMInstance* instance)
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        THROW_EXCEPTION(FAILED_TO_EXECUTE_BECAUSE_ARGS_NOT_ENOUGH,
-                        "revokeObjectURL", "URL", "1", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "revokeObjectURL", "URL",
+                        reason);
+        THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
+
     StarFish* callWith = fetchStarFish(instance);
     // Call native function (nargs: 1)
     URL::revokeObjectURL(callWith, value0);
@@ -412,20 +419,16 @@ ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
     ESString* URLString = ESString::create("URL");
     ESFunctionObject* URLFunction = ESFunctionObject::create(
         nullptr, urlConstructor, URLString, 1, true, true);
+    ESObject* URLPrototypeObj =
+        URLFunction->protoType().asESPointer()->asESObject();
     URLFunction->defineAccessorProperty(
         ESVMInstance::currentInstance()->strings().prototype.string(),
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
-    URLFunction->protoType()
-        .asESPointer()
-        ->asESObject()
-        ->forceNonVectorHiddenClass(false);
-    URLFunction->protoType().asESPointer()->asESObject()->set__proto__(
-        fetchData(scriptBindingInstance)
-            ->m_instance->globalObject()
-            ->objectPrototype());
-    ESObject* URLPrototypeObj =
-        URLFunction->protoType().asESPointer()->asESObject();
+    URLPrototypeObj->forceNonVectorHiddenClass(false);
+    URLPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                      ->m_instance->globalObject()
+                                      ->objectPrototype());
 
 // Bind for attributes
 #ifdef STARFISH_ENABLE_TEST
@@ -511,15 +514,16 @@ ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
 
     ESString* createObjectURLString = ESString::create("createObjectURL");
     ESFunctionObject* createObjectURLESFn = ESFunctionObject::create(
-        nullptr, createObjectURLFunction, createObjectURLString, 1, false);
-    URLFunction->defineDataProperty(createObjectURLString, true, true, true,
-                                    createObjectURLESFn);
+        nullptr, createObjectURLFunction, createObjectURLString, 0, false);
+    URLPrototypeObj->defineDataProperty(createObjectURLString, true, true, true,
+                                        createObjectURLESFn);
 
     ESString* revokeObjectURLString = ESString::create("revokeObjectURL");
     ESFunctionObject* revokeObjectURLESFn = ESFunctionObject::create(
         nullptr, revokeObjectURLFunction, revokeObjectURLString, 1, false);
     URLFunction->defineDataProperty(revokeObjectURLString, true, true, true,
                                     revokeObjectURLESFn);
+
     return URLFunction;
 }
 }

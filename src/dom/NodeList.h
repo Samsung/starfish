@@ -38,8 +38,8 @@ public:
         return true;
     }
 
-    size_t length() const;
-    Node* item(unsigned long index);
+    uint32_t length() const;
+    Node* item(uint32_t index);
     NodeListImpl& getNodeListImpl()
     {
         return m_nodeListImpl;

@@ -24,24 +24,29 @@ using namespace escargot;
 static ESValue htmlimageelementConstructor(ESVMInstance* instance)
 {
     if (!instance->currentExecutionContext()->isNewExpression()) {
-        THROW_EXCEPTION(CALLED_CONSTRUCTOR_WITHOUT_NEW, "HTMLImageElement");
+        COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW,
+                        "HTMLImageElement");
+        THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 2;
+    bool argCounting = true;
     ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
     ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    // Handle argument arg0
-    uint32_t value0;
-    if (arg0.isUndefinedOrNull()) {
-        validArgCount--;
-    } else {
-        value0 = arg0.toUint32();
-    }
     // Handle argument arg1
     uint32_t value1;
-    if (arg1.isUndefinedOrNull()) {
+    if (argCounting && arg1.isUndefined()) {
         validArgCount--;
     } else {
+        argCounting = false;
         value1 = arg1.toUint32();
+    }
+    // Handle argument arg0
+    uint32_t value0;
+    if (argCounting && arg0.isUndefined()) {
+        validArgCount--;
+    } else {
+        argCounting = false;
+        value0 = arg0.toUint32();
     }
     HTMLImageElement* result = nullptr;
     Document* callWith = fetchDocument(instance);
