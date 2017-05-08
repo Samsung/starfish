@@ -501,31 +501,26 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
             Element* elem = obj->asElement();
             ESValue argValue =
                 instance->currentExecutionContext()->readArgument(0);
-
-            if (argValue.isESString()) {
-                try {
-                    ESString* argStr = argValue.asESString();
-
-                    if (*argStr == *(strings->emptyString.string())) {
-                        throw new DOMException(
-                            elem->document()->window()->scriptBindingInstance(),
-                            DOMException::Code::DOM_EXCEPTION,
-                            "Failed to execute 'querySelector' "
-                            "on 'Element': The provided "
-                            "selector is empty.");
-                    }
-
-                    Element* result =
-                        elem->querySelector(toBrowserString(argStr));
-                    if (result != nullptr) {
-                        return result->scriptValue();
-                    }
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        elem->document()->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute 'querySelector' "
+                        "on 'Element': The provided "
+                        "selector is empty.");
                 }
-            } else if (argValue.isNull() || argValue.isUndefined()) {
-                return ESValue(ESValue::ESNull);
+
+                Element* result = elem->querySelector(toBrowserString(argStr));
+                if (result != nullptr) {
+                    return result->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
             auto msg = ESString::create(
@@ -556,31 +551,27 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
             Element* elem = obj->asElement();
             ESValue argValue =
                 instance->currentExecutionContext()->readArgument(0);
-
-            if (argValue.isESString()) {
-                try {
-                    ESString* argStr = argValue.asESString();
-
-                    if (*argStr == *(strings->emptyString.string())) {
-                        throw new DOMException(
-                            elem->document()->window()->scriptBindingInstance(),
-                            DOMException::Code::DOM_EXCEPTION,
-                            "Failed to execute "
-                            "'querySelectorAll' on 'Element': "
-                            "The provided selector is empty.");
-                    }
-
-                    NodeList* result =
-                        elem->querySelectorAll(toBrowserString(argStr));
-                    if (result != nullptr) {
-                        return result->scriptValue();
-                    }
-                } catch (DOMException* e) {
-                    ESVMInstance::currentInstance()->throwError(
-                        e->scriptValue());
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        elem->document()->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute "
+                        "'querySelectorAll' on 'Element': "
+                        "The provided selector is empty.");
                 }
-            } else if (argValue.isNull() || argValue.isUndefined()) {
-                return ESValue(ESValue::ESNull);
+
+                NodeList* list =
+                    elem->querySelectorAll(toBrowserString(argStr));
+                if (list != nullptr) {
+                    return list->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
             }
         } else {
             auto msg = ESString::create(
@@ -805,7 +796,7 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
         .asESPointer()
         ->asESObject()
         ->defineDataProperty(
-            ESString::create("querySelector"), false, false, false,
+            ESString::create("querySelector"), true, true, true,
             ESFunctionObject::create(NULL, querySelectorFunction,
                                      ESString::create("querySelector"), 1,
                                      false));
@@ -814,7 +805,7 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
         .asESPointer()
         ->asESObject()
         ->defineDataProperty(
-            ESString::create("querySelectorAll"), false, false, false,
+            ESString::create("querySelectorAll"), true, true, true,
             ESFunctionObject::create(NULL, querySelectorAllFunction,
                                      ESString::create("querySelectorAll"), 1,
                                      false));

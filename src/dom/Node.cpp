@@ -1044,7 +1044,7 @@ void Node::parseSelector(
 
     if (selectorListContainer.size() < 1) {
         throw new DOMException(m_document->scriptBindingInstance(),
-                               DOMException::DOM_EXCEPTION,
+                               DOMException::SYNTAX_ERR,
                                "Failed to execute 'querySelector' on "
                                "'Document': The provided selector is invalid.");
     }
