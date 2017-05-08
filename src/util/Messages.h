@@ -33,11 +33,11 @@ static const char* ILLEGAL_INVOKE = "Illegal invocation";
 static const char* ARGS_NOT_ENOUGH = "needs %s parameter, but only %s present.";
 static const char* ARG_TYPE_IS_NONFINITE =
     "The provided double value is non-finite";
-static const char* ARG_TYPE_MISMATCH = "parameter %d ('%s') is not a(n) %s.";
+static const char* ARG_TYPE_MISMATCH = "parameter %s ('%s') is not a(n) %s.";
 static const char* ARG_TYPE_MISMATCH_2 =
-    "parameter %d ('%s') must be either a '%s' or '%s' element.";
+    "parameter %s ('%s') must be either a '%s' or '%s' element.";
 static const char* ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE =
-    "The parameter %d ('%s') is neither an array, nor does it have indexed "
+    "The parameter %s ('%s') is neither an array, nor does it have indexed "
     "properties.";
 static const char* ARG_TYPE_MISMATCH_WITH_ENUM =
     "The provided value is not a valid enum value of type %s.";
