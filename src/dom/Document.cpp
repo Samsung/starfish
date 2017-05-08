@@ -1161,9 +1161,10 @@ HTMLElement* Document::body()
 void Document::setBody(HTMLElement* element)
 {
     if (!(element && element->isHTMLBodyElement())) {
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_2, "1", "body",
+                        "HTMLBodyElement", "HTMLFrameSetElement");
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "body", "Document",
-                        "'body' must be either a 'HTMLBodyElement' or "
-                        "'HTMLFrameSetElement'.");
+                        reason);
         THROW_DOM_EXCEPTION(m_document->window()->scriptBindingInstance(),
                             DOMException::HIERARCHY_REQUEST_ERR, msg);
     }
