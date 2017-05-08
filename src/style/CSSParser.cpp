@@ -1890,7 +1890,6 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
 
     bool valid = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
-    // var declarations = [];
     if (list.size()) {
         CSSToken* token = currentToken();
         if (token->isSymbol('{')) {
@@ -1912,24 +1911,28 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
             valid = true;
         }
     } else if (!validSelector) {
-        // selector is invalid so the whole rule is invalid with it
-        CSSToken* token = getToken(true, true);
-        while (!token->isSymbol('{') && token->isNotNull()) {
-            token = getToken(true, false);
-        }
-        if (token->isSymbol('{')) {
-            token = getToken(true, false);
-        }
-        while (true) {
-            if (!token->isNotNull()) {
-                return;
+        if (isQueryingSelector) {
+            return;
+        } else {
+            // selector is invalid so the whole rule is invalid with it
+            CSSToken* token = getToken(true, true);
+            while (!token->isSymbol('{') && token->isNotNull()) {
+                token = getToken(true, false);
             }
-            if (token->isSymbol('}')) {
-                return;
-            } else {
-                parseDeclaration(token, declarations);
+            if (token->isSymbol('{')) {
+                token = getToken(true, false);
             }
-            token = getToken(true, false);
+            while (true) {
+                if (!token->isNotNull()) {
+                    return;
+                }
+                if (token->isSymbol('}')) {
+                    return;
+                } else {
+                    parseDeclaration(token, declarations);
+                }
+                token = getToken(true, false);
+            }
         }
     }
 
