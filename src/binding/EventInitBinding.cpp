@@ -22,6 +22,10 @@ using namespace escargot;
 
 EventInit toEventInitFromESValue(ESVMInstance* instance, ESValue& from)
 {
+    if (from.isUndefinedOrNull()) {
+        // Return empty dictionary
+        return EventInit();
+    }
     if (!from.isObject()) {
         auto msg =
             ESString::create("Failed to generate EventInit from non-object");
