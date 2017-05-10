@@ -341,4 +341,10 @@ void DOMTokenList::validateToken(String* token)
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
 }
+
+void DOMTokenList::setValue(String* value)
+{
+    // Unimplemented
+    STARFISH_ASSERT_NOT_REACHED()
+}
 }
