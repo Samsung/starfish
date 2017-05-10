@@ -1,6 +1,5 @@
 // https://html.spec.whatwg.org/multipage/#navigatorid
-[PartialInterface,
- NoInterfaceObject,
+[NoInterfaceObject,
  Exposed=(Window,Worker)]
 interface NavigatorID {
   readonly attribute DOMString appCodeName; // constant "Mozilla"

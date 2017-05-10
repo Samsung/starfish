@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/multipage/interaction.html#elementcontenteditable
 
-[PartialInterface, NoInterfaceObject]
+[NoInterfaceObject]
 interface ElementContentEditable {
   [Unimplemented, CEReactions] attribute DOMString contentEditable;
   [Unimplemented] readonly attribute boolean isContentEditable;
