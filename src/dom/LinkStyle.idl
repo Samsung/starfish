@@ -1,7 +1,6 @@
 // https://drafts.csswg.org/cssom/#the-linkstyle-interface
 
-[ParitalInterface,
- NoInterfaceObject]
+[NoInterfaceObject]
 interface LinkStyle {
   [Unimplemented] readonly attribute StyleSheet? sheet;
 };

@@ -1,7 +1,6 @@
 // https://drafts.csswg.org/cssom/#elementcssinlinestyle
 
-[PartialInterface,
- NoInterfaceObject]
+[NoInterfaceObject]
 interface ElementCSSInlineStyle {
   // FIXME readonly property but seems to have a Setter
   // [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;

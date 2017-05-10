@@ -1,6 +1,5 @@
 // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
-[PartialInterface,
-NoInterfaceObject]
+[NoInterfaceObject]
 interface GlobalEventHandlers {
   attribute EventHandler onabort;
   [Unimplemented] attribute EventHandler onauxclick;
