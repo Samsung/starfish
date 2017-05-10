@@ -63,18 +63,8 @@ public:
     // Constructor exposed to script.
     DOMException(Document* document, String* message, String* name);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMException()->protoType());
-        scriptObject()->defineDataProperty(ESString::create("code"), false,
-                                           false, false, ESValue(m_code));
-    }
-
-    virtual bool isDOMException() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDOMException() const override;
 
     String* message()
     {

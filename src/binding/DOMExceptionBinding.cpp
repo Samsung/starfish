@@ -298,4 +298,17 @@ ESFunctionObject* bindingDOMException(
 
     return DOMExceptionFunction;
 }
+
+void DOMException::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMException()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMException::isDOMException() const
+{
+    return true;
+}
 }

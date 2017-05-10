@@ -29,16 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnTouchEvent()->protoType());
-    }
-
-    virtual bool isTouchEvent() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isTouchEvent() const override;
 };
 }
 

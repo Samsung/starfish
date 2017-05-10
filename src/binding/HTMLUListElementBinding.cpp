@@ -42,6 +42,20 @@ ESFunctionObject* bindingHTMLUListElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLUListElementFunction;
+}
+
+void HTMLUListElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLUListElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLUListElement::isHTMLUListElement() const
+{
+    return true;
 }
 }

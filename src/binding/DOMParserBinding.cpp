@@ -56,11 +56,9 @@ static ESValue parseFromStringFunction(ESVMInstance* instance)
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 2)
     try {
         result = originalObj->parseFromString(value0, value1);
@@ -98,6 +96,19 @@ ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
                                               true, parseFromStringESFn);
 
     return DOMParserFunction;
+}
+
+void DOMParser::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMParser()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMParser::isDOMParser() const
+{
+    return true;
 }
 }
 #endif

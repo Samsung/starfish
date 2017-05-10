@@ -38,16 +38,8 @@ public:
         return m_starFish;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnGeolocation()->protoType());
-    }
-
-    virtual bool isGeolocation() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isGeolocation() const override;
 
     virtual void getCurrentPosition(GeoPositionCallback cb, void* cbData,
                                     GeoPositionErrorCallback errorCb,

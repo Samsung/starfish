@@ -34,16 +34,8 @@ public:
         return m_starFish;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHistory()->protoType());
-    }
-
-    virtual bool isHistory() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHistory() const override;
 
     uint32_t length();
     ScriptValue state();

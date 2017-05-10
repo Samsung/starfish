@@ -54,7 +54,6 @@ static ESValue addEventListenerFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 2-3)
     if (validArgCount == 2) {
         originalObj->addEventListener(value0, value1);
@@ -98,7 +97,6 @@ static ESValue removeEventListenerFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 2-3)
     if (validArgCount == 2) {
         originalObj->removeEventListener(value0, value1);
@@ -129,7 +127,6 @@ static ESValue dispatchEventFunction(ESVMInstance* instance)
     Event* value0 = nullptr;
     CHECK_TYPEOF(arg0, Event);
     value0 = (Event*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     result = originalObj->dispatchEvent(value0);
 
@@ -180,5 +177,18 @@ ESFunctionObject* bindingEventTarget(
                                                 true, dispatchEventESFn);
 
     return EventTargetFunction;
+}
+
+void EventTarget::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnEventTarget()->protoType());
+
+    postInit(instance);
+}
+
+bool EventTarget::isEventTarget() const
+{
+    return true;
 }
 }

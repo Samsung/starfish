@@ -148,6 +148,9 @@ public:
     }
 
     virtual void init(ScriptBindingInstance* instance) = 0;
+    virtual void postInit(ScriptBindingInstance* instance)
+    {
+    }
 
     bool hasProperty(String* name);
 

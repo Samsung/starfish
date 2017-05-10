@@ -710,4 +710,16 @@ ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
 
     return ElementFunction;
 }
+
+void Element::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnElement()->protoType());
+
+    postInit(instance);
+}
+
+bool Element::isElement() const
+{
+    return true;
+}
 }

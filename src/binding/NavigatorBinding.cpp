@@ -131,4 +131,17 @@ ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
 
     return NavigatorFunction;
 }
+
+void Navigator::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnNavigator()->protoType());
+
+    postInit(instance);
+}
+
+bool Navigator::isNavigator() const
+{
+    return true;
+}
 }

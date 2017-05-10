@@ -30,11 +30,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLStyleElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLStyleElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -42,11 +39,6 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLStyleElement() const override
-    {
-        return true;
-    }
 
     String* type();
     void setType(String* type);

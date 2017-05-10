@@ -54,7 +54,6 @@ static ESValue progresseventConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     ProgressEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -130,5 +129,18 @@ ESFunctionObject* bindingProgressEvent(
         ProgressEventPrototypeObj, totalString, totalGetterFunction, nullptr);
 
     return ProgressEventFunction;
+}
+
+void ProgressEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnProgressEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool ProgressEvent::isProgressEvent() const
+{
+    return true;
 }
 }

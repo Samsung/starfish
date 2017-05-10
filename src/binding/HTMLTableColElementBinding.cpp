@@ -71,4 +71,17 @@ ESFunctionObject* bindingHTMLTableColElement(
 
     return HTMLTableColElementFunction;
 }
+
+void HTMLTableColElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableColElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableColElement::isHTMLTableColElement() const
+{
+    return true;
+}
 }

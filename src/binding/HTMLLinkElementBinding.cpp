@@ -122,4 +122,17 @@ ESFunctionObject* bindingHTMLLinkElement(
 
     return HTMLLinkElementFunction;
 }
+
+void HTMLLinkElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLLinkElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLLinkElement::isHTMLLinkElement() const
+{
+    return true;
+}
 }

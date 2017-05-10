@@ -43,4 +43,17 @@ ESFunctionObject* bindingHTMLParagraphElement(
 
     return HTMLParagraphElementFunction;
 }
+
+void HTMLParagraphElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLParagraphElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLParagraphElement::isHTMLParagraphElement() const
+{
+    return true;
+}
 }

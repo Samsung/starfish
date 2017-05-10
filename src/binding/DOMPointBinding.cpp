@@ -179,6 +179,20 @@ ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBindingInstance)
         DOMPointPrototypeObj, wString, wGetterFunction, wSetterFunction);
 
     // Bind for functions
+
     return DOMPointFunction;
+}
+
+void DOMPoint::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMPoint()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMPoint::isDOMPoint() const
+{
+    return true;
 }
 }

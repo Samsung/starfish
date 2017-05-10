@@ -70,4 +70,17 @@ ESFunctionObject* bindingHTMLStyleElement(
 
     return HTMLStyleElementFunction;
 }
+
+void HTMLStyleElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLStyleElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLStyleElement::isHTMLStyleElement() const
+{
+    return true;
+}
 }

@@ -51,10 +51,8 @@ public:
         return new URL(url, baseURL);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(fetchData(instance)->fnURL()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isURL() const override;
 
     String* baseURI() const;
 

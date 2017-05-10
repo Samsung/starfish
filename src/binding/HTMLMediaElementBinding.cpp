@@ -402,7 +402,6 @@ static ESValue canPlayTypeFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = originalObj->canPlayType(value0);
 
@@ -473,7 +472,6 @@ static ESValue addTextTrackFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 3)
     result = originalObj->addTextTrack(value0, value1, value2);
 
@@ -714,6 +712,19 @@ ESFunctionObject* bindingHTMLMediaElement(
         addTextTrackString, true, true, true, addTextTrackESFn);
 
     return HTMLMediaElementFunction;
+}
+
+void HTMLMediaElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLMediaElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLMediaElement::isHTMLMediaElement() const
+{
+    return true;
 }
 }
 #endif

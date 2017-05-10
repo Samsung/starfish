@@ -152,4 +152,17 @@ ESFunctionObject* bindingHTMLVideoElement(
 
     return HTMLVideoElementFunction;
 }
+
+void HTMLVideoElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLVideoElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLVideoElement::isHTMLVideoElement() const
+{
+    return true;
+}
 }

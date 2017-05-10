@@ -32,16 +32,8 @@ public:
             const DOMPointInit&);
     DOMQuad(const DOMRectInit&);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMQuad()->protoType());
-    }
-
-    virtual bool isDOMQuad() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDOMQuad() const override;
 
     DOMPoint* p1() const
     {

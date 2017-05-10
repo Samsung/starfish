@@ -208,5 +208,18 @@ ESFunctionObject* bindingTextTrackCue(
 
     return TextTrackCueFunction;
 }
+
+void TextTrackCue::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTextTrackCue()->protoType());
+
+    postInit(instance);
+}
+
+bool TextTrackCue::isTextTrackCue() const
+{
+    return true;
+}
 }
 #endif

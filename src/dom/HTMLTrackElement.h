@@ -34,19 +34,11 @@ public:
 
     HTMLTrackElement(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTrackElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLTrackElement() const override;
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    virtual bool isHTMLTrackElement() const override
-    {
-        return true;
-    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

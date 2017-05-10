@@ -51,7 +51,6 @@ static ESValue getTrackByIdFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = originalObj->getTrackById(value0);
 
@@ -95,6 +94,19 @@ ESFunctionObject* bindingTextTrackList(
                                                   true, true, getTrackByIdESFn);
 
     return TextTrackListFunction;
+}
+
+void TextTrackList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTextTrackList()->protoType());
+
+    postInit(instance);
+}
+
+bool TextTrackList::isTextTrackList() const
+{
+    return true;
 }
 }
 #endif

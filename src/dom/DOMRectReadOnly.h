@@ -25,16 +25,8 @@ class DOMRectReadOnly : public ScriptWrappable {
 public:
     DOMRectReadOnly(double x, double y, double width, double height);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMRectReadOnly()->protoType());
-    }
-
-    virtual bool isDOMRectReadOnly() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDOMRectReadOnly() const override;
 
     double x() const
     {

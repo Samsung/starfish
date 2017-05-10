@@ -49,16 +49,8 @@ public:
         return m_timestamp;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnGeoposition()->protoType());
-    }
-
-    virtual bool isGeoposition() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isGeoposition() const override;
 
 protected:
     StarFish* m_starFish;

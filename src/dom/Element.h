@@ -62,11 +62,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isElement() const override;
 
     /* 4.4 Interface Node */
     virtual NodeType nodeType() const override
@@ -83,13 +80,6 @@ public:
 
     virtual QualifiedName name() = 0;
     String* tagName();
-
-    /* Other methods (not in Node interface) */
-
-    virtual bool isElement() const override
-    {
-        return true;
-    }
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
     size_t attributeCount() const

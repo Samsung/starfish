@@ -28,11 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDocumentFragment()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDocumentFragment() const override;
 
     /* 4.4 Interface Node */
     virtual NodeType nodeType() const override
@@ -43,13 +40,6 @@ public:
     virtual String* nodeName();
 
     virtual Node* clone();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isDocumentFragment() const override
-    {
-        return true;
-    }
 };
 }
 

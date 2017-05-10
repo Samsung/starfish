@@ -48,11 +48,8 @@ public:
         setHeight(height);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLImageElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLImageElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -76,11 +73,6 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLImageElement() const override
-    {
-        return true;
-    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

@@ -52,4 +52,17 @@ ESFunctionObject* bindingGeolocation(
 
     return GeolocationFunction;
 }
+
+void Geolocation::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnGeolocation()->protoType());
+
+    postInit(instance);
+}
+
+bool Geolocation::isGeolocation() const
+{
+    return true;
+}
 }

@@ -104,11 +104,8 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void CSSStyleDeclaration::init(ScriptBindingInstance* instance)
+void CSSStyleDeclaration::postInit(ScriptBindingInstance* instance)
 {
-    scriptObject()->set__proto__(
-        fetchData(instance)->fnCSSStyleDeclaration()->protoType());
-
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);

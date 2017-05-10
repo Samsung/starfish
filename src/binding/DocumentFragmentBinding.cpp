@@ -42,4 +42,17 @@ ESFunctionObject* bindingDocumentFragment(
 
     return DocumentFragmentFunction;
 }
+
+void DocumentFragment::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDocumentFragment()->protoType());
+
+    postInit(instance);
+}
+
+bool DocumentFragment::isDocumentFragment() const
+{
+    return true;
+}
 }

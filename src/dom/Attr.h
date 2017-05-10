@@ -48,11 +48,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnAttr()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isAttr() const override;
 
     QualifiedName qname() const
     {
@@ -100,11 +97,6 @@ public:
     virtual Node* clone() override
     {
         return new Attr(document(), m_qname, value());
-    }
-
-    virtual bool isAttr() const override
-    {
-        return true;
     }
 
     void detachFromElement(String* value)

@@ -32,16 +32,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnVTTCue()->protoType());
-    }
-
-    virtual bool isVTTCue() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isVTTCue() const override;
 
     String* text()
     {

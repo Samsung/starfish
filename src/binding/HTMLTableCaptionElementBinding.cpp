@@ -45,6 +45,20 @@ ESFunctionObject* bindingHTMLTableCaptionElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLTableCaptionElementFunction;
+}
+
+void HTMLTableCaptionElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableCaptionElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableCaptionElement::isHTMLTableCaptionElement() const
+{
+    return true;
 }
 }

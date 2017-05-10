@@ -300,16 +300,8 @@ public:
         NodeStateTarget = 1 << 3,
     };
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnNode()->protoType());
-    }
-
-    virtual bool isNode() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isNode() const override;
 
     void setFirstChild(Node* s)
     {

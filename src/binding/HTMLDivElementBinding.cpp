@@ -42,4 +42,17 @@ ESFunctionObject* bindingHTMLDivElement(
 
     return HTMLDivElementFunction;
 }
+
+void HTMLDivElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLDivElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLDivElement::isHTMLDivElement() const
+{
+    return true;
+}
 }

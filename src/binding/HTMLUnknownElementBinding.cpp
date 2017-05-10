@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "dom/HTMLElement.h"
+#include "dom/HTMLUnknownElement.h"
 
 namespace StarFish {
 
@@ -41,5 +41,18 @@ ESFunctionObject* bindingHTMLUnknownElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     return HTMLUnknownElementFunction;
+}
+
+void HTMLUnknownElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLUnknownElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLUnknownElement::isHTMLUnknownElement() const
+{
+    return true;
 }
 }

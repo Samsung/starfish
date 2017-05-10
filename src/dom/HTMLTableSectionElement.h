@@ -28,23 +28,13 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTableSectionElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLTableSectionElement() const;
 
     /* 4.4 Interface Node */
 
     virtual String* localName() = 0;
     virtual QualifiedName name() = 0;
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLTableSectionElement() const
-    {
-        return true;
-    }
 };
 }
 

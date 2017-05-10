@@ -45,16 +45,8 @@ public:
         return m_w;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMPointReadOnly()->protoType());
-    }
-
-    virtual bool isDOMPointReadOnly() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDOMPointReadOnly() const override;
 
     // to do : doesn't appear to be supported anywhere yet.
     // DOMPoint matrixTransform(DOMMatrixReadOnly matrix);

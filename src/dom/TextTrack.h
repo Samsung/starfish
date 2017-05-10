@@ -50,16 +50,8 @@ public:
               String* label = String::emptyString,
               String* language = String::emptyString);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnTextTrack()->protoType());
-    }
-
-    virtual bool isTextTrack() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isTextTrack() const override;
 
 #define VIRTUAL
 #define OVERRIDE

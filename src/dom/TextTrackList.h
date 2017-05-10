@@ -30,11 +30,8 @@ public:
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isTextTrackList() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isTextTrackList() const override;
 
     // JS Bindings
     uint32_t length()

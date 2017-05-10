@@ -42,4 +42,17 @@ ESFunctionObject* bindingHTMLPreElement(
 
     return HTMLPreElementFunction;
 }
+
+void HTMLPreElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLPreElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLPreElement::isHTMLPreElement() const
+{
+    return true;
+}
 }

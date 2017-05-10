@@ -51,7 +51,6 @@ static ESValue urlConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     URL* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -331,7 +330,6 @@ static ESValue createObjectURL1Function(ESVMInstance* instance)
     // Handle argument arg0
     Blob* value0 = nullptr;
     value0 = (Blob*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     result = URL::createObjectURL(value0);
 
@@ -361,7 +359,6 @@ static ESValue createObjectURL2Function(ESVMInstance* instance)
     MediaSource* value0 = nullptr;
     value0 =
         (MediaSource*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     result = URL::createObjectURL(value0);
 
@@ -404,7 +401,6 @@ static ESValue revokeObjectURLFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     StarFish* callWith = fetchStarFish(instance);
     // Call native function (nargs: 1)
     URL::revokeObjectURL(callWith, value0);
@@ -525,5 +521,17 @@ ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
                                     revokeObjectURLESFn);
 
     return URLFunction;
+}
+
+void URL::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnURL()->protoType());
+
+    postInit(instance);
+}
+
+bool URL::isURL() const
+{
+    return true;
 }
 }

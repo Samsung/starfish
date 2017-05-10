@@ -32,16 +32,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLDocument()->protoType());
-    }
-
-    virtual bool isHTMLDocument() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLDocument() const override;
 
     virtual Element* createElement(AtomicString localName,
                                    bool shouldCheckName);

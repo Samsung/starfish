@@ -32,16 +32,8 @@ public:
         m_data = data;
     }
 
-    virtual bool isCharacterData() const override
-    {
-        return true;
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnCharacterData()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCharacterData() const override;
 
     /* 4.9. Interface CharacterData */
 

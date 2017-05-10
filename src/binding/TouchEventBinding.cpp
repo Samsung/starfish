@@ -41,6 +41,20 @@ ESFunctionObject* bindingTouchEvent(
         fetchData(scriptBindingInstance)->fnUIEvent());
 
     // Bind for attributes
+
     return TouchEventFunction;
+}
+
+void TouchEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTouchEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool TouchEvent::isTouchEvent() const
+{
+    return true;
 }
 }

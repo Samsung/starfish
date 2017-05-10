@@ -37,11 +37,8 @@ public:
 #endif
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDocumentType()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDocumentType() const override;
 
     String* name() const
     {
@@ -80,12 +77,6 @@ public:
     String* systemId()
     {
         return m_systemId;
-    }
-
-    /* Other methods (not in DOM API) */
-    virtual bool isDocumentType() const override
-    {
-        return true;
     }
 
     void remove()

@@ -28,11 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLBodyElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLBodyElement() const;
 
     /* 4.4 Interface Node */
 
@@ -40,11 +37,6 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLBodyElement() const
-    {
-        return true;
-    }
 
     virtual bool isFocusable() const
     {

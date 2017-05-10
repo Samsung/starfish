@@ -80,7 +80,6 @@ static ESValue namedItemFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = originalObj->namedItem(value0);
 
@@ -130,5 +129,18 @@ ESFunctionObject* bindingHTMLCollection(
                                                    true, namedItemESFn);
 
     return HTMLCollectionFunction;
+}
+
+void HTMLCollection::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLCollection()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLCollection::isHTMLCollection() const
+{
+    return true;
 }
 }

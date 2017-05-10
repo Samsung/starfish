@@ -55,11 +55,8 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void TextTrackCueList::init(ScriptBindingInstance* instance)
+void TextTrackCueList::postInit(ScriptBindingInstance* instance)
 {
-    scriptObject()->set__proto__(
-        fetchData(instance)->fnTextTrackCueList()->protoType());
-
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);

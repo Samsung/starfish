@@ -42,4 +42,17 @@ ESFunctionObject* bindingHTMLBRElement(
 
     return HTMLBRElementFunction;
 }
+
+void HTMLBRElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLBRElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLBRElement::isHTMLBRElement() const
+{
+    return true;
+}
 }

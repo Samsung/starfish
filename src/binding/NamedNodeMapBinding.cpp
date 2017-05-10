@@ -80,7 +80,6 @@ static ESValue getNamedItemFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = originalObj->getNamedItem(value0);
 
@@ -110,7 +109,6 @@ static ESValue setNamedItemFunction(ESVMInstance* instance)
     Attr* value0 = nullptr;
     CHECK_TYPEOF(arg0, Attr);
     value0 = (Attr*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     result = originalObj->setNamedItem(value0);
 
@@ -139,7 +137,6 @@ static ESValue removeNamedItemFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     try {
         result = originalObj->removeNamedItem(value0);
@@ -201,5 +198,18 @@ ESFunctionObject* bindingNamedNodeMap(
         removeNamedItemString, true, true, true, removeNamedItemESFn);
 
     return NamedNodeMapFunction;
+}
+
+void NamedNodeMap::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnNamedNodeMap()->protoType());
+
+    postInit(instance);
+}
+
+bool NamedNodeMap::isNamedNodeMap() const
+{
+    return true;
 }
 }

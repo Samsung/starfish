@@ -104,11 +104,9 @@ static ESValue pushStateFunction(ESVMInstance* instance)
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     ScriptValue value0;
     value0 = arg0;
-
     // Call native function (nargs: 3)
     originalObj->pushState(value0, value1, value2);
 
@@ -140,11 +138,9 @@ static ESValue replaceStateFunction(ESVMInstance* instance)
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     ScriptValue value0;
     value0 = arg0;
-
     // Call native function (nargs: 3)
     originalObj->replaceState(value0, value1, value2);
 
@@ -209,5 +205,17 @@ ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)
                                             true, replaceStateESFn);
 
     return HistoryFunction;
+}
+
+void History::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnHistory()->protoType());
+
+    postInit(instance);
+}
+
+bool History::isHistory() const
+{
+    return true;
 }
 }

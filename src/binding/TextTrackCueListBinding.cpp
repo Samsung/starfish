@@ -59,7 +59,21 @@ ESFunctionObject* bindingTextTrackCueList(
         nullptr);
 
     // Bind for functions
+
     return TextTrackCueListFunction;
+}
+
+void TextTrackCueList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTextTrackCueList()->protoType());
+
+    postInit(instance);
+}
+
+bool TextTrackCueList::isTextTrackCueList() const
+{
+    return true;
 }
 }
 #endif

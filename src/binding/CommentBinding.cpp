@@ -60,4 +60,16 @@ ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
 
     return CommentFunction;
 }
+
+void Comment::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnComment()->protoType());
+
+    postInit(instance);
+}
+
+bool Comment::isComment() const
+{
+    return true;
+}
 }

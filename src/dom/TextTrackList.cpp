@@ -55,11 +55,8 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void TextTrackList::init(ScriptBindingInstance* instance)
+void TextTrackList::postInit(ScriptBindingInstance* instance)
 {
-    scriptObject()->set__proto__(
-        fetchData(instance)->fnTextTrackList()->protoType());
-
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);

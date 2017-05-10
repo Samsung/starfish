@@ -98,6 +98,20 @@ ESFunctionObject* bindingHTMLTableElement(
         bgColorSetterFunction);
 
     // Bind for functions
+
     return HTMLTableElementFunction;
+}
+
+void HTMLTableElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableElement::isHTMLTableElement() const
+{
+    return true;
 }
 }

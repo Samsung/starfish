@@ -96,5 +96,18 @@ ESFunctionObject* bindingHTMLSourceElement(
 
     return HTMLSourceElementFunction;
 }
+
+void HTMLSourceElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLSourceElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLSourceElement::isHTMLSourceElement() const
+{
+    return true;
+}
 }
 #endif

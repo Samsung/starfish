@@ -226,16 +226,8 @@ public:
 
     HTMLMediaElement(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLMediaElement()->protoType());
-    }
-
-    virtual bool isHTMLMediaElement() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLMediaElement() const override;
 
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);

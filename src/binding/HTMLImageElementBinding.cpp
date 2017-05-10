@@ -185,4 +185,17 @@ ESFunctionObject* bindingImage(ScriptBindingInstance* scriptBindingInstance)
         fetchData(scriptBindingInstance)->fnHTMLImageElement());
     return ImageFunction;
 }
+
+void HTMLImageElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLImageElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLImageElement::isHTMLImageElement() const
+{
+    return true;
+}
 }

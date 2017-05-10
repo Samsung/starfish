@@ -181,6 +181,19 @@ ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
         heightSetterFunction);
 
     // Bind for functions
+
     return DOMRectFunction;
+}
+
+void DOMRect::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnDOMRect()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMRect::isDOMRect() const
+{
+    return true;
 }
 }

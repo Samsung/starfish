@@ -29,16 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnXMLHttpRequestEventTarget()->protoType());
-    }
-
-    virtual bool isXMLHttpRequestEventTarget() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isXMLHttpRequestEventTarget() const override;
 
 #define VIRTUAL
 #define OVERRIDE
@@ -62,16 +54,8 @@ public:
 
     enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnXMLHttpRequest()->protoType());
-    }
-
-    virtual bool isXMLHttpRequest() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isXMLHttpRequest() const override;
 
     NetworkRequest* networkRequest()
     {

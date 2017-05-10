@@ -29,11 +29,8 @@ public:
         setTabIndex(0);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLAnchorElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLAnchorElement() const;
 
     /* 4.4 Interface Node */
 
@@ -41,11 +38,6 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLAnchorElement() const
-    {
-        return true;
-    }
 
     virtual void handleDefaultEvent(Event* event);
 

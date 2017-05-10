@@ -42,6 +42,20 @@ ESFunctionObject* bindingHTMLHeadingElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLHeadingElementFunction;
+}
+
+void HTMLHeadingElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLHeadingElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLHeadingElement::isHTMLHeadingElement() const
+{
+    return true;
 }
 }

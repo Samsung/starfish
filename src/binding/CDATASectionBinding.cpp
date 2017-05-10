@@ -41,4 +41,17 @@ ESFunctionObject* bindingCDATASection(
 
     return CDATASectionFunction;
 }
+
+void CDATASection::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnCDATASection()->protoType());
+
+    postInit(instance);
+}
+
+bool CDATASection::isCDATASection() const
+{
+    return true;
+}
 }

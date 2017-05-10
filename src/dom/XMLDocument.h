@@ -33,16 +33,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnXMLDocument()->protoType());
-    }
-
-    virtual bool isXMLDocument() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isXMLDocument() const override;
 };
 }
 

@@ -37,11 +37,8 @@ public:
         return m_starFish;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnLocation()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isLocation() const override;
 
     URL* url();
     String* href();
@@ -59,11 +56,6 @@ public:
     void setPathname(String* newPath, bool needRemovingDots = true);
     void setSearch(String* search);
     void setHash(String* search);
-
-    virtual bool isLocation() const override
-    {
-        return true;
-    }
 
     void close()
     {

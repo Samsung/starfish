@@ -100,4 +100,17 @@ ESFunctionObject* bindingPositionError(
 
     return PositionErrorFunction;
 }
+
+void PositionError::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnPositionError()->protoType());
+
+    postInit(instance);
+}
+
+bool PositionError::isPositionError() const
+{
+    return true;
+}
 }

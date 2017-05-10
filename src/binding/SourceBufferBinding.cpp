@@ -308,7 +308,6 @@ static ESValue removeFunction(ESVMInstance* instance)
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
-
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
@@ -318,7 +317,6 @@ static ESValue removeFunction(ESVMInstance* instance)
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, reason);
         THROW_EXCEPTION(msg);
     }
-
     // Call native function (nargs: 2)
     try {
         originalObj->remove(value0, value1);
@@ -431,6 +429,19 @@ ESFunctionObject* bindingSourceBuffer(
                                                  removeESFn);
 
     return SourceBufferFunction;
+}
+
+void SourceBuffer::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnSourceBuffer()->protoType());
+
+    postInit(instance);
+}
+
+bool SourceBuffer::isSourceBuffer() const
+{
+    return true;
 }
 }
 #endif

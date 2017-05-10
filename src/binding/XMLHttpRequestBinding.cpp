@@ -175,15 +175,12 @@ static ESValue open2Function(ESVMInstance* instance)
     // Handle argument arg2
     bool value2;
     value2 = arg2.toBoolean();
-
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 5)
     try {
         originalObj->open(value0, value1, value2, value3, value4);
@@ -204,11 +201,9 @@ static ESValue open1Function(ESVMInstance* instance)
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 2)
     try {
         originalObj->open(value0, value1);
@@ -254,11 +249,9 @@ static ESValue setRequestHeaderFunction(ESVMInstance* instance)
     // Handle argument arg1
     String* value1 = String::emptyString;
     value1 = toBrowserString(arg1);
-
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 2)
     try {
         originalObj->setRequestHeader(value0, value1);
@@ -426,5 +419,18 @@ ESFunctionObject* bindingXMLHttpRequest(
                                                    true, abortESFn);
 
     return XMLHttpRequestFunction;
+}
+
+void XMLHttpRequest::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnXMLHttpRequest()->protoType());
+
+    postInit(instance);
+}
+
+bool XMLHttpRequest::isXMLHttpRequest() const
+{
+    return true;
 }
 }
