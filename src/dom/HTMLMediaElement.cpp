@@ -506,7 +506,8 @@ TimeRanges* HTMLMediaElement::buffered()
 
 String* HTMLMediaElement::canPlayType(String* type)
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
     return String::emptyString;
 }
 
@@ -536,19 +537,22 @@ bool HTMLMediaElement::paused()
 
 double HTMLMediaElement::defaultPlaybackRate()
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
     return 1;
 }
 
 double HTMLMediaElement::playbackRate()
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
     return 1;
 }
 
 TimeRanges* HTMLMediaElement::played()
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
 }
 
@@ -725,12 +729,14 @@ void HTMLMediaElement::setOfficialPlaybackPosition(double time)
 
 void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
 }
 
 void HTMLMediaElement::setPlaybackRate(double playbackRate)
 {
-    // TODO
+    // Unimplmented
+    STARFISH_ASSERT_NOT_REACHED();
 }
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
