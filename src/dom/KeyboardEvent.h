@@ -71,12 +71,12 @@ private:
 
 class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(String* eventType, String* key,
+    KeyboardEvent(String* eventType,
                   const KeyboardEventInit& init = KeyboardEventInit())
         : UIEvent(eventType, init)
         , m_metaKey(false)
     {
-        m_keyCode = convertKeyCodeFromEcore(key);
+        m_keyCode = convertKeyCodeFromEcore(init.key());
         m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||
                      (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
         m_shiftKey = (m_keyCode == KEYBOARD_KEYCODE_SHIFT);
