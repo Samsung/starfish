@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,20 +14,21 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLDocument__
-#define __StarFishHTMLDocument__
+#ifndef __StarFishXMLDocument__
+#define __StarFishXMLDocument__
 
 #include "dom/Document.h"
 
 namespace StarFish {
 
 class Window;
+class URL;
 
-class HTMLDocument : public Document {
+class XMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                 URL* url, String* charSet, bool doesParticipateInRendering)
-        : Document(window, scriptBindingInstance, url, charSet,
+    XMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
+                URL* uri, String* charSet, bool doesParticipateInRendering)
+        : Document(window, scriptBindingInstance, uri, charSet,
                    doesParticipateInRendering)
     {
     }
@@ -35,21 +36,13 @@ public:
     virtual void init(ScriptBindingInstance* instance) override
     {
         scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLDocument()->protoType());
+            fetchData(instance)->fnXMLDocument()->protoType());
     }
 
-    virtual bool isHTMLDocument() const override
+    virtual bool isXMLDocument() const override
     {
         return true;
     }
-
-    virtual Element* createElement(AtomicString localName,
-                                   bool shouldCheckName);
-    static Element* createHTMLElement(Document* document,
-                                      AtomicString localName);
-
-    static bool isCaseSensitiveAttribute(Document* document,
-                                         const QualifiedName& attributeName);
 };
 }
 

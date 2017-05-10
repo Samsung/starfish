@@ -17,12 +17,14 @@
 #include "StarFish.h"
 #include "dom/CDATASection.h"
 #include "dom/Comment.h"
+#include "dom/Document.h"
 #include "dom/DocumentFragment.h"
 #include "dom/DocumentType.h"
 #include "dom/DOMParser.h"
 #include "dom/DOMException.h"
 #include "dom/Element.h"
 #include "dom/Text.h"
+#include "dom/XMLDocument.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "dom/HTMLDocument.h"
 #include "platform/window/Window.h"
@@ -139,11 +141,11 @@ Document* DOMParser::parseFromString(String* str, String* type)
         try {
             doc.parse<rapidxml::parse_doctype_node |
                       rapidxml::parse_comment_nodes>(cStr);
-            Document* document =
-                new Document(starFish()->window(),
-                             starFish()->window()->scriptBindingInstance(),
-                             starFish()->window()->document()->documentURI(),
-                             String::createASCIIString("UTF-8"), true, false);
+            XMLDocument* document =
+                new XMLDocument(starFish()->window(),
+                                starFish()->window()->scriptBindingInstance(),
+                                starFish()->window()->document()->documentURI(),
+                                String::createASCIIString("UTF-8"), false);
 
             rapidxml::xml_node<char>* n = doc.first_node();
             while (n) {
