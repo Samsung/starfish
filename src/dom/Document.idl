@@ -19,7 +19,6 @@ enum VisibilityState { "hidden", "visible", "prerender", "unloaded" };
 
 
 [UnimplementedConstructor,
- Constructor,
  Exposed=Window]
 interface Document : Node {
   // [REF1]--------------------------------------------------------------
