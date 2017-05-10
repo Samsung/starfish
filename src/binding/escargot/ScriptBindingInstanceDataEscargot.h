@@ -93,6 +93,7 @@
     F(TouchEvent)                                   \
     F(UIEvent)                                      \
     F(Window)                                       \
+    F(XMLDocument)                                  \
     F(XMLHttpRequest)                               \
     F(XMLHttpRequestEventTarget)
 

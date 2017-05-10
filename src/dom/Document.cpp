@@ -45,12 +45,10 @@
 namespace StarFish {
 
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                   URL* uri, String* charSet, bool isXMLDocument,
-                   bool doesParticipateInRendering)
+                   URL* uri, String* charSet, bool doesParticipateInRendering)
     : Node(this)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
-    , m_isXMLDocument(isXMLDocument)
     , m_doesParticipateInRendering(doesParticipateInRendering)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)

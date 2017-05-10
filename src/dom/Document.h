@@ -63,8 +63,7 @@ class Document : public Node {
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
-             URL* url, String* charSet, bool isXMLDocument,
-             bool doesParticipateInRendering);
+             URL* url, String* charSet, bool doesParticipateInRendering);
 
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
@@ -277,11 +276,6 @@ public:
     String* contentType()
     {
         return String::createASCIIString("text/html");
-    }
-
-    bool isXMLDocument()
-    {
-        return m_isXMLDocument;
     }
 
     /* Document-level focus APIs */
