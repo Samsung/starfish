@@ -21,28 +21,38 @@
 
 namespace StarFish {
 
-String* HTMLTableCellElement::colspan()
+uint32_t HTMLTableCellElement::colSpan()
 {
-    return getAttributeOrEmpty(
+    Nullable<String*> colSpan = getAttribute(
         document()->window()->starFish()->staticStrings()->m_colspan);
+    if (colSpan.hasValue()) {
+        int colSpanInt = String::parseInt(colSpan.getValue());
+        return colSpanInt <= 0 ? 1 : (uint32_t)colSpanInt;
+    }
+    return 1;
 }
 
-void HTMLTableCellElement::setColspan(uint32_t colspan)
+void HTMLTableCellElement::setColSpan(uint32_t colSpan)
 {
     setAttribute(document()->window()->starFish()->staticStrings()->m_colspan,
-                 String::fromInt(colspan));
+                 String::fromInt(colSpan));
 }
 
-String* HTMLTableCellElement::rowspan()
+uint32_t HTMLTableCellElement::rowSpan()
 {
-    return getAttributeOrEmpty(
+    Nullable<String*> rowSpan = getAttribute(
         document()->window()->starFish()->staticStrings()->m_rowspan);
+    if (rowSpan.hasValue()) {
+        int rowSpanInt = String::parseInt(rowSpan.getValue());
+        return rowSpanInt <= 0 ? 1 : (uint32_t)rowSpanInt;
+    }
+    return 1;
 }
 
-void HTMLTableCellElement::setRowspan(uint32_t rowspan)
+void HTMLTableCellElement::setRowSpan(uint32_t rowSpan)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_colspan,
-                 String::fromInt(rowspan));
+    setAttribute(document()->window()->starFish()->staticStrings()->m_rowspan,
+                 String::fromInt(rowSpan));
 }
 
 String* HTMLTableCellElement::bgColor()

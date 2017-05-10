@@ -184,19 +184,16 @@ unsigned FrameTableCellBox::colspan()
     }
 
     HTMLElement* e = node()->asHTMLElement();
-    String* colspan = String::emptyString;
+    // Use 1 as the default value
+    uint32_t colspan = 1;
     if (e->isHTMLTableCellElement()) {
-        colspan = e->asHTMLTableCellElement()->colspan();
+        colspan = e->asHTMLTableCellElement()->colSpan();
     } else {
         // colspan is only accepted when HTML element is either <td> or <th>,
         // hence it is not applied when used in other elements.
         // e.g., <div style="display: table-cell" colspan="2">
         // In this case, we ignore the colspan value
     }
-
-    int num = String::parseInt(colspan);
-    // If colspan is not defined, use 1 as the default value
-    // Negative colspan value is ignored
-    return num <= 0 ? 1 : num;
+    return colspan;
 }
 }

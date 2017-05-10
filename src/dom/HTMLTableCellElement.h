@@ -38,11 +38,11 @@ public:
 
     /* table cell related */
 
-    String* colspan();
-    void setColspan(uint32_t colspan);
+    uint32_t colSpan();
+    void setColSpan(uint32_t colSpan);
 
-    String* rowspan();
-    void setRowspan(uint32_t rowspan);
+    uint32_t rowSpan();
+    void setRowSpan(uint32_t rowSpan);
 
     /* Not in HTML5 */
     String* bgColor();
