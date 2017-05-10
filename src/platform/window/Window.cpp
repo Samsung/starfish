@@ -2826,8 +2826,9 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
-    KeyboardEvent* e =
-        new KeyboardEvent(eventType, key, KeyboardEventInit(true, true));
+    KeyboardEventInit eventInit(true, true);
+    eventInit.setKey(key);
+    KeyboardEvent* e = new KeyboardEvent(eventType, eventInit);
 
     if (e->ctrlKey()) {
         m_ctrlKeyDown = kind == KeyEventKind::KeyEventDown ? m_ctrlKeyDown + 1
