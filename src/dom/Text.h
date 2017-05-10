@@ -28,16 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnText()->protoType());
-    }
-
-    virtual bool isText() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isText() const override;
 
     /* 4.4 Interface Node */
 

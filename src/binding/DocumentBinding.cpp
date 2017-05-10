@@ -1637,4 +1637,17 @@ ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 
     return DocumentFunction;
 }
+
+void Document::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDocument()->protoType());
+
+    postInit(instance);
+}
+
+bool Document::isDocument() const
+{
+    return true;
+}
 }

@@ -47,6 +47,20 @@ ESFunctionObject* bindingHTMLTableSectionElement(
 
     // Bind for attributes
     // Bind for functions
+
     return HTMLTableSectionElementFunction;
+}
+
+void HTMLTableSectionElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableSectionElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableSectionElement::isHTMLTableSectionElement() const
+{
+    return true;
 }
 }

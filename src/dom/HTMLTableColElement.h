@@ -28,11 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTableColElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLTableColElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -40,11 +37,6 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLTableColElement() const override
-    {
-        return true;
-    }
 
     void setSpan(uint32_t span);
     uint32_t span();

@@ -32,11 +32,8 @@ public:
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isTextTrackCueList() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isTextTrackCueList() const override;
 
     uint32_t length()
     {

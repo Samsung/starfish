@@ -251,4 +251,17 @@ ESFunctionObject* bindingXMLHttpRequestEventTarget(
 
     return XMLHttpRequestEventTargetFunction;
 }
+
+void XMLHttpRequestEventTarget::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnXMLHttpRequestEventTarget()->protoType());
+
+    postInit(instance);
+}
+
+bool XMLHttpRequestEventTarget::isXMLHttpRequestEventTarget() const
+{
+    return true;
+}
 }

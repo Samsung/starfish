@@ -72,11 +72,8 @@ public:
         m_compatibilityMode = m;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDocument()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDocument() const override;
 
     CompatibilityMode compatibilityMode() const
     {
@@ -153,11 +150,6 @@ public:
     virtual String* localName();
 
     Element* documentElement();
-
-    virtual bool isDocument() const override
-    {
-        return true;
-    }
 
     virtual Node* clone() override
     {

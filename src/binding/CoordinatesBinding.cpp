@@ -161,4 +161,17 @@ ESFunctionObject* bindingCoordinates(
 
     return CoordinatesFunction;
 }
+
+void Coordinates::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnCoordinates()->protoType());
+
+    postInit(instance);
+}
+
+bool Coordinates::isCoordinates() const
+{
+    return true;
+}
 }

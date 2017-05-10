@@ -110,7 +110,6 @@ static ESValue addSourceBufferFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     try {
         result = originalObj->addSourceBuffer(value0);
@@ -142,7 +141,6 @@ static ESValue removeSourceBufferFunction(ESVMInstance* instance)
     CHECK_TYPEOF(arg0, SourceBuffer);
     value0 =
         (SourceBuffer*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     try {
         originalObj->removeSourceBuffer(value0);
@@ -200,7 +198,6 @@ static ESValue isTypeSupportedFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = MediaSource::isTypeSupported(value0);
 
@@ -276,6 +273,19 @@ ESFunctionObject* bindingMediaSource(
                                             true, isTypeSupportedESFn);
 
     return MediaSourceFunction;
+}
+
+void MediaSource::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnMediaSource()->protoType());
+
+    postInit(instance);
+}
+
+bool MediaSource::isMediaSource() const
+{
+    return true;
 }
 }
 #endif

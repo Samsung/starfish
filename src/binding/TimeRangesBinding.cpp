@@ -49,7 +49,6 @@ static ESValue startFunction(ESVMInstance* instance)
     // Handle argument arg0
     uint32_t value0;
     value0 = arg0.toUint32();
-
     // Call native function (nargs: 1)
     result = originalObj->start(value0);
 
@@ -74,7 +73,6 @@ static ESValue endFunction(ESVMInstance* instance)
     // Handle argument arg0
     uint32_t value0;
     value0 = arg0.toUint32();
-
     // Call native function (nargs: 1)
     result = originalObj->end(value0);
 
@@ -119,6 +117,19 @@ ESFunctionObject* bindingTimeRanges(
                                                endESFn);
 
     return TimeRangesFunction;
+}
+
+void TimeRanges::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTimeRanges()->protoType());
+
+    postInit(instance);
+}
+
+bool TimeRanges::isTimeRanges() const
+{
+    return true;
 }
 }
 #endif

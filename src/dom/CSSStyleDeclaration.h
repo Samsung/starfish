@@ -55,11 +55,8 @@ public:
     CSSStyleDeclaration* clone(Document* document, Element* element);
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isCSSStyleDeclaration() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isCSSStyleDeclaration() const override;
 
     StyleType styleType()
     {

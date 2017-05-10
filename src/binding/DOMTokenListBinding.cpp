@@ -80,7 +80,6 @@ static ESValue containsFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     try {
         result = originalObj->contains(value0);
@@ -138,7 +137,6 @@ static ESValue toggleFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1-2)
     try {
         if (validArgCount == 1) {
@@ -227,5 +225,18 @@ ESFunctionObject* bindingDOMTokenList(
                                                  true, toStringESFn);
 
     return DOMTokenListFunction;
+}
+
+void DOMTokenList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMTokenList()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMTokenList::isDOMTokenList() const
+{
+    return true;
 }
 }

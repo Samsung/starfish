@@ -283,7 +283,6 @@ static ESValue compareDocumentPositionFunction(ESVMInstance* instance)
     Node* value0 = nullptr;
     CHECK_TYPEOF(arg0, Node);
     value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     result = originalObj->compareDocumentPosition(value0);
 
@@ -343,7 +342,6 @@ static ESValue insertBeforeFunction(ESVMInstance* instance)
     Node* value0 = nullptr;
     CHECK_TYPEOF(arg0, Node);
     value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 2)
     try {
         result = originalObj->insertBefore(value0, value1);
@@ -374,7 +372,6 @@ static ESValue appendChildFunction(ESVMInstance* instance)
     Node* value0 = nullptr;
     CHECK_TYPEOF(arg0, Node);
     value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     try {
         result = originalObj->appendChild(value0);
@@ -406,12 +403,10 @@ static ESValue replaceChildFunction(ESVMInstance* instance)
     Node* value1 = nullptr;
     CHECK_TYPEOF(arg1, Node);
     value1 = (Node*)(arg1.asESPointer()->asESObject()->extraPointerData());
-
     // Handle argument arg0
     Node* value0 = nullptr;
     CHECK_TYPEOF(arg0, Node);
     value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 2)
     try {
         result = originalObj->replaceChild(value0, value1);
@@ -442,7 +437,6 @@ static ESValue removeChildFunction(ESVMInstance* instance)
     Node* value0 = nullptr;
     CHECK_TYPEOF(arg0, Node);
     value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     try {
         result = originalObj->removeChild(value0);
@@ -757,5 +751,17 @@ ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
                                          removeChildESFn);
 
     return NodeFunction;
+}
+
+void Node::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnNode()->protoType());
+
+    postInit(instance);
+}
+
+bool Node::isNode() const
+{
+    return true;
 }
 }

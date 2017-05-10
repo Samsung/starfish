@@ -111,16 +111,8 @@ public:
 
     SourceBuffer(Document* document, String* type);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnSourceBuffer()->protoType());
-    }
-
-    virtual bool isSourceBuffer() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isSourceBuffer() const override;
 
 #define VIRTUAL
 #define OVERRIDE

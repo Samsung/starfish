@@ -73,4 +73,17 @@ ESFunctionObject* bindingGeoposition(
 
     return GeopositionFunction;
 }
+
+void Geoposition::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnGeoposition()->protoType());
+
+    postInit(instance);
+}
+
+bool Geoposition::isGeoposition() const
+{
+    return true;
+}
 }

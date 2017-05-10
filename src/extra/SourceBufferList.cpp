@@ -66,11 +66,8 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void SourceBufferList::init(ScriptBindingInstance* instance)
+void SourceBufferList::postInit(ScriptBindingInstance* instance)
 {
-    scriptObject()->set__proto__(
-        fetchData(instance)->fnSourceBufferList()->protoType());
-
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);

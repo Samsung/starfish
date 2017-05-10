@@ -28,6 +28,9 @@ public:
     {
     }
 
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLElement() const override;
+
     /* 4.4 Interface Node */
 
     virtual String* nodeName()
@@ -36,17 +39,6 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLElement() const override
-    {
-        return true;
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLElement()->protoType());
-    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

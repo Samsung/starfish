@@ -56,11 +56,8 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void DOMTokenList::init(ScriptBindingInstance* instance)
+void DOMTokenList::postInit(ScriptBindingInstance* instance)
 {
-    scriptObject()->set__proto__(
-        fetchData(instance)->fnDOMTokenList()->protoType());
-
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);

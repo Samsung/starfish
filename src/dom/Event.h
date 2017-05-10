@@ -57,16 +57,8 @@ public:
     Event();
     Event(String* eventType, const EventInit& init = EventInit());
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnEvent()->protoType());
-    }
-
-    virtual bool isEvent() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isEvent() const override;
 
     String* type() const
     {

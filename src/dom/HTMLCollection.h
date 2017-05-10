@@ -33,11 +33,8 @@ public:
                    bool canCache = false);
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isHTMLCollection() const
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLCollection() const;
 
     size_t length() const;
     Element* item(unsigned long index);

@@ -236,4 +236,17 @@ ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
 
     return LocationFunction;
 }
+
+void Location::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnLocation()->protoType());
+
+    postInit(instance);
+}
+
+bool Location::isLocation() const
+{
+    return true;
+}
 }

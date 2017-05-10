@@ -54,7 +54,6 @@ static ESValue uieventConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     UIEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -84,6 +83,19 @@ ESFunctionObject* bindingUIEvent(ScriptBindingInstance* scriptBindingInstance)
     UIEventFunction->set__proto__(fetchData(scriptBindingInstance)->fnEvent());
 
     // Bind for attributes
+
     return UIEventFunction;
+}
+
+void UIEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnUIEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool UIEvent::isUIEvent() const
+{
+    return true;
 }
 }

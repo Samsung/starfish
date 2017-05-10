@@ -30,11 +30,8 @@ public:
     SourceBufferList(Document* document, MediaSource* sb);
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isSourceBufferList() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isSourceBufferList() const override;
 
     size_t length() const
     {

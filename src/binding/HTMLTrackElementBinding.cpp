@@ -239,5 +239,18 @@ ESFunctionObject* bindingHTMLTrackElement(
 
     return HTMLTrackElementFunction;
 }
+
+void HTMLTrackElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTrackElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTrackElement::isHTMLTrackElement() const
+{
+    return true;
+}
 }
 #endif

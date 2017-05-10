@@ -194,6 +194,20 @@ ESFunctionObject* bindingDOMRectReadOnly(
         DOMRectReadOnlyPrototypeObj, leftString, leftGetterFunction, nullptr);
 
     // Bind for functions
+
     return DOMRectReadOnlyFunction;
+}
+
+void DOMRectReadOnly::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMRectReadOnly()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMRectReadOnly::isDOMRectReadOnly() const
+{
+    return true;
 }
 }

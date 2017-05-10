@@ -296,4 +296,16 @@ ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
 
     return EventFunction;
 }
+
+void Event::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool Event::isEvent() const
+{
+    return true;
+}
 }

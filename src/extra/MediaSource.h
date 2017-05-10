@@ -50,16 +50,8 @@ public:
 
     MediaSource(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnMediaSource()->protoType());
-    }
-
-    virtual bool isMediaSource() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isMediaSource() const override;
 
     StarFish* starFish()
     {

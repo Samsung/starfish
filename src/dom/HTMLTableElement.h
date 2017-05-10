@@ -28,11 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLTableElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLTableElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -45,13 +42,6 @@ public:
 
     String* bgColor();
     void setBgColor(String* bgColor);
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLTableElement() const override
-    {
-        return true;
-    }
 };
 }
 

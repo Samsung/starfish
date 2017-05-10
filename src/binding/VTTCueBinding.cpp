@@ -43,7 +43,6 @@ static ESValue vttcueConstructor(ESVMInstance* instance)
     // Handle argument arg2
     String* value2 = String::emptyString;
     value2 = toBrowserString(arg2);
-
     // Handle argument arg1
     double value1;
     value1 = arg1.toNumber();
@@ -52,7 +51,6 @@ static ESValue vttcueConstructor(ESVMInstance* instance)
         COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, reason);
         THROW_EXCEPTION(msg);
     }
-
     // Handle argument arg0
     double value0;
     value0 = arg0.toNumber();
@@ -61,7 +59,6 @@ static ESValue vttcueConstructor(ESVMInstance* instance)
         COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, reason);
         THROW_EXCEPTION(msg);
     }
-
     VTTCue* result = nullptr;
     Document* callWith = fetchDocument(instance);
     // Call native function (nargs: 3)
@@ -136,6 +133,18 @@ ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
                                            getCueAsHTMLESFn);
 
     return VTTCueFunction;
+}
+
+void VTTCue::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnVTTCue()->protoType());
+
+    postInit(instance);
+}
+
+bool VTTCue::isVTTCue() const
+{
+    return true;
 }
 }
 #endif

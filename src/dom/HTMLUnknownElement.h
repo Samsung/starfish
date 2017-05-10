@@ -25,11 +25,8 @@ class HTMLUnknownElement : public HTMLElement {
 public:
     HTMLUnknownElement(Document* document, AtomicString localName);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLUnknownElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLUnknownElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -41,12 +38,6 @@ public:
     virtual QualifiedName name()
     {
         return m_name;
-    }
-
-    /* Other methods (not in DOM API) */
-    virtual bool isHTMLUnknownElement() const override
-    {
-        return true;
     }
 
 protected:

@@ -102,4 +102,17 @@ ESFunctionObject* bindingHTMLBodyElement(
 
     return HTMLBodyElementFunction;
 }
+
+void HTMLBodyElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLBodyElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLBodyElement::isHTMLBodyElement() const
+{
+    return true;
+}
 }

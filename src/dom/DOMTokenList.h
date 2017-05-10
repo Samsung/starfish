@@ -36,11 +36,8 @@ public:
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isDOMTokenList() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isDOMTokenList() const override;
 
     static void tokenize(GCVector<String*>* tokens, String* src);
     static void concatTokensInsideParentheses(GCVector<String*>* tokens);

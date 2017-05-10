@@ -42,7 +42,21 @@ ESFunctionObject* bindingHTMLAnchorElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLAnchorElementFunction;
+}
+
+void HTMLAnchorElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLAnchorElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLAnchorElement::isHTMLAnchorElement() const
+{
+    return true;
 }
 }
 #endif

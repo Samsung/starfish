@@ -35,19 +35,11 @@ public:
         setSrc(src);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLAudioElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLAudioElement() const override;
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    virtual bool isHTMLAudioElement() const override
-    {
-        return true;
-    }
 };
 }
 

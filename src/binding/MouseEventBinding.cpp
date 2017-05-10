@@ -54,7 +54,6 @@ static ESValue mouseeventConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     MouseEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -88,6 +87,20 @@ ESFunctionObject* bindingMouseEvent(
 
     // Bind for attributes
     // Bind for functions
+
     return MouseEventFunction;
+}
+
+void MouseEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnMouseEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool MouseEvent::isMouseEvent() const
+{
+    return true;
 }
 }

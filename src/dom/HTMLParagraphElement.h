@@ -28,23 +28,13 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLParagraphElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLParagraphElement() const;
 
     /* 4.4 Interface Node */
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLParagraphElement() const
-    {
-        return true;
-    }
 };
 }
 

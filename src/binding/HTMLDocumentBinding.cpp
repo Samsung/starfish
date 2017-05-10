@@ -43,6 +43,20 @@ ESFunctionObject* bindingHTMLDocument(
 
     // Bind for attributes
     // Bind for functions
+
     return HTMLDocumentFunction;
+}
+
+void HTMLDocument::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLDocument()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLDocument::isHTMLDocument() const
+{
+    return true;
 }
 }

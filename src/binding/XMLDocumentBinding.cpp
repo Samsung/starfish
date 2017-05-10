@@ -41,4 +41,17 @@ ESFunctionObject* bindingXMLDocument(
 
     return XMLDocumentFunction;
 }
+
+void XMLDocument::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnXMLDocument()->protoType());
+
+    postInit(instance);
+}
+
+bool XMLDocument::isXMLDocument() const
+{
+    return true;
+}
 }

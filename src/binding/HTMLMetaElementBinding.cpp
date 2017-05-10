@@ -42,6 +42,20 @@ ESFunctionObject* bindingHTMLMetaElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLMetaElementFunction;
+}
+
+void HTMLMetaElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLMetaElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLMetaElement::isHTMLMetaElement() const
+{
+    return true;
 }
 }

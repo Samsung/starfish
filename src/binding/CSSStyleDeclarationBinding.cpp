@@ -78,7 +78,6 @@ static ESValue getPropertyValueFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 1)
     result = originalObj->getPropertyValue(value0);
 
@@ -117,7 +116,6 @@ static ESValue setPropertyFunction(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     // Call native function (nargs: 3)
     try {
         originalObj->setProperty(value0, value1, value2);
@@ -181,5 +179,18 @@ ESFunctionObject* bindingCSSStyleDeclaration(
 #endif
 
     return CSSStyleDeclarationFunction;
+}
+
+void CSSStyleDeclaration::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnCSSStyleDeclaration()->protoType());
+
+    postInit(instance);
+}
+
+bool CSSStyleDeclaration::isCSSStyleDeclaration() const
+{
+    return true;
 }
 }

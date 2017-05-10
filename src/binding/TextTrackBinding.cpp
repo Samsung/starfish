@@ -153,7 +153,6 @@ static ESValue addCueFunction(ESVMInstance* instance)
     CHECK_TYPEOF(arg0, TextTrackCue);
     value0 =
         (TextTrackCue*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     originalObj->addCue(value0);
 
@@ -180,7 +179,6 @@ static ESValue removeCueFunction(ESVMInstance* instance)
     CHECK_TYPEOF(arg0, TextTrackCue);
     value0 =
         (TextTrackCue*)(arg0.asESPointer()->asESObject()->extraPointerData());
-
     // Call native function (nargs: 1)
     originalObj->removeCue(value0);
 
@@ -256,6 +254,19 @@ ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
                                               removeCueESFn);
 
     return TextTrackFunction;
+}
+
+void TextTrack::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnTextTrack()->protoType());
+
+    postInit(instance);
+}
+
+bool TextTrack::isTextTrack() const
+{
+    return true;
 }
 }
 #endif

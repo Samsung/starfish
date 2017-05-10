@@ -120,4 +120,16 @@ ESFunctionObject* bindingCSSRule(ScriptBindingInstance* scriptBindingInstance)
 
     return CSSRuleFunction;
 }
+
+void CSSRule::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnCSSRule()->protoType());
+
+    postInit(instance);
+}
+
+bool CSSRule::isCSSRule() const
+{
+    return true;
+}
 }

@@ -136,4 +136,17 @@ ESFunctionObject* bindingCharacterData(
 
     return CharacterDataFunction;
 }
+
+void CharacterData::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnCharacterData()->protoType());
+
+    postInit(instance);
+}
+
+bool CharacterData::isCharacterData() const
+{
+    return true;
+}
 }

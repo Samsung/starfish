@@ -28,23 +28,11 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLBRElement()->protoType());
-    }
-
-    /* 4.4 Interface Node */
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLBRElement() const override;
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLBRElement() const override
-    {
-        return true;
-    }
 };
 }
 

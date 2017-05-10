@@ -28,16 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnCDATASection()->protoType());
-    }
-
-    virtual bool isCDATASection() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCDATASection() const override;
 
     virtual String* nodeName();
     virtual String* localName();

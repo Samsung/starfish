@@ -43,16 +43,8 @@ public:
     {
     }
 
-    virtual bool isFocusEvent() const override
-    {
-        return true;
-    }
-
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnFocusEvent()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isFocusEvent() const override;
 
     EventTarget* relatedTarget()
     {

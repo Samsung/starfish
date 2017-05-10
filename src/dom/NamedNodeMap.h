@@ -33,11 +33,8 @@ public:
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isNamedNodeMap() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isNamedNodeMap() const override;
 
     size_t length();
     Attr* item(unsigned long index);

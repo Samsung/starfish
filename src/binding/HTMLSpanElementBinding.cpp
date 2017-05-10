@@ -42,4 +42,17 @@ ESFunctionObject* bindingHTMLSpanElement(
 
     return HTMLSpanElementFunction;
 }
+
+void HTMLSpanElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLSpanElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLSpanElement::isHTMLSpanElement() const
+{
+    return true;
+}
 }

@@ -44,6 +44,20 @@ ESFunctionObject* bindingHTMLObjectElement(
 
     // Bind for attributes
     // Bind for functions
+
     return HTMLObjectElementFunction;
+}
+
+void HTMLObjectElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLObjectElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLObjectElement::isHTMLObjectElement() const
+{
+    return true;
 }
 }

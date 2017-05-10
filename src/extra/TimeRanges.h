@@ -28,16 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnTimeRanges()->protoType());
-    }
-
-    virtual bool isTimeRanges() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isTimeRanges() const override;
 
     double start(uint32_t idx)
     {

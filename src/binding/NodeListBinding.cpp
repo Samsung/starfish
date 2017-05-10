@@ -92,4 +92,17 @@ ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
 
     return NodeListFunction;
 }
+
+void NodeList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnNodeList()->protoType());
+
+    postInit(instance);
+}
+
+bool NodeList::isNodeList() const
+{
+    return true;
+}
 }

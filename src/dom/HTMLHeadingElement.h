@@ -25,11 +25,8 @@ class HTMLHeadingElement : public HTMLElement {
 public:
     HTMLHeadingElement(Document* document, AtomicString name);
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLHeadingElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLHeadingElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -41,13 +38,6 @@ public:
     virtual QualifiedName name()
     {
         return m_name;
-    }
-
-    /* Other methods (not in DOM API) */
-
-    virtual bool isHTMLHeadingElement() const override
-    {
-        return true;
     }
 
 protected:

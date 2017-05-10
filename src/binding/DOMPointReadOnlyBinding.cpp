@@ -137,6 +137,20 @@ ESFunctionObject* bindingDOMPointReadOnly(
         DOMPointReadOnlyPrototypeObj, wString, wGetterFunction, nullptr);
 
     // Bind for functions
+
     return DOMPointReadOnlyFunction;
+}
+
+void DOMPointReadOnly::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMPointReadOnly()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMPointReadOnly::isDOMPointReadOnly() const
+{
+    return true;
 }
 }

@@ -42,6 +42,20 @@ ESFunctionObject* bindingHTMLLIElement(
         fetchData(scriptBindingInstance)->fnHTMLElement());
 
     // Bind for attributes
+
     return HTMLLIElementFunction;
+}
+
+void HTMLLIElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLLIElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLLIElement::isHTMLLIElement() const
+{
+    return true;
 }
 }

@@ -104,4 +104,16 @@ ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
 
     return BlobFunction;
 }
+
+void Blob::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnBlob()->protoType());
+
+    postInit(instance);
+}
+
+bool Blob::isBlob() const
+{
+    return true;
+}
 }

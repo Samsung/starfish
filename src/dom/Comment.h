@@ -28,16 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnComment()->protoType());
-    }
-
-    virtual bool isComment() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isComment() const override;
 
     /* 4.4 Interface Node */
     virtual NodeType nodeType() const override

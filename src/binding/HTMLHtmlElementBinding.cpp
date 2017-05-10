@@ -42,4 +42,17 @@ ESFunctionObject* bindingHTMLHtmlElement(
 
     return HTMLHtmlElementFunction;
 }
+
+void HTMLHtmlElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLHtmlElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLHtmlElement::isHTMLHtmlElement() const
+{
+    return true;
+}
 }

@@ -957,4 +957,17 @@ ESFunctionObject* bindingHTMLElement(
 
     return HTMLElementFunction;
 }
+
+void HTMLElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLElement::isHTMLElement() const
+{
+    return true;
+}
 }

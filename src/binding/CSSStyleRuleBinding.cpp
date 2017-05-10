@@ -41,6 +41,20 @@ ESFunctionObject* bindingCSSStyleRule(
         fetchData(scriptBindingInstance)->fnCSSRule());
 
     // Bind for attributes
+
     return CSSStyleRuleFunction;
+}
+
+void CSSStyleRule::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnCSSStyleRule()->protoType());
+
+    postInit(instance);
+}
+
+bool CSSStyleRule::isCSSStyleRule() const
+{
+    return true;
 }
 }

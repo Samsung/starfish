@@ -69,13 +69,25 @@ ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
         fetchData(scriptBindingInstance)->fnCharacterData()->protoType());
     TextFunction->set__proto__(
         fetchData(scriptBindingInstance)->fnCharacterData());
-
     // Bind for attributes
     ESString* wholeTextString = ESString::create("wholeText");
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         TextPrototypeObj, wholeTextString, wholeTextGetterFunction, nullptr);
 
     // Bind for functions
+
     return TextFunction;
+}
+
+void Text::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnText()->protoType());
+
+    postInit(instance);
+}
+
+bool Text::isText() const
+{
+    return true;
 }
 }

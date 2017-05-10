@@ -31,16 +31,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMParser()->protoType());
-    }
-
-    virtual bool isDOMParser() const override
-    {
-        return true;
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDOMParser() const override;
 
     StarFish* starFish()
     {

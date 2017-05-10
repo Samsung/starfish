@@ -45,6 +45,20 @@ ESFunctionObject* bindingHTMLTableRowElement(
 
     // Bind for attributes
     // Bind for functions
+
     return HTMLTableRowElementFunction;
+}
+
+void HTMLTableRowElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableRowElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableRowElement::isHTMLTableRowElement() const
+{
+    return true;
 }
 }

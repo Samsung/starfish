@@ -164,4 +164,17 @@ ESFunctionObject* bindingKeyboardEvent(
     // Bind for functions
     return KeyboardEventFunction;
 }
+
+void KeyboardEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnKeyboardEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool KeyboardEvent::isKeyboardEvent() const
+{
+    return true;
+}
 }

@@ -39,11 +39,8 @@ public:
     DOMRect* item(uint32_t index);
 
     virtual void init(ScriptBindingInstance* instance) override;
-
-    virtual bool isDOMRectList() const override
-    {
-        return true;
-    }
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isDOMRectList() const override;
 
 private:
     DOMRectList();

@@ -29,19 +29,11 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLVideoElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLVideoElement() const override;
 
     virtual String* localName();
     virtual QualifiedName name();
-
-    virtual bool isHTMLVideoElement() const override
-    {
-        return true;
-    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

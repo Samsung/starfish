@@ -128,4 +128,16 @@ ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
 
     return AttrFunction;
 }
+
+void Attr::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnAttr()->protoType());
+
+    postInit(instance);
+}
+
+bool Attr::isAttr() const
+{
+    return true;
+}
 }

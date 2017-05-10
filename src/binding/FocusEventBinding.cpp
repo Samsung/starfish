@@ -55,7 +55,6 @@ static ESValue focuseventConstructor(ESVMInstance* instance)
     // Handle argument arg0
     String* value0 = String::emptyString;
     value0 = toBrowserString(arg0);
-
     FocusEvent* result = nullptr;
     // Call native function (nargs: 1-2)
     if (validArgCount == 1) {
@@ -106,5 +105,18 @@ ESFunctionObject* bindingFocusEvent(
         relatedTargetGetterFunction, nullptr);
 
     return FocusEventFunction;
+}
+
+void FocusEvent::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnFocusEvent()->protoType());
+
+    postInit(instance);
+}
+
+bool FocusEvent::isFocusEvent() const
+{
+    return true;
 }
 }

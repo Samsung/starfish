@@ -79,5 +79,18 @@ ESFunctionObject* bindingSourceBufferList(
         SourceBufferString, true, true, true, SourceBufferESFn);
     return SourceBufferListFunction;
 }
+
+void SourceBufferList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnSourceBufferList()->protoType());
+
+    postInit(instance);
+}
+
+bool SourceBufferList::isSourceBufferList() const
+{
+    return true;
+}
 }
 #endif

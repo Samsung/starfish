@@ -93,4 +93,17 @@ ESFunctionObject* bindingDOMRectList(
 
     return DOMRectListFunction;
 }
+
+void DOMRectList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMRectList()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMRectList::isDOMRectList() const
+{
+    return true;
+}
 }

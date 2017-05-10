@@ -50,19 +50,15 @@ static ESValue domquadConstructor(ESVMInstance* instance)
     // Handle argument arg3
     DOMPointInit value3;
     value3 = toDOMPointInitFromESValue(instance, arg3);
-
     // Handle argument arg2
     DOMPointInit value2;
     value2 = toDOMPointInitFromESValue(instance, arg2);
-
     // Handle argument arg1
     DOMPointInit value1;
     value1 = toDOMPointInitFromESValue(instance, arg1);
-
     // Handle argument arg0
     DOMPointInit value0;
     value0 = toDOMPointInitFromESValue(instance, arg0);
-
     DOMQuad* result = nullptr;
     // Call native function (nargs: 4)
     result = new DOMQuad(value0, value1, value2, value3);
@@ -170,5 +166,17 @@ ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
                                             getBoundsESFn);
 
     return DOMQuadFunction;
+}
+
+void DOMQuad::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(fetchData(instance)->fnDOMQuad()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMQuad::isDOMQuad() const
+{
+    return true;
 }
 }

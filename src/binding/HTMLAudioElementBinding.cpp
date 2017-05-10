@@ -92,5 +92,18 @@ ESFunctionObject* bindingAudio(ScriptBindingInstance* scriptBindingInstance)
         fetchData(scriptBindingInstance)->fnHTMLAudioElement());
     return AudioFunction;
 }
+
+void HTMLAudioElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLAudioElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLAudioElement::isHTMLAudioElement() const
+{
+    return true;
+}
 }
 #endif

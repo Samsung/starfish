@@ -45,4 +45,17 @@ ESFunctionObject* bindingHTMLTableCellElement(
     // Bind for attributes
     return HTMLTableCellElementFunction;
 }
+
+void HTMLTableCellElement::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnHTMLTableCellElement()->protoType());
+
+    postInit(instance);
+}
+
+bool HTMLTableCellElement::isHTMLTableCellElement() const
+{
+    return true;
+}
 }

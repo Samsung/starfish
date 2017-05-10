@@ -29,11 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnHTMLSourceElement()->protoType());
-    }
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isHTMLSourceElement() const override;
 
     /* 4.4 Interface Node */
 
@@ -41,10 +38,6 @@ public:
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-    virtual bool isHTMLSourceElement() const override
-    {
-        return true;
-    }
 
     // https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element
     // Attributes

@@ -71,4 +71,17 @@ ESFunctionObject* bindingDOMSettableTokenList(
 
     return DOMSettableTokenListFunction;
 }
+
+void DOMSettableTokenList::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMSettableTokenList()->protoType());
+
+    postInit(instance);
+}
+
+bool DOMSettableTokenList::isDOMSettableTokenList() const
+{
+    return true;
+}
 }
