@@ -28,6 +28,9 @@
 #include "dom/Element.h"
 #include "dom/Document.h"
 
+// TODO Remove this
+#include "platform/window/Window.h"
+
 namespace StarFish {
 
 using namespace escargot;
@@ -1213,64 +1216,99 @@ static ESValue getElementByIdFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
+// TODO Replace it quto generated one
 static ESValue querySelectorFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Document);
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 1) {
-        char buffer[2];
-        snprintf(buffer, 2, "%zu", argCount);
-        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelector", "Document",
-                        reason);
-        THROW_EXCEPTION(msg);
-    }
-    // Declare native value (empty when type is void)
-    Element* result = nullptr;
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, Document);
+    Node* obj =
+        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
-    // Call native function (nargs: 1)
-    try {
-        result = originalObj->querySelector(value0);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    if (obj->isDocument()) {
+        if (instance->currentExecutionContext()->argumentCount() > 0) {
+            Document* doc = obj->asDocument();
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(0);
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        doc->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute 'querySelector' on "
+                        "'Document': The provided selector is "
+                        "empty.");
+                }
+
+                Element* elem = doc->querySelector(toBrowserString(argStr));
+                if (elem != nullptr) {
+                    return elem->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            }
+        } else {
+            auto msg = ESString::create(
+                "Failed to execute 'querySelector' on 'Document': "
+                "1 argument required, but only 0 present.");
+            instance->throwError(ESValue(TypeError::create(msg)));
+        }
+    } else {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
     return ESValue(ESValue::ESNull);
 }
 
+// TODO Replace it quto generated one
 static ESValue querySelectorAllFunction(ESVMInstance* instance)
 {
-    GENERATE_THIS_AND_CHECK_TYPE(Document);
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
-    if (argCount < 1) {
-        char buffer[2];
-        snprintf(buffer, 2, "%zu", argCount);
-        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "querySelectorAll", "Document",
-                        reason);
-        THROW_EXCEPTION(msg);
-    }
-    // Declare native value (empty when type is void)
-    NodeList* result = nullptr;
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
+    ESValue thisValue =
+        instance->currentExecutionContext()->resolveThisBinding();
+    CHECK_TYPEOF(thisValue, Document);
+    Node* obj =
+        (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
-    // Call native function (nargs: 1)
-    try {
-        result = originalObj->querySelectorAll(value0);
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    if (obj->isDocument()) {
+        if (instance->currentExecutionContext()->argumentCount() > 0) {
+            Document* doc = obj->asDocument();
+            ESValue argValue =
+                instance->currentExecutionContext()->readArgument(0);
+            if (!argValue.isESString()) {
+                argValue = argValue.toString();
+            }
+            try {
+                ESString* argStr = argValue.asESString();
+                if (*argStr == *(strings->emptyString.string())) {
+                    throw new DOMException(
+                        doc->window()->scriptBindingInstance(),
+                        DOMException::Code::DOM_EXCEPTION,
+                        "Failed to execute 'querySelectorAll' "
+                        "on 'Document': The provided selector "
+                        "is empty.");
+                }
+
+                NodeList* list = doc->querySelectorAll(toBrowserString(argStr));
+                if (list != nullptr) {
+                    return list->scriptValue();
+                }
+            } catch (DOMException* e) {
+                ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            }
+        } else {
+            auto msg = ESString::create(
+                "Failed to execute 'querySelectorAll' on "
+                "'Document': 1 argument required, but only 0 "
+                "present.");
+            instance->throwError(ESValue(TypeError::create(msg)));
+        }
+    } else {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
-    // Return ESValue from native value
-    STARFISH_ASSERT(result != nullptr);
-    return result->scriptValue();
+    return ESValue(ESValue::ESNull);
 }
 
 ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
