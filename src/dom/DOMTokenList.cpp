@@ -345,6 +345,6 @@ void DOMTokenList::validateToken(String* token)
 void DOMTokenList::setValue(String* value)
 {
     // Unimplemented
-    STARFISH_ASSERT_NOT_REACHED()
+    STARFISH_ASSERT_NOT_REACHED();
 }
 }
