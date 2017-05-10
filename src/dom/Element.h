@@ -91,11 +91,6 @@ public:
         return true;
     }
 
-    virtual bool isPseudoElement() const
-    {
-        return false;
-    }
-
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
     size_t attributeCount() const
     {

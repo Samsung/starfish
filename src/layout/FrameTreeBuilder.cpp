@@ -261,8 +261,7 @@ Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
 {
     Frame* pseudoFrame = frame;
     while (pseudoFrame) {
-        if (pseudoFrame->node() && pseudoFrame->node()->isElement() &&
-            pseudoFrame->node()->asElement()->isPseudoElement()) {
+        if (pseudoFrame->node() && pseudoFrame->node()->isPseudoElement()) {
             break;
         }
         pseudoFrame =
