@@ -60,6 +60,8 @@ public:
     bool toggle(String* token, bool isForced, bool forceValue);
     String* toString();
     void validateToken(String* token); // Throw Exceptions
+    void setValue(String* value);
+
 private:
     Element* m_element;
     QualifiedName m_localName;
