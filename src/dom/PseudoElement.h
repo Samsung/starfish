@@ -32,11 +32,6 @@ public:
     {
     }
 
-    virtual bool isPseudoElement() const override
-    {
-        return true;
-    }
-
     virtual QualifiedName name()
     {
         return m_name;
