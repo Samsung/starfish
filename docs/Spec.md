@@ -82,9 +82,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | type | One of the Type constants indicating the type of CSS rule. |
 | [CSSStyleDeclaration](https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface) | interface | CSSStyleDeclaration | The CSSStyleDeclaration interface represents a CSS declaration block, including its underlying state, where this underlying state depends upon the source of the CSSStyleDeclaration instance. |
 |  | attribute | length | return the number of CSS declarations in the declarations. |
-|  | method | item | return the property name of the CSS declaration at position index. |
-|  | method | getPropertyValue | Returns the property value |
-|  | method | setProperty | Sets the property |
+|  | method | getter DOMString item(unsigned long index) | return the property name of the CSS declaration at position index. |
+|  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
+|  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
 | [Document 1](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [6](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [7](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [8](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
@@ -216,8 +216,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
 | [HTMLElement 1](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
 |  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
-|  | method | click | Acts as if the element was clicked. |
-|  | method | focus | When an element is focused, key events received by the document must be targeted at that element. |
+|  | method | void click() | Acts as if the element was clicked. |
+|  | method | void focus() | When an element is focused, key events received by the document must be targeted at that element. |
 | [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |
 | | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
@@ -341,28 +341,28 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | ownerDocument | Returns the node document. Returns null for documents. |
 |  | attribute | parentNode | Returns the parent. |
 |  | attribute | parentElement | Returns the parent element. |
-|  | method | hasChildNodes | Returns whether node has children. |
+|  | method | boolean hasChildNodes() | Returns whether node has children. |
 |  | attribute | childNodes | Returns the children. |
 |  | attribute | firstChild | Returns the first child. |
-|  | attribute | cloneNode | Returns a copy of node. If deep is true, the copy also includes the node’s descendants. |
+|  | attribute | Node cloneNode(optional boolean deep = false) | Returns a copy of node. If deep is true, the copy also includes the node’s descendants. |
 |  | attribute | previousSibling | Returns the previous sibling. |
 |  | attribute | nextSibling | Returns the next sibling. |
 |  | attribute | nodeValue | Gets and sets Attr, Text, ProcessingInstruction, Comment depending on the context object: |
 |  | attribute | textContent | Gets and sets DocumentFragment, Element, Attr, Text, ProcessingInstruction, Comment switching on context object |
 |  | method | normalize | Removes empty exclusive Text nodes and concatenates the data of remaining contiguous exclusive Text nodes into the first of their nodes. |
-|  | method | isEqualNode | Returns whether node and otherNode have the same properties. |
+|  | method | boolean isEqualNode(Node? otherNode) | Returns whether node and otherNode have the same properties. |
 |  | constant | DOCUMENT_POSITION_DISCONNECTED = 0x01; | Set when node and other are not in the same tree. |
 |  | constant | DOCUMENT_POSITION_PRECEDING = 0x02; | Set when other is preceding node. |
 |  | constant | DOCUMENT_POSITION_FOLLOWING = 0x04; | Set when other is following node. |
 |  | constant | DOCUMENT_POSITION_CONTAINS = 0x08; | Set when other is an ancestor of node. |
 |  | constant | DOCUMENT_POSITION_CONTAINED_BY = 0x10; | Set when other is a descendant of node. |
 |  | constant | DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; |  |
-|  | method | compareDocumentPosition | Returns a bitmask indicating the position of other relative to node.  |
-|  | method | contains | Returns true if other is an inclusive descendant of context object, and false otherwise |
-|  | method | insertBefore | Returns the result of pre-inserting node into context object before child. |
-|  | method | appendChild | Returns the result of appending node to context object. |
-|  | method | replaceChild | Returns the result of replacing child with node within context object. |
-|  | method | removeChild | Returns the result of pre-removing child from context object. |
+|  | method | unsigned short compareDocumentPosition(Node other) | Returns a bitmask indicating the position of other relative to node.  |
+|  | method | boolean contains(Node? other) | Returns true if other is an inclusive descendant of context object, and false otherwise |
+|  | method | Node insertBefore(Node node, Node? child) | Returns the result of pre-inserting node into context object before child. |
+|  | method | Node appendChild(Node node) | Returns the result of appending node to context object. |
+|  | method | Node replaceChild(Node node, Node child) | Returns the result of replacing child with node within context object. |
+|  | method | Node removeChild(Node child) | Returns the result of pre-removing child from context object. |
 |  | attribute | lastChild | Returns the last child |
 | [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A NodeList object is a collection of nodes. |
 |  | method | Node? item(unsigned long index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
@@ -379,7 +379,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
 |  | method | querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
-| [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
+| [Text](https://dom.spec.whatwg.org/#text) | constructor | Text(optional DOMString data = "") | Text node whose data is data and node document is current global object’s associated Document. |
+|  | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
 |  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
 | [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
 |  | enum | TextTrackMode | "disabled",  "hidden",  "showing" |
@@ -391,8 +392,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute  | mode | Gets and sets the text track mode |
 |  | attribute  | cues | Returns the text track list of cues, as a TextTrackCueList object. |
 |  | attribute  | activeCues | Returns a live TextTrackCueList object  |
-|  | method | addCue | Add cue to the method's TextTrack object's text track's text track list of cues. |
-|  | method | removeCue | Remove cue from the method's TextTrack object's text track's text track list of cues. |
+|  | method | void addCue(TextTrackCue cue) | Adds cue to the method's TextTrack object's text track's text track list of cues. |
+|  | method | void removeCue(TextTrackCue cue) | Removes cue from the method's TextTrack object's text track's text track list of cues. |
 |  | attribute  | oncuechange | The event handler for the cue change event  |
 | [TextTrackCue](https://html.spec.whatwg.org/#texttrackcue) | interface | TextTrackCue | A text track cue is the unit of time-sensitive data in a text track, corresponding for instance for subtitles and captions to the text that appears at a particular time and disappears at another time. |
 |  | attribute | track | Returns the TextTrack object to which this text track cue belongs, if any, or null otherwise. |
@@ -728,7 +729,7 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 | [Blob] (https://w3c.github.io/FileAPI/#blob) | interface	|	A Blob object refers to a byte sequence |
 | |	attribute |	size	| Returns the size of the byte sequence in number of bytes |
 | |	attribute |	type	| The ASCII-encoded string in lower case representing the media type of the Blob |
-| |	method	| slice	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
+| |	method	| Blob slice([Clamp] optional long long start = 0, [Clamp] optional long long end = size, optional DOMString contentType = "")	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
 | |	typedef |	BlobPar	||
 | |	method	| isClosed	| Returns a boolean value that indicates whether the Blob is in the CLOSED readability state. |
 | |	method	| close	| The close() method closes a Blob. |
