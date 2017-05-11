@@ -52,91 +52,444 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [NonElementParentNode](https://www.w3.org/TR/domcore/#interface-nonelementparentnode) | method | getElementById(elementId) | Returns the first element within node's descendants whose ID is elementId |
-| [ParentNode](https://www.w3.org/TR/domcore/#interface-parentnode) | attribute | children | Returns child elements |
-| | | firstElementChild | Returns the first child element, or null otherwise |
-| | | lastElementChild | Returns the last child that is an element, and null otherwise. |
-| | | childElementCount | Returns the number of children of the context object that are elements |
-| [NonDocumentTypeChildNode](https://www.w3.org/TR/domcore/#interface-nondocumenttypechildnode) | attribute | previousElementSibling | Returns the first preceding sibling that is an element, and null otherwise.|
-|  |  | nextElementSibling | Returns the first following sibling that is an element, and null otherwise.|
-| [ChildNode](https://www.w3.org/TR/domcore/#childnode) | method | remove() | Removes the node |
-| [NodeList](https://www.w3.org/TR/domcore/#nodelist) | method | item(index) (or collection[index]) | Returns the node with index index number from the collection. The nodes are sorted in tree order. |
-|  | attribute | length | Returns the number of elements in the collection. |
-| [HTMLCollection](https://www.w3.org/TR/domcore/#htmlcollection) | attribute | length | Returns the number of elements in the collection. |
-|  | method | item(index) (or collection[index]) | Returns the element with index index number from the collection. The elements are sorted in tree order. |
-|  |  | namedItem(name) (or collection[name]) | Returns the first element with ID or name name from the collection. |
-| [Node](https://www.w3.org/TR/domcore/#interface-node) | attribute | nodeType | Returns the type of node. |
-|  |  | nodeName | Returns a string appropriate for the type of node. |
-|  |  | parentNode | Returns the parent. |
-|  |  | childNodes | Returns the children. |
-|  |  | firstChild | Returns the first child. |
-|  |  | lastChild | Returns the last child. |
-|  |  | previousSibling | Returns the previous sibling. |
-|  |  | nextSibling | Returns the next sibling. |
-|  |  | nodeValue | If node is Text, Comment or ProcessingInstruction, returns the context object's data.  |
-|  |  |  | Otherwise returns Null. |
-|  |  | textContent | If node is Element, returns the concatenation of data of all the Text node descendants of the context object, in tree order.  |
-|  |  |  | If node is Text or Comment, returns the context object's data.  |
-|  |  |  | Otherwise returns Null. |
-|  | method | hasChildNodes | Returns whether node has children. |
-|  |  | cloneNode(deep = false) | Returns a copy of node. If deep is true, the copy also includes the node's descendants. |
-|  |  | isEqualNode(other) | Returns whether node and other have the same properties. |
-|  |  | compareDocumentPosition(other) | Returns a bitmask indicating the position of other relative to node. |
-|  |  | contains(other) | Returns true if other is an inclusive descendant of node, and false otherwise. |
-|  |  | insertBefore(node, child) | Inserts Node before child. |
-|  |  | appendChild(node) | Adds node to the end of child list. |
-|  |  | replaceChild(node, child) | Replaces child to Node. |
-|  |  | removeChild(child) | Removes child. |
-| [Document](https://www.w3.org/TR/domcore/#document) | attribute | compatMode | Returns the string "CSS1Compat". |
-|  |  | characterSet | Returns document's encoding type "UTF8". |
-|  |  | contentType | Returns document's content type "text/html". |
-|  |  | doctype | Returns the doctype or null if there is none. |
-|  |  | documentElement | Returns the document element. |
+|[Common Definitions](https://heycam.github.io/webidl/#common) | typedef | (unsigned long long) DOMTimeStamp | The DOMTimeStamp type is used for representing a number of milliseconds, either as an absolute time (relative to some epoch) or as a relative amount of time. |
+|  | typedef | (Int8Array or Int16Array or Int32Array or Uint8Array or Uint16Array or Uint32Array or Uint8ClampedArray or Float32Array or Float64Array or DataView) ArrayBufferView |  |
+|  | typedef | (ArrayBufferView or ArrayBuffer) BufferSource |  |
+| [Attr](https://dom.spec.whatwg.org/#interface-attr) | interface | Attr | Attr nodes are simply known as attributes. They are sometimes referred to as content attributes to avoid confusion with IDL attributes. |
+|  | attribute | localName | Return the local name. |
+|  | attribute | name | Return the qualified name. |
+|  | attribute | value | Return the value. |
+|  | attribute | ownerElement | Return context object’s element. |
+|  | attribute | specified | Return true. |
+| [CDATASection](https://dom.spec.whatwg.org/#interface-cdatasection) | interface | CDATASection |  |
+| [CharacterData](https://dom.spec.whatwg.org/#interface-characterdata) | interface | CharacterData | CharacterData is an abstract interface and does not exist as node. It is used by Text, ProcessingInstruction, and Comment nodes. |
+|  | attribute | data | Getter must return context object’s data. Its setter must replace data with node context object, offset 0, count context object’s length, and data new value. |
+|  | attribute | length | Return context object’s length. |
+| [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | The childNodes interface contains methods that are particular to Node objects that can have a parent. |
+|  | method | remove() | Removes this childNodes from the children list of its parent. |
+| [Comment](https://dom.spec.whatwg.org/#interface-comment) | interface | Comment | The Comment interface represents textual notations within markup; although it is generally not visually shown, such comments are available to be read in the source view |
+| [CSSRule](https://drafts.csswg.org/cssom/#the-cssrule-interface) | interface | CSSRule | The CSSRule interface represents an abstract, base CSS style rule. Each distinct CSS style rule type is represented by a distinct interface that inherits from this interface. |
+|  | constant | STYLE_RULE = 1 |  |
+|  | constant | CHARSET_RULE = 2 |  |
+|  | constant | IMPORT_RULE = 3 |  |
+|  | constant | MEDIA_RULE = 4 |  |
+|  | constant | FONT_FACE_RULE = 5 |  |
+|  | constant | PAGE_RULE = 6 |  |
+|  | constant | MARGIN_RULE = 9 |  |
+|  | constant | NAMESPACE_RULE = 10 |  |
+|  | attribute | type | One of the Type constants indicating the type of CSS rule. |
+| [CSSStyleDeclaration](https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface) | interface | CSSStyleDeclaration | The CSSStyleDeclaration interface represents a CSS declaration block, including its underlying state, where this underlying state depends upon the source of the CSSStyleDeclaration instance. |
+|  | attribute | length | return the number of CSS declarations in the declarations. |
+|  | method | item | return the property name of the CSS declaration at position index. |
+|  | method | getPropertyValue | Returns the property value |
+|  | method | setProperty | Sets the property |
+| [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
+| [Document 1](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [6](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [7](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [8](https://www.w3.org/TR/dom/#parentnode)   |
+|  | attribute | documentURI | Returns document's URL. |
+|  | attribute | compatMode | Returns the string "CSS1Compat". |
+|  | attribute | charset | Returns document's encoding type ""UTF8"". |
+|  | attribute | characterSet | Returns document's encoding type ""UTF8"". |
+|  | attribute | contentType | Returns document's content type "text/html". |
+|  | attribute | doctype | Returns the doctype or null if there is none. |
+|  | attribute | documentElement | Returns the document element. |
 |  | method | getElementsByTagName(localName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
-|  |  | getElementsByClassName(classes) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
-|  |  | createElement(localName) | Returns an element in the HTML namespace with localName as local name. |
-|  |  | createTextNode(data) | Returns a Text node whose data is data. |
-|  |  | createComment(data) | Returns a Comment node whose data is data. |
-| [DocumentType](https://www.w3.org/TR/domcore/#interface-documenttype) | attribute | name | Returns the name. |
-| [Element](https://www.w3.org/TR/domcore/#element) | attribute | localName | Return the value of the attribute in element's attribute list whose namespace is namespace and local name is localName, if it has one, and null otherwise. |
-|  |  | tagName | If namespace prefix is not null, returns the concatenation of namespace prefix, ":", and local name. Otherwise it returns the local name. |
-|  |  | id | Reflects the "id" content attribute. |
-|  |  | className | Reflects the "class" content attribute. |
-|  |  | classList | Returns the associated DOMTokenList object representing the context object's classes. |
-|  |  | attributes | Returns a NamedNodeMap. |
-|  |  | clientLeft | Returns the width of the left border of an element in pixels. |
-|  |  | clientTop | Returns the width of the top border of an element in pixels. |
-|  |  | clientWidth | Returns the sum of contents width + padding width. Returns 0 if an element, or an ancestor of an element is set to display: none or display: inline. |
-|  |  | clientHeight | Returns the sum of contents height + padding height. Returns 0 if an element, or an ancestor of an element is set to display: none or display: inline. |
+|  | method | getElementsByClassName(className) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
+|  | method | createElement(localName) | Returns an element in the HTML namespace with localName as local name. |
+|  | method | createDocumentFragment() | Returns a new DocumentFragment node with its node document set to the context object. |
+|  | method | createTextNode(data) | Returns a Text node whose data is data. |
+|  | method | createComment(data) | Returns a Comment node whose data is data. |
+| [Document 2](https://dom.spec.whatwg.org/#interface-document) | method | createCDATASection(data) | Returns a CDATASection node whose data is data. |
+|  | method | createAttribute(localName) | Return a new attribute whose local name is localName and node document is context object. |
+| [Document 3](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
+|  | attribute | bodyElement | Returns body element or null if not exists |
+|  | attribute | headElement | Returns head element or null if not exists |
+| [Document 5](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | elementFromPoint(x, y) | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. |
+| [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
+|  | attribute | name | Return the context object’s name. |
+|  | attribute | publicId | Return the context object’s public ID. |
+|  | attribute | systemId | Return the context object’s system ID. |
+| [DOMException](https://heycam.github.io/webidl/#idl-exceptions) | interface | DOMException |  |
+|  | attribute | code | Exception code |
+|  | attribute | name | optional exception name |
+|  | attribute | message | optional exception message |
+|  | constant | INDEX_SIZE_ERR = 1 | Deprecated. Use RangeError instead. |
+|  | constant | HIERARCHY_REQUEST_ERR = 3 | The operation would yield an incorrect node tree. |
+|  | constant | WRONG_DOCUMENT_ERR = 4 | The object is in the wrong document. |
+|  | constant | INVALID_CHARACTER_ERR = 5 | The string contains invalid characters. |
+|  | constant | NO_MODIFICATION_ALLOWED_ERR = 7 | The object can not be modified. |
+|  | constant | NOT_FOUND_ERR = 8 | The object can not be found here. |
+|  | constant | NOT_SUPPORTED_ERR = 9 | The operation is not supported. |
+|  | constant | INUSE_ATTRIBUTE_ERR = 10 | The attribute is in use. |
+|  | constant | INVALID_STATE_ERR = 11 | The object is in an invalid state. |
+|  | constant | SYNTAX_ERR = 12 | The string did not match the expected pattern. |
+|  | constant | INVALID_MODIFICATION_ERR = 13 | The object can not be modified in this way. |
+|  | constant | NAMESPACE_ERR = 14 | The operation is not allowed by Namespaces in XML.  |
+|  | constant | INVALID_ACCESS_ERR = 15 | Deprecated. Use TypeError for invalid arguments, "NotSupportedError" DOMException for unsupported operations, and "NotAllowedError" DOMException for denied requests instead. |
+|  | constant | SECURITY_ERR = 18 | The operation is insecure. |
+|  | constant | NETWORK_ERR = 19 | A network error occurred. |
+|  | constant | ABORT_ERR = 20 | The operation was aborted. |
+|  | constant | URL_MISMATCH_ERR = 21 | The quota has been exceeded.The given URL does not match another URL. |
+|  | constant | QUOTA_EXCEEDED_ERR = 22 | The quota has been exceeded. |
+|  | constant | TIMEOUT_ERR = 23 | The operation timed out. |
+|  | constant | INVALID_NODE_TYPE_ERR = 24 | The supplied node is incorrect or has an incorrect ancestor for this operation. |
+|  | constant | DATA_CLONE_ERR = 25 | The object can not be cloned. |
+| [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
+|  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
+| [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
+|  | attribute | x | Reurn the x coordinate value of the object it was invoked on. |
+|  | attribute | y | Reurn the y coordinate value of the object it was invoked on. |
+|  | attribute | z | Reurn the z coordinate value of the object it was invoked on. |
+|  | attribute | w | Return the w perspective value of the object it was invoked on. |
+|  | dictionary | DOMPointInit::x | Initializes an DOMPoint object with x. |
+|  | dictionary | DOMPointInit::y | Initializes an DOMPoint object with y. |
+|  | dictionary | DOMPointInit::z | Initializes an DOMPoint object with z. |
+|  | dictionary | DOMPointInit::w | Initializes an DOMPoint object with w. |
+|  [DOMPointReadOnly](https://drafts.fxtf.org/geometry/#dompointreadonly)  |  attribute  |  x  |  Return  x coordinate value of the object  |
+|    |  attribute  |  y  |  Return y coordinate value of the object  |
+|    |  attribute  |  z  |  Return z coordinate value of the object  |
+|    |  attribute  |  w  |  Return w perspective value of the object  |
+| [DOMQuad](https://drafts.fxtf.org/geometry/#DOMQuad) | interface | DOMQuad | Objects implementing the DOMQuad interface represents a quadrilateral. |
+|  | attribute | p1 | Return a DOMPoint that represents p1 of the quadrilateral |
+|  | attribute | p2 | Return a DOMPoint that represents p2 of the quadrilateral |
+|  | attribute | p3 | Return a DOMPoint that represents p3 of the quadrilateral |
+|  | attribute | p4 | Return a DOMPoint that represents p4 of the quadrilateral |
+|  | method | getBounds() | Return bounds |
+|  [DOMRect](https://drafts.fxtf.org/geometry/#domrect)  |  attribute  |  x  |  Return x coordinate value of the object   |
+|    |  attribute  |  y  |  Return y coordinate value of the object   |
+|    |  attribute  |  width  |  Return width dimension value of the object  |
+|    |  attribute  |  height  |  Return height dimension value of the object  |
+| [DOMRectList](https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webi이) | interface | DOMRectList | The DOMRectList objects are collections of DOMRects. DOMRectList must be supported for legacy reasons. New interfaces must not use DOMRectList and may use Sequences instead. |
+|  | attribute | length | Returns the total number of DOMRect objects associated with the object. |
+|  | method | item(index) | Returns the DOMRect with the index number. |
+|  [DOMRectReadOnly](https://drafts.fxtf.org/geometry/#domrectreadonly)  |  attribute  |  x  |  Return x coordinate value of the object   |
+|    |  attribute  |  y  |  Return y coordinate value of the object   |
+|    |  attribute  |  width  |  Return width dimension value of the object  |
+|    |  attribute  |  height  |  Return height dimension value of the object  |
+|    |  attribute  |  top  |  Return min(y coordinate, y coordinate + height dimension) of the object  |
+|    |  attribute  |  right  |  Return max(x coordinate, x coordinate + width dimension) of the object  |
+|    |  attribute  |  bottom  |  Return max(y coordinate, y coordinate + height dimension) of the object  |
+|    |  attribute  |  left  |  Return min(x coordinate, x coordinate + width dimension) of the object  |
+| [DOMSettableTokenList](https://dev.w3.org/html5/spec-LC/common-dom-interfaces.html#domsettabletokenlist-0) | interface | DOMSettableTokenList | The DOMSettableTokenList interface is the same as the DOMTokenList interface, except that it allows the underlying string to be directly changed. |
+|  | attribute  | value | The value attribute must return the underlying string on getting, and must replace the underlying string with the new value on setting. |
+|  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens.  |
+|    |  method  |  item(index) (or tokenlist[index])  |  Returns the token with the index index number.  |
+|    |  method  |  contains(token)  |  Returns true if token is present, and false otherwise.  |
+|    |  method  |  add(tokens...)  |  Adds all arguments passed, except those already present.  |
+|    |  method  |  remove(tokens...)  |  Removes arguments passed, if they are present.  |
+|    |  method  |  toggle(token [, force])  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).   |
+| [Element](https://dom.spec.whatwg.org/#interface-element) | interface | Element | Element nodes are simply known as elements. |
+|  | attribute | namespaceURI | Return the context object’s namespace. |
+|  | attribute | localName | Return the value of the attribute in element's attribute list whose namespace is namespace and local name is localName, if it has one, and null otherwise. |
+|  | attribute | tagName | If namespace prefix is not null, returns the concatenation of namespace prefix, ":", and local name. Otherwise it returns the local name. |
+|  | attribute | id | Reflects the "id" content attribute. |
+|  | attribute | className | Reflects the "class" content attribute. |
+|  | attribute | classList | Returns the associated DOMTokenList object representing the context object's classes. |
+|  | attribute | attributes | Returns a NamedNodeMap. |
 |  | method | getAttribute(name) | Returns the value of the first attribute in the context object's attribute list whose name is name, and null otherwise. |
-|  |  | setAttribute(name, value) | Changes the attribute whose name is name from context object to value. |
-|  |  | removeAttribute(name) | Removes the first attribute from the context object whose name is name, if any. |
-|  |  | hasAttribute(name) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
-|  |  | getElementsByTagName(localName) | Returns the list of elements with local name localName for the context object. |
-|  |  | getElementsByClassName(classNames) | Returns the list of elements with class names classNames for the context object. |
-| [Attr](https://www.w3.org/TR/domcore/#attr) | attribute | name | Returns the name. |
-|  |  | value | Returns the value. |
-|  |  | specified | Always returns true |
-| [CharacterData](https://www.w3.org/TR/domcore/#characterdata) | attribute | data | Returns data, and on setting, must replace data with node context object offset 0, count length attribute value, and data new value. |
-|  |  | length | Returns the number of code units in data. |
-| [Text](https://www.w3.org/TR/domcore/#text) | attribute | wholeText | Returns a concatenation of the data of the contiguous Text nodes of the context object, in tree order. |
-| [Comment](https://www.w3.org/TR/domcore/#interface-comment) |  |  | Comment does not define neither attributes or methods |
-| [DOMTokenList](https://www.w3.org/TR/domcore/#interface-domtokenlist) | attribute | length | Returns the number of tokens. |
-|  | method | item(index) (or tokenlist[index]) | Returns the token with the index index number. |
-|  |  | contains(token) | Returns true if token is present, and false otherwise. |
-|  |  | add(tokens...) | Adds all arguments passed, except those already present. |
-|  |  | remove(tokens...) | Removes arguments passed, if they are present. |
-|  |  | toggle(token [, force]) | If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).  |
-|  |  |  | Returns true if token is now present, and false otherwise. |
-| Window from [HTML5](https://www.w3.org/TR/html5/browsers.html#the-window-object) and [CSSOM](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface), and [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | attribute | window | Returns window. |
-|  |  | document | Returns the document associated with window. |
-|  |  | innerHeight | Returns the inner height of a window's content area. |
-|  |  | innerWidth | Returns the inner width of a window's content area. |
-|  | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
+|  | method | setAttribute(name, value) | Changes the attribute whose name is name from context object to value. |
+|  | method | removeAttribute(name) | Removes the first attribute from the context object whose name is name, if any. |
+|  | method | hasAttribute(name) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
+|  | method | getElementsByTagName(localName) | Returns the list of elements with local name localName for the context object. |
+|  | method | getElementsByClassName(classNames) | Returns the list of elements with class names classNames for the context object. |
+| [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents. (Note: This API is supported only on TEST_MODE.)|
+| [Element](https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface) | method | getClientRects | Return a collection of rectangles that indicate the bounding rectangles for each box in a client. (Note: This API is supported only in case of that display property is `BLOCK`.)|
+|  | method | getBoundingClientRect | Return the size of an element and its position relative to the viewport. (Note: This API is supported only in case of that display property is `BLOCK`.)|
+|  | attribute | clientTop | Return the width of the top border of an element in pixels. |
+|  | attribute | clientLeft | Return the width of the left border of an element in pixels. |
+|  | attribute | clientWidth | Return zero for elements with no CSS or inline layout boxes, otherwise the inner width of an element in pixels. |
+|  | attribute | clientHeight | Return zero for elements with no CSS or inline layout boxes, otherwise the inner height of an element in pixels. |
+| [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
+|  | attribute | style | Return a live CSS declaration block. |
+| [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
+| [HTMLAudioElement](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) | interface | HTMLAudioElement | The audio element represents a sound or audio stream. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
+| [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
+|  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
+| [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
+|  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
+|    |  method  |  item(index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
+| [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |
+| [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
+| [HTMLElement 1](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
+|  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
+|  | method | click | Acts as if the element was clicked. |
+|  | method | focus | When an element is focused, key events received by the document must be targeted at that element. |
+| [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |
+| | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element |
+| [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
+| [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
+| [HTMLImageElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element) | interface | HTMLImageElement | Represents an image. |
+|  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
+|  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
+|  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
+| [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
+|  | attribute | href | Is a DOMString representing the URI for the target resource. |
+|  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
+|  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
+| [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
+|  | enum | CanPlayTypeResult | "", "maybe", "probably" |
+|  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |
+|  | attribute | src | Is a DOMString that reflects the src HTML attribute, which contains the URL of a media resource to use. |
+|  | attribute | currentSrc | Returns a DOMString with the absolute URL of the chosen media resource. |
+|  | constant | NETWORK_EMPTY = 0 |  |
+|  | constant | NETWORK_IDLE = 1 |  |
+|  | constant | NETWORK_LOADING = 2 |  |
+|  | constant | NETWORK_NO_SOURCE = 3 |  |
+|  | attribute | networkState | Returns a unsigned short (enumeration) indicating the current state of fetching the media over the network. |
+|  | attribute | preload | Is a DOMString that reflects the preload HTML attribute, indicating what data should be preloaded, if any. Possible values are: none, metadata, auto. |
+|  | attribute | buffered | Returns a TimeRanges object that indicates the ranges of the media source that the browser has buffered (if any) at the moment the buffered property is accessed. |
+|  | method | load() | Resets the media element and restarts the media resource. Any pending events are discarded. How much media data is fetched is still affected by the preload attribute. This method can be useful for releasing resources after any src attribute and source element descendants have been removed. Otherwise, it is usually unnecessary to use this method, unless required to rescan source element children after dynamic changes. |
+|  | method | canPlayType(DOMString type) | Determines whether the specified media type can be played back. |
+|  | constant | HAVE_NOTHING = 0 |  |
+|  | constant | HAVE_METADATA = 1 |  |
+|  | constant | HAVE_CURRENT_DATA = 2 |  |
+|  | constant | HAVE_FUTURE_DATA = 3 |  |
+|  | constant | HAVE_ENOUGH_DATA = 4 |  |
+|  | attribute | readyState | Returns a unsigned short (enumeration) indicating the readiness state of the media. |
+|  | attribute | seeking | Returns a TimeRanges object that contains the time ranges that the user is able to seek to, if any. |
+|  | attribute | currentTime | Is a double indicating the current playback time in seconds. Setting this value seeks the media to the new time. |
+|  | attribute | duration | Returns a double indicating the length of the media in seconds, or 0 if no media data is available. |
+|  | attribute | paused | Returns a Boolean that indicates whether the media element is paused. |
+|  | attribute | defaultPlaybackRate | Is a double indicating the default playback rate for the media. |
+|  | attribute | playbackRate | Is a double that indicates the rate at which the media is being played back.  |
+|  | attribute | played | Returns a TimeRanges object that contains the ranges of the media source that the browser has played, if any. |
+|  | attribute | seekable | Returns a TimeRanges object that contains the time ranges that the user is able to seek to, if any. |
+|  | attribute | ended | Returns a Boolean that indicates whether the media element has finished playing. |
+|  | attribute | autoplay | A Boolean that reflects the autoplay HTML attribute, indicating whether playback should automatically begin as soon as enough media is available to do so without interruption. |
+|  | attribute | loop | Is a Boolean that reflects the loop HTML attribute, which indicates whether the media element should start over when it reaches the end. |
+|  | method | play() | Begins playback of the media. |
+|  | method | pause() | Pauses the media playback. |
+|  | attribute | volume | Is a double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest). |
+|  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
+|  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
+|  | method | addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "") |  |
+| [HTMLMetaElement](https://html.spec.whatwg.org/multipage/semantics.html#meta) | interface | HTMLMetaElement | The meta element represents various kinds of metadata that cannot be expressed using the title, base, link, style, and script elements. |
+| [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
+| [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
+| [HTMLPreElement](https://html.spec.whatwg.org/multipage/semantics.html#the-pre-element) | interface | HTMLPreElement | The HTMLPreElement interface expose specific properties and methods for manipulating block of preformatted text. |
+| [HTMLScriptElement](https://html.spec.whatwg.org/multipage/scripting.html#the-script-element) | interface | HTMLScriptElement | The script element allows authors to include dynamic script and data blocks in their documents. |
+|  | attribute | src | Address of the resource.<br>&lt;URL&gt; must be a local path. |
+|  | attribute | type | Type of embedded resource.<br>Allowed value: text/javascript |
+|  | attribute | charset | Character encoding of the external script resource.<br>Allowed value: UTF-8 |
+|  | attribute | text | Return the child text content of the script element |
+| [HTMLSourceElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSourceElement) | interface | HTMLSourceElement | The HTMLSourceElement interface provides special properties for manipulating <source> elements. |
+|  | attribute | src | DOMString reflecting the src HTML attribute, containing the URL for the media resource. (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
+|  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |
+| [HTMLSpanElement](https://html.spec.whatwg.org/multipage/semantics.html#the-span-element) | interface | HTMLSpanElement | The span element is a generic inline container for phrasing content. |
+| [HTMLStyleElement](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) | interface | HTMLStyleElement | The style element allows authors to embed style information in their documents. |
+|  | attribute | type | Type of embedded resource<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
+|  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
+|    |    |  rowSpan  |  rowspan content attribute  |
+|    |    |  bgColor  |  bgcolor content attributes  |
+| [HTMLTableColElement](https://html.spec.whatwg.org/#htmltablecolelement) | interface | HTMLTableColElement |  |
+|  | attribute | span | Number of columns spanned by the element. |
+| [HTMLTableSectionElement](https://html.spec.whatwg.org/#htmltablesectionelement) | interface | HTMLTableSectionElement |  |
+| [HTMLTrackElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element) | interface | HTMLTrackElement | The track element allows authors to specify explicit external timed text tracks for media elements. It does not represent anything on its own. |
+|  | attribute | kind | Return value of keywords such as subtitles, captions, descriptions, chapters and metadata. |
+|  | attribute | src | Gives the URL of the text track data. |
+|  | attribute | srclang | Gives the language of the text track data. |
+|  | attribute | label | Gives a user-readable title for the track. |
+|  | attribute | default | Indicates that the track is to be enabled if the user's preferences do not indicate that another track would be more appropriate. |
+|  | constant | NONE | Indicates that the text track's cues have not been obtained. |
+|  | constant | LOADING | Indicates that the text track is loading and there have been no fatal errors encountered so far. Further cues might still be added to the track by the parser. |
+|  | constant | LOADED | Indicates that the text track has been loaded with no fatal errors. |
+|  | constant | ERROR | Indicates that the text track was enabled, but when the user agent attempted to obtain it, this failed in some way. Some or all of the cues are likely missing and will not be obtained. |
+|  | attribute | readyState | Returns the numeric value corresponding to the text track readiness state  |
+|  | attribute | track | Returns the TextTrack object corresponding to the text track of the track element. |
+| [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
+| [HTMLVideoElement](https://html.spec.whatwg.org/#htmlvideoelement) | interface | HTMLVideoElement | A video element is used for playing videos or movies, and audio files with captions. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
+|  | attribute | width | Returns the dimensions of the visual content of the video. |
+|  | attribute | height | Returns the dimensions of the visual content of the video. |
+|  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
+|  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
+|  | attribute | poster | Not supported (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
+| [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
+|  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
+|  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
+|  | constant | DOM_KEY_LOCATION_RIGHT = 0x02 |  |
+|  | constant | DOM_KEY_LOCATION_NUMPAD = 0x03 |  |
+|  | attribute | ctrlKey | Returns a Boolean that is true if the Ctrl key was active when the key event was generated. |
+|  | attribute | shiftKey | Returns a Boolean that is true if the Shift key was active when the key event was generated. |
+|  | attribute | altKey | Returns a Boolean that is true if the Alt key was active when the key event was generated. |
+|  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
+|  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
+| [KeyboardEventInit](https://w3c.github.io/uievents/#dictdef-keyboardeventinit) | dictionary | KeyboardEventInit | `{ DOMString key = ""; DOMString code = ""; unsigned long location = 0; boolean repeat = false; boolean isComposing = false; }` |
+| [LinkStyle](https://drafts.csswg.org/cssom/#the-linkstyle-interface) | interface | LinkStyle |  |
+| [NamedNodeMap](https://dom.spec.whatwg.org/#interface-namednodemap) | interface | NamedNodeMap |  |
+|  | attribute | length | Return the attribute list’s size. |
+|  | method | item(index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
+|  | method | getNamedItem(qualifiedName) | Return the result of getting an attribute given qualifiedName and element. |
+|  | method | setNamedItem(attr) | Return the result of setting an attribute given attr and element. |
+|  | method | removeNamedItem(qualifiedName) | Remove the attribute identified by the given map. |
+| [Node](https://dom.spec.whatwg.org/#interface-node) | interface | Node | Node is an abstract interface and does not exist as node. It is used by all nodes (Document, DocumentType, DocumentFragment, Element, Text, ProcessingInstruction, and Comment). |
+|  | constant | ELEMENT_NODE | Node is an element. |
+|  | constant | ATTRIBUTE_NODE | Node is an attribute |
+|  | constant | TEXT_NODE | Node is a Text node. |
+|  | constant | CDATA_SECTION_NODE | Node is a CDATASection node. |
+|  | constant | ENTITY_REFERENCE_NODE | Node is an entry preference node |
+|  | constant | ENTITY_NODE | Node is an entry node |
+|  | constant | PROCESSING_INSTRUCTION_NODE | Node is a ProcessingInstruction node. |
+|  | constant | COMMENT_NODE | Node is a Comment node. |
+|  | constant | DOCUMENT_NODE | Node is a document. |
+|  | constant | DOCUMENT_TYPE_NODE | Node is a doctype. |
+|  | constant | DOCUMENT_FRAGMENT_NODE | Node is a DocumentFragment node. |
+|  | constant | NOTATION_NODE | Node is a notation node |
+|  | attribute | nodeType | Returns the node type |
+|  | attribute | nodeName | Retuns the node name |
+|  | attribute | ownerDocument | Returns the node document. Returns null for documents. |
+|  | attribute | parentNode | Returns the parent. |
+|  | attribute | parentElement | Returns the parent element. |
+|  | method | hasChildNodes | Returns whether node has children. |
+|  | attribute | childNodes | Returns the children. |
+|  | attribute | firstChild | Returns the first child. |
+|  | attribute | cloneNode | Returns a copy of node. If deep is true, the copy also includes the node’s descendants. |
+|  | attribute | previousSibling | Returns the previous sibling. |
+|  | attribute | nextSibling | Returns the next sibling. |
+|  | attribute | nodeValue | Gets and sets Attr, Text, ProcessingInstruction, Comment depending on the context object: |
+|  | attribute | textContent | Gets and sets DocumentFragment, Element, Attr, Text, ProcessingInstruction, Comment switching on context object |
+|  | method | normalize | Removes empty exclusive Text nodes and concatenates the data of remaining contiguous exclusive Text nodes into the first of their nodes. |
+|  | method | isEqualNode | Returns whether node and otherNode have the same properties. |
+|  | constant | DOCUMENT_POSITION_DISCONNECTED = 0x01; | Set when node and other are not in the same tree. |
+|  | constant | DOCUMENT_POSITION_PRECEDING = 0x02; | Set when other is preceding node. |
+|  | constant | DOCUMENT_POSITION_FOLLOWING = 0x04; | Set when other is following node. |
+|  | constant | DOCUMENT_POSITION_CONTAINS = 0x08; | Set when other is an ancestor of node. |
+|  | constant | DOCUMENT_POSITION_CONTAINED_BY = 0x10; | Set when other is a descendant of node. |
+|  | constant | DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; |  |
+|  | method | compareDocumentPosition | Returns a bitmask indicating the position of other relative to node.  |
+|  | method | contains | Returns true if other is an inclusive descendant of context object, and false otherwise |
+|  | method | insertBefore | Returns the result of pre-inserting node into context object before child. |
+|  | method | appendChild | Returns the result of appending node to context object. |
+|  | method | replaceChild | Returns the result of replacing child with node within context object. |
+|  | method | removeChild | Returns the result of pre-removing child from context object. |
+|  | attribute | lastChild | Returns the last child |
+| [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A NodeList object is a collection of nodes. |
+|  | method | item(index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
+|  | attribute | length | Returns the number of nodes in the collection. |
+|  | iterable&lt;Node&gt; |  |  |
+| [NonDocumentTypeChildNode](https://dom.spec.whatwg.org/#nondocumenttypechildnode) | interface | NonDocumentTypeChildNode | The NonDocumentTypeChildNode interface contains methods that are particular to Node Object that can have a sibling. |
+|  | attribute | previousElementSibling | Returns the Element immediately prior to this node in its parent's children list, or null if there is no Element in the list prior to this node. |
+|  | attribute | nextElementSibling | Returns the Element immediately following this node in its parent's children list, or null if there is no Element in the list following this node. |
+| [NonElementParentNode](https://www.w3.org/TR/dom/#interface-nonelementparentnode) | interface | NonElementParentNode |  |
+|  | method | getElementById(id) | Returns the first element within node's descendants whose ID is elementId. |
+| [ParentNode](none) | interface | ParentNode | The ParentNode interface contains methods that are particular to Node objects that can have children. |
+|  | attribute | firstElementChild | Returns the Element that is the first child of this ParentNode, or null if there is none. |
+|  | attribute | lastElementChild | Returns the Element that is the last child of this ParentNode, or null if there is none. |
+|  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
+|  | method | querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
+|  | method | querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
+| [Slotable](none) | interface | Slotable |  |
+| [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
+|  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
+| [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
+|  | enum | TextTrackMode | "disabled",  "hidden",  "showing" |
+|  | enum | TextTrackKind | "subtitles",  "captions",  "descriptions",  "chapters",  "metadata" |
+|  | attribute  | kind | Returns the text track kind string. |
+|  | attribute  | label | Returns the text track label, if there is one, or the empty string otherwise  |
+|  | attribute  | language | Returns the text track language string. |
+|  | attribute  | id | Returns the ID of the given track. |
+|  | attribute  | mode | Gets and sets the text track mode |
+|  | attribute  | cues | Returns the text track list of cues, as a TextTrackCueList object. |
+|  | attribute  | activeCues | Returns a live TextTrackCueList object  |
+|  | method | addCue | Add cue to the method's TextTrack object's text track's text track list of cues. |
+|  | method | removeCue | Remove cue from the method's TextTrack object's text track's text track list of cues. |
+|  | attribute  | oncuechange | The event handler for the cue change event  |
+| [TextTrackCue](https://html.spec.whatwg.org/#texttrackcue) | interface | TextTrackCue | A text track cue is the unit of time-sensitive data in a text track, corresponding for instance for subtitles and captions to the text that appears at a particular time and disappears at another time. |
+|  | attribute | track | Returns the TextTrack object to which this text track cue belongs, if any, or null otherwise. |
+|  | attribute | id | Gets and sets the text track cue identifier. |
+|  | attribute | startTime | Gets and setsthe text track cue start time, in seconds. |
+|  | attribute | endTime | Gets and sets the text track cue end time, in seconds. |
+|  | attribute | onenter | The event handler for the enter event  |
+|  | attribute | onexit | The event handler for the exit event  |
+|  [TextTrackCueList](https://html.spec.whatwg.org/#texttrackcuelist)  |  attribute  |  length |  Return the number of cues in the list represented by the TextTrackCueList object  |
+|    |  method  |  TextTrackCue[index]  |  Return Text track cue object with index  |
+| [TextTrackList](https://html.spec.whatwg.org/#texttracklist) | interface | TextTrackList | A TextTrackList object represents a dynamically updating list of text tracks in a given order. |
+|  | attribute | length | Returns the number of text tracks associated with the media element. |
+|  | method | [index] | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
+|  | method | getTrackById(id) | Returns the TextTrack object with the given identifier, or null if no track has that identifier. |
+| [VTTCue](https://w3c.github.io/webvtt/#vttcue) | interface | VTTCue | VTTCues represent a cue in a text track. |
+|  | enum | AutoKeyword | "auto" |
+|  | typedef | (double or AutoKeyword) LineAndPositionSetting |  |
+|  | enum | DirectionSetting | "", "rl", "lr" |
+|  | enum | LineAlignSetting | "start", "center", "end" |
+|  | enum | PositionAlignSetting | "line-left", "center", "line-right", "auto" |
+|  | enum | AlignSetting | "start", "center", "end", "left", "right" |
+|  | attribute | text | Return the raw text track cue text of the WebVTT cue that the VTTCue object represents. On setting, the text track cue text must be set to the new value. |
+|  | method | getCueAsHTML() | Convert the text track cue text to a DocumentFragment for the responsible document specified by the entry settings object by applying the WebVTT cue text DOM construction rules to the result of applying the WebVTT cue text parsing rules to the text track cue text. |
+| [XMLDocument](https://www.w3.org/TR/dom/#interface-document) | interface | XMLDocument | The XMLDocument interface represent an XML document. |
+| [History](https://html.spec.whatwg.org/multipage/browsers.html#the-history-interface) | interface | History | The History interface allows to manipulate the browser session history, that is the pages visited in the tab or frame that the current page is loaded in. |
+|  | attribute | length | Returns an Integer representing the number of elements in the session history, including the currently loaded page. For example, for a page loaded in a new tab this property returns 1. |
+|  | attribute | state | Returns an any value representing the state at the top of the history stack. This is a way to look at the state without having to wait for a popstate event. |
+|  | method | go(optional long delta = 0) | Loads a page from the session history, identified by its relative location to the current page, for example -1 for the previous page or 1  for the next page. |
+|  | method | back() | Goes to the previous page in session history, the same action as when the user clicks the browser's Back button. Equivalent to history.go(-1). |
+|  | method | forward() | Goes to the next page in session history, the same action as when the user clicks the browser's Forward button; this is equivalent to history.go(1). |
+|  | method | pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
+|  | method | replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
+|  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location)  |  attribute  |  href  |  Return Location object's url  |
+|    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":"  |
+|    |  attribute  |  host  |  Return url's host, serialized, followed by ":" and url's port, serialized  |
+|    |  attribute  |  pathname  |  Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/"  |
+|    |  attribute  |  search  |  Return "?", followed by this Location object's url's query  |
+|    |  attribute  |  hash  |  Return "#", followed by this Location object's url's fragment  |
+| [MediaSource](https://w3c.github.io/media-source/#mediasource) | enum | ReadyState | "closed", "open", "ended" |
+|  | enum | EndOfStreamError  | "network", "decode" |
+|  | interface | MediaSource | The MediaSource object represents a source of media data for an HTMLMediaElement. |
+|  | attribute | sourceBuffers | Contains the list of SourceBuffer objects associated with this MediaSource. |
+|  | attribute | activeSourceBuffers | Contains the subset of sourceBuffers that are providing the selected video track, the enabled audio track(s), and the "showing" or "hidden" text track(s). |
+|  | attribute | readyState | Indicates the current state of the MediaSource object. |
+|  | attribute | duration | Allows the web application to set the presentation duration. |
+|  | method | addSourceBuffer(type) | Adds a new SourceBuffer to sourceBuffers. |
+|  | method | removeSourceBuffer(sourceBuffer) | Removes a SourceBuffer from sourceBuffers. |
+|  | method | endOfStream(optional error) | Signals the end of the stream. |
+|  | method | isTypeSupported(type) | Check to see whether the MediaSource is capable of creating SourceBuffer objects for the specified MIME type. |
+|  [SourceBuffer](https://w3c.github.io/media-source/#sourcebuffer)  |  attribute  |  mode  |  Controls how a sequence of media segments are handled  |
+|    |  attribute  |  updating  |  Return whether the asynchronous continuation of an appendBuffer() or remove() operation is still being processed  |
+|    |  attribute  |  buffered  |  Return what TimeRanges are buffered in the SourceBuffer  |
+|    |  attribute  |  timestampOffset  |  Controls the offset applied to timestamps inside subsequent media segments that are appended to this SourceBuffer  |
+|    |  attribute  |  textTracks  |  Return The list of TextTrack objects created by this object  |
+|    |  attribute  |  appendWindowStart  |  The presentation timestamp for the start of the append window  |
+|    |  attribute  |  appendWindowEnd  |  The presentation timestamp for the end of the append window  |
+|    |  attribute  |  onupdatestart  |  The event handler for the updatestart event  |
+|    |  attribute  |  onupdate  |  The event handler for the update event  |
+|    |  attribute  |  onupdateend  |  The event handler for the updateend event  |
+|    |  attribute  |  onerror  |  The event handler for the error event  |
+|    |  attribute  |  onabort  |  The event handler for the abort event  |
+|    |  method  |  appendBuffer  |  Appends the segment data in an BufferSource to the source buffer |
+|    |  method  |  abort  |  Aborts the current segment and resets the segment parser  |
+|    |  method  |  remove  |  Removes media for a specific time range  |
+|  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
+|    |  method  |  SourceBuffer[index]  |  Return SourceBuffer object with index  |
+| [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
+|  | attribute | length | Returns the number of ranges in the object. |
+|  | method | start(index) | Returns the time for the start of the range with the given index. |
+|  | method | end(index) | Returns the time for the end of the range with the given index. |
+| [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
+|  | attribute | window | Returns window. |
+|  | attribute | document | Returns the document associated with window. |
+|  | attribute | location | Return this Window object's Location object. |
+|  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
+|  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
+| [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
+|  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
+| [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
+| [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
+|  | attribute | href | A DOMString containing the whole URL. |
+|  | attribute | origin | A DOMString containing the origin of the URL, that is its scheme, its domain and its port. |
+|  | attribute | protocol | A DOMString containing the protocol scheme of the URL, including the final ':'. |
+|  | attribute | username | A DOMString containing the username specified before the domain name. |
+|  | attribute | password | A DOMString containing the password specified before the domain name. |
+|  | attribute | host | A DOMString containing the host, that is the hostname, a ':', and the port of the URL. |
+|  | attribute | hostname | A DOMString containing the domain of the URL. |
+|  | attribute | port | A DOMString containing the port number of the URL. |
+|  | attribute | pathname | A DOMString containing an initial '/' followed by the path of the URL. |
+|  | attribute | search | A DOMString containing a '?' followed by the parameters of the URL. |
+|  | attribute | hash | A DOMString containing a '#' followed by the fragment identifier of the URL. |
+|  | method | createObjectURL(Blob blob) | Returns a DOMString containing a unique blob URL, that is a URL with blob: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
+|  | method | createObjectURL(MediaSource mediaSource) | Returns a DOMString containing a unique blob URL, that is a URL with media source: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
+|  | method | revokeObjectURL(DOMString url) | Revokes an object URL previously created using URL.createObjectURL() |
 | [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | setTimeout(handler [, timeout [, arguments... ]]) | Calls a function or evaluates an expression after a specified number of milliseconds. |
-|  |  | clearTimeout(handle) | Clears a timer set with setTimeout(). |
-|  |  | setInterval(handler [, timeout [, arguments...]]) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
-|  |  | clearInterval(handle) | Clears a timer set with setInterval(). |
+|  | method | clearTimeout(handle) | Clears a timer set with setTimeout(). |
+|  | method | setInterval(handler [, timeout [, arguments...]]) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
+|  | method | clearInterval(handle) | Clears a timer set with setInterval(). |
 
 ## Event
 | Interface | Type | Name | Description | Note |
