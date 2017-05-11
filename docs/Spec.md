@@ -55,6 +55,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |[Common Definitions](https://heycam.github.io/webidl/#common) | typedef | (unsigned long long) DOMTimeStamp | The DOMTimeStamp type is used for representing a number of milliseconds, either as an absolute time (relative to some epoch) or as a relative amount of time. |
 |  | typedef | (Int8Array or Int16Array or Int32Array or Uint8Array or Uint16Array or Uint32Array or Uint8ClampedArray or Float32Array or Float64Array or DataView) ArrayBufferView |  |
 |  | typedef | (ArrayBufferView or ArrayBuffer) BufferSource |  |
+|  | callback | Function = any (any... arguments) | |
+|  | callback | VoidFunction = void () | |
 | [Attr](https://dom.spec.whatwg.org/#interface-attr) | interface | Attr | Attr nodes are simply known as attributes. They are sometimes referred to as content attributes to avoid confusion with IDL attributes. |
 |  | attribute | localName | Return the local name. |
 |  | attribute | name | Return the qualified name. |
@@ -161,7 +163,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  height  |  Return height dimension value of the object  |
 | [DOMRectList](https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webi이) | interface | DOMRectList | The DOMRectList objects are collections of DOMRects. DOMRectList must be supported for legacy reasons. New interfaces must not use DOMRectList and may use Sequences instead. |
 |  | attribute | length | Returns the total number of DOMRect objects associated with the object. |
-|  | method | item(index) | Returns the DOMRect with the index number. |
+|  | method | DOMRect? item(unsigned long index) | Returns the DOMRect with the index number. |
 |  [DOMRectReadOnly](https://drafts.fxtf.org/geometry/#domrectreadonly)  |  attribute  |  x  |  Return x coordinate value of the object   |
 |    |  attribute  |  y  |  Return y coordinate value of the object   |
 |    |  attribute  |  width  |  Return width dimension value of the object  |
@@ -203,6 +205,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
 | [HTMLAudioElement](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) | interface | HTMLAudioElement | The audio element represents a sound or audio stream. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
+|  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
 | [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
@@ -219,6 +222,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
 | [HTMLImageElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element) | interface | HTMLImageElement | Represents an image. |
+|  | constructor | Image(optional unsigned long width, optional unsigned long height) |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
@@ -296,13 +300,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | ERROR | Indicates that the text track was enabled, but when the user agent attempted to obtain it, this failed in some way. Some or all of the cues are likely missing and will not be obtained. |
 |  | attribute | readyState | Returns the numeric value corresponding to the text track readiness state  |
 |  | attribute | track | Returns the TextTrack object corresponding to the text track of the track element. |
-| [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
 | [HTMLVideoElement](https://html.spec.whatwg.org/#htmlvideoelement) | interface | HTMLVideoElement | A video element is used for playing videos or movies, and audio files with captions. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | attribute | width | Returns the dimensions of the visual content of the video. |
 |  | attribute | height | Returns the dimensions of the visual content of the video. |
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
-|  | attribute | poster | Not supported (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
 | [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
 |  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
 |  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
@@ -314,7 +316,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
 |  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
 | [KeyboardEventInit](https://w3c.github.io/uievents/#dictdef-keyboardeventinit) | dictionary | KeyboardEventInit | `{ DOMString key = ""; DOMString code = ""; unsigned long location = 0; boolean repeat = false; boolean isComposing = false; }` |
-| [LinkStyle](https://drafts.csswg.org/cssom/#the-linkstyle-interface) | interface | LinkStyle |  |
 | [NamedNodeMap](https://dom.spec.whatwg.org/#interface-namednodemap) | interface | NamedNodeMap |  |
 |  | attribute | length | Return the attribute list’s size. |
 |  | method | item(index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
@@ -377,7 +378,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
 |  | method | querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
-| [Slotable](none) | interface | Slotable |  |
 | [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
 |  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
 | [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
@@ -404,8 +404,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  TextTrackCue[index]  |  Return Text track cue object with index  |
 | [TextTrackList](https://html.spec.whatwg.org/#texttracklist) | interface | TextTrackList | A TextTrackList object represents a dynamically updating list of text tracks in a given order. |
 |  | attribute | length | Returns the number of text tracks associated with the media element. |
-|  | method | [index] | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
-|  | method | getTrackById(id) | Returns the TextTrack object with the given identifier, or null if no track has that identifier. |
+|  | method | TextTrack (unsigned long index) | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
+|  | method | TextTrack? getTrackById(DOMString id) | Returns the TextTrack object with the given identifier, or null if no track has that identifier. |
 | [VTTCue](https://w3c.github.io/webvtt/#vttcue) | interface | VTTCue | VTTCues represent a cue in a text track. |
 |  | enum | AutoKeyword | "auto" |
 |  | typedef | (double or AutoKeyword) LineAndPositionSetting |  |
@@ -513,13 +513,13 @@ This section describes the complete list of supported HTML tags and attributes b
 | | dictionary | EventInit::bubles | Initializes an Event object with bubbles. |
 | | dictionary | EventInit::cancelable | Initializes an Event object with cancelable. |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
-| | method | addEventListener(type, EventListener? callback, capture = false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
-| | method | removeEventListener(type, EventListener? callback, capture = false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
-| | method | dispatchEvent(event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
-| | callback | EventListener | An event listener can be used to observe a specific event. |
-| | callback | EventHandlerNonNull| |
-| | callback | OnErrorEventHandlerNonNull | |
-| | callback | OnBeforeUnloadEventHandlerNonNull | |
+| | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
+| | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
+| | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
+| | callback | EventListener = void () | An event listener can be used to observe a specific event. |
+| | callback | EventHandlerNonNull = any (Event event)| |
+| | callback | OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long colno, optional any error) | |
+| | callback | OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event) | |
 | | typedef | (EventHandlerNonNull?) EventHandler | |
 | | typedef | (OnErrorEventHandlerNonNull?) OnErrorEventHandler | |
 | | typedef | (OnBeforeUnloadEventHandlerNonNull?) OnBeforeUnloadEventHandler | |
