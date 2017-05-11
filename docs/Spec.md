@@ -68,8 +68,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | data | Getter must return context object’s data. Its setter must replace data with node context object, offset 0, count context object’s length, and data new value. |
 |  | attribute | length | Return context object’s length. |
 | [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | The childNodes interface contains methods that are particular to Node objects that can have a parent. |
-|  | method | remove() | Removes this childNodes from the children list of its parent. |
+|  | method | void remove() | Removes this childNodes from the children list of its parent. |
 | [Comment](https://dom.spec.whatwg.org/#interface-comment) | interface | Comment | The Comment interface represents textual notations within markup; although it is generally not visually shown, such comments are available to be read in the source view |
+||constructor|Comment(optional DOMString data = "")|Returns a Comment object with the parameter as its textual content.|
 | [CSSRule](https://drafts.csswg.org/cssom/#the-cssrule-interface) | interface | CSSRule | The CSSRule interface represents an abstract, base CSS style rule. Each distinct CSS style rule type is represented by a distinct interface that inherits from this interface. |
 |  | constant | STYLE_RULE = 1 |  |
 |  | constant | CHARSET_RULE = 2 |  |
@@ -137,6 +138,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | INVALID_NODE_TYPE_ERR = 24 | The supplied node is incorrect or has an incorrect ancestor for this operation. |
 |  | constant | DATA_CLONE_ERR = 25 | The object can not be cloned. |
 | [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
+|| constructor |DOMParser()| Create a new DOMParser |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
 | [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
 |  | constructor | DOMPoint(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double w = 1) | Creates a new DOMPoint object. |
@@ -153,16 +155,17 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  z  |  Return z coordinate value of the object  |
 |    |  attribute  |  w  |  Return w perspective value of the object  |
 | [DOMQuad](https://drafts.fxtf.org/geometry/#DOMQuad) | interface | DOMQuad | Objects implementing the DOMQuad interface represents a quadrilateral. |
+||constructor|DOMQuad(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4)||
 |  | attribute | p1 | Return a DOMPoint that represents p1 of the quadrilateral |
 |  | attribute | p2 | Return a DOMPoint that represents p2 of the quadrilateral |
 |  | attribute | p3 | Return a DOMPoint that represents p3 of the quadrilateral |
 |  | attribute | p4 | Return a DOMPoint that represents p4 of the quadrilateral |
-|  | method | getBounds() | Return bounds |
+|  | method | DOMRect getBounds() | Return bounds |
 |  [DOMRect](https://drafts.fxtf.org/geometry/#domrect)  |  attribute  |  x  |  Return x coordinate value of the object   |
 |    |  attribute  |  y  |  Return y coordinate value of the object   |
 |    |  attribute  |  width  |  Return width dimension value of the object  |
 |    |  attribute  |  height  |  Return height dimension value of the object  |
-| [DOMRectList](https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webi이) | interface | DOMRectList | The DOMRectList objects are collections of DOMRects. DOMRectList must be supported for legacy reasons. New interfaces must not use DOMRectList and may use Sequences instead. |
+| [DOMRectList](https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webidl) | interface | DOMRectList | The DOMRectList objects are collections of DOMRects. DOMRectList must be supported for legacy reasons. New interfaces must not use DOMRectList and may use Sequences instead. |
 |  | attribute | length | Returns the total number of DOMRect objects associated with the object. |
 |  | method | DOMRect? item(unsigned long index) | Returns the DOMRect with the index number. |
 |  [DOMRectReadOnly](https://drafts.fxtf.org/geometry/#domrectreadonly)  |  attribute  |  x  |  Return x coordinate value of the object   |
@@ -223,7 +226,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
 | [HTMLImageElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element) | interface | HTMLImageElement | Represents an image. |
-|  | constructor | Image(optional unsigned long width, optional unsigned long height) |  |
+|  | constructor | Image(optional unsigned long width = 0, optional unsigned long height = 0) |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
@@ -231,6 +234,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
+| [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
 |  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |
@@ -243,8 +247,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | networkState | Returns a unsigned short (enumeration) indicating the current state of fetching the media over the network. |
 |  | attribute | preload | Is a DOMString that reflects the preload HTML attribute, indicating what data should be preloaded, if any. Possible values are: none, metadata, auto. |
 |  | attribute | buffered | Returns a TimeRanges object that indicates the ranges of the media source that the browser has buffered (if any) at the moment the buffered property is accessed. |
-|  | method | load() | Resets the media element and restarts the media resource. Any pending events are discarded. How much media data is fetched is still affected by the preload attribute. This method can be useful for releasing resources after any src attribute and source element descendants have been removed. Otherwise, it is usually unnecessary to use this method, unless required to rescan source element children after dynamic changes. |
-|  | method | canPlayType(DOMString type) | Determines whether the specified media type can be played back. |
+|  | method |  void load() | Resets the media element and restarts the media resource. Any pending events are discarded. How much media data is fetched is still affected by the preload attribute. This method can be useful for releasing resources after any src attribute and source element descendants have been removed. Otherwise, it is usually unnecessary to use this method, unless required to rescan source element children after dynamic changes. |
+|  | method | CanPlayTypeResult canPlayType(DOMString type) | Determines whether the specified media type can be played back. |
 |  | constant | HAVE_NOTHING = 0 |  |
 |  | constant | HAVE_METADATA = 1 |  |
 |  | constant | HAVE_CURRENT_DATA = 2 |  |
@@ -262,12 +266,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | ended | Returns a Boolean that indicates whether the media element has finished playing. |
 |  | attribute | autoplay | A Boolean that reflects the autoplay HTML attribute, indicating whether playback should automatically begin as soon as enough media is available to do so without interruption. |
 |  | attribute | loop | Is a Boolean that reflects the loop HTML attribute, which indicates whether the media element should start over when it reaches the end. |
-|  | method | play() | Begins playback of the media. |
-|  | method | pause() | Pauses the media playback. |
+|  | method | Promise<void> play() | Begins playback of the media. |
+|  | method | void pause() | Pauses the media playback. |
 |  | attribute | volume | Is a double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest). |
 |  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
 |  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
-|  | method | addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "") |  |
+|  | method | TextTrack addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "") |  |
 | [HTMLMetaElement](https://html.spec.whatwg.org/multipage/semantics.html#meta) | interface | HTMLMetaElement | The meta element represents various kinds of metadata that cannot be expressed using the title, base, link, style, and script elements. |
 | [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
 | [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
@@ -307,6 +311,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 | [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
+|| constructor | KeyboardEvent(DOMString type, optional KeyboardEventInit eventInitDict) | Creates a new KeyboardEvent. |
 |  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
 |  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
 |  | constant | DOM_KEY_LOCATION_RIGHT = 0x02 |  |
@@ -377,10 +382,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | firstElementChild | Returns the Element that is the first child of this ParentNode, or null if there is none. |
 |  | attribute | lastElementChild | Returns the Element that is the last child of this ParentNode, or null if there is none. |
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
-|  | method | querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
-|  | method | querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
-| [Text](https://dom.spec.whatwg.org/#text) | constructor | Text(optional DOMString data = "") | Text node whose data is data and node document is current global object’s associated Document. |
-|  | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
+|  | method | Element? querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
+|  | method | NodeList querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
+| [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
 |  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
 | [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
 |  | enum | TextTrackMode | "disabled",  "hidden",  "showing" |
@@ -409,6 +413,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | TextTrack (unsigned long index) | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
 |  | method | TextTrack? getTrackById(DOMString id) | Returns the TextTrack object with the given identifier, or null if no track has that identifier. |
 | [VTTCue](https://w3c.github.io/webvtt/#vttcue) | interface | VTTCue | VTTCues represent a cue in a text track. |
+|| constructor | VTTCue(double startTime, double endTime, DOMString text) | Create a new VTTCue |
 |  | enum | AutoKeyword | "auto" |
 |  | typedef | (double or AutoKeyword) LineAndPositionSetting |  |
 |  | enum | DirectionSetting | "", "rl", "lr" |
@@ -416,16 +421,16 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | enum | PositionAlignSetting | "line-left", "center", "line-right", "auto" |
 |  | enum | AlignSetting | "start", "center", "end", "left", "right" |
 |  | attribute | text | Return the raw text track cue text of the WebVTT cue that the VTTCue object represents. On setting, the text track cue text must be set to the new value. |
-|  | method | getCueAsHTML() | Convert the text track cue text to a DocumentFragment for the responsible document specified by the entry settings object by applying the WebVTT cue text DOM construction rules to the result of applying the WebVTT cue text parsing rules to the text track cue text. |
+|  | method | DocumentFragment getCueAsHTML() | Convert the text track cue text to a DocumentFragment for the responsible document specified by the entry settings object by applying the WebVTT cue text DOM construction rules to the result of applying the WebVTT cue text parsing rules to the text track cue text. |
 | [XMLDocument](https://www.w3.org/TR/dom/#interface-document) | interface | XMLDocument | The XMLDocument interface represent an XML document. |
 | [History](https://html.spec.whatwg.org/multipage/browsers.html#the-history-interface) | interface | History | The History interface allows to manipulate the browser session history, that is the pages visited in the tab or frame that the current page is loaded in. |
 |  | attribute | length | Returns an Integer representing the number of elements in the session history, including the currently loaded page. For example, for a page loaded in a new tab this property returns 1. |
 |  | attribute | state | Returns an any value representing the state at the top of the history stack. This is a way to look at the state without having to wait for a popstate event. |
-|  | method | go(optional long delta = 0) | Loads a page from the session history, identified by its relative location to the current page, for example -1 for the previous page or 1  for the next page. |
-|  | method | back() | Goes to the previous page in session history, the same action as when the user clicks the browser's Back button. Equivalent to history.go(-1). |
-|  | method | forward() | Goes to the next page in session history, the same action as when the user clicks the browser's Forward button; this is equivalent to history.go(1). |
-|  | method | pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
-|  | method | replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
+|  | method | void go(optional long delta = 0) | Loads a page from the session history, identified by its relative location to the current page, for example -1 for the previous page or 1  for the next page. |
+|  | method | void back() | Goes to the previous page in session history, the same action as when the user clicks the browser's Back button. Equivalent to history.go(-1). |
+|  | method | void forward() | Goes to the next page in session history, the same action as when the user clicks the browser's Forward button; this is equivalent to history.go(1). |
+|  | method | void pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
+|  | method | void replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
 |  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location)  |  attribute  |  href  |  Return Location object's url  |
 |    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":"  |
 |    |  attribute  |  host  |  Return url's host, serialized, followed by ":" and url's port, serialized  |
@@ -474,6 +479,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
 | [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
+|| constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
 |  | attribute | href | A DOMString containing the whole URL. |
 |  | attribute | origin | A DOMString containing the origin of the URL, that is its scheme, its domain and its port. |
 |  | attribute | protocol | A DOMString containing the protocol scheme of the URL, including the final ':'. |
@@ -485,9 +491,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | pathname | A DOMString containing an initial '/' followed by the path of the URL. |
 |  | attribute | search | A DOMString containing a '?' followed by the parameters of the URL. |
 |  | attribute | hash | A DOMString containing a '#' followed by the fragment identifier of the URL. |
-|  | method | createObjectURL(Blob blob) | Returns a DOMString containing a unique blob URL, that is a URL with blob: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
-|  | method | createObjectURL(MediaSource mediaSource) | Returns a DOMString containing a unique blob URL, that is a URL with media source: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
-|  | method | revokeObjectURL(DOMString url) | Revokes an object URL previously created using URL.createObjectURL() |
+|  | method | static DOMString createObjectURL(Blob blob) | Returns a DOMString containing a unique blob URL, that is a URL with blob: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
+|  | method | static DOMString createObjectURL(MediaSource mediaSource) | Returns a DOMString containing a unique blob URL, that is a URL with media source: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
+|  | method | static void revokeObjectURL(DOMString url) | Revokes an object URL previously created using URL.createObjectURL() |
 | [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | setTimeout(handler [, timeout [, arguments... ]]) | Calls a function or evaluates an expression after a specified number of milliseconds. |
 |  | method | clearTimeout(handle) | Clears a timer set with setTimeout(). |
 |  | method | setInterval(handler [, timeout [, arguments...]]) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
@@ -521,12 +527,13 @@ This section describes the complete list of supported HTML tags and attributes b
 | | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
 | | callback | EventListener = void () | An event listener can be used to observe a specific event. |
 | | callback | EventHandlerNonNull = any (Event event)| |
-| | callback | OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long colno, optional any error) | |
+| | callback | OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source = "", optional unsigned long lineno = 0, optional unsigned long colno = 0, optional any error) | |
 | | callback | OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event) | |
 | | typedef | (EventHandlerNonNull?) EventHandler | |
 | | typedef | (OnErrorEventHandlerNonNull?) OnErrorEventHandler | |
 | | typedef | (OnBeforeUnloadEventHandlerNonNull?) OnBeforeUnloadEventHandler | |
 | [FocusEvent](https://w3c.github.io/uievents/#interface-focusevent) | interface | FocusEvent | The FocusEvent interface represents focus-related events like focus, blur, focusin, or focusout. |
+|| constructor | FocusEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new FocusEvent |
 | | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |
 | [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
 | | attribute | onabort | Fired at the Window when the download was aborted by the user |
@@ -551,6 +558,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
 | [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent) | interface | ProgressEvent | The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an \<img\>, \<audio\>, \<video\>, \<style\> or \<link\>). |
+|| constructor | ProgressEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new ProgressEvent |
 | | attribute | lengthComputable | Is a Boolean flag indicating if the total work to be done, and the amount of work already done, by the underlying process is calculable. In other words, it tells if the progress is measurable or not. |
 | | attribute | loaded | Is an unsigned long long representing the amount of work already performed by the underlying process. The ratio of work done can be calculated with the property and ProgressEvent.total. When downloading a resource using HTTP, this only represent the part of the content itself, not headers and other overhead. |
 | | attribute | total | Is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing. When downloading a resource using HTTP, this only represent the content itself, not headers and other overhead. |
