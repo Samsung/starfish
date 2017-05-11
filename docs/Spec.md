@@ -87,7 +87,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
-| [Document 1](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [6](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [7](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [8](https://www.w3.org/TR/dom/#parentnode)   |
+| [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |
 |  | attribute | charset | Returns document's encoding type ""UTF8"". |
@@ -101,12 +101,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | DocumentFragment createDocumentFragment() | Returns a new DocumentFragment node with its node document set to the context object. |
 |  | method | Text createTextNode(DOMString data) | Returns a Text node whose data is data. |
 |  | method | Comment createComment(DOMString data) | Returns a Comment node whose data is data. |
-| [Document 2](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
+| [Document](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
 |  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
-| [Document 3](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
+| [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | bodyElement | Returns body element or null if not exists |
 |  | attribute | headElement | Returns head element or null if not exists |
-| [Document 5](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
+| | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
+| [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
 | [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. |
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
@@ -266,7 +269,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | ended | Returns a Boolean that indicates whether the media element has finished playing. |
 |  | attribute | autoplay | A Boolean that reflects the autoplay HTML attribute, indicating whether playback should automatically begin as soon as enough media is available to do so without interruption. |
 |  | attribute | loop | Is a Boolean that reflects the loop HTML attribute, which indicates whether the media element should start over when it reaches the end. |
-|  | method | Promise<void> play() | Begins playback of the media. |
+|  | method | Promise\<void\> play() | Begins playback of the media. |
 |  | method | void pause() | Pauses the media playback. |
 |  | attribute | volume | Is a double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest). |
 |  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
@@ -477,6 +480,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 | [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
+| [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | unsigned long requestAnimationFrame(FrameRequestCallback callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
+| | method | void cancelAnimationFrame(unsigned long handle) | Used to cancel a previously made request to schedule an animation frame update. |
+| | callback | FrameRequestCallback = void (DOMHighResTimeStamp time) | |
+| [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
 | [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
 || constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
@@ -491,13 +498,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | pathname | A DOMString containing an initial '/' followed by the path of the URL. |
 |  | attribute | search | A DOMString containing a '?' followed by the parameters of the URL. |
 |  | attribute | hash | A DOMString containing a '#' followed by the fragment identifier of the URL. |
+| [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression after a specified number of milliseconds. |
 |  | method | static DOMString createObjectURL(Blob blob) | Returns a DOMString containing a unique blob URL, that is a URL with blob: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
 |  | method | static DOMString createObjectURL(MediaSource mediaSource) | Returns a DOMString containing a unique blob URL, that is a URL with media source: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
 |  | method | static void revokeObjectURL(DOMString url) | Revokes an object URL previously created using URL.createObjectURL() |
-| [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | setTimeout(handler [, timeout [, arguments... ]]) | Calls a function or evaluates an expression after a specified number of milliseconds. |
-|  | method | clearTimeout(handle) | Clears a timer set with setTimeout(). |
-|  | method | setInterval(handler [, timeout [, arguments...]]) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
-|  | method | clearInterval(handle) | Clears a timer set with setInterval(). |
+|  | method | void clearTimeout(optional long handle = 0) | Clears a timer set with setTimeout(). |
+|  | method | long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
+|  | method | void clearInterval(optional long handle = 0) | Clears a timer set with setInterval(). |
+|  | typedef | (DOMString or Function) TimerHandler | |
+
 
 ## Event
 | Interface | Type | Name | Description |
@@ -742,24 +751,6 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 | |	method	| isClosed	| Returns a boolean value that indicates whether the Blob is in the CLOSED readability state. |
 | |	method	| close	| The close() method closes a Blob. |
 
-### Page Visibility
-Extensions to the Document Object: The document object is extended by the following attributes.
-
-| Interface            | Type   | Name                      | Description |
-|----------------------|--------|---------------------------|-------------|
-| [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
-| | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
-| [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
-
-
-### Timing Control for Script-based Animations
-Extensions to the Window Object: The window object is extended by the following methods.
-
-| Interface            | Type   | Name                      | Description |
-|----------------------|--------|---------------------------|-------------|
-| [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | requestAnimationFrame(callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
-| | | cancelAnimationFrame(handle) | Used to cancel a previously made request to schedule an animation frame update. |
-
 
 ### Geolocation
 Extensions to the Navigator Object: The navigator is extended by the following attributes and methods.
@@ -768,7 +759,7 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 |----------------------|--------|---------------------------|-------------|
 | [Navigator](https://html.spec.whatwg.org/#the-navigator-object)	| interface	| Navigator	| The navigator attribute of the Window interface must return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 | |	attribute	| geolocation	| Return geolocation interface |
-| [NavigatorID] (https://html.spec.whatwg.org/multipage/#navigatorid)	| interface	|	| NavigatorID is used for identifying Navigator |
+| [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid)	| interface	|	| NavigatorID is used for identifying Navigator |
 | |	attribute	| appCodeName	| Returns  the string "StarFish".|
 | |	attribute	| appName	| Returns  the string "StarFish".|
 | |	attribute	| appVersion	| Returns the string "Mozilla/5.0 StarFish/0.1".|
