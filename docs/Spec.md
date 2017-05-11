@@ -94,18 +94,18 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | contentType | Returns document's content type "text/html". |
 |  | attribute | doctype | Returns the doctype or null if there is none. |
 |  | attribute | documentElement | Returns the document element. |
-|  | method | getElementsByTagName(localName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
-|  | method | getElementsByClassName(className) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
-|  | method | createElement(localName) | Returns an element in the HTML namespace with localName as local name. |
-|  | method | createDocumentFragment() | Returns a new DocumentFragment node with its node document set to the context object. |
-|  | method | createTextNode(data) | Returns a Text node whose data is data. |
-|  | method | createComment(data) | Returns a Comment node whose data is data. |
-| [Document 2](https://dom.spec.whatwg.org/#interface-document) | method | createCDATASection(data) | Returns a CDATASection node whose data is data. |
-|  | method | createAttribute(localName) | Return a new attribute whose local name is localName and node document is context object. |
+|  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
+|  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
+|  | method | Element createElement(DOMString localName) | Returns an element in the HTML namespace with localName as local name. |
+|  | method | DocumentFragment createDocumentFragment() | Returns a new DocumentFragment node with its node document set to the context object. |
+|  | method | Text createTextNode(DOMString data) | Returns a Text node whose data is data. |
+|  | method | Comment createComment(DOMString data) | Returns a Comment node whose data is data. |
+| [Document 2](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
+|  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
 | [Document 3](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | bodyElement | Returns body element or null if not exists |
 |  | attribute | headElement | Returns head element or null if not exists |
-| [Document 5](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | elementFromPoint(x, y) | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| [Document 5](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
 | [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. |
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
@@ -176,11 +176,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | [DOMSettableTokenList](https://dev.w3.org/html5/spec-LC/common-dom-interfaces.html#domsettabletokenlist-0) | interface | DOMSettableTokenList | The DOMSettableTokenList interface is the same as the DOMTokenList interface, except that it allows the underlying string to be directly changed. |
 |  | attribute  | value | The value attribute must return the underlying string on getting, and must replace the underlying string with the new value on setting. |
 |  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens.  |
-|    |  method  |  item(index) (or tokenlist[index])  |  Returns the token with the index index number.  |
-|    |  method  |  contains(token)  |  Returns true if token is present, and false otherwise.  |
-|    |  method  |  add(tokens...)  |  Adds all arguments passed, except those already present.  |
-|    |  method  |  remove(tokens...)  |  Removes arguments passed, if they are present.  |
-|    |  method  |  toggle(token [, force])  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).   |
+|    |  method  |  DOMString? item(unsigned long index) (or tokenlist[index])  |  Returns the token with the index index number.  |
+|    |  method  |  boolean contains(DOMString token)  |  Returns true if token is present, and false otherwise.  |
+|    |  method  |  void add(DOMString... tokens)  |  Adds all arguments passed, except those already present.  |
+|    |  method  |  void remove(DOMString... tokens)  |  Removes arguments passed, if they are present.  |
+|    |  method  |  boolean toggle(DOMString token, optional boolean force = false)  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).   |
 | [Element](https://dom.spec.whatwg.org/#interface-element) | interface | Element | Element nodes are simply known as elements. |
 |  | attribute | namespaceURI | Return the context object’s namespace. |
 |  | attribute | localName | Return the value of the attribute in element's attribute list whose namespace is namespace and local name is localName, if it has one, and null otherwise. |
@@ -211,7 +211,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
 | [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
 |  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
-|    |  method  |  item(index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
+|    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
 | [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
 | [HTMLElement 1](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
@@ -284,8 +284,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLStyleElement](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) | interface | HTMLStyleElement | The style element allows authors to embed style information in their documents. |
 |  | attribute | type | Type of embedded resource<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
-|    |    |  rowSpan  |  rowspan content attribute  |
-|    |    |  bgColor  |  bgcolor content attributes  |
+|    | attribute |  rowSpan  |  rowspan content attribute  |
+|    | attribute |  bgColor  |  bgcolor content attributes  |
 | [HTMLTableColElement](https://html.spec.whatwg.org/#htmltablecolelement) | interface | HTMLTableColElement |  |
 |  | attribute | span | Number of columns spanned by the element. |
 | [HTMLTableSectionElement](https://html.spec.whatwg.org/#htmltablesectionelement) | interface | HTMLTableSectionElement |  |
@@ -402,7 +402,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | onenter | The event handler for the enter event  |
 |  | attribute | onexit | The event handler for the exit event  |
 |  [TextTrackCueList](https://html.spec.whatwg.org/#texttrackcuelist)  |  attribute  |  length |  Return the number of cues in the list represented by the TextTrackCueList object  |
-|    |  method  |  TextTrackCue[index]  |  Return Text track cue object with index  |
+|    |  method  |  TextTrackCue[unsigned long index]  |  Return Text track cue object with index  |
 | [TextTrackList](https://html.spec.whatwg.org/#texttracklist) | interface | TextTrackList | A TextTrackList object represents a dynamically updating list of text tracks in a given order. |
 |  | attribute | length | Returns the number of text tracks associated with the media element. |
 |  | method | TextTrack (unsigned long index) | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
@@ -454,11 +454,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  onupdateend  |  The event handler for the updateend event  |
 |    |  attribute  |  onerror  |  The event handler for the error event  |
 |    |  attribute  |  onabort  |  The event handler for the abort event  |
-|    |  method  |  appendBuffer  |  Appends the segment data in an BufferSource to the source buffer |
-|    |  method  |  abort  |  Aborts the current segment and resets the segment parser  |
-|    |  method  |  remove  |  Removes media for a specific time range  |
+|    |  method  |  void appendBuffer(BufferSource data)  |  Appends the segment data in an BufferSource to the source buffer |
+|    |  method  |  void abort()  |  Aborts the current segment and resets the segment parser  |
+|    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
 |  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
-|    |  method  |  SourceBuffer[index]  |  Return SourceBuffer object with index  |
+|    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |
 |  | method | double start(unsigned long index) | Returns the time for the start of the range with the given index. |
@@ -687,7 +687,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | enum	| XMLHttpRequestResponseType	| "", "text", "arraybuffer", "document", "blob", "json"|
+| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | enum        | XMLHttpRequestResponseType  | "", "text", "arraybuffer", "document", "blob", "json"|
 | | attribute	| onloadstart	| Function called when the request starts. Usage: onloadstart: function() {} |
 | | attribute	| onprogress	| Function called when transmitting data. Usage: onprogress: function() {} |
 | | attribute	| onabort	| Function called when the request has been aborted. For instance, by invoking the abort() method. Usage: onabort: function() {} |
@@ -695,17 +695,19 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | attribute	| onload	| Function called when the request has successfully completed. Usage: onload: function() {} |
 | | attribute	| ontimeout	| Function called when the author specified timeout has passed before the request completed. Usage: ontimeout: function() {} |
 | | attribute	| onloadend	| Function called when the request has completed (either in success or failure). Usage: onloadend: function() {} |
-| [XMLHttpRequest](https://xhr.spec.whatwg.org/#xmlhttprequest) | attribute	| onReadyStateChange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
-| | method	| open(method, url, async=true, userName=null, password=null)	| "Sets the request method, request URL, and synchronous flag. Supported request method : GET, POST" |
-| | method	| setRequestHeader(name, value)	| Combines a header in author request headers. |
+| [XMLHttpRequest](https://xhr.spec.whatwg.org/#xmlhttprequest) | constructor | XMLHttpRequest() |  |
+| | attribute    | onReadyStateChange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
 | | attribute	| timeout	| Can be set to a time in milliseconds.Terminates fetching after the given time (in milliseconds) has passed. If the fetching has not completed after the time passed and the synchronous flag is unset, a timeout event will be dispatched. |
-| | method	| send(body = null)	| Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
-| | method	| abort()	| Cancels any network activity. |
 | | attribute	| status	| Returns 0 if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status code.|
 | | attribute	| responseType	| Sets or returns the response type, which is either "", "blob", "json", or "text".|
 | | attribute	| response	| Returns the response entity body, which is either string, Blob object, object, or string when responseType is "", "blob", "json", or "text", respectively.|
 | | attribute	| responseText	| Returns an empty string if the state is not LOADING or DONE, or error flag is set. Returns the text response entity body when responseType is either "" or "text". The allowed character set for response text is UTF-8. Otherwise returns an invalidStateError exception with either "Permission denied", "Position unavailable", or "Timeout expired".|
 | | attribute	| readyState*	| Returns the current state, which is one of the readyState code shown below.|
+| | method    | void open(ByteString method, DOMString url, boolean async = true, optional DOMString? username = null, optional DOMString? password = null)    | Sets the request method, request URL, and synchronous flag. Supported request method : GET, POST |
+| | method    | void setRequestHeader(ByteString name, ByteString value)    | Combines a header in author request headers. |
+| | method    | void send(optional DOMString? body = null)    | Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
+| | method    | void abort();    | Cancels any network activity. |
+
 
 \* The readyState code are as follows.
 
@@ -737,7 +739,7 @@ Extensions to the Document Object: The document object is extended by the follow
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
-| | | visibilityState | Returns one of the following strings: "hidden", or "visible" |
+| | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
 
 
@@ -780,8 +782,8 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | [PositionError](https://dev.w3.org/geo/api/spec-source.html#position_error_interface) | attribute | code* |	 Returns the appropriate position error code |
 | | message |	Returns an error message describing the details of the error encountered. | |
 | |	constant |	PERMISSION_DENIED = 1 | |
-| | |	POSITION_UNAVAILABLE = 2 | |
-| | |	TIMEOUT = 3 | | |
+| | constant |	POSITION_UNAVAILABLE = 2 | |
+| | constant | TIMEOUT = 3 | | |
 
 
 \* PositionError codes are as follows:
