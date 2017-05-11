@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,23 +14,30 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-
-#include "dom/TextTrackCueList.h"
+#include "dom/Attr.h"
+#include "dom/Element.h"
+#include "dom/Document.h"
+#include "dom/NamedNodeMap.h"
 
 namespace StarFish {
+
+using namespace escargot;
 
 static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isTextTrackCueList());
+    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNamedNodeMap());
     uint32_t idx = key.toIndex();
-    if (idx != ESValue::ESInvalidIndexValue && idx < self->size()) {
-        TextTrackCue* e = (*self)[idx];
+    if (idx == ESValue::ESInvalidIndexValue) {
+        String* str = toBrowserString(key);
+        auto attrName = self->element()->document()->createAttributeName(str);
+        Attr* e = self->getNamedItem(attrName);
         if (e != nullptr) {
             return e->scriptValue();
         }
+    } else if (idx < self->length()) {
+        return self->item(idx)->scriptValue();
     }
     return ESValue(ESValue::ESDeletedValue);
 }
@@ -45,9 +52,9 @@ static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
 static ESValueVector enumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isTextTrackCueList());
-    size_t len = self->size();
+    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNamedNodeMap());
+    size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
         v[i] = ESValue(i);
@@ -55,12 +62,10 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void TextTrackCueList::postInit(ScriptBindingInstance* instance)
+void NamedNodeMap::postInit(ScriptBindingInstance* instance)
 {
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);
 }
 }
-
-#endif
