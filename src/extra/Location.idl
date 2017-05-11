@@ -3,7 +3,6 @@
 
 interface Location {
 
-  // TODO binding generator - Handle Unforgeable
   [Unforgeable] stringifier attribute DOMString href;
   [Unimplemented, Unforgeable] readonly attribute DOMString origin;
   [Unforgeable] attribute DOMString protocol;

@@ -2,7 +2,7 @@
 
 [NoInterfaceObject]
 interface ElementCSSInlineStyle {
-  // FIXME readonly property but seems to have a Setter
+  // FIXME cssText is not implemented so we implement here using Custom extended attribute
   // [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
   [Custom=(Getter, Setter)] attribute CSSStyleDeclaration style;
 };

@@ -16,5 +16,4 @@ interface HTMLAnchorElement : HTMLElement {
   [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
 };
 
-// TODO Support impements
 HTMLAnchorElement implements HTMLHyperlinkElementUtils;
