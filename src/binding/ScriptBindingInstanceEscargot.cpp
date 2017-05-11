@@ -176,28 +176,6 @@ static ESValue warnFunction(ESVMInstance* instance)
     return ESValue();
 }
 
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-static ESValue locationGetterFunction(ESVMInstance* instance)
-{
-    return (((Window*)ESVMInstance::currentInstance()
-                 ->globalObject()
-                 ->extraPointerData()))
-        ->location()
-        ->scriptObject();
-}
-
-static ESValue locationSetterFunction(ESVMInstance* instance)
-{
-    Window* wnd = (Window*)instance->globalObject()->extraPointerData();
-    wnd->location()->setHref(
-        String::fromUTF8(instance->currentExecutionContext()
-                             ->readArgument(0)
-                             .toString()
-                             ->utf8Data()));
-    return ESValue();
-}
-#endif
-
 static ESValue toStringFunction(ESVMInstance* instance)
 {
     ESValue thisValue =
@@ -225,41 +203,6 @@ static ESValue toStringFunction(ESVMInstance* instance)
     return callScriptFunction(
         function, instance->currentExecutionContext()->arguments(),
         instance->currentExecutionContext()->argumentCount(), thisValue);
-}
-
-static ESValue windowGetterFunction(ESVMInstance* instance)
-{
-    return ESVMInstance::currentInstance()->globalObject();
-}
-
-static ESValue documentGetterFunction(ESVMInstance* instance)
-{
-#ifdef STARFISH_TC_COVERAGE
-    STARFISH_LOG_INFO("&&&document\n");
-#endif
-    return (((Window*)ESVMInstance::currentInstance()
-                 ->globalObject()
-                 ->extraPointerData()))
-        ->document()
-        ->scriptObject();
-}
-
-static ESValue historyGetterFunction(ESVMInstance* instance)
-{
-    return (((Window*)ESVMInstance::currentInstance()
-                 ->globalObject()
-                 ->extraPointerData()))
-        ->history()
-        ->scriptObject();
-}
-
-static ESValue navigatorGetterFunction(ESVMInstance* instance)
-{
-    return (((Window*)ESVMInstance::currentInstance()
-                 ->globalObject()
-                 ->extraPointerData()))
-        ->navigator()
-        ->scriptObject();
 }
 
 #define DECLARE_FUNC_FOR_BINDING(exportName)                          \
@@ -312,7 +255,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->valueWindow();
 
 #if defined(STARFISH_ENABLE_TEST)
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(
+    globalObject->defineDataProperty(
         ESString::create("wptTestEnd"), false, false, false,
         ESFunctionObject::create(nullptr, wptTextEndFunction,
                                  ESString::create("wptTestEnd"), 1, false));
@@ -331,49 +274,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     console->set(ESString::create("warn"),
                  ESFunctionObject::create(nullptr, warnFunction,
                                           ESString::create("warn"), 1, false));
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(
-        ESString::create("console"), false, false, false, console);
-
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fetchData(this)->m_instance->globalObject(),
-        ESString::create("location"), locationGetterFunction,
-        locationSetterFunction, true, false);
-#endif
+    globalObject->defineDataProperty(ESString::create("console"), false, false,
+                                     false, console);
 
     fetchData(this)->m_orgToString =
-        fetchData(this)
-            ->m_instance->globalObject()
+        ((GlobalObject*)globalObject)
             ->objectPrototype()
             ->getOwnProperty(ESString::create("toString"))
             .asESPointer()
             ->asESFunctionObject();
     auto fnToString = ESFunctionObject::create(
         nullptr, toStringFunction, ESString::create("toString"), 0, false);
-    fetchData(this)
-        ->m_instance->globalObject()
+    ((GlobalObject*)globalObject)
         ->objectPrototype()
         ->defineDataProperty(ESString::create("toString"), true, false, true,
                              fnToString);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fetchData(this)->m_instance->globalObject(), ESString::create("window"),
-        windowGetterFunction, nullptr, true, false);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fetchData(this)->m_instance->globalObject(),
-        ESString::create("document"), documentGetterFunction, nullptr, true,
-        false);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fetchData(this)->m_instance->globalObject(),
-        ESString::create("history"), historyGetterFunction, nullptr, true,
-        true);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        fetchData(this)->m_instance->globalObject(),
-        ESString::create("navigator"), navigatorGetterFunction, nullptr, true,
-        false);
 
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::initialize(fetchData(this)->m_instance);

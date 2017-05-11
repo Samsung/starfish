@@ -114,8 +114,12 @@ ScriptWrappable::ScriptWrappable(void* extraPointerData)
 ScriptObject ScriptWrappable::scriptObjectSlowCase()
 {
     void* extraPointerData = (void*)((size_t)m_object - 1);
-    m_object = ESObject::create(0);
-    STARFISH_ASSERT(!((size_t)m_object & (size_t)1));
+    if (isWindow()) {
+        m_object = ESVMInstance::currentInstance()->globalObject();
+    } else {
+        m_object = ESObject::create(0);
+    }
+    STARFISH_ASSERT(!isGivenUpScriptValue());
     m_object->setExtraPointerData(extraPointerData);
     m_object->setExtraData(kEscargotObjectCheckMagic);
 

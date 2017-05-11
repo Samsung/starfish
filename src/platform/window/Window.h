@@ -53,12 +53,9 @@ public:
     void navigateAsyncWithoutSetHistory(URL* url);
     void setHistory(URL* url);
 
-    virtual bool isWindow() const
-    {
-        return true;
-    }
-
     virtual void init(ScriptBindingInstance* instance) override;
+    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual bool isWindow() const;
 
     bool inRendering()
     {
@@ -119,6 +116,9 @@ public:
 
     Document* document()
     {
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("&&&document\n");
+#endif
         return m_document;
     }
 
@@ -159,15 +159,15 @@ public:
         return m_scriptBindingInstance;
     }
 
-    uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay,
+    uint32_t setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
                         void* data);
-    void clearTimeout(uint32_t id);
-    uint32_t setInterval(WindowSetTimeoutHandler handler, uint32_t delay,
+    void clearTimeout(int32_t id);
+    uint32_t setInterval(WindowSetTimeoutHandler handler, int32_t delay,
                          void* data);
-    void clearInterval(uint32_t id);
+    void clearInterval(int32_t id);
 
     uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
-    void cancelAnimationFrame(uint32_t reqID);
+    void cancelAnimationFrame(int32_t reqID);
 
     enum TouchEventKind {
         TouchEventStart,
@@ -219,19 +219,22 @@ public:
         return m_hasBodyElementBackground;
     }
 
-    virtual int width() = 0;
-    virtual int height() = 0;
+    CSSStyleDeclaration* getComputedStyle(Element* element);
+    CSSStyleDeclaration* getComputedStyle(Element* element, String* pseudoElt);
+
+    virtual int32_t width() = 0;
+    virtual int32_t height() = 0;
     virtual void resizeTo(int w, int h) = 0;
     virtual void* unwrap() = 0;
 
     // The viewport width and height are same as the window size for wearable
     // widget.
-    double innerWidth()
+    int32_t innerWidth()
     {
         return width();
     }
 
-    double innerHeight()
+    int32_t innerHeight()
     {
         return height();
     }
@@ -404,11 +407,11 @@ protected:
     int m_altKeyDown;
     int m_metaKeyDown;
 
-    uint32_t m_timeoutCounter;
-    GCUnorderedMap<uint32_t, void*> m_timeoutHandler;
+    int32_t m_timeoutCounter;
+    GCUnorderedMap<int32_t, void*> m_timeoutHandler;
 
-    uint32_t m_requestAnimationFrameCounter;
-    GCUnorderedMap<uint32_t, void*> m_requestAnimationFrameHandler;
+    int32_t m_requestAnimationFrameCounter;
+    GCUnorderedMap<int32_t, void*> m_requestAnimationFrameHandler;
 
     GCVector<Node*> m_activeNodes;
     GCVector<Node*> m_hoveredNodes;

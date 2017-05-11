@@ -99,9 +99,17 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
     type* originalObj =                                            \
         (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());
 
-class ScriptWrappable : public gc {
-    friend class Window;
+#define GENERATE_WINDOW()                                          \
+    ESValue thisValue =                                            \
+        instance->currentExecutionContext()->resolveThisBinding(); \
+    if (!(thisValue.isUndefinedOrNull() ||                         \
+          thisValue.asESPointer()->asESObject() ==                 \
+              instance->globalObject())) {                         \
+        THROW_EXCEPTION(ILLEGAL_INVOKE);                           \
+    }                                                              \
+    Window* window = (Window*)instance->globalObject()->extraPointerData();
 
+class ScriptWrappable : public gc {
 public:
 #define FOR_EACH_REFLECT_FN(exportName) \
     virtual bool is##exportName() const \
@@ -130,7 +138,7 @@ public:
 
     ScriptObject scriptObject()
     {
-        if (UNLIKELY((size_t)m_object & (size_t)1)) {
+        if (UNLIKELY(isGivenUpScriptValue())) {
             return scriptObjectSlowCase();
         }
         return m_object;
@@ -139,6 +147,11 @@ public:
     void giveUpScriptValue()
     {
         m_object = (ESObject*)1;
+    }
+
+    bool isGivenUpScriptValue()
+    {
+        return ((size_t)m_object & (size_t)1);
     }
 
     ScriptObject scriptObjectSlowCase();

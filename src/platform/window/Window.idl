@@ -5,11 +5,11 @@
 [PrimaryGlobal, LegacyUnenumerableNamedProperties]
 interface Window : EventTarget {
   // the current browsing context
-  [Unforgeable] readonly attribute WindowProxy window;
+  [Custom, Unforgeable] readonly attribute WindowProxy window;
   [Unimplemented, Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
   [Unimplemented] attribute DOMString name;
-  [PutForwards=href, Unforgeable] readonly attribute Location location;
+  [STARFISH_ENABLE_MULTI_PAGE, PutForwards=href, Unforgeable] readonly attribute Location location;
   readonly attribute History history;
   [Unimplemented] readonly attribute CustomElementRegistry customElements;
   [Unimplemented, Replaceable] readonly attribute BarProp locationbar;
@@ -49,16 +49,109 @@ interface Window : EventTarget {
   [Unimplemented] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Unimplemented] void print();
 
-  [Unimplemented] unsigned long requestAnimationFrame(FrameRequestCallback callback);
-  [Unimplemented] void cancelAnimationFrame(unsigned long handle);
+  [Custom] unsigned long requestAnimationFrame(FrameRequestCallback callback);
+  void cancelAnimationFrame(unsigned long handle);
 
   [Unimplemented] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
 
+  // https://html.spec.whatwg.org/#Window-partial
+  [Unimplemented] void captureEvents();
+  [Unimplemented] void releaseEvents();
 
+  [Unimplemented, Replaceable, SameObject] readonly attribute External external;
+
+  // https://drafts.csswg.org/cssom/#extensions-to-the-window-interface
+  [NewObject] CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt);
+
+  // https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface
+  [Unimplemented, NewObject] MediaQueryList matchMedia(CSSOMString query);
+  [Unimplemented, SameObject, Replaceable] readonly attribute Screen screen;
+
+  // browsing context
+  [Unimplemented] void moveTo(long x, long y);
+  [Unimplemented] void moveBy(long x, long y);
+  [Unimplemented] void resizeTo(long x, long y);
+  [Unimplemented] void resizeBy(long x, long y);
+
+  // viewport
+  [Replaceable] readonly attribute long innerWidth;
+  [Replaceable] readonly attribute long innerHeight;
+
+  // viewport scrolling
+  [Replaceable] readonly attribute double scrollX;
+  [Unimplemented, Replaceable] readonly attribute double pageXOffset;
+  [Replaceable] readonly attribute double scrollY;
+  [Unimplemented, Replaceable] readonly attribute double pageYOffset;
+  [Unimplemented] void scroll(optional ScrollToOptions options);
+  [Unimplemented] void scroll(unrestricted double x, unrestricted double y);
+  [Unimplemented] void scrollTo(optional ScrollToOptions options);
+  [Unimplemented] void scrollTo(unrestricted double x, unrestricted double y);
+  [Unimplemented] void scrollBy(optional ScrollToOptions options);
+  [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
+
+  // client
+  [Unimplemented, Replaceable] readonly attribute long screenX;
+  [Unimplemented, Replaceable] readonly attribute long screenY;
+  [Unimplemented, Replaceable] readonly attribute long outerWidth;
+  [Unimplemented, Replaceable] readonly attribute long outerHeight;
+  [Unimplemented, Replaceable] readonly attribute double devicePixelRatio;
 };
 
-// TODO Support implements
 Window implements GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
 callback FrameRequestCallback = void (DOMHighResTimeStamp time);
+
+// https://html.spec.whatwg.org/#windoworworkerglobalscope
+
+typedef (DOMString or Function) TimerHandler;
+
+[NoInterfaceObject, Exposed=(Window,Worker)]
+interface WindowOrWorkerGlobalScope {
+  [Unimplemented, Replaceable] readonly attribute USVString origin;
+
+  // base64 utility methods
+  [Unimplemented] DOMString btoa(DOMString data);
+  [Unimplemented] DOMString atob(DOMString data);
+
+  // timers
+  [Custom] long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
+  void clearTimeout(optional long handle = 0);
+  [Custom] long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
+  void clearInterval(optional long handle = 0);
+
+  // ImageBitmap
+  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
+  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
+};
+
+Window implements WindowOrWorkerGlobalScope;
+// WorkerGlobalScope implements WindowOrWorkerGlobalScope;
+
+// https://html.spec.whatwg.org/#windowlocalstorage
+[NoInterfaceObject]
+interface WindowLocalStorage {
+  [Unimplemented] readonly attribute Storage localStorage;
+};
+Window implements WindowLocalStorage;
+
+// https://html.spec.whatwg.org/#windowsessionstorage
+[NoInterfaceObject]
+interface WindowSessionStorage {
+  [Unimplemented] readonly attribute Storage sessionStorage;
+};
+Window implements WindowSessionStorage;
+
+// https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface
+enum ScrollBehavior { "auto", "instant", "smooth" };
+
+[Unimplemented]
+dictionary ScrollOptions {
+    ScrollBehavior behavior = "auto";
+};
+
+[Unimplemented]
+dictionary ScrollToOptions : ScrollOptions {
+    unrestricted double left;
+    unrestricted double top;
+};
