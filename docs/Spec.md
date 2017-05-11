@@ -139,9 +139,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
 | [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
-|  | attribute | x | Reurn the x coordinate value of the object it was invoked on. |
-|  | attribute | y | Reurn the y coordinate value of the object it was invoked on. |
-|  | attribute | z | Reurn the z coordinate value of the object it was invoked on. |
+|  | constructor | DOMPoint(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double w = 1) | Creates a new DOMPoint object. |
+|  | attribute | x | Return the x coordinate value of the object it was invoked on. |
+|  | attribute | y | Return the y coordinate value of the object it was invoked on. |
+|  | attribute | z | Return the z coordinate value of the object it was invoked on. |
 |  | attribute | w | Return the w perspective value of the object it was invoked on. |
 |  | dictionary | DOMPointInit::x | Initializes an DOMPoint object with x. |
 |  | dictionary | DOMPointInit::y | Initializes an DOMPoint object with y. |
@@ -188,12 +189,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | className | Reflects the "class" content attribute. |
 |  | attribute | classList | Returns the associated DOMTokenList object representing the context object's classes. |
 |  | attribute | attributes | Returns a NamedNodeMap. |
-|  | method | getAttribute(name) | Returns the value of the first attribute in the context object's attribute list whose name is name, and null otherwise. |
-|  | method | setAttribute(name, value) | Changes the attribute whose name is name from context object to value. |
-|  | method | removeAttribute(name) | Removes the first attribute from the context object whose name is name, if any. |
-|  | method | hasAttribute(name) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
-|  | method | getElementsByTagName(localName) | Returns the list of elements with local name localName for the context object. |
-|  | method | getElementsByClassName(classNames) | Returns the list of elements with class names classNames for the context object. |
+|  | method | DOMString? getAttribute(DOMString qualifiedName) | Returns the value of the first attribute in the context object's attribute list whose name is name, and null otherwise. |
+|  | method | void setAttribute(DOMString qualifiedName, DOMString value) | Changes the attribute whose name is name from context object to value. |
+|  | method | void removeAttribute(DOMString qualifiedName) | Removes the first attribute from the context object whose name is name, if any. |
+|  | method | boolean hasAttribute(DOMString qualifiedName) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
+|  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
+|  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
 | [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents. (Note: This API is supported only on TEST_MODE.)|
 | [Element](https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface) | method | getClientRects | Return a collection of rectangles that indicate the bounding rectangles for each box in a client. (Note: This API is supported only in case of that display property is `BLOCK`.)|
 |  | method | getBoundingClientRect | Return the size of an element and its position relative to the viewport. (Note: This API is supported only in case of that display property is `BLOCK`.)|
@@ -318,10 +319,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | [KeyboardEventInit](https://w3c.github.io/uievents/#dictdef-keyboardeventinit) | dictionary | KeyboardEventInit | `{ DOMString key = ""; DOMString code = ""; unsigned long location = 0; boolean repeat = false; boolean isComposing = false; }` |
 | [NamedNodeMap](https://dom.spec.whatwg.org/#interface-namednodemap) | interface | NamedNodeMap |  |
 |  | attribute | length | Return the attribute list’s size. |
-|  | method | item(index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
-|  | method | getNamedItem(qualifiedName) | Return the result of getting an attribute given qualifiedName and element. |
-|  | method | setNamedItem(attr) | Return the result of setting an attribute given attr and element. |
-|  | method | removeNamedItem(qualifiedName) | Remove the attribute identified by the given map. |
+|  | method | Attr? item(unsigned long index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
+|  | method | Attr? getNamedItem(DOMString qualifiedName) | Return the result of getting an attribute given qualifiedName and element. |
+|  | method | Attr? setNamedItem(Attr attr) | Return the result of setting an attribute given attr and element. |
+|  | method | Attr removeNamedItem(DOMString qualifiedName) | Remove the attribute identified by the given map. |
 | [Node](https://dom.spec.whatwg.org/#interface-node) | interface | Node | Node is an abstract interface and does not exist as node. It is used by all nodes (Document, DocumentType, DocumentFragment, Element, Text, ProcessingInstruction, and Comment). |
 |  | constant | ELEMENT_NODE | Node is an element. |
 |  | constant | ATTRIBUTE_NODE | Node is an attribute |
@@ -364,14 +365,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | removeChild | Returns the result of pre-removing child from context object. |
 |  | attribute | lastChild | Returns the last child |
 | [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A NodeList object is a collection of nodes. |
-|  | method | item(index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
+|  | method | Node? item(unsigned long index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
 |  | attribute | length | Returns the number of nodes in the collection. |
 |  | iterable&lt;Node&gt; |  |  |
 | [NonDocumentTypeChildNode](https://dom.spec.whatwg.org/#nondocumenttypechildnode) | interface | NonDocumentTypeChildNode | The NonDocumentTypeChildNode interface contains methods that are particular to Node Object that can have a sibling. |
 |  | attribute | previousElementSibling | Returns the Element immediately prior to this node in its parent's children list, or null if there is no Element in the list prior to this node. |
 |  | attribute | nextElementSibling | Returns the Element immediately following this node in its parent's children list, or null if there is no Element in the list following this node. |
 | [NonElementParentNode](https://www.w3.org/TR/dom/#interface-nonelementparentnode) | interface | NonElementParentNode |  |
-|  | method | getElementById(id) | Returns the first element within node's descendants whose ID is elementId. |
+|  | method | Element? getElementById(DOMString elementId) | Returns the first element within node's descendants whose ID is elementId. |
 | [ParentNode](none) | interface | ParentNode | The ParentNode interface contains methods that are particular to Node objects that can have children. |
 |  | attribute | firstElementChild | Returns the Element that is the first child of this ParentNode, or null if there is none. |
 |  | attribute | lastElementChild | Returns the Element that is the last child of this ParentNode, or null if there is none. |
@@ -437,10 +438,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | activeSourceBuffers | Contains the subset of sourceBuffers that are providing the selected video track, the enabled audio track(s), and the "showing" or "hidden" text track(s). |
 |  | attribute | readyState | Indicates the current state of the MediaSource object. |
 |  | attribute | duration | Allows the web application to set the presentation duration. |
-|  | method | addSourceBuffer(type) | Adds a new SourceBuffer to sourceBuffers. |
-|  | method | removeSourceBuffer(sourceBuffer) | Removes a SourceBuffer from sourceBuffers. |
-|  | method | endOfStream(optional error) | Signals the end of the stream. |
-|  | method | isTypeSupported(type) | Check to see whether the MediaSource is capable of creating SourceBuffer objects for the specified MIME type. |
+|  | method | SourceBuffer addSourceBuffer(DOMString type) | Adds a new SourceBuffer to sourceBuffers. |
+|  | method | void removeSourceBuffer(SourceBuffer sourceBuffer) | Removes a SourceBuffer from sourceBuffers. |
+|  | method | void endOfStream(optional EndOfStreamError error) | Signals the end of the stream. |
+|  | method | static boolean isTypeSupported(DOMString type) | Check to see whether the MediaSource is capable of creating SourceBuffer objects for the specified MIME type. |
 |  [SourceBuffer](https://w3c.github.io/media-source/#sourcebuffer)  |  attribute  |  mode  |  Controls how a sequence of media segments are handled  |
 |    |  attribute  |  updating  |  Return whether the asynchronous continuation of an appendBuffer() or remove() operation is still being processed  |
 |    |  attribute  |  buffered  |  Return what TimeRanges are buffered in the SourceBuffer  |
@@ -460,8 +461,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  SourceBuffer[index]  |  Return SourceBuffer object with index  |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |
-|  | method | start(index) | Returns the time for the start of the range with the given index. |
-|  | method | end(index) | Returns the time for the end of the range with the given index. |
+|  | method | double start(unsigned long index) | Returns the time for the start of the range with the given index. |
+|  | method | double end(unsigned long index) | Returns the time for the end of the range with the given index. |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
 |  | attribute | document | Returns the document associated with window. |
@@ -495,6 +496,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | Interface | Type | Name | Description |
 |-----------|------|------|-------------|
 | [Event](https://dom.spec.whatwg.org/#interface-event) | interface | Event | |
+| | constructor | Event(DOMString type, optional EventInit eventInitDict) | Creates a new Event object. |
 | | constant | NONE = 0 | Events not currently dispatched are in this phase. |
 | | constant | CAPTURING_PHASE = 1 | When an event is dispatched to an object that participates in a tree it will be in this phase before it reaches its target attribute value. |
 | | constant | AT_TARGET = 2 | When an event is dispatched it will be in this phase on its target attribute value. |
@@ -507,11 +509,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | target | Returns the object to which event is dispatched. |
 | | attribute | timeStamp | Returns the creation time of event as the number of milliseconds that passed since 00:00:00 UTC on 1 January 1970. |
 | | attribute | type | Returns the type of event, e.g. "click, "hashchange", or "submit" |
-| | method | stopPropagation() | When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object. |
-| | method | stopImmediatePropagation() | Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects. |
-| | method | preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
-| | dictionary | EventInit::bubles | Initializes an Event object with bubbles. |
-| | dictionary | EventInit::cancelable | Initializes an Event object with cancelable. |
+| | method | void stopPropagation() | When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object. |
+| | method | void stopImmediatePropagation() | Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects. |
+| | method | void preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
+| | dictionary | EventInit::bubles = false | Initializes an Event object with bubbles. |
+| | dictionary | EventInit::cancelable = false | Initializes an Event object with cancelable. |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
 | | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
 | | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
@@ -762,7 +764,9 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | |	attribute	| userAgent	| Returns the string "Mozilla/5.0 StarFish/0.1".|
 | |	attribute	| vendor	| Returns the string "Samsung Electronics Co., Ltd."|
 | [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | |
-| |	method	| getCurrentPosition	| Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
+| | method   | void getCurrentPosition(PositionCallback successCallback, optional PositionErrorCallback errorCallback, optional PositionOptions options)	| Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
+| | callback | PositionCallback = void (Position position) | |
+| | callback | PositionErrorCallback = void (PositionError positionError) | |
 | [Coordinates](https://dev.w3.org/geo/api/spec-source.html#coordinates_interface) | attribute | latitude | The latitude attribute is a geographic coordinate specified in decimal degrees. |
 | | attribute | longitude | The longitude attribute is a geographic coordinate specified in decimal degrees. |
 | | attribute |	altitude | The altitude attribute denotes the height of the position, specified in meters above the WGS84 ellipsoid.|
