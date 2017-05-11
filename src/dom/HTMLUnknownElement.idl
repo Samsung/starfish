@@ -1,0 +1,4 @@
+// https://html.spec.whatwg.org/multipage/dom.html#htmlunknownelement
+
+// Note: intentionally not [HTMLConstructor]
+interface HTMLUnknownElement : HTMLElement { };

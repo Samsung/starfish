@@ -8,3 +8,6 @@ typedef unsigned long long DOMTimeStamp;
 
 callback Function = any (any... arguments);
 callback VoidFunction = void ();
+
+// https://drafts.csswg.org/cssom/#typedefdef-cssomstring
+typedef USVString CSSOMString;
