@@ -492,37 +492,70 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | clearInterval(handle) | Clears a timer set with setInterval(). |
 
 ## Event
-| Interface | Type | Name | Description | Note |
-|-----------|------|------|-------------|------|
-| [Global event handler attribute](https://www.w3.org/TR/html5/webappapis.html#event-handler-attributes) | attribute | onclick | The onclick event occurs when the user clicks on an element | Attributes that are common to all elements in the HTML languages. |
-| |  | onload | The onload event occurs when an object has been loaded | |
-| [DOM Event](https://www.w3.org/TR/domcore/#interface-event) | constant | CAPTURING_PHASE | The current event phase is the capturing phase. | |
-| | | AT_TARGET | The event is currently being evaluated at the target EventTarget. | |
-| | | BUBBLING_PHASE | The current event phase is the bubbling phase. | |
-| | | NONE | Events not currently dispatched are in this phase. | |
-| | attribute	| bubbles | Used to indicate whether or not an event is a bubbling event | |
-| | | cancelable | Used to indicate whether or not an event can have its default action prevented | |
-| | | currentTarget | Used to indicate the EventTarget whose EventListeners are currently being processed | |
-| | | eventPhase | Used to indicate which phase of event flow is currently being evaluated. | |
-| | | target | Used to indicate the EventTarget to which the event was originally dispatched. | |
-| | | timeStamp | Returns the number of milliseconds (after midnight January 1, 1970), when the event occurred | |
-| | | type | Name of the event type (case-insensitive). | |
-| | | defaultPrevented | Checks whether the preventDefault() method was called for the event | |
-| | method | preventDefault() | If an event is cancelable, the preventDefault method is used to signify that the |event is to be canceled | |
-| | | stopPropagation() | Prevents further propagation of the current event in the bubbling phase | |
-| | | stopImmediatePropagation() | Prevents other listeners of the same event from being called | |
-| | | property | EventInit::bubbles | Initializes an Event object with bubbles | |
-| | | EventInit::cancelable | Initializes an Event object with cancelable | |
-| [EventTarget](https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventTarget)	| method | addEventListener(type, listener, useCapture) | Attaches an event handler to the specified element | |
-| | | removeEventListener(type, listener, useCapture) | Removes an event handler that has been attached with the addEventListener() method | |
-| | | dispatchEvent(evt) | Allows the dispatch of events into the implementations event model | |
-| [EventListener](https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventListener)	| method | handleEvent(evt) | This method is called whenever an event occurs of the type for which the EventListener interface was registered. | |
-| [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent)	| attribute | lengthComputable | Progress has started | ProgressEvent is dispatched on XMLHttpRequest object. Events using the ProgressEvent interface indicate some kind of progression. |
-| | | loaded | In progress | |
-| | | total | Progress failed | |
-| | property | ProgressEventInit::lengthComputable | Initialize a ProgressEvent object with lengthComputable | |
-| | | ProgressEventInit::loaded | Initialize a ProgressEvent object with loaded | |
-| | | ProgressEventInit::total | Initialize a ProgressEvent object with total | |
+| Interface | Type | Name | Description |
+|-----------|------|------|-------------|
+| [Event](https://dom.spec.whatwg.org/#interface-event) | interface | Event | |
+| | constant | NONE = 0 | Events not currently dispatched are in this phase. |
+| | constant | CAPTURING_PHASE = 1 | When an event is dispatched to an object that participates in a tree it will be in this phase before it reaches its target attribute value. |
+| | constant | AT_TARGET = 2 | When an event is dispatched it will be in this phase on its target attribute value. |
+| | constant | BUBBLING_PHASE = 3 | When an event is dispatched to an object that participates in a tree it will be in this phase after it reaches its target attribute value. |
+| | attribute | bubbles | Returns true or false depending on how event was initialized. True if event goes through its target attribute value’s ancestors in reverse tree order, and false otherwise. |
+| | attribute | cancelable | Returns true or false depending on how event was initialized. Its return value does not always carry meaning, but true can indicate that part of the operation during which event was dispatched, can be canceled by invoking the preventDefault() method. |
+| | attribute | currentTarget | Returns the object whose event listener’s callback is currently being invoked. |
+| | attribute | defaultPrevented | Returns true if preventDefault() was invoked successfully to indicate cancellation, and false otherwise. |
+| | attribute | eventPhase | Returns the event’s phase, which is one of NONE, CAPTURING_PHASE, AT_TARGET, and BUBBLING_PHASE. |
+| | attribute | target | Returns the object to which event is dispatched. |
+| | attribute | timeStamp | Returns the creation time of event as the number of milliseconds that passed since 00:00:00 UTC on 1 January 1970. |
+| | attribute | type | Returns the type of event, e.g. "click, "hashchange", or "submit" |
+| | method | stopPropagation() | When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object. |
+| | method | stopImmediatePropagation() | Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects. |
+| | method | preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
+| | dictionary | EventInit::bubles | Initializes an Event object with bubbles. |
+| | dictionary | EventInit::cancelable | Initializes an Event object with cancelable. |
+| [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
+| | method | addEventListener(type, EventListener? callback, capture = false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
+| | method | removeEventListener(type, EventListener? callback, capture = false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
+| | method | dispatchEvent(event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
+| | callback | EventListener | An event listener can be used to observe a specific event. |
+| | callback | EventHandlerNonNull| |
+| | callback | OnErrorEventHandlerNonNull | |
+| | callback | OnBeforeUnloadEventHandlerNonNull | |
+| | typedef | (EventHandlerNonNull?) EventHandler | |
+| | typedef | (OnErrorEventHandlerNonNull?) OnErrorEventHandler | |
+| | typedef | (OnBeforeUnloadEventHandlerNonNull?) OnBeforeUnloadEventHandler | |
+| [FocusEvent](https://w3c.github.io/uievents/#interface-focusevent) | interface | FocusEvent | The FocusEvent interface represents focus-related events like focus, blur, focusin, or focusout. |
+| | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |
+| [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
+| | attribute | onabort | Fired at the Window when the download was aborted by the user |
+| | attribute | oncanplay | Fired when the user agent can resume playback of the media data, but estimates that if playback were to be started now, the media resource could not be rendered at the current playback rate up to its end without having to stop for further buffering of content. |
+| | attribute | oncanplaythrough | Fired when the user agent estimates that if playback were to be started now, the media resource could be rendered at the current playback rate all the way to its end without having to stop for further buffering. |
+| | attribute | onclick | Fired when the click event is raised. |
+| | attribute | ondurationchange | Fired when the duration attribute has just been updated. |
+| | attribute | onemptied | Fired when a media element whose networkState was previously not in the NETWORK_EMPTY state has just switched to that state. |
+| | attribute | onended | Fired when playback has stopped because the end of the media resource was reached. |
+| | attribute | onerror | Fired when the error event is raised. |
+| | attribute | onfocus | Fired when the focus event is raised. |
+| | attribute | onkeydown | Fired when the keydown event is raised. |
+| | attribute | onkeyup | Fired when the keyup event is raised. |
+| | attribute | onload | Fired when the load event is raised. |
+| | attribute | onloadeddata | Fired when the user agent can render the media data at the current playback position for the first time. |
+| | attribute | onloadedmetadata | Fired when the user agent has just determined the duration and dimensions of the media resource and the text tracks are ready. |
+| | attribute | onloadstart | Fired when the user agent begins looking for media data, as part of the resource selection algorithm. |
+| | attribute | onmouseover | Fired when the mouseover event is raised. |
+| | attribute | onpause | Fired when the element has been paused. |
+| | attribute | onplay | Fired when the element is no longer paused. Fired after the play() method has returned, or when the autoplay attribute has caused playback to begin. |
+| | attribute | onplaying | Fired when playback is ready to start after having been paused or delayed due to lack of media data. |
+| | attribute | onprogress | Fired when the user agent is fetching media data. |
+| | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
+| [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent) | interface | ProgressEvent | The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an \<img\>, \<audio\>, \<video\>, \<style\> or \<link\>). |
+| | attribute | lengthComputable | Is a Boolean flag indicating if the total work to be done, and the amount of work already done, by the underlying process is calculable. In other words, it tells if the progress is measurable or not. |
+| | attribute | loaded | Is an unsigned long long representing the amount of work already performed by the underlying process. The ratio of work done can be calculated with the property and ProgressEvent.total. When downloading a resource using HTTP, this only represent the part of the content itself, not headers and other overhead. |
+| | attribute | total | Is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing. When downloading a resource using HTTP, this only represent the content itself, not headers and other overhead. |
+| [UIEvent](https://w3c.github.io/uievents/#interface-UIEvent) | interface | UIEvent | |
+| | dictionary | EventModifierInit | ctrlKey, shiftKey, altKey, metaKey, modifierAltGraph, modifierCapsLock, modifierFn, modifierFnLock, modifierHyper, modifierNumLock, modifierScrollLock, modifierSuper, modifierSymbol, modifierSymbolLock |
+| | dictionary | UIEventInit | view, detail |
+| [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
+| | attribute | onunload | Represents the code to be called when the unload event is raised. |
 
 ## CSS
 
