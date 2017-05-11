@@ -20,5 +20,4 @@ interface HTMLLinkElement : HTMLElement {
   [Unimplemented, CEReactions] attribute boolean useCache;
 };
 
-// TODO Support implements
 HTMLLinkElement implements LinkStyle;
