@@ -25,12 +25,10 @@
         'libraries_x64_debug': [
             '<(escargot_root)/out/linux/x64/interpreter/debug/libescargot.a',
             '<(escargot_root)/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.a',
-            '<(starfish_root)/third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.a',
         ],
         'libraries_x64_release': [
             '<(escargot_root)/out/linux/x64/interpreter/release/libescargot.a',
             '<(escargot_root)/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.a',
-            '<(starfish_root)/third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.a',
         ],
         'main_file' : 'src/shell/shell.cpp',
         'variables': {
@@ -42,16 +40,18 @@
         ['CXX', '/usr/bin/g++'],
     ],
     'target_defaults' : {
+        'dependencies': [
+            './build.dep.gyp:clipper.x64.release',
+            './build.dep.gyp:mp4parse.x64.release',
+            './build.dep.gyp:skia.x64.release',
+            './build.dep.gyp:webm.x64.release',
+        ],
        'include_dirs': [
            '<(starfish_root)/src',
            '<(starfish_root)/inc',
-           '<(starfish_root)/third_party/skia_matrix',
-           '<(starfish_root)/third_party/clipper/cpp',
            '<(starfish_root)/third_party/rapidxml',
            '<(starfish_root)/third_party/cppzmq',
            '<(starfish_root)/third_party/zeromq/include',
-           '<(starfish_root)/third_party/webm',
-           '<(starfish_root)/third_party/MP4Parse/source/include',
            '<(escargot_root)/src',
            '<(escargot_root)/third_party/bdwgc/include',
            '<(escargot_root)/third_party/checked_arithmetic',
@@ -75,14 +75,6 @@
            '<!@(find src/style -name *.cpp)',
            '<!@(find src/util -name *.cpp)',
            'third_party/clipper/cpp/clipper.cpp',
-           '<!@(find third_party/MP4Parse/source -name MP4*.cpp)',
-           'third_party/skia_matrix/SkMath.cpp',
-           'third_party/skia_matrix/SkPoint.cpp',
-           'third_party/skia_matrix/SkRect.cpp',
-           'third_party/skia_matrix/SkMatrix.cpp',
-           'third_party/skia_matrix/SkDebug.cpp',
-           'third_party/webm/mkvparser.cpp',
-           'third_party/webm/webvttparser.cc',
        ],
        'link_settings': {
            'ldflags' : [
@@ -92,6 +84,7 @@
                '-L<(libav_lib)/libavutil',
            ],
            'libraries': [
+               '<(starfish_root)/third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.a',
                '<!@(pkg-config --libs-only-l <(third_party_libs))',
                '-Wl,-rpath <(libav_lib)/libavformat -lavformat',
                '-Wl,-rpath <(libav_lib)/libavcodec -lavcodec',
@@ -169,8 +162,6 @@
             'target_name': 'starfish.x64.debug',
             'type': '<(component)',
             'product_name': 'StarFish.x64.debug',
-            'dependencies': [
-            ],
             'conditions': [
                 ['component=="executable"', {
                     'sources' : [
