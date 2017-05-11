@@ -256,7 +256,7 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | Selectors | Type | Pattern | Usage | Description |
 |-----------|------|---------|-------|-------------|
-| [Selectors](https://www.w3.org/TR/CSS2/selector.html) | Universal Selector | * | * | Selects all elements |
+| [Selectors](https://www.w3.org/TR/selectors/) | Universal Selector | * | * | Selects all elements |
 | | Type Selector | element | p | Selects all \<p\> elements. The 'OR' condition is allowed (e.g., element, element) |
 | | Class Selector | element.class | div.intro | Selects all \<div\> elements with class="intro". A subset matching of "class" values is not allowed (for example, div.class1.class2) |
 | | ID Selector | element#id | div#firstname | Selects an \<div\> element with id="firstname" |
@@ -299,23 +299,25 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | attribute | onloadstart | Function called when the request starts. Usage: `onloadstart: function() {}` |
-| | | onprogress | Function called when transmitting data. Usage: `onprogress: function() {}` |
-| | | onabort | Function called when the request has been aborted. For instance, by invoking the abort() method. Usage: `onabort: function() {}` |
-| | | onerror | Function called when the request has failed. Usage: `onerror: function() {}` |
-| | | onload | Function called when the request has successfully completed. Usage: `onload: function() {}` |
-| | | ontimeout | Function called when the author specified timeout has passed before the request completed. Usage: `ontimeout: function() {}` |
-| | | onloadend | Function called when the request has completed (either in success or failure). Usage: `onloadend: function() {}` |
-| [XMLHttpRequest](https://xhr.spec.whatwg.org/#interface-xmlhttprequest) | attribute | onreadystatechange | The readyState attribute changes value, except when it changes to UNSENT. Usage: `onreadystatechange: function() {}` |
-| | | readyState* | Returns the current state, which is one of the readyState code shown below. |
-| | | timeout | Terminates fetching after the given time (in milliseconds) has passed. If the fetching has not completed after the time passed and the synchronous flag is unset, a timeout event will be dispatched. |
-| | | status | Returns 0 if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status code. |
-| | | responseType | Sets or returns the response type, which is either `""`, `"blob"`, `"json"`, or `"text"`. |
-| | | response | Returns the response entity body, which is either `string`, `Blob` object, `object`, or `string` when responseType is `""`, `"blob"`, `"json"`, or `"text"`, respectively. |
-| | | responseText | Returns an empty string if the state is not LOADING or DONE, or error flag is set. Returns the text response entity body when responseType is either `""` or `"text"`. The allowed character set for response text is UTF-8. Otherwise returns an invalidStateError exception with either "Permission denied", "Position unavailable", or "Timeout expired". |
-| | method | open(method, url [, async = true [, username = null [, password = null]]]) | Sets the request method, request URL, and synchronous flag.<br>Supported request method : GET, POST  |
-| | | send(data = null) | Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
-| | | abort() | Cancels any network activity. |
+| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | enum	| XMLHttpRequestResponseType	| "", "text", "arraybuffer", "document", "blob", "json"|
+| | attribute	| onloadstart	| Function called when the request starts. Usage: onloadstart: function() {} |
+| | attribute	| onprogress	| Function called when transmitting data. Usage: onprogress: function() {} |
+| | attribute	| onabort	| Function called when the request has been aborted. For instance, by invoking the abort() method. Usage: onabort: function() {} |
+| | attribute	| onerror	| Function called when the request has failed. Usage: onerror: function() {} |
+| | attribute	| onload	| Function called when the request has successfully completed. Usage: onload: function() {} |
+| | attribute	| ontimeout	| Function called when the author specified timeout has passed before the request completed. Usage: ontimeout: function() {} |
+| | attribute	| onloadend	| Function called when the request has completed (either in success or failure). Usage: onloadend: function() {} |
+| [XMLHttpRequest](https://xhr.spec.whatwg.org/#xmlhttprequest) | attribute	| onReadyStateChange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
+| | method	| open(method, url, async=true, userName=null, password=null)	| "Sets the request method, request URL, and synchronous flag. Supported request method : GET, POST" |
+| | method	| setRequestHeader(name, value)	| Combines a header in author request headers. |
+| | attribute	| timeout	| Can be set to a time in milliseconds.Terminates fetching after the given time (in milliseconds) has passed. If the fetching has not completed after the time passed and the synchronous flag is unset, a timeout event will be dispatched. |
+| | method	| send(body = null)	| Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
+| | method	| abort()	| Cancels any network activity. |
+| | attribute	| status	| Returns 0 if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status code.|
+| | attribute	| responseType	| Sets or returns the response type, which is either "", "blob", "json", or "text".|
+| | attribute	| response	| Returns the response entity body, which is either string, Blob object, object, or string when responseType is "", "blob", "json", or "text", respectively.|
+| | attribute	| responseText	| Returns an empty string if the state is not LOADING or DONE, or error flag is set. Returns the text response entity body when responseType is either "" or "text". The allowed character set for response text is UTF-8. Otherwise returns an invalidStateError exception with either "Permission denied", "Position unavailable", or "Timeout expired".|
+| | attribute	| readyState*	| Returns the current state, which is one of the readyState code shown below.|
 
 \* The readyState code are as follows.
 
@@ -333,12 +335,13 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [Blob](https://w3c.github.io/FileAPI/#blob) | attribute | size | Returns the size of the byte sequence in number of bytes. |
-| | | type | Returns a parsable MIME type. |
-| | | isClosed | Returns a boolean value that indicates whether the Blob is in the CLOSED readability state. |
-| | method  | slice(start = 0, end = size, contentType = "") | The slice() method returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. |
-| | | close() | The close() method closes a Blob. |
-
+| [Blob] (https://w3c.github.io/FileAPI/#blob) | interface	|	A Blob object refers to a byte sequence |
+| |	attribute |	size	| Returns the size of the byte sequence in number of bytes |
+| |	attribute |	type	| The ASCII-encoded string in lower case representing the media type of the Blob |
+| |	method	| slice	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
+| |	typedef |	BlobPar	||
+| |	method	| isClosed	| Returns a boolean value that indicates whether the Blob is in the CLOSED readability state. |
+| |	method	| close	| The close() method closes a Blob. |
 
 ### Page Visibility
 Extensions to the Document Object: The document object is extended by the following attributes.
@@ -364,22 +367,32 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [Navigator](https://dev.w3.org/geo/api/spec-source.html#api_description) | attribute | geolocation | `navigator.geolocation` object is used to determine the location information associated with the hosting device. |
-| [Geolocation](https://dev.w3.org/geo/api/spec-source.html#api_description) | method | getCurrentPosition(successCallback, errorCallback, options) | Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
-| [PositionOptions](https://dev.w3.org/geo/api/spec-source.html#position-options) | attribute | enableHighAccuracy | When enabled, use GPS only to improve the location accuracy. When disabled, use both GPS and WPS. Enabling it may result in slower response times or increased power consumption. Default: false |
-| | | timeout | The maximum length of time (expressed in milliseconds) that is allowed to pass from the call to getCurrentPosition() until the corresponding successCallback is invoked. The maximum allowed value is 120. Default: 120 |
-| | | maximumAge | Sets to return a cached position whose age is no greater than the specified time in milliseconds. If maximumAge is set to 0, a new position object is acquired immediately. Default: 0 |
-| [Position](https://dev.w3.org/geo/api/spec-source.html#position_interface) | attribute | coords | The coords attribute contains a set of geographic coordinates together with their associated accuracy, as well as a set of other optional attributes such as altitude and speed. |
-| | | timestamp | The timestamp attribute represents the time when the Position object was acquired in milliseconds. |
+| [Navigator](https://html.spec.whatwg.org/#the-navigator-object)	| interface	| Navigator	| The navigator attribute of the Window interface must return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
+| |	attribute	| geolocation	| Return geolocation interface |
+| [NavigatorID] (https://html.spec.whatwg.org/multipage/#navigatorid)	| interface	|	| NavigatorID is used for identifying Navigator |
+| |	attribute	| appCodeName	| Returns  the string "StarFish".|
+| |	attribute	| appName	| Returns  the string "StarFish".|
+| |	attribute	| appVersion	| Returns the string "Mozilla/5.0 StarFish/0.1".|
+| |	attribute	| userAgent	| Returns the string "Mozilla/5.0 StarFish/0.1".|
+| |	attribute	| vendor	| Returns the string "Samsung Electronics Co., Ltd."|
+| [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | |
+| |	method	| getCurrentPosition	| Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
 | [Coordinates](https://dev.w3.org/geo/api/spec-source.html#coordinates_interface) | attribute | latitude | The latitude attribute is a geographic coordinate specified in decimal degrees. |
-| | | longitude | The longitude attribute is a geographic coordinate specified in decimal degrees. |
-| | | altitude | The altitude attribute denotes the height of the position, specified in meters above the WGS84 ellipsoid. |
-| | | accuracy | The accuracy attribute denotes the accuracy level of the latitude and longitude coordinates. It is specified in meters, and is a non-negative real number. |
-| | | altitudeAccuracy | Not supported by the widget engine. Always returns null. |
-| | | heading | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north. |
-| | | speed | The speed attribute denotes the magnitude of the horizontal component of the hosting device's current velocity and is specified in meters per second. The value of the speed attribute is a non-negative real number. |
-| [PositionError](https://dev.w3.org/geo/api/spec-source.html#position_error_interface) | attribute | code* | Returns the appropriate position error code |
-| | | message | Returns an error message describing the details of the error encountered. |
+| | attribute | longitude | The longitude attribute is a geographic coordinate specified in decimal degrees. |
+| | attribute |	altitude | The altitude attribute denotes the height of the position, specified in meters above the WGS84 ellipsoid.|
+| | attribute | accuracy | The accuracy attribute denotes the accuracy level of the latitude and longitude coordinates. It is specified in meters, and is a non-negative real number.|
+| | attribute |  altitudeAccuracy |	 Not supported by the widget engine. Always returns null.|
+| | attribute |	 heading | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north.|
+| | attribute |	 speed | The speed attribute denotes the magnitude of the horizontal component of the hosting device's current velocity and is specified in meters per second. The value of the speed attribute is a non-negative real number.|
+| [Geoposition](none)	| interface	| Geoposition	| The Geoposition interface represents the position of the concerned device at a given time |
+| | attribute	| coords | Returns a Coordinates object defining the current location. |
+| |	attribute	| timestamp | Returns a DOMTimeStamp representing the time at which the location was retrieved. |
+| [PositionError](https://dev.w3.org/geo/api/spec-source.html#position_error_interface) | attribute | code* |	 Returns the appropriate position error code |
+| | message |	Returns an error message describing the details of the error encountered. | |
+| |	constant |	PERMISSION_DENIED = 1 | |
+| | |	POSITION_UNAVAILABLE = 2 | |
+| | |	TIMEOUT = 3 | | |
+
 
 \* PositionError codes are as follows:
 
