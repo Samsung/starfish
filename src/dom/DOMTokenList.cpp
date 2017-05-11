@@ -170,14 +170,17 @@ String* DOMTokenList::addSingleToken(String* src, GCVector<String*>* tokens,
     return src;
 }
 
-void DOMTokenList::add(GCVector<String*>* tokensToAdd)
+void DOMTokenList::add(GCVector<String*>& tokensToAdd)
 {
+    if (tokensToAdd.size() == 0) {
+        return;
+    }
     String* str = m_element->getAttributeOrEmpty(m_localName);
     GCVector<String*> tokens;
     tokenize(&tokens, str);
-    for (unsigned i = 0; i < tokensToAdd->size(); i++) {
-        validateToken((*tokensToAdd)[i]);
-        str = addSingleToken(str, &tokens, (*tokensToAdd)[i]);
+    for (unsigned i = 0; i < tokensToAdd.size(); i++) {
+        validateToken(tokensToAdd[i]);
+        str = addSingleToken(str, &tokens, tokensToAdd[i]);
     }
     m_element->setAttribute(m_localName, str);
 }
@@ -201,11 +204,14 @@ void DOMTokenList::remove(String* token)
 {
     GCVector<String*> tokensToRemove;
     tokensToRemove.push_back(token);
-    remove(&tokensToRemove);
+    remove(tokensToRemove);
 }
 
-void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
+void DOMTokenList::remove(GCVector<String*>& tokensToRemove)
 {
+    if (tokensToRemove.size() == 0) {
+        return;
+    }
     Nullable<String*> old = m_element->getAttribute(m_localName);
     if (!old.hasValue()) {
         // Nothing to remove
@@ -217,10 +223,10 @@ void DOMTokenList::remove(GCVector<String*>* tokensToRemove)
     tokenize(&tokens, src);
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
-    for (unsigned i = 0; i < tokensToRemove->size(); i++) {
-        validateToken((*tokensToRemove)[i]);
+    for (unsigned i = 0; i < tokensToRemove.size(); i++) {
+        validateToken(tokensToRemove[i]);
         matchCount +=
-            checkMatchedTokens(matchFlags, &tokens, (*tokensToRemove)[i]);
+            checkMatchedTokens(matchFlags, &tokens, tokensToRemove[i]);
     }
     if (matchCount > 0) {
         bool isEmpty = true;

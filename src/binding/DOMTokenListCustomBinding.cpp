@@ -21,29 +21,6 @@ namespace StarFish {
 
 using namespace escargot;
 
-ESValue addDOMTokenListFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
-    try {
-        GCVector<String*> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(i);
-            ESString* argStr = argValue.toString();
-            String* aa = toBrowserString(argStr);
-            tokens.push_back(aa);
-        }
-        if (argCount > 0) {
-            originalObj->add(&tokens);
-        }
-        return ESValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);

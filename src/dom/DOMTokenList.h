@@ -46,11 +46,11 @@ public:
     bool contains(String* token);
     String* addSingleToken(String* src, GCVector<String*>* tokens,
                            String* token);
-    void add(GCVector<String*>* tokens);
+    void add(GCVector<String*>& tokens);
     int checkMatchedTokens(bool* flags, GCVector<String*>* tokens,
                            String* token);
     void remove(String* token);
-    void remove(GCVector<String*>* tokens);
+    void remove(GCVector<String*>& tokens);
 
     bool toggle(String* token);
     bool toggle(String* token, bool forceValue);
