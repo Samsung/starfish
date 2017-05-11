@@ -14,47 +14,21 @@
  *    limitations under the License.
  */
 
-#include "dom/DOMException.h"
-#include "dom/DOMTokenList.h"
+#include "dom/Node.h"
+#include "dom/NodeList.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESValue addDOMTokenListFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
-    try {
-        GCVector<String*> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(i);
-            ESString* argStr = argValue.toString();
-            String* aa = toBrowserString(argStr);
-            tokens.push_back(aa);
-        }
-        if (argCount > 0) {
-            originalObj->add(&tokens);
-        }
-        return ESValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMTokenList());
+    NodeList* self = (NodeList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNodeList());
     uint32_t idx = key.toIndex();
     if (idx < self->length()) {
-        Nullable<String*> result = self->item(idx);
-        if (result.hasValue()) {
-            return createScriptString(result.getValue());
-        }
+        return self->item(idx)->scriptValue();
     }
     return ESValue(ESValue::ESDeletedValue);
 }
@@ -69,8 +43,8 @@ static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
 static ESValueVector enumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMTokenList());
+    NodeList* self = (NodeList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isNodeList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -79,7 +53,7 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void DOMTokenList::postInit(ScriptBindingInstance* instance)
+void NodeList::postInit(ScriptBindingInstance* instance)
 {
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,

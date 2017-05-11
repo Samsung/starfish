@@ -34,45 +34,6 @@ DOMRectList::DOMRectList(const std::vector<DOMQuad>& quads)
     }
 }
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMRectList* self = (DOMRectList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMRectList());
-    uint32_t idx = key.toIndex();
-    if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
-    }
-    return ESValue(ESValue::ESDeletedValue);
-}
-
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
-}
-
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMRectList* self = (DOMRectList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMRectList());
-    size_t len = self->length();
-    ESValueVector v(len);
-    for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
-    }
-    return v;
-}
-
-void DOMRectList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
-}
-
 uint32_t DOMRectList::length() const
 {
     return m_list.size();

@@ -13,48 +13,24 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#include "dom/DOMException.h"
-#include "dom/DOMTokenList.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#include "extra/SourceBuffer.h"
+#include "extra/SourceBufferList.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
-ESValue addDOMTokenListFunction(ESVMInstance* instance)
-{
-    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
-    try {
-        GCVector<String*> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            ESValue argValue =
-                instance->currentExecutionContext()->readArgument(i);
-            ESString* argStr = argValue.toString();
-            String* aa = toBrowserString(argStr);
-            tokens.push_back(aa);
-        }
-        if (argCount > 0) {
-            originalObj->add(&tokens);
-        }
-        return ESValue();
-    } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMTokenList());
+    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isSourceBufferList());
     uint32_t idx = key.toIndex();
-    if (idx < self->length()) {
-        Nullable<String*> result = self->item(idx);
-        if (result.hasValue()) {
-            return createScriptString(result.getValue());
-        }
+    if (idx != ESValue::ESInvalidIndexValue && idx < self->length()) {
+        SourceBuffer* e = (*self)[idx];
+        STARFISH_ASSERT(e);
+        return e->scriptValue();
     }
     return ESValue(ESValue::ESDeletedValue);
 }
@@ -69,8 +45,8 @@ static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
 static ESValueVector enumerateCallbackFunction(ESObject* obj)
 {
     STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMTokenList());
+    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
+    STARFISH_ASSERT(self->isSourceBufferList());
     size_t len = self->length();
     ESValueVector v(len);
     for (size_t i = 0; i < len; i++) {
@@ -79,10 +55,11 @@ static ESValueVector enumerateCallbackFunction(ESObject* obj)
     return v;
 }
 
-void DOMTokenList::postInit(ScriptBindingInstance* instance)
+void SourceBufferList::postInit(ScriptBindingInstance* instance)
 {
     scriptObject()->setPropertyInterceptor(readCallbackFunction,
                                            writeCallbackFunction,
                                            enumerateCallbackFunction, true);
 }
 }
+#endif

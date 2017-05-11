@@ -30,50 +30,6 @@ HTMLCollection::HTMLCollection(ScriptBindingInstance* instance, Node* root,
 {
 }
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isHTMLCollection());
-    uint32_t idx = key.toIndex();
-    if (idx == ESValue::ESInvalidIndexValue) {
-        Element* e = self->namedItem(toBrowserString(key));
-        if (e != nullptr) {
-            return e->scriptValue();
-        }
-    } else if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
-    }
-    return ESValue(ESValue::ESDeletedValue);
-}
-
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
-}
-
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
-{
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isHTMLCollection());
-    size_t len = self->length();
-    ESValueVector v(len);
-    for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
-    }
-    return v;
-}
-
-void HTMLCollection::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
-}
-
 size_t HTMLCollection::length() const
 {
     return m_nodeListImpl.length();
