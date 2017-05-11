@@ -91,22 +91,47 @@ static ESValue containsFunction(ESVMInstance* instance)
     return ESValue(result);
 }
 
-extern ESValue addDOMTokenListFunction(ESVMInstance* instance);
-
-static ESValue removeFunction(ESVMInstance* instance)
+static ESValue addFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    // Declare native value (empty when type is void)
+    // Handle ellipsis arguments from index0
+    GCVector<String*> value0;
     size_t argCount = instance->currentExecutionContext()->argumentCount();
+    for (size_t i = 0; i < argCount; i++) {
+        ESValue item = instance->currentExecutionContext()->readArgument(i);
+        value0.push_back(toBrowserString(item));
+    }
+    // Call native function (nargs: 1)
     try {
-        for (size_t i = 0; i < argCount; i++) {
-            ESValue arg = instance->currentExecutionContext()->readArgument(i);
-            String* value = toBrowserString(arg);
-            originalObj->remove(value);
-        }
+        originalObj->add(value0);
     } catch (DOMException* e) {
         ESVMInstance::currentInstance()->throwError(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    // Return ESValue from native value
+    return ESValue(ESValue::ESUndefined);
+}
+
+static ESValue removeFunction(ESVMInstance* instance)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(DOMTokenList);
+    // Declare native value (empty when type is void)
+    // Handle ellipsis arguments from index0
+    GCVector<String*> value0;
+    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    for (size_t i = 0; i < argCount; i++) {
+        ESValue item = instance->currentExecutionContext()->readArgument(i);
+        value0.push_back(toBrowserString(item));
+    }
+    // Call native function (nargs: 1)
+    try {
+        originalObj->remove(value0);
+    } catch (DOMException* e) {
+        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ESValue from native value
     return ESValue(ESValue::ESUndefined);
 }
 
@@ -201,14 +226,14 @@ ESFunctionObject* bindingDOMTokenList(
                                                  true, containsESFn);
 
     ESString* addString = ESString::create("add");
-    ESFunctionObject* addDOMTokenListESFn = ESFunctionObject::create(
-        nullptr, addDOMTokenListFunction, addString, 1, false);
+    ESFunctionObject* addESFn =
+        ESFunctionObject::create(nullptr, addFunction, addString, 0, false);
     DOMTokenListPrototypeObj->defineDataProperty(addString, true, true, true,
-                                                 addDOMTokenListESFn);
+                                                 addESFn);
 
     ESString* removeString = ESString::create("remove");
     ESFunctionObject* removeESFn = ESFunctionObject::create(
-        nullptr, removeFunction, removeString, 1, false);
+        nullptr, removeFunction, removeString, 0, false);
     DOMTokenListPrototypeObj->defineDataProperty(removeString, true, true, true,
                                                  removeESFn);
 
