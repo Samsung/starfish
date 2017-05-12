@@ -35,17 +35,6 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnDOMImplementation()->protoType());
-    }
-
-    virtual bool isDOMImplementation() const override
-    {
-        return true;
-    }
-
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);
     Document* createHTMLDocument(String* title = String::spaceString);

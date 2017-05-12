@@ -1,6 +1,7 @@
 // https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
 
-[NoInterfaceObject]
+[PartialInterface,
+ NoInterfaceObject]
 interface DocumentAndElementEventHandlers {
   [Unimplemented] attribute EventHandler onafterprint;
   [Unimplemented] attribute EventHandler onbeforeprint;

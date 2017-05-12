@@ -13,30 +13,46 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 #if defined(STARFISH_EXP)
+
+#include "dom/Document.h"
 #include "dom/DOMImplementation.h"
 
 namespace StarFish {
 
 using namespace escargot;
 
+// Implement for functions
 static ESValue createHTMLDocumentFunction(ESVMInstance* instance)
 {
     GENERATE_THIS_AND_CHECK_TYPE(DOMImplementation);
-    DOMImplementation* impl = originalObj;
-    if (impl) {
-        Document* doc = impl->createHTMLDocument();
-        if (doc) {
-            return doc->scriptValue();
-        }
+    size_t validArgCount = 1;
+    // Declare native value (empty when type is void)
+    Document* result = nullptr;
+    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    // Handle argument arg0
+    String* value0 = String::emptyString;
+    if (arg0.isUndefined()) {
+        validArgCount--;
+    } else {
+        value0 = toBrowserString(arg0);
     }
-    return ESValue(ESValue::ESNull);
+    // Call native function (nargs: 0-1)
+    if (validArgCount == 0) {
+        result = originalObj->createHTMLDocument();
+    } else if (validArgCount == 1) {
+        result = originalObj->createHTMLDocument(value0);
+    }
+
+    // Return ESValue from native value
+    STARFISH_ASSERT(result != nullptr);
+    return result->scriptValue();
 }
 
-ESFunctionObject* bindingDOMPImplemntation(
+ESFunctionObject* bindingDOMImplementation(
     ScriptBindingInstance* scriptBindingInstance)
 {
+    // Bind for constructor
     ESString* DOMImplementationString = ESString::create("DOMImplementation");
     ESFunctionObject* DOMImplementationFunction =
         ESFunctionObject::create(nullptr, errorOnConstructorFunction,
@@ -48,16 +64,33 @@ ESFunctionObject* bindingDOMPImplemntation(
         ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false,
         false, false);
     DOMImplementationPrototypeObj->forceNonVectorHiddenClass(false);
-    DOMImplementationFunction->set__proto__(fetchData(scriptBindingInstance)
-                                                ->m_instance->globalObject()
-                                                ->objectPrototype());
-
+    DOMImplementationPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
+                                                    ->m_instance->globalObject()
+                                                    ->objectPrototype());
+    // Bind for functions
     ESString* createHTMLDocumentString = ESString::create("createHTMLDocument");
     ESFunctionObject* createHTMLDocumentESFn =
         ESFunctionObject::create(nullptr, createHTMLDocumentFunction,
-                                 createHTMLDocumentString, 1, false);
+                                 createHTMLDocumentString, 0, false);
     DOMImplementationPrototypeObj->defineDataProperty(
-        createHTMLDocumentString, true, true, true, createHTMLDocumentESFn);
+        createHTMLDocumentString, true /* writable */, true /* enumerable */,
+        true /* configurable */, createHTMLDocumentESFn);
+
+    return DOMImplementationFunction;
+}
+
+void DOMImplementation::init(ScriptBindingInstance* instance)
+{
+    scriptObject()->set__proto__(
+        fetchData(instance)->fnDOMImplementation()->protoType());
+    // Bind for functions
+
+    postInit(instance);
+}
+
+bool DOMImplementation::isDOMImplementation() const
+{
+    return true;
 }
 }
 #endif

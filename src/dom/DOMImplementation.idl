@@ -1,0 +1,10 @@
+// https://dom.spec.whatwg.org/#interface-domimplementation
+
+[STARFISH_EXP, Exposed=Window]
+interface DOMImplementation {
+  [Unimplemented, NewObject] DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId);
+  [Unimplemented, NewObject] XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, optional DocumentType? doctype = null);
+  [NewObject] Document createHTMLDocument(optional DOMString title);
+
+  [Unimplemented] boolean hasFeature();
+};
