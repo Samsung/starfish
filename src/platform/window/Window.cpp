@@ -566,7 +566,7 @@ void Window::navigate(URL* url)
     m_scriptBindingInstance = new ScriptBindingInstance();
     StarFishEnterer enter(m_starFish);
     m_scriptBindingInstance->initBinding(m_starFish);
-    scriptObject();
+    scriptObjectSlowCase();
 
     m_history = new History(m_starFish);
     m_navigator = new Navigator(m_starFish);
