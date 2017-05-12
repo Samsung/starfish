@@ -5,48 +5,62 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | HTML Tag | Attribute | Allowed Value | Usage | Note |
 |----------|-----------|---------------|-------|------|
-| [Global Attribute](https://www.w3.org/TR/html5/dom.html#global-attributes) | class | &lt;string&gt; | &lt;element class="classname"&gt; | &lt;css_styles&gt; must conform to the widget engine's [CSS](https://developer.tizen.org/development/api-references/web-application?redirect=https%3A//developer.tizen.org/dev-guide/2.3.2/org.tizen.web.apireference/html/widget_spec/web_widget.html&langredirect=1#user-content-css) rules |
-| | dir | ltr &#124; rtl | &lt;element dir="ltr"&gt; | |
-| | id | &lt;string&gt; | &lt;element id="id"&gt; | |
-| | style | &lt;css_styles&gt; | &lt;element style="css_styles"&gt; | |
-| [html](https://www.w3.org/TR/html5/semantics.html#the-root-element) | | | | |
-| [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element) | | | | |
-| [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element) | rel | stylesheet | &lt;link rel="stylesheet"&gt; | &lt;URL&gt; must be a local path |
-| | href | &lt;URL&gt; | &lt;link href="local_path"&gt; | |
-| | type | text/css | &lt;link tyle="text/css"&gt; | |
-| [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element) | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | `name` and `content` are used to set the widget background transparent only. To do so, both `name` and `content` must be set in the same `meta` tag |
-| | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | |
-| | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | |
-| [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element) | type | text/css | &lt;style type="text/css"&gt; | &lt;URL&gt; must be a local path |
-| [body](https://www.w3.org/TR/html5/sections.html#the-body-element) | | | | |
-| [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements) | | | | |
-| [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element) | | | | |
-| [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | | | | |
-| [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element) | | | | |
-| [br](https://www.w3.org/TR/html5/text-level-semantics.html#the-br-element) | | | | |
-| [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element) | src | &lt;URL&gt; | &lt;img src="local_path"&gt; | &lt;URL&gt; must be a local path. Supported images are of type `.png`, `.jpg`, and `.bmp` |
-| | height | pixels | &lt;img height="pixels"&gt; | |
-| | width | pixels | &lt;img width="pixels"&gt; | |
-| [script](https://developer.tizen.org/development/api-references/web-application?redirect=https%3A//developer.tizen.org/dev-guide/2.3.2/org.tizen.web.apireference/html/widget_spec/web_widget.html&langredirect=1#user-content-additional-supported-apis) | src | &lt;URL&gt; | &lt;script src="local_path"&gt; | &lt;URL&gt; must be a local path |
-| | type | text/javascript | &lt;script type="text/javascript"&gt; | |
-| | charset | UTF-8 | &lt;script charset="UTF-8"&gt; | |
-| [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element) | width | pixels &#124; &lt;percentage&gt; | | |
-| | bgcolor | &lt;color&gt; | | |
-| [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) | | | | |
-| [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element) | | | | |
-| [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element) | | | | |
-| [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element) | | | | |
-| [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element) | | | | |
-| [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element) | | | | |
-| [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element) | bgcolor | &lt;color&gt; | | |
-| [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element) | width | pixels &#124; &lt;percentage&gt; | | |
-| | colspan | number | | |
-| | bgcolor | &lt;color&gt; | | |
-| [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element) | width | pixels &#124; &lt;percentage&gt; | | |
-| | bgcolor | &lt;color&gt; | | |
-| [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element) | | | | |
-| [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype) | | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported. |
-
+| [Global Attribute](https://www.w3.org/TR/html5/dom.html#global-attributes) | class | &lt;string&gt; | &lt;element class="classname"&gt; |  |
+|  | dir | ltr &#124; rtl | &lt;element dir="ltr"&gt; |  |
+|  | id | &lt;string&gt; | &lt;element id="id"&gt; |  |
+|  | style | &lt;css_styles&gt; | &lt;element style="css_styles"&gt; | &lt;css_styles&gt; must conform to the CSS section of this specification document. |
+|  [html](https://www.w3.org/TR/html5/semantics.html#the-root-element)  |  |  | &lt;html&gt;&lt;/html&gt; |  |
+|  [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element)  |  |  | &lt;head&gt;SAMSUNG&lt;/head&gt; |  |
+|  [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element)  | rel | stylesheet | &lt;link rel="stylesheet"&gt; |  |
+|  | href | &lt;URL&gt; | &lt;link rel="stylesheet" href="mystyle.css"&gt; |  |
+|  | type | text/css | &lt;link rel="stylesheet" href="mystyle.css" type="text/css"&gt; |  |
+|  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | Only UTF-8 is supported  |
+|  | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
+|  | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |  |
+|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | type | text/css | &lt;style type="text/css"&gt;&lt;\style&gt; | Only "text/css" type is supportd. |
+|  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
+|  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  |  |  | &lt;h1&gt;&lt;\h1&gt;, &lt;h2&gt;&lt;\h2&gt;, &lt;h3&gt;&lt;\h3&gt;, etc. |  |
+|  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
+|  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  | &lt;div&gt;SAMSUNG&lt;/div&gt; |  |
+|  [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element)  |  |  | &lt;span&gt;SAMSUNG&lt;/span&gt; |  |
+|  [br](https://www.w3.org/TR/html5/text-level-semantics.html#the-br-element)  |  |  | &lt;br&gt; |  |
+|  [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | &lt;img src="URL"&gt; |  Supported images are of type .png, .jpg, and .bmp |
+|  | height | pixels | &lt;img height="pixels"&gt; |  |
+|  | width | pixels | &lt;img width="pixels"&gt; |  |
+|  [script](https://developer.tizen.org/development/api-references/web-application?redirect=https%3A//developer.tizen.org/dev-guide/2.3.2/org.tizen.web.apireference/html/widget_spec/web_widget.html&langredirect=1#user-content-additional-supported-apis)  | src | &lt;URL&gt; | &lt;script src="URL"&gt;&lt;/script&gt; |  |
+|  | type | text/javascript | &lt;script type="text/javascript"&gt;&lt;/script&gt; |  |
+|  | charset | UTF-8 | &lt;script charset="UTF-8"&gt;&lt;/script&gt; | Only UTF-8 is supported |
+|  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;table width="400"&gt;&lt;/table&gt; |  |
+|  | bgcolor | &lt;color&gt; | &lt;table bgcolor="blue"&gt;&lt;/table&gt; |  |
+|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element)  |  |  | &lt;caption&gt;&lt;/caption&gt; |  |
+|  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  | &lt;colgroup&gt;&lt;/colgroup&gt; |  |
+|  [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element)  | span | number | &lt;col span="2"&gt; |  |
+|  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  | &lt;tbody&gt;&lt;/tbody&gt; |  |
+|  [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element)  |  |  | &lt;thead&gt;&lt;/thead&gt; |  |
+|  [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element)  |  |  | &lt;tfoot&gt;&lt;/tfoot&gt; |  |
+|  [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element)  |  |  | &lt;tr&gt;&lt;/tr&gt; |  |
+|  [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;td width="30%"&gt;SAMSUNG&lt;/td&gt; |  |
+|  | colspan | number | &lt;td colspan="2"&gt; |  |
+|  | rowspan | number | &lt;td rowspan="2"&gt; |  |
+|  | bgcolor | &lt;color&gt; | &lt;td bgcolor="blue"&gt;SAMSUNG&lt;/td&gt; |  |
+|  [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element)  |  |  | &lt;th&gt;&lt;/th&gt; |  |
+|  [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element)  | src | &lt;URL&gt; | &lt;video src="movie.ogg" &gt; | [local&#124;network][absolute&#124;relative] URL |
+|  | autoplay | autoplay | &lt;video width="320" height="240" autoplay&gt; |  |
+|  | loop | loop | &lt;video loop&gt; |  |
+|  | muted | muted | &lt;video muted&gt; |  |
+|  | width | pixels | &lt;video width="320" height="240"&gt; |  |
+|  | height | pixels | &lt;video width="320" height="240"&gt; |  |
+|  [a](https://www.w3.org/TR/html5/text-level-semantics.html#the-a-element) | href | &lt;URL&gt; | &lt;a href="./content.html"&gt;content&lt;/a&gt; |  |
+|  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  | &lt;pre&gt;SAMSUNG&lt;/pre&gt; |  |
+|  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; |  |
+|  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  | &lt;li&gt;Coffee&lt;/li&gt; |  |
+|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  | &lt;caption&gt;SAMSUNG&lt;/caption&gt; |  |
+|  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  | &lt;audio&gt;&lt;/audio&gt; |  |
+|  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; | &lt;source src="horse.mp4"&gt; |  |
+|  | type | MIME-type | &lt;source type="video/mp4"&gt; | Only video/mp4 and audio/mp4 are supported. |
+|  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  | &lt;object&gt;&lt;/object&gt; |  |
+|  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  | &lt;h1&gt;Chapter 1: &lt;strong&gt;The Praxis&lt;/strong&gt;&lt;/h1&gt; |  |
+|  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
 ## DOM
 
@@ -615,7 +629,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-image-source | &lt;image&gt; &#124; none | The path to the image is to be used as a border. | |
 | | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 0 (not 100%). | |
 | | border-image-width | &lt;length&gt; &#124; &lt;number&gt;	| Width of the border image. &lt;number&gt; value represents multiples of the corresponding border-top-width. | |
-| [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | inline &#124; block &#124; inline-block &#124; table &#124; inline-table &#124; table-row-group &#124; table-header-group &#124; table-footer-group &#124; table-row &#124; table-column-group &#124; table-column &#124; table-cell &#124; table-caption &#124; none | Displays elements as inline elements | The display property specifies the type of box used for an HTML element (Also check Visibility) |
+| [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | inline &#124; block &#124; inline-block &#124; table &#124; inline-table &#124; table-row-group &#124; table-header-group &#124; table-footer-group &#124; table-row &#124; table-column-group &#124; table-column &#124; table-cell &#124; table-caption &#124; none | The display property specifies the type of box used for an HTML element (Also check Visibility) |  |
 | [Position](https://www.w3.org/TR/CSS2/visuren.html#positioning-scheme) | position | static &#124; absolute &#124; relative | The position property specifies the type of positioning method used for an element. | Each element in the document tree generates zero or more boxes according to the box model. The layout of these boxes is governed by box dimensions, type, positioning scheme, relationships between in the document tree and external information. \*CSS direction property only accepts "ltr" as a value. To support right-to-left text, the dir attribute in an HTML element should be used, e.g., &lt;html dir="rtl"&gt; (Also check Layers, Direction, Visual Formatting Model, and Visual Effects) |
 | | top | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the top edge of an element to a unit above/below the top edge of its nearest positioned ancestor. | |
 | | right | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the right edge of an element to a unit above/below the right edge of its nearest positioned ancestor. | |
