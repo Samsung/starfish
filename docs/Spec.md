@@ -32,18 +32,16 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | charset | UTF-8 | &lt;script charset="UTF-8"&gt;&lt;/script&gt; | Only UTF-8 is supported |
 |  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;table width="400"&gt;&lt;/table&gt; |  |
 |  | bgcolor | &lt;color&gt; | &lt;table bgcolor="blue"&gt;&lt;/table&gt; |  |
-|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element)  |  |  | &lt;caption&gt;&lt;/caption&gt; |  |
+|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  | &lt;caption&gt;SAMSUNG&lt;/caption&gt; |  |
 |  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  | &lt;colgroup&gt;&lt;/colgroup&gt; |  |
-|  [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element)  | span | number | &lt;col span="2"&gt; |  |
 |  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  | &lt;tbody&gt;&lt;/tbody&gt; |  |
 |  [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element)  |  |  | &lt;thead&gt;&lt;/thead&gt; |  |
 |  [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element)  |  |  | &lt;tfoot&gt;&lt;/tfoot&gt; |  |
 |  [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element)  |  |  | &lt;tr&gt;&lt;/tr&gt; |  |
-|  [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;td width="30%"&gt;SAMSUNG&lt;/td&gt; |  |
+|  [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element), [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element) | width | pixels &#124; &lt;percentage&gt; | &lt;td width="30%"&gt;SAMSUNG&lt;/td&gt; |  |
 |  | colspan | number | &lt;td colspan="2"&gt; |  |
 |  | rowspan | number | &lt;td rowspan="2"&gt; |  |
 |  | bgcolor | &lt;color&gt; | &lt;td bgcolor="blue"&gt;SAMSUNG&lt;/td&gt; |  |
-|  [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element)  |  |  | &lt;th&gt;&lt;/th&gt; |  |
 |  [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element)  | src | &lt;URL&gt; | &lt;video src="movie.ogg" &gt; | [local&#124;network][absolute&#124;relative] URL |
 |  | autoplay | autoplay | &lt;video width="320" height="240" autoplay&gt; |  |
 |  | loop | loop | &lt;video loop&gt; |  |
@@ -54,7 +52,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  | &lt;pre&gt;SAMSUNG&lt;/pre&gt; |  |
 |  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; |  |
 |  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  | &lt;li&gt;Coffee&lt;/li&gt; |  |
-|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  | &lt;caption&gt;SAMSUNG&lt;/caption&gt; |  |
 |  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  | &lt;audio&gt;&lt;/audio&gt; |  |
 |  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; | &lt;source src="horse.mp4"&gt; |  |
 |  | type | MIME-type | &lt;source type="video/mp4"&gt; | Only video/mp4 and audio/mp4 are supported. |
@@ -96,8 +93,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | NAMESPACE_RULE = 10 |  |
 |  | attribute | type | One of the Type constants indicating the type of CSS rule. |
 | [CSSStyleDeclaration](https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface) | interface | CSSStyleDeclaration | The CSSStyleDeclaration interface represents a CSS declaration block, including its underlying state, where this underlying state depends upon the source of the CSSStyleDeclaration instance. |
-|  | attribute | length | return the number of CSS declarations in the declarations. |
-|  | method | getter DOMString item(unsigned long index) | return the property name of the CSS declaration at position index. |
+|  | attribute | length | Returns the number of CSS declarations in the declarations. |
+|  | method | getter DOMString item(unsigned long index) | Returns the property name of the CSS declaration at position index. |
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
