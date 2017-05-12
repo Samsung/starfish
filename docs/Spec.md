@@ -104,8 +104,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Document](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
 |  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
-|  | attribute | bodyElement | Returns body element or null if not exists |
-|  | attribute | headElement | Returns head element or null if not exists |
+|  | attribute | body | Returns body element or null if not exists |
+|  | attribute | head | Returns head element or null if not exists |
+|  | attribute | defaultView | Returns this Document's browsing context's WindowProxy object, if this Document has an associated browsing context, or null otherwise |
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
@@ -743,13 +744,12 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [Blob] (https://w3c.github.io/FileAPI/#blob) | interface	|	A Blob object refers to a byte sequence |
-| |	attribute |	size	| Returns the size of the byte sequence in number of bytes |
+| [Blob](https://w3c.github.io/FileAPI/#blob) | interface | Blob | A Blob object refers to a byte sequence |
+| | constructor | Blob(optional sequence\<BlobPart\> blobParts = []) | |
+| |	attribute |	size    | Returns the size of the byte sequence in number of bytes |
 | |	attribute |	type	| The ASCII-encoded string in lower case representing the media type of the Blob |
 | |	method	| Blob slice([Clamp] optional long long start = 0, [Clamp] optional long long end = size, optional DOMString contentType = "")	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
-| |	typedef |	BlobPar	||
-| |	method	| isClosed	| Returns a boolean value that indicates whether the Blob is in the CLOSED readability state. |
-| |	method	| close	| The close() method closes a Blob. |
+| |	typedef | (BufferSource or Blob or DOMString) BlobPart | |
 
 
 ### Geolocation
