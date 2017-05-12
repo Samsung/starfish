@@ -17,7 +17,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | Only UTF-8 is supported  |
 |  | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
 |  | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |  |
-|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | type | text/css | &lt;style type="text/css"&gt;&lt;\style&gt; | Only "text/css" type is supportd. |
+|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | type | text/css | &lt;style type="text/css"&gt;&lt;\style&gt; | Only "text/css" type is supported. |
 |  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
 |  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  |  |  | &lt;h1&gt;&lt;\h1&gt;, &lt;h2&gt;&lt;\h2&gt;, &lt;h3&gt;&lt;\h3&gt;, etc. |  |
 |  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
@@ -27,7 +27,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | &lt;img src="URL"&gt; |  Supported images are of type .png, .jpg, and .bmp |
 |  | height | pixels | &lt;img height="pixels"&gt; |  |
 |  | width | pixels | &lt;img width="pixels"&gt; |  |
-|  [script](https://developer.tizen.org/development/api-references/web-application?redirect=https%3A//developer.tizen.org/dev-guide/2.3.2/org.tizen.web.apireference/html/widget_spec/web_widget.html&langredirect=1#user-content-additional-supported-apis)  | src | &lt;URL&gt; | &lt;script src="URL"&gt;&lt;/script&gt; |  |
+|  [script](https://www.w3.org/TR/html5/scripting-1.html#the-script-element)  | src | &lt;URL&gt; | &lt;script src="URL"&gt;&lt;/script&gt; |  |
 |  | type | text/javascript | &lt;script type="text/javascript"&gt;&lt;/script&gt; |  |
 |  | charset | UTF-8 | &lt;script charset="UTF-8"&gt;&lt;/script&gt; | Only UTF-8 is supported |
 |  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;table width="400"&gt;&lt;/table&gt; |  |
@@ -50,7 +50,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | height | pixels | &lt;video width="320" height="240"&gt; |  |
 |  [a](https://www.w3.org/TR/html5/text-level-semantics.html#the-a-element) | href | &lt;URL&gt; | &lt;a href="./content.html"&gt;content&lt;/a&gt; |  |
 |  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  | &lt;pre&gt;SAMSUNG&lt;/pre&gt; |  |
-|  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; |  |
+|  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; | List items are not displayed as bullets. |
 |  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  | &lt;li&gt;Coffee&lt;/li&gt; |  |
 |  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  | &lt;audio&gt;&lt;/audio&gt; |  |
 |  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; | &lt;source src="horse.mp4"&gt; |  |
@@ -647,7 +647,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the vertical alignment of an element. | |
 | [Overflow](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#overflow) | overflow | visible &#124; hidden | Specifies what happens if content overflows an element's box. | |
 | [Visibility](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#visibility) | visibility | visible &#124; hidden | Specifies whether or not an element should be visible | |
-| [Generated content](https://www.w3.org/TR/2011/REC-CSS2-20110607/generate.html#content) | content | normal &#124; none &#124; [ &lt;string&gt; &#124; &lt;uri&gt; &#124; attr(&lt;identifier&gt;) ]+ | This property is used with the :before and :after pseudo-elements to generate content in a document. | |
+| [Generated content](https://www.w3.org/TR/2011/REC-CSS2-20110607/generate.html#content) | content | normal &#124; none &#124; [ &lt;string&gt; &#124; attr(&lt;identifier&gt;) ]+ | This property is used with the :before and :after pseudo-elements to generate content in a document. | |
 | [Color](https://www.w3.org/TR/css3-color/) | color | &lt;color&gt; | Sets the color of text. HSL color value is not supported | CSS uses color-related properties and values to color the text, backgrounds, borders, and other parts of elements in a document. |
 | | opacity | alpha value (0.0 ~ 1.0) | Sets the opacity level for an element | |
 | [Background](https://www.w3.org/TR/CSS2/colors.html#background) | background | &lt;background-color&gt; &lt;background-image&gt; &lt;background-repeat&gt; | A shorthand property for setting all the background properties in one declaration | The background property sets all the background properties. (Also check Background) |
