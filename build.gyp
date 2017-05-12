@@ -46,6 +46,17 @@
             './build.dep.gyp:skia.x64.release',
             './build.dep.gyp:webm.x64.release',
         ],
+        'direct_dependent_settings': {
+            'include_dirs': [
+                '<(starfish_root)/src',
+                '<(starfish_root)/inc',
+                '<(escargot_root)/src',
+                'third_party/clipper/cpp',
+                'third_party/MP4Parse/source/include',
+                'third_party/skia_matrix',
+                'third_party/webm',
+            ],
+        },
        'include_dirs': [
            '<(starfish_root)/src',
            '<(starfish_root)/inc',
