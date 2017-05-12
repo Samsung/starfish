@@ -1,4 +1,5 @@
-[NoInterfaceObject,
+[PartialInterface,
+ NoInterfaceObject,
  Exposed=Window]
 interface ParentNode {
   [SameObject] readonly attribute HTMLCollection children;

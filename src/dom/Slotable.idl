@@ -1,4 +1,5 @@
-[NoInterfaceObject,
+[PartialInterface,
+ NoInterfaceObject,
  Exposed=Window]
 interface Slotable {
   [Unimplemented] readonly attribute HTMLSlotElement? assignedSlot;

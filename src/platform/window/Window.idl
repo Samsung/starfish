@@ -106,7 +106,9 @@ callback FrameRequestCallback = void (DOMHighResTimeStamp time);
 
 typedef (DOMString or Function) TimerHandler;
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
+[PartialInterface,
+ NoInterfaceObject,
+ Exposed=(Window,Worker)]
 interface WindowOrWorkerGlobalScope {
   [Unimplemented, Replaceable] readonly attribute USVString origin;
 
@@ -129,14 +131,16 @@ Window implements WindowOrWorkerGlobalScope;
 // WorkerGlobalScope implements WindowOrWorkerGlobalScope;
 
 // https://html.spec.whatwg.org/#windowlocalstorage
-[NoInterfaceObject]
+[PartialInterface,
+ NoInterfaceObject]
 interface WindowLocalStorage {
   [Unimplemented] readonly attribute Storage localStorage;
 };
 Window implements WindowLocalStorage;
 
 // https://html.spec.whatwg.org/#windowsessionstorage
-[NoInterfaceObject]
+[PartialInterface,
+ NoInterfaceObject]
 interface WindowSessionStorage {
   [Unimplemented] readonly attribute Storage sessionStorage;
 };
