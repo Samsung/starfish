@@ -393,8 +393,8 @@ String* URL::createObjectURL(MediaSource* mediaSource)
         store =
             mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
     }
-    return StarFish::blobURLStoreToString(
-        store, mediaSource->starFish()->window()->document()->urlString());
+    return StarFish::blobURLStoreToString(store,
+                                          mediaSource->document()->urlString());
 }
 #endif
 

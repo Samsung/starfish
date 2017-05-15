@@ -16,11 +16,9 @@
 
 #include "StarFish.h"
 #include "dom/Node.h"
-#include "dom/Document.h"
 #include "dom/HTMLHtmlElement.h"
 #include "layout/FrameReplaced.h"
 #include "layout/FrameDocument.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -29,9 +27,9 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     IntrinsicSize siz = intrinsicSize();
     IntrinsicSizeUsedInLayout result;
     String* widthString = node()->asElement()->getAttributeOrEmpty(
-        node()->document()->window()->starFish()->staticStrings()->m_width);
+        node()->starFish()->staticStrings()->m_width);
     String* heightString = node()->asElement()->getAttributeOrEmpty(
-        node()->document()->window()->starFish()->staticStrings()->m_height);
+        node()->starFish()->staticStrings()->m_height);
     if (siz.m_isContentExists) {
         result.m_intrinsicContentSize =
             LayoutSize(siz.m_intrinsicContentSize.width(),

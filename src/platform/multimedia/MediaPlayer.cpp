@@ -16,10 +16,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "dom/Document.h"
 #include "dom/HTMLMediaElement.h"
 #include "platform/multimedia/MediaPlayer.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -31,7 +29,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
     , m_activeMediaSource(nullptr)
-    , m_starFish(element->document()->window()->starFish())
+    , m_starFish(element->starFish())
     , m_currentTimeUpdateTimer(SIZE_MAX)
 {
 }

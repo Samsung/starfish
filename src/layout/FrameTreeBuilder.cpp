@@ -496,30 +496,20 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             FrameTreeBuilder::clearTree(current);
             return nullptr;
         }
-        bool isHTMLElement =
-            current->isElement() && current->asElement()->isHTMLElement();
-        if (isHTMLElement &&
-            current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-            auto element =
-                current->asElement()->asHTMLElement()->asHTMLImageElement();
+        if (current->isHTMLImageElement()) {
             currentFrame = new FrameReplacedImage(current);
             shouldSkipChildren = true;
         }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        else if (isHTMLElement &&
-                 current->asElement()->asHTMLElement()->isHTMLVideoElement()) {
+        else if (current->isHTMLVideoElement()) {
             currentFrame = new FrameReplacedVideo(current);
             shouldSkipChildren = true;
         }
 #endif
-        else if (isHTMLElement &&
-                 current->asElement()->asHTMLElement()->isHTMLBRElement()) {
+        else if (current->isHTMLBRElement()) {
             currentFrame = new FrameLineBreak(current);
             shouldSkipChildren = true;
-        } else if (isHTMLElement &&
-                   current->asElement()
-                       ->asHTMLElement()
-                       ->isHTMLObjectElement()) {
+        } else if (current->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
         } else if (isTableType) {

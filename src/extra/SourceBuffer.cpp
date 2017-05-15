@@ -358,7 +358,7 @@ public:
 SourceBuffer::SourceBuffer(Document* document, String* type)
     : EventTarget(document)
     , m_isAttachedToParent(false)
-    , m_starFish(document->window()->starFish())
+    , m_starFish(document->starFish())
     , m_demuxer(nullptr)
     , m_type(type)
     , m_parentMediaSource(nullptr)

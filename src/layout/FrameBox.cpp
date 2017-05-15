@@ -15,10 +15,11 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
+#include "dom/Node.h"
 #include "layout/FrameBox.h"
 #include "layout/StackingContext.h"
 #include "platform/canvas/Canvas.h"
+#include "platform/canvas/image/ImageData.h"
 #include "platform/window/Window.h"
 
 namespace StarFish {
@@ -281,7 +282,7 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
         }
 
         if (node() && node()->isHTMLBodyElement()) {
-            if (!node()->document()->window()->hasRootElementBackground()) {
+            if (!node()->window()->hasRootElementBackground()) {
                 break;
             }
         }

@@ -141,14 +141,14 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(
 {
     Locker<Mutex> locker(*requestData->request->m_mutex);
     requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
-        requestData->request->m_starFish->messageLoop()
+        requestData->request->starFish()
+            ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(this->responseHandler,
                                                    requestData);
 }
 
 NetworkRequest::NetworkRequest(Document* document)
-    : m_starFish(document->window()->starFish())
-    , m_document(document)
+    : DocumentHoldable(document)
     , m_url(nullptr)
     , m_readyState(UNSENT)
     , m_progressState(NONE)
@@ -196,25 +196,25 @@ void NetworkRequest::clearIdlers()
 {
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
-        m_starFish->messageLoop()->removeIdler(*iter2);
+        starFish()->messageLoop()->removeIdler(*iter2);
         iter2++;
     }
     m_requstedIdlers.clear();
 
     if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnHeaderReceivedEventIdlerHandle);
         m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
     }
 
     if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnProgressEventIdlerHandle);
         m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
     }
 
     if (m_pendingNetworkWorkerEndIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(
+        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingNetworkWorkerEndIdlerHandle);
         m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
     }
@@ -388,11 +388,11 @@ void NetworkRequest::changeReadyState(ReadyState readyState,
     }
 
     if (m_readyState == ReadyState::DONE) {
-        m_starFish->messageLoop()->addIdler(
+        starFish()->messageLoop()->addIdler(
             [](size_t, void* data, void* data2) {
                 ((StarFish*)data)->removePointerFromRootSet(data2);
             },
-            m_starFish, this);
+            starFish(), this);
     }
 }
 
@@ -427,8 +427,7 @@ void NetworkRequest::open(MethodType method, String* url, bool async,
     {
         initVariables();
         m_method = method;
-        m_url = URL::createURL(
-            m_starFish->window()->document()->documentURI()->baseURI(), url);
+        m_url = URL::createURL(document()->documentURI()->baseURI(), url);
         if (userName->length()) {
             m_url->setUsername(userName);
         }
@@ -498,7 +497,8 @@ size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb,
             request->changeProgress(PROGRESS, true);
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
-                request->m_starFish->messageLoop()
+                request->starFish()
+                    ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
                         [](size_t handle, void* data) {
                             NetworkRequest* request = (NetworkRequest*)data;
@@ -547,7 +547,7 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size,
 
 void NetworkRequest::send(String* body)
 {
-    m_starFish->addPointerInRootSet(this);
+    starFish()->addPointerInRootSet(this);
     m_didSend = true;
     changeProgress(LOADSTART, true);
     if (m_url->isFileURL()) {
@@ -559,7 +559,7 @@ void NetworkRequest::send(String* body)
         if (m_isSync) {
             fileWorker(this, filePath);
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler(
+            size_t handle = starFish()->messageLoop()->addIdler(
                 [](size_t handle, void* data, void* data1) {
                     NetworkRequest* request = (NetworkRequest*)data;
                     request->removeIdlerHandle(handle);
@@ -575,7 +575,7 @@ void NetworkRequest::send(String* body)
         if (m_isSync) {
             dataURLWorker(this, m_url->urlString());
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler(
+            size_t handle = starFish()->messageLoop()->addIdler(
                 [](size_t handle, void* data, void* data1) {
                     NetworkRequest* request = (NetworkRequest*)data;
                     request->removeIdlerHandle(handle);
@@ -591,7 +591,7 @@ void NetworkRequest::send(String* body)
         if (m_isSync) {
             blobURLWorker(this, m_url->urlString());
         } else {
-            size_t handle = m_starFish->messageLoop()->addIdler(
+            size_t handle = starFish()->messageLoop()->addIdler(
                 [](size_t handle, void* data, void* data1) {
                     NetworkRequest* request = (NetworkRequest*)data;
                     request->removeIdlerHandle(handle);
@@ -644,7 +644,7 @@ void NetworkRequest::send(String* body)
             // list = curl_slist_append(list, "Accept:text/plain");
             list = curl_slist_append(list, "Accept-Charset:utf-8");
             headerText = "Accept-Language:";
-            headerText += m_starFish->locale().getName();
+            headerText += starFish()->locale().getName();
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
@@ -705,7 +705,7 @@ void NetworkRequest::send(String* body)
             networkWorker(data);
         } else {
             data->networkWorker = new AsyncNetworkWorkHelper();
-            m_starFish->threadPool()->addWork(networkWorker, data);
+            starFish()->threadPool()->addWork(networkWorker, data);
             // Thread* t = new Thread();
             // t->run(networkWorker, data);
         }
@@ -835,7 +835,7 @@ void NetworkRequest::blobURLWorker(NetworkRequest* res, String* url)
         return;
     }
 
-    if (!res->m_starFish->isValidBlobURL(store)) {
+    if (!res->starFish()->isValidBlobURL(store)) {
         res->handleError(ERROR);
         return;
     }

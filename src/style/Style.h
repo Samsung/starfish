@@ -18,6 +18,7 @@
 #define __StarFishStyle__
 
 #include "StarFishConfig.h"
+#include "binding/DocumentHoldable.h"
 #include "style/NamedColors.h"
 
 namespace StarFish {
@@ -1651,7 +1652,7 @@ protected:
 
 using Declarations = GCVector<CSSStyleDeclaration*>;
 
-class StyleResolver {
+class StyleResolver : public DocumentHoldable {
 public:
     enum PseudoElementType {
         PseudoElementNone,
@@ -1743,7 +1744,6 @@ protected:
     bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
                                 bool& originFound);
 
-    Document* m_document;
     float m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_allRules;

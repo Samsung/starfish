@@ -14,17 +14,18 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishDocumentBuilderElement__
-#define __StarFishDocumentBuilderElement__
+#ifndef __StarFishDocumentBuilder__
+#define __StarFishDocumentBuilder__
 
-#include "../Document.h"
+#include "binding/DocumentHoldable.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
-class DocumentBuilder : public gc {
+class DocumentBuilder : public gc, public DocumentHoldable {
 public:
     DocumentBuilder(Document* document)
-        : m_document(document)
+        : DocumentHoldable(document)
     {
     }
 
@@ -35,14 +36,6 @@ public:
     virtual void build(URL* url) = 0;
     virtual void build(String* str) = 0;
     virtual void resume() = 0;
-
-    Document* document()
-    {
-        return m_document;
-    }
-
-protected:
-    Document* m_document;
 };
 }
 

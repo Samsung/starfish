@@ -103,8 +103,7 @@ void Resource::didLoadCanceled()
     }
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
-        m_loader->m_document->window()->starFish()->messageLoop()->removeIdler(
-            *iter2);
+        m_loader->starFish()->messageLoop()->removeIdler(*iter2);
         iter2++;
     }
     m_requstedIdlers.clear();

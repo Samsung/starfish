@@ -926,16 +926,9 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 
 URL* CSSStyleSheet::url()
 {
-    if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() &&
-        m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-        STARFISH_ASSERT(m_origin->asElement()
-                            ->asHTMLElement()
-                            ->asHTMLLinkElement()
-                            ->href());
-        return m_origin->asElement()
-            ->asHTMLElement()
-            ->asHTMLLinkElement()
-            ->url();
+    if (m_origin->isHTMLLinkElement()) {
+        STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
+        return m_origin->asHTMLLinkElement()->url();
     }
     return m_origin->document()->documentURI();
 }
@@ -2618,10 +2611,9 @@ void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 }
 
 StyleResolver::StyleResolver(Document* document)
-    : m_document(document)
-    , m_mediumFontSize(
-          document->window()->starFish()->defaultFontSizeMultiplier() *
-          DEFAULT_FONT_SIZE)
+    : DocumentHoldable(document)
+    , m_mediumFontSize(starFish()->defaultFontSizeMultiplier() *
+                       DEFAULT_FONT_SIZE)
     , m_usesFirstLineRule(false)
 {
 }
@@ -2655,11 +2647,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
     if (element->isHTMLElement()) {
         if (element->asHTMLElement()->hasDirAttribute()) {
             String* str = element->asHTMLElement()->getAttributeOrEmpty(
-                element->document()
-                    ->window()
-                    ->starFish()
-                    ->staticStrings()
-                    ->m_dir);
+                element->starFish()->staticStrings()->m_dir);
             str = str->toLower();
             if (str->equals("ltr")) {
                 style->m_inheritedStyles.m_direction =
@@ -4494,8 +4482,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             applyTransition(element, element->style(), style);
         } else {
             // TODO: temporal code
-            element->document()->window()->animationExecutor()->cancelAnimation(
-                element);
+            element->window()->animationExecutor()->cancelAnimation(element);
         }
         element->setStyle(style);
         element->clearNeedsStyleRecalc();
@@ -4559,8 +4546,8 @@ void StyleResolver::resolveDOMStyle(Document* document, bool force)
 
 bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
 {
-    if (node->isElement() && node->asElement()->isHTMLElement()) {
-        HTMLElement* htmlElement = node->asElement()->asHTMLElement();
+    if (node->isHTMLElement()) {
+        HTMLElement* htmlElement = node->asHTMLElement();
         CSSStyleSheet* nSheet = nullptr;
         if (htmlElement->isHTMLStyleElement()) {
             nSheet = htmlElement->asHTMLStyleElement()->generatedSheet();

@@ -1339,10 +1339,9 @@ CSSSelector* CSSParser::getAttributeSelector()
     }
 
     attributeName = attributeName->toLower();
-    QualifiedName attrQualifiedName =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(
-                          m_document->window()->starFish(), attributeName));
+    QualifiedName attrQualifiedName = QualifiedName(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAtomicString(starFish(), attributeName));
 
     CSSSelector* selector = new CSSSelector();
     if (currentToken()->isSymbol(']')) {

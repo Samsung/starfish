@@ -941,14 +941,9 @@ void Document::notifyDomContentLoaded()
     GCVector<Element*> mediaElements;
     Traverse::getherDescendant(
         mediaElements, this,
-        [&](Element* element) {
-            return element->isHTMLElement() &&
-                   element->asHTMLElement()->isHTMLMediaElement();
-        },
-        false);
+        [&](Element* element) { return element->isHTMLMediaElement(); }, false);
     for (size_t i = 0; i < mediaElements.size(); i++) {
-        HTMLMediaElement* target =
-            mediaElements[i]->asHTMLElement()->asHTMLMediaElement();
+        HTMLMediaElement* target = mediaElements[i]->asHTMLMediaElement();
         target->onDOMContentLoaded();
     }
 #endif
@@ -1005,8 +1000,8 @@ Element* Document::getElementById(String* id)
         return nullptr;
     }
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isElement() && child->asElement()->isHTMLElement() &&
-            child->asElement()->asHTMLElement()->id()->equals(id)) {
+        if (child->isHTMLElement() &&
+            child->asHTMLElement()->id()->equals(id)) {
             return true;
         } else {
             return false;
@@ -1153,10 +1148,8 @@ void Document::setVisibilityState(VisibilityState visibilityState)
 {
     if (m_pageVisibilityState != visibilityState) {
         m_pageVisibilityState = visibilityState;
-        String* eventType = window()
-                                ->starFish()
-                                ->staticStrings()
-                                ->m_visibilitychange.localName();
+        String* eventType =
+            starFish()->staticStrings()->m_visibilitychange.localName();
         Event* e = new Event(eventType, EventInit(true, false));
         EventTarget::dispatchEvent(this->asNode(), e);
     }
@@ -1196,8 +1189,7 @@ HTMLCollection* Document::namedAccess(String* name)
     // just return nullptr;
     QualifiedName* ptr =
         new QualifiedName(AtomicString::emptyAtomicString(),
-                          AtomicString::createAtomicString(
-                              document()->window()->starFish(), name));
+                          AtomicString::createAtomicString(starFish(), name));
     auto list = new HTMLCollection(document(), NodeListImpl::NamedAccessFilter,
                                    (void*)ptr, true);
     m_namedAccessActiveHTMLCollectionList.push_back(std::make_pair(name, list));

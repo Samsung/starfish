@@ -45,9 +45,8 @@ void HTMLParser::parseStep()
     while (true) {
         if (m_treeBuilder.hasParserBlockingScript()) {
             TextPosition pos;
-            HTMLScriptElement* script = m_treeBuilder.takeScriptToProcess(pos)
-                                            ->asHTMLElement()
-                                            ->asHTMLScriptElement();
+            HTMLScriptElement* script =
+                m_treeBuilder.takeScriptToProcess(pos)->asHTMLScriptElement();
             script->clearParserInserted();
             bool shouldStop = script->executeScript(false, true);
             script->markScriptExecuted();

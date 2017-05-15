@@ -33,8 +33,6 @@ void TextTrackCue::dispatchEnterEvent()
     String* eventType = String::emptyString;
     if (m_textTrack && m_textTrack->hasTrackElement()) {
         eventType = m_textTrack->trackElement()
-                        ->document()
-                        ->window()
                         ->starFish()
                         ->staticStrings()
                         ->m_enter.localName();
@@ -50,8 +48,6 @@ void TextTrackCue::dispatchExitEvent()
     String* eventType = String::emptyString;
     if (m_textTrack && m_textTrack->hasTrackElement()) {
         eventType = m_textTrack->trackElement()
-                        ->document()
-                        ->window()
                         ->starFish()
                         ->staticStrings()
                         ->m_exit.localName();
@@ -75,8 +71,7 @@ DocumentFragment* TextTrackCue::getCueAsHTML()
         m_payloadAsHTML = document()->createDocumentFragment();
         // FIXME : HTMLParser require context element -> make dummy element here
         HTMLDivElement* dummyDiv = new HTMLDivElement(document());
-        HTMLParser parser(document()->window()->starFish(), m_payloadAsHTML,
-                          dummyDiv, m_payload);
+        HTMLParser parser(starFish(), m_payloadAsHTML, dummyDiv, m_payload);
         parser.startParse();
         parser.parseStep();
         STARFISH_ASSERT(m_payloadAsHTML);

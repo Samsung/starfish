@@ -420,11 +420,8 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
 void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
 {
     HTMLElement::didNodeInserted(parent, newChild);
-    if (parent == this && newChild->isElement() &&
-        newChild->asElement()->isHTMLElement() &&
-        newChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-        HTMLTrackElement* trackElement =
-            newChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+    if (parent == this && newChild->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement = newChild->asHTMLTrackElement();
         STARFISH_ASSERT(trackElement->track());
         addTextTrack(trackElement->track());
     }
@@ -437,11 +434,8 @@ void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
 void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     HTMLElement::didNodeRemoved(parent, oldChild);
-    if (parent == this && oldChild->isElement() &&
-        oldChild->asElement()->isHTMLElement() &&
-        oldChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-        HTMLTrackElement* trackElement =
-            oldChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+    if (parent == this && oldChild->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement = oldChild->asHTMLTrackElement();
         STARFISH_ASSERT(trackElement->track());
         removeTextTrack(trackElement->track());
     }
@@ -1086,9 +1080,8 @@ HTMLSourceElement* ResourceSelectionContext::getNextCandidate()
     updatePointer(child);
 
     while (child) {
-        if (child->isElement() && child->asElement()->isHTMLElement() &&
-            child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
-            return child->asElement()->asHTMLElement()->asHTMLSourceElement();
+        if (child->isHTMLSourceElement()) {
+            return child->asHTMLSourceElement();
         }
         child = child->nextSibling();
         updatePointer(child);

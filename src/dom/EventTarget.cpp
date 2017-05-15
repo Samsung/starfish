@@ -162,12 +162,11 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     while (eventTarget) {
         if (eventTarget->isNode()) {
             Node* node = eventTarget->asNode();
-            if (node->isElement() && node->asElement()->isHTMLElement()) {
+            if (node->isHTMLElement()) {
                 eventPath.push_back(eventTarget);
             } else if (node->isDocument()) {
                 eventPath.push_back(eventTarget);
-                eventPath.push_back(
-                    eventTarget->asNode()->asDocument()->window());
+                eventPath.push_back(eventTarget->asDocument()->window());
                 break;
             }
             eventTarget = node->parentNode();

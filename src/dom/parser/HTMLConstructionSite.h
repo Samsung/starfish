@@ -42,6 +42,7 @@
 #ifndef __StarFishHTMLConstructionSite__
 #define __StarFishHTMLConstructionSite__
 
+#include "binding/DocumentHoldable.h"
 #include "dom/parser/HTMLElementStack.h"
 #include "dom/parser/HTMLFormattingElementList.h"
 #include "dom/Document.h"
@@ -94,7 +95,7 @@ class Document;
 class Element;
 typedef HTMLElement HTMLFormElement;
 
-class HTMLConstructionSite : public gc {
+class HTMLConstructionSite : public gc, public DocumentHoldable {
 public:
     HTMLConstructionSite(Document*);
     HTMLConstructionSite(DocumentFragment*);
@@ -232,11 +233,6 @@ public:
     }
     HTMLFormElement* takeForm();
 
-    Document* document()
-    {
-        return m_document;
-    }
-
     class RedirectToFosterParentGuard : public gc {
     public:
         RedirectToFosterParentGuard(HTMLConstructionSite& tree)
@@ -278,8 +274,6 @@ private:
 
     void executeTask(HTMLConstructionSiteTask&);
     void queueTask(const HTMLConstructionSiteTask&);
-
-    Document* m_document;
 
     // This is the root ContainerNode to which the parser attaches all newly
     // constructed nodes. It points to a DocumentFragment when parsing fragments

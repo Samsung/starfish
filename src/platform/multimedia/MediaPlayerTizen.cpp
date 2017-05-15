@@ -19,7 +19,6 @@
 
 #include "StarFishConfig.h"
 #include "util/URL.h"
-#include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
 #include "MediaPlayerTizen.h"
 #include "platform/message_loop/MessageLoop.h"
@@ -449,8 +448,7 @@ void MediaPlayerTizen::pause()
 
 void MediaPlayerTizen::initDisplay()
 {
-    m_canvasSurface =
-        CanvasSurface::create(m_container->document()->window(), 1, 1);
+    m_canvasSurface = CanvasSurface::create(m_container->window(), 1, 1);
     m_canvasSurface->clear();
 }
 

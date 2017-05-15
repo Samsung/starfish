@@ -15,20 +15,18 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/Text.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* Text::nodeName()
 {
-    return document()->window()->starFish()->staticStrings()->m_textLocalName;
+    return starFish()->staticStrings()->m_textLocalName;
 }
 
 String* Text::localName()
 {
-    return document()->window()->starFish()->staticStrings()->m_textLocalName;
+    return starFish()->staticStrings()->m_textLocalName;
 }
 
 // Text* Text::splitText(unsigned long offset)

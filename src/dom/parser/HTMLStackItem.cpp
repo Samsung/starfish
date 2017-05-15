@@ -39,10 +39,8 @@
  */
 #include "StarFish.h"
 #include "dom/Element.h"
-#include "dom/Document.h"
 #include "dom/parser/AtomicHTMLToken.h"
 #include "dom/parser/HTMLStackItem.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -57,7 +55,7 @@ HTMLStackItem::HTMLStackItem(Node* node, ItemType type)
         break;
     case ItemForContextElement:
         m_tokenLocalName = AtomicString::createAttrAtomicString(
-            m_node->document()->window()->starFish(), m_node->localName());
+            m_node->starFish(), m_node->localName());
         m_namespaceURI = m_node->asElement()->name().namespaceURIAtomic();
         m_isDocumentFragmentNode = false;
         break;
@@ -203,6 +201,6 @@ bool HTMLStackItem::isSpecialNode() const
 
 const StaticStrings& HTMLStackItem::staticStrings() const
 {
-    return *m_node->document()->window()->starFish()->staticStrings();
+    return *m_node->starFish()->staticStrings();
 }
 }

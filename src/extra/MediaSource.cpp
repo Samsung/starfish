@@ -24,7 +24,6 @@
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
-#include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
@@ -38,7 +37,6 @@ MediaSource::MediaSource(Document* document)
     , m_activeVideoStreamIndex(SIZE_MAX)
     , m_activeAudioSourceBuffer(nullptr)
     , m_activeAudioStreamIndex(SIZE_MAX)
-    , m_starFish(document->window()->starFish())
     , m_duration(std::numeric_limits<double>::quiet_NaN())
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {

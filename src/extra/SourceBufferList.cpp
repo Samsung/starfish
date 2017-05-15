@@ -21,13 +21,12 @@
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
 #include "extra/SourceBufferList.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
     : EventTarget(document)
-    , m_starFish(document->window()->starFish())
+    , m_starFish(document->starFish())
     , m_parentMediaSource(sb)
 {
 }

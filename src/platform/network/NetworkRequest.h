@@ -17,6 +17,7 @@
 #ifndef __StarFishNetworkRequest__
 #define __StarFishNetworkRequest__
 
+#include "binding/DocumentHoldable.h"
 #include "util/URL.h"
 #include "platform/threading/Mutex.h"
 #include "platform/threading/Semaphore.h"
@@ -85,7 +86,7 @@ protected:
                                         NetworkWorkerData* requestData);
 };
 
-class NetworkRequest : public gc {
+class NetworkRequest : public gc, public DocumentHoldable {
     friend class XMLHttpRequest;
     friend class NetworkWorkerHelper;
     friend class AsyncNetworkWorkHelper;
@@ -165,16 +166,6 @@ public:
         return m_isSync;
     }
 
-    Document* document()
-    {
-        return m_document;
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
     const NetworkRequestResponseHeader& responseHeaderData()
     {
         return m_responseHeaderData;
@@ -235,8 +226,6 @@ protected:
     bool m_didSend;
     bool m_gotError;
     bool m_containsBase64Content;
-    StarFish* m_starFish;
-    Document* m_document;
     URL* m_url;
     ReadyState m_readyState;
     ProgressState m_progressState;

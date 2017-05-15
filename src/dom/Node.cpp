@@ -403,8 +403,7 @@ unsigned long Node::childElementCount()
 Node* Node::nearestParentElement()
 {
     Node* t = this;
-    while (!(t->isElement() && t->asElement()->isHTMLElement()) &&
-           !t->isDocument()) {
+    while (!t->isHTMLElement() && !t->isDocument()) {
         t = t->parentNode();
     }
 
@@ -582,9 +581,8 @@ DOMTokenList* Node::classList()
             return m_rareNodeMembers->m_domTokenList;
         }
 
-        m_rareNodeMembers->m_domTokenList = new DOMTokenList(
-            asElement(),
-            document()->window()->starFish()->staticStrings()->m_class);
+        m_rareNodeMembers->m_domTokenList =
+            new DOMTokenList(asElement(), starFish()->staticStrings()->m_class);
         return m_rareNodeMembers->m_domTokenList;
     }
     return nullptr;
@@ -1212,7 +1210,7 @@ void Node::setNeedsFrameTreeBuild()
         }
     }
 
-    m_document->window()->setNeedsFrameTreeBuild();
+    window()->setNeedsFrameTreeBuild();
 }
 
 void Node::setNeedsStyleRecalc()
@@ -1230,7 +1228,7 @@ void Node::setNeedsStyleRecalc()
             node = node->parentNode();
         }
     }
-    m_document->window()->setNeedsStyleRecalc();
+    window()->setNeedsStyleRecalc();
 }
 
 void Node::setChildrenNeedsStyleRecalc()
@@ -1266,7 +1264,7 @@ void Node::setNeedsLayout()
         return;
     }
 
-    m_document->window()->setNeedsLayout();
+    window()->setNeedsLayout();
 }
 
 void Node::setNeedsPainting()
@@ -1275,7 +1273,7 @@ void Node::setNeedsPainting()
         return;
     }
 
-    m_document->window()->setNeedsPainting();
+    window()->setNeedsPainting();
 }
 
 void Node::setNeedsComposite()
@@ -1284,7 +1282,7 @@ void Node::setNeedsComposite()
         return;
     }
 
-    m_document->window()->setNeedsComposite();
+    window()->setNeedsComposite();
 }
 
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
@@ -1360,7 +1358,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     CSSStyleDeclaration* d = new CSSStyleDeclaration();
 
     // TODO: change below code to resolve DOM style
-    document()->window()->layoutIfNeeds();
+    window()->layoutIfNeeds();
 
     ComputedStyle* style = m_style;
     if (style == nullptr) {

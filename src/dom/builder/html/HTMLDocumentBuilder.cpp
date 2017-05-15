@@ -19,7 +19,6 @@
 #include "dom/Document.h"
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "dom/parser/HTMLParser.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -179,8 +178,8 @@ public:
     void load()
     {
         Document* document = m_builder.document();
-        m_builder.m_parser = m_parser = new HTMLParser(
-            document->window()->starFish(), document, m_htmlSource);
+        m_builder.m_parser = m_parser =
+            new HTMLParser(document->starFish(), document, m_htmlSource);
         m_parser->startParse();
         m_parser->parseStep();
     }
@@ -206,7 +205,7 @@ void HTMLDocumentBuilder::build(URL* url)
 void HTMLDocumentBuilder::build(String* str)
 {
     m_document->resourceLoader().markDocumentOpenState();
-    HTMLParser parser(m_document->window()->starFish(), m_document, str);
+    HTMLParser parser(starFish(), m_document, str);
     parser.startParse();
     parser.parseStep();
 }

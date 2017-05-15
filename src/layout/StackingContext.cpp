@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-#include "dom/Document.h"
 #include "dom/Node.h"
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
@@ -125,9 +124,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             if (m_buffer) {
                 m_buffer->detachNativeBuffer();
             }
-            m_buffer =
-                CanvasSurface::create(m_owner->node()->document()->window(),
-                                      bufferWidth, bufferHeight);
+            m_buffer = CanvasSurface::create(m_owner->node()->window(),
+                                             bufferWidth, bufferHeight);
         }
 
         m_buffer->clear();

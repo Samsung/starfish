@@ -15,20 +15,14 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/DocumentFragment.h"
 #include "dom/Text.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* DocumentFragment::nodeName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_documentFragmentLocalName.string();
+    return starFish()->staticStrings()->m_documentFragmentLocalName.string();
 }
 
 Node* DocumentFragment::clone()

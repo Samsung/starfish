@@ -16,26 +16,16 @@
 
 #include "StarFish.h"
 #include "dom/Comment.h"
-#include "dom/Document.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* Comment::nodeName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_commentLocalName.string();
+    return starFish()->staticStrings()->m_commentLocalName.string();
 }
 
 String* Comment::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_commentLocalName.string();
+    return starFish()->staticStrings()->m_commentLocalName.string();
 }
 }
