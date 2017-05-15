@@ -33,9 +33,6 @@ interface HTMLElement : Element {
   readonly attribute long offsetHeight;
 };
 
-// Note: intentionally not [HTMLConstructor]
-interface HTMLUnknownElement : HTMLElement { };
-
 HTMLElement implements GlobalEventHandlers;
 HTMLElement implements DocumentAndElementEventHandlers;
 HTMLElement implements ElementContentEditable;
