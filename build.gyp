@@ -35,6 +35,7 @@
             'component%': 'static_library',
         },
         'component%':'<(component)',
+        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/)',]
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
@@ -45,6 +46,7 @@
             './build.dep.gyp:mp4parse.x64.release',
             './build.dep.gyp:skia.x64.release',
             './build.dep.gyp:webm.x64.release',
+            './build.dep.gyp:js_binding',
         ],
         'direct_dependent_settings': {
             'include_dirs': [

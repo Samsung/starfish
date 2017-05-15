@@ -5,7 +5,8 @@ StarFish
 *.class
 
 # Binding Generator generated
-src/binding/*Idl.txt
+src/binding/*Binding.cpp
+!src/binding/*CustomBinding.cpp
 
 # Node releated
 node_modules
