@@ -18,16 +18,14 @@ build:
     #- strip out/x64/exe/debug/StarFish
     - GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
     - ninja -C out/debug starfish.x64.debug
+    - ninja -C out/release starfish.x64.release
     - cp out/debug/StarFish.x64.debug StarFish
+    - cp -ar out/debug/lib lib
     - strip StarFish
   artifacts:
     paths:
       - StarFish
-      - out/x64/exe/debug/StarFish
-      - third_party/libav/out/linux/x64/release/libavformat/libavformat.so.56
-      - third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56
-      - third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54
-      #- out/
+      - lib
 
 # run tests using the binary built before
 
@@ -124,7 +122,7 @@ test_regression_test_vendor1:
     - make install_pixel_test_dep
   script:
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi   
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
     - xvfb-run -s "-screen 0 1920x1080x24" -a make vendor_test_gecko_layout | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
