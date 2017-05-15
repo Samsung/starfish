@@ -1,23 +1,50 @@
 # StarFish
+## Abstract
+Starfish is a lightweight Web browser engine for mobile and wearable devices.
 
-## Building
+## How to Compile
 
 ```sh
 git clone git@10.113.64.74:webtf/starfish2.git
 cd starfish2
 ./build_third_party.sh
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=[executable|static_library|shared_library]
-ninja -C out/[debug|release] starfish.x64.[debug|release]
-```
-
-For example,
-
-```
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
 ninja -C out/debug starfish.x64.debug
 ```
 
-The Makefile-based build system is to be deprecated.
+### Build options
+The following build options are supported when generating ninja script using gyp.
+Default values are written in **bold**.
+
+* -Dcomponent=[ executable | **static_library** | shared_library ]<br>
+  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
+
+The following build options are supported when running ninja script.
+
+```sh
+ninja -C out/[ debug | release ] starfish.x64.[ debug | release ]
+```
+
+### Directory Structure
+Starfish is compiled to ``out/debug`` (or ``out/release``) directory.
+The structure is as follows.
+
+```
+out
+  + debug
+    + Starfish.x64.debug // Starfish binary
+    + lib                // contains shared libraries that Starfish needs
+```
+
+## How to run
+```sh
+./out/debug/Starfish.x64.debug html_file_path
+```
+
+~~Use `./run.sh [html_file_path]` to run StarFish~~
+
+### Makefile-based Build System
+The following Makefile-based build system is to be deprecated.
 
 ``` sh
 git clone git@10.113.64.74:webtf/starfish2.git
@@ -28,9 +55,6 @@ make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
 
 e.g. `make x64.exe.debug -j`
 
-## Running
-
-Use `./run.sh [html_file_path]` to run StarFish
 
 ## Testing
 #### Summary
