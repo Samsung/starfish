@@ -143,6 +143,17 @@ ifneq (,$(findstring tizen,$(HOST)))
   endif
 endif
 
+ifeq ($(ARCH),)
+  # For test targets, skip generating
+  SKIP_GEN_JSBINDING=true
+endif
+SKIP_GEN_JSBINDING?=false
+
+ifeq ($(SKIP_GEN_JSBINDING), false)
+  GEN_JSBINGING_RESULTS:=$(shell ./binding_generator/scripts/starfish_code_generator.py src/)
+  # $(info $(GEN_JSBINGING_RESULTS))
+endif
+
 $(info host... $(HOST))
 $(info arch... $(ARCH))
 $(info type... $(TYPE))
@@ -684,6 +695,7 @@ $(OUTDIR)/%.o: %.c $(DEPENDENCY_MAKEFILE)
 
 clean:
 	rm -rf out
+	find src -type f -name "*Binding.cpp" ! -name "*CustomBinding.cpp" | xargs -r rm
 
 
 ################################################################################
