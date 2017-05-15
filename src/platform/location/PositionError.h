@@ -21,22 +21,14 @@
 
 namespace StarFish {
 
-class StarFish;
-
 class PositionError : public ScriptWrappable {
 public:
     enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
 
-    PositionError(StarFish* starFish, Error code)
+    PositionError(Error code)
         : ScriptWrappable(this)
-        , m_starFish(starFish)
         , m_code(code)
     {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
     }
 
     Error code() const
@@ -62,7 +54,6 @@ public:
     virtual bool isPositionError() const override;
 
 protected:
-    StarFish* m_starFish;
     Error m_code;
 };
 }

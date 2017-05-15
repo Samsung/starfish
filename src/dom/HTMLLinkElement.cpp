@@ -29,59 +29,49 @@ bool isCSSType(const char* type);
 
 String* HTMLLinkElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_linkTagName.localName();
+    return starFish()->staticStrings()->m_linkTagName.localName();
 }
 
 QualifiedName HTMLLinkElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_linkTagName;
+    return starFish()->staticStrings()->m_linkTagName;
 }
 
 String* HTMLLinkElement::href()
 {
-    String* url = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_href);
+    String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_href);
 
     return URL::getURLString(document()->documentURI()->baseURI(), url);
 }
 
 void HTMLLinkElement::setHref(String* href)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_href,
-                 href);
+    setAttribute(starFish()->staticStrings()->m_href, href);
 }
 
 String* HTMLLinkElement::rel()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_rel);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_rel);
 }
 
 void HTMLLinkElement::setRel(String* rel)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_rel, rel);
+    setAttribute(starFish()->staticStrings()->m_rel, rel);
 }
 
 String* HTMLLinkElement::type()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
 }
 
 void HTMLLinkElement::setType(String* type)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
-                 type);
+    setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
 URL* HTMLLinkElement::url()
 {
-    Nullable<String*> url =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    Nullable<String*> url = getAttribute(starFish()->staticStrings()->m_href);
 
     if (!url.hasValue()) {
         return nullptr;
@@ -108,12 +98,9 @@ void HTMLLinkElement::checkLoadStyleSheet()
         return;
     }
 
-    Nullable<String*> type =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_type);
-    Nullable<String*> href =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_href);
-    Nullable<String*> rel =
-        getAttribute(document()->window()->starFish()->staticStrings()->m_rel);
+    Nullable<String*> type = getAttribute(starFish()->staticStrings()->m_type);
+    Nullable<String*> href = getAttribute(starFish()->staticStrings()->m_href);
+    Nullable<String*> rel = getAttribute(starFish()->staticStrings()->m_rel);
 
     if (((type.hasValue() &&
           isCSSType(type.getValue()->toLower()->utf8Data())) ||
@@ -151,7 +138,7 @@ public:
         if (sheet) {
             m_element->m_generatedSheet = sheet;
             m_element->document()->styleResolver().addSheet(sheet);
-            m_element->document()->window()->setWholeDocumentNeedsStyleRecalc();
+            m_element->window()->setWholeDocumentNeedsStyleRecalc();
         }
 
         m_element->m_styleSheetTextResource = nullptr;
@@ -165,8 +152,8 @@ protected:
 void HTMLLinkElement::loadStyleSheet()
 {
     unloadStyleSheetIfExists();
-    String* urlString = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_href);
+    String* urlString =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_href);
     URL* url = URL::createURL(document()->documentURI()->baseURI(), urlString);
 
     if (m_styleSheetTextResource) {
@@ -189,7 +176,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        document()->window()->setWholeDocumentNeedsStyleRecalc();
+        window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
 }
@@ -200,15 +187,13 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_href) {
+    if (name == starFish()->staticStrings()->m_href) {
         if (!old->equals(value)) {
             checkLoadStyleSheet();
         }
-    } else if (name ==
-               document()->window()->starFish()->staticStrings()->m_type) {
+    } else if (name == starFish()->staticStrings()->m_type) {
         checkLoadStyleSheet();
-    } else if (name ==
-               document()->window()->starFish()->staticStrings()->m_rel) {
+    } else if (name == starFish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
     }
 }
@@ -216,11 +201,11 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
 void HTMLLinkElement::willStyleSheetLoad()
 {
     STARFISH_ASSERT(isInDocumentScopeAndDocumentParticipateInRendering());
-    document()->window()->markHasPendingStyleSheet();
+    window()->markHasPendingStyleSheet();
 }
 
 void HTMLLinkElement::didStyleSheetLoadComplete()
 {
-    document()->window()->unmarkHasPendingStyleSheet();
+    window()->unmarkHasPendingStyleSheet();
 }
 }

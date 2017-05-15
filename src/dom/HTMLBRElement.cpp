@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLBRElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLBRElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_brTagName.localName();
+    return starFish()->staticStrings()->m_brTagName.localName();
 }
 
 QualifiedName HTMLBRElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_brTagName;
+    return starFish()->staticStrings()->m_brTagName;
 }
 }

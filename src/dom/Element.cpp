@@ -90,8 +90,7 @@ String* Element::getAttributeOrEmpty(QualifiedName name)
 void Element::setAttribute(String* name, String* value)
 {
     if (!QualifiedName::checkNameProductionRule(name, name->length())) {
-        throw new DOMException(document()->window()->scriptBindingInstance(),
-                               DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
     setAttribute(document()->createAttributeName(name), value);
@@ -348,7 +347,7 @@ Node* Element::clone()
     for (const Attribute& attr : m_attributes) {
         newNode->setAttribute(attr.name(), attr.value());
     }
-    newNode->m_inlineStyle = inlineStyle()->clone(document(), newNode);
+    newNode->m_inlineStyle = inlineStyle()->clone(newNode);
 
     return newNode;
 }
@@ -357,8 +356,7 @@ NamedNodeMap* Element::attributes()
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
     if (!rareMembers->m_namedNodeMap) {
-        rareMembers->m_namedNodeMap =
-            new NamedNodeMap(document()->scriptBindingInstance(), this);
+        rareMembers->m_namedNodeMap = new NamedNodeMap(this);
     }
     return rareMembers->m_namedNodeMap;
 }
@@ -478,8 +476,8 @@ void Element::setStyleAttr(String* style)
 CSSStyleDeclaration* Element::inlineStyle()
 {
     if (m_inlineStyle == nullptr) {
-        m_inlineStyle = new CSSStyleDeclaration(
-            document(), this, CSSStyleDeclaration::InlineStyle);
+        m_inlineStyle =
+            new CSSStyleDeclaration(this, CSSStyleDeclaration::InlineStyle);
     }
     return m_inlineStyle;
 }

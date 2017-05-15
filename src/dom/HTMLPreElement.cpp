@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLPreElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLPreElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_preTagName.localName();
+    return starFish()->staticStrings()->m_preTagName.localName();
 }
 
 QualifiedName HTMLPreElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_preTagName;
+    return starFish()->staticStrings()->m_preTagName;
 }
 }

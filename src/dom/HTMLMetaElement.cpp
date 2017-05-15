@@ -27,16 +27,12 @@ extern bool g_enablePixelTest;
 
 String* HTMLMetaElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_metaTagName.localName();
+    return starFish()->staticStrings()->m_metaTagName.localName();
 }
 
 QualifiedName HTMLMetaElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_metaTagName;
+    return starFish()->staticStrings()->m_metaTagName;
 }
 
 void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
@@ -45,11 +41,10 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_name) {
+    if (name == starFish()->staticStrings()->m_name) {
         m_name = value;
         checkPlatformFlags();
-    } else if (name ==
-               document()->window()->starFish()->staticStrings()->m_content) {
+    } else if (name == starFish()->staticStrings()->m_content) {
         m_content = value;
         checkPlatformFlags();
     }
@@ -73,7 +68,7 @@ void HTMLMetaElement::checkPlatformFlags()
             g_enablePixelTest = true;
             document()->setStyle(
                 document()->styleResolver().resolveDocumentStyle(document()));
-            document()->window()->setWholeDocumentNeedsStyleRecalc();
+            window()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif
 #ifdef STARFISH_TIZEN

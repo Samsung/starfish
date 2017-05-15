@@ -19,12 +19,14 @@
 #define __StarFishAvplay__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 #include <media/player.h>
 
 namespace StarFish {
 
 class StarFish;
-class Avplay : public ScriptWrappable {
+
+class Avplay : public ScriptWrappable, public StarFishHoldable {
 public:
     enum AVPLAY_CALLBACK_TYPE {
         prepare_async_CALLBACK,
@@ -41,10 +43,6 @@ public:
 
     Avplay(StarFish* starFish);
     ~Avplay();
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
 
     virtual void init(ScriptBindingInstance* instance) override
     {
@@ -85,7 +83,6 @@ public:
     }
 
 protected:
-    StarFish* m_starFish;
     double m_offsetLeft;
     double m_offsetTop;
     double m_offsetWidth;

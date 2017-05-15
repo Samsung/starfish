@@ -17,25 +17,19 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
 #include "platform/multimedia/MediaPlayer.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* HTMLVideoElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_videoTagName.localName();
+    return starFish()->staticStrings()->m_videoTagName.localName();
 }
 
 QualifiedName HTMLVideoElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_videoTagName;
+    return starFish()->staticStrings()->m_videoTagName;
 }
 
 uint32_t HTMLVideoElement::videoWidth()
@@ -57,8 +51,8 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated,
                                           attributeRemoved);
 
-    if (name == document()->window()->starFish()->staticStrings()->m_width ||
-        name == document()->window()->starFish()->staticStrings()->m_height) {
+    if (name == starFish()->staticStrings()->m_width ||
+        name == starFish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -67,27 +61,26 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
 
 uint32_t HTMLVideoElement::width()
 {
-    String* widthStr = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_width);
+    String* widthStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
 
 void HTMLVideoElement::setWidth(uint32_t width)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                 String::fromInt(width));
+    setAttribute(starFish()->staticStrings()->m_width, String::fromInt(width));
 }
 
 uint32_t HTMLVideoElement::height()
 {
-    String* heightStr = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_height);
+    String* heightStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }
 
 void HTMLVideoElement::setHeight(uint32_t height)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_height,
+    setAttribute(starFish()->staticStrings()->m_height,
                  String::fromInt(height));
 }
 

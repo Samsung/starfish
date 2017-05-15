@@ -574,8 +574,10 @@ void Window::navigate(URL* url)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     m_webapis = new WebApis(m_starFish);
 #endif
+
     m_document = new HTMLDocument(this, scriptBindingInstance(), url,
                                   String::createASCIIString("UTF-8"), true);
+
     m_document->open();
 }
 

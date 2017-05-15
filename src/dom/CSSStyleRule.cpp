@@ -21,11 +21,9 @@
 
 namespace StarFish {
 
-CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText,
-                           Document* document)
+CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText)
     : CSSRule(CSSRule::STYLE_RULE)
-    , m_styleDeclaration(new CSSStyleDeclaration(document))
-    , m_document(document)
+    , m_styleDeclaration(new CSSStyleDeclaration())
 {
     CSSSelector* selector =
         new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
@@ -35,11 +33,10 @@ CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText,
 }
 
 CSSStyleRule::CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
-                           Document* document, CSSStyleDeclaration* decl)
+                           CSSStyleDeclaration* decl)
     : CSSRule(CSSRule::STYLE_RULE)
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)
-    , m_document(document)
 {
 }
 }

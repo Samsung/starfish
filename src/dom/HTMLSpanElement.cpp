@@ -15,23 +15,17 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLSpanElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* HTMLSpanElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_spanTagName.localName();
+    return starFish()->staticStrings()->m_spanTagName.localName();
 }
 
 QualifiedName HTMLSpanElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_spanTagName;
+    return starFish()->staticStrings()->m_spanTagName;
 }
 }

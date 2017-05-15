@@ -27,10 +27,9 @@ class CSSStyleRule : public CSSRule {
     friend class StyleResolver;
 
 public:
-    CSSStyleRule(CSSSelector::Type type, String* selectorText,
-                 Document* document);
+    CSSStyleRule(CSSSelector::Type type, String* selectorText);
 
-    CSSStyleRule(GCDeque<CSSSelector*>* selectorList, Document* document,
+    CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
                  CSSStyleDeclaration* decl);
 
     virtual void init(ScriptBindingInstance* instance) override;
@@ -46,15 +45,9 @@ public:
         return m_styleDeclaration;
     }
 
-    Document* document()
-    {
-        return m_document;
-    }
-
 protected:
     GCDeque<CSSSelector*>* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
-    Document* m_document;
 };
 }
 

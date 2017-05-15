@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLDivElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLDivElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_divTagName.localName();
+    return starFish()->staticStrings()->m_divTagName.localName();
 }
 
 QualifiedName HTMLDivElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_divTagName;
+    return starFish()->staticStrings()->m_divTagName;
 }
 }

@@ -15,16 +15,14 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTableCellElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 uint32_t HTMLTableCellElement::colSpan()
 {
-    Nullable<String*> colSpan = getAttribute(
-        document()->window()->starFish()->staticStrings()->m_colspan);
+    Nullable<String*> colSpan =
+        getAttribute(starFish()->staticStrings()->m_colspan);
     if (colSpan.hasValue()) {
         int colSpanInt = String::parseInt(colSpan.getValue());
         return colSpanInt <= 0 ? 1 : (uint32_t)colSpanInt;
@@ -34,14 +32,14 @@ uint32_t HTMLTableCellElement::colSpan()
 
 void HTMLTableCellElement::setColSpan(uint32_t colSpan)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_colspan,
+    setAttribute(starFish()->staticStrings()->m_colspan,
                  String::fromInt(colSpan));
 }
 
 uint32_t HTMLTableCellElement::rowSpan()
 {
-    Nullable<String*> rowSpan = getAttribute(
-        document()->window()->starFish()->staticStrings()->m_rowspan);
+    Nullable<String*> rowSpan =
+        getAttribute(starFish()->staticStrings()->m_rowspan);
     if (rowSpan.hasValue()) {
         int rowSpanInt = String::parseInt(rowSpan.getValue());
         return rowSpanInt <= 0 ? 1 : (uint32_t)rowSpanInt;
@@ -51,19 +49,17 @@ uint32_t HTMLTableCellElement::rowSpan()
 
 void HTMLTableCellElement::setRowSpan(uint32_t rowSpan)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_rowspan,
+    setAttribute(starFish()->staticStrings()->m_rowspan,
                  String::fromInt(rowSpan));
 }
 
 String* HTMLTableCellElement::bgColor()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_bgColor);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_bgColor);
 }
 
 void HTMLTableCellElement::setBgColor(String* bgColor)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_bgColor,
-                 bgColor);
+    setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
 }

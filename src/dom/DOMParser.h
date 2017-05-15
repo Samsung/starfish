@@ -16,33 +16,25 @@
 #if defined(STARFISH_ENABLE_DOMPARSER) && !defined(__StarFishDOMParser__)
 #define __StarFishDOMParser__
 
+#include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class StarFish;
 class Document;
 
-class DOMParser : public ScriptWrappable {
+class DOMParser : public ScriptWrappable, public DocumentHoldable {
 public:
-    DOMParser(StarFish* sf)
+    DOMParser(Document* document)
         : ScriptWrappable(this)
-        , m_starFish(sf)
+        , DocumentHoldable(document)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isDOMParser() const override;
 
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
     Document* parseFromString(String* str, String* type);
-
-private:
-    StarFish* m_starFish;
 };
 }
 

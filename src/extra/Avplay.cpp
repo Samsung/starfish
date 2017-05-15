@@ -120,9 +120,9 @@ void printNativePlayerError(int errorCode)
     }
 }
 
-Avplay::Avplay(StarFish* starFish)
+Avplay::Avplay(Document* document)
     : ScriptWrappable(this)
-    , m_starFish(starFish)
+    , DocumentHoldable(document)
     , m_offsetLeft(0)
     , m_offsetTop(0)
     , m_offsetWidth(0)

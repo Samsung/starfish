@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "ProgressEvent.h"
+#include "dom/ProgressEvent.h"
 
 namespace StarFish {
 

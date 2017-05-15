@@ -125,10 +125,10 @@ static void buildDocumentFromXML(
 Document* DOMParser::parseFromString(String* str, String* type)
 {
     if (type->equalsWithoutCase("text/html")) {
-        Document* document = new HTMLDocument(
-            starFish()->window(), starFish()->window()->scriptBindingInstance(),
-            starFish()->window()->document()->documentURI(),
-            String::createASCIIString("UTF-8"), false);
+        Document* document =
+            new HTMLDocument(window(), window()->scriptBindingInstance(),
+                             DOMParser::document()->documentURI(),
+                             String::createASCIIString("UTF-8"), false);
 
         HTMLDocumentBuilder builder(document);
         builder.build(str);
@@ -142,15 +142,13 @@ Document* DOMParser::parseFromString(String* str, String* type)
             doc.parse<rapidxml::parse_doctype_node |
                       rapidxml::parse_comment_nodes>(cStr);
             XMLDocument* document =
-                new XMLDocument(starFish()->window(),
-                                starFish()->window()->scriptBindingInstance(),
-                                starFish()->window()->document()->documentURI(),
+                new XMLDocument(window(), window()->scriptBindingInstance(),
+                                DOMParser::document()->documentURI(),
                                 String::createASCIIString("UTF-8"), false);
 
             rapidxml::xml_node<char>* n = doc.first_node();
             while (n) {
-                buildDocumentFromXML(n, document->window()->starFish(),
-                                     document,
+                buildDocumentFromXML(n, document->starFish(), document,
                                      std::map<std::string, AtomicString>());
                 n = n->next_sibling();
             }
@@ -168,8 +166,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
     } else {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_ENUM, "SupportedType");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser");
-        THROW_DOM_EXCEPTION(starFish()->window()->scriptBindingInstance(),
-                            DOMException::TYPE_ERR, msg);
+        throw new DOMException(DOMException::TYPE_ERR, msg);
     }
 }
 }

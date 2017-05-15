@@ -17,15 +17,13 @@
 #include "StarFish.h"
 #include "dom/Document.h"
 #include "dom/HTMLUnknownElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 HTMLUnknownElement::HTMLUnknownElement(Document* document,
                                        AtomicString localName)
     : HTMLElement(document)
-    , m_name(
-          document->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI,
-          localName)
+    , m_name(document->starFish()->staticStrings()->m_xhtmlNamespaceURI,
+             localName)
 {
 }
 }

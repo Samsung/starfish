@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTFootElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLTFootElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_tfootTagName.localName();
+    return starFish()->staticStrings()->m_tfootTagName.localName();
 }
 
 QualifiedName HTMLTFootElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_tfootTagName;
+    return starFish()->staticStrings()->m_tfootTagName;
 }
 }

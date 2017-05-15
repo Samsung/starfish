@@ -1,7 +1,6 @@
 // https://heycam.github.io/webidl/#idl-exceptions
 [
     ExceptionConstructor(optional DOMString message = "", optional DOMString name = "Error"),
-    ConstructorCallWith=Document,
     Exposed=(Window,Worker)
 ] interface DOMException {
     readonly attribute unsigned short code;

@@ -37,10 +37,9 @@ void CSSStyleDeclaration::clear()
     m_cssValues.clear();
 }
 
-CSSStyleDeclaration* CSSStyleDeclaration::clone(Document* document,
-                                                Element* element)
+CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 {
-    CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(document, element);
+    CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(element);
     newStyle->m_cssValues = m_cssValues;
 
     return newStyle;

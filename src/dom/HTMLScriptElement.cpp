@@ -104,21 +104,21 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
-        Nullable<String*> typeStr = getAttribute(
-            document()->window()->starFish()->staticStrings()->m_type);
+        Nullable<String*> typeStr =
+            getAttribute(starFish()->staticStrings()->m_type);
         if (typeStr.hasValue() &&
             !isJavaScriptType(typeStr.getValue()->toLower()->utf8Data())) {
             return false;
         }
-        Nullable<String*> srcStr = getAttribute(
-            document()->window()->starFish()->staticStrings()->m_src);
+        Nullable<String*> srcStr =
+            getAttribute(starFish()->staticStrings()->m_src);
         if (!srcStr.hasValue()) {
             if (!firstChild()) {
                 return false;
             }
             String* script = text();
             m_isAlreadyStarted = true;
-            document()->window()->scriptBindingInstance()->evaluate(script);
+            window()->scriptBindingInstance()->evaluate(script);
             m_didScriptExecuted = true;
             return false;
         } else {
@@ -129,12 +129,9 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
                 return false;
             }
 
-            String* charset = getAttributeOrEmpty(document()
-                                                      ->window()
-                                                      ->starFish()
-                                                      ->staticStrings()
-                                                      ->m_charset)
-                                  ->trim();
+            String* charset =
+                getAttributeOrEmpty(starFish()->staticStrings()->m_charset)
+                    ->trim();
             TextResource* res = document()->resourceLoader().fetchText(
                 URL::createURL(document()->documentURI()->baseURI(), url),
                 charset);
@@ -157,7 +154,7 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+    if (name == starFish()->staticStrings()->m_src) {
         executeScript();
     }
 }
@@ -182,53 +179,44 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
 
 String* HTMLScriptElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_scriptTagName.localName();
+    return starFish()->staticStrings()->m_scriptTagName.localName();
 }
 
 QualifiedName HTMLScriptElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_scriptTagName;
+    return starFish()->staticStrings()->m_scriptTagName;
 }
 
 String* HTMLScriptElement::src()
 {
-    String* url = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_src);
+    String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_src);
 
     return URL::getURLString(document()->documentURI()->baseURI(), url);
 }
 
 void HTMLScriptElement::setSrc(String* src)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+    setAttribute(starFish()->staticStrings()->m_src, src);
 }
 
 String* HTMLScriptElement::type()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
 }
 
 void HTMLScriptElement::setType(String* type)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
-                 type);
+    setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
 String* HTMLScriptElement::charset()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_charset);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_charset);
 }
 
 void HTMLScriptElement::setCharset(String* charset)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_charset,
-                 charset);
+    setAttribute(starFish()->staticStrings()->m_charset, charset);
 }
 
 String* HTMLScriptElement::text()
@@ -255,10 +243,7 @@ void HTMLScriptElement::setText(String* s)
 
 Node* HTMLScriptElement::clone()
 {
-    HTMLScriptElement* n = HTMLElement::clone()
-                               ->asElement()
-                               ->asHTMLElement()
-                               ->asHTMLScriptElement();
+    HTMLScriptElement* n = HTMLElement::clone()->asHTMLScriptElement();
     n->m_isAlreadyStarted = m_isAlreadyStarted;
     n->m_didScriptExecuted = m_didScriptExecuted;
     return n;

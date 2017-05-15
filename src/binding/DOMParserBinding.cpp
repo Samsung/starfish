@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_DOMPARSER)
+
 #include "dom/DOMException.h"
 #include "dom/Document.h"
 #include "dom/DOMParser.h"
@@ -30,7 +31,7 @@ static ESValue domparserConstructor(ESVMInstance* instance)
         THROW_EXCEPTION(msg);
     }
     DOMParser* result = nullptr;
-    StarFish* callWith = fetchStarFish(instance);
+    Document* callWith = fetchDocument(instance);
     // Call native function (nargs: 0)
     result = new DOMParser(callWith);
     return result->scriptValue();
@@ -87,13 +88,13 @@ ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
     DOMParserPrototypeObj->set__proto__(fetchData(scriptBindingInstance)
                                             ->m_instance->globalObject()
                                             ->objectPrototype());
-
     // Bind for functions
     ESString* parseFromStringString = ESString::create("parseFromString");
     ESFunctionObject* parseFromStringESFn = ESFunctionObject::create(
         nullptr, parseFromStringFunction, parseFromStringString, 2, false);
-    DOMParserPrototypeObj->defineDataProperty(parseFromStringString, true, true,
-                                              true, parseFromStringESFn);
+    DOMParserPrototypeObj->defineDataProperty(
+        parseFromStringString, true /* writable */, true /* enumerable */,
+        true /* configurable */, parseFromStringESFn);
 
     return DOMParserFunction;
 }
@@ -102,6 +103,7 @@ void DOMParser::init(ScriptBindingInstance* instance)
 {
     scriptObject()->set__proto__(
         fetchData(instance)->fnDOMParser()->protoType());
+    // Bind for functions
 
     postInit(instance);
 }

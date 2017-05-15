@@ -1237,7 +1237,6 @@ static ESValue querySelectorFunction(ESVMInstance* instance)
                 ESString* argStr = argValue.asESString();
                 if (*argStr == *(strings->emptyString.string())) {
                     throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
                         DOMException::Code::DOM_EXCEPTION,
                         "Failed to execute 'querySelector' on "
                         "'Document': The provided selector is "
@@ -1284,7 +1283,6 @@ static ESValue querySelectorAllFunction(ESVMInstance* instance)
                 ESString* argStr = argValue.asESString();
                 if (*argStr == *(strings->emptyString.string())) {
                     throw new DOMException(
-                        doc->window()->scriptBindingInstance(),
                         DOMException::Code::DOM_EXCEPTION,
                         "Failed to execute 'querySelectorAll' "
                         "on 'Document': The provided selector "

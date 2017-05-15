@@ -24,16 +24,12 @@ namespace StarFish {
 
 String* HTMLBodyElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_bodyTagName.localName();
+    return starFish()->staticStrings()->m_bodyTagName.localName();
 }
 
 QualifiedName HTMLBodyElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_bodyTagName;
+    return starFish()->staticStrings()->m_bodyTagName;
 }
 
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, load);
@@ -45,9 +41,9 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (!newStyle->backgroundColor().isTransparent() ||
         !newStyle->backgroundImage()->equals(String::emptyString)) {
-        document()->window()->m_hasBodyElementBackground = true;
+        window()->m_hasBodyElementBackground = true;
     } else {
-        document()->window()->m_hasBodyElementBackground = false;
+        window()->m_hasBodyElementBackground = false;
     }
 
     if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
@@ -61,13 +57,11 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    StaticStrings* ss = document()->window()->starFish()->staticStrings();
+    StaticStrings* ss = starFish()->staticStrings();
     if (name == ss->m_onload) {
-        document()->window()->setAttributeEventListener(ss->m_load, value,
-                                                        this);
+        window()->setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onunload) {
-        document()->window()->setAttributeEventListener(ss->m_unload, value,
-                                                        this);
+        window()->setAttributeEventListener(ss->m_unload, value, this);
     }
 }
 }

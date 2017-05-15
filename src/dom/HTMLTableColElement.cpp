@@ -15,35 +15,27 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTableColElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLTableColElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_colTagName.localName();
+    return starFish()->staticStrings()->m_colTagName.localName();
 }
 
 QualifiedName HTMLTableColElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_colTagName;
+    return starFish()->staticStrings()->m_colTagName;
 }
 
 void HTMLTableColElement::setSpan(uint32_t span)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_span,
-                 String::fromInt(span));
+    setAttribute(starFish()->staticStrings()->m_span, String::fromInt(span));
 }
 
 uint32_t HTMLTableColElement::span()
 {
-    String* spanAttr = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_span);
+    String* spanAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_span);
     return String::parseInt(spanAttr);
 }
 }

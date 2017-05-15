@@ -17,6 +17,7 @@
 #ifndef __StarFishEventTarget__
 #define __StarFishEventTarget__
 
+#include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
@@ -118,11 +119,11 @@ private:
     }
 };
 
-class EventTarget : public ScriptWrappable {
+class EventTarget : public ScriptWrappable, public DocumentHoldable {
 protected:
     EventTarget(Document* document)
         : ScriptWrappable(this)
-        , m_document(document)
+        , DocumentHoldable(document)
     {
     }
 
@@ -180,22 +181,16 @@ public:
         m_eventListeners.clear();
     }
 
-    Document* document()
-    {
-        return m_document;
-    }
-
 protected:
     GCUnorderedMap<String*, GCVector<EventListener*>*> m_eventListeners;
-    Document* m_document;
 };
 
 #define DECLARE_EVENT_LISTENER(EVENT)            \
     VIRTUAL EventListener* on##EVENT() OVERRIDE; \
     VIRTUAL void setOn##EVENT(EventListener* on##EVENT) OVERRIDE;
 
-#define GENERATE_ATTR(EVENT)               \
-    Window* window = document()->window(); \
+#define GENERATE_ATTR(EVENT)                \
+    Window* window = EventTarget::window(); \
     QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT;
 
 #define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)       \

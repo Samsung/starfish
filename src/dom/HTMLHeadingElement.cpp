@@ -15,16 +15,12 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLHeadingElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 HTMLHeadingElement::HTMLHeadingElement(Document* document, AtomicString name)
     : HTMLElement(document)
-    , m_name(
-          document->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI,
-          name)
+    , m_name(starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
 {
 }
 }

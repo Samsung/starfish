@@ -21,16 +21,12 @@
 
 namespace StarFish {
 
-class StarFish;
-
 class Coordinates : public ScriptWrappable {
 public:
-    Coordinates(StarFish* starFish, double latitude, double longitude,
-                Nullable<double> altitude, double accuracy,
-                Nullable<double> altitudeAccuracy, Nullable<double> heading,
-                Nullable<double> speed)
+    Coordinates(double latitude, double longitude, Nullable<double> altitude,
+                double accuracy, Nullable<double> altitudeAccuracy,
+                Nullable<double> heading, Nullable<double> speed)
         : ScriptWrappable(this)
-        , m_starFish(starFish)
         , m_latitude(latitude)
         , m_longitude(longitude)
         , m_altitude(altitude)
@@ -39,11 +35,6 @@ public:
         , m_heading(heading)
         , m_speed(speed)
     {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
@@ -88,7 +79,6 @@ public:
     }
 
 protected:
-    StarFish* m_starFish;
     double m_latitude;
     double m_longitude;
     Nullable<double> m_altitude;

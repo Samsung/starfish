@@ -15,7 +15,6 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/Event.h"
 #include "dom/HTMLElement.h"
 #include "dom/Text.h"
@@ -30,7 +29,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
 {
     Element::didAttributeChanged(name, old, value, attributeCreated,
                                  attributeRemoved);
-    StaticStrings* ss = document()->window()->starFish()->staticStrings();
+    StaticStrings* ss = starFish()->staticStrings();
     if (name == ss->m_onclick) {
         setAttributeEventListener(ss->m_click, value, this);
     } else if (name == ss->m_onmouseover) {
@@ -100,7 +99,7 @@ bool HTMLElement::supportsFocus()
 
 LayoutRect HTMLElement::offsetRect()
 {
-    document()->window()->layoutIfNeeds();
+    window()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();
@@ -122,26 +121,23 @@ Element* HTMLElement::offsetParent()
 
 String* HTMLElement::dir()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_dir);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_dir);
 }
 
 void HTMLElement::setDir(String* dir)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_dir, dir);
+    setAttribute(starFish()->staticStrings()->m_dir, dir);
 }
 
 void HTMLElement::click()
 {
-    String* eventType =
-        document()->window()->starFish()->staticStrings()->m_click.localName();
+    String* eventType = starFish()->staticStrings()->m_click.localName();
     dispatchEvent(new Event(eventType, EventInit(true, true)));
 }
 
 void HTMLElement::focus()
 {
-    String* eventType =
-        document()->window()->starFish()->staticStrings()->m_focus.localName();
+    String* eventType = starFish()->staticStrings()->m_focus.localName();
     dispatchEvent(new Event(eventType, EventInit(true, true)));
 }
 

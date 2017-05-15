@@ -70,9 +70,8 @@ void XMLHttpRequest::send(Nullable<String*> body)
 void XMLHttpRequest::send(String* body)
 {
     if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::INVALID_STATE_ERR, "InvalidStateError");
+        throw new DOMException(DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
     }
     m_networkRequest->send(body);
 }
@@ -111,14 +110,11 @@ void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url,
                           bool async, String* userName, String* password)
 {
     if (method == NetworkRequest::UNKNOWN_METHOD) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::SYNTAX_ERR, "SYNTAX_ERR");
+        throw new DOMException(DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
     if (!async && m_networkRequest->timeout() != 0) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
+        throw new DOMException(DOMException::INVALID_ACCESS_ERR,
+                               "InvalidAccessError");
     }
     m_networkRequest->open(method, url, async, userName, password);
     initResponseData();
@@ -136,7 +132,6 @@ void XMLHttpRequest::setResponseType(ResponseType type)
     if (m_networkRequest->readyState() == NetworkRequest::LOADING ||
         m_networkRequest->readyState() == NetworkRequest::DONE) {
         throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
             DOMException::INVALID_STATE_ERR,
             "The response type cannot be set if the object's state is LOADING "
             "or DONE.");
@@ -145,7 +140,6 @@ void XMLHttpRequest::setResponseType(ResponseType type)
     // synchronous flag is set, throw an "InvalidAccessError" exception.
     if (/*isMainThread() &&*/ m_networkRequest->isSync()) {
         throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
             DOMException::INVALID_ACCESS_ERR,
             "Failed to set the 'responseType' property on 'XMLHttpRequest': "
             "The response type cannot be changed for synchronous requests made "
@@ -253,7 +247,6 @@ String* XMLHttpRequest::responseText() const
     if (!(m_responseType == ResponseType::Unspecified ||
           m_responseType == ResponseType::Text)) {
         throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
             DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseText' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
@@ -274,9 +267,8 @@ uint32_t XMLHttpRequest::timeout() const
 void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
     if (m_networkRequest->isSync() == true) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
+        throw new DOMException(DOMException::INVALID_ACCESS_ERR,
+                               "InvalidAccessError");
     }
     m_networkRequest->setTimeout(timeout);
 }
@@ -286,14 +278,11 @@ void XMLHttpRequest::setRequestHeader(String* h, String* c)
     h = h->trim();
     c = c->trim();
     if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::INVALID_STATE_ERR, "InvalidStateError");
+        throw new DOMException(DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
     }
     if (h->length() == 0) {
-        throw new DOMException(
-            m_networkRequest->starFish()->window()->scriptBindingInstance(),
-            DOMException::SYNTAX_ERR, "InvalidStateError");
+        throw new DOMException(DOMException::SYNTAX_ERR, "InvalidStateError");
     }
     m_networkRequest->setRequestHeader(h, c);
 }
@@ -310,9 +299,7 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request,
         eventName = request->starFish()->staticStrings()->m_error.localName();
         if (!m_networkRequest->url()->isFileURL() &&
             !m_networkRequest->url()->isDataURL() && request->isSync()) {
-            throw new DOMException(
-                m_networkRequest->starFish()->window()->scriptBindingInstance(),
-                DOMException::NETWORK_ERR, "NetworkError");
+            throw new DOMException(DOMException::NETWORK_ERR, "NetworkError");
         }
     } else if (progState == NetworkRequest::ABORT) {
         if (isExplicitAction) {

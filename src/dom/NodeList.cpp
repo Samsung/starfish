@@ -20,15 +20,14 @@
 
 namespace StarFish {
 
-NodeList::NodeList(ScriptBindingInstance* instance, Node* root,
-                   NodeListImpl::FilterFunctionType filterType, void* data,
-                   bool canCache)
+NodeList::NodeList(Node* root, NodeListImpl::FilterFunctionType filterType,
+                   void* data, bool canCache)
     : ScriptWrappable(this)
     , m_nodeListImpl(root, filterType, data, canCache)
 {
 }
 
-NodeList::NodeList(ScriptBindingInstance* instance, Node* root, bool canCache)
+NodeList::NodeList(Node* root, bool canCache)
     : ScriptWrappable(this)
     , m_nodeListImpl(root, canCache)
 {

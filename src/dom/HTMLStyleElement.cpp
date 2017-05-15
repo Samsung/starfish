@@ -37,28 +37,22 @@ bool isCSSType(const char* type)
 
 String* HTMLStyleElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_styleTagName.localName();
+    return starFish()->staticStrings()->m_styleTagName.localName();
 }
 
 QualifiedName HTMLStyleElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_styleTagName;
+    return starFish()->staticStrings()->m_styleTagName;
 }
 
 String* HTMLStyleElement::type()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
 }
 
 void HTMLStyleElement::setType(String* type)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_type,
-                 type);
+    setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
@@ -128,29 +122,26 @@ void HTMLStyleElement::generateStyleSheet()
     CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
     m_generatedSheet = sheet;
     document()->styleResolver().addSheet(sheet);
-    document()->window()->setWholeDocumentNeedsStyleRecalc();
+    window()->setWholeDocumentNeedsStyleRecalc();
 }
 
 void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        document()->window()->setWholeDocumentNeedsStyleRecalc();
+        window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
 }
 
 void HTMLStyleElement::dispatchLoadEvent()
 {
-    document()->window()->starFish()->messageLoop()->addIdler(
+    starFish()->messageLoop()->addIdler(
         [](size_t handle, void* data) {
             HTMLStyleElement* element = (HTMLStyleElement*)data;
             if (!element->hasLoaded()) {
-                String* eventType = element->document()
-                                        ->window()
-                                        ->starFish()
-                                        ->staticStrings()
-                                        ->m_load.localName();
+                String* eventType =
+                    element->starFish()->staticStrings()->m_load.localName();
                 Event* e = new Event(eventType, EventInit(false, false));
                 element->dispatchEvent(e);
                 element->setLoaded();

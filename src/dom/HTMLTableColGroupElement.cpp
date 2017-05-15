@@ -14,24 +14,17 @@
  *    limitations under the License.
  */
 
-#include "HTMLTableColGroupElement.h"
-
 #include "StarFish.h"
-#include "dom/Document.h"
-#include "platform/window/Window.h"
+#include "dom/HTMLTableColGroupElement.h"
 
 namespace StarFish {
 String* HTMLTableColGroupElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_colgroupTagName.localName();
+    return starFish()->staticStrings()->m_colgroupTagName.localName();
 }
 
 QualifiedName HTMLTableColGroupElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_colgroupTagName;
+    return starFish()->staticStrings()->m_colgroupTagName;
 }
 }

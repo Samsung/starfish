@@ -73,7 +73,7 @@ private:
     {
         for (; element;
              element = (Element*)Traverse::nextElement(element, m_rootNode)) {
-            if (element->isElement() && element->hasClass() &&
+            if (element->hasClass() &&
                 contains(element->classNames(), m_className)) {
                 return element;
             }
@@ -104,8 +104,7 @@ NodeList* SelectorQuery::queryAll(Node& rootNode)
     GCVector<Element*> matchedElement;
     execute(rootNode, matchedElement, false);
 
-    NodeList* list = new NodeList(rootNode.document()->scriptBindingInstance(),
-                                  &rootNode, true);
+    NodeList* list = new NodeList(&rootNode, true);
     if (matchedElement.size() > 0) {
         list->getNodeListImpl().setItems(matchedElement);
     }

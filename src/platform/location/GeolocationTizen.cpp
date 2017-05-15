@@ -100,11 +100,10 @@ Geolocation* Geolocation::create(StarFish* starFish)
 static void sendResult(LocationRequestInfoTizen* info)
 {
     Coordinates* c = new Coordinates(
-        info->starFish, info->latitude, info->longitude,
-        Nullable(info->altitude), info->horizontalAccuracy, Nullable(),
-        Nullable(info->direction), Nullable(info->speed * 1000));
-    info->cb(info->starFish,
-             new Geoposition(info->starFish, c, info->timestamp), info->cbData);
+        info->latitude, info->longitude, Nullable(info->altitude),
+        info->horizontalAccuracy, Nullable(), Nullable(info->direction),
+        Nullable(info->speed * 1000));
+    info->cb(info->starFish, new Geoposition(c, info->timestamp), info->cbData);
 
     GCVector<LocationRequestInfoTizen*>& v =
         info->geolocation->m_pendingRequest;
@@ -119,8 +118,8 @@ static void handleError(int error, LocationRequestInfoTizen* info)
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(
-                           sf, PositionError::Error::PERMISSION_DENIED),
+                cb(sf,
+                   new PositionError(PositionError::Error::PERMISSION_DENIED),
                    data3);
             },
             info->starFish, (void*)info->errorCb, info->errorCbData);
@@ -130,7 +129,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
                 StarFish* sf = (StarFish*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
-                           sf, PositionError::Error::POSITION_UNAVAILABLE),
+                           PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             info->starFish, (void*)info->errorCb, info->errorCbData);
@@ -285,8 +284,8 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                             StarFish* sf = (StarFish*)data;
                             GeoPositionErrorCallback cb =
                                 (GeoPositionErrorCallback)data2;
-                            cb(sf, new PositionError(
-                                       sf, PositionError::Error::TIMEOUT),
+                            cb(sf,
+                               new PositionError(PositionError::Error::TIMEOUT),
                                data3);
                         },
                         info->starFish, (void*)info->errorCb,

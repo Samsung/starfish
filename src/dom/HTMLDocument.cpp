@@ -154,8 +154,7 @@ Element* HTMLDocument::createElement(AtomicString localName,
     if (shouldCheckName &&
         !QualifiedName::checkNameProductionRule(localName.string(),
                                                 localName.string()->length())) {
-        throw new DOMException(document()->scriptBindingInstance(),
-                               DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
