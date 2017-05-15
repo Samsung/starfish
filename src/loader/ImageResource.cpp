@@ -65,17 +65,13 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
             if (ResourceRequestSyncLevel::NeverSync != syncLevel) {
                 doLoadFile(this);
             } else {
-                pushIdlerHandle(m_loader->m_document->window()
-                                    ->starFish()
-                                    ->messageLoop()
-                                    ->addIdler(
-                                        [](size_t handle, void* data) {
-                                            Resource* res = (Resource*)data;
-                                            res->removeIdlerHandle(handle);
-                                            res->asImageResource()->doLoadFile(
-                                                data);
-                                        },
-                                        this));
+                pushIdlerHandle(m_loader->starFish()->messageLoop()->addIdler(
+                    [](size_t handle, void* data) {
+                        Resource* res = (Resource*)data;
+                        res->removeIdlerHandle(handle);
+                        res->asImageResource()->doLoadFile(data);
+                    },
+                    this));
             }
         }
     } else {

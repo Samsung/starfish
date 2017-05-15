@@ -151,17 +151,17 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     }
 #endif
 
-    StaticStrings* ss = document()->window()->starFish()->staticStrings();
+    StaticStrings* ss = starFish()->staticStrings();
     if (name == ss->m_id) {
         m_id = value;
         // Style should be recalculated from root node because of combinators.
-        document()->window()->setWholeDocumentNeedsStyleRecalc();
+        window()->setWholeDocumentNeedsStyleRecalc();
 
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
         // Style should be recalculated from root node because of combinators.
-        document()->window()->setWholeDocumentNeedsStyleRecalc();
+        window()->setWholeDocumentNeedsStyleRecalc();
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to
         // parent tree
@@ -211,7 +211,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 
 LayoutRect Element::clientRect()
 {
-    document()->window()->layoutIfNeeds();
+    window()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();
@@ -324,7 +324,7 @@ void Element::setInnerHTML(String* html)
 
     DocumentFragment* df = document()->createDocumentFragment();
 
-    HTMLParser parser(document()->window()->starFish(), df, this, html);
+    HTMLParser parser(starFish(), df, this, html);
     parser.startParse();
     parser.parseStep();
     parser.endParse();
@@ -446,31 +446,27 @@ void Element::setPseudoElement(StyleResolver::PseudoElementType type)
 
 String* Element::idAttr()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_id);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_id);
 }
 
 void Element::setIdAttr(String* id)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_id, id);
+    setAttribute(starFish()->staticStrings()->m_id, id);
 }
 
 String* Element::className()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_class);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_class);
 }
 
 void Element::setClassName(String* className)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_class,
-                 className);
+    setAttribute(starFish()->staticStrings()->m_class, className);
 }
 
 void Element::setStyleAttr(String* style)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_style,
-                 style);
+    setAttribute(starFish()->staticStrings()->m_style, style);
 }
 
 CSSStyleDeclaration* Element::inlineStyle()
@@ -490,7 +486,7 @@ String* Element::getLaunguage()
     do {
         if (n->isElement()) {
             value = n->asElement()->getAttributeOrEmpty(
-                n->document()->window()->starFish()->staticStrings()->m_lang);
+                n->starFish()->staticStrings()->m_lang);
         } else if (n->isDocument()) {
             // TODO: checking the MIME content-language
             // value = document()->contentLanguage();

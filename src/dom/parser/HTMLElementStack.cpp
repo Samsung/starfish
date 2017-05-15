@@ -40,11 +40,9 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/Element.h"
 #include "dom/parser/HTMLElementStack.h"
 #include "dom/parser/HTMLStackItem.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -53,18 +51,13 @@ namespace {
     inline bool isRootNode(HTMLStackItem* item)
     {
         return item->isDocumentFragmentNode() ||
-               item->hasTagName(item->node()
-                                    ->document()
-                                    ->window()
-                                    ->starFish()
-                                    ->staticStrings()
-                                    ->m_htmlTagName);
+               item->hasTagName(
+                   item->node()->starFish()->staticStrings()->m_htmlTagName);
     }
 
     inline bool isScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return item->hasTagName(s.m_appletTagName) ||
                item->hasTagName(s.m_captionTagName) ||
                item->hasTagName(s.m_marqueeTagName) ||
@@ -86,24 +79,21 @@ namespace {
 
     inline bool isListItemScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return isScopeMarker(item) || item->hasTagName(s.m_olTagName) ||
                item->hasTagName(s.m_ulTagName);
     }
 
     inline bool isTableScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return item->hasTagName(s.m_tableTagName) ||
                item->hasTagName(s.m_templateTagName) || isRootNode(item);
     }
 
     inline bool isTableBodyScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return item->hasTagName(s.m_tbodyTagName) ||
                item->hasTagName(s.m_tfootTagName) ||
                item->hasTagName(s.m_theadTagName) ||
@@ -112,8 +102,7 @@ namespace {
 
     inline bool isTableRowScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return item->hasTagName(s.m_trTagName) ||
                item->hasTagName(s.m_templateTagName) || isRootNode(item);
     }
@@ -121,7 +110,7 @@ namespace {
     inline bool isForeignContentScopeMarker(HTMLStackItem* item)
     {
         // const StaticStrings& s =
-        // *item->node()->document()->window()->starFish()->staticStrings();
+        // *item->node()->starFish()->staticStrings();
         return HTMLElementStack::isMathMLTextIntegrationPoint(item)
                // || HTMLElementStack::isHTMLIntegrationPoint(item)
                || item->isInHTMLNamespace();
@@ -129,15 +118,13 @@ namespace {
 
     inline bool isButtonScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return isScopeMarker(item) || item->hasTagName(s.m_buttonTagName);
     }
 
     inline bool isSelectScopeMarker(HTMLStackItem* item)
     {
-        const StaticStrings& s =
-            *item->node()->document()->window()->starFish()->staticStrings();
+        const StaticStrings& s = *item->node()->starFish()->staticStrings();
         return !item->hasTagName(s.m_optgroupTagName) &&
                !item->hasTagName(s.m_optionTagName);
     }
@@ -245,13 +232,8 @@ void HTMLElementStack::popAll()
 
 void HTMLElementStack::pop()
 {
-    STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()
-                                                    ->node()
-                                                    ->document()
-                                                    ->window()
-                                                    ->starFish()
-                                                    ->staticStrings()
-                                                    ->m_headTagName));
+    STARFISH_ASSERT(!topStackItem()->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_headTagName));
     popCommon();
 }
 
@@ -374,12 +356,8 @@ void HTMLElementStack::pushRootNode(HTMLStackItem* rootItem)
 
 void HTMLElementStack::pushHTMLHtmlElement(HTMLStackItem* item)
 {
-    STARFISH_ASSERT(item->hasTagName(item->node()
-                                         ->document()
-                                         ->window()
-                                         ->starFish()
-                                         ->staticStrings()
-                                         ->m_htmlTagName));
+    STARFISH_ASSERT(item->hasTagName(
+        item->node()->starFish()->staticStrings()->m_htmlTagName));
     pushRootNodeCommon(item);
 }
 
@@ -393,12 +371,8 @@ void HTMLElementStack::pushRootNodeCommon(HTMLStackItem* rootItem)
 
 void HTMLElementStack::pushHTMLHeadElement(HTMLStackItem* item)
 {
-    STARFISH_ASSERT(item->hasTagName(item->node()
-                                         ->document()
-                                         ->window()
-                                         ->starFish()
-                                         ->staticStrings()
-                                         ->m_headTagName));
+    STARFISH_ASSERT(item->hasTagName(
+        item->node()->starFish()->staticStrings()->m_headTagName));
     STARFISH_ASSERT(!m_headElement);
     m_headElement = item->element();
     pushCommon(item);
@@ -406,12 +380,8 @@ void HTMLElementStack::pushHTMLHeadElement(HTMLStackItem* item)
 
 void HTMLElementStack::pushHTMLBodyElement(HTMLStackItem* item)
 {
-    STARFISH_ASSERT(item->hasTagName(item->node()
-                                         ->document()
-                                         ->window()
-                                         ->starFish()
-                                         ->staticStrings()
-                                         ->m_bodyTagName));
+    STARFISH_ASSERT(item->hasTagName(
+        item->node()->starFish()->staticStrings()->m_bodyTagName));
     STARFISH_ASSERT(!m_bodyElement);
     m_bodyElement = item->element();
     pushCommon(item);
@@ -419,27 +389,12 @@ void HTMLElementStack::pushHTMLBodyElement(HTMLStackItem* item)
 
 void HTMLElementStack::push(HTMLStackItem* item)
 {
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_htmlTagName));
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_headTagName));
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_bodyTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_htmlTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_headTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_bodyTagName));
     ASSERT(m_rootNode);
     pushCommon(item);
 }
@@ -450,27 +405,12 @@ void HTMLElementStack::insertAbove(HTMLStackItem* item,
     STARFISH_ASSERT(item);
     STARFISH_ASSERT(recordBelow);
     STARFISH_ASSERT(m_top);
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_htmlTagName));
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_headTagName));
-    STARFISH_ASSERT(!item->hasTagName(topStackItem()
-                                          ->node()
-                                          ->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_bodyTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_htmlTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_headTagName));
+    STARFISH_ASSERT(!item->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_bodyTagName));
     STARFISH_ASSERT(m_rootNode);
     if (recordBelow == m_top) {
         push(item);
@@ -684,8 +624,6 @@ bool HTMLElementStack::hasTemplateInHTMLScope() const
 {
     return inScopeCommon<isRootNode>(m_top,
                                      m_top->node()
-                                         ->document()
-                                         ->window()
                                          ->starFish()
                                          ->staticStrings()
                                          ->m_templateTagName.localNameAtomic());
@@ -732,25 +670,16 @@ void HTMLElementStack::pushCommon(HTMLStackItem* item)
 
 void HTMLElementStack::popCommon()
 {
+    STARFISH_ASSERT(!topStackItem()->hasTagName(
+        topStackItem()->node()->starFish()->staticStrings()->m_htmlTagName));
     STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()
                                                     ->node()
-                                                    ->document()
-                                                    ->window()
-                                                    ->starFish()
-                                                    ->staticStrings()
-                                                    ->m_htmlTagName));
-    STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()
-                                                    ->node()
-                                                    ->document()
-                                                    ->window()
                                                     ->starFish()
                                                     ->staticStrings()
                                                     ->m_headTagName) ||
                     !m_headElement);
     STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()
                                                     ->node()
-                                                    ->document()
-                                                    ->window()
                                                     ->starFish()
                                                     ->staticStrings()
                                                     ->m_bodyTagName) ||
@@ -763,18 +692,10 @@ void HTMLElementStack::popCommon()
 
 void HTMLElementStack::removeNonTopCommon(Element* element)
 {
-    STARFISH_ASSERT(
-        !element->localName()->equals(element->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_htmlTagName.localName()));
-    STARFISH_ASSERT(
-        !element->localName()->equals(element->document()
-                                          ->window()
-                                          ->starFish()
-                                          ->staticStrings()
-                                          ->m_bodyTagName.localName()));
+    STARFISH_ASSERT(!element->localName()->equals(
+        element->starFish()->staticStrings()->m_htmlTagName.localName()));
+    STARFISH_ASSERT(!element->localName()->equals(
+        element->starFish()->staticStrings()->m_bodyTagName.localName()));
     STARFISH_ASSERT(top() != element);
     for (ElementRecord* pos = m_top; pos; pos = pos->next()) {
         if (pos->next()->element() == element) {

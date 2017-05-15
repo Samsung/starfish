@@ -31,12 +31,11 @@ FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
 
 bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
 {
-    if (!(node() && node()->isElement() &&
-          node()->asElement()->isHTMLElement())) {
+    if (!(node() && node()->isHTMLElement())) {
         return false;
     }
 
-    HTMLElement* elem = node()->asElement()->asHTMLElement();
+    HTMLElement* elem = node()->asHTMLElement();
     if (!(elem->isHTMLTableElement() || elem->isHTMLTableCellElement())) {
         return false;
     }

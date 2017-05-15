@@ -53,11 +53,6 @@ public:
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isMediaSource() const override;
 
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
     SourceBuffer* addSourceBuffer(String* type);
     void removeSourceBuffer(SourceBuffer* sourceBuffer);
     void endOfStream();
@@ -159,7 +154,6 @@ protected:
     size_t m_activeVideoStreamIndex;
     SourceBuffer* m_activeAudioSourceBuffer;
     size_t m_activeAudioStreamIndex;
-    StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
     GCVector<MediaSourceClient*> m_clients;

@@ -16,18 +16,12 @@
 
 #include "StarFish.h"
 #include "dom/CDATASection.h"
-#include "dom/Document.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* CDATASection::nodeName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_cdataSectionLocalName;
+    return starFish()->staticStrings()->m_cdataSectionLocalName;
 }
 
 String* CDATASection::localName()

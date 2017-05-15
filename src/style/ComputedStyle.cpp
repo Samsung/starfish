@@ -61,7 +61,7 @@ void ComputedStyle::loadResources(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
-    StarFish* sf = consumer->document()->window()->starFish();
+    StarFish* sf = consumer->starFish();
     float fontSize = m_inheritedStyles.m_fontSize.fixed();
 
     char style = m_inheritedStyles.m_fontStyle;
@@ -309,8 +309,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 void applyTransition(Element* element, ComputedStyle* oldStyle,
                      ComputedStyle* newStyle)
 {
-    AnimationExecutor* executor =
-        element->document()->window()->animationExecutor();
+    AnimationExecutor* executor = element->window()->animationExecutor();
     if (newStyle->transitionProperty() ==
         TransitionPropertyValue::TransitionPropertyWidthValue) {
         Length from = oldStyle->width();

@@ -49,7 +49,7 @@ QualifiedName PseudoElement::pseudoElementTagName(
 {
     STARFISH_ASSERT(document());
 
-    StarFish* sf = document()->window()->starFish();
+    StarFish* sf = starFish();
     switch (pseudoId) {
     case StyleResolver::PseudoElementType::PseudoElementAfter:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(

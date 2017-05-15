@@ -15,12 +15,10 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/Element.h"
 #include "dom/HTMLElement.h"
 #include "dom/Node.h"
 #include "dom/NodeListImpl.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -54,8 +52,8 @@ bool isSameTagName(Node* node, void* data)
 bool hasClassNames(Node* node, void* data)
 {
     String* classNames = (String*)data;
-    if (node->isElement() && node->asElement()->isHTMLElement()) {
-        HTMLElement* htmlElement = node->asElement()->asHTMLElement();
+    if (node->isHTMLElement()) {
+        HTMLElement* htmlElement = node->asHTMLElement();
         if (htmlElement->classNames().size() > 0) {
             size_t length = classNames->length();
             bool isWhiteSpaceState = true;
@@ -106,13 +104,12 @@ bool isSameNamedAccess(Node* node, void* data)
 {
     QualifiedName* namedAccess = (QualifiedName*)data;
 
-    if (node->isElement() && node->asElement()->isHTMLElement()) {
+    if (node->isHTMLElement()) {
         // a, applet, area, embed, form, frameset, img, or object elements
         // that have a name content attribute whose value is name, or
-        HTMLElement* htmlElement = node->asElement()->asHTMLElement();
+        HTMLElement* htmlElement = node->asHTMLElement();
         QualifiedName name = htmlElement->name();
-        StaticStrings* ss =
-            node->document()->window()->starFish()->staticStrings();
+        StaticStrings* ss = node->starFish()->staticStrings();
         bool shouldConsiderNameAttribute = false;
         if (name == ss->m_aTagName) {
             shouldConsiderNameAttribute = true;

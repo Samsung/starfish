@@ -48,9 +48,7 @@ void TextTrack::dispatchCueChangeEvent()
 {
     String* eventType = String::emptyString;
     if (m_trackElement) {
-        eventType = m_trackElement->document()
-                        ->window()
-                        ->starFish()
+        eventType = m_trackElement->starFish()
                         ->staticStrings()
                         ->m_cuechange.localName();
     } else {

@@ -57,13 +57,12 @@
 #include "dom/HTMLTrackElement.h"
 #include "dom/HTMLVideoElement.h"
 #endif
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
 {
-    StaticStrings* str = document->window()->starFish()->staticStrings();
+    StaticStrings* str = document->starFish()->staticStrings();
     if (name == str->m_htmlTagName.localNameAtomic()) {
         return new HTMLHtmlElement(document);
     } else if (name == str->m_headTagName.localNameAtomic()) {
@@ -174,7 +173,7 @@ static void createHtmlCaseInsensitiveAttributesSet(
 {
     // This is the list of attributes in HTML 4.01 with values marked as "[CI]"
     // or case-insensitive
-    StaticStrings* str = document->window()->starFish()->staticStrings();
+    StaticStrings* str = document->starFish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
         /* &accept_charsetAttr, &acceptAttr, &alignAttr, &alinkAttr, &axisAttr,

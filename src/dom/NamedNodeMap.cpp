@@ -65,11 +65,7 @@ Attr* NamedNodeMap::setNamedItem(Attr* attr)
 
 Attr* NamedNodeMap::removeNamedItem(String* name)
 {
-    STARFISH_ASSERT(element());
-    STARFISH_ASSERT(element()->document());
-    STARFISH_ASSERT(element()->document()->window());
-    STARFISH_ASSERT(element()->document()->window()->starFish());
-    StarFish* starfish = element()->document()->window()->starFish();
+    StarFish* starfish = element()->starFish();
     QualifiedName qname(AtomicString::emptyAtomicString(),
                         AtomicString::createAttrAtomicString(starfish, name));
     Attr* old = getNamedItem(qname);

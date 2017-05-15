@@ -40,9 +40,9 @@ extern bool g_fireOnloadEvent;
 namespace StarFish {
 
 ResourceLoader::ResourceLoader(Document* document)
-    : m_isDocumentInOpenState(false)
+    : DocumentHoldable(document)
+    , m_isDocumentInOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
-    , m_document(document)
     , m_resourceCacheSize(0)
     , m_lastCachePruneTime(0)
 {
@@ -356,7 +356,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
         } else {
             STARFISH_ASSERT(syncLevel ==
                             Resource::ResourceRequestSyncLevel::NeverSync);
-            document()->window()->starFish()->messageLoop()->addIdler(
+            starFish()->messageLoop()->addIdler(
                 [](size_t, void* data, void* data2) {
                     Resource* org = (Resource*)data;
                     Resource* now = (Resource*)data2;
@@ -365,7 +365,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
                 org, now);
         }
     } else if (s == Resource::State::Failed) {
-        document()->window()->starFish()->messageLoop()->addIdler(
+        starFish()->messageLoop()->addIdler(
             [](size_t, void* data) {
                 Resource* now = (Resource*)data;
                 now->didLoadFailed();
@@ -381,7 +381,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
     if (m_pendingResourceCountWhileDocumentOpening == 0 &&
         m_isDocumentInOpenState) {
         m_isDocumentInOpenState = false;
-        m_document->window()->starFish()->messageLoop()->addIdler(
+        starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data) {
                 Window* wnd = (Window*)data;
                 String* eventType =
@@ -394,7 +394,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                 wnd->testStart();
 #endif
             },
-            m_document->window());
+            window());
     }
 }
 

@@ -76,8 +76,7 @@ public:
             m_resource->networkRequest()->responseMimeType()->toLower()->equals(
                 "application/json")) {
             String* text = m_resource->asTextResource()->text();
-            m_element->document()->window()->scriptBindingInstance()->evaluate(
-                text);
+            m_element->window()->scriptBindingInstance()->evaluate(text);
         }
         didScriptLoaded();
     }

@@ -17,6 +17,7 @@
 #ifndef __StarFishCSSParser__
 #define __StarFishCSSParser__
 
+#include "binding/DocumentHoldable.h"
 #include "style/Style.h"
 
 namespace StarFish {
@@ -540,7 +541,7 @@ public:
 
 class CSSToken;
 class CSSScanner;
-class CSSParser {
+class CSSParser : public DocumentHoldable {
 public:
     enum NumericSign {
         NoSign,
@@ -549,7 +550,7 @@ public:
     };
 
     CSSParser(Document* document)
-        : m_document(document)
+        : DocumentHoldable(document)
     {
         m_error = String::emptyString;
         m_failedParsing = false;
@@ -604,7 +605,6 @@ protected:
     void reportError(const char* aMsg);
     bool parseCharsetRule(CSSStyleSheet* aSheet);
     static String* combineAndTrimTokenValues(GCVector<CSSToken*>* list);
-    Document* m_document;
     bool m_preserveWS;
     bool m_preserveComments;
     GCVector<CSSToken*> m_preservedTokens;

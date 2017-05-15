@@ -40,7 +40,6 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/DocumentFragment.h"
 #include "dom/Element.h"
 #include "dom/HTMLElement.h"
@@ -52,7 +51,6 @@
 #include "dom/parser/HTMLToken.h"
 #include "dom/parser/HTMLTokenizer.h"
 #include "dom/parser/HTMLTreeBuilder.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -335,18 +333,14 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, DocumentFragment* fragment,
         m_tree.openElements()->pushRootNode(new HTMLStackItem(
             fragment, HTMLStackItem::ItemForDocumentFragmentNode));
 
-        if (contextElement->name() == (fragment->document()
-                                           ->window()
-                                           ->starFish()
-                                           ->staticStrings()
-                                           ->m_templateTagName)) {
+        if (contextElement->name() ==
+            (fragment->starFish()->staticStrings()->m_templateTagName)) {
             m_templateInsertionModes.push_back(TemplateContentsMode);
         }
 
         resetInsertionModeAppropriately();
         m_tree.setForm(closestFormAncestor(
-            fragment->document()->window()->starFish()->staticStrings(),
-            contextElement));
+            fragment->starFish()->staticStrings(), contextElement));
     }
 }
 /*
@@ -491,16 +485,14 @@ void HTMLTreeBuilder::processFakeStartTag(const QualifiedName& tagName,
 {
     // FIXME: We'll need a fancier conversion than just "localName" for
     // SVG/MathML tags.
-    AtomicHTMLToken fakeToken(m_tree.document()->window()->starFish(),
-                              HTMLToken::StartTag, tagName.localNameAtomic(),
-                              attributes);
+    AtomicHTMLToken fakeToken(m_tree.starFish(), HTMLToken::StartTag,
+                              tagName.localNameAtomic(), attributes);
     processStartTag(&fakeToken);
 }
 
 void HTMLTreeBuilder::processFakeEndTag(const AtomicString& tagName)
 {
-    AtomicHTMLToken fakeToken(m_tree.document()->window()->starFish(),
-                              HTMLToken::EndTag, tagName);
+    AtomicHTMLToken fakeToken(m_tree.starFish(), HTMLToken::EndTag, tagName);
     processEndTag(&fakeToken);
 }
 
@@ -514,19 +506,12 @@ void HTMLTreeBuilder::processFakeEndTag(const QualifiedName& tagName)
 void HTMLTreeBuilder::processFakePEndTagIfPInButtonScope()
 {
     if (!m_tree.openElements()->inButtonScope(
-            m_tree.document()
-                ->window()
-                ->starFish()
-                ->staticStrings()
-                ->m_pTagName.localNameAtomic())) {
+            m_tree.starFish()->staticStrings()->m_pTagName.localNameAtomic())) {
         return;
     }
-    AtomicHTMLToken endP(m_tree.document()->window()->starFish(),
-                         HTMLToken::EndTag, m_tree.document()
-                                                ->window()
-                                                ->starFish()
-                                                ->staticStrings()
-                                                ->m_pTagName.localNameAtomic());
+    AtomicHTMLToken endP(
+        m_tree.starFish(), HTMLToken::EndTag,
+        m_tree.starFish()->staticStrings()->m_pTagName.localNameAtomic());
     processEndTag(&endP);
 }
 
@@ -1051,11 +1036,7 @@ bool HTMLTreeBuilder::processColgroupEndTagForInColumnGroup()
     if (m_tree.currentIsRootNode() ||
         (m_tree.currentNode()->isElement() &&
          m_tree.currentNode()->asElement()->name() ==
-             (m_tree.document()
-                  ->window()
-                  ->starFish()
-                  ->staticStrings()
-                  ->m_templateTagName))) {
+             (m_tree.starFish()->staticStrings()->m_templateTagName))) {
         ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error
         return false;
@@ -1081,7 +1062,7 @@ HTMLStackItem* HTMLTreeBuilder::adjustedCurrentStackItem() const
 void HTMLTreeBuilder::closeTheCell()
 {
     STARFISH_ASSERT(insertionMode() == InCellMode);
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (m_tree.openElements()->inTableScope(s->m_tdTagName)) {
         STARFISH_ASSERT(!m_tree.openElements()->inTableScope(s->m_thTagName));
         processFakeEndTag(s->m_tdTagName);
@@ -1095,7 +1076,7 @@ void HTMLTreeBuilder::closeTheCell()
 void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::StartTag);
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (token->name() == s->m_captionTagName) {
         m_tree.openElements()->popUntilTableScopeMarker();
         m_tree.activeFormattingElements()->appendMarker();
@@ -1173,7 +1154,7 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::StartTag);
     switch (insertionMode()) {
     case InitialMode:
@@ -1578,7 +1559,7 @@ void HTMLTreeBuilder::processHtmlStartTagForInBody(AtomicHTMLToken* token)
 
 bool HTMLTreeBuilder::processBodyEndTagForInBody(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndTag);
     ASSERT(token->name() == s->m_bodyTagName);
     if (!m_tree.openElements()->inScope(s->m_bodyTagName)) {
@@ -1735,7 +1716,7 @@ void HTMLTreeBuilder::resetInsertionModeAppropriately()
 {
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/
     //        parsing.html#reset-the-insertion-mode-appropriately
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     bool last = false;
     HTMLElementStack::ElementRecord* nodeRecord =
         m_tree.openElements()->topRecord();
@@ -1815,7 +1796,7 @@ void HTMLTreeBuilder::resetInsertionModeAppropriately()
 
 void HTMLTreeBuilder::processEndTagForInTableBody(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndTag);
     if (isTableBodyContextTag(s, token->name())) {
         if (!m_tree.openElements()->inTableScope(token->name())) {
@@ -1856,7 +1837,7 @@ void HTMLTreeBuilder::processEndTagForInTableBody(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processEndTagForInRow(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndTag);
     if (token->name() == s->m_trTagName) {
         processTrEndTagForInRow();
@@ -1894,7 +1875,7 @@ void HTMLTreeBuilder::processEndTagForInRow(AtomicHTMLToken* token)
 void HTMLTreeBuilder::processEndTagForInCell(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::EndTag);
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (isTableCellContextTag(s, token->name())) {
         if (!m_tree.openElements()->inTableScope(token->name())) {
             parseError(token);
@@ -1934,7 +1915,7 @@ void HTMLTreeBuilder::processEndTagForInCell(AtomicHTMLToken* token)
 void HTMLTreeBuilder::processEndTagForInBody(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::EndTag);
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (token->name() == s->m_bodyTagName) {
         processBodyEndTagForInBody(token);
         return;
@@ -2076,7 +2057,7 @@ void HTMLTreeBuilder::processEndTagForInBody(AtomicHTMLToken* token)
 
 bool HTMLTreeBuilder::processCaptionEndTagForInCaption()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_captionTagName)) {
         ASSERT(isParsingFragment());
         // FIXME: parse error
@@ -2093,7 +2074,7 @@ bool HTMLTreeBuilder::processCaptionEndTagForInCaption()
 
 bool HTMLTreeBuilder::processTrEndTagForInRow()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_trTagName)) {
         ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error
@@ -2108,7 +2089,7 @@ bool HTMLTreeBuilder::processTrEndTagForInRow()
 
 bool HTMLTreeBuilder::processTableEndTagForInTable()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_tableTagName)) {
         ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error.
@@ -2121,7 +2102,7 @@ bool HTMLTreeBuilder::processTableEndTagForInTable()
 
 void HTMLTreeBuilder::processEndTagForInTable(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndTag);
     if (token->name() == s->m_tableTagName) {
         processTableEndTagForInTable();
@@ -2144,7 +2125,7 @@ void HTMLTreeBuilder::processEndTagForInTable(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndTag);
     switch (insertionMode()) {
     case InitialMode:
@@ -2489,7 +2470,7 @@ ReprocessBuffer:
         }
     }
 
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     switch (insertionMode()) {
     case InitialMode: {
         ASSERT(insertionMode() == InitialMode);
@@ -2671,7 +2652,7 @@ void HTMLTreeBuilder::processCharacterBufferForInBody(
 
 void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::EndOfFile);
     switch (insertionMode()) {
     case InitialMode:
@@ -2788,9 +2769,8 @@ void HTMLTreeBuilder::defaultForInitial()
 
 void HTMLTreeBuilder::defaultForBeforeHTML()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
-    AtomicHTMLToken startHTML(m_tree.document()->window()->starFish(),
-                              HTMLToken::StartTag,
+    StaticStrings* s = m_tree.starFish()->staticStrings();
+    AtomicHTMLToken startHTML(m_tree.starFish(), HTMLToken::StartTag,
                               s->m_htmlTagName.localNameAtomic());
     m_tree.insertHTMLHtmlStartTagBeforeHTML(&startHTML);
     setInsertionMode(BeforeHeadMode);
@@ -2798,36 +2778,32 @@ void HTMLTreeBuilder::defaultForBeforeHTML()
 
 void HTMLTreeBuilder::defaultForBeforeHead()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
-    AtomicHTMLToken startHead(m_tree.document()->window()->starFish(),
-                              HTMLToken::StartTag,
+    StaticStrings* s = m_tree.starFish()->staticStrings();
+    AtomicHTMLToken startHead(m_tree.starFish(), HTMLToken::StartTag,
                               s->m_headTagName.localNameAtomic());
     processStartTag(&startHead);
 }
 
 void HTMLTreeBuilder::defaultForInHead()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
-    AtomicHTMLToken endHead(m_tree.document()->window()->starFish(),
-                            HTMLToken::EndTag,
+    StaticStrings* s = m_tree.starFish()->staticStrings();
+    AtomicHTMLToken endHead(m_tree.starFish(), HTMLToken::EndTag,
                             s->m_headTagName.localNameAtomic());
     processEndTag(&endHead);
 }
 
 void HTMLTreeBuilder::defaultForInHeadNoscript()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
-    AtomicHTMLToken endNoscript(m_tree.document()->window()->starFish(),
-                                HTMLToken::EndTag,
+    StaticStrings* s = m_tree.starFish()->staticStrings();
+    AtomicHTMLToken endNoscript(m_tree.starFish(), HTMLToken::EndTag,
                                 s->m_noscriptTagName.localNameAtomic());
     processEndTag(&endNoscript);
 }
 
 void HTMLTreeBuilder::defaultForAfterHead()
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
-    AtomicHTMLToken startBody(m_tree.document()->window()->starFish(),
-                              HTMLToken::StartTag,
+    StaticStrings* s = m_tree.starFish()->staticStrings();
+    AtomicHTMLToken startBody(m_tree.starFish(), HTMLToken::StartTag,
                               s->m_bodyTagName.localNameAtomic());
     processStartTag(&startBody);
     m_framesetOk = true;
@@ -2853,7 +2829,7 @@ void HTMLTreeBuilder::defaultForInTableText()
 
 bool HTMLTreeBuilder::processStartTagForInHead(AtomicHTMLToken* token)
 {
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
     ASSERT(token->type() == HTMLToken::StartTag);
     if (token->name() == s->m_htmlTagName) {
         processHtmlStartTagForInBody(token);
@@ -2999,7 +2975,7 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
 
     m_tree.flush();
     HTMLStackItem* adjustedCurrentNode = adjustedCurrentStackItem();
-    StaticStrings* s = m_tree.document()->window()->starFish()->staticStrings();
+    StaticStrings* s = m_tree.starFish()->staticStrings();
 
     switch (token->type()) {
     case HTMLToken::Uninitialized:

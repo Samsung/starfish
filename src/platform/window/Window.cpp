@@ -919,65 +919,58 @@ void Window::rendering()
                                            ->asFrameBox()
                                            ->stackingContext();
 
-                std::function<void(StackingContext*, int)> dumpSC =
-                    [&dumpSC](StackingContext* ctx, int depth) {
-                        for (int i = 0; i < depth; i++) {
+                std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](
+                    StackingContext* ctx, int depth) {
+                    for (int i = 0; i < depth; i++) {
+                        printf("  ");
+                    }
+
+                    auto fr = ctx->visibleRect();
+
+                    std::string className;
+                    for (unsigned i = 0; i < ctx->owner()
+                                                 ->node()
+                                                 ->asHTMLElement()
+                                                 ->classNames()
+                                                 .size();
+                         i++) {
+                        className += ctx->owner()
+                                         ->node()
+                                         ->asHTMLElement()
+                                         ->classNames()[i]
+                                         ->utf8Data();
+                        className += " ";
+                    }
+
+                    printf(
+                        "StackingContext[%p, node %p %s id:%s className:%s "
+                        ", frame %p, buf %p %d %d %d %d]\n",
+                        ctx, ctx->owner()->node(),
+                        ctx->owner()->node()->localName()->utf8Data(),
+                        ctx->owner()->node()->asHTMLElement()->id()->utf8Data(),
+                        className.data(), ctx->owner(), ctx->buffer(),
+                        (int)fr.x(), (int)fr.y(), (int)fr.width(),
+                        (int)fr.height());
+
+                    auto iter = ctx->childContexts().begin();
+                    while (iter != ctx->childContexts().end()) {
+                        int32_t num = iter->first;
+
+                        for (int i = 0; i < depth + 1; i++) {
                             printf("  ");
                         }
 
-                        auto fr = ctx->visibleRect();
+                        printf("z-index: %d\n", (int)num);
 
-                        std::string className;
-                        for (unsigned i = 0; i < ctx->owner()
-                                                     ->node()
-                                                     ->asElement()
-                                                     ->asHTMLElement()
-                                                     ->classNames()
-                                                     .size();
-                             i++) {
-                            className += ctx->owner()
-                                             ->node()
-                                             ->asElement()
-                                             ->asHTMLElement()
-                                             ->classNames()[i]
-                                             ->utf8Data();
-                            className += " ";
+                        auto iter2 = iter->second->begin();
+                        while (iter2 != iter->second->end()) {
+                            dumpSC(*iter2, depth + 2);
+                            iter2++;
                         }
 
-                        printf(
-                            "StackingContext[%p, node %p %s id:%s className:%s "
-                            ", frame %p, buf %p %d %d %d %d]\n",
-                            ctx, ctx->owner()->node(),
-                            ctx->owner()->node()->localName()->utf8Data(),
-                            ctx->owner()
-                                ->node()
-                                ->asElement()
-                                ->asHTMLElement()
-                                ->id()
-                                ->utf8Data(),
-                            className.data(), ctx->owner(), ctx->buffer(),
-                            (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                            (int)fr.height());
-
-                        auto iter = ctx->childContexts().begin();
-                        while (iter != ctx->childContexts().end()) {
-                            int32_t num = iter->first;
-
-                            for (int i = 0; i < depth + 1; i++) {
-                                printf("  ");
-                            }
-
-                            printf("z-index: %d\n", (int)num);
-
-                            auto iter2 = iter->second->begin();
-                            while (iter2 != iter->second->end()) {
-                                dumpSC(*iter2, depth + 2);
-                                iter2++;
-                            }
-
-                            iter++;
-                        }
-                    };
+                        iter++;
+                    }
+                };
 
                 dumpSC(ctx, 0);
             }
@@ -1363,13 +1356,12 @@ void Window::setFocusedNode(Node* n)
     String* eventType;
     Event* e;
     if (t) {
-        if (t->isElement() && t->asElement()->isHTMLElement()) {
+        if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_blur.localName();
             e = new FocusEvent(eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
-        if (t->isElement() && t->asElement()->isHTMLElement() &&
-            !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusout.localName();
             e = new FocusEvent(eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);
@@ -1380,13 +1372,12 @@ void Window::setFocusedNode(Node* n)
 
     t = m;
     if (t) {
-        if (t->isElement() && t->asElement()->isHTMLElement()) {
+        if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_focus.localName();
             e = new FocusEvent(eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
-        if (t->isElement() && t->asElement()->isHTMLElement() &&
-            !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusin.localName();
             e = new FocusEvent(eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);

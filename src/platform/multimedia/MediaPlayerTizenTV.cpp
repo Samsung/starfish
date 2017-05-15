@@ -18,7 +18,6 @@
 
 #include "StarFishConfig.h"
 #include "util/URL.h"
-#include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
 #include "MediaPlayerTizenTV.h"
 #include "platform/canvas/Canvas.h"
@@ -83,8 +82,8 @@ void MediaPlayerTizenTV::setNativePlayerDefaultOptions(URL* url)
     }
 
     if (m_container->isHTMLVideoElement() && m_container->frame()) {
-        player_display_h displayHandle = GET_DISPLAY(elm_win_xwindow_get(
-            (Evas_Object*)m_container->document()->window()->unwrap()));
+        player_display_h displayHandle = GET_DISPLAY(
+            elm_win_xwindow_get((Evas_Object*)m_container->window()->unwrap()));
         player_display_type_e displayType = PLAYER_DISPLAY_TYPE_X11;
         player_display_mode_e displayMode = PLAYER_DISPLAY_MODE_DST_ROI;
         player_display_roi_mode_e roiMode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;

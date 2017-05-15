@@ -17,6 +17,7 @@
 #ifndef __StarFishResourceLoader__
 #define __StarFishResourceLoader__
 
+#include "binding/DocumentHoldable.h"
 #include "loader/Resource.h"
 #include "loader/TextResource.h"
 #include "loader/ImageResource.h"
@@ -30,7 +31,7 @@ class ResourceCacheData : public gc {
     uint64_t m_lastUsedTime; // stores tick count
 };
 
-class ResourceLoader : public gc {
+class ResourceLoader : public gc, public DocumentHoldable {
     friend class Resource;
     friend class ImageResource;
     friend class DocumentOnLoadChecker;
@@ -57,11 +58,6 @@ public:
         STARFISH_ASSERT(m_pendingResourceCountWhileDocumentOpening > 0);
         m_pendingResourceCountWhileDocumentOpening--;
         fireDocumentOnLoadEventIfNeeded();
-    }
-
-    Document* document()
-    {
-        return m_document;
     }
 
     void clear()
@@ -95,7 +91,6 @@ private:
     bool m_isDocumentInOpenState;
     uint64_t m_documentOpenTime;
     size_t m_pendingResourceCountWhileDocumentOpening;
-    Document* m_document;
     GCVector<Resource*> m_currentLoadingResources;
     GCUnorderedMap<std::string, ResourceCacheData> m_imageResourceCache;
     GCVector<Resource*> m_imageResourceCacheLRUList;

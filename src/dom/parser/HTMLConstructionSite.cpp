@@ -55,7 +55,6 @@
 #include "dom/parser/HTMLParserIdioms.h"
 #include "dom/parser/HTMLStackItem.h"
 #include "dom/parser/HTMLToken.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -74,8 +73,7 @@ static inline void setAttributes(Element* element, AtomicHTMLToken* token)
 
 static bool hasImpliedEndTag(const HTMLStackItem* item)
 {
-    StaticStrings* s =
-        item->node()->document()->window()->starFish()->staticStrings();
+    StaticStrings* s = item->node()->starFish()->staticStrings();
     return item->hasTagName(s->m_ddTagName) ||
            item->hasTagName(s->m_dtTagName) ||
            item->hasTagName(s->m_liTagName) ||
@@ -87,11 +85,7 @@ static bool hasImpliedEndTag(const HTMLStackItem* item)
 
 static bool shouldUseLengthLimit(const Node* node)
 {
-    StaticStrings* s = const_cast<Node*>(node)
-                           ->document()
-                           ->window()
-                           ->starFish()
-                           ->staticStrings();
+    StaticStrings* s = const_cast<Node*>(node)->starFish()->staticStrings();
     return !const_cast<Node*>(node)->localName()->equals(
                s->m_scriptTagName.localName()) &&
            !const_cast<Node*>(node)->localName()->equals(
@@ -389,7 +383,7 @@ void HTMLConstructionSite::executeQueuedTasks()
 }
 
 HTMLConstructionSite::HTMLConstructionSite(Document* document)
-    : m_document(document)
+    : DocumentHoldable(document)
     , m_attachmentRoot(document)
     , m_isParsingFragment(false)
     , m_redirectAttachToFosterParent(false)
@@ -401,7 +395,7 @@ HTMLConstructionSite::HTMLConstructionSite(Document* document)
 }
 
 HTMLConstructionSite::HTMLConstructionSite(DocumentFragment* fragment)
-    : m_document(fragment->document())
+    : DocumentHoldable(fragment->document())
     , m_attachmentRoot(fragment)
     , m_isParsingFragment(true)
     , m_redirectAttachToFosterParent(false)
@@ -921,16 +915,11 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
                                              const AtomicString& namespaceURI)
 {
     Element* element;
-    QualifiedName tagName(namespaceURI,
-                          AtomicString::createAttrAtomicString(
-                              m_document->window()->starFish(), token->name()));
+    QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(
+                                            starFish(), token->name()));
 
     // TODO add special xml documents here!
-    if (namespaceURI ==
-        m_document->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_xhtmlNamespaceURI) {
+    if (namespaceURI == starFish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = HTMLDocument::createHTMLElement(
             &ownerDocumentForCurrentNode(), tagName.localNameAtomic());
     } else {
@@ -962,8 +951,8 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // to occur after construction to allow better code sharing here.
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(),
     //     document, form, true);
-    AtomicString tagName = AtomicString::createAttrAtomicString(
-        m_document->window()->starFish(), token->name());
+    AtomicString tagName =
+        AtomicString::createAttrAtomicString(starFish(), token->name());
     Element* element =
         ownerDocumentForCurrentNode().createElement(tagName, false);
     setAttributes(element, token);
@@ -977,16 +966,10 @@ HTMLStackItem* HTMLConstructionSite::createElementFromSavedToken(
     Element* element;
     // NOTE: Moving from item -> token -> item copies the Attribute vector
     // twice!
-    AtomicHTMLToken fakeToken(item->node()->document()->window()->starFish(),
-                              HTMLToken::StartTag, item->localName(),
-                              item->attributes());
+    AtomicHTMLToken fakeToken(item->node()->starFish(), HTMLToken::StartTag,
+                              item->localName(), item->attributes());
     if (item->namespaceURI() ==
-        item->node()
-            ->document()
-            ->window()
-            ->starFish()
-            ->staticStrings()
-            ->m_xhtmlNamespaceURI) {
+        item->node()->starFish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = createHTMLElement(&fakeToken);
     } else {
         element = createElement(&fakeToken, item->namespaceURI());
@@ -1061,7 +1044,7 @@ void HTMLConstructionSite::findFosterSite(HTMLConstructionSiteTask& task)
     // When a node is to be foster parented, the last template element with no
     // table element is below it in the stack of open elements is the foster
     // parent element (NOT the template's parent!)
-    auto s = m_document->window()->starFish()->staticStrings();
+    auto s = m_document->starFish()->staticStrings();
     HTMLElementStack::ElementRecord* lastTemplateElement =
         m_openElements.topmost(s->m_templateTagName.localNameAtomic());
     if (lastTemplateElement &&
