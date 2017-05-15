@@ -24,9 +24,9 @@ namespace StarFish {
 
 History::History(StarFish* starFish)
     : ScriptWrappable(this)
-    , m_starFish(starFish)
+    , StarFishHoldable(starFish)
+    , m_offset(std::numeric_limits<uint32_t>::max())
 {
-    m_offset = std::numeric_limits<uint32_t>::max();
 }
 
 void History::back()

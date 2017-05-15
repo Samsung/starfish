@@ -15,47 +15,37 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTableElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* HTMLTableElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_tableTagName.localName();
+    return starFish()->staticStrings()->m_tableTagName.localName();
 }
 
 QualifiedName HTMLTableElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_tableTagName;
+    return starFish()->staticStrings()->m_tableTagName;
 }
 
 String* HTMLTableElement::width()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_width);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_width);
 }
 
 void HTMLTableElement::setWidth(String* width)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                 width);
+    setAttribute(starFish()->staticStrings()->m_width, width);
 }
 
 String* HTMLTableElement::bgColor()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_bgColor);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_bgColor);
 }
 
 void HTMLTableElement::setBgColor(String* bgColor)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_bgColor,
-                 bgColor);
+    setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
 }

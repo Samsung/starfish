@@ -20,7 +20,6 @@
 #include "layout/FrameReplacedImage.h"
 #include "loader/ElementResourceClient.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -77,52 +76,46 @@ protected:
 
 String* HTMLImageElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_imgTagName.localName();
+    return starFish()->staticStrings()->m_imgTagName.localName();
 }
 
 QualifiedName HTMLImageElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_imgTagName;
+    return starFish()->staticStrings()->m_imgTagName;
 }
 
 void HTMLImageElement::setSrc(String* src)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+    setAttribute(starFish()->staticStrings()->m_src, src);
 }
 
 String* HTMLImageElement::src()
 {
-    return getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_src);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
 }
 
 unsigned long HTMLImageElement::width()
 {
-    String* widthStr = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_width);
+    String* widthStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
 
 void HTMLImageElement::setWidth(unsigned long width)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_width,
-                 String::fromInt(width));
+    setAttribute(starFish()->staticStrings()->m_width, String::fromInt(width));
 }
 
 unsigned long HTMLImageElement::height()
 {
-    String* heightStr = getAttributeOrEmpty(
-        document()->window()->starFish()->staticStrings()->m_height);
+    String* heightStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }
 
 void HTMLImageElement::setHeight(unsigned long height)
 {
-    setAttribute(document()->window()->starFish()->staticStrings()->m_height,
+    setAttribute(starFish()->staticStrings()->m_height,
                  String::fromInt(height));
 }
 
@@ -132,21 +125,15 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+    if (name == starFish()->staticStrings()->m_src) {
         if (value->length() && document()->doesParticipateInRendering()) {
             // TODO convert src into url string
             loadImage(value);
         } else {
             unloadImage();
         }
-    } else if (name ==
-                   document()->window()->starFish()->staticStrings()->m_width ||
-               name ==
-                   document()
-                       ->window()
-                       ->starFish()
-                       ->staticStrings()
-                       ->m_height) {
+    } else if (name == starFish()->staticStrings()->m_width ||
+               name == starFish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -157,8 +144,8 @@ void HTMLImageElement::didNodeAdopted()
 {
     HTMLElement::didNodeAdopted();
     if (document()->doesParticipateInRendering()) {
-        Nullable<String*> srcStr = getAttribute(
-            document()->window()->starFish()->staticStrings()->m_src);
+        Nullable<String*> srcStr =
+            getAttribute(starFish()->staticStrings()->m_src);
         if (srcStr.hasValue() && srcStr.getValue()->length() > 0) {
             loadImage(srcStr.getValue());
         }

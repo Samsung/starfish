@@ -57,11 +57,10 @@ public:
         URI_ERR = 106,
     };
 
-    DOMException(ScriptBindingInstance* instance, Code code,
-                 const char* message = nullptr);
+    DOMException(Code code, const char* message = nullptr);
 
     // Constructor exposed to script.
-    DOMException(Document* document, String* message, String* name);
+    DOMException(String* message, String* name);
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isDOMException() const override;
@@ -85,7 +84,6 @@ public:
     }
 
 private:
-    ScriptBindingInstance* m_instance;
     uint16_t m_code;
     String* m_message;
     String* m_name;

@@ -15,25 +15,19 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLObjectElement.h"
 #include "platform/canvas/Canvas.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* HTMLObjectElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_objectTagName.localName();
+    return starFish()->staticStrings()->m_objectTagName.localName();
 }
 
 QualifiedName HTMLObjectElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_objectTagName;
+    return starFish()->staticStrings()->m_objectTagName;
 }
 
 void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
@@ -43,7 +37,7 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_type) {
+    if (name == starFish()->staticStrings()->m_type) {
         if (m_content) {
             m_content->unload();
         }

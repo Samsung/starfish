@@ -27,7 +27,7 @@ class DOMSettableTokenList : public DOMTokenList {
 public:
     DOMSettableTokenList(ScriptBindingInstance* instance, Element* element,
                          QualifiedName localName)
-        : DOMTokenList(instance, element, localName)
+        : DOMTokenList(element, localName)
     {
     }
 

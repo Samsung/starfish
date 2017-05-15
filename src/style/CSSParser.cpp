@@ -1889,7 +1889,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
     parseSelector(list, validSelector);
 
     bool valid = false;
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration();
     if (list.size()) {
         CSSToken* token = currentToken();
         if (token->isSymbol('{')) {
@@ -1942,8 +1942,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                CSSStyleRule* rule =
-                    new CSSStyleRule(list[i], m_document, declarations);
+                CSSStyleRule* rule = new CSSStyleRule(list[i], declarations);
                 aOwner->addRule(rule);
             }
         }

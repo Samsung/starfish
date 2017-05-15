@@ -18,6 +18,7 @@
 #define __StarFishGeolocation__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
@@ -29,14 +30,9 @@ typedef void (*GeoPositionCallback)(StarFish*, Geoposition*, void* data);
 typedef void (*GeoPositionErrorCallback)(StarFish*, PositionError* error,
                                          void* data);
 
-class Geolocation : public ScriptWrappable {
+class Geolocation : public ScriptWrappable, public StarFishHoldable {
 public:
     static Geolocation* create(StarFish* starFish);
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isGeolocation() const override;
@@ -56,7 +52,6 @@ protected:
                                          void* errorCbData,
                                          bool enableHighAccuracy,
                                          int32_t timeout, int32_t maximumAge);
-    StarFish* m_starFish;
 };
 }
 

@@ -20,18 +20,16 @@
 #define __StarFishWebApis__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
-class StarFish;
 class Avplay;
-class WebApis : public ScriptWrappable {
+class StarFish;
+
+class WebApis : public ScriptWrappable, public StarFishHoldable {
 public:
     WebApis(StarFish* starFish);
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
 
     virtual void init(ScriptBindingInstance* instance) override
     {
@@ -50,7 +48,6 @@ public:
     }
 
 protected:
-    StarFish* m_starFish;
     Avplay* m_avplay;
 };
 }

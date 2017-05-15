@@ -18,22 +18,23 @@
 #define __StarFishBlob__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
-class StarFish;
+class Document;
 
-class Blob : public ScriptWrappable {
+class Blob : public ScriptWrappable, public StarFishHoldable {
 public:
     Blob(StarFish* starFish, uint64_t size, String* type, void* data,
          bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
+        , StarFishHoldable(starFish)
+        , m_size(size)
+        , m_type(type)
+        , m_data(data)
+        , m_isClosed(isClosed)
     {
-        m_starFish = starFish;
-        m_size = size;
-        m_type = type;
-        m_data = data;
-        m_isClosed = isClosed;
         if (isEntryOfBlobURLStore) {
             addBlobToBlobURLStore();
         }
@@ -41,11 +42,6 @@ public:
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isBlob() const override;
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
 
     void* data()
     {
@@ -88,12 +84,11 @@ protected:
     void addBlobToBlobURLStore();
     void removeBlobFromBlobURLStore();
 
-    bool m_isEntryOfBlobURLStore;
-    bool m_isClosed;
-    StarFish* m_starFish;
+    uint64_t m_size;
     String* m_type;
     void* m_data;
-    uint64_t m_size;
+    bool m_isClosed;
+    bool m_isEntryOfBlobURLStore;
 };
 }
 

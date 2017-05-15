@@ -23,16 +23,12 @@
 namespace StarFish {
 String* HTMLHtmlElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_htmlTagName.localName();
+    return starFish()->staticStrings()->m_htmlTagName.localName();
 }
 
 QualifiedName HTMLHtmlElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_htmlTagName;
+    return starFish()->staticStrings()->m_htmlTagName;
 }
 
 void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
@@ -41,9 +37,9 @@ void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (!newStyle->backgroundColor().isTransparent() ||
         !newStyle->backgroundImage()->equals(String::emptyString)) {
-        document()->window()->m_hasRootElementBackground = true;
+        window()->m_hasRootElementBackground = true;
     } else {
-        document()->window()->m_hasRootElementBackground = false;
+        window()->m_hasRootElementBackground = false;
     }
 
     if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {

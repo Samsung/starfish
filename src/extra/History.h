@@ -18,6 +18,7 @@
 #define __StarFishHistory__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
@@ -25,14 +26,9 @@ class HistoryEntry;
 class StarFish;
 class URL;
 
-class History : public ScriptWrappable {
+class History : public ScriptWrappable, public StarFishHoldable {
 public:
     History(StarFish* starFish);
-
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isHistory() const override;
@@ -63,7 +59,6 @@ public:
     bool isSameAsCurrentState(StateObject*) const;
     */
 protected:
-    StarFish* m_starFish;
     GCVector<HistoryEntry*> m_historyEntries;
     uint32_t m_offset;
     URL* getURL();

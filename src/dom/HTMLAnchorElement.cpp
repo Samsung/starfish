@@ -23,38 +23,34 @@
 namespace StarFish {
 String* HTMLAnchorElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_aTagName.localName();
+    return starFish()->staticStrings()->m_aTagName.localName();
 }
 
 QualifiedName HTMLAnchorElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_aTagName;
+    return starFish()->staticStrings()->m_aTagName;
 }
 
 void HTMLAnchorElement::handleDefaultEvent(Event* event)
 {
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equals("click")) {
-        auto href = document()->window()->starFish()->staticStrings()->m_href;
+        auto href = starFish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
-                    document()->window()->navigateAsync(URL::createURL(
+                    window()->navigateAsync(URL::createURL(
                         document()->urlString()->substring(
                             0, document()->urlString()->indexOf('#')),
                         hrefStr));
                 } else {
-                    document()->window()->navigateAsync(
+                    window()->navigateAsync(
                         URL::createURL(document()->urlString(), hrefStr));
                 }
             } else {
-                document()->window()->navigateAsync(document()->documentURI());
+                window()->navigateAsync(document()->documentURI());
             }
         }
     }
@@ -62,7 +58,7 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
 
 bool HTMLAnchorElement::supportsFocus()
 {
-    auto href = document()->window()->starFish()->staticStrings()->m_href;
+    auto href = starFish()->staticStrings()->m_href;
     return hasAttribute(href) != SIZE_MAX ? true : false;
 }
 }

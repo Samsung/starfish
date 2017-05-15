@@ -22,8 +22,6 @@
 
 namespace StarFish {
 
-class Document;
-
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 
@@ -34,10 +32,9 @@ public:
         InlineStyle,
     };
 
-    CSSStyleDeclaration(Document* document, Element* element = NULL,
+    CSSStyleDeclaration(Element* element = NULL,
                         StyleType styleType = InternalStyle)
         : ScriptWrappable(this)
-        , m_document(document)
     {
         m_element = element;
         m_styleType = styleType;
@@ -47,12 +44,7 @@ public:
 
     void clear();
 
-    Document* document()
-    {
-        return m_document;
-    }
-
-    CSSStyleDeclaration* clone(Document* document, Element* element);
+    CSSStyleDeclaration* clone(Element* element);
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
@@ -138,7 +130,6 @@ public:
 
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
-    Document* m_document;
     Element* m_element;
     StyleType m_styleType;
 };

@@ -31,7 +31,7 @@ Geolocation* Geolocation::create(StarFish* starFish)
 
 Geolocation::Geolocation(StarFish* starFish)
     : ScriptWrappable(this)
-    , m_starFish(starFish)
+    , StarFishHoldable(starFish)
 {
 }
 
@@ -45,8 +45,7 @@ bool Geolocation::getCurrentPositionPreprocessing(
             [](size_t, void* data, void* data2, void* data3) {
                 StarFish* sf = (StarFish*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT),
-                   data3);
+                cb(sf, new PositionError(PositionError::Error::TIMEOUT), data3);
             },
             m_starFish, (void*)errorCb, errorCbData);
         return false;
@@ -67,7 +66,7 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                 StarFish* sf = (StarFish*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
-                           sf, PositionError::Error::POSITION_UNAVAILABLE),
+                           PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             m_starFish, (void*)errorCb, errorCbData);

@@ -25,10 +25,9 @@ class Element;
 class Attr;
 class NamedNodeMap : public ScriptWrappable {
 public:
-    NamedNodeMap(ScriptBindingInstance* instance, Element* element)
+    NamedNodeMap(Element* element)
         : ScriptWrappable(this)
         , m_element(element)
-        , m_instance(instance)
     {
     }
 
@@ -43,10 +42,6 @@ public:
     Attr* setNamedItem(Attr* attr);
     Attr* removeNamedItem(String* name);
 
-    ScriptBindingInstance* striptBindingInstance()
-    {
-        return m_instance;
-    }
     Element* element()
     {
         return m_element;
@@ -54,7 +49,6 @@ public:
 
 private:
     Element* m_element;
-    ScriptBindingInstance* m_instance;
 };
 }
 

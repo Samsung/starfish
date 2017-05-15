@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLAudioElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLAudioElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_audioTagName.localName();
+    return starFish()->staticStrings()->m_audioTagName.localName();
 }
 
 QualifiedName HTMLAudioElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_audioTagName;
+    return starFish()->staticStrings()->m_audioTagName;
 }
 }

@@ -28,9 +28,8 @@ class Element;
 
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root,
-                   NodeListImpl::FilterFunctionType filterType, void* data,
-                   bool canCache = false);
+    HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
+                   void* data, bool canCache = false);
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual void postInit(ScriptBindingInstance* instance) override;

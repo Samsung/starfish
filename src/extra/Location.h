@@ -18,23 +18,19 @@
 #define __StarFishLocation__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
 class StarFish;
 class URL;
 
-class Location : public ScriptWrappable {
+class Location : public ScriptWrappable, public StarFishHoldable {
 public:
     Location(StarFish* starFish)
         : ScriptWrappable(this)
-        , m_starFish(starFish)
+        , StarFishHoldable(starFish)
     {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
@@ -62,9 +58,6 @@ public:
     }
 
     void setLocation(String* newURL);
-
-protected:
-    StarFish* m_starFish;
 };
 }
 

@@ -14,17 +14,28 @@
  *    limitations under the License.
  */
 
-#include "StarFish.h"
-#include "dom/HTMLBRElement.h"
+#ifndef __StarFishStarFishHodable__
+#define __StarFishStarFishHodable__
 
 namespace StarFish {
-String* HTMLBRElement::localName()
-{
-    return starFish()->staticStrings()->m_brTagName.localName();
-}
 
-QualifiedName HTMLBRElement::name()
-{
-    return starFish()->staticStrings()->m_brTagName;
+class StarFish;
+class Window;
+
+class StarFishHoldable {
+public:
+    StarFishHoldable(StarFish* starFish)
+        : m_starFish(starFish)
+    {
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
+    }
+
+protected:
+    StarFish* m_starFish;
+};
 }
-}
+#endif

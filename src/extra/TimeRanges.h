@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-class TimeRanges : public ScriptWrappable {
+class TimeRanges : public ScriptWrappable, public GCVector<TimeRange> {
 public:
     TimeRanges()
         : ScriptWrappable(this)
@@ -33,43 +33,24 @@ public:
 
     double start(uint32_t idx)
     {
-        if (idx < m_list.size()) {
-            return m_list[idx].start();
+        if (idx < size()) {
+            return (*this)[idx].start();
         }
         return DBL_MAX;
     }
 
     double end(uint32_t idx)
     {
-        if (idx < m_list.size()) {
-            return m_list[idx].end();
+        if (idx < size()) {
+            return (*this)[idx].end();
         }
         return DBL_MAX;
     }
 
-    void push_back(TimeRange item)
-    {
-        m_list.push_back(item);
-    }
-
-    void push_back(double start, double end)
-    {
-        m_list.push_back(TimeRange(start, end));
-    }
-
     uint32_t length()
     {
-        return m_list.size();
+        return size();
     }
-
-    TimeRange& at(uint32_t idx)
-    {
-        STARFISH_ASSERT(idx < m_list.size());
-        return m_list[idx];
-    }
-
-private:
-    GCVector<TimeRange> m_list;
 };
 }
 

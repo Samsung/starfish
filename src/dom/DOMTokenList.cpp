@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-#include "dom/Document.h"
 #include "dom/DOMException.h"
 #include "dom/DOMTokenList.h"
 #include "dom/Element.h"
@@ -293,13 +292,11 @@ void DOMTokenList::validateToken(String* token)
 {
     std::string stdToken = token->utf8Data();
     if (stdToken.length() == 0) {
-        throw new DOMException(m_element->document()->scriptBindingInstance(),
-                               DOMException::Code::SYNTAX_ERR);
+        throw new DOMException(DOMException::Code::SYNTAX_ERR);
     }
     auto f = [](char c) { return std::isspace(static_cast<unsigned char>(c)); };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
-        throw new DOMException(m_element->document()->scriptBindingInstance(),
-                               DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR);
     }
 }
 

@@ -15,23 +15,17 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTBodyElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
 String* HTMLTBodyElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_tbodyTagName.localName();
+    return starFish()->staticStrings()->m_tbodyTagName.localName();
 }
 
 QualifiedName HTMLTBodyElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_tbodyTagName;
+    return starFish()->staticStrings()->m_tbodyTagName;
 }
 }

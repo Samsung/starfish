@@ -14,29 +14,22 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishPosition__
-#define __StarFishPosition__
+#ifndef __StarFishGeoposition__
+#define __StarFishGeoposition__
 
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class StarFish;
 class Coordinates;
 
 class Geoposition : public ScriptWrappable {
 public:
-    Geoposition(StarFish* starFish, Coordinates* c, DOMTimeStamp timestamp)
+    Geoposition(Coordinates* c, DOMTimeStamp timestamp)
         : ScriptWrappable(this)
-        , m_starFish(starFish)
         , m_coords(c)
         , m_timestamp(timestamp)
     {
-    }
-
-    StarFish* starFish()
-    {
-        return m_starFish;
     }
 
     Coordinates* coords()
@@ -53,7 +46,6 @@ public:
     virtual bool isGeoposition() const override;
 
 protected:
-    StarFish* m_starFish;
     Coordinates* m_coords;
     DOMTimeStamp m_timestamp;
 };

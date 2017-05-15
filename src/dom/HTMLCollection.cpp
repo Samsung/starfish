@@ -15,14 +15,12 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLCollection.h"
 #include "dom/HTMLElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 
-HTMLCollection::HTMLCollection(ScriptBindingInstance* instance, Node* root,
+HTMLCollection::HTMLCollection(Node* root,
                                NodeListImpl::FilterFunctionType filterType,
                                void* data, bool canCache)
     : ScriptWrappable(this)
@@ -48,14 +46,11 @@ Element* HTMLCollection::namedItem(String* key)
     if (key->length()) {
         for (unsigned i = 0; i < m_nodeListImpl.length(); i++) {
             Element* elem = m_nodeListImpl.item(i)->asElement();
-            if (elem->asElement()->asHTMLElement()->id()->equals(key)) {
+            if (elem->asHTMLElement()->id()->equals(key)) {
                 return elem;
             }
-            Nullable<String*> attrStr = elem->getAttribute(elem->document()
-                                                               ->window()
-                                                               ->starFish()
-                                                               ->staticStrings()
-                                                               ->m_name);
+            Nullable<String*> attrStr =
+                elem->getAttribute(elem->starFish()->staticStrings()->m_name);
             if (attrStr.hasValue() && attrStr.getValue()->equals(key)) {
                 return elem;
             }

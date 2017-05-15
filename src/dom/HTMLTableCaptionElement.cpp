@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLTableCaptionElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLTableCaptionElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_captionTagName.localName();
+    return starFish()->staticStrings()->m_captionTagName.localName();
 }
 
 QualifiedName HTMLTableCaptionElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_captionTagName;
+    return starFish()->staticStrings()->m_captionTagName;
 }
 }

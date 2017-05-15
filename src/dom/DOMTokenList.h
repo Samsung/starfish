@@ -27,8 +27,7 @@ class Element;
 // https://dom.spec.whatwg.org/#interface-domtokenlist
 class DOMTokenList : public ScriptWrappable {
 public:
-    DOMTokenList(ScriptBindingInstance* instance, Element* element,
-                 QualifiedName localName)
+    DOMTokenList(Element* element, QualifiedName localName)
         : ScriptWrappable(this)
         , m_element(element)
         , m_localName(localName)

@@ -15,22 +15,16 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
 #include "dom/HTMLParagraphElement.h"
-#include "platform/window/Window.h"
 
 namespace StarFish {
 String* HTMLParagraphElement::localName()
 {
-    return document()
-        ->window()
-        ->starFish()
-        ->staticStrings()
-        ->m_pTagName.localName();
+    return starFish()->staticStrings()->m_pTagName.localName();
 }
 
 QualifiedName HTMLParagraphElement::name()
 {
-    return document()->window()->starFish()->staticStrings()->m_pTagName;
+    return starFish()->staticStrings()->m_pTagName;
 }
 }

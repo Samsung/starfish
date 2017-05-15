@@ -74,8 +74,7 @@ Attr* NamedNodeMap::removeNamedItem(String* name)
                         AtomicString::createAttrAtomicString(starfish, name));
     Attr* old = getNamedItem(qname);
     if (old == nullptr) {
-        throw new DOMException(striptBindingInstance(),
-                               DOMException::Code::NOT_FOUND_ERR, nullptr);
+        throw new DOMException(DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
     Attr* toReturn = new Attr(old->document(), qname, old->value());
     m_element->removeAttribute(qname);
