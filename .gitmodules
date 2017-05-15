@@ -10,3 +10,6 @@
 [submodule "test"]
 	path = test
 	url = git@coding.sec.samsung.net:RS7-webtf/widget-tc.git
+[submodule "tool/gyp"]
+	path = tool/gyp
+	url = git@coding.sec.samsung.net:RS7-webtf/gyp.git
