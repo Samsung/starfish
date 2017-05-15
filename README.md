@@ -6,14 +6,14 @@
 git clone git@10.113.64.74:webtf/starfish2.git
 cd starfish2
 ./build_third_party.sh
-GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=[executable|static_library|shared_library]
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=[executable|static_library|shared_library]
 ninja -C out/[debug|release] starfish.x64.[debug|release]
 ```
 
 For example,
 
 ```
-GYP_GENERATORS=ninja gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
 ninja -C out/debug starfish.x64.debug
 ```
 
