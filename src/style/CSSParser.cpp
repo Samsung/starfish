@@ -1365,7 +1365,7 @@ CSSSelector* CSSParser::getAttributeSelector()
     selector->setValue(getStringWithoutQuotationMarks(attributeValue->m_value));
     selector->setAttribute(attrQualifiedName, getAttributeFlags());
 
-    token = getToken(false, false);
+    token = getToken(true, false);
     getToken(false, false);
 
     if (!token->isSymbol(']')) {

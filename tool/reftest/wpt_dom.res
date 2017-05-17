@@ -89,3 +89,4 @@ test/reftest/web-platform-tests/dom/nodes/Node-properties.html
 test/reftest/web-platform-tests/dom/nodes/Node-removeChild.html
 test/reftest/web-platform-tests/dom/nodes/Node-replaceChild.html
 test/reftest/web-platform-tests/dom/nodes/Node-textContent.html
+test/reftest/web-platform-tests/dom/nodes/ParentNode-querySelector-All.html

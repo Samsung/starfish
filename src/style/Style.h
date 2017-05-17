@@ -1711,8 +1711,6 @@ public:
 
     void resolveDOMStyle(Document* document, bool force = false);
 
-    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
-                        unsigned idx, MatchResult& result);
 #ifdef STARFISH_ENABLE_TEST
     void dumpDOMStyle(Document* document);
 #endif
@@ -1722,6 +1720,9 @@ public:
     void matchAllRules(
         Element* element, ComputedStyle* ret, ComputedStyle* parent,
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
+    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
+                        unsigned idx, MatchResult& result,
+                        bool isQueryingSelector = false);
 
 protected:
     void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
@@ -1733,7 +1734,8 @@ protected:
                            CSSSelector::RelationType relation, unsigned idx,
                            MatchResult& result);
 
-    bool checkOne(Element* element, CSSSelector* selector, MatchResult& result);
+    bool checkOne(Element* element, CSSSelector* selector, MatchResult& result,
+                  bool isQueryingSelector = false);
     bool checkPseudoClass(Element* element, CSSSelector* selector,
                           MatchResult& result);
     bool checkPseudoElement(Element* element, CSSSelector* selector,

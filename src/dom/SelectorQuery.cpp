@@ -199,7 +199,7 @@ bool SelectorQuery::selectorMatches(GCDeque<CSSSelector*>& selector,
 {
     StyleResolver& resolver = element->document()->styleResolver();
     StyleResolver::MatchResult result;
-    return resolver.matchSelector(element, &selector, 0, result) ==
+    return resolver.matchSelector(element, &selector, 0, result, true) ==
            StyleResolver::Match::SelectorMatches;
 }
 
