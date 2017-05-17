@@ -1821,7 +1821,11 @@ static bool attributeValueMatches(
     String* attrValue, CSSSelector::Type type, String* selectorValue,
     CSSSelector::AttributeMatchType caseSensitivity)
 {
-    if (attrValue->equals(String::emptyString)) {
+    // For AttributeSet and AttributeExact attribute selectors, the attribute
+    // value can be empty string.
+    if (type != CSSSelector::AttributeSet &&
+        type != CSSSelector::AttributeExact &&
+        attrValue->equals(String::emptyString)) {
         return false;
     }
 
@@ -4101,12 +4105,12 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 
 StyleResolver::Match StyleResolver::matchSelector(
     Element* element, GCDeque<CSSSelector*>* selectorList, unsigned idx,
-    MatchResult& result)
+    MatchResult& result, bool isQueryingSelector)
 {
     STARFISH_ASSERT(idx < selectorList->size());
 
     CSSSelector* selector = (*selectorList)[idx];
-    if (!checkOne(element, selector, result)) {
+    if (!checkOne(element, selector, result, isQueryingSelector)) {
         return Match::SelectorFailsLocally;
     }
 
@@ -4116,7 +4120,8 @@ StyleResolver::Match StyleResolver::matchSelector(
 
     Match match;
     if (selector->relation() == CSSSelector::RelationType::SubSelector) {
-        match = matchSelector(element, selectorList, ++idx, result);
+        match = matchSelector(element, selectorList, ++idx, result,
+                              isQueryingSelector);
     } else {
         match = matchForRelation(element, selectorList, selector->relation(),
                                  ++idx, result);
@@ -4180,7 +4185,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
 }
 
 bool StyleResolver::checkOne(Element* element, CSSSelector* selector,
-                             MatchResult& result)
+                             MatchResult& result, bool isQueryingSelector)
 {
     switch (selector->type()) {
     case CSSSelector::Type::Universal:
@@ -4203,7 +4208,12 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector,
     case CSSSelector::Type::PseudoClass:
         return checkPseudoClass(element, selector, result);
     case CSSSelector::Type::PseudoElement:
-        return checkPseudoElement(element, selector, result);
+        // while the use of pseudo-elements in selectors of querySelector is
+        // permitted, they will not match any elements in the document, and thus
+        // would not result in any elements being returned.
+        return isQueryingSelector
+                   ? false
+                   : checkPseudoElement(element, selector, result);
     default:
         return false;
     }
