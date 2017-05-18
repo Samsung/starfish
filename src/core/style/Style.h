@@ -25,10 +25,54 @@ namespace StarFish {
 
 class ComputedStyle;
 class CSSStyleRule;
+class CSSRule;
 class Document;
 class Element;
 class Node;
 class URL;
+
+enum UnitType {
+    UnknownType,
+    Number,
+    Percentage,
+    // Length units
+    Ems,
+    Exs,
+    Pixels,
+    Centimeters,
+    Millimeters,
+    Inches,
+    Points,
+    Picas,
+    ViewportWidth,
+    ViewportHeight,
+    ViewportMin,
+    ViewportMax,
+    Rems,
+    Chs,
+    UserUnits, // The SVG term for unitless lengths
+    // Angle units
+    Degrees,
+    Radians,
+    Gradians,
+    Turns,
+    // Time units
+    Milliseconds,
+    Seconds,
+    Hertz,
+    Kilohertz,
+    // Resolution
+    DotsPerPixel,
+    DotsPerInch,
+    DotsPerCentimeter,
+    // Other units
+    Fraction,
+    Integer,
+    Calc,
+    CalcPercentageWithNumber,
+    CalcPercentageWithLength,
+    ValueID,
+};
 
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
@@ -1626,6 +1670,11 @@ public:
         m_rules.push_back(rule);
     }
 
+    void addRule(CSSRule* rule)
+    {
+        m_allRules.push_back(rule);
+    }
+
     URL* url();
     Node* origin()
     {
@@ -1640,13 +1689,22 @@ public:
         return m_rules;
     }
 
+    GCVector<CSSRule*>& allRules()
+    {
+        STARFISH_ASSERT(m_sourceString == String::emptyString);
+        return m_allRules;
+    }
+
     void sortRulesBySpecificity();
+
+    void tmpEvaluate(GCVector<CSSRule*>& rules);
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;
     GCVector<CSSStyleRule*> m_rules;
+    GCVector<CSSRule*> m_allRules;
     Node* m_origin;
 };
 

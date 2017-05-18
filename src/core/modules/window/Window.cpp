@@ -723,19 +723,28 @@ void Window::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("parse sheet");
 #endif
-            document()->styleResolver().sheets()[0]->parseSheetIfneeds();
-            document()->styleResolver().sheets()[0]->sortRulesBySpecificity();
+            CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
+
+            uaSheet->parseSheetIfneeds();
+            // TODO: evaluate media queries and gather valid style rules
+            uaSheet->tmpEvaluate(uaSheet->allRules());
+            uaSheet->sortRulesBySpecificity();
 
             document()->styleResolver().removeAllRules();
-            for (size_t i = 1; i < document()->styleResolver().sheets().size();
-                 i++) {
-                document()->styleResolver().sheets()[i]->parseSheetIfneeds();
-                for (size_t j = 0;
-                     j <
-                     document()->styleResolver().sheets()[i]->rules().size();
-                     j++) {
+
+            size_t sheets = document()->styleResolver().sheets().size();
+            for (size_t i = 1; i < sheets; i++) {
+                CSSStyleSheet* authorSheet =
+                    document()->styleResolver().sheets()[i];
+
+                authorSheet->parseSheetIfneeds();
+                // TODO: evaluate media queries and gather valid style rules
+                authorSheet->tmpEvaluate(authorSheet->allRules());
+
+                size_t rules = authorSheet->rules().size();
+                for (size_t j = 0; j < rules; j++) {
                     document()->styleResolver().allRules()->addRule(
-                        document()->styleResolver().sheets()[i]->rules()[j]);
+                        authorSheet->rules()[j]);
                 }
             }
             document()->styleResolver().allRules()->sortRulesBySpecificity();

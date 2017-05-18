@@ -45,9 +45,52 @@ public:
         return m_styleDeclaration;
     }
 
+    bool isStyleRule()
+    {
+        return true;
+    }
+
 protected:
     GCDeque<CSSSelector*>* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
+};
+
+class CSSStyleRuleGroup : public CSSRule {
+    friend class StyleResolver;
+
+public:
+    CSSStyleRuleGroup(RuleType type, GCVector<CSSRule*>& rules);
+    CSSStyleRuleGroup(CSSStyleRuleGroup& o);
+
+    GCVector<CSSRule*>& childRules()
+    {
+        return m_childRules;
+    }
+
+protected:
+    GCVector<CSSRule*> m_childRules;
+};
+
+class MediaQuerySet;
+class CSSStyleRuleMedia : public CSSStyleRuleGroup {
+    friend class StyleResolver;
+
+public:
+    CSSStyleRuleMedia(MediaQuerySet* media, GCVector<CSSRule*>& rules);
+    CSSStyleRuleMedia(CSSStyleRuleMedia& o);
+
+    MediaQuerySet* mediaQueries()
+    {
+        return m_mediaQueries;
+    }
+
+    bool isMediaRule()
+    {
+        return true;
+    }
+
+protected:
+    MediaQuerySet* m_mediaQueries;
 };
 }
 

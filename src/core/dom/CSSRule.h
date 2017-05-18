@@ -40,12 +40,28 @@ public:
     {
     }
 
+    CSSRule(CSSRule& o)
+        : ScriptWrappable(this)
+        , m_ruleType(o.type())
+    {
+    }
+
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isCSSRule() const override;
 
-    uint8_t type()
+    RuleType type()
     {
         return m_ruleType;
+    }
+
+    virtual bool isStyleRule()
+    {
+        return false;
+    }
+
+    virtual bool isMediaRule()
+    {
+        return false;
     }
 
 private:

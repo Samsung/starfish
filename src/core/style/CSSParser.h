@@ -19,6 +19,7 @@
 
 #include "binding/DocumentHoldable.h"
 #include "core/style/Style.h"
+#include "core/style/MediaQuerySet.h"
 
 namespace StarFish {
 
@@ -541,6 +542,46 @@ public:
 
 class CSSToken;
 class CSSScanner;
+class MediaQueryExp;
+
+class MediaQueryData {
+private:
+    MediaQuery::RestrictorType m_restrictor;
+    String* m_mediaType;
+    GCVector<MediaQueryExp*> m_expressions;
+    String* m_mediaFeature;
+    GCVector<CSSToken*> m_valueList;
+    bool m_mediaTypeSet;
+
+public:
+    MediaQueryData();
+    void clear();
+    bool addExpression();
+    bool tryAddParserToken(CSSToken*);
+    void setMediaType(String*);
+    MediaQuery* mediaQuery();
+
+    inline bool currentMediaQueryChanged() const
+    {
+        return (m_restrictor != MediaQuery::None || m_mediaTypeSet ||
+                m_expressions.size() > 0);
+    }
+
+    inline MediaQuery::RestrictorType restrictor()
+    {
+        return m_restrictor;
+    }
+    inline void setRestrictor(MediaQuery::RestrictorType restrictor)
+    {
+        m_restrictor = restrictor;
+    }
+    inline void setMediaFeature(String* str)
+    {
+        m_mediaFeature = str;
+    }
+};
+
+class CSSStyleRuleMedia;
 class CSSParser : public DocumentHoldable {
 public:
     enum NumericSign {
@@ -557,14 +598,14 @@ public:
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
+    void parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
+    bool parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
                         bool aIsInsideMediaRule,
                         GCVector<GCDeque<CSSSelector*>*>* sList,
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
-    bool parseMediaRule(CSSToken* aToken, CSSStyleSheet* aSheet);
-    bool parseMediaQuery();
+    CSSStyleRuleMedia* parseMediaRule();
 
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
@@ -601,9 +642,9 @@ protected:
                                 bool canNegate, bool& validSelector);
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
-    void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
+    void addUnknownAtRule(String* aString);
     void reportError(const char* aMsg);
-    bool parseCharsetRule(CSSStyleSheet* aSheet);
+    bool parseCharsetRule(GCVector<CSSRule*>& rules);
     static String* combineAndTrimTokenValues(GCVector<CSSToken*>* list);
     bool m_preserveWS;
     bool m_preserveComments;
@@ -613,6 +654,125 @@ protected:
     CSSToken* m_token;
     String* m_error;
     bool m_failedParsing;
+
+    // Media Query
+    enum MediaQueryParserType {
+        MediaQuerySetParser,
+        MediaConditionParser,
+    };
+
+    void initParseMediaQuery(MediaQueryParserType parserType);
+    MediaQuerySet* parseMediaQuery();
+
+    void processToken(CSSToken* token);
+
+    void readRestrictor(CSSToken*);
+    void readMediaNot(CSSToken*);
+    void readMediaType(CSSToken*);
+    void readAnd(CSSToken*);
+    void readFeatureStart(CSSToken*);
+    void readFeature(CSSToken*);
+    void readFeatureColon(CSSToken*);
+    void readFeatureValue(CSSToken*);
+    void readFeatureEnd(CSSToken*);
+    void skipUntilComma(CSSToken*);
+    void skipUntilBlockEnd(CSSToken*);
+    void done(CSSToken*);
+
+    using State = void (CSSParser::*)(CSSToken*);
+
+    void setStateAndRestrict(State, MediaQuery::RestrictorType);
+    void handleBlocks(CSSToken*);
+
+    State m_state;
+    MediaQueryParserType m_parserType;
+    MediaQueryData m_mediaQueryData;
+    MediaQuerySet* m_querySet;
+
+    const static State ReadRestrictor;
+    const static State ReadMediaNot;
+    const static State ReadMediaType;
+    const static State ReadAnd;
+    const static State ReadFeatureStart;
+    const static State ReadFeature;
+    const static State ReadFeatureColon;
+    const static State ReadFeatureValue;
+    const static State ReadFeatureEnd;
+    const static State SkipUntilComma;
+    const static State SkipUntilBlockEnd;
+    const static State Done;
+};
+
+struct MediaQueryExpValue {
+    String* id;
+    double value;
+    UnitType unit;
+    unsigned numerator;
+    unsigned denominator;
+
+    bool isID;
+    bool isValue;
+    bool isRatio;
+
+    MediaQueryExpValue()
+        : id(String::emptyString)
+        , value(0)
+        , unit(UnitType::UnknownType)
+        , numerator(0)
+        , denominator(1)
+        , isID(false)
+        , isValue(false)
+        , isRatio(false)
+    {
+    }
+
+    bool isValid() const
+    {
+        return (isID || isValue || isRatio);
+    }
+    String cssText() const;
+    bool equals(const MediaQueryExpValue& expValue) const
+    {
+        if (isID)
+            return (id->equals(expValue.id));
+        if (isValue)
+            return (value == expValue.value);
+        if (isRatio)
+            return (numerator == expValue.numerator &&
+                    denominator == expValue.denominator);
+        return !expValue.isValid();
+    }
+};
+
+class MediaQueryExp : public gc {
+public:
+    static MediaQueryExp* createIfValid(String* mediaFeature,
+                                        const GCVector<CSSToken*>&);
+    ~MediaQueryExp();
+
+    String* mediaFeature()
+    {
+        return m_mediaFeature;
+    }
+
+    MediaQueryExpValue expValue()
+    {
+        return m_expValue;
+    }
+
+    bool operator==(const MediaQueryExp& other) const;
+
+    bool isViewportDependent() const;
+
+    bool isDeviceDependent() const;
+
+    MediaQueryExp(MediaQueryExp& other);
+
+protected:
+    MediaQueryExp(String*, MediaQueryExpValue);
+
+    String* m_mediaFeature;
+    MediaQueryExpValue m_expValue;
 };
 }
 
