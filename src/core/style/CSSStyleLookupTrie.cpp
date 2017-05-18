@@ -1118,4 +1118,136 @@ bool lookupCSSMediaQueryConstraints(const char* data, unsigned length)
     }
     return false;
 }
+
+UnitType lookupUnitType(const char* data, unsigned length)
+{
+    switch (length) {
+    case 1:
+        switch (data[0]) {
+        case 's':
+            if (memcmp(data, "s", 1) == 0) {
+                return UnitType::Seconds;
+            }
+        }
+        break;
+    case 2:
+        switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "ch", 2) == 0) {
+                return UnitType::Chs;
+            }
+            if (memcmp(data, "cm", 2) == 0) {
+                return UnitType::Centimeters;
+            }
+            break;
+        case 'e':
+            if (memcmp(data, "em", 2) == 0) {
+                return UnitType::Ems;
+            }
+            if (memcmp(data, "ex", 2) == 0) {
+                return UnitType::Exs;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "fr", 2) == 0) {
+                return UnitType::Fraction;
+            }
+            break;
+        case 'h':
+            if (memcmp(data, "hz", 2) == 0) {
+                return UnitType::Hertz;
+            }
+            break;
+        case 'i':
+            if (memcmp(data, "in", 2) == 0) {
+                return UnitType::Inches;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "mm", 2) == 0) {
+                return UnitType::Millimeters;
+            }
+            if (memcmp(data, "ms", 2) == 0) {
+                return UnitType::Milliseconds;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "pc", 2) == 0) {
+                return UnitType::Picas;
+            }
+            if (memcmp(data, "pt", 2) == 0) {
+                return UnitType::Points;
+            }
+            if (memcmp(data, "px", 2) == 0) {
+                return UnitType::Pixels;
+            }
+            break;
+        case 'v':
+            if (memcmp(data, "vh", 2) == 0) {
+                return UnitType::ViewportHeight;
+            }
+            if (memcmp(data, "vw", 2) == 0) {
+                return UnitType::ViewportWidth;
+            }
+            break;
+        }
+        break;
+    case 3:
+        switch (data[0]) {
+        case 'd':
+            if (memcmp(data, "deg", 3) == 0) {
+                return UnitType::Degrees;
+            }
+            if (memcmp(data, "dpi", 3) == 0) {
+                return UnitType::DotsPerInch;
+            }
+            break;
+        case 'k':
+            if (memcmp(data, "khz", 3) == 0) {
+                return UnitType::Kilohertz;
+            }
+            break;
+        case 'r':
+            if (memcmp(data, "rad", 3) == 0) {
+                return UnitType::Radians;
+            }
+            if (memcmp(data, "rem", 3) == 0) {
+                return UnitType::Rems;
+            }
+            break;
+        }
+        break;
+    case 4:
+        switch (data[0]) {
+        case 'd':
+            if (memcmp(data, "dpcm", 4) == 0) {
+                return UnitType::DotsPerCentimeter;
+            }
+            if (memcmp(data, "dppx", 4) == 0) {
+                return UnitType::DotsPerPixel;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grad", 4) == 0) {
+                return UnitType::Gradians;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "turn", 4) == 0) {
+                return UnitType::Turns;
+            }
+            break;
+        case 'v':
+            if (memcmp(data, "vmax", 4) == 0) {
+                return UnitType::ViewportMax;
+            }
+            if (memcmp(data, "vmin", 4) == 0) {
+                return UnitType::ViewportMin;
+            }
+            break;
+        }
+        break;
+    }
+    return UnitType::UnknownType;
+}
 }

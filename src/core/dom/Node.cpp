@@ -1132,7 +1132,8 @@ void Node::parseSelector(
     CSSParser parser(document());
     CSSToken* token = parser.makeToken(selectors);
 
-    parser.parseStyleRule(token, nullptr, false, &selectorListContainer, true);
+    GCVector<CSSRule*> nullVec;
+    parser.parseStyleRule(token, nullVec, false, &selectorListContainer, true);
 
     if (selectorListContainer.size() < 1) {
         throw new DOMException(DOMException::SYNTAX_ERR,

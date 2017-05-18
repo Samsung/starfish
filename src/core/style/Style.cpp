@@ -997,6 +997,21 @@ void CSSStyleSheet::sortRulesBySpecificity()
     std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
 }
 
+void CSSStyleSheet::tmpEvaluate(GCVector<CSSRule*>& rules)
+{
+    // TODO: need to evaluate rule's media query
+
+    size_t size = rules.size();
+    for (size_t i = 0; i < size; ++i) {
+        if (rules[i]->isStyleRule()) {
+            m_rules.push_back((CSSStyleRule*)rules[i]);
+        } else {
+            CSSStyleRuleMedia* media = (CSSStyleRuleMedia*)rules[i];
+            tmpEvaluate(media->childRules());
+        }
+    }
+}
+
 String* CSSStyleDeclaration::generateCSSText()
 {
     String* txt = String::emptyString;
@@ -4040,20 +4055,20 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            GCDeque<CSSSelector*>* selectorList =
-                sheet->rules()[j]->selectorList();
+            CSSStyleRule* rule = (CSSStyleRule*)sheet->rules()[j];
+            GCDeque<CSSSelector*>* selectorList = rule->selectorList();
             MatchResult result;
             if (matchSelector(element, selectorList, 0, result) ==
                 Match::SelectorMatches) {
-                userAgentDeclarations.push_back(
-                    sheet->rules()[j]->styleDeclaration());
+                userAgentDeclarations.push_back(rule->styleDeclaration());
             }
         }
     }
 
     sheet = allRules();
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
-        GCDeque<CSSSelector*>* selectorList = sheet->rules()[j]->selectorList();
+        CSSStyleRule* rule = (CSSStyleRule*)sheet->rules()[j];
+        GCDeque<CSSSelector*>* selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, selectorList, 0, result) ==
             Match::SelectorMatches) {
@@ -4061,13 +4076,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                 element->setPseudoElement(result.pseudoType);
                 if (result.pseudoType == pseudoElementType) {
                     ret->setPseudoType(pseudoElementType);
-                    authorDeclarations.push_back(
-                        sheet->rules()[j]->styleDeclaration());
+                    authorDeclarations.push_back(rule->styleDeclaration());
                 }
             } else if (pseudoElementType ==
                        PseudoElementType::PseudoElementNone) {
-                authorDeclarations.push_back(
-                    sheet->rules()[j]->styleDeclaration());
+                authorDeclarations.push_back(rule->styleDeclaration());
             }
         }
     }

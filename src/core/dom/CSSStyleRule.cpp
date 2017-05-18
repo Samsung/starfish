@@ -18,6 +18,7 @@
 #include "core/dom/CSSStyleDeclaration.h"
 #include "core/dom/CSSStyleRule.h"
 #include "core/style/Style.h"
+#include "core/style/MediaQuerySet.h"
 
 namespace StarFish {
 
@@ -38,5 +39,37 @@ CSSStyleRule::CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)
 {
+}
+
+CSSStyleRuleGroup::CSSStyleRuleGroup(RuleType type, GCVector<CSSRule*>& rules)
+    : CSSRule(type)
+{
+    m_childRules.clear();
+    m_childRules.assign(rules.begin(), rules.end());
+}
+CSSStyleRuleGroup::CSSStyleRuleGroup(CSSStyleRuleGroup& o)
+    : CSSRule(o.type())
+{
+    m_childRules.clear();
+    m_childRules.assign(o.childRules().begin(), o.childRules().end());
+}
+
+CSSStyleRuleMedia::CSSStyleRuleMedia(MediaQuerySet* media,
+                                     GCVector<CSSRule*>& rules)
+    : CSSStyleRuleGroup(CSSRule::MEDIA_RULE, rules)
+    , m_mediaQueries(media)
+{
+}
+
+CSSStyleRuleMedia::CSSStyleRuleMedia(CSSStyleRuleMedia& o)
+    : CSSStyleRuleGroup(o)
+{
+    if (o.mediaQueries()) {
+        m_mediaQueries = MediaQuerySet::create();
+        m_mediaQueries->queryVector().clear();
+        m_mediaQueries->queryVector().assign(
+            o.mediaQueries()->queryVector().begin(),
+            o.mediaQueries()->queryVector().end());
+    }
 }
 }

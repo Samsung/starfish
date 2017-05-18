@@ -139,11 +139,13 @@ size_t kLexTableSize = sizeof kLexTable / sizeof(int);
 class CSSToken : public gc {
 public:
     CSSToken(char type, String* value = String::emptyString,
-             String* unit = String::emptyString)
+             String* unit = String::emptyString, float numericValue = 0)
     {
         m_type = type;
         m_value = value;
         m_unit = unit;
+        m_unitType = getUnitType(m_unit->toLower());
+        m_numericValue = numericValue;
     }
 
     bool isNotNull()
@@ -255,11 +257,10 @@ public:
 
     bool isLength()
     {
-        return (isPercentage() || isDimensionOfUnit("cm") ||
-                isDimensionOfUnit("mm") || isDimensionOfUnit("in") ||
-                isDimensionOfUnit("pc") || isDimensionOfUnit("px") ||
-                isDimensionOfUnit("em") || isDimensionOfUnit("ex") ||
-                isDimensionOfUnit("pt"));
+        return (isDimensionOfUnit("cm") || isDimensionOfUnit("mm") ||
+                isDimensionOfUnit("in") || isDimensionOfUnit("pc") ||
+                isDimensionOfUnit("px") || isDimensionOfUnit("em") ||
+                isDimensionOfUnit("ex") || isDimensionOfUnit("pt"));
     }
 
     bool isAngle()
@@ -268,9 +269,48 @@ public:
                 isDimensionOfUnit("grad"));
     }
 
+    UnitType getUnitType(String* unit)
+    {
+        if (unit == nullptr || unit->equals(String::emptyString) ||
+            !unit->isASCIIString()) {
+            return UnitType::UnknownType;
+        }
+
+        return lookupUnitType(unit->utf8Data(), unit->length());
+    }
+
+    char type()
+    {
+        return m_type;
+    }
+
+    String* value()
+    {
+        return m_value;
+    }
+
+    float numericValue()
+    {
+        STARFISH_ASSERT(m_type == NUMBER_TYPE || m_type == PERCENTAGE_TYPE ||
+                        m_type == DIMENSION_TYPE);
+        return m_numericValue;
+    }
+
+    String* unit()
+    {
+        return m_unit;
+    }
+
+    UnitType unitType()
+    {
+        return m_unitType;
+    }
+
     char m_type;
     String* m_value;
     String* m_unit;
+    UnitType m_unitType;
+    float m_numericValue;
 
     static const char NULL_TYPE = 0;
     static const char WHITESPACE_TYPE = 1;
@@ -540,15 +580,20 @@ public:
 
         if (c != -1 && startsWithIdent(c, peek())) { // DIMENSION
             String* unit = gatherIdent(c);
+            float f = String::parseFloat(s);
             s = s->concat(unit);
-            return new CSSToken(CSSToken::DIMENSION_TYPE, s, unit);
+            return new CSSToken(CSSToken::DIMENSION_TYPE, s, unit, f);
         } else if (c == '%') {
+            float f = String::parseFloat(s);
             s = s->concat(String::createUTF32String('%'));
-            return new CSSToken(CSSToken::PERCENTAGE_TYPE, s);
+            return new CSSToken(CSSToken::PERCENTAGE_TYPE, s,
+                                String::emptyString, f);
         } else if (c != -1) {
             pushback();
         }
-        return new CSSToken(CSSToken::NUMBER_TYPE, s);
+
+        float f = String::parseFloat(s);
+        return new CSSToken(CSSToken::NUMBER_TYPE, s, String::emptyString, f);
     }
 
     CSSToken* parseString(int aStop)
@@ -1874,7 +1919,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
     return;
 }
 
-void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
+bool CSSParser::parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
                                bool aIsInsideMediaRule,
                                GCVector<GCDeque<CSSSelector*>*>* sList,
                                bool isQueryingSelector)
@@ -1911,7 +1956,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
         }
     } else if (!validSelector) {
         if (isQueryingSelector) {
-            return;
+            return false;
         } else {
             // selector is invalid so the whole rule is invalid with it
             CSSToken* token = getToken(true, true);
@@ -1923,10 +1968,10 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
             }
             while (true) {
                 if (!token->isNotNull()) {
-                    return;
+                    return false;
                 }
                 if (token->isSymbol('}')) {
-                    return;
+                    return false;
                 } else {
                     parseDeclaration(token, declarations);
                 }
@@ -1941,21 +1986,20 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner,
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                CSSStyleRule* rule = new CSSStyleRule(list[i], declarations);
-                aOwner->addRule(rule);
+                rules.push_back(new CSSStyleRule(list[i], declarations));
             }
         }
-
-        return;
+        return true;
     }
     restoreState();
     String* s = currentToken()->m_value;
-    addUnknownAtRule(aOwner, s);
+    addUnknownAtRule(s);
+
+    return false;
 }
 
-void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
+void CSSParser::addUnknownAtRule(String* aString)
 {
-    // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     GCVector<String*> blocks;
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
@@ -1984,29 +2028,14 @@ void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
         }
         token = getToken(false, false);
     }
-
-    // addUnknownRule(aSheet, aString, currentLine);
 }
-
-/*
-void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString,
-                               size_t aCurrentLine)
-{
-    String* errorMsg = consumeError();
-    // var rule = new jscsspErrorRule(errorMsg);
-    // rule.currentLine = aCurrentLine;
-    // rule.parsedCssText = aString;
-    // rule.parentStyleSheet = aSheet;
-    // aSheet.cssRules.push(rule);
-}
-*/
 
 void CSSParser::reportError(const char* aMsg)
 {
     m_error = String::createASCIIString(aMsg);
 }
 
-bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
+bool CSSParser::parseCharsetRule(GCVector<CSSRule*>& rules)
 {
     CSSToken* token = getToken(false, false);
     String* s = String::emptyString;
@@ -2040,7 +2069,7 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
         }
     }
 
-    addUnknownAtRule(aSheet, s);
+    addUnknownAtRule(s);
     return false;
 }
 
@@ -2055,267 +2084,114 @@ CSSToken* CSSParser::makeToken(String* str)
     return getToken(false, false);
 }
 
-static bool isMediaType(CSSToken* token)
-{
-    // TODO: Add print, speech, tv
-    if (token->isIdent(String::createASCIIString("screen")) ||
-        token->isIdent(String::createASCIIString("all"))) {
-        return true;
-    }
-    return false;
-}
-
-bool CSSParser::parseMediaQuery()
-{
-    CSSToken* token = getToken(true, true);
-    bool isMediumSupported = false;
-
-    if (isMediaType(token)) {
-        isMediumSupported = true;
-        token = getToken(true, true);
-    } else if (token->isIdent(String::createASCIIString("not")) ||
-               token->isIdent(String::createASCIIString("only"))) {
-        token = getToken(true, true);
-        if (isMediaType(token)) {
-            isMediumSupported = true;
-            token = getToken(true, true);
-        }
-    } else {
-        return false;
-    }
-
-    if (isMediumSupported) {
-        if (!token->isNotNull()) {
-            return true;
-        }
-        if (token->isIdent(String::createASCIIString("and"))) {
-            token = getToken(true, true);
-        } else if (!token->isSymbol('{')) {
-            return false;
-        }
-    }
-
-    while (token->isSymbol('(')) {
-        token = getToken(true, true);
-        if (token->isIdent() &&
-            lookupCSSMediaQueryConstraints(token->m_value->utf8Data(),
-                                           token->m_value->length())) {
-            token = getToken(true, true);
-            if (token->isSymbol(':')) {
-                token = getToken(true, true);
-                while (!token->isSymbol(')')) {
-                    token = getToken(true, true);
-                }
-
-                if (token->isSymbol(')')) {
-                    token = getToken(true, true);
-
-                    if (token->isNotNull()) {
-                        if (token->isIdent(String::createASCIIString("and"))) {
-                            token = getToken(true, true);
-                        } else if (!token->isSymbol('{')) {
-                            return false;
-                        }
-                    } else {
-                        return true;
-                    }
-                } else {
-                    return false;
-                }
-            } else if (token->isSymbol(')')) {
-                token = getToken(true, true);
-                if (token->isNotNull()) {
-                    if (token->isIdent(String::createASCIIString("and"))) {
-                        token = getToken(true, true);
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return true;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    return true;
-};
-
-bool CSSParser::parseMediaRule(CSSToken* aToken, CSSStyleSheet* aSheet)
+CSSStyleRuleMedia* CSSParser::parseMediaRule()
 {
     preserveState();
 
     CSSToken* token = getToken(true, true);
-    bool foundMedia = false;
 
     bool hasMediaRule = false;
-    while (token->isNotNull()) {
-        ungetToken();
-        bool isMediaQuery = parseMediaQuery();
-        token = currentToken();
+    MediaQuerySet* mediaQuerySet;
+    if (token->isNotNull()) {
+        mediaQuerySet = parseMediaQuery();
+        hasMediaRule = true;
+    } else {
+        return nullptr;
+    }
 
-        if (isMediaQuery) {
-            foundMedia = true;
-            hasMediaRule = true;
-            if (!token->isSymbol(',')) {
-                if (token->isSymbol('{')) {
-                    break;
-                } else {
-                    // error
-                    token->m_type = CSSToken::NULL_TYPE;
-                    break;
-                }
-            }
-        } else if (token->isSymbol('{')) {
-            break;
-        } else if (foundMedia) {
-            // not a media list
-            token->m_type = CSSToken::NULL_TYPE;
-            break;
-        }
-
-        token = getToken(true, true);
+    token = currentToken();
+    if (token->isSymbol('}') || token->isSymbol(';')) {
+        return nullptr;
     }
 
     bool valid = false;
+    GCVector<CSSRule*> rootRule;
     if (token->isSymbol('{') && hasMediaRule) {
         token = getToken(true, false);
-        while (token->isNotNull()) {
-            if (token->isComment()) {
-                // if (this.mPreserveComments) {
-                //     s += " " + token.value;
-                //     var comment = new jscsspComment();
-                //     comment.parsedCssText = token.value;
-                //     mediaRule.cssRules.push(comment);
-                // }
-            } else if (token->isSymbol('}')) {
-                valid = true;
-                break;
-            } else {
-                parseStyleRule(token, aSheet, true, nullptr, false);
-            }
-            token = getToken(true, false);
+        if (token->isNotNull()) {
+            parseRules(token, rootRule);
+            valid = rootRule.size() > 0;
+        } else {
+            return nullptr;
         }
     }
 
     if (valid) {
         forgetState();
-        return true;
+        return new CSSStyleRuleMedia(mediaQuerySet, rootRule);
     }
     restoreState();
-    return false;
+    return nullptr;
 }
 
 void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
 {
-    /* m_lookAhead = nullptr;
-    m_token = nullptr;
-    m_preserveWS = false;
-    m_preserveComments = false;
-    m_scanner = new CSSScanner(sourceString);
-
-    CSSToken* token = getToken(false, false);
-    */
     // @charset can only appear at first char of the stylesheet
     CSSToken* token = makeToken(sourceString);
     if (!token->isNotNull()) {
         return;
     }
+
+    GCVector<CSSRule*> rules;
     if (token->isAtRule(String::createASCIIString("@charset"))) {
         ungetToken();
-        parseCharsetRule(target);
+        parseCharsetRule(rules);
         token = getToken(false, false);
     }
+    parseRules(token, rules);
 
-    // bool foundStyleRules = false;
-    // bool foundImportRules = false;
-    // bool foundNameSpaceRules = false;
+    for (size_t i = 0; i < rules.size(); ++i) {
+        target->addRule(rules[i]);
+    }
+}
 
+void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule)
+{
+    unsigned nestingLevel = 1;
     while (true) {
         if (!token->isNotNull()) {
             break;
         }
+
+        if (token->isSymbol('{')) {
+            nestingLevel++;
+        } else if (token->isSymbol('}')) {
+            if (--nestingLevel == 0) {
+                break;
+            }
+        }
+
         if (token->isWhiteSpace()) {
-            // if (aTryToPreserveWhitespaces) {
-            //     this.addWhitespace(sheet, token.value);
-            // }
         } else if (token->isComment()) {
-            // if (this.mPreserveComments) {
-            //     this.addComment(sheet, token.value);
-            // }
         } else if (token->isAtRule()) {
             if (token->isAtRule(String::createASCIIString("@media"))) {
-                if (!parseMediaRule(token, target)) {
-                    addUnknownAtRule(target, token->m_value);
+                CSSStyleRuleMedia* rule = parseMediaRule();
+                if (rule) {
+                    rootRule.push_back(rule);
+                } else {
+                    addUnknownAtRule(token->m_value);
                 }
             } else {
-                addUnknownAtRule(target, token->m_value);
+                addUnknownAtRule(token->m_value);
             }
             /*
-            if (token.isAtRule("@variables")) {
-                if (!foundImportRules && !foundStyleRules) {
-                    this.parseVariablesRule(token, sheet);
-                } else {
-                    this.reportError(kVARIABLES_RULE_POSITION);
-                    this.addUnknownAtRule(sheet, token.value);
-                }
+            else if (token.isAtRule("@variables")) {
             } else if (token.isAtRule("@import")) {
-                // @import rules MUST occur before all style and namespace
-                // rules
-                if (!foundStyleRules && !foundNameSpaceRules) {
-                    foundImportRules = this.parseImportRule(token, sheet);
-                } else {
-                    this.reportError(kIMPORT_RULE_POSITION);
-                    this.addUnknownAtRule(sheet, token.value);
-                }
             } else if (token.isAtRule("@namespace")) {
-                // @namespace rules MUST occur before all style rule and
-                // after all @import rules
-                if (!foundStyleRules) {
-                    foundNameSpaceRules = this.parseNamespaceRule(token, sheet);
-                } else {
-                    this.reportError(kNAMESPACE_RULE_POSITION);
-                    this.addUnknownAtRule(sheet, token.value);
-                }
             } else if (token.isAtRule("@font-face")) {
-                if (this.parseFontFaceRule(token, sheet)) {
-                    foundStyleRules = true;
-                } else {
-                    this.addUnknownAtRule(sheet, token.value);
-                }
             } else if (token.isAtRule("@page")) {
-                if (this.parsePageRule(token, sheet)) {
-                    foundStyleRules = true;
-                } else {
-                    this.addUnknownAtRule(sheet, token.value);
-                }
-            } else if (token.isAtRule("@media")) {
-                if (this.parseMediaRule(token, sheet)) {
-                    foundStyleRules = true;
-                } else {
-                    this.addUnknownAtRule(sheet, token.value);
-                }
             } else if (token.isAtRule("@keyframes")) {
-                if (!this.parseKeyframesRule(token, sheet)) {
-                    this.addUnknownAtRule(sheet, token.value);
-                }
             } else if (token.isAtRule("@charset")) {
-                this.reportError(kCHARSET_RULE_CHARSET_SOF);
-                this.addUnknownAtRule(sheet, token.value);
             } else {
-                this.reportError(kUNKNOWN_AT_RULE);
-                this.addUnknownAtRule(sheet, token.value);
             } */
         } else {
             // plain style rules
-            parseStyleRule(token, target, false, nullptr, false);
-            // String* ruleText = parseStyleRule(token, sheet, false);
-            // if (ruleText) {
-            //     foundStyleRules = true;
-            // }
+            GCVector<CSSRule*> rules;
+            if (parseStyleRule(token, rules, false, nullptr, false)) {
+                rootRule.insert(rootRule.end(), rules.begin(), rules.end());
+            }
         }
+
         token = getToken(false, false);
     }
 }
@@ -2338,5 +2214,564 @@ void CSSParser::parseStyleDeclaration(String* str,
         parseDeclaration(token, declarations);
         token = getToken(true, false);
     }
+}
+
+const CSSParser::State CSSParser::ReadRestrictor = &CSSParser::readRestrictor;
+const CSSParser::State CSSParser::ReadMediaNot = &CSSParser::readMediaNot;
+const CSSParser::State CSSParser::ReadMediaType = &CSSParser::readMediaType;
+const CSSParser::State CSSParser::ReadAnd = &CSSParser::readAnd;
+const CSSParser::State CSSParser::ReadFeatureStart =
+    &CSSParser::readFeatureStart;
+const CSSParser::State CSSParser::ReadFeature = &CSSParser::readFeature;
+const CSSParser::State CSSParser::ReadFeatureColon =
+    &CSSParser::readFeatureColon;
+const CSSParser::State CSSParser::ReadFeatureValue =
+    &CSSParser::readFeatureValue;
+const CSSParser::State CSSParser::ReadFeatureEnd = &CSSParser::readFeatureEnd;
+const CSSParser::State CSSParser::SkipUntilComma = &CSSParser::skipUntilComma;
+const CSSParser::State CSSParser::SkipUntilBlockEnd =
+    &CSSParser::skipUntilBlockEnd;
+const CSSParser::State CSSParser::Done = &CSSParser::done;
+
+void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
+{
+    m_parserType = parserType;
+    m_querySet = MediaQuerySet::create();
+    if (parserType == MediaQuerySetParser)
+        m_state = &CSSParser::readRestrictor;
+    else // MediaConditionParser
+        m_state = &CSSParser::readMediaNot;
+}
+
+void CSSParser::handleBlocks(CSSToken* token)
+{
+    if (!token->isSymbol('('))
+        m_state = SkipUntilBlockEnd;
+}
+
+void CSSParser::processToken(CSSToken* token)
+{
+    // Call the function that handles current state
+    if (!token->isWhiteSpace()) {
+        ((this)->*(m_state))(token);
+    }
+}
+
+MediaQuerySet* CSSParser::parseMediaQuery()
+{
+    initParseMediaQuery(MediaQuerySetParser);
+
+    CSSToken* token = currentToken();
+    while (!token->isSymbol('{') && m_state != Done) {
+        processToken(token);
+        token = getToken(false, false);
+    }
+
+    if (m_state != ReadAnd && m_state != ReadRestrictor && m_state != Done &&
+        m_state != ReadMediaNot)
+        m_querySet->addMediaQuery(MediaQuery::createNotAll());
+    else if (m_mediaQueryData.currentMediaQueryChanged())
+        m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
+
+    return m_querySet;
+}
+
+void CSSParser::setStateAndRestrict(State state,
+                                    MediaQuery::RestrictorType restrictor)
+{
+    m_mediaQueryData.setRestrictor(restrictor);
+    m_state = state;
+}
+
+// State machine member functions start here
+void CSSParser::readRestrictor(CSSToken* token)
+{
+    readMediaType(token);
+}
+
+void CSSParser::readMediaNot(CSSToken* token)
+{
+    if (token->isIdent() && token->m_value->equalsWithoutCase("not"))
+        setStateAndRestrict(ReadFeatureStart, MediaQuery::Not);
+    else
+        readFeatureStart(token);
+}
+
+static bool isRestrictorOrLogicalOperator(CSSToken* token)
+{
+    String* val = token->m_value;
+    return val->equalsWithoutCase("not") || val->equalsWithoutCase("and") ||
+           val->equalsWithoutCase("or") || val->equalsWithoutCase("only");
+}
+
+void CSSParser::readMediaType(CSSToken* token)
+{
+    if (token->isSymbol('(')) {
+        if (m_mediaQueryData.restrictor() != MediaQuery::None)
+            m_state = SkipUntilComma;
+        else
+            m_state = ReadFeature;
+    } else if (token->isIdent()) {
+        if (m_state == ReadRestrictor &&
+            token->m_value->equalsWithoutCase("not")) {
+            setStateAndRestrict(ReadMediaType, MediaQuery::Not);
+        } else if (m_state == ReadRestrictor &&
+                   token->m_value->equalsWithoutCase("only")) {
+            setStateAndRestrict(ReadMediaType, MediaQuery::Only);
+        } else if (m_mediaQueryData.restrictor() != MediaQuery::None &&
+                   isRestrictorOrLogicalOperator(token)) {
+            m_state = SkipUntilComma;
+        } else {
+            m_mediaQueryData.setMediaType(token->m_value);
+            m_state = ReadAnd;
+        }
+    } else if ((token->isSymbol('}') || token->isSymbol(';')) &&
+               (!m_querySet->queryVector().size() ||
+                m_state != ReadRestrictor)) {
+        m_state = Done;
+    } else {
+        m_state = SkipUntilComma;
+        if (token->isSymbol(','))
+            skipUntilComma(token);
+    }
+}
+
+void CSSParser::readAnd(CSSToken* token)
+{
+    if (token->isIdent() && token->m_value->equalsWithoutCase("and")) {
+        m_state = ReadFeatureStart;
+    } else if (token->isSymbol(',') && m_parserType != MediaConditionParser) {
+        m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
+        m_state = ReadRestrictor;
+    } else if (token->isSymbol('}') || token->isSymbol(';')) {
+        m_state = Done;
+    } else {
+        m_state = SkipUntilComma;
+    }
+}
+
+void CSSParser::readFeatureStart(CSSToken* token)
+{
+    if (token->isSymbol('('))
+        m_state = ReadFeature;
+    else
+        m_state = SkipUntilComma;
+}
+
+void CSSParser::readFeature(CSSToken* token)
+{
+    if (token->isIdent()) {
+        m_mediaQueryData.setMediaFeature(token->m_value);
+        m_state = ReadFeatureColon;
+    } else {
+        m_state = SkipUntilComma;
+    }
+}
+
+void CSSParser::readFeatureColon(CSSToken* token)
+{
+    if (token->isSymbol(':'))
+        m_state = ReadFeatureValue;
+    else if (token->isSymbol(')') || token->isSymbol('}') ||
+             token->isSymbol(';'))
+        readFeatureEnd(token);
+    else
+        m_state = SkipUntilBlockEnd;
+}
+
+void CSSParser::readFeatureValue(CSSToken* token)
+{
+    if (token->isDimension() &&
+        !(token->isNumber() || token->isPercentage() || token->isLength() ||
+          token->isAngle())) {
+        m_state = SkipUntilComma;
+    } else {
+        if (m_mediaQueryData.tryAddParserToken(token))
+            m_state = ReadFeatureEnd;
+        else
+            m_state = SkipUntilBlockEnd;
+    }
+}
+
+void CSSParser::readFeatureEnd(CSSToken* token)
+{
+    if (token->isSymbol(')') || token->isSymbol('}') || token->isSymbol(';')) {
+        if (m_mediaQueryData.addExpression())
+            m_state = ReadAnd;
+        else
+            m_state = SkipUntilComma;
+    } else if (token->isSymbol('/')) {
+        m_mediaQueryData.tryAddParserToken(token);
+        m_state = ReadFeatureValue;
+    } else {
+        m_state = SkipUntilBlockEnd;
+    }
+}
+
+void CSSParser::skipUntilComma(CSSToken* token)
+{
+    if ((token->isSymbol(',')) || token->isSymbol('}') ||
+        token->isSymbol(';')) {
+        m_state = ReadRestrictor;
+        m_mediaQueryData.clear();
+        m_querySet->addMediaQuery(MediaQuery::createNotAll());
+    }
+}
+
+void CSSParser::skipUntilBlockEnd(CSSToken* token)
+{
+    if (token->isSymbol('}') || token->isSymbol(';'))
+        m_state = SkipUntilComma;
+}
+
+void CSSParser::done(CSSToken* token)
+{
+}
+
+MediaQueryData::MediaQueryData()
+    : m_restrictor(MediaQuery::None)
+    , m_mediaType(String::createASCIIString("all"))
+    , m_mediaFeature(String::emptyString)
+    , m_mediaTypeSet(false)
+{
+}
+
+void MediaQueryData::clear()
+{
+    m_restrictor = MediaQuery::None;
+    m_mediaType = String::createASCIIString("all");
+    m_mediaTypeSet = false;
+    m_mediaFeature = String::emptyString;
+    m_valueList.clear();
+    m_expressions.clear();
+}
+
+bool MediaQueryData::tryAddParserToken(CSSToken* token)
+{
+    if (token->isNumber() || token->isPercentage() || token->isDimension() ||
+        token->isSymbol() || token->isIdent()) {
+        m_valueList.push_back(token);
+        return true;
+    }
+
+    return false;
+}
+
+void MediaQueryData::setMediaType(String* mediaType)
+{
+    m_mediaType = mediaType;
+    m_mediaTypeSet = true;
+}
+
+MediaQuery* MediaQueryData::mediaQuery()
+{
+    MediaQuery* mediaQuery =
+        MediaQuery::create(m_restrictor, m_mediaType, std::move(m_expressions));
+    clear();
+    return mediaQuery;
+}
+
+bool MediaQueryData::addExpression()
+{
+    MediaQueryExp* expression =
+        MediaQueryExp::createIfValid(m_mediaFeature, m_valueList);
+    bool isValid = !!expression;
+    m_expressions.push_back(expression);
+    m_valueList.clear();
+    return isValid;
+}
+
+const String* devicePixelRatioMediaFeature =
+    String::createASCIIString("-webkit-device-pixel-ratio");
+const String* maxDevicePixelRatioMediaFeature =
+    String::createASCIIString("-webkit-max-device-pixel-ratio");
+const String* minDevicePixelRatioMediaFeature =
+    String::createASCIIString("-webkit-min-device-pixel-ratio");
+const String* transform3dMediaFeature =
+    String::createASCIIString("-webkit-transform-3d");
+const String* aspectRatioMediaFeature =
+    String::createASCIIString("aspect-ratio");
+const String* colorMediaFeature = String::createASCIIString("color");
+const String* colorIndexMediaFeature = String::createASCIIString("color-index");
+const String* deviceAspectRatioMediaFeature =
+    String::createASCIIString("device-aspect-ratio");
+const String* deviceHeightMediaFeature =
+    String::createASCIIString("device-height");
+const String* deviceWidthMediaFeature =
+    String::createASCIIString("device-width");
+const String* displayModeMediaFeature =
+    String::createASCIIString("display-mode");
+const String* gridMediaFeature = String::createASCIIString("grid");
+const String* heightMediaFeature = String::createASCIIString("height");
+const String* maxAspectRatioMediaFeature =
+    String::createASCIIString("max-aspect-ratio");
+const String* maxColorMediaFeature = String::createASCIIString("max-color");
+const String* maxColorIndexMediaFeature =
+    String::createASCIIString("max-color-index");
+const String* maxDeviceAspectRatioMediaFeature =
+    String::createASCIIString("max-device-aspect-ratio");
+const String* maxDeviceHeightMediaFeature =
+    String::createASCIIString("max-device-height");
+const String* maxDeviceWidthMediaFeature =
+    String::createASCIIString("max-device-width");
+const String* maxHeightMediaFeature = String::createASCIIString("max-height");
+const String* maxMonochromeMediaFeature =
+    String::createASCIIString("max-monochrome");
+const String* maxResolutionMediaFeature =
+    String::createASCIIString("max-resolution");
+const String* maxWidthMediaFeature = String::createASCIIString("max-width");
+const String* minAspectRatioMediaFeature =
+    String::createASCIIString("min-aspect-ratio");
+const String* minColorMediaFeature = String::createASCIIString("min-color");
+const String* minColorIndexMediaFeature =
+    String::createASCIIString("min-color-index");
+const String* minDeviceAspectRatioMediaFeature =
+    String::createASCIIString("min-device-aspect-ratio");
+const String* minDeviceHeightMediaFeature =
+    String::createASCIIString("min-device-height");
+const String* minDeviceWidthMediaFeature =
+    String::createASCIIString("min-device-width");
+const String* minHeightMediaFeature = String::createASCIIString("min-height");
+const String* minMonochromeMediaFeature =
+    String::createASCIIString("min-monochrome");
+const String* minResolutionMediaFeature =
+    String::createASCIIString("min-resolution");
+const String* minWidthMediaFeature = String::createASCIIString("min-width");
+const String* monochromeMediaFeature = String::createASCIIString("monochrome");
+const String* orientationMediaFeature =
+    String::createASCIIString("orientation");
+const String* resolutionMediaFeature = String::createASCIIString("resolution");
+const String* scanMediaFeature = String::createASCIIString("scan");
+const String* widthMediaFeature = String::createASCIIString("width");
+
+static inline bool featureWithoutValue(String* mediaFeature)
+{
+    // Media features that are prefixed by min/max cannot be used without a
+    // value.
+    return mediaFeature->equals(monochromeMediaFeature) ||
+           mediaFeature->equals(colorMediaFeature) ||
+           mediaFeature->equals(colorIndexMediaFeature) ||
+           mediaFeature->equals(gridMediaFeature) ||
+           mediaFeature->equals(heightMediaFeature) ||
+           mediaFeature->equals(widthMediaFeature) ||
+           mediaFeature->equals(deviceHeightMediaFeature) ||
+           mediaFeature->equals(deviceWidthMediaFeature) ||
+           mediaFeature->equals(orientationMediaFeature) ||
+           mediaFeature->equals(aspectRatioMediaFeature) ||
+           mediaFeature->equals(deviceAspectRatioMediaFeature) ||
+           mediaFeature->equals(transform3dMediaFeature) ||
+           mediaFeature->equals(devicePixelRatioMediaFeature) ||
+           mediaFeature->equals(resolutionMediaFeature) ||
+           mediaFeature->equals(displayModeMediaFeature) ||
+           mediaFeature->equals(scanMediaFeature);
+}
+
+static inline bool featureWithValidIdent(const String* mediaFeature,
+                                         const String* ident)
+{
+    if (mediaFeature->equals(displayModeMediaFeature)) {
+        return ident->equalsWithoutCase(
+                   String::createASCIIString("fullscreen")) ||
+               ident->equalsWithoutCase(
+                   String::createASCIIString("standalone")) ||
+               ident->equalsWithoutCase(
+                   String::createASCIIString("minimalui")) ||
+               ident->equalsWithoutCase(String::createASCIIString("browser"));
+    }
+
+    if (mediaFeature->equals(orientationMediaFeature)) {
+        return ident->equalsWithoutCase(
+                   String::createASCIIString("portrait")) ||
+               ident->equalsWithoutCase(String::createASCIIString("landscape"));
+    }
+
+    if (mediaFeature->equals(scanMediaFeature)) {
+        return ident->equalsWithoutCase(
+                   String::createASCIIString("interlace")) ||
+               ident->equalsWithoutCase(
+                   String::createASCIIString("progressive"));
+    }
+
+    return false;
+}
+
+static inline bool featureWithValidPositiveLength(String* mediaFeature,
+                                                  CSSToken* token)
+{
+    if (!token->isLength() ||
+        (token->isNumber() && token->numericValue() == 0) ||
+        token->numericValue() < 0) {
+        return false;
+    }
+
+    return mediaFeature->equals(heightMediaFeature) ||
+           mediaFeature->equals(maxHeightMediaFeature) ||
+           mediaFeature->equals(minHeightMediaFeature) ||
+           mediaFeature->equals(widthMediaFeature) ||
+           mediaFeature->equals(maxWidthMediaFeature) ||
+           mediaFeature->equals(minWidthMediaFeature) ||
+           mediaFeature->equals(deviceHeightMediaFeature) ||
+           mediaFeature->equals(maxDeviceHeightMediaFeature) ||
+           mediaFeature->equals(minDeviceHeightMediaFeature) ||
+           mediaFeature->equals(deviceWidthMediaFeature) ||
+           mediaFeature->equals(minDeviceWidthMediaFeature) ||
+           mediaFeature->equals(maxDeviceWidthMediaFeature);
+}
+
+static inline bool featureWithValidDensity(const String* mediaFeature,
+                                           CSSToken* token)
+{
+    if (token->unitType() != UnitType::DotsPerPixel &&
+        token->unitType() != UnitType::DotsPerInch &&
+        token->unitType() != UnitType::DotsPerCentimeter) {
+        return false;
+    }
+
+    return mediaFeature->equals(resolutionMediaFeature) ||
+           mediaFeature->equals(minResolutionMediaFeature) ||
+           mediaFeature->equals(maxResolutionMediaFeature);
+}
+
+static inline bool featureWithPositiveInteger(const String* mediaFeature,
+                                              CSSToken* token)
+{
+    if (token->value()->contains(".") || token->numericValue() < 0) {
+        return false;
+    }
+
+    return mediaFeature->equals(colorMediaFeature) ||
+           mediaFeature->equals(maxColorMediaFeature) ||
+           mediaFeature->equals(minColorMediaFeature) ||
+           mediaFeature->equals(colorIndexMediaFeature) ||
+           mediaFeature->equals(maxColorIndexMediaFeature) ||
+           mediaFeature->equals(minColorIndexMediaFeature) ||
+           mediaFeature->equals(monochromeMediaFeature) ||
+           mediaFeature->equals(maxMonochromeMediaFeature) ||
+           mediaFeature->equals(minMonochromeMediaFeature);
+}
+
+static inline bool featureWithPositiveNumber(const String* mediaFeature,
+                                             CSSToken* token)
+{
+    if (!token->isNumber() || token->numericValue() < 0) {
+        return false;
+    }
+
+    return mediaFeature->equals(transform3dMediaFeature) ||
+           mediaFeature->equals(devicePixelRatioMediaFeature) ||
+           mediaFeature->equals(maxDevicePixelRatioMediaFeature) ||
+           mediaFeature->equals(minDevicePixelRatioMediaFeature);
+}
+
+static inline bool featureWithZeroOrOne(const String* mediaFeature,
+                                        CSSToken* token)
+{
+    if (token->value()->contains(".") ||
+        !(token->numericValue() == 1 || token->numericValue() == 0)) {
+        return false;
+    }
+
+    return mediaFeature->equals(gridMediaFeature);
+}
+
+static inline bool featureWithAspectRatio(const String* mediaFeature)
+{
+    return mediaFeature->equals(aspectRatioMediaFeature) ||
+           mediaFeature->equals(deviceAspectRatioMediaFeature) ||
+           mediaFeature->equals(minAspectRatioMediaFeature) ||
+           mediaFeature->equals(maxAspectRatioMediaFeature) ||
+           mediaFeature->equals(minDeviceAspectRatioMediaFeature) ||
+           mediaFeature->equals(maxDeviceAspectRatioMediaFeature);
+}
+
+MediaQueryExp::MediaQueryExp(MediaQueryExp& other)
+    : m_mediaFeature(other.mediaFeature())
+    , m_expValue(other.expValue())
+{
+}
+
+MediaQueryExp::MediaQueryExp(String* mediaFeature, MediaQueryExpValue expValue)
+    : m_mediaFeature(mediaFeature)
+    , m_expValue(expValue)
+{
+}
+
+MediaQueryExp* MediaQueryExp::createIfValid(
+    String* mediaFeature, const GCVector<CSSToken*>& tokenList)
+{
+    STARFISH_ASSERT(mediaFeature);
+
+    MediaQueryExpValue expValue;
+    String* lowerMediaFeature = mediaFeature->toLower();
+
+    // Create value for media query expression that must have 1 or more values.
+    if (tokenList.size() == 0 && featureWithoutValue(lowerMediaFeature)) {
+        // Valid, creates a MediaQueryExp with an 'invalid' MediaQueryExpValue
+    } else if (tokenList.size() == 1) {
+        CSSToken* token = tokenList.front();
+
+        if (token->isIdent()) {
+            String* ident = token->value();
+            if (!featureWithValidIdent(lowerMediaFeature, ident)) {
+                return nullptr;
+            }
+            expValue.id = ident;
+            expValue.unit = UnitType::ValueID;
+            expValue.isID = true;
+        } else if (token->isNumber() || token->isPercentage() ||
+                   token->isDimension()) {
+            // Check for numeric token types since it is only safe for these
+            // types to call numericValue.
+            if (featureWithValidDensity(lowerMediaFeature, token) ||
+                featureWithValidPositiveLength(lowerMediaFeature, token)) {
+                // Media features that must have non-negative <density>, ie.
+                // dppx, dpi or dpcm,
+                // or Media features that must have non-negative <length> or
+                // number value.
+                expValue.value = token->numericValue();
+                expValue.unit = token->unitType();
+                expValue.isValue = true;
+            } else if (featureWithPositiveInteger(lowerMediaFeature, token) ||
+                       featureWithPositiveNumber(lowerMediaFeature, token) ||
+                       featureWithZeroOrOne(lowerMediaFeature, token)) {
+                // Media features that must have non-negative integer value,
+                // or media features that must have non-negative number value,
+                // or media features that must have (0|1) value.
+                expValue.value = token->numericValue();
+                expValue.unit = UnitType::Number;
+                expValue.isValue = true;
+            } else {
+                return nullptr;
+            }
+        } else {
+            return nullptr;
+        }
+    } else if (tokenList.size() == 3 &&
+               featureWithAspectRatio(lowerMediaFeature)) {
+        // <ratio> is supposed to allow whitespace around the '/'
+        // Applicable to device-aspect-ratio and aspect-ratio.
+        CSSToken* numerator = tokenList[0];
+        CSSToken* delimiter = tokenList[1];
+        CSSToken* denominator = tokenList[2];
+        if (!delimiter->isSymbol() || !delimiter->isSymbol('/')) {
+            return nullptr;
+        }
+        if (!numerator->isNumber() || numerator->numericValue() <= 0 ||
+            numerator->value()->contains(".")) {
+            return nullptr;
+        }
+        if (!denominator->isNumber() || denominator->numericValue() <= 0 ||
+            denominator->value()->contains(".")) {
+            return nullptr;
+        }
+
+        expValue.numerator = (unsigned)numerator->numericValue();
+        expValue.denominator = (unsigned)denominator->numericValue();
+        expValue.isRatio = true;
+    } else {
+        return nullptr;
+    }
+
+    return new MediaQueryExp(lowerMediaFeature, expValue);
 }
 }
