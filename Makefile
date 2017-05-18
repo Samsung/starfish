@@ -156,7 +156,7 @@ ifeq ($(BINDING_GENERATOR_SUPPORT), true)
   AUTOGEN_DEPENDENCY+=$(shell find src/ -type f -name *.idl)
   ifneq ($(ARCH),)
     GEN_JSBINGING_RESULTS:=$(shell mkdir -p $(AUTOGEN_DIR_TMP) && ./binding_generator/scripts/starfish_code_generator.py src/ $(AUTOGEN_DIR_TMP))
-    AUTOGEN_SRC+=$(shell find $(AUTOGEN_DIR_TMP) -type f -name *.cpp | sed 's/out\//src\//')
+    AUTOGEN_SRC:=$(shell find $(AUTOGEN_DIR_TMP) -type f -name *.cpp | sed 's/out\//src\//')
   endif
 endif
 
@@ -373,7 +373,7 @@ SRC=
 SRC_CC=
 SRC += $(AUTOGEN_SRC)
 SRC += $(foreach dir, src , $(wildcard $(dir)/*.cpp))
-SRC += $(foreach dir, src/binding , $(wildcard $(dir)/*.cpp))
+SRC += $(filter-out $(AUTOGEN_SRC), $(wildcard src/binding/*.cpp))
 SRC += $(foreach dir, src/dom , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/extra , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/parser , $(wildcard $(dir)/*.cpp))
