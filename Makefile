@@ -44,6 +44,9 @@ DOMPARSER_SUPPORT=false
 # WASU
 WASU_SUPPORT=false
 
+# binding generator
+BINDING_GENERATOR_SUPPORT=true
+
 $(info goal... $(MAKECMDGOALS))
 
 ifneq (,$(findstring x86,$(MAKECMDGOALS)))
@@ -143,15 +146,18 @@ ifneq (,$(findstring tizen,$(HOST)))
   endif
 endif
 
-ifeq ($(ARCH),)
-  # For test targets, skip generating
-  SKIP_GEN_JSBINDING=true
-endif
-SKIP_GEN_JSBINDING?=false
+AUTOGEN_SRC=
+AUTOGEN_DEPENDENCY=
+AUTOGEN_DIR_TMP=out/binding
+AUTOGEN_DIR=src/binding
 
-ifeq ($(SKIP_GEN_JSBINDING), false)
-  GEN_JSBINGING_RESULTS:=$(shell ./binding_generator/scripts/starfish_code_generator.py src/)
-  # $(info $(GEN_JSBINGING_RESULTS))
+ifeq ($(BINDING_GENERATOR_SUPPORT), true)
+  AUTOGEN_DEPENDENCY+=.git/modules/binding_generator/HEAD
+  AUTOGEN_DEPENDENCY+=$(shell find src/ -type f -name *.idl)
+  ifneq ($(ARCH),)
+    GEN_JSBINGING_RESULTS:=$(shell mkdir -p $(AUTOGEN_DIR_TMP) && ./binding_generator/scripts/starfish_code_generator.py src/ $(AUTOGEN_DIR_TMP))
+    AUTOGEN_SRC+=$(shell find $(AUTOGEN_DIR_TMP) -type f -name *.cpp | sed 's/out\//src\//')
+  endif
 endif
 
 $(info host... $(HOST))
@@ -365,6 +371,7 @@ endif
 
 SRC=
 SRC_CC=
+SRC += $(AUTOGEN_SRC)
 SRC += $(foreach dir, src , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom , $(wildcard $(dir)/*.cpp))
@@ -697,6 +704,12 @@ clean:
 	rm -rf out
 	find src -type f -name "*Binding.cpp" ! -name "*CustomBinding.cpp" | xargs -r rm
 
+$(AUTOGEN_SRC): $(AUTOGEN_DEPENDENCY)
+	@echo "[GEN] $@"
+	@mkdir -p $(AUTOGEN_DIR)
+	@mv $(@:src/%=out/%) $@
+
+.SECONDARY: $(AUTOGEN_SRC)
 
 ################################################################################
 ################################################################################

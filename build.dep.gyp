@@ -101,22 +101,12 @@
                     ],
                     'inputs': [
                         '.git/modules/binding_generator/HEAD',
-                        '<!@(find src/binding -name *.idl)',
-                        '<!@(find src/animation -name *.idl)',
-                        '<!@(find src/dom -name *.idl)',
-                        '<!@(find src/extra -name *.idl)',
-                        '<!@(find src/inspector -name *.idl)',
-                        '<!@(find src/layout -name *.idl)',
-                        '<!@(find src/loader -name *.idl)',
-                        '<!@(find src/platform -name *.idl)',
-                        '<!@(find src/public -name *.idl)',
-                        '<!@(find src/style -name *.idl)',
-                        '<!@(find src/util -name *.idl)',
+                        '<!@(find src -name *.idl)',
                     ],
                     'outputs': [
-                        '<!@(find src/binding -name *Binding.cpp ! -name *CustomBinding.cpp)'
+                        '<!@(find src/binding -name *Binding.cpp)'
                     ],
-                    'action': ['python', 'binding_generator/scripts/starfish_code_generator.py', 'src/'],
+                    'action': ['python', 'binding_generator/scripts/starfish_code_generator.py', 'src/', 'src/binding/'],
                 },
             ],
         },

@@ -15,7 +15,7 @@
             'component%': 'static_library',
         },
         'component%':'<(component)',
-        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/)',]
+        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',]
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
