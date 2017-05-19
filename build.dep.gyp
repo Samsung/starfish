@@ -91,15 +91,11 @@
             'type': 'none',
             'dependencies': [
             ],
-            'sources': [
-            ],
             'actions': [
                 {
                     'action_name': 'generate_code',
                     'inputs': [
-                       'binding_generator/scripts/starfish_code_generator.py',
-                    ],
-                    'inputs': [
+                        'binding_generator/scripts/starfish_code_generator.py',
                         '.git/modules/binding_generator/HEAD',
                         '<!@(find src -name *.idl)',
                     ],
@@ -186,20 +182,13 @@
         {
             'target_name': 'escargot.x64.release',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install escargot',
-                    'inputs': [
+                    'files': [
                         'third_party/escargot/out/linux/x64/interpreter/release/libescargot.a',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/release/libescargot.a',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/release && cp -r <(_inputs) <(PRODUCT_DIR)/lib/release',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/release',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -216,20 +205,13 @@
         {
             'target_name': 'escargot.x64.debug',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install escargot',
-                    'inputs': [
+                    'files': [
                         'third_party/escargot/out/linux/x64/interpreter/debug/libescargot.a',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/debug/libescargot.a',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/debug && cp -r <(_inputs) <(PRODUCT_DIR)/lib/debug',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -246,10 +228,9 @@
         {
             'target_name': 'av.x64.release',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install libav',
-                    'inputs': [
+                    'files': [
                         'third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so',
                         'third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56',
                         'third_party/libav/out/linux/x64/release/libavformat/libavformat.so',
@@ -257,19 +238,8 @@
                         'third_party/libav/out/linux/x64/release/libavutil/libavutil.so',
                         'third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/release/libavcodec.so',
-                        '<(PRODUCT_DIR)/lib/release/libavcodec.so.56',
-                        '<(PRODUCT_DIR)/lib/release/libavformat.so',
-                        '<(PRODUCT_DIR)/lib/release/libavformat.so.56',
-                        '<(PRODUCT_DIR)/lib/release/libavutil.so',
-                        '<(PRODUCT_DIR)/lib/release/libavutil.so.54',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/release && cp -r <(_inputs) <(PRODUCT_DIR)/lib/release',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/release',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -284,10 +254,9 @@
         {
             'target_name': 'av.x64.debug',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install libav',
-                    'inputs': [
+                    'files': [
                         'third_party/libav/out/linux/x64/debug/libavcodec/libavcodec.so',
                         'third_party/libav/out/linux/x64/debug/libavcodec/libavcodec.so.56',
                         'third_party/libav/out/linux/x64/debug/libavformat/libavformat.so',
@@ -295,19 +264,8 @@
                         'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so',
                         'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so.54',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/debug/libavcodec.so',
-                        '<(PRODUCT_DIR)/lib/debug/libavcodec.so.56',
-                        '<(PRODUCT_DIR)/lib/debug/libavformat.so',
-                        '<(PRODUCT_DIR)/lib/debug/libavformat.so.56',
-                        '<(PRODUCT_DIR)/lib/debug/libavutil.so',
-                        '<(PRODUCT_DIR)/lib/debug/libavutil.so.54',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/debug && cp -r <(_inputs) <(PRODUCT_DIR)/lib/debug',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -320,57 +278,17 @@
             },
         },
         {
-            'target_name': 'zmq.x64.release',
-            'type': 'none',
-            'actions': [
-                {
-                    'action_name': 'install libzmq',
-                    'inputs': [
-                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so',
-                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5',
-                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5.0.1',
-                    ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/release/libzmq.so',
-                        '<(PRODUCT_DIR)/lib/release/libzmq.so.5',
-                        '<(PRODUCT_DIR)/lib/release/libzmq.so.5.0.1',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/release && cp -r <(_inputs) <(PRODUCT_DIR)/lib/release',
-                    ],
-                }
-            ],
-            'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/zeromq/include',
-                ],
-                'libraries': [
-                    'lib/release/libzmq.so',
-                ],
-            },
-        },
-        {
             'target_name': 'zmq.x64.debug',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install libzmq',
-                    'inputs': [
+                    'files': [
                         'third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.so',
                         'third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.so.5',
                         'third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.so.5.0.1',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/debug/libzmq.so',
-                        '<(PRODUCT_DIR)/lib/debug/libzmq.so.5',
-                        '<(PRODUCT_DIR)/lib/debug/libzmq.so.5.0.1',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/debug && cp -r <(_inputs) <(PRODUCT_DIR)/lib/debug',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -382,26 +300,39 @@
             },
         },
         {
+            'target_name': 'zmq.x64.release',
+            'type': 'none',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so',
+                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5',
+                        'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5.0.1',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/release',
+                },
+            ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    'third_party/zeromq/include',
+                ],
+                'libraries': [
+                    'lib/release/libzmq.so',
+                ],
+            },
+        },
+        {
             'target_name': 'gc.x64.release',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install libgc',
-                    'inputs': [
+                    'files': [
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/release/libgc.so',
-                        '<(PRODUCT_DIR)/lib/release/libgc.so.1',
-                        '<(PRODUCT_DIR)/lib/release/libgc.so.1.0.3',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/release && cp -a <(_inputs) <(PRODUCT_DIR)/lib/release',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/release',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -415,24 +346,15 @@
         {
             'target_name': 'gc.x64.debug',
             'type': 'none',
-            'actions': [
+            'copies': [
                 {
-                    'action_name': 'install libgc',
-                    'inputs': [
+                    'files': [
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
                         'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
                     ],
-                    'outputs': [
-                        '<(PRODUCT_DIR)/lib/debug/libgc.so',
-                        '<(PRODUCT_DIR)/lib/debug/libgc.so.1',
-                        '<(PRODUCT_DIR)/lib/debug/libgc.so.1.0.3',
-                    ],
-                    'action': [
-                        'eval',
-                        'mkdir -p <(PRODUCT_DIR)/lib/debug && cp -a <(_inputs) <(PRODUCT_DIR)/lib/debug',
-                    ],
-                }
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [

@@ -15,12 +15,13 @@
             'component%': 'static_library',
         },
         'component%':'<(component)',
-        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',]
+        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
     ],
     'target_defaults' : {
+        'default_configuration': 'debug',
         'dependencies': [
             './build.dep.gyp:clipper.x64',
             './build.dep.gyp:cppzmq.x64',
@@ -47,30 +48,15 @@
            '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
        ],
        'sources': [
-           'src/StarFish.cpp',
-           '<!@(find src/binding -name *.cpp)',
-           '<!@(find src/animation -name *.cpp)',
-           '<!@(find src/dom -name *.cpp)',
-           '<!@(find src/extra -name *.cpp)',
-           '<!@(find src/inspector -name *.cpp)',
-           '<!@(find src/layout -name *.cpp)',
-           '<!@(find src/loader -name *.cpp)',
-           '<!@(find src/platform -name *.cpp)',
-           '<!@(find src/public -name *.cpp)',
-           '<!@(find src/style -name *.cpp)',
-           '<!@(find src/util -name *.cpp)',
+           '<!@(find src -name *.cpp)',
        ],
-       'link_settings': {
-           'ldflags' : [
-               '-L/usr/local/lib',
-           ],
-           'libraries': [
-               '<!@(pkg-config --libs-only-l <(third_party_libs))',
-               '-Wl,-rpath=/usr/local/lib',
-               '-lpthread',
-               '-lcurl',
-           ],
-       },
+       'conditions': [
+           ['component!="executable"', {
+               'sources!' : [
+                   '<(main_file)',
+               ]
+           }],
+       ],
        'conditions': [
            ['OS=="linux"', {
                'cflags' : [
@@ -131,6 +117,31 @@
                        ],
                    },
                },
+               'link_settings': {
+                   'ldflags' : [
+                       '-L/usr/local/lib',
+                   ],
+                   'libraries': [
+                       '<!@(pkg-config --libs-only-l <(third_party_libs))',
+                       '-Wl,-rpath=/usr/local/lib',
+                       '-lpthread',
+                       '-lcurl',
+                   ],
+                   'configurations': {
+                       'debug': {
+                           'ldflags': [
+                               '-Wl,-rpath=\$$ORIGIN/lib/debug',
+                               '-Wl,-rpath-link=lib/debug',
+                           ],
+                       },
+                       'release': {
+                           'ldflags': [
+                               '-Wl,-rpath=\$$ORIGIN/lib/release',
+                               '-Wl,-rpath-link=lib/release',
+                           ],
+                       }
+                   }
+               },
            }],
        ],
     },
@@ -145,24 +156,9 @@
                 './build.dep.gyp:gc.x64.debug',
                 './build.dep.gyp:zmq.x64.debug',
             ],
-            'conditions': [
-                ['component=="executable"', {
-                    'sources' : [
-                        '<(main_file)',
-                    ]
-                }],
-            ],
             'defines': [
                 '<@(defines_x64)',
             ],
-            'cflags' : [
-            ],
-            'link_settings': {
-                'libraries': [
-                    '-Wl,-rpath=\$$ORIGIN/lib/debug',
-                    '-Wl,-rpath-link=lib/debug',
-                ],
-            },
         },
         {
             'target_name': 'starfish.x64.release',
@@ -174,24 +170,9 @@
                 './build.dep.gyp:gc.x64.release',
                 './build.dep.gyp:zmq.x64.release',
             ],
-            'conditions': [
-                ['component=="executable"', {
-                    'sources' : [
-                        '<(main_file)',
-                    ]
-                }],
-            ],
             'defines': [
                 '<@(defines_x64)',
             ],
-            'cflags' : [
-            ],
-            'link_settings': {
-                'libraries': [
-                    '-Wl,-rpath=\$$ORIGIN/lib/release',
-                    '-Wl,-rpath-link=lib/release',
-                ],
-            },
         },
     ],
 }
