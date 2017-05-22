@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#ifndef __StarFishVTTCue__
+#define __StarFishVTTCue__
+
+#include "core/dom/TextTrackCue.h"
+
+namespace StarFish {
+
+// VTTCue
+// : Only support "text"
+// : Wrapper class of TextTrackCue
+class VTTCue : public TextTrackCue {
+public:
+    VTTCue(Document* document, double start, double end, String* payload)
+        : TextTrackCue(document, start, end, payload)
+    {
+    }
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isVTTCue() const override;
+
+    String* text()
+    {
+        return getPayload();
+    }
+
+    void setText(String* text)
+    {
+        setPayload(text);
+    }
+
+#ifndef NDEBUG
+    virtual void dump()
+    {
+        printf("[VTTCue]\n");
+        printf("    StartTime : %lf\n", m_timeRange.start());
+        printf("    EndTime : %lf\n", m_timeRange.end());
+        printf("    text : \n\"%s\"\n", m_payload->utf8Data());
+    }
+#endif
+};
+}
+
+#endif
+#endif // STARFISH_ENABLE_MULTIMEDIA

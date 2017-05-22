@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "dom/DOMRect.h"
-#include "dom/DOMRectList.h"
+#include "core/dom/DOMRect.h"
+#include "core/dom/DOMRectList.h"
 
 namespace StarFish {
 

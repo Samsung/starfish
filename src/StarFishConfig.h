@@ -309,14 +309,14 @@ protected:
     T m_value;
 };
 
-#include "layout/LayoutUtil.h"
-#include "util/String.h"
-#include "util/AtomicString.h"
-#include "util/QualifiedName.h"
-#include "util/Messages.h"
-#include "style/Length.h"
-#include "style/Unit.h"
-#include "style/UnitHelper.h"
-#include "platform/canvas/font/Font.h"
+#include "core/layout/LayoutUtil.h"
+#include "core/util/String.h"
+#include "core/util/AtomicString.h"
+#include "core/util/QualifiedName.h"
+#include "core/util/Messages.h"
+#include "core/style/Length.h"
+#include "core/style/Unit.h"
+#include "core/style/UnitHelper.h"
+#include "core/modules/canvas/font/Font.h"
 
 #endif

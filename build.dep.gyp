@@ -97,7 +97,7 @@
                     'inputs': [
                         'binding_generator/scripts/starfish_code_generator.py',
                         '.git/modules/binding_generator/HEAD',
-                        '<!@(find src -name *.idl)',
+                        '<!@(find src/core -name *.idl)',
                     ],
                     'outputs': [
                         '<!@(find src/binding -name *Binding.cpp)'

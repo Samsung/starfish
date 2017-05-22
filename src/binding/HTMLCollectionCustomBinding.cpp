@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "dom/Element.h"
-#include "dom/HTMLCollection.h"
+#include "core/dom/Element.h"
+#include "core/dom/HTMLCollection.h"
 
 namespace StarFish {
 

@@ -22,14 +22,14 @@
 #endif
 #include "StarFishConfig.h"
 #include "StarFish.h"
-#include "dom/Document.h"
-#include "platform/threading/ThreadPool.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/window/Window.h"
-#include "platform/canvas/image/ImageData.h"
+#include "core/dom/Document.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/window/Window.h"
+#include "core/modules/canvas/image/ImageData.h"
 #include "binding/ScriptBindingInstance.h"
-#include "inspector/Inspector.h"
-#include "extra/Console.h"
+#include "core/inspector/Inspector.h"
+#include "core/extra/Console.h"
 
 #include <malloc.h>
 #include <Elementary.h>

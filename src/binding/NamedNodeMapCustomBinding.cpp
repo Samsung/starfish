@@ -14,10 +14,10 @@
  *    limitations under the License.
  */
 
-#include "dom/Attr.h"
-#include "dom/Element.h"
-#include "dom/Document.h"
-#include "dom/NamedNodeMap.h"
+#include "core/dom/Attr.h"
+#include "core/dom/Element.h"
+#include "core/dom/Document.h"
+#include "core/dom/NamedNodeMap.h"
 
 namespace StarFish {
 

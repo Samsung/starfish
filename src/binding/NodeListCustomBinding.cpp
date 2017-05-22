@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "dom/Node.h"
-#include "dom/NodeList.h"
+#include "core/dom/Node.h"
+#include "core/dom/NodeList.h"
 
 namespace StarFish {
 

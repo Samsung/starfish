@@ -1,0 +1,322 @@
+/*
+ * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishElement__
+#define __StarFishElement__
+
+#include "core/dom/Node.h"
+#include "core/dom/Attribute.h"
+#include "core/style/Style.h"
+
+namespace StarFish {
+
+class Attr;
+class NamedNodeMap;
+class HTMLElement;
+class CSSStyleDeclaration;
+class PseudoElementData;
+
+class RareElementMembers : public RareNodeMembers {
+public:
+    RareElementMembers()
+        : RareNodeMembers()
+        , m_namedNodeMap(nullptr)
+        , m_attrList(nullptr)
+        , m_pseudoElementData(nullptr)
+    {
+    }
+
+    bool isRareElementMembers() const override
+    {
+        return true;
+    }
+
+    NamedNodeMap* m_namedNodeMap;
+    GCVector<Attr*>* m_attrList;
+    PseudoElementData* m_pseudoElementData;
+};
+
+class Element : public Node {
+public:
+    Element(Document* document)
+        : Node(document)
+        , m_inlineStyle(nullptr)
+        , m_focused(false)
+        , m_tabIndex(0)
+        , m_tabIndexWasSetExplicitly(false)
+        , m_id(String::emptyString)
+        , m_className(String::emptyString)
+    {
+    }
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isElement() const override;
+
+    /* 4.4 Interface Node */
+    virtual NodeType nodeType() const override
+    {
+        return ELEMENT_NODE;
+    }
+
+    virtual Node* clone() override;
+
+#ifdef STARFISH_ENABLE_TEST
+    String* innerHTML();
+    void setInnerHTML(String*);
+#endif
+
+    virtual QualifiedName name() = 0;
+    String* tagName();
+
+    // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
+    size_t attributeCount() const
+    {
+        return m_attributes.size();
+    }
+
+    QualifiedName getAssuredAttributeName(size_t t)
+    {
+        return m_attributes[t].name();
+    }
+
+    String* getAssuredAttribute(size_t t)
+    {
+        return m_attributes[t].value();
+    }
+
+    bool hasAttribute(String* name);
+    size_t hasAttribute(QualifiedName name);
+
+    Nullable<String*> getAttribute(String* name);
+    Nullable<String*> getAttribute(QualifiedName name);
+    String* getAttributeOrEmpty(QualifiedName name);
+
+    void setAttribute(String* name, String* value);
+    void setAttribute(QualifiedName name, String* value);
+
+    void removeAttribute(String* name);
+    void removeAttribute(QualifiedName name);
+
+    // DO NOT MODIFY ATTRIBUTE
+    const Attribute& attributeData(QualifiedName name)
+    {
+        return m_attributes[hasAttribute(name)];
+    }
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+#ifdef STARFISH_ENABLE_TEST
+    virtual void dump()
+    {
+        Node::dump();
+
+        printf("id:%s, ", m_id->utf8Data());
+        std::string className;
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
+            className += m_classNames[i]->utf8Data();
+            className += " ";
+        }
+
+        printf("className:%s", className.data());
+    }
+#endif
+
+    /* Other than DOM API */
+    bool hasSameAttributes(Element* otherNode)
+    {
+        if (getAttributes()->size() != otherNode->getAttributes()->size()) {
+            return false;
+        }
+
+        for (const Attribute& otherAttr : *(otherNode->getAttributes())) {
+            Nullable<String*> attr = getAttribute(otherAttr.name());
+            if (!attr.hasValue() ||
+                !attr.getValue()->equals(otherAttr.value())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    NamedNodeMap* attributes();
+
+    // https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
+    uint32_t clientLeft();
+    uint32_t clientTop();
+    uint32_t clientWidth();
+    uint32_t clientHeight();
+
+    // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
+    DOMRectList* getClientRects();
+    DOMRect* getBoundingClientRect();
+
+    RareNodeMembers* ensureRareMembers();
+    RareElementMembers* ensureRareElementMembers();
+
+    void addAttr(Attr* attr);
+    Attr* attr(QualifiedName name);
+    Attr* ensureAttr(QualifiedName name);
+
+    bool hasPseudoElements();
+    bool hasPseudoElement(StyleResolver::PseudoElementType type);
+    void setPseudoElement(StyleResolver::PseudoElementType type);
+
+    String* id()
+    {
+        return m_id;
+    }
+
+    String* idAttr();
+    void setIdAttr(String* id);
+
+    String* className();
+    void setClassName(String* className);
+
+    // DO NOT MODIFY THIS VECTOR
+    const GCVector<String*>& classNames()
+    {
+        return m_classNames;
+    }
+
+    bool hasClassName(String* className)
+    {
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
+            if (className->equals(m_classNames[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void setStyleAttr(String* style);
+
+    CSSStyleDeclaration* inlineStyleWithoutCreation()
+    {
+        return m_inlineStyle;
+    }
+
+    CSSStyleDeclaration* inlineStyle();
+
+    void notifyInlineStyleChanged()
+    {
+        setNeedsStyleRecalc();
+        m_didInlineStyleModifiedAfterAttributeSet = true;
+    }
+
+    // FIXME: Use NodeState instead of this flag.
+    bool focused() const
+    {
+        return m_focused;
+    }
+    void setFocused(bool flag)
+    {
+        m_focused = flag;
+    }
+    virtual void setFocus(bool flag);
+
+    virtual bool supportsFocus();
+    virtual bool isFocusable();
+
+    virtual int tabIndex()
+    {
+        return m_tabIndex;
+    }
+    void setTabIndex(int index)
+    {
+        m_tabIndex = index;
+    }
+    bool tabIndexSetExplicitly() const
+    {
+        return m_tabIndexWasSetExplicitly;
+    };
+    void setTabIndexExplicitly(int index)
+    {
+        m_tabIndex = index;
+        m_tabIndexWasSetExplicitly = true;
+    }
+
+    /* Element-level focus APIs */
+    virtual void focus();
+    virtual void blur();
+
+    inline bool hasClass()
+    {
+        return m_classNames.size() > 0;
+    }
+    inline bool hasId()
+    {
+        return !m_id->equals(String::emptyString);
+    }
+
+    String* getLaunguage();
+
+protected:
+    // clientRect is differ with clientBoundingRect.
+    // this function is only for client{Left, Top, Width, Top}
+    LayoutRect clientRect();
+
+    void getClientQuads(std::vector<DOMQuad>& quads);
+
+    // DO NOT MODIFY ATTRIBUTES.
+    const GCVector<Attribute>* getAttributes()
+    {
+        return (GCVector<Attribute>*)&m_attributes;
+    }
+
+    CSSStyleDeclaration* m_inlineStyle;
+
+    bool m_focused;
+    int m_tabIndex;
+    bool m_tabIndexWasSetExplicitly;
+
+private:
+    String* m_id;
+    String* m_className;
+    GCVector<String*> m_classNames;
+    GCVector<Attribute> m_attributes;
+};
+
+// used for not of html, xhtml, svg element
+class NamedElement : public Element {
+public:
+    NamedElement(Document* document, const QualifiedName& name)
+        : Element(document)
+        , m_name(name)
+    {
+    }
+
+    virtual QualifiedName name()
+    {
+        return m_name;
+    }
+
+    virtual String* localName()
+    {
+        return m_name.localName();
+    }
+
+    virtual String* nodeName()
+    {
+        return m_name.localName();
+    }
+
+protected:
+    QualifiedName m_name;
+};
+}
+
+#endif
