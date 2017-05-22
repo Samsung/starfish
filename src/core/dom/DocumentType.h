@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishDocumentType__
+#define __StarFishDocumentType__
+
+#include "core/dom/Node.h"
+
+namespace StarFish {
+
+class DocumentType : public Node {
+public:
+    DocumentType(Document* document, String* name, String* publicId,
+                 String* systemId)
+        : Node(document)
+        , m_name(name)
+        , m_publicId(publicId)
+        , m_systemId(systemId)
+    {
+#ifdef STARFISH_TC_COVERAGE
+        if (name->equals("html")) {
+            STARFISH_LOG_INFO("+++doctype:!DOCTYPE\n");
+        }
+#endif
+    }
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isDocumentType() const override;
+
+    String* name() const
+    {
+        return m_name;
+    }
+
+    /* 4.4 Interface Node */
+
+    virtual NodeType nodeType() const override
+    {
+        return DOCUMENT_TYPE_NODE;
+    }
+
+    virtual String* nodeName() override
+    {
+        return name();
+    }
+
+    virtual Node* clone() override
+    {
+        return new DocumentType(document(), m_name, m_publicId, m_systemId);
+    }
+
+    virtual Element* parentElement()
+    {
+        return nullptr;
+    }
+
+    /* 4.7 Interface DocumentType */
+
+    String* publicId()
+    {
+        return m_publicId;
+    }
+
+    String* systemId()
+    {
+        return m_systemId;
+    }
+
+    void remove()
+    {
+        // TODO
+    }
+
+protected:
+    String* m_name;
+    String* m_publicId;
+    String* m_systemId;
+};
+}
+
+#endif

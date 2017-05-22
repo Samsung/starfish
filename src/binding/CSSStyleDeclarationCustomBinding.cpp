@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "dom/CSSStyleDeclaration.h"
-#include "style/CSSStyleLookupTrie.h"
+#include "core/dom/CSSStyleDeclaration.h"
+#include "core/style/CSSStyleLookupTrie.h"
 
 namespace StarFish {
 

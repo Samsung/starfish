@@ -15,12 +15,12 @@
  */
 
 #include "StarFishConfig.h"
-#include "dom/Document.h"
+#include "core/dom/Document.h"
 #include "StarFish.h"
 
 #include "binding/ScriptBindingInstance.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/multimedia/Demuxer.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
 
 #include <pthread.h>

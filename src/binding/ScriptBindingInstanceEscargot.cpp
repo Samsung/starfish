@@ -18,16 +18,16 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include "dom/Document.h"
+#include "core/dom/Document.h"
 #ifdef STARFISH_EXP
-#include "dom/DOMImplementation.h"
+#include "core/dom/DOMImplementation.h"
 #endif
-#include "extra/Console.h"
-#include "extra/History.h"
-#include "extra/Location.h"
-#include "extra/Navigator.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/window/Window.h"
+#include "core/extra/Console.h"
+#include "core/extra/History.h"
+#include "core/extra/Location.h"
+#include "core/extra/Navigator.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/window/Window.h"
 
 #include <Escargot.h>
 #include <vm/ESVMInstance.h>

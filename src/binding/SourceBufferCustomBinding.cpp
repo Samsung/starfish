@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "dom/DOMException.h"
-#include "extra/SourceBuffer.h"
+#include "core/dom/DOMException.h"
+#include "core/extra/SourceBuffer.h"
 
 namespace StarFish {
 

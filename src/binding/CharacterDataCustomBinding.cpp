@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "dom/CharacterData.h"
+#include "core/dom/CharacterData.h"
 
 namespace StarFish {
 

@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-#include "platform/location/Geolocation.h"
-#include "platform/location/Geoposition.h"
-#include "platform/location/PositionError.h"
+#include "core/modules/location/Geolocation.h"
+#include "core/modules/location/Geoposition.h"
+#include "core/modules/location/PositionError.h"
 
 namespace StarFish {
 

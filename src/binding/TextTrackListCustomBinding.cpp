@@ -16,7 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "dom/TextTrackList.h"
+#include "core/dom/TextTrackList.h"
 
 namespace StarFish {
 

@@ -15,13 +15,13 @@
  */
 
 #include "StarFish.h"
-#include "dom/Document.h"
-#include "dom/Element.h"
-#include "dom/HTMLCollection.h"
-#include "layout/Frame.h"
-#include "layout/FrameBox.h"
-#include "platform/message_loop/MessageLoop.h"
-#include "platform/window/Window.h"
+#include "core/dom/Document.h"
+#include "core/dom/Element.h"
+#include "core/dom/HTMLCollection.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/window/Window.h"
 
 namespace StarFish {
 
