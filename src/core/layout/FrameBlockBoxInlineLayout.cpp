@@ -494,7 +494,8 @@ static CharDirection charDirFromICUDir(UBiDiDirection dir)
 
 static UBiDiDirection getTextDir(const StringView& sv, size_t start, size_t end)
 {
-    UTF16NonGCString str = sv.originalString()->toUTF16NonGCString(start, end);
+    UTF16StringDataNonGCStd str =
+        sv.originalString()->toUTF16NonGCString(start, end);
     UBiDiDirection dir =
         ubidi_getBaseDirection((const UChar*)str.data(), str.length());
     return dir;
@@ -2371,7 +2372,7 @@ static void textBidiResolver(FrameText* frameText,
                              std::vector<TextRun>& runs)
 {
     UBiDi* bidi = ubidi_open();
-    UTF16NonGCString str = frameText->text()->toUTF16NonGCString();
+    UTF16StringDataNonGCStd str = frameText->text()->toUTF16NonGCString();
     UErrorCode err = (UErrorCode)0;
     ubidi_setPara(bidi, (const UChar*)str.data(), str.length(),
                   directionValue == DirectionValue::LtrDirectionValue

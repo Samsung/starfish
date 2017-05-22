@@ -36,7 +36,7 @@ public:
     {
     }
 
-    static bool checkNameProductionRule(String* str, unsigned length);
+    static bool checkNameProductionRule(String* str);
     bool operator==(const QualifiedName& src) const
     {
         return m_namespaceURI == src.m_namespaceURI &&

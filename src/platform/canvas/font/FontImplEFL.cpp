@@ -183,7 +183,7 @@ public:
                 free(buf);
             }
         } else {
-            UTF8NonGCString s =
+            UTF8StringDataNonGCStd s =
                 str.originalString()->toUTF8NonGCString(str.start(), str.end());
             evas_object_text_text_set(m_text, s.c_str());
         }

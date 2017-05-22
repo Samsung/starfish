@@ -1732,7 +1732,7 @@ String* HTMLTokenizer::bufferedCharacters() const
     ASCIIString characters;
     characters.push_back('<');
     characters.push_back('/');
-    characters.append(m_temporaryBuffer.begin(), m_temporaryBuffer.end());
+    characters.append(m_temporaryBuffer);
     return new StringDataASCII(std::move(characters));
 }
 

@@ -310,7 +310,7 @@ bool ResourceLoader::requestResourcePreprocess(
     // TODO cache every resource
     if (res->isImageResource() &&
         syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
-        std::string url = res->url()->urlString()->utf8Data();
+        ASCIIString url = *res->url()->urlString()->asASCIIString();
         auto iter = m_imageResourceCache.find(url);
         if (iter == m_imageResourceCache.end()) {
             ResourceCacheData data;

@@ -27,34 +27,44 @@ AtomicString::AtomicString()
 
 AtomicString AtomicString::createAtomicString(StarFish* sf, String* str)
 {
-    return createAtomicString(sf, str->utf8Data());
+    return createAtomicString(sf, str->toUTF32String());
 }
 
 AtomicString AtomicString::createAtomicString(StarFish* sf, const char* str)
 {
-    std::string data = str;
+    return createAtomicString(sf, new StringDataUTF32(str, strlen(str)));
+}
+
+AtomicString AtomicString::createAtomicString(StarFish* sf, UTF32String str)
+{
+    UTF32String data = str;
     auto& map = sf->m_atomicStringMap;
-    auto iter = map.find(data);
+    auto iter = map.find(str);
 
     if (iter != map.end()) {
         return iter->second;
     }
 
-    String* s = String::fromUTF8(data.c_str());
+    String* s = String::createUTF32String(data);
     AtomicString name(s);
-    map.insert(std::make_pair(data, name));
+    map.insert(std::make_pair(std::move(data), name));
 
     return name;
 }
 
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 {
-    return createAttrAtomicString(sf, str->utf8Data());
+    return createAttrAtomicString(sf, str->toUTF32String());
 }
 
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
 {
-    std::string data = str;
+    return createAttrAtomicString(sf, new StringDataUTF32(str, strlen(str)));
+}
+
+AtomicString AtomicString::createAttrAtomicString(StarFish* sf, UTF32String str)
+{
+    UTF32String data = str;
     std::transform(data.begin(), data.end(), data.begin(), ::tolower);
     auto& map = sf->m_atomicStringMap;
     auto iter = map.find(data);
@@ -63,9 +73,9 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
         return iter->second;
     }
 
-    String* s = String::fromUTF8(data.c_str());
+    String* s = String::createUTF32String(data);
     AtomicString name(s);
-    map.insert(std::make_pair(data, name));
+    map.insert(std::make_pair(std::move(data), name));
 
     return name;
 }

@@ -18,17 +18,6 @@
 
 #include "StarFish.h"
 #include "Inspector.h"
-
-#define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseFullPrecisionFlag
-#define RAPIDJSON_ERROR_CHARTYPE char
-#define RAPIDJSON_NAMESPACE rapidjson_starfish
-#include "../../third_party/rapidjson/include/rapidjson/document.h"
-#include "../../third_party/rapidjson/include/rapidjson/internal/dtoa.h"
-#include "../../third_party/rapidjson/include/rapidjson/stringbuffer.h"
-#include "../../third_party/rapidjson/include/rapidjson/writer.h"
-#include "../../third_party/rapidjson/include/rapidjson/error/en.h"
-#undef RAPIDJSON_NAMESPACE
-
 #include "core/modules/message_loop/MessageLoop.h"
 
 namespace StarFish {
@@ -59,7 +48,7 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
                         if (request.size()) {
                             struct Request {
                                 Inspector* inspector;
-                                rapidjson_starfish::Document document;
+                                rapidjson::Document document;
                             };
                             Request* r = new Request;
                             r->inspector = self;
@@ -71,27 +60,26 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
                             if (std::string(
                                     r->document["command"].GetString()) ==
                                 "ping") {
-                                rapidjson_starfish::Document document;
+                                rapidjson::Document document;
                                 document.Parse("{}");
-                                rapidjson_starfish::Value v;
+                                rapidjson::Value v;
                                 v = "pong";
                                 document.AddMember(
-                                    rapidjson_starfish::Value(
-                                        "command", document.GetAllocator()),
+                                    rapidjson::Value("command",
+                                                     document.GetAllocator()),
                                     v, document.GetAllocator());
-                                rapidjson_starfish::Value v2;
-                                v2 = rapidjson_starfish::Value(
+                                rapidjson::Value v2;
+                                v2 = rapidjson::Value(
                                     r->document["content"].GetString(),
                                     document.GetAllocator());
                                 document.AddMember(
-                                    rapidjson_starfish::Value(
-                                        "content", document.GetAllocator()),
+                                    rapidjson::Value("content",
+                                                     document.GetAllocator()),
                                     v2, document.GetAllocator());
-                                rapidjson_starfish::StringBuffer strbuf;
+                                rapidjson::StringBuffer strbuf;
                                 strbuf.Clear();
 
-                                rapidjson_starfish::Writer<
-                                    rapidjson_starfish::StringBuffer>
+                                rapidjson::Writer<rapidjson::StringBuffer>
                                     writer(strbuf);
                                 document.Accept(writer);
 
@@ -150,22 +138,20 @@ void Inspector::sendInfoMessage(String* m)
     if (!m_ioThread) {
         return;
     }
-    rapidjson_starfish::Document document;
+    rapidjson::Document document;
     document.Parse("{}");
-    rapidjson_starfish::Value v;
+    rapidjson::Value v;
     v = "console-info";
-    document.AddMember(
-        rapidjson_starfish::Value("command", document.GetAllocator()), v,
-        document.GetAllocator());
-    rapidjson_starfish::Value v2;
-    v2 = rapidjson_starfish::Value(m->utf8Data(), strlen(m->utf8Data()));
-    document.AddMember(
-        rapidjson_starfish::Value("content", document.GetAllocator()), v2,
-        document.GetAllocator());
-    rapidjson_starfish::StringBuffer strbuf;
+    document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
+                       document.GetAllocator());
+    rapidjson::Value v2;
+    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
+                       document.GetAllocator());
+    rapidjson::StringBuffer strbuf;
     strbuf.Clear();
 
-    rapidjson_starfish::Writer<rapidjson_starfish::StringBuffer> writer(strbuf);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
@@ -181,22 +167,20 @@ void Inspector::sendErrorMessage(String* m)
     if (!m_ioThread) {
         return;
     }
-    rapidjson_starfish::Document document;
+    rapidjson::Document document;
     document.Parse("{}");
-    rapidjson_starfish::Value v;
+    rapidjson::Value v;
     v = "console-error";
-    document.AddMember(
-        rapidjson_starfish::Value("command", document.GetAllocator()), v,
-        document.GetAllocator());
-    rapidjson_starfish::Value v2;
-    v2 = rapidjson_starfish::Value(m->utf8Data(), strlen(m->utf8Data()));
-    document.AddMember(
-        rapidjson_starfish::Value("content", document.GetAllocator()), v2,
-        document.GetAllocator());
-    rapidjson_starfish::StringBuffer strbuf;
+    document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
+                       document.GetAllocator());
+    rapidjson::Value v2;
+    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
+                       document.GetAllocator());
+    rapidjson::StringBuffer strbuf;
     strbuf.Clear();
 
-    rapidjson_starfish::Writer<rapidjson_starfish::StringBuffer> writer(strbuf);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
@@ -212,22 +196,20 @@ void Inspector::sendWarnMessage(String* m)
     if (!m_ioThread) {
         return;
     }
-    rapidjson_starfish::Document document;
+    rapidjson::Document document;
     document.Parse("{}");
-    rapidjson_starfish::Value v;
+    rapidjson::Value v;
     v = "console-warn";
-    document.AddMember(
-        rapidjson_starfish::Value("command", document.GetAllocator()), v,
-        document.GetAllocator());
-    rapidjson_starfish::Value v2;
-    v2 = rapidjson_starfish::Value(m->utf8Data(), strlen(m->utf8Data()));
-    document.AddMember(
-        rapidjson_starfish::Value("content", document.GetAllocator()), v2,
-        document.GetAllocator());
-    rapidjson_starfish::StringBuffer strbuf;
+    document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
+                       document.GetAllocator());
+    rapidjson::Value v2;
+    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
+                       document.GetAllocator());
+    rapidjson::StringBuffer strbuf;
     strbuf.Clear();
 
-    rapidjson_starfish::Writer<rapidjson_starfish::StringBuffer> writer(strbuf);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();

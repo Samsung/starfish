@@ -89,7 +89,7 @@ String* Element::getAttributeOrEmpty(QualifiedName name)
 
 void Element::setAttribute(String* name, String* value)
 {
-    if (!QualifiedName::checkNameProductionRule(name, name->length())) {
+    if (!QualifiedName::checkNameProductionRule(name)) {
         throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }

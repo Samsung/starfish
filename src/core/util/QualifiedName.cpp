@@ -80,8 +80,13 @@ bool checkNameProductionRule_internal(char32_t c)
     return true;
 }
 
-bool QualifiedName::checkNameProductionRule(String* str, unsigned length)
+bool QualifiedName::checkNameProductionRule(String* str)
 {
+    size_t length = str->length();
+    if (length == 0) {
+        return false;
+    }
+
     if (!checkNameProductionRuleStart_internal(str->charAt(0))) {
         return false;
     }

@@ -944,7 +944,7 @@ public:
             evas_object_color_set(
                 eo, lastState().m_color.r(), lastState().m_color.g(),
                 lastState().m_color.b(), lastState().m_color.a());
-            UTF8NonGCString us = sv.originalString()->toUTF8NonGCString(
+            UTF8StringDataNonGCStd us = sv.originalString()->toUTF8NonGCString(
                 sv.start(), sv.end(), true);
             evas_object_text_text_set(eo, us.c_str());
 
@@ -1091,7 +1091,7 @@ public:
                                   lastState().m_color.g(),
                                   lastState().m_color.b(),
                                   lastState().m_color.a()); */
-            UTF8NonGCString us =
+            UTF8StringDataNonGCStd us =
                 stringToDraw.originalString()->toUTF8NonGCString(
                     stringToDraw.start(), stringToDraw.end());
             evas_object_textblock_text_markup_set(eo, us.c_str());

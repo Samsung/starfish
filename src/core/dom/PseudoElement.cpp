@@ -90,7 +90,7 @@ size_t FirstLetterPseudoElement::firstLetterLength(String* text)
 
     // Bail if we didn't find a letter before the end of the text or before a
     // space.
-    if (isSpaceForFirstLetter(text->charAt(length)) || length == textLength) {
+    if (length == textLength || isSpaceForFirstLetter(text->charAt(length))) {
         return 0;
     }
 
