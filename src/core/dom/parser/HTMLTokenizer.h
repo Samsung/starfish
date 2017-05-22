@@ -301,10 +301,10 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/#preprocessing-the-input-stream
     InputStreamPreprocessor<HTMLTokenizer> m_inputStreamPreprocessor;
 
-    GCVector<char32_t> m_appropriateEndTagName;
+    UTF32String m_appropriateEndTagName;
 
     // http://www.whatwg.org/specs/web-apps/current-work/#temporary-buffer
-    GCVector<char> m_temporaryBuffer;
+    ASCIIString m_temporaryBuffer;
 
     // We occasionally want to emit both a character token and an end tag
     // token (e.g., when lexing script). We buffer the name of the end tag

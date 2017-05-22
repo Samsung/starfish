@@ -48,20 +48,89 @@
 #define __StarFishString__
 
 #include "StarFishConfig.h"
+#include "core/util/BasicString.h"
+#include "core/util/VariableBasicString.h"
 
 namespace StarFish {
 
-typedef std::basic_string<char, std::char_traits<char>,
-                          gc_allocator_ignore_off_page<char>>
+typedef VariableBasicString<char,
+                            gc_malloc_atomic_ignore_off_page_allocator<char>>
     ASCIIString;
-typedef std::basic_string<char16_t, std::char_traits<char16_t>,
-                          gc_allocator_ignore_off_page<char16_t>>
+typedef VariableBasicString<char,
+                            gc_malloc_atomic_ignore_off_page_allocator<char>>
+    UTF8String;
+typedef VariableBasicString<
+    char16_t, gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
     UTF16String;
-typedef std::basic_string<char> UTF8NonGCString;
-typedef std::basic_string<char16_t> UTF16NonGCString;
-typedef std::basic_string<char32_t, std::char_traits<char32_t>,
-                          gc_allocator_ignore_off_page<char32_t>>
+typedef VariableBasicString<
+    char32_t, gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
     UTF32String;
+
+typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;
+typedef std::basic_string<char, std::char_traits<char>> UTF8StringDataNonGCStd;
+typedef std::basic_string<char16_t, std::char_traits<char16_t>>
+    UTF16StringDataNonGCStd;
+typedef std::basic_string<char32_t, std::char_traits<char32_t>>
+    UTF32StringDataNonGCStd;
+}
+
+namespace std {
+template <>
+struct hash<StarFish::ASCIIString> {
+    size_t operator()(StarFish::ASCIIString const& x) const
+    {
+        return std::hash<StarFish::ASCIIStringDataNonGCStd>{}(
+            StarFish::ASCIIStringDataNonGCStd(x.data()));
+    }
+};
+
+template <>
+struct equal_to<StarFish::ASCIIString> {
+    bool operator()(StarFish::ASCIIString const& a,
+                    StarFish::ASCIIString const& b) const
+    {
+        return a.compare(b) == 0;
+    }
+};
+
+template <>
+struct hash<StarFish::UTF16String> {
+    size_t operator()(StarFish::UTF16String const& x) const
+    {
+        return std::hash<StarFish::UTF16StringDataNonGCStd>{}(
+            StarFish::UTF16StringDataNonGCStd(x.data()));
+    }
+};
+
+template <>
+struct equal_to<StarFish::UTF16String> {
+    bool operator()(StarFish::UTF16String const& a,
+                    StarFish::UTF16String const& b) const
+    {
+        return a.compare(b) == 0;
+    }
+};
+
+template <>
+struct hash<StarFish::UTF32String> {
+    size_t operator()(StarFish::UTF32String const& x) const
+    {
+        return std::hash<StarFish::UTF32StringDataNonGCStd>{}(
+            StarFish::UTF32StringDataNonGCStd(x.data()));
+    }
+};
+
+template <>
+struct equal_to<StarFish::UTF32String> {
+    bool operator()(StarFish::UTF32String const& a,
+                    StarFish::UTF32String const& b) const
+    {
+        return a.compare(b) == 0;
+    }
+};
+}
+
+namespace StarFish {
 
 class StringDataASCII;
 class String;
@@ -154,6 +223,9 @@ enum CharCategory {
     Punctuation_FinalQuote = U_MASK(U_FINAL_PUNCTUATION)
 };
 
+class StringDataASCII;
+class StringDataUTF32;
+
 class String {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
@@ -174,32 +246,21 @@ public:
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
 
-    ASCIIString* asASCIIString() const
+    virtual ASCIIString* asASCIIString() const
     {
-        STARFISH_ASSERT(m_isASCIIString);
-#ifndef NDEBUG
-        return (ASCIIString*)((size_t) this + (sizeof(size_t) * 2));
-#else
-        return (ASCIIString*)((size_t) this + sizeof(size_t));
-#endif
+        STARFISH_ASSERT_NOT_REACHED();
     }
-
-    UTF32String* asUTF32String() const
+    virtual UTF32String* asUTF32String() const
     {
-        STARFISH_ASSERT(!m_isASCIIString);
-#ifndef NDEBUG
-        return (UTF32String*)((size_t) this + (sizeof(size_t) * 2));
-#else
-        return (UTF32String*)((size_t) this + sizeof(size_t));
-#endif
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
     UTF16String toUTF16String() const;
-    UTF16NonGCString toUTF16NonGCString() const;
-    UTF16NonGCString toUTF16NonGCString(size_t start, size_t end) const;
+    UTF16StringDataNonGCStd toUTF16NonGCString() const;
+    UTF16StringDataNonGCStd toUTF16NonGCString(size_t start, size_t end) const;
 
-    UTF8NonGCString toUTF8NonGCString(size_t start, size_t end,
-                                      bool ignoreZeroWidthChar = false) const;
+    UTF8StringDataNonGCStd toUTF8NonGCString(
+        size_t start, size_t end, bool ignoreZeroWidthChar = false) const;
 
     // 1. this method always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
@@ -275,7 +336,7 @@ public:
 
     size_t length() const
     {
-        if (m_isASCIIString) {
+        if (isASCIIString()) {
             return asASCIIString()->length();
         } else {
             return asUTF32String()->length();
@@ -284,7 +345,7 @@ public:
 
     char32_t charAt(size_t idx) const
     {
-        if (m_isASCIIString) {
+        if (isASCIIString()) {
             return (*asASCIIString())[idx];
         } else {
             return (*asUTF32String())[idx];
@@ -410,9 +471,9 @@ public:
     String* toUpper();
     String* toLower();
     String* replaceAll(String* from, String* to);
-    bool isASCIIString() const
+    virtual bool isASCIIString() const
     {
-        return m_isASCIIString;
+        return true;
     }
 
     String* concat(String* str);
@@ -464,7 +525,7 @@ public:
     ALWAYS_INLINE void putDebugInfo()
     {
 #ifndef NDEBUG
-        if (m_isASCIIString) {
+        if (isASCIIString()) {
             m_debugInfo.string8Ptr = asASCIIString()->data();
         } else {
             m_debugInfo.string32Ptr = asUTF32String()->data();
@@ -493,10 +554,7 @@ protected:
     const char* utf8DataSlowCase(bool ignoreZeroWidthChar = false);
     String()
     {
-        m_isASCIIString = true;
     }
-
-    size_t m_isASCIIString;
 
     bool isASCIIStringData(const char* str);
 
@@ -508,7 +566,7 @@ protected:
 #endif
 };
 
-class StringDataASCII : public String, public ASCIIString, public gc {
+class StringDataASCII : public String, public ASCIIString {
 public:
     StringDataASCII(ASCIIString&& str)
         : ASCIIString(str)
@@ -523,32 +581,44 @@ public:
     }
 
     StringDataASCII(const char* str, size_t len)
-        : ASCIIString(str, &str[len])
+        : ASCIIString(str, len)
     {
         putDebugInfo();
     }
+
+    virtual ASCIIString* asASCIIString() const override
+    {
+        return const_cast<ASCIIString*>(static_cast<const ASCIIString*>(this));
+    }
 };
 
-class StringDataUTF32 : public String, public UTF32String, public gc {
+class StringDataUTF32 : public String, public UTF32String {
 public:
     StringDataUTF32(const UTF32String& str)
         : UTF32String(str)
     {
-        m_isASCIIString = false;
         putDebugInfo();
     }
     StringDataUTF32(UTF32String&& str)
         : UTF32String(str)
     {
-        m_isASCIIString = false;
         putDebugInfo();
     }
     StringDataUTF32(const char* src, size_t len);
     StringDataUTF32(const char32_t* str)
         : UTF32String(str)
     {
-        m_isASCIIString = false;
         putDebugInfo();
+    }
+
+    virtual bool isASCIIString() const override
+    {
+        return false;
+    }
+
+    virtual UTF32String* asUTF32String() const override
+    {
+        return const_cast<UTF32String*>(static_cast<const UTF32String*>(this));
     }
 };
 

@@ -142,8 +142,7 @@ public:
             break;
         case HTMLToken::DOCTYPE:
             m_name = AtomicString::createAttrAtomicString(
-                m_starFish, new StringDataUTF32(UTF32String(
-                                token.name().begin(), token.name().end())));
+                m_starFish, new StringDataUTF32(token.name()));
             m_doctypeData = token.releaseDoctypeData();
             break;
         case HTMLToken::EndOfFile:
@@ -157,8 +156,7 @@ public:
                 m_name = tagName.localNameAtomic();
             } else {
                 m_name = AtomicString::createAttrAtomicString(
-                    m_starFish, new StringDataUTF32(UTF32String(
-                                    token.name().begin(), token.name().end())));
+                    m_starFish, new StringDataUTF32(token.name()));
             }
             initializeAttributes(token.attributes());
             break;
@@ -166,11 +164,10 @@ public:
         case HTMLToken::Character:
         case HTMLToken::Comment:
             if (token.isAll7BitData()) {
-                m_data = String::createASCIIStringFromUTF32Source(
-                    UTF32String(token.data().begin(), token.data().end()));
+                m_data = String::createASCIIStringFromUTF32Source(token.data());
             } else {
                 m_data = String::createASCIIStringFromUTF32SourceIfPossible(
-                    UTF32String(token.data().begin(), token.data().end()));
+                    token.data());
             }
             break;
         }

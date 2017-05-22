@@ -244,7 +244,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
     String* s = String::emptyString;
     AtomicString emptyAtom(s);
-    m_atomicStringMap.insert(std::make_pair(std::string(), emptyAtom));
+    m_atomicStringMap.insert(std::make_pair(UTF32String(), emptyAtom));
     m_staticStrings = new StaticStrings(this);
     UErrorCode code = U_ZERO_ERROR;
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);

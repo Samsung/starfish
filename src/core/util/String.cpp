@@ -205,10 +205,10 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len,
     return result;
 }
 
-UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end,
-                            bool ignoreZeroWidthChar)
+UTF8StringDataNonGCStd utf32ToUtf8(const UTF32String& str, size_t start,
+                                   size_t end, bool ignoreZeroWidthChar)
 {
-    UTF8NonGCString ret;
+    UTF8StringDataNonGCStd ret;
     ret.reserve((end - start) * 2);
     char buffer[8];
     for (size_t i = start; i < end; i++) {
@@ -284,7 +284,6 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
 
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
 {
-    m_isASCIIString = false;
     const char* end = src + len;
     while (end != src) {
         char32_t c;
@@ -296,7 +295,7 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
 
 const char* String::utf8DataSlowCase(bool ignoreZeroWidthChar)
 {
-    STARFISH_ASSERT(!m_isASCIIString);
+    STARFISH_ASSERT(!isASCIIString());
     if (ignoreZeroWidthChar) {
         return utf32ToUtf8IgnoreZeroWidthChar(asUTF32String()->data(),
                                               asUTF32String()->length());
@@ -407,7 +406,7 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(
 
 NullableUTF8String String::toNullableUTF8String()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         void* ptr = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(asASCIIString()->size());
         memcpy(ptr, asASCIIString()->data(), asASCIIString()->size());
         return NullableUTF8String((const char*)ptr, asASCIIString()->size());
@@ -421,7 +420,7 @@ NullableUTF8String String::toNullableUTF8String()
 
 const char* String::utf8Data()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         return asASCIIString()->data();
     } else {
         return utf8DataSlowCase();
@@ -430,11 +429,12 @@ const char* String::utf8Data()
 
 const char* String::utf8DataIgnoreZeroWidthChar()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         StringDataASCII* newStr = new StringDataASCII("");
         for (size_t i = 0; i < length(); i++) {
             if (!String::isZeroWidthChar(charAt(i))) {
-                newStr->insert(newStr->end(), (*asASCIIString())[i]);
+                newStr->insert(asASCIIString()->length(),
+                               (*asASCIIString())[i]);
             }
         }
         return newStr->data();
@@ -445,9 +445,9 @@ const char* String::utf8DataIgnoreZeroWidthChar()
 
 String* String::substring(size_t pos, size_t len)
 {
-    if (m_isASCIIString) {
-        return new StringDataASCII(
-            std::move(asASCIIString()->substr(pos, len)));
+    if (isASCIIString()) {
+        ASCIIString str = asASCIIString()->substr(pos, len);
+        return new StringDataASCII(std::move(str));
     } else {
         return new StringDataUTF32(
             std::move(asUTF32String()->substr(pos, len)));
@@ -456,7 +456,7 @@ String* String::substring(size_t pos, size_t len)
 
 String* String::toUpper()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         ASCIIString str = *asASCIIString();
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataASCII(std::move(str));
@@ -470,7 +470,7 @@ String* String::toUpper()
 
 String* String::toLower()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         ASCIIString str = *asASCIIString();
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataASCII(std::move(str));
@@ -488,19 +488,20 @@ String* String::concat(String* str)
         return str;
     }
     if (isASCIIString() && str->isASCIIString()) {
-        ASCIIString s = *asASCIIString() + *(str->asASCIIString());
+        ASCIIString s = *asASCIIString();
+        s.append(str->asASCIIString()->data());
         return new StringDataASCII(std::move(s));
     } else {
         UTF32String a = toUTF32String();
         UTF32String b = str->toUTF32String();
-        a = a + b;
+        a.append(b);
         return new StringDataUTF32(std::move(a));
     }
 }
 
 String* String::replaceAll(String* from, String* to)
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         std::string str = std::string(utf8Data());
         std::string from_str = std::string(from->utf8Data());
         std::string to_str = std::string(to->utf8Data());
@@ -514,9 +515,9 @@ String* String::replaceAll(String* from, String* to)
         }
         return createASCIIString(str.c_str());
     } else {
-        std::basic_string<char32_t> str(toUTF32String().data());
-        std::basic_string<char32_t> from_str(from->toUTF32String().data());
-        std::basic_string<char32_t> to_str(to->toUTF32String().data());
+        UTF32String str(toUTF32String().data());
+        UTF32String from_str(from->toUTF32String().data());
+        UTF32String to_str(to->toUTF32String().data());
 
         size_t start_pos = 0;
         while ((start_pos = str.find(from_str, start_pos)) !=
@@ -525,7 +526,7 @@ String* String::replaceAll(String* from, String* to)
             start_pos += to_str.length(); // Handles case where 'to' is a
                                           // substring of 'from'
         }
-        return createUTF32String(UTF32String(str.begin(), str.end()));
+        return createUTF32String(str);
     }
 }
 
@@ -544,8 +545,8 @@ template <typename StringType, typename VectorType>
 static VectorType splitString(const StringType& s, char seperator)
 {
     VectorType output;
-    std::string::size_type prev_pos = 0, pos = 0;
-    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+    size_t prev_pos = 0, pos = 0;
+    while ((pos = s.find(seperator, pos)) != SIZE_MAX) {
         StringType substring(s.substr(prev_pos, pos - prev_pos));
         output.push_back(std::move(substring));
         prev_pos = ++pos;
@@ -557,7 +558,7 @@ static VectorType splitString(const StringType& s, char seperator)
 
 void String::split(char delim, GCVector<String*>& tokens)
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         GCVector<ASCIIString> ss =
             splitString<ASCIIString, GCVector<ASCIIString>>(*asASCIIString(),
                                                             delim);
@@ -656,7 +657,7 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
 
 UTF32String String::toUTF32String()
 {
-    if (m_isASCIIString) {
+    if (isASCIIString()) {
         UTF32String str;
         const ASCIIString& src = *asASCIIString();
         size_t len = src.length();
@@ -691,9 +692,10 @@ UTF16String String::toUTF16String() const
     return out;
 }
 
-UTF16NonGCString String::toUTF16NonGCString(size_t start, size_t end) const
+UTF16StringDataNonGCStd String::toUTF16NonGCString(size_t start,
+                                                   size_t end) const
 {
-    UTF16NonGCString out;
+    UTF16StringDataNonGCStd out;
     if (isASCIIString()) {
         out.assign(asASCIIString()->begin() + start,
                    asASCIIString()->begin() + end);
@@ -717,16 +719,16 @@ UTF16NonGCString String::toUTF16NonGCString(size_t start, size_t end) const
     return out;
 }
 
-UTF16NonGCString String::toUTF16NonGCString() const
+UTF16StringDataNonGCStd String::toUTF16NonGCString() const
 {
     return toUTF16NonGCString(0, length());
 }
 
-UTF8NonGCString String::toUTF8NonGCString(size_t start, size_t end,
-                                          bool ignoreZeroWidthChar) const
+UTF8StringDataNonGCStd String::toUTF8NonGCString(size_t start, size_t end,
+                                                 bool ignoreZeroWidthChar) const
 {
     if (isASCIIString()) {
-        UTF8NonGCString ret;
+        UTF8StringDataNonGCStd ret;
         ret.reserve(end - start);
         for (size_t i = start; i < end; i++) {
             if (ignoreZeroWidthChar &&

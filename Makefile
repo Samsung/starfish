@@ -378,7 +378,7 @@ ALLSRC := $(call rwildcard,src/,*.cpp)
 ALLSRC := $(filter-out $(AUTOGEN_SRC), $(ALLSRC))
 SRC += $(ALLSRC)
 ifeq ($(TYPE), lib)
-	SRC := $(filter-out src/shell, $(SRC))
+  SRC := $(filter-out src/shell, $(SRC))
 endif
 
 # escargot
@@ -402,7 +402,7 @@ endif
 
 # deviceapi
 ifeq ($(TIZEN_DEVICE_API), true)
-  SRC += $(foreach dir, third_party/deviceapi/src , $(wildcard $(dir)/*.cpp))
+  SRC += $(foreach dir, third_party/deviceapi/src, $(wildcard $(dir)/*.cpp))
 endif
 
 # skia_matrix
@@ -420,7 +420,7 @@ ifeq ($(MEDIA_SUPPORT), true)
     SRC_CC += third_party/webm/webvttparser.cc
     SRC_CC += third_party/webm/mkvparser.cc
 
-    SRC += $(foreach dir, third_party/MP4Parse/source , $(wildcard $(dir)/MP4*.cpp))
+    SRC += $(foreach dir, third_party/MP4Parse/source, $(wildcard $(dir)/MP4*.cpp))
     CXXFLAGS += -Ithird_party/MP4Parse/source/include
     ifneq (,$(findstring tizen,$(HOST)))
       ifneq ($(TIZEN_PROFILE),wearable)

@@ -33,7 +33,7 @@ class NetworkWorkerHelper;
 struct NetworkWorkerData;
 
 typedef std::vector<char> NetworkRequestResponse;
-typedef std::string NetworkRequestResponseHeader;
+typedef std::basic_string<char> NetworkRequestResponseHeader;
 
 class NetworkRequestClient : public gc {
 public:

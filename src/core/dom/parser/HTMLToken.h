@@ -92,11 +92,6 @@ public:
         UTF32String value;
     };
 
-    // By using an inline capacity of 256, we avoid spilling over into an
-    // malloced buffer approximately 99% of the time based on a non-scientific
-    // browse around a number of popular web sites on 23 May 2013.
-    typedef GCVector<char32_t> DataVector;
-
     HTMLToken()
     {
         m_doctypeData = nullptr;
@@ -149,7 +144,7 @@ public:
         m_range.end = endOffset - m_baseOffset;
     }
 
-    const DataVector& data() const
+    const UTF32String& data() const
     {
         STARFISH_ASSERT(m_type == Character || m_type == Comment ||
                         m_type == StartTag || m_type == EndTag);
@@ -161,7 +156,7 @@ public:
         return (m_orAllData < 128);
     }
 
-    const DataVector& name() const
+    const UTF32String& name() const
     {
         STARFISH_ASSERT(m_type == StartTag || m_type == EndTag ||
                         m_type == DOCTYPE);
@@ -406,7 +401,7 @@ public:
         m_type = Character;
     }
 
-    const DataVector& characters() const
+    const UTF32String& characters() const
     {
         STARFISH_ASSERT(m_type == Character);
         return m_data;
@@ -425,7 +420,7 @@ public:
         m_orAllData |= character;
     }
 
-    void appendToCharacter(const GCVector<char>& characters)
+    void appendToCharacter(const ASCIIString& characters)
     {
         STARFISH_ASSERT(m_type == Character);
 
@@ -436,7 +431,7 @@ public:
 
     /* Comment Tokens */
 
-    const DataVector& comment() const
+    const UTF32String& comment() const
     {
         STARFISH_ASSERT(m_type == Comment);
         return m_data;
@@ -467,7 +462,10 @@ private:
     Type m_type;
     Attribute::Range m_range; // Always starts at zero.
     int m_baseOffset;
-    DataVector m_data;
+    // By using an inline capacity of 256, we avoid spilling over into an
+    // malloced buffer approximately 99% of the time based on a non-scientific
+    // browse around a number of popular web sites on 23 May 2013.
+    UTF32String m_data;
     char32_t m_orAllData;
 
     // For StartTag and EndTag

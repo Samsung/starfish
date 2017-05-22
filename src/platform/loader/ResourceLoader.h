@@ -92,7 +92,7 @@ private:
     uint64_t m_documentOpenTime;
     size_t m_pendingResourceCountWhileDocumentOpening;
     GCVector<Resource*> m_currentLoadingResources;
-    GCUnorderedMap<std::string, ResourceCacheData> m_imageResourceCache;
+    GCUnorderedMap<ASCIIString, ResourceCacheData> m_imageResourceCache;
     GCVector<Resource*> m_imageResourceCacheLRUList;
     size_t m_resourceCacheSize;
     uint64_t m_lastCachePruneTime;

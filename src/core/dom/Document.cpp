@@ -1017,8 +1017,7 @@ DocumentFragment* Document::createDocumentFragment()
 Element* Document::createElement(AtomicString localName, bool shouldCheckName)
 {
     if (shouldCheckName &&
-        !QualifiedName::checkNameProductionRule(localName.string(),
-                                                localName.string()->length())) {
+        !QualifiedName::checkNameProductionRule(localName.string())) {
         throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
@@ -1029,7 +1028,7 @@ Element* Document::createElement(AtomicString localName, bool shouldCheckName)
 Element* Document::createElement(String* name)
 {
     AtomicString atomicName = AtomicString::createAttrAtomicString(
-        window()->starFish(), name->utf8Data());
+        window()->starFish(), name->toUTF32String());
     return createElement(atomicName, true);
 }
 
@@ -1058,8 +1057,7 @@ Attr* Document::createAttribute(String* name)
 
 Attr* Document::createAttribute(QualifiedName localName)
 {
-    if (!QualifiedName::checkNameProductionRule(
-            localName.localName(), localName.localName()->length())) {
+    if (!QualifiedName::checkNameProductionRule(localName.localName())) {
         throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }

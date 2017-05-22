@@ -55,6 +55,8 @@
 #include <gc_cpp.h>
 #include <gc_allocator.h>
 
+#include <Escargot.h>
+
 #include <SkMatrix.h>
 
 #include <unicode/locid.h>
