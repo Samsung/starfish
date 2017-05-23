@@ -18,6 +18,8 @@
 #define __Font__
 
 #include "StarFishConfig.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 namespace StarFish {
 
@@ -86,6 +88,11 @@ public:
         return m_metrics;
     }
 
+    FT_Face FTFace()
+    {
+        return m_FTFace;
+    }
+
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
     static inline size_t spaceSizeNumerator(char32_t c)
@@ -117,6 +124,8 @@ protected:
     char m_weight;
     char m_style;
     String* m_fontFamily;
+
+    FT_Face m_FTFace;
 };
 
 class FontSelector {

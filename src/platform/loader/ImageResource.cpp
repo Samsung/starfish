@@ -25,7 +25,7 @@
 
 namespace StarFish {
 
-#ifdef STARFISH_EFL
+#if defined(USE_EFL) || defined(USE_DALI)
 void ImageResource::doLoadFile(void* data)
 {
     Resource* res = (Resource*)data;
@@ -58,7 +58,7 @@ void ImageResource::doLoadFile(void* data)
 
 void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 {
-#ifdef STARFISH_EFL
+#if defined(USE_EFL) || defined(USE_DALI)
     if (m_url->isFileURL()) {
         if (!loader()->requestResourcePreprocess(this, syncLevel)) {
             // cache miss
@@ -84,7 +84,7 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 
 void ImageResource::didLoadFinished()
 {
-#ifdef STARFISH_EFL
+#if defined(USE_EFL) || defined(USE_DALI)
     if (!m_url->isFileURL()) {
         m_imageData = ImageData::create(m_networkRequest->response().data(),
                                         m_networkRequest->response().size());

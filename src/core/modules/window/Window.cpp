@@ -46,8 +46,6 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 
-#include <Elementary.h>
-#include <Evas_Engine_Buffer.h>
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
 #else
@@ -56,412 +54,19 @@
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
 
-#ifdef STARFISH_TIZEN_WEARABLE
-#include <efl_extension.h>
-#include <tizen.h>
-#endif
-
 #ifdef STARFISH_ENABLE_TEST
 #include <sys/ioctl.h>
 #include <net/if.h>
+
 bool g_fireOnloadEvent = false;
 bool g_forceRendering = false;
-#endif
-
-#ifndef STARFISH_TIZEN_WEARABLE_LIB
-extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
-extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
+Evas_Object* g_imgBufferForScreehShot;
+StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
 // #define STARFISH_ENABLE_TIMER
 
 namespace StarFish {
-
-struct IdlerData {
-    void (*m_fn)(void*);
-    void* m_data;
-};
-
-class WindowImplEFL : public Window {
-public:
-    WindowImplEFL(StarFish* sf)
-        : Window(sf)
-    {
-        m_mainBox = nullptr;
-        m_dummyBox = nullptr;
-        m_dummyBoxClipper = nullptr;
-        m_renderingAnimator = nullptr;
-        m_renderingIdlerData = nullptr;
-
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
-            },
-            NULL, NULL, NULL);
-    }
-
-    virtual int32_t width() override
-    {
-#ifdef STARFISH_ENABLE_TEST
-        if (getenv("SCREEN_SHOT_WIDTH") &&
-            strlen(getenv("SCREEN_SHOT_WIDTH"))) {
-            return atoi(getenv("SCREEN_SHOT_WIDTH"));
-        }
-#endif
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-        int width;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, NULL);
-        return width;
-    }
-
-    virtual int32_t height() override
-    {
-#ifdef STARFISH_ENABLE_TEST
-        if (getenv("SCREEN_SHOT_HEIGHT") &&
-            strlen(getenv("SCREEN_SHOT_HEIGHT"))) {
-            return atoi(getenv("SCREEN_SHOT_HEIGHT"));
-        }
-#endif
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-        int height;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, NULL,
-                                 &height);
-        return height;
-    }
-
-    virtual void resizeTo(int w, int h)
-    {
-        evas_object_resize(m_window, w, h);
-    }
-
-    virtual void* unwrap()
-    {
-        return (void*)m_window;
-    }
-
-    void clearEFLResources()
-    {
-        clearStackingContext(false);
-    }
-
-    bool m_isActive;
-    uintptr_t m_handle;
-    Evas_Object* m_window;
-    Evas_Object* m_canvasAdpater;
-    std::vector<Evas_Object*> m_objectList;
-    std::vector<Evas_Object*> m_surfaceList;
-    Evas_Object* m_mainBox;
-    Evas_Object* m_dummyBox;
-    Evas_Object* m_dummyBoxClipper;
-
-    Ecore_Event_Handler* m_desktopMouseDownEventHandler;
-    Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
-    Ecore_Event_Handler* m_desktopMouseUpEventHandler;
-    Ecore_Event_Handler* m_desktopKeyDownEventHandler;
-    Ecore_Event_Handler* m_desktopKeyUpEventHandler;
-
-    void (*m_mobileMouseDownEventHandler)(void* data, Evas* evas,
-                                          Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseMoveEventHandler)(void* data, Evas* evas,
-                                          Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas,
-                                        Evas_Object* obj, void* event_info);
-    void (*m_mobileClickEventHandler)(void* data, Evas_Object* obj,
-                                      void* event_info);
-
-    Ecore_Animator* m_renderingAnimator;
-    IdlerData* m_renderingIdlerData;
-
-    float m_lastMouseX, m_lastMouseY;
-};
-
-class CanvasSurfaceEFL : public CanvasSurface {
-public:
-    CanvasSurfaceEFL(Window* wnd, size_t w, size_t h)
-    {
-        m_window = (WindowImplEFL*)wnd;
-        m_image =
-            evas_object_image_add(evas_object_evas_get(m_window->m_window));
-        evas_object_image_size_set(m_image, w, h);
-        evas_object_image_filled_set(m_image, EINA_TRUE);
-        evas_object_image_colorspace_set(
-            m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
-        evas_object_image_alpha_set(m_image, EINA_TRUE);
-        evas_object_anti_alias_set(m_image, EINA_TRUE);
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
-                                EVAS_COLORSPACE_ARGB8888);
-        m_width = w;
-        m_height = h;
-        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
-
-        STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           CanvasSurfaceEFL* s =
-                                               (CanvasSurfaceEFL*)obj;
-                                           // STARFISH_LOG_INFO("release
-                                           // CanvasSurfaceEFL %p\n", s);
-                                           s->detachNativeBuffer();
-                                       },
-                                       NULL, NULL, NULL);
-    }
-
-    void detachNative(Evas_Object* image)
-    {
-        if (!image) {
-            return;
-        }
-        CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)this;
-        // STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n",
-        //                   image);
-        // evas_object_image_size_set(image, 0, 0);
-        evas_object_hide(image);
-        STARFISH_RELEASE_ASSERT(evas_object_ref_get(image) == 0);
-        evas_object_del(image);
-        /*
-        auto iter = std::find(s->m_window->m_surfaceList.begin(),
-        s->m_window->m_surfaceList.end(), s->m_image);
-        if (s->m_window->m_surfaceList.end() != iter) {
-            s->m_window->m_surfaceList.erase(iter);
-        }
-        */
-    }
-
-    virtual void detachNativeBuffer()
-    {
-        detachNative(m_image);
-        m_image = nullptr;
-    }
-
-    virtual void resize(size_t w, size_t h)
-    {
-        STARFISH_ASSERT(m_image);
-        evas_object_image_size_set(m_image, w, h);
-    }
-
-    virtual void* unwrap()
-    {
-        return m_image;
-    }
-
-    virtual size_t width()
-    {
-        return m_width;
-    }
-
-    virtual size_t height()
-    {
-        return m_height;
-    }
-
-    virtual void clear()
-    {
-        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
-        size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(address, 0xff, end);
-        evas_object_image_data_set(m_image, address);
-    }
-
-protected:
-    WindowImplEFL* m_window;
-    Evas_Object* m_image;
-    size_t m_width;
-    size_t m_height;
-};
-
-CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
-{
-    return new CanvasSurfaceEFL(wnd, w, h);
-}
-
-static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
-                                  void* user_data)
-{
-    ecore_animator_add(
-        [](void* user_data) -> Eina_Bool {
-            WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-            wnd->setNeedsLayout();
-            return ECORE_CALLBACK_CANCEL;
-        },
-        user_data);
-}
-
-Window* Window::create(StarFish* sf, void* win, int width, int height)
-{
-    auto wnd = new WindowImplEFL(sf);
-    wnd->m_starFish = sf;
-    wnd->m_window = (Evas_Object*)win;
-
-#ifndef STARFISH_TIZEN_WEARABLE_LIB
-    Evas* e = evas_object_evas_get(wnd->m_window);
-    Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
-    Ecore_Window ew = ecore_evas_window_get(ee);
-    wnd->m_handle = (uintptr_t)ew;
-
-    wnd->m_mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND,
-                                     EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
-    elm_box_layout_set(wnd->m_mainBox, mainRenderingFunction, wnd, NULL);
-    evas_object_show(wnd->m_mainBox);
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        const char* hide = getenv("HIDE_WINDOW");
-        if ((path && strlen(path)) || (hide && strlen(hide))) {
-            evas_object_hide(wnd->m_window);
-        } else {
-            evas_object_show(wnd->m_window);
-        }
-    }
-#else
-    evas_object_show(wnd->m_window);
-#endif
-    /*
-    evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST,
-        [](void *data,
-            Evas *e, void *event_info) {
-        }, wnd);
-    */
-
-    wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_BUTTON_DOWN,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
-            Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventDown);
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopMouseUpEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_BUTTON_UP,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
-            Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventUp);
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_MOVE,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
-            Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopKeyDownEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_KEY_DOWN,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
-            Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(String::createASCIIString(d->keyname),
-                                 Window::KeyEventDown);
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopKeyUpEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_KEY_UP,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
-            Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(String::createASCIIString(d->keyname),
-                                 Window::KeyEventUp);
-            return EINA_TRUE;
-        },
-        wnd);
-
-#else
-    Evas* e = evas_object_evas_get(wnd->m_window);
-    wnd->m_mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND,
-                                     EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
-    elm_box_layout_set(wnd->m_mainBox, mainRenderingFunction, wnd, NULL);
-    evas_object_show(wnd->m_mainBox);
-
-    wnd->m_dummyBox = elm_button_add(wnd->m_window);
-    int w, h;
-    evas_object_geometry_get(wnd->m_window, &w, &h, NULL, NULL);
-    evas_object_resize(wnd->m_dummyBox, width, height);
-    evas_object_move(wnd->m_dummyBox, 0, 0);
-    evas_object_show(wnd->m_dummyBox);
-
-    wnd->m_dummyBoxClipper = evas_object_rectangle_add(e);
-    evas_object_move(wnd->m_dummyBoxClipper, 0, 0);
-    evas_object_resize(wnd->m_dummyBoxClipper, width, height);
-    evas_object_clip_set(wnd->m_dummyBox, wnd->m_dummyBoxClipper);
-    evas_object_color_set(wnd->m_dummyBoxClipper, 0, 0, 0, 0);
-    evas_object_show(wnd->m_dummyBoxClipper);
-
-    evas_object_show(wnd->m_window);
-
-    wnd->m_mobileMouseDownEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
-        sf->m_lastMouseX = ev->canvas.x;
-        sf->m_lastMouseY = ev->canvas.y;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y,
-                               Window::TouchEventStart, true);
-        return;
-    };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
-                                   wnd->m_mobileMouseDownEventHandler, wnd);
-
-    wnd->m_mobileMouseMoveEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
-        sf->m_lastMouseX = ev->cur.canvas.x;
-        sf->m_lastMouseY = ev->cur.canvas.y;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y,
-                               Window::TouchEventMove, true);
-        return;
-    };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
-                                   wnd->m_mobileMouseMoveEventHandler, wnd);
-
-    wnd->m_mobileMouseUpEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        sf->starFish()->messageLoop()->addIdler(
-            [](size_t a, void* data) {
-                ((Window*)data)
-                    ->dispatchTouchEvent(0, 0, Window::TouchEventCancel, true);
-            },
-            sf);
-        return;
-    };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP,
-                                   wnd->m_mobileMouseUpEventHandler, wnd);
-
-    wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj,
-                                        void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY,
-                               Window::TouchEventEnd, true);
-    };
-    evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
-                                   wnd->m_mobileClickEventHandler, wnd);
-#endif
-    wnd->m_animationExecutor = new AnimationExecutor(wnd);
-    return wnd;
-}
 
 Window::Window(StarFish* starFish)
     : EventTarget(nullptr)
@@ -505,63 +110,14 @@ void Window::initFlags()
     m_lastRenderingTime = 0;
 }
 
-Window::~Window()
-{
-    STARFISH_LOG_INFO("Window::~Window\n");
-
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
-    if (eflWindow->m_dummyBoxClipper) {
-        evas_object_del(eflWindow->m_dummyBoxClipper);
-        eflWindow->m_dummyBoxClipper = nullptr;
-    }
-
-    if (eflWindow->m_dummyBox) {
-        evas_object_del(eflWindow->m_dummyBox);
-        eflWindow->m_dummyBox = nullptr;
-    }
-
-    if (eflWindow->m_mainBox) {
-        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
-        evas_object_del(eflWindow->m_mainBox);
-        eflWindow->m_mainBox = nullptr;
-    }
-
-#ifndef STARFISH_TIZEN_WEARABLE
-    ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_DOWN,
-                                   eflWindow->m_mobileMouseDownEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_MOVE,
-                                   eflWindow->m_mobileMouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_UP,
-                                   eflWindow->m_mobileMouseUpEventHandler);
-    evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
-                                   eflWindow->m_mobileClickEventHandler);
-
-    if (m_animationExecutor->isAlive()) {
-        m_animationExecutor->stopIfNeeds();
-    }
-#endif
-}
-
 void Window::navigate(URL* url)
 {
     close();
     initFlags();
     STARFISH_LOG_INFO("Window::navigate %s\n", url->urlString()->utf8Data());
 
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    eflWindow->m_isActive = true;
+    // WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    m_isActive = true;
 
     m_scriptBindingInstance = new ScriptBindingInstance();
     StarFishEnterer enter(m_starFish);
@@ -607,113 +163,6 @@ void Window::navigateAsyncWithoutSetHistory(URL* url)
             ((Window*)data2)->navigate((URL*)data);
         },
         url, this);
-}
-
-#ifdef STARFISH_ENABLE_TEST
-static Evas_Object* g_imgBufferForScreehShot;
-static CanvasSurface* g_surfaceForScreehShot;
-#endif
-
-Canvas* preparePainting(WindowImplEFL* eflWindow, bool forPainting)
-{
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
-            g_surfaceForScreehShot = CanvasSurface::create(
-                eflWindow, eflWindow->width(), eflWindow->height());
-            g_imgBufferForScreehShot =
-                (Evas_Object*)g_surfaceForScreehShot->unwrap();
-            return Canvas::create(g_surfaceForScreehShot);
-        }
-    }
-#endif
-    int width, height;
-    evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
-    Evas* evas = evas_object_evas_get(eflWindow->m_window);
-    struct dummy {
-        void* a;
-        void* b;
-        int w;
-        int h;
-        std::vector<Evas_Object*>* objList;
-        std::vector<Evas_Object*>* surfaceList;
-    };
-    dummy* d = new dummy;
-    d->a = evas;
-    d->b = nullptr;
-    if (!forPainting) {
-        d->b = nullptr;
-    }
-    d->w = width;
-    d->h = height;
-    d->objList = &eflWindow->m_objectList;
-    d->surfaceList = &eflWindow->m_surfaceList;
-    auto iter = eflWindow->m_objectList.begin();
-    while (iter != eflWindow->m_objectList.end()) {
-        evas_object_del(*iter);
-        iter++;
-    }
-    eflWindow->m_objectList.clear();
-    eflWindow->m_objectList.shrink_to_fit();
-
-    iter = eflWindow->m_surfaceList.begin();
-    while (iter != eflWindow->m_surfaceList.end()) {
-        evas_object_hide(*iter);
-        iter++;
-    }
-    eflWindow->m_surfaceList.clear();
-    eflWindow->m_surfaceList.shrink_to_fit();
-
-    Canvas* canvas = Canvas::createDirect(d);
-    delete d;
-
-    return canvas;
-}
-
-void Window::paintWindowBackground(Canvas* canvas)
-{
-#ifdef STARFISH_TIZEN
-    if (!document()->m_tizenWidgetTransparentBackground) {
-        canvas->clearColor(Color(255, 255, 255, 255));
-    }
-#else
-    canvas->clearColor(Unit::Color(255, 255, 255, 255));
-#endif
-
-    if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-        int width, height;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width,
-                                 &height);
-        LayoutRect colorRect(0, 0, width, height);
-        if (m_hasRootElementBackground) {
-            FrameBox* rootRect =
-                document()->rootElement()->frame()->asFrameBox();
-            LayoutLocation rootRectPos =
-                rootRect->absolutePoint(document()->frame()->asFrameBox());
-            LayoutRect imgRect(rootRectPos.x() + rootRect->borderLeft(),
-                               rootRectPos.y() + rootRect->borderTop(),
-                               rootRect->width() - rootRect->borderWidth(),
-                               rootRect->height() - rootRect->borderHeight());
-
-            FrameBox::paintBackground(canvas,
-                                      document()->rootElement()->style(),
-                                      imgRect, colorRect, true);
-        } else {
-            LayoutRect imgRect(0, 0, width, height);
-            if (document()->rootElement()->body()->frame()) {
-                FrameBox* bodyRect =
-                    document()->rootElement()->body()->frame()->asFrameBox();
-                imgRect.setHeight(bodyRect->height() +
-                                  bodyRect->marginHeight());
-            }
-
-            FrameBox::paintBackground(
-                canvas, document()->rootElement()->body()->style(), imgRect,
-                colorRect, true);
-        }
-    }
 }
 
 void Window::layoutIfNeeds()
@@ -831,24 +280,8 @@ void Window::layoutIfNeeds()
     }
 }
 
-void Window::markHasPendingStyleSheet()
-{
-    STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
-    m_pendingStyleSheetCount++;
-}
-
-void Window::unmarkHasPendingStyleSheet()
-{
-    STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
-    if (m_pendingStyleSheetCount > 0) {
-        m_pendingStyleSheetCount--;
-        setNeedsRendering();
-    }
-}
-
 void Window::rendering()
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     if (m_pendingStyleSheetCount && document() &&
         document()->resourceLoader().isDocumentInOpenState() &&
         ((timestamp() - document()->resourceLoader().documentOpenTime()) <
@@ -857,7 +290,7 @@ void Window::rendering()
         setTimeout([](Window* wnd, void* data) { wnd->setNeedsRendering(); },
                    100, nullptr);
 
-        Canvas* canvas = preparePainting(eflWindow, true);
+        Canvas* canvas = preparePainting(true);
 #ifndef STARFISH_TIZEN
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
@@ -871,7 +304,7 @@ void Window::rendering()
     uint64_t currentTick = tickCount();
     m_lastRenderingTime = currentTick;
     m_inRendering = true;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 #ifdef STARFISH_ENABLE_TIMER
     Timer renderingTimer("Window::rendering");
 #endif
@@ -891,7 +324,7 @@ void Window::rendering()
         Timer t("painting");
 #endif
         // painting
-        Canvas* canvas = preparePainting(eflWindow, true);
+        Canvas* canvas = preparePainting(true);
 
         if (m_document->frame()->firstChild()) {
             m_needsComposite = m_rootStackingContext->needsOwnBuffer();
@@ -993,7 +426,7 @@ void Window::rendering()
 #endif
         if (m_document->frame()->firstChild() &&
             m_rootStackingContext->needsOwnBuffer()) {
-            Canvas* canvas = preparePainting(eflWindow, false);
+            Canvas* canvas = preparePainting(false);
             paintWindowBackground(canvas);
             m_document->frame()
                 ->firstChild()
@@ -1032,6 +465,62 @@ void Window::rendering()
         }
     }
 #endif
+}
+
+void Window::paintWindowBackground(Canvas* canvas)
+{
+#ifdef STARFISH_TIZEN
+    if (!document()->m_tizenWidgetTransparentBackground) {
+        canvas->clearColor(Color(255, 255, 255, 255));
+    }
+#else
+    canvas->clearColor(Unit::Color(255, 255, 255, 255));
+#endif
+
+    if (m_hasRootElementBackground || m_hasBodyElementBackground) {
+        LayoutRect colorRect(0, 0, width(), height());
+        if (m_hasRootElementBackground) {
+            FrameBox* rootRect =
+                document()->rootElement()->frame()->asFrameBox();
+            LayoutLocation rootRectPos =
+                rootRect->absolutePoint(document()->frame()->asFrameBox());
+            LayoutRect imgRect(rootRectPos.x() + rootRect->borderLeft(),
+                               rootRectPos.y() + rootRect->borderTop(),
+                               rootRect->width() - rootRect->borderWidth(),
+                               rootRect->height() - rootRect->borderHeight());
+
+            FrameBox::paintBackground(canvas,
+                                      document()->rootElement()->style(),
+                                      imgRect, colorRect, true);
+        } else {
+            LayoutRect imgRect(0, 0, width(), height());
+            if (document()->rootElement()->body()->frame()) {
+                FrameBox* bodyRect =
+                    document()->rootElement()->body()->frame()->asFrameBox();
+                imgRect.setHeight(bodyRect->height() +
+                                  bodyRect->marginHeight());
+            }
+
+            FrameBox::paintBackground(
+                canvas, document()->rootElement()->body()->style(), imgRect,
+                colorRect, true);
+        }
+    }
+}
+
+void Window::markHasPendingStyleSheet()
+{
+    STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
+    m_pendingStyleSheetCount++;
+}
+
+void Window::unmarkHasPendingStyleSheet()
+{
+    STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
+    if (m_pendingStyleSheetCount > 0) {
+        m_pendingStyleSheetCount--;
+        setNeedsRendering();
+    }
 }
 
 void Window::clearStackingContext(bool backupBuffer)
@@ -1088,23 +577,6 @@ void Window::setNetworkState(bool state)
     ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 }
 
-void Window::screenShot(std::string filePath)
-{
-    bool oldNeedsPainting = m_needsPainting;
-    bool oldOnLoad = g_fireOnloadEvent;
-    g_fireOnloadEvent = true;
-    g_forceRendering = true;
-    setNeedsPainting();
-    setenv("SCREEN_SHOT", filePath.data(), 1);
-    rendering();
-    setenv("SCREEN_SHOT", "", 1);
-    g_fireOnloadEvent = oldOnLoad;
-    g_forceRendering = false;
-
-    m_needsPainting = oldNeedsPainting;
-    setNeedsRendering();
-}
-
 void Window::forceDisableOnloadCapture()
 {
     setenv("SCREEN_SHOT", "", 1);
@@ -1136,39 +608,6 @@ void Window::testStart()
 }
 #endif
 
-void Window::setNeedsRenderingSlowCase()
-{
-    STARFISH_ASSERT(!m_needsRendering);
-    m_needsRendering = true;
-
-    IdlerData* id = new (NoGC) IdlerData;
-    id->m_fn = [](void* data) -> void {
-        Window* wnd = (Window*)data;
-        wnd->rendering();
-    };
-    id->m_data = this;
-
-    ((WindowImplEFL*)this)->m_renderingIdlerData = id;
-    ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            IdlerData* id = (IdlerData*)data;
-            Window* wnd = (Window*)id->m_data;
-            StarFishEnterer enter(wnd->m_starFish);
-            id->m_fn(id->m_data);
-            ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
-            ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
-            GC_FREE(id);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        id);
-}
-
-void Window::setWholeDocumentNeedsStyleRecalc()
-{
-    m_needsStyleRecalcForWholeDocument = true;
-    setNeedsRendering();
-}
-
 struct TimeoutData {
     Window* m_window;
     int32_t m_id;
@@ -1177,11 +616,79 @@ struct TimeoutData {
     WindowSetTimeoutHandler m_handler;
 };
 
+void Window::close()
+{
+    STARFISH_LOG_INFO("Window::close\n");
+    clearEventListeners();
+
+    if (m_navigator) {
+        m_navigator->close();
+    }
+
+    m_focusedNode = nullptr;
+    m_relatedTarget = nullptr;
+    m_cssTarget = nullptr;
+
+    m_activeNodes.clear();
+    m_activeNodes.shrink_to_fit();
+    m_hoveredNodes.clear();
+    m_hoveredNodes.shrink_to_fit();
+
+    if (m_location) {
+        m_location->close();
+    }
+
+    if (m_document) {
+        StarFishEnterer enter(m_starFish);
+        m_document->close();
+        delete m_document;
+        m_document = nullptr;
+    }
+
+    if (m_scriptBindingInstance) {
+        if (true) {
+            StarFishEnterer enter(m_starFish);
+            m_scriptBindingInstance->close();
+        }
+        delete m_scriptBindingInstance;
+        m_scriptBindingInstance = nullptr;
+    }
+
+    m_isActive = false;
+
+    auto timerIter = m_timeoutHandler.begin();
+    while (timerIter != m_timeoutHandler.end()) {
+        TimeoutData* td = (TimeoutData*)timerIter->second;
+        ecore_timer_del(td->m_timerID);
+        GC_FREE(td);
+        timerIter++;
+    }
+    m_timeoutHandler.clear();
+
+    auto aniIter = m_requestAnimationFrameHandler.begin();
+    while (aniIter != m_requestAnimationFrameHandler.end()) {
+        TimeoutData* td = (TimeoutData*)aniIter->second;
+        ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        GC_FREE(td);
+        aniIter++;
+    }
+    m_requestAnimationFrameHandler.clear();
+    clearResources();
+
+    m_starFish->messageLoop()->clearPendingIdlers();
+    m_starFish->clearBlobURLStore();
+}
+
+void Window::setWholeDocumentNeedsStyleRecalc()
+{
+    m_needsStyleRecalcForWholeDocument = true;
+    setNeedsRendering();
+}
+
 uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
                             void* data)
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 
     TimeoutData* td = new (NoGC) TimeoutData;
     td->m_window = this;
@@ -1213,8 +720,7 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
 
 void Window::clearTimeout(int32_t id)
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) {
@@ -1228,8 +734,7 @@ void Window::clearTimeout(int32_t id)
 uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
                              void* data)
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 
     TimeoutData* td = new (NoGC) TimeoutData;
     td->m_window = this;
@@ -1255,8 +760,7 @@ uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
 
 void Window::clearInterval(int32_t id)
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) {
@@ -1270,8 +774,7 @@ void Window::clearInterval(int32_t id)
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
                                        void* data)
 {
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+    STARFISH_RELEASE_ASSERT(m_isActive);
 
     TimeoutData* td = new (NoGC) TimeoutData;
     td->m_window = this;
@@ -1778,78 +1281,20 @@ void Window::resume()
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
 }
 
-void Window::close()
+void Window::screenShot(std::string filePath)
 {
-    STARFISH_LOG_INFO("Window::close\n");
-    clearEventListeners();
+    bool oldNeedsPainting = m_needsPainting;
+    bool oldOnLoad = g_fireOnloadEvent;
+    g_fireOnloadEvent = true;
+    g_forceRendering = true;
+    setNeedsPainting();
+    setenv("SCREEN_SHOT", filePath.data(), 1);
+    rendering();
+    setenv("SCREEN_SHOT", "", 1);
+    g_fireOnloadEvent = oldOnLoad;
+    g_forceRendering = false;
 
-    if (m_navigator) {
-        m_navigator->close();
-    }
-
-    m_focusedNode = nullptr;
-    m_relatedTarget = nullptr;
-    m_cssTarget = nullptr;
-
-    m_activeNodes.clear();
-    m_activeNodes.shrink_to_fit();
-    m_hoveredNodes.clear();
-    m_hoveredNodes.shrink_to_fit();
-
-    if (m_location) {
-        m_location->close();
-    }
-
-    if (m_document) {
-        StarFishEnterer enter(m_starFish);
-        m_document->close();
-        delete m_document;
-        m_document = nullptr;
-    }
-
-    if (m_scriptBindingInstance) {
-        if (true) {
-            StarFishEnterer enter(m_starFish);
-            m_scriptBindingInstance->close();
-        }
-        delete m_scriptBindingInstance;
-        m_scriptBindingInstance = nullptr;
-    }
-
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    eflWindow->m_isActive = false;
-
-    auto timerIter = m_timeoutHandler.begin();
-    while (timerIter != m_timeoutHandler.end()) {
-        TimeoutData* td = (TimeoutData*)timerIter->second;
-        ecore_timer_del(td->m_timerID);
-        GC_FREE(td);
-        timerIter++;
-    }
-    m_timeoutHandler.clear();
-
-    auto aniIter = m_requestAnimationFrameHandler.begin();
-    while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
-        aniIter++;
-    }
-    m_requestAnimationFrameHandler.clear();
-
-    if (eflWindow->m_renderingAnimator) {
-        ecore_animator_del(eflWindow->m_renderingAnimator);
-        GC_FREE(eflWindow->m_renderingIdlerData);
-    }
-
-    eflWindow->clearEFLResources();
-
-    eflWindow->m_objectList.clear();
-    eflWindow->m_objectList.shrink_to_fit();
-    eflWindow->m_surfaceList.clear();
-    eflWindow->m_surfaceList.shrink_to_fit();
-
-    m_starFish->messageLoop()->clearPendingIdlers();
-    m_starFish->clearBlobURLStore();
+    m_needsPainting = oldNeedsPainting;
+    setNeedsRendering();
 }
 }

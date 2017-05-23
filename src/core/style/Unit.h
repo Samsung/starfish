@@ -293,6 +293,27 @@ namespace Unit {
         {
             return m_a;
         }
+        double R() const
+        {
+            return normalize(m_r);
+        }
+        double G() const
+        {
+            return normalize(m_g);
+        }
+        double B() const
+        {
+            return normalize(m_b);
+        }
+        double A() const
+        {
+            return normalize(m_a);
+        }
+
+        double normalize(unsigned char value) const
+        {
+            return (double)value / 255.0;
+        }
 
         unsigned char m_r, m_g, m_b, m_a;
     };

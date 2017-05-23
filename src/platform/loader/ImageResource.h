@@ -59,7 +59,7 @@ public:
         m_imageData = cache->asImageResource()->m_imageData;
         Resource::didLoadFinished();
     }
-#ifdef STARFISH_EFL
+#if defined(USE_EFL) || defined(USE_DALI)
     static void doLoadFile(void*);
 #endif
 protected:

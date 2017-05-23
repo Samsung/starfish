@@ -14,6 +14,9 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
+
+#if defined(USE_EFL)
 #include "StarFish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
@@ -1643,3 +1646,4 @@ Canvas* Canvas::create(CanvasSurface* data)
     return new CanvasEFL(data);
 }
 }
+#endif

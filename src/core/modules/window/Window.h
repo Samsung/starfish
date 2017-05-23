@@ -226,6 +226,8 @@ public:
     virtual int32_t height() = 0;
     virtual void resizeTo(int w, int h) = 0;
     virtual void* unwrap() = 0;
+    virtual void clearResources() = 0;
+    virtual Canvas* preparePainting(bool forPainting) = 0;
 
     // The viewport width and height are same as the window size for wearable
     // widget.
@@ -381,6 +383,7 @@ protected:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
     bool m_isRunning;
+    bool m_isActive;
 
     size_t m_pendingStyleSheetCount;
     size_t m_pendingRenderingCount;

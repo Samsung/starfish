@@ -195,7 +195,7 @@ class AnimationExecutor : public gc {
 public:
     AnimationExecutor(Window* window)
         : m_isAlive(false)
-        , m_platformAnimator(nullptr)
+        , m_platformAnimator(0)
     {
         m_window = window;
     }
@@ -222,7 +222,7 @@ public:
 private:
     Window* m_window;
     bool m_isAlive;
-    Ecore_Animator* m_platformAnimator;
+    size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;
     CubicBeizer* m_timingFunctionPreset[5];
 };

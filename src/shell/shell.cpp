@@ -12,7 +12,7 @@
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
- */
+*/
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
@@ -22,9 +22,14 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
+#include "core/modules/window/Window.h"
 
 #include <pthread.h>
 #include <Elementary.h>
+
+#ifdef USE_DALI
+#include <dali-toolkit/dali-toolkit.h>
+#endif
 
 using namespace StarFish;
 
@@ -106,6 +111,131 @@ static void printMemps(
     fclose(file);
 }
 #endif
+
+#ifdef USE_DALI
+using namespace Dali;
+
+char* url = nullptr;
+
+class DaliShellController : public ConnectionTracker {
+public:
+    DaliShellController(Application& application)
+        : mApplication(application)
+    {
+        mApplication.InitSignal().Connect(this, &DaliShellController::Create);
+    }
+    ~DaliShellController()
+    {
+    }
+    void Create(Application& application)
+    {
+        int width = 360, height = 360;
+        int flag = 0;
+
+        m_sf =
+            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
+                                   "Asia/Seoul", nullptr, width, height, 1);
+        m_sf->loadHTMLDocument(String::createASCIIString(url));
+        Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
+            this, &DaliShellController::OnStageTouched);
+
+        pthread_t t;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(&t, &attr,
+                       [](void* data) -> void* {
+                           char buf[1024];
+                           sleep(1);
+                           while (1) {
+                               fgets(buf, 1024, stdin);
+                               struct Pass {
+                                   StarFish::StarFish* sf;
+                                   char* buf;
+                               };
+                               char* b = new char[1024];
+                               Pass* pass = new Pass;
+                               pass->buf = b;
+                               pass->sf = (StarFish::StarFish*)data;
+                               memcpy(b, buf, sizeof buf);
+                               ecore_thread_main_loop_begin();
+                               ecore_animator_add(
+                                   [](void* data) -> Eina_Bool {
+                                       Pass* p = (Pass*)data;
+
+                                       if (strncmp(p->buf, "!exit", 5) == 0) {
+                                           delete p->sf;
+
+                                           GC_gcollect_and_unmap();
+                                           GC_gcollect_and_unmap();
+                                           GC_gcollect_and_unmap();
+                                           GC_gcollect_and_unmap();
+                                           exit(-1);
+                                       }
+
+                                       StarFishEnterer enter(p->sf);
+                                       String* str = p->sf->evaluate(
+                                           String::fromUTF8(p->buf));
+                                       puts(str->utf8Data());
+
+                                       delete[] p->buf;
+                                       delete p;
+                                       return ECORE_CALLBACK_CANCEL;
+                                   },
+                                   pass);
+                               ecore_thread_main_loop_end();
+                           }
+                           return NULL;
+                       },
+                       m_sf);
+
+        m_sf->run();
+        mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
+    }
+    bool OnStageTouched(Dali::Actor actor, const Dali::TouchData& data)
+    {
+        size_t pointCount = data.GetPointCount();
+        if (pointCount == 1) {
+            // Single touch event
+
+            // Get touch state of the primary point
+            Dali::PointState::Type pointState = data.GetState(0);
+            if (pointState == Dali::PointState::DOWN) {
+                StarFishEnterer enter(m_sf);
+                const Vector2& screen = data.GetScreenPosition(0);
+                m_sf->window()->dispatchMouseEvent(
+                    screen.x, screen.y, StarFish::Window::MouseEventDown);
+            } else if (pointState == Dali::PointState::UP) {
+                StarFishEnterer enter(m_sf);
+                const Vector2& screen = data.GetScreenPosition(0);
+                m_sf->window()->dispatchMouseEvent(
+                    screen.x, screen.y, StarFish::Window::MouseEventUp);
+            }
+            // sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
+        }
+        return true;
+    }
+    void OnIdle()
+    {
+        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+        mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
+    }
+
+private:
+    StarFish::StarFish* m_sf;
+    Application& mApplication;
+};
+
+int main(int argc, char* argv[])
+{
+    url = argv[1];
+    Application application = Application::New(&argc, &argv);
+    DaliShellController shell(application);
+    application.MainLoop();
+
+    return 0;
+}
+
+#elif defined(USE_EFL)
 
 int main(int argc, char* argv[])
 {
@@ -256,9 +386,10 @@ int main(int argc, char* argv[])
                    sf);
 
     // sf->messageLoop()->addIdler(test, sf);
-
     sf->run();
     // delete sf;
 
     return 0;
 }
+
+#endif

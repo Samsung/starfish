@@ -71,7 +71,7 @@
                    '-Wno-unused-function',
                    '-Wno-deprecated-declarations',
                    '-Wno-type-limits',
-                   '-fno-rtti',
+                   # '-fno-rtti',
                    '-fno-math-errno',
                    '-fdata-sections',
                    '-ffunction-sections',

@@ -17,14 +17,16 @@
 #include "StarFish.h"
 
 #include <Evas.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#ifdef USE_CAIRO
+#include <cairo.h>
+#include <cairo/cairo-ft.h>
+#endif
 #include <fontconfig/fontconfig.h>
 
 #include "core/modules/canvas/font/Font.h"
 #include "core/style/UnitHelper.h"
 
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
+#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) && defined(USE_EFL)
 extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text* obj);
 extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text* obj);
 #endif
@@ -83,6 +85,8 @@ static String* convertStyleParamStr(String* familyName, unsigned char style,
     }
     return familyName;
 }
+
+#if defined(USE_EFL)
 
 class FontImplEFL : public Font {
 public:
@@ -281,4 +285,237 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }
+
+#elif defined(USE_CAIRO)
+
+class FontImplCAIRO : public Font {
+public:
+    FontImplCAIRO(String* familyName, float size, char style, char weight,
+                  FontMetrics met, FT_Face face)
+    {
+        m_FTFace = face;
+        m_text = nullptr;
+        m_metrics = met;
+        m_size = size;
+        m_weight = weight;
+        m_style = style;
+        m_fontFamily = convertStyleParamStr(familyName, style, weight);
+
+        loadFont(m_size);
+
+#ifdef STARFISH_ENABLE_TEST
+        if (!g_enablePixelTest) {
+            m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+            m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
+            m_metrics.m_fontHeight =
+                m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_xheightRate = met.m_xheightRate;
+        } else {
+            // Set the FontMetrics as if font is Ahem.
+            m_metrics.m_ascender = m_size * 0.8;
+            m_metrics.m_descender = m_metrics.m_ascender - m_size;
+            m_metrics.m_fontHeight =
+                m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_xheightRate = 0.8f;
+        }
+#else
+        m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+        m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
+        m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+        m_metrics.m_xheightRate = met.m_xheightRate;
+#endif
+
+        m_spaceWidth = measureText(StringView(String::spaceString, 0, 1));
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           // STARFISH_LOG_INFO("FontImplCAIRO::~FontImplCAIRO\n");
+                                           FontImplCAIRO* m =
+                                               (FontImplCAIRO*)obj;
+                                           if (m->m_text) {
+                                               evas_object_hide(m->m_text);
+                                               evas_object_del(m->m_text);
+                                           }
+                                       },
+                                       NULL, NULL, NULL);
+    }
+    ~FontImplCAIRO()
+    {
+    }
+
+    void loadFont(int size)
+    {
+        if (m_text) {
+            unloadFont();
+        }
+        m_text = evas_object_text_add(internalCanvas());
+        evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), size);
+    }
+
+    void unloadFont()
+    {
+        evas_object_del(m_text);
+        m_text = nullptr;
+    }
+
+    virtual LayoutUnit measureText(const StringView& str)
+    {
+        if (str.length() == 0) {
+            return 0;
+        }
+#ifdef STARFISH_ENABLE_TEST
+        if (g_enablePixelTest) {
+            size_t count = 0;
+            for (size_t i = str.start(); i < str.end(); i++) {
+                count += Font::spaceSizeNumerator((*str.originalString())[i]);
+            }
+            return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
+        }
+#endif
+        cairo_surface_t* surface;
+        cairo_t* cr;
+
+        surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 120, 120);
+        cr = cairo_create(surface);
+        FT_Face face = FTFace();
+        cairo_font_face_t* fontFace;
+        fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+        int size;
+        evas_object_text_font_get((Evas_Object*)this->unwrap(), NULL, &size);
+
+        cairo_set_font_face(cr, fontFace);
+        cairo_set_font_size(cr, size);
+        auto scaled_face = cairo_get_scaled_font(cr);
+        cairo_glyph_t* glyphs = NULL;
+        int glyph_count;
+        cairo_text_extents_t extents;
+
+        if (str.originalString()->isASCIIString()) {
+            bool isShort = str.length() < 128;
+            char* buf =
+                isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
+            strncpy(buf,
+                    str.originalString()->asASCIIString()->data() + str.start(),
+                    str.end() - str.start());
+            buf[str.length()] = 0;
+
+            cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, buf,
+                                             strlen(buf), &glyphs, &glyph_count,
+                                             nullptr, nullptr, nullptr);
+
+            if (!isShort) {
+                free(buf);
+            }
+
+        } else {
+            UTF8NonGCString s =
+                str.originalString()->toUTF8NonGCString(str.start(), str.end());
+            cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, s.c_str(),
+                                             s.length(), &glyphs, &glyph_count,
+                                             nullptr, nullptr, nullptr);
+        }
+        cairo_scaled_font_glyph_extents(scaled_face, glyphs, glyph_count,
+                                        &extents);
+
+        return extents.x_advance;
+    }
+
+    virtual void* unwrap()
+    {
+        return m_text;
+    }
+
+protected:
+    Evas_Object* m_text;
+};
+
+#define CHECK_ERROR                            \
+    if (error) {                               \
+        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+    }
+
+Font::FontMetrics loadFontMetrics(String* familyName, double size,
+                                  FT_Face& face)
+{
+    FcConfig* config = FcInitLoadConfigAndFonts();
+
+    // FcPattern* pattern = FcNameParse((const
+    // FcChar8*)(familyName->utf8Data()));
+    FcPattern* pattern = FcNameParse((const FcChar8*)("NanumGothic"));
+
+    FcConfigSubstitute(config, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+
+    FcResult res;
+    FcFontSet* set = FcFontSort(config, pattern, FcTrue, NULL, &res);
+
+    if (!set) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    std::string fontPath;
+    for (int i = 0; i < set->nfont; i++) {
+        FcPattern* font = set->fonts[i];
+        FcChar8* file;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            fontPath = (char*)file;
+            break;
+        }
+    }
+
+    FcFontSetDestroy(set);
+    FcPatternDestroy(pattern);
+    FcConfigDestroy(config);
+
+    FT_Library library;
+    FT_Error error;
+    error = FT_Init_FreeType(&library);
+    CHECK_ERROR;
+
+    // FT_Face face;
+    error = FT_New_Face(library, fontPath.data(), 0, &face);
+    CHECK_ERROR;
+
+    error = FT_Set_Pixel_Sizes(face, 0, size);
+    CHECK_ERROR;
+    FT_UInt glyph_index = FT_Get_Char_Index(face, 'x');
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+    CHECK_ERROR;
+    FT_Int xheight = face->glyph->bitmap_top;
+
+    Font::FontMetrics met;
+    met.m_fontHeight =
+        ((face->ascender - face->descender) * size) / face->units_per_EM;
+    met.m_ascender = ((face->ascender * size) / (face->units_per_EM));
+    met.m_descender = met.m_ascender - met.m_fontHeight;
+    met.m_xheightRate = xheight / size;
+
+    // FT_Done_Face(face);
+    // FT_Done_FreeType(library);
+    return met;
+}
+
+Font* FontSelector::loadFont(String* familyName, float size, char style,
+                             char weight)
+{
+    FontImplCAIRO* f = nullptr;
+
+    for (unsigned i = 0; i < m_fontCache.size(); i++) {
+        if (std::get<1>(m_fontCache[i])->equals(familyName)) {
+            if (std::get<2>(m_fontCache[i]) == size &&
+                std::get<3>(m_fontCache[i]) == style &&
+                std::get<4>(m_fontCache[i]) == weight) {
+                return std::get<0>(m_fontCache[i]);
+            }
+        }
+    }
+
+    FT_Face face = nullptr;
+    Font::FontMetrics fontMetrics = loadFontMetrics(
+        convertStyleParamStr(familyName, style, weight), size, face);
+    f = new FontImplCAIRO(familyName, size, style, weight, fontMetrics, face);
+    m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
+    return f;
+}
+#endif
 }
