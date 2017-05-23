@@ -319,4 +319,12 @@ protected:
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
 
+#if defined(STARFISH_EFL)
+#define USE_EFL
+#elif defined(STARFISH_DALI)
+#define USE_CAIRO
+#define USE_DALI
+#define USE_LIBUV
+#endif
+
 #endif

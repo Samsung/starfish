@@ -39,6 +39,10 @@
 #include <Ecore_X.h>
 #endif
 
+#ifdef USE_DALI
+#include <dali-toolkit/dali-toolkit.h>
+#endif
+
 extern Evas* g_internalCanvas;
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -221,6 +225,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_force_unmap_on_gcollect(1);
     }
 
+#if defined(USE_EFL)
     if (!win) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");
@@ -232,7 +237,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     }
 
     m_nativeWindow = win;
-
+#endif
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
 
@@ -328,8 +333,16 @@ void StarFish::loadHTMLDocument(String* filePath)
 
     int width;
     int height;
+
+#if defined(USE_DALI)
+    Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
+    width = size.width;
+    height = size.height;
+#elif defined(USE_EFL)
     evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width,
                              &height);
+#endif
+
     m_window = Window::create(this, m_nativeWindow, width, height);
     URL* url =
         URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));

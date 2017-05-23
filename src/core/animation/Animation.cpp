@@ -15,6 +15,8 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
@@ -201,14 +203,13 @@ void AnimationExecutor::startIfNeeds()
         return;
     }
     m_isAlive = true;
-    m_platformAnimator = ecore_animator_add(
-        [](void* user_data) -> Eina_Bool {
-            AnimationExecutor* executor = (AnimationExecutor*)user_data;
+    m_platformAnimator = window()->starFish()->messageLoop()->addIdler(
+        [](size_t handle, void* data) {
+            AnimationExecutor* executor = (AnimationExecutor*)data;
             if (executor->isAlive()) {
                 executor->step();
-                return ECORE_CALLBACK_RENEW;
+                // TODO : register task again.
             }
-            return ECORE_CALLBACK_CANCEL;
         },
         this);
 }
@@ -220,8 +221,8 @@ void AnimationExecutor::stop()
     }
     m_isAlive = false;
     if (m_platformAnimator) {
-        ecore_animator_del(m_platformAnimator);
-        m_platformAnimator = nullptr;
+        window()->starFish()->messageLoop()->removeIdler(m_platformAnimator);
+        m_platformAnimator = 0;
     }
 }
 
