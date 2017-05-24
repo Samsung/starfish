@@ -18,8 +18,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ProgressEvent.h"
-#include "core/extra/Blob.h"
-#include "core/extra/XMLHttpRequest.h"
+#include "core/fileapi/Blob.h"
+#include "core/xml/XMLHttpRequest.h"
 #include "core/modules/network/NetworkRequest.h"
 #include "core/modules/window/Window.h"
 

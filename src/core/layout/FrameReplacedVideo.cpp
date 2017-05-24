@@ -18,7 +18,7 @@
 #include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 

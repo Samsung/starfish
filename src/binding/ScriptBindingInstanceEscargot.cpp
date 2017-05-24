@@ -23,9 +23,9 @@
 #include "core/dom/DOMImplementation.h"
 #endif
 #include "core/extra/Console.h"
-#include "core/extra/History.h"
-#include "core/extra/Location.h"
-#include "core/extra/Navigator.h"
+#include "core/page/History.h"
+#include "core/page/Location.h"
+#include "core/page/Navigator.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 

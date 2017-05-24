@@ -19,7 +19,7 @@
 #define __StarFishSourceBuffer__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/multimedia/Demuxer.h"
+#include "platform/multimedia/Demuxer.h"
 
 namespace StarFish {
 

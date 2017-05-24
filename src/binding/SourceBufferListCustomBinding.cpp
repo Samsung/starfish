@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#include "core/extra/SourceBuffer.h"
-#include "core/extra/SourceBufferList.h"
+#include "core/modules/mediasource/SourceBuffer.h"
+#include "core/modules/mediasource/SourceBufferList.h"
 
 namespace StarFish {
 

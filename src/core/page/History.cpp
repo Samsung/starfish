@@ -15,9 +15,9 @@
  */
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/extra/History.h"
-#include "core/extra/HistoryEntry.h"
-#include "core/extra/Location.h"
+#include "core/page/History.h"
+#include "core/page/HistoryEntry.h"
+#include "core/page/Location.h"
 #include "core/modules/window/Window.h"
 
 namespace StarFish {

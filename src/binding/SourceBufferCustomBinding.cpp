@@ -15,7 +15,7 @@
  */
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/DOMException.h"
-#include "core/extra/SourceBuffer.h"
+#include "core/modules/mediasource/SourceBuffer.h"
 
 namespace StarFish {
 

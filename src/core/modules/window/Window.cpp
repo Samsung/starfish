@@ -31,9 +31,9 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/Traverse.h"
-#include "core/extra/History.h"
-#include "core/extra/Navigator.h"
-#include "core/extra/Location.h"
+#include "core/page/History.h"
+#include "core/page/Navigator.h"
+#include "core/page/Location.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/WebApis.h"
 #endif

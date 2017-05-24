@@ -21,9 +21,9 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLMediaElement.h"
-#include "core/extra/MediaSource.h"
-#include "core/extra/SourceBuffer.h"
-#include "core/extra/SourceBufferList.h"
+#include "core/modules/mediasource/MediaSource.h"
+#include "core/modules/mediasource/SourceBuffer.h"
+#include "core/modules/mediasource/SourceBufferList.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 namespace StarFish {
