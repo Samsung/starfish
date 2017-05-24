@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishNetworkRequestJobInterface__
+#define __StarFishNetworkRequestJobInterface__
+
+namespace StarFish {
+
+class NetworkRequest;
+
+static String* decodeURL(String* src, size_t idx);
+
+class NetworkRequestJobInterface {
+public:
+    // Currently, only 'send' is chosen as a common interface, but more
+    // interfaces can be added later.
+    virtual void send(String* body = String::emptyString) = 0;
+};
+
+class NetworkRequestJobDelegateFactory {
+public:
+    static NetworkRequestJobInterface* createJob(NetworkRequest* proxy);
+
+private:
+    NetworkRequestJobDelegateFactory(){};
+    ~NetworkRequestJobDelegateFactory(){};
+};
+
+class FileURLNetworkRequestJobDelegate : public gc,
+                                         public NetworkRequestJobInterface {
+public:
+    static void worker(NetworkRequest* res, String* filePath);
+    FileURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    NetworkRequest* m_orgProxy;
+};
+
+class DataURLNetworkRequestJobDelegate : public gc,
+                                         public NetworkRequestJobInterface {
+public:
+    static void worker(NetworkRequest* res, String* filePath);
+    DataURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    NetworkRequest* m_orgProxy;
+};
+
+class BlobURLNetworkRequestJobDelegate : public gc,
+                                         public NetworkRequestJobInterface {
+public:
+    static void worker(NetworkRequest* res, String* filePath);
+    BlobURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    NetworkRequest* m_orgProxy;
+};
+
+class NetworkURLNetworkRequestJobDelegate : public gc,
+                                            public NetworkRequestJobInterface {
+public:
+    static void* worker(void* data);
+    static int curlProgressCallback(void* clientp, curl_off_t dltotal,
+                                    curl_off_t dlnow, curl_off_t ultotal,
+                                    curl_off_t ulnow);
+    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb,
+                                    void* data);
+    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
+                                          void* data);
+    NetworkURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    NetworkRequest* m_orgProxy;
+};
+}
+
+#endif

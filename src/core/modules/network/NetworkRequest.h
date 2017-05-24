@@ -22,12 +22,15 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Locker.h"
+#include "core/modules/network/NetworkRequestJob.h"
+#include "core/modules/network/NetworkWorkerHelper.h"
 
 namespace StarFish {
 
 class Document;
 class NetworkRequest;
 class NetworkWorkerHelper;
+struct NetworkWorkerData;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::string NetworkRequestResponseHeader;
@@ -46,53 +49,16 @@ public:
     }
 };
 
-struct NetworkWorkerData {
-    NetworkRequest* request;
-    NetworkWorkerHelper* networkWorker;
-    CURL* curl;
-    curl_slist* headerList;
-    bool isSync;
-    bool isAborted;
-    long responseCode;
-    int res;
-};
-
-class NetworkWorkerHelper : public gc {
-public:
-    NetworkWorkerHelper()
-    {
-    }
-    virtual ~NetworkWorkerHelper()
-    {
-    }
-    void* networkWorker(void* data);
-
-protected:
-    virtual void responseHandlerWrapper(int res, NetworkWorkerData* requestData)
-    {
-    }
-    static void responseHandler(size_t handle, void* requestData);
-};
-
-class AsyncNetworkWorkHelper : public NetworkWorkerHelper {
-protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkWorkerData* requestData);
-};
-
-class SyncNetworkWorkHelper : public NetworkWorkerHelper {
-protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkWorkerData* requestData);
-};
-
-class NetworkRequest : public gc, public DocumentHoldable {
+class NetworkRequest : public gc,
+                       public DocumentHoldable,
+                       public NetworkRequestJobInterface {
     friend class XMLHttpRequest;
     friend class NetworkWorkerHelper;
     friend class AsyncNetworkWorkHelper;
-    friend void NetworkRequestFileWorker(NetworkRequest* res, String* filePath);
-    friend void NetworkRequestDataURLWorker(NetworkRequest* res, String* url);
-    friend void NetworkRequestBlobURLWorker(NetworkRequest* res, String* url);
+    friend class FileURLNetworkRequestJobDelegate;
+    friend class DataURLNetworkRequestJobDelegate;
+    friend class BlobURLNetworkRequestJobDelegate;
+    friend class NetworkURLNetworkRequestJobDelegate;
 
 public:
     enum MethodType { UNKNOWN_METHOD, POST_METHOD, GET_METHOD };
@@ -120,11 +86,11 @@ public:
     };
 
     NetworkRequest(Document* document);
-    void open(MethodType method, String* url, bool async,
+    void open(NetworkRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
-    void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString);
 
     void setTimeout(uint32_t ms)
     {
@@ -202,17 +168,6 @@ protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
     void clearIdlers();
-    static void fileWorker(NetworkRequest* res, String* filePath);
-    static void dataURLWorker(NetworkRequest* res, String* url);
-    static void blobURLWorker(NetworkRequest* res, String* url);
-    static int curlProgressCallback(void* clientp, curl_off_t dltotal,
-                                    curl_off_t dlnow, curl_off_t ultotal,
-                                    curl_off_t ulnow);
-    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb,
-                                    void* data);
-    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
-                                          void* data);
-    static void* networkWorker(void*);
 
     template <typename StrType>
     static NetworkRequestResponse parseBase64String(const StrType& str,
@@ -222,6 +177,18 @@ protected:
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
     void handleError(ProgressState error);
+
+    void pushIdlerHandle(size_t handle)
+    {
+        m_requstedIdlers.push_back(handle);
+    }
+
+    void removeIdlerHandle(size_t handle)
+    {
+        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(),
+                                         m_requstedIdlers.end(), handle));
+    }
+
     bool m_isSync;
     bool m_didSend;
     bool m_gotError;
@@ -240,16 +207,8 @@ protected:
     NetworkRequestResponseHeader m_responseHeaderData;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
-    void pushIdlerHandle(size_t handle)
-    {
-        m_requstedIdlers.push_back(handle);
-    }
-
-    void removeIdlerHandle(size_t handle)
-    {
-        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(),
-                                         m_requstedIdlers.end(), handle));
-    }
+    // request job proxy
+    NetworkRequestJobInterface* m_networkRequestJobDelegate;
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
     volatile size_t m_pendingOnProgressEventIdlerHandle;
@@ -261,21 +220,6 @@ protected:
 
     GCVector<NetworkRequestClient*> m_clients;
 };
-
-inline void NetworkRequestFileWorker(NetworkRequest* res, String* filePath)
-{
-    NetworkRequest::fileWorker(res, filePath);
-}
-
-inline void NetworkRequestDataURLWorker(NetworkRequest* res, String* url)
-{
-    NetworkRequest::dataURLWorker(res, url);
-}
-
-inline void NetworkRequestBlobURLWorker(NetworkRequest* res, String* url)
-{
-    NetworkRequest::blobURLWorker(res, url);
-}
 }
 
 #endif
