@@ -28,5 +28,6 @@ cscope.files
 cscope.out
 
 # Etc
-core
+core # dump
+!src/core
 .*
