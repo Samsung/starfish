@@ -17,7 +17,7 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "core/dom/HTMLMediaElement.h"
-#include "core/modules/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 

@@ -20,7 +20,7 @@
 
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/multimedia/Demuxer.h"
+#include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
 
 #include <pthread.h>

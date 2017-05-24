@@ -18,7 +18,7 @@
 #define __StarFishMockMediaPlayer__
 
 #include "StarFishConfig.h"
-#include "core/modules/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 

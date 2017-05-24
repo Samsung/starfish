@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#include "core/extra/Blob.h"
+#include "core/fileapi/Blob.h"
 
 namespace StarFish {
 

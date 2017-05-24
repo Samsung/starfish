@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/extra/Blob.h"
+#include "core/fileapi/Blob.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/network/NetworkRequest.h"

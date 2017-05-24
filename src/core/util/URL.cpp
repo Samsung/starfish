@@ -16,8 +16,8 @@
 
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/extra/Blob.h"
-#include "core/extra/MediaSource.h"
+#include "core/fileapi/Blob.h"
+#include "core/modules/mediasource/MediaSource.h"
 #include "core/util/URL.h"
 #include "core/modules/window/Window.h"
 
