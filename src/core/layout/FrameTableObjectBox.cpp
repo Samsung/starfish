@@ -50,7 +50,17 @@ bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
     if (color && (!color->equals(String::emptyString))) {
         CSSStyleValuePair pair;
         if (pair.updateValueUnitColor(color)) {
-            *ret = pair.colorValue();
+            switch (pair.valueKind()) {
+            case CSSStyleValuePair::ValueKind::ColorValueKind:
+                *ret = pair.colorValue();
+                break;
+            case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+                *ret = NamedColor::namedColorToColor(pair.namedColorValue());
+                break;
+            default:
+                STARFISH_ASSERT_NOT_REACHED();
+            }
+
             return true;
         }
     }
