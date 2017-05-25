@@ -329,6 +329,8 @@ int main(int argc, char* argv[])
         NULL);
 #endif
 
+    GC_set_all_interior_pointers(1);
+
     // TODO: Need to get screen info from X11.
     // Temporally, rect's width and height are set to window size.
     ScreenInfo info;
