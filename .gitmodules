@@ -13,3 +13,9 @@
 [submodule "tool/gyp"]
 	path = tool/gyp
 	url = git@github.sec.samsung.net:RS7-webtf/gyp.git
+[submodule "third_party/GCutil"]
+	path = third_party/GCutil
+	url = git@github.sec.samsung.net:RS7-webtf/gcutil.git
+[submodule "third_party/escargot2"]
+	path = third_party/escargot2
+	url = http://10.113.64.74/webtf/escargot2.git

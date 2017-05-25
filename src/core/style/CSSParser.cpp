@@ -2567,67 +2567,67 @@ bool MediaQueryData::addExpression()
 }
 
 const String* devicePixelRatioMediaFeature =
-    String::createASCIIString("-webkit-device-pixel-ratio");
+    String::createASCIIStringWithNoGC("-webkit-device-pixel-ratio");
 const String* maxDevicePixelRatioMediaFeature =
-    String::createASCIIString("-webkit-max-device-pixel-ratio");
+    String::createASCIIStringWithNoGC("-webkit-max-device-pixel-ratio");
 const String* minDevicePixelRatioMediaFeature =
-    String::createASCIIString("-webkit-min-device-pixel-ratio");
+    String::createASCIIStringWithNoGC("-webkit-min-device-pixel-ratio");
 const String* transform3dMediaFeature =
-    String::createASCIIString("-webkit-transform-3d");
+    String::createASCIIStringWithNoGC("-webkit-transform-3d");
 const String* aspectRatioMediaFeature =
-    String::createASCIIString("aspect-ratio");
-const String* colorMediaFeature = String::createASCIIString("color");
-const String* colorIndexMediaFeature = String::createASCIIString("color-index");
+    String::createASCIIStringWithNoGC("aspect-ratio");
+const String* colorMediaFeature = String::createASCIIStringWithNoGC("color");
+const String* colorIndexMediaFeature = String::createASCIIStringWithNoGC("color-index");
 const String* deviceAspectRatioMediaFeature =
-    String::createASCIIString("device-aspect-ratio");
+    String::createASCIIStringWithNoGC("device-aspect-ratio");
 const String* deviceHeightMediaFeature =
-    String::createASCIIString("device-height");
+    String::createASCIIStringWithNoGC("device-height");
 const String* deviceWidthMediaFeature =
-    String::createASCIIString("device-width");
+    String::createASCIIStringWithNoGC("device-width");
 const String* displayModeMediaFeature =
-    String::createASCIIString("display-mode");
-const String* gridMediaFeature = String::createASCIIString("grid");
-const String* heightMediaFeature = String::createASCIIString("height");
+    String::createASCIIStringWithNoGC("display-mode");
+const String* gridMediaFeature = String::createASCIIStringWithNoGC("grid");
+const String* heightMediaFeature = String::createASCIIStringWithNoGC("height");
 const String* maxAspectRatioMediaFeature =
-    String::createASCIIString("max-aspect-ratio");
-const String* maxColorMediaFeature = String::createASCIIString("max-color");
+    String::createASCIIStringWithNoGC("max-aspect-ratio");
+const String* maxColorMediaFeature = String::createASCIIStringWithNoGC("max-color");
 const String* maxColorIndexMediaFeature =
-    String::createASCIIString("max-color-index");
+    String::createASCIIStringWithNoGC("max-color-index");
 const String* maxDeviceAspectRatioMediaFeature =
-    String::createASCIIString("max-device-aspect-ratio");
+    String::createASCIIStringWithNoGC("max-device-aspect-ratio");
 const String* maxDeviceHeightMediaFeature =
-    String::createASCIIString("max-device-height");
+    String::createASCIIStringWithNoGC("max-device-height");
 const String* maxDeviceWidthMediaFeature =
-    String::createASCIIString("max-device-width");
-const String* maxHeightMediaFeature = String::createASCIIString("max-height");
+    String::createASCIIStringWithNoGC("max-device-width");
+const String* maxHeightMediaFeature = String::createASCIIStringWithNoGC("max-height");
 const String* maxMonochromeMediaFeature =
-    String::createASCIIString("max-monochrome");
+    String::createASCIIStringWithNoGC("max-monochrome");
 const String* maxResolutionMediaFeature =
-    String::createASCIIString("max-resolution");
-const String* maxWidthMediaFeature = String::createASCIIString("max-width");
+    String::createASCIIStringWithNoGC("max-resolution");
+const String* maxWidthMediaFeature = String::createASCIIStringWithNoGC("max-width");
 const String* minAspectRatioMediaFeature =
-    String::createASCIIString("min-aspect-ratio");
-const String* minColorMediaFeature = String::createASCIIString("min-color");
+    String::createASCIIStringWithNoGC("min-aspect-ratio");
+const String* minColorMediaFeature = String::createASCIIStringWithNoGC("min-color");
 const String* minColorIndexMediaFeature =
-    String::createASCIIString("min-color-index");
+    String::createASCIIStringWithNoGC("min-color-index");
 const String* minDeviceAspectRatioMediaFeature =
-    String::createASCIIString("min-device-aspect-ratio");
+    String::createASCIIStringWithNoGC("min-device-aspect-ratio");
 const String* minDeviceHeightMediaFeature =
-    String::createASCIIString("min-device-height");
+    String::createASCIIStringWithNoGC("min-device-height");
 const String* minDeviceWidthMediaFeature =
-    String::createASCIIString("min-device-width");
-const String* minHeightMediaFeature = String::createASCIIString("min-height");
+    String::createASCIIStringWithNoGC("min-device-width");
+const String* minHeightMediaFeature = String::createASCIIStringWithNoGC("min-height");
 const String* minMonochromeMediaFeature =
-    String::createASCIIString("min-monochrome");
+    String::createASCIIStringWithNoGC("min-monochrome");
 const String* minResolutionMediaFeature =
-    String::createASCIIString("min-resolution");
-const String* minWidthMediaFeature = String::createASCIIString("min-width");
-const String* monochromeMediaFeature = String::createASCIIString("monochrome");
+    String::createASCIIStringWithNoGC("min-resolution");
+const String* minWidthMediaFeature = String::createASCIIStringWithNoGC("min-width");
+const String* monochromeMediaFeature = String::createASCIIStringWithNoGC("monochrome");
 const String* orientationMediaFeature =
-    String::createASCIIString("orientation");
-const String* resolutionMediaFeature = String::createASCIIString("resolution");
-const String* scanMediaFeature = String::createASCIIString("scan");
-const String* widthMediaFeature = String::createASCIIString("width");
+    String::createASCIIStringWithNoGC("orientation");
+const String* resolutionMediaFeature = String::createASCIIStringWithNoGC("resolution");
+const String* scanMediaFeature = String::createASCIIStringWithNoGC("scan");
+const String* widthMediaFeature = String::createASCIIStringWithNoGC("width");
 
 static inline bool featureWithoutValue(String* mediaFeature)
 {

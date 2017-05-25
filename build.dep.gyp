@@ -339,16 +339,19 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
+                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
+                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
+                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
                     ],
                     'destination': '<(PRODUCT_DIR)/lib/release',
                 },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
-                    'third_party/escargot/third_party/bdwgc/include',
+                    'third_party/GCutil/bdwgc/include',
                 ],
                 'libraries': [
                     'lib/release/libgc.so',
@@ -361,16 +364,19 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
-                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
+#                        'third_party/escargot/third_party/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
+                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
+                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
+                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
                     ],
                     'destination': '<(PRODUCT_DIR)/lib/debug',
                 },
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
-                    'third_party/escargot/third_party/bdwgc/include',
+                    'third_party/GCutil/bdwgc/include',
                 ],
                 'libraries': [
                     'lib/debug/libgc.so',

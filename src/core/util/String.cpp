@@ -355,7 +355,7 @@ String* String::createASCIIString(const char* str)
 
 String* String::createASCIIStringWithNoGC(const char* str)
 {
-    return new (NoGC) StringDataASCII(str);
+    return new StringDataNonGCASCII(str);
 }
 
 String* String::createUTF32String(const UTF32String& src)

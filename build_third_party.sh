@@ -375,3 +375,17 @@ make tizen24_mobile_arm.interpreter.debug.static  -j8
 make tizen24_mobile_emulator.interpreter.debug.static -j8
 fi
 
+cd -
+
+./build_gc.sh
+
+cd third_party/escargot2/
+git submodule init
+git submodule update
+#./build_third_party.sh
+make clean
+make x64.interpreter.release.static -j8
+make x64.interpreter.debug.static -j8
+make install_header_to_include
+
+cd -
