@@ -17,6 +17,14 @@
 #ifndef __StarFishConfig__
 #define __StarFishConfig__
 
+#if defined(STARFISH_EFL)
+#define USE_EFL
+#elif defined(STARFISH_DALI)
+#define USE_CAIRO
+#define USE_DALI
+#define USE_LIBUV
+#endif
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstdint>
@@ -318,13 +326,5 @@ protected:
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
-
-#if defined(STARFISH_EFL)
-#define USE_EFL
-#elif defined(STARFISH_DALI)
-#define USE_CAIRO
-#define USE_DALI
-#define USE_LIBUV
-#endif
 
 #endif
