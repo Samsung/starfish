@@ -31,6 +31,7 @@
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/MediaQueryEvaluator.h"
 #include "core/style/NamedColors.h"
 #include "core/util/URL.h"
 
@@ -997,18 +998,32 @@ void CSSStyleSheet::sortRulesBySpecificity()
     std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
 }
 
-void CSSStyleSheet::tmpEvaluate(GCVector<CSSRule*>& rules)
+bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
+                                        MediaQuerySet* mediaQueries)
 {
-    // TODO: need to evaluate rule's media query
+    if (!mediaQueries) {
+        return true;
+    }
 
-    size_t size = rules.size();
-    for (size_t i = 0; i < size; ++i) {
-        if (rules[i]->isStyleRule()) {
-            m_rules.push_back((CSSStyleRule*)rules[i]);
-        } else {
-            CSSStyleRuleMedia* media = (CSSStyleRuleMedia*)rules[i];
-            tmpEvaluate(media->childRules());
+    return evaluator.eval(mediaQueries);
+}
+
+void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
+{
+    auto resolver = origin()->document()->styleResolver();
+    auto iter = rules.begin();
+    while (iter != rules.end()) {
+        if ((*iter)->isCSSStyleRule()) {
+            m_rules.push_back((CSSStyleRule*)(*iter));
+        } else if ((*iter)->isMediaRule()) {
+            CSSStyleRuleMedia* media = (CSSStyleRuleMedia*)(*iter);
+            const MediaQueryEvaluator& evaluator =
+                resolver.mediaQueryEvaluator();
+            if (matchesMediaQueries(evaluator, media->mediaQueries())) {
+                collectRulesForSheet(media->childRules());
+            }
         }
+        iter++;
     }
 }
 
@@ -4616,6 +4631,15 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     if (!traverseAndTryAddSheet(m_document, sheet, originFound)) {
         m_sheets.push_back(sheet);
     }
+}
+
+const MediaQueryEvaluator& StyleResolver::mediaQueryEvaluator()
+{
+    if (!m_mediaQueryEvaluator) {
+        m_mediaQueryEvaluator = new MediaQueryEvaluator(
+            String::fromUTF8("screen"), new MediaValues(document()->frame()));
+    }
+    return *m_mediaQueryEvaluator;
 }
 
 bool CSSStyleValuePair::updateValueUnitColor(String* token)
