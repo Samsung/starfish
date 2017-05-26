@@ -18,8 +18,11 @@
 #define __Font__
 
 #include "StarFishConfig.h"
+
+#ifdef USE_CAIRO
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#endif
 
 namespace StarFish {
 
@@ -81,6 +84,10 @@ public:
         LayoutUnit m_descender;
         LayoutUnit m_fontHeight;
         float m_xheightRate;
+#ifdef USE_CAIRO
+        FT_Face m_FTFace;
+        FT_Library m_FTFaceLib;
+#endif
     };
 
     const FontMetrics& metrics()
@@ -88,10 +95,12 @@ public:
         return m_metrics;
     }
 
+#ifdef USE_CAIRO
     FT_Face FTFace()
     {
-        return m_FTFace;
+        return metrics().m_FTFace;
     }
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
@@ -124,8 +133,6 @@ protected:
     char m_weight;
     char m_style;
     String* m_fontFamily;
-
-    FT_Face m_FTFace;
 };
 
 class FontSelector {

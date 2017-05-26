@@ -14,15 +14,16 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 
+#if defined(USE_EFL)
 #include <Evas.h>
-#ifdef USE_CAIRO
+#endif
+
 #include <cairo.h>
 #include <cairo/cairo-ft.h>
-#endif
 #include <fontconfig/fontconfig.h>
-
 #include "core/modules/canvas/font/Font.h"
 #include "core/style/UnitHelper.h"
 
@@ -35,6 +36,8 @@ namespace StarFish {
 
 extern int g_screenDpi;
 Evas* internalCanvas();
+
+#if defined(USE_EFL)
 
 static String* convertStyleParamStr(String* familyName, unsigned char style,
                                     char weight)
@@ -85,8 +88,6 @@ static String* convertStyleParamStr(String* familyName, unsigned char style,
     }
     return familyName;
 }
-
-#if defined(USE_EFL)
 
 class FontImplEFL : public Font {
 public:
@@ -291,38 +292,34 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
 class FontImplCAIRO : public Font {
 public:
     FontImplCAIRO(String* familyName, float size, char style, char weight,
-                  FontMetrics met, FT_Face face)
+                  FontMetrics met)
     {
-        m_FTFace = face;
-        m_text = nullptr;
         m_metrics = met;
         m_size = size;
         m_weight = weight;
         m_style = style;
-        m_fontFamily = convertStyleParamStr(familyName, style, weight);
-
-        loadFont(m_size);
+        m_fontFamily = familyName;
 
 #ifdef STARFISH_ENABLE_TEST
-        if (!g_enablePixelTest) {
-            m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
-            m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
-            m_metrics.m_fontHeight =
-                m_metrics.m_ascender - m_metrics.m_descender;
-            m_metrics.m_xheightRate = met.m_xheightRate;
-        } else {
-            // Set the FontMetrics as if font is Ahem.
-            m_metrics.m_ascender = m_size * 0.8;
-            m_metrics.m_descender = m_metrics.m_ascender - m_size;
-            m_metrics.m_fontHeight =
-                m_metrics.m_ascender - m_metrics.m_descender;
-            m_metrics.m_xheightRate = 0.8f;
-        }
+// if (!g_enablePixelTest) {
+//     m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+//     m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
+//     m_metrics.m_fontHeight =
+//         m_metrics.m_ascender - m_metrics.m_descender;
+//     m_metrics.m_xheightRate = met.m_xheightRate;
+// } else {
+//     // Set the FontMetrics as if font is Ahem.
+//     m_metrics.m_ascender = m_size * 0.8;
+//     m_metrics.m_descender = m_metrics.m_ascender - m_size;
+//     m_metrics.m_fontHeight =
+//         m_metrics.m_ascender - m_metrics.m_descender;
+//     m_metrics.m_xheightRate = 0.8f;
+// }
 #else
-        m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
-        m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
-        m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
-        m_metrics.m_xheightRate = met.m_xheightRate;
+// m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+// m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
+// m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+// m_metrics.m_xheightRate = met.m_xheightRate;
 #endif
 
         m_spaceWidth = measureText(StringView(String::spaceString, 0, 1));
@@ -332,30 +329,14 @@ public:
                                            // STARFISH_LOG_INFO("FontImplCAIRO::~FontImplCAIRO\n");
                                            FontImplCAIRO* m =
                                                (FontImplCAIRO*)obj;
-                                           if (m->m_text) {
-                                               evas_object_hide(m->m_text);
-                                               evas_object_del(m->m_text);
-                                           }
+                                           FontMetrics fm = m->metrics();
+                                           FT_Done_Face(fm.m_FTFace);
+                                           FT_Done_FreeType(fm.m_FTFaceLib);
                                        },
                                        NULL, NULL, NULL);
     }
     ~FontImplCAIRO()
     {
-    }
-
-    void loadFont(int size)
-    {
-        if (m_text) {
-            unloadFont();
-        }
-        m_text = evas_object_text_add(internalCanvas());
-        evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), size);
-    }
-
-    void unloadFont()
-    {
-        evas_object_del(m_text);
-        m_text = nullptr;
     }
 
     virtual LayoutUnit measureText(const StringView& str)
@@ -380,11 +361,9 @@ public:
         FT_Face face = FTFace();
         cairo_font_face_t* fontFace;
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
-        int size;
-        evas_object_text_font_get((Evas_Object*)this->unwrap(), NULL, &size);
 
         cairo_set_font_face(cr, fontFace);
-        cairo_set_font_size(cr, size);
+        cairo_set_font_size(cr, m_size);
         auto scaled_face = cairo_get_scaled_font(cr);
         cairo_glyph_t* glyphs = NULL;
         int glyph_count;
@@ -422,11 +401,8 @@ public:
 
     virtual void* unwrap()
     {
-        return m_text;
+        return nullptr;
     }
-
-protected:
-    Evas_Object* m_text;
 };
 
 #define CHECK_ERROR                            \
@@ -434,13 +410,13 @@ protected:
         STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
     }
 
-Font::FontMetrics loadFontMetrics(String* familyName, double size,
-                                  FT_Face& face)
+Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
     FcConfig* config = FcInitLoadConfigAndFonts();
 
     // FcPattern* pattern = FcNameParse((const
     // FcChar8*)(familyName->utf8Data()));
+    // TODO : need to fallback font
     FcPattern* pattern = FcNameParse((const FcChar8*)("NanumGothic"));
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
@@ -468,6 +444,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size,
     FcConfigDestroy(config);
 
     FT_Library library;
+    FT_Face face;
     FT_Error error;
     error = FT_Init_FreeType(&library);
     CHECK_ERROR;
@@ -490,8 +467,9 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size,
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-    // FT_Done_Face(face);
-    // FT_Done_FreeType(library);
+    met.m_FTFace = face;
+    met.m_FTFaceLib = library;
+
     return met;
 }
 
@@ -510,10 +488,8 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
         }
     }
 
-    FT_Face face = nullptr;
-    Font::FontMetrics fontMetrics = loadFontMetrics(
-        convertStyleParamStr(familyName, style, weight), size, face);
-    f = new FontImplCAIRO(familyName, size, style, weight, fontMetrics, face);
+    Font::FontMetrics fontMetrics = loadFontMetrics(familyName, size);
+    f = new FontImplCAIRO(familyName, size, style, weight, fontMetrics);
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }

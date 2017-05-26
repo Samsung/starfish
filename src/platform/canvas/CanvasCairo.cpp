@@ -751,9 +751,7 @@ public:
         FT_Face face = lastState().m_font->FTFace();
         cairo_font_face_t* fontFace;
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
-        int size;
-        evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(),
-                                  NULL, &size);
+        int size = lastState().m_font->size();
 
         cairo_set_font_face(m_canvas, fontFace);
         cairo_set_font_size(m_canvas, size);
