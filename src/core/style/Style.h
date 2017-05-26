@@ -28,6 +28,8 @@ class CSSStyleRule;
 class CSSRule;
 class Document;
 class Element;
+class MediaQuerySet;
+class MediaQueryEvaluator;
 class Node;
 class URL;
 
@@ -1697,7 +1699,9 @@ public:
 
     void sortRulesBySpecificity();
 
-    void tmpEvaluate(GCVector<CSSRule*>& rules);
+    bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
+                             MediaQuerySet* mediaQueres);
+    void collectRulesForSheet(GCVector<CSSRule*>& rules);
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
@@ -1782,6 +1786,8 @@ public:
                         unsigned idx, MatchResult& result,
                         bool isQueryingSelector = false);
 
+    const MediaQueryEvaluator& mediaQueryEvaluator();
+
 protected:
     void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
                ComputedStyle* style, ComputedStyle* parentStyle,
@@ -1808,6 +1814,7 @@ protected:
     GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_allRules;
     bool m_usesFirstLineRule;
+    MediaQueryEvaluator* m_mediaQueryEvaluator;
 };
 }
 

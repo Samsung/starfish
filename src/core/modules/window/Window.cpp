@@ -175,8 +175,7 @@ void Window::layoutIfNeeds()
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
 
             uaSheet->parseSheetIfneeds();
-            // TODO: evaluate media queries and gather valid style rules
-            uaSheet->tmpEvaluate(uaSheet->allRules());
+            uaSheet->collectRulesForSheet(uaSheet->allRules());
             uaSheet->sortRulesBySpecificity();
 
             document()->styleResolver().removeAllRules();
@@ -187,8 +186,7 @@ void Window::layoutIfNeeds()
                     document()->styleResolver().sheets()[i];
 
                 authorSheet->parseSheetIfneeds();
-                // TODO: evaluate media queries and gather valid style rules
-                authorSheet->tmpEvaluate(authorSheet->allRules());
+                authorSheet->collectRulesForSheet(authorSheet->allRules());
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {
