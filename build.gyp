@@ -2,7 +2,7 @@
     'variables' : {
         'starfish_root': '<!(pwd)',
         'escargot_root': '<(starfish_root)/third_party/escargot',
-        'third_party_libs': 'elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n',
+        'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n',
         'defines_x64': [
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_AVPLAY',
@@ -10,12 +10,41 @@
             'STARFISH_ENABLE_MULTI_PAGE',
             'STARFISH_ENABLE_DOMPARSER',
         ],
+        'defines_extra': [
+        ],
+        'cflags_extra': [
+        ],
+        'deps_extra': [
+        ],
         'main_file' : 'src/shell/shell.cpp',
         'variables': {
             'component%': 'static_library',
+            'backend%': 'efl',
         },
         'component%':'<(component)',
         'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
+        'backend%': '<(backend)',
+        'conditions': [
+            ['backend=="efl"', {
+                'defines_extra': [
+                    'STARFISH_EFL',
+                ],
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl.x64',
+                ],
+            }],
+            ['backend=="dali"', {
+                'defines_extra': [
+                    'STARFISH_DALI',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:dali.x64',
+                ],
+            }]
+        ],
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
@@ -23,12 +52,14 @@
     'target_defaults' : {
         'default_configuration': 'debug',
         'dependencies': [
+            './build.dep.gyp:js_binding',
             './build.dep.gyp:clipper.x64',
             './build.dep.gyp:cppzmq.x64',
             './build.dep.gyp:mp4parse.x64',
             './build.dep.gyp:js_binding',
             './build.dep.gyp:skia.x64',
             './build.dep.gyp:webm.x64',
+            '<@(deps_extra)',
         ],
         'direct_dependent_settings': {
             'include_dirs': [
@@ -54,7 +85,7 @@
            ['component!="executable"', {
                'sources!' : [
                    '<(main_file)',
-               ]
+               ],
            }],
        ],
        'conditions': [
@@ -71,7 +102,6 @@
                    '-Wno-unused-function',
                    '-Wno-deprecated-declarations',
                    '-Wno-type-limits',
-                   # '-fno-rtti',
                    '-fno-math-errno',
                    '-fdata-sections',
                    '-ffunction-sections',
@@ -82,14 +112,15 @@
                    '-fno-omit-frame-pointer',
                    '-fstack-protector',
                    '-fPIC',
+                   '<@(cflags_extra)',
                ],
                'ldflags' : [
                ],
                'defines': [
-                   'STARFISH_EFL',
                    'ESCARGOT_64=1',
                    'ESCARGOT',
                    'USE_ES6_FEATURE',
+                   '<@(defines_extra)',
                ],
                'include_dirs': [
                ],

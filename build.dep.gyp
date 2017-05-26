@@ -2,8 +2,18 @@
     'variables' : {
         'variables': {
             'dep_lib%': 'shared_library',
+            'backend%': 'efl',
         },
         'dep_lib%': '<(dep_lib)',
+        'conditions': [
+            ['backend=="efl"', {
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+            }],
+            ['backend=="dali"', {
+            }]
+        ],
     },
     'make_global_settings': [
         ['CXX', '/usr/bin/g++'],
@@ -30,7 +40,6 @@
                    '-Wno-deprecated-declarations',
                    '-Wno-type-limits',
                    '-Wno-invalid-offsetof',
-                   # '-fno-rtti',
                    '-fno-math-errno',
                    '-fdata-sections',
                    '-ffunction-sections',
@@ -38,6 +47,7 @@
                    '-fsignaling-nans',
                    '-fno-omit-frame-pointer',
                    '-fstack-protector',
+                   '<@(cflags_extra)',
                ],
                'ldflags' : [
                ],
@@ -97,7 +107,7 @@
                     'inputs': [
                         'binding_generator/scripts/starfish_code_generator.py',
                         '.git/modules/binding_generator/HEAD',
-                        '<!@(find src/core -name *.idl)',
+                        '<!@(find src -name *.idl)',
                     ],
                     'outputs': [
                         '<!@(find src/binding -name *Binding.cpp)'
@@ -362,6 +372,29 @@
                 ],
                 'libraries': [
                     'lib/debug/libgc.so',
+                ],
+            },
+        },
+        {
+            'target_name': 'efl.x64',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)',
+                ],
+                'libraries': [
+                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)',
+                ],
+            },
+        },
+        {
+            'target_name': 'dali.x64',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                ],
+                'libraries': [
+                    '-ldali-core -ldali-adaptor -ldali-toolkit -luv',
                 ],
             },
         },
