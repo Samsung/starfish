@@ -18,6 +18,8 @@ Default values are written in **bold**.
 
 * -Dcomponent=[ executable | **static_library** | shared_library ]<br>
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
+* -Dbackend=[ **efl** | dali ]<br>
+  Use either efl or dali as the backend graphics library
 
 The following build options are supported when running ninja script.
 
