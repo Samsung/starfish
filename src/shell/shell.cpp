@@ -132,9 +132,9 @@ public:
         int width = 360, height = 360;
         int flag = 0;
 
-        m_sf =
-            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                                   "Asia/Seoul", nullptr, width, height, 1);
+        m_sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag,
+                                      "ko-KR", "Asia/Seoul", &application,
+                                      width, height, 1);
         m_sf->loadHTMLDocument(String::createASCIIString(url));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::OnStageTouched);
@@ -230,6 +230,8 @@ int main(int argc, char* argv[])
     url = argv[1];
     Application application = Application::New(&argc, &argv);
     DaliShellController shell(application);
+    application.DoInit();
+    shell.Create(application);
     application.MainLoop();
 
     return 0;

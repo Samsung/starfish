@@ -53,6 +53,7 @@
 #endif
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
+#include <Elementary.h>
 
 #ifdef STARFISH_ENABLE_TEST
 #include <sys/ioctl.h>

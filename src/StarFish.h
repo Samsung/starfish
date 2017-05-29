@@ -363,7 +363,7 @@ class StarFish : public gc {
 
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
-             const char* timezoneID, void* win, int w, int h,
+             const char* timezoneID, void* platformHandle, int w, int h,
              float defaultFontSizeMultiplier);
     ~StarFish();
     void run();
@@ -486,7 +486,7 @@ protected:
     float m_defaultFontSizeMultiplier;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
-    void* m_nativeWindow;
+    void* m_nativeHandle;
     Window* m_window;
     FontSelector m_fontSelector;
     ThreadPool* m_threadPool;

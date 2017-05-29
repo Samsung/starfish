@@ -34,10 +34,10 @@ extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text* obj);
 
 namespace StarFish {
 
+#if defined(USE_EFL)
+
 extern int g_screenDpi;
 Evas* internalCanvas();
-
-#if defined(USE_EFL)
 
 static String* convertStyleParamStr(String* familyName, unsigned char style,
                                     char weight)

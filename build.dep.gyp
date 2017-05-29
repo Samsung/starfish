@@ -12,6 +12,8 @@
                 ],
             }],
             ['backend=="dali"', {
+                'cflags_extra': [
+                ],
             }]
         ],
     },
