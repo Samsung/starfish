@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,30 +14,49 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishPlatformTimer__
-#define __StarFishPlatformTimer__
+#ifndef __StarFishTimerWrapper__
+#define __StarFishTimerWrapper__
 
 namespace StarFish {
 
-class PlatformTimer : public gc {
+typedef bool (*GenericAnimationHandler)(void* data);
+
+class TimerWrapper : public gc {
     friend class StarFish;
     friend class Window;
 
 public:
-    PlatformTimer(StarFish* sf);
+    TimerWrapper(StarFish* sf);
     size_t addTimer(double delay, WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
     void removeTimer(size_t reqID);
 
     size_t addAnimator(WindowSetTimeoutHandler handler, void* data);
-    void removeAnimator(size_t reqID);
-
-    // bool hasPendingIdler()
-    // {
-    //     return m_idlers.size();
-    // }
+    size_t addAnimator(GenericAnimationHandler handler, void* data);
+    void removeWindowAnimator(size_t reqID);
+    void removeGenericAnimator(size_t reqID);
 
     void clear();
+
+    StarFish* starfish()
+    {
+        return m_starFish;
+    }
+
+    GCUnorderedMap<int32_t, void*> timeoutHandler()
+    {
+        return m_timeoutHandler;
+    }
+
+    GCUnorderedMap<int32_t, void*> requestAnimationFrameHandler()
+    {
+        return m_requestAnimationFrameHandler;
+    }
+
+    GCUnorderedMap<int32_t, void*> animationHandler()
+    {
+        return m_animationHandler;
+    }
 
 protected:
     StarFish* m_starFish;
@@ -47,6 +66,9 @@ protected:
 
     int32_t m_requestAnimationFrameCounter;
     GCUnorderedMap<int32_t, void*> m_requestAnimationFrameHandler;
+
+    int32_t m_AnimationCounter;
+    GCUnorderedMap<int32_t, void*> m_animationHandler;
 };
 }
 

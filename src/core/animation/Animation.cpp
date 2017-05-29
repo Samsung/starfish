@@ -16,12 +16,12 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/style/ComputedStyle.h"
 #include "core/modules/window/Window.h"
+#include "core/modules/message_loop/Timer.h"
 
 namespace StarFish {
 
@@ -203,13 +203,14 @@ void AnimationExecutor::startIfNeeds()
         return;
     }
     m_isAlive = true;
-    m_platformAnimator = window()->starFish()->messageLoop()->addIdler(
-        [](size_t handle, void* data) {
+    m_platformAnimator = window()->starFish()->timer()->addAnimator(
+        [](void* data) -> bool {
             AnimationExecutor* executor = (AnimationExecutor*)data;
             if (executor->isAlive()) {
                 executor->step();
-                // TODO : register task again.
+                return true;
             }
+            return false;
         },
         this);
 }
@@ -221,7 +222,8 @@ void AnimationExecutor::stop()
     }
     m_isAlive = false;
     if (m_platformAnimator) {
-        window()->starFish()->messageLoop()->removeIdler(m_platformAnimator);
+        window()->starFish()->timer()->removeGenericAnimator(
+            m_platformAnimator);
         m_platformAnimator = 0;
     }
 }
