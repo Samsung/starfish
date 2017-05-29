@@ -45,15 +45,12 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
+#include "core/modules/message_loop/Timer.h"
 
-#if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
-#include <Ecore.h>
-#else
-#include <Ecore_X.h>
-#endif
-#include <Ecore_Input.h>
-#include <Ecore_Input_Evas.h>
+#if defined(PORT_EVENTLOOP_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
 #include <Elementary.h>
+Evas_Object* g_imgBufferForScreehShot;
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
 #include <sys/ioctl.h>
@@ -61,7 +58,6 @@
 
 bool g_fireOnloadEvent = false;
 bool g_forceRendering = false;
-Evas_Object* g_imgBufferForScreehShot;
 StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
@@ -92,9 +88,6 @@ Window::Window(StarFish* starFish)
 
 void Window::initFlags()
 {
-    m_timeoutCounter = 0;
-    m_requestAnimationFrameCounter = 1;
-
     m_needsRendering = false;
     m_inRendering = false;
     m_needsStyleRecalc = false;
@@ -444,7 +437,7 @@ void Window::rendering()
     m_needsRendering = false;
     m_inRendering = false;
 
-#ifdef STARFISH_ENABLE_TEST
+#if defined(PORT_EVENTLOOP_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
@@ -607,14 +600,6 @@ void Window::testStart()
 }
 #endif
 
-struct TimeoutData {
-    Window* m_window;
-    int32_t m_id;
-    Ecore_Timer* m_timerID;
-    void* m_data;
-    WindowSetTimeoutHandler m_handler;
-};
-
 void Window::close()
 {
     STARFISH_LOG_INFO("Window::close\n");
@@ -655,23 +640,7 @@ void Window::close()
 
     m_isActive = false;
 
-    auto timerIter = m_timeoutHandler.begin();
-    while (timerIter != m_timeoutHandler.end()) {
-        TimeoutData* td = (TimeoutData*)timerIter->second;
-        ecore_timer_del(td->m_timerID);
-        GC_FREE(td);
-        timerIter++;
-    }
-    m_timeoutHandler.clear();
-
-    auto aniIter = m_requestAnimationFrameHandler.begin();
-    while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
-        aniIter++;
-    }
-    m_requestAnimationFrameHandler.clear();
+    m_starFish->timer()->clear();
     clearResources();
 
     m_starFish->messageLoop()->clearPendingIdlers();
@@ -688,130 +657,38 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
                             void* data)
 {
     STARFISH_RELEASE_ASSERT(m_isActive);
-
-    TimeoutData* td = new (NoGC) TimeoutData;
-    td->m_window = this;
-    int32_t id = ++m_timeoutCounter;
-    td->m_id = id;
-    td->m_data = data;
-    td->m_handler = handler;
-    td->m_timerID =
-        ecore_timer_add(delay / 1000.0,
-                        [](void* data) -> Eina_Bool {
-                            TimeoutData* td = (TimeoutData*)data;
-                            StarFishEnterer enter(td->m_window->m_starFish);
-                            Window* wnd = td->m_window;
-                            int32_t id = td->m_id;
-                            td->m_handler(td->m_window, td->m_data);
-                            auto iter = wnd->m_timeoutHandler.find(id);
-                            if (iter != wnd->m_timeoutHandler.end()) {
-                                wnd->m_timeoutHandler.erase(iter);
-                                GC_FREE(td);
-                            }
-                            return ECORE_CALLBACK_DONE;
-                        },
-                        td);
-
-    m_timeoutHandler.insert(std::make_pair(id, td));
-
-    return id;
+    return m_starFish->timer()->addTimer(delay, handler, data, false);
 }
 
 void Window::clearTimeout(int32_t id)
 {
     STARFISH_RELEASE_ASSERT(m_isActive);
-
-    auto handlerData = m_timeoutHandler.find(id);
-    if (handlerData != m_timeoutHandler.end()) {
-        TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_timer_del(td->m_timerID);
-        GC_FREE(td);
-        m_timeoutHandler.erase(handlerData);
-    }
+    m_starFish->timer()->removeTimer(id);
 }
 
 uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
                              void* data)
 {
     STARFISH_RELEASE_ASSERT(m_isActive);
-
-    TimeoutData* td = new (NoGC) TimeoutData;
-    td->m_window = this;
-    int32_t id = ++m_timeoutCounter;
-    td->m_id = id;
-    td->m_data = data;
-    td->m_handler = handler;
-    td->m_timerID =
-        ecore_timer_add(delay / 1000.0,
-                        [](void* data) -> Eina_Bool {
-                            TimeoutData* td = (TimeoutData*)data;
-                            StarFishEnterer enter(td->m_window->m_starFish);
-                            auto a =
-                                td->m_window->m_timeoutHandler.find(td->m_id);
-                            td->m_handler(td->m_window, td->m_data);
-                            return ECORE_CALLBACK_RENEW;
-                        },
-                        td);
-
-    m_timeoutHandler.insert(std::make_pair(id, td));
-    return id;
+    return m_starFish->timer()->addTimer(delay, handler, data, true);
 }
 
 void Window::clearInterval(int32_t id)
 {
     STARFISH_RELEASE_ASSERT(m_isActive);
-
-    auto handlerData = m_timeoutHandler.find(id);
-    if (handlerData != m_timeoutHandler.end()) {
-        TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_timer_del(td->m_timerID);
-        GC_FREE(td);
-        m_timeoutHandler.erase(handlerData);
-    }
+    m_starFish->timer()->removeTimer(id);
 }
 
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
                                        void* data)
 {
     STARFISH_RELEASE_ASSERT(m_isActive);
-
-    TimeoutData* td = new (NoGC) TimeoutData;
-    td->m_window = this;
-    int32_t id = ++m_requestAnimationFrameCounter;
-    td->m_id = id;
-    td->m_data = data;
-    td->m_handler = handler;
-    td->m_timerID = (Ecore_Timer*)ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            TimeoutData* td = (TimeoutData*)data;
-            StarFishEnterer enter(td->m_window->m_starFish);
-            auto a =
-                td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
-            td->m_handler(td->m_window, td->m_data);
-            a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
-            if (td->m_window->m_requestAnimationFrameHandler.end() != a) {
-                td->m_window->m_requestAnimationFrameHandler.erase(a);
-            }
-            GC_FREE(td);
-            return ECORE_CALLBACK_DONE;
-        },
-        td);
-
-    m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
-
-    return id;
+    return m_starFish->timer()->addAnimator(handler, data);
 }
 
 void Window::cancelAnimationFrame(int32_t reqID)
 {
-    auto handlerData = m_requestAnimationFrameHandler.find(reqID);
-
-    if (handlerData != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
-        m_requestAnimationFrameHandler.erase(handlerData);
-    }
+    m_starFish->timer()->removeAnimator(reqID);
 }
 
 Node* Window::hitTest(float x, float y)
