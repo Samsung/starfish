@@ -26,6 +26,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 
+#include <Elementary.h>
 #include <dali-toolkit/dali-toolkit.h>
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>

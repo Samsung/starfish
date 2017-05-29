@@ -19,7 +19,7 @@
 
 #include "StarFishConfig.h"
 
-#ifdef USE_CAIRO
+#ifdef PORT_CANVAS_BACKEND_CAIRO
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #endif
@@ -84,7 +84,7 @@ public:
         LayoutUnit m_descender;
         LayoutUnit m_fontHeight;
         float m_xheightRate;
-#ifdef USE_CAIRO
+#ifdef PORT_CANVAS_BACKEND_CAIRO
         FT_Face m_FTFace;
         FT_Library m_FTFaceLib;
 #endif
@@ -95,7 +95,7 @@ public:
         return m_metrics;
     }
 
-#ifdef USE_CAIRO
+#ifdef PORT_CANVAS_BACKEND_CAIRO
     FT_Face FTFace()
     {
         return metrics().m_FTFace;

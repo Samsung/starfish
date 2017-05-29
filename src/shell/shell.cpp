@@ -231,8 +231,6 @@ int main(int argc, char* argv[])
     url = argv[1];
     Application application = Application::New(&argc, &argv);
     DaliShellController shell(application);
-    application.DoInit();
-    shell.Create(application);
     application.MainLoop();
 
     return 0;
