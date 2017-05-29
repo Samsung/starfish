@@ -669,6 +669,14 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
 | [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
+| [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | | | ‘all’ means suitable for all supported devices. |
+| [Media Queries - Media Features](https://www.w3.org/TR/css3-mediaqueries/#media1) | width | &lt;length&gt; | Describes the width of the targeted display area of the output device. | |
+| | height | &lt;length&gt; | Describes the height of the targeted display area of the output device. | |
+| | device-width | &lt;length&gt; | Describes the width of the rendering surface of the output device. | |
+| | device-heigth | &lt;length&gt; | Describes the height of the rendering surface of the output device. | |
+| | orientation | portrait &#124; landscape| ‘portrait’ when the value of the ‘height’ media feature is greater than or equal to the value of the ‘width’ media feature. Otherwise ‘orientation’ is ‘landscape’. | |
+| | aspect-ratio | &lt;ratio&gt; | The ratio of the value of the ‘width’ media feature to the value of the ‘height’ media feature. | |
+| | device-aspect-ratio | &lt;ratio&gt; | The ratio of the value of the ‘device-width’ media feature to the value of the ‘device-height’ media feature. | |
 
 
 ## Selectors
