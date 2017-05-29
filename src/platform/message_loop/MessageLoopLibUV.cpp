@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(USE_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "StarFish.h"
 #include "core/modules/message_loop/MessageLoop.h"

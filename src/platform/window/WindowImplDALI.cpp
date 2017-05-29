@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#ifdef USE_DALI
+#ifdef PORT_GRAPHIC_BACKEND_DALI
 
 #include "StarFish.h"
 

@@ -26,7 +26,7 @@
 
 #include <pthread.h>
 
-#if defined(USE_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_DALI)
 #include <dali-toolkit/dali-toolkit.h>
 #endif
 
@@ -113,7 +113,7 @@ static void printMemps(
 }
 #endif
 
-#ifdef USE_DALI
+#ifdef PORT_GRAPHIC_BACKEND_DALI
 using namespace Dali;
 
 char* url = nullptr;
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-#elif defined(USE_EFL)
+#elif defined(PORT_GRAPHIC_BACKEND_EFL)
 
 int main(int argc, char* argv[])
 {

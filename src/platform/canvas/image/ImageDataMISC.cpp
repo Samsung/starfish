@@ -16,20 +16,20 @@
 
 #include "StarFishConfig.h"
 
-#if defined(USE_EXT_IMG_DECODER)
+#if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
 #include "core/modules/canvas/image/ImageData.h"
 #include "platform/file/FileIO.h"
 
 namespace StarFish {
 
-class ImageDataEXT : public ImageData {
+class ImageDataMISC : public ImageData {
 public:
-    ImageDataEXT(String* localImageSrc)
+    ImageDataMISC(String* localImageSrc)
     {
     }
 
-    ImageDataEXT(const char* buf, size_t len)
+    ImageDataMISC(const char* buf, size_t len)
     {
     }
 
@@ -74,7 +74,7 @@ protected:
 
 ImageData* ImageData::create(String* localImageSrc)
 {
-    ImageData* imageData = new ImageDataEXT(localImageSrc);
+    ImageData* imageData = new ImageDataMISC(localImageSrc);
     if (imageData->unwrap() == NULL) {
         return NULL;
     }
@@ -83,7 +83,7 @@ ImageData* ImageData::create(String* localImageSrc)
 
 ImageData* ImageData::create(const char* buf, size_t len)
 {
-    ImageData* imageData = new ImageDataEXT(buf, len);
+    ImageData* imageData = new ImageDataMISC(buf, len);
     if (imageData->unwrap() == NULL) {
         return NULL;
     }

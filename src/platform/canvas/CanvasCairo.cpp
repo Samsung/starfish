@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(USE_DALI) && defined(USE_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_DALI) && defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules//canvas/font/Font.h"

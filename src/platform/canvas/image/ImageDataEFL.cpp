@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(USE_EFL)
+#if defined(PORT_IMAGEDECODER_BACKEND_EFL)
 #include "core/modules/canvas/image/ImageData.h"
 #include "platform/file/FileIO.h"
 

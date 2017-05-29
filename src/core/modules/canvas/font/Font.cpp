@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
-#if defined(USE_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Evas.h>
 #endif
 
@@ -27,14 +27,15 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/style/UnitHelper.h"
 
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) && defined(USE_EFL)
+#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) && \
+    defined(PORT_GRAPHIC_BACKEND_EFL)
 extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text* obj);
 extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text* obj);
 #endif
 
 namespace StarFish {
 
-#if defined(USE_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 
 extern int g_screenDpi;
 Evas* internalCanvas();
@@ -287,7 +288,7 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
     return f;
 }
 
-#elif defined(USE_CAIRO)
+#elif defined(PORT_CANVAS_BACKEND_CAIRO)
 
 class FontImplCAIRO : public Font {
 public:

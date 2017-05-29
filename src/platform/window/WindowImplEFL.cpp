@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#ifdef USE_EFL
+#ifdef PORT_GRAPHIC_BACKEND_EFL
 #include "StarFish.h"
 
 #include "core/animation/Animation.h"
