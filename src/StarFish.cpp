@@ -26,6 +26,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/modules/canvas/image/ImageData.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/inspector/Inspector.h"
@@ -249,6 +250,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     m_messageLoop = new MessageLoop(this);
+    m_timer = new PlatformTimer(this);
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif

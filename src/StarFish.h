@@ -22,6 +22,7 @@
 namespace StarFish {
 
 class MessageLoop;
+class PlatformTimer;
 class Window;
 class ScriptBindingInstance;
 class ImageData;
@@ -399,6 +400,11 @@ public:
         return m_messageLoop;
     }
 
+    PlatformTimer* timer()
+    {
+        return m_timer;
+    }
+
     StarFishStartUpFlag startUpFlag()
     {
         return (StarFishStartUpFlag)m_startUpFlag;
@@ -486,6 +492,7 @@ protected:
     float m_defaultFontSizeMultiplier;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
+    PlatformTimer* m_timer;
     void* m_nativeHandle;
     Window* m_window;
     FontSelector m_fontSelector;

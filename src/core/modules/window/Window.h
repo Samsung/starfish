@@ -40,6 +40,7 @@ typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Window : public EventTarget {
     friend class MessageLoop;
+    friend class Timer;
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
@@ -409,12 +410,6 @@ protected:
     int m_shiftKeyDown;
     int m_altKeyDown;
     int m_metaKeyDown;
-
-    int32_t m_timeoutCounter;
-    GCUnorderedMap<int32_t, void*> m_timeoutHandler;
-
-    int32_t m_requestAnimationFrameCounter;
-    GCUnorderedMap<int32_t, void*> m_requestAnimationFrameHandler;
 
     GCVector<Node*> m_activeNodes;
     GCVector<Node*> m_hoveredNodes;
