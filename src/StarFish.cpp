@@ -161,7 +161,7 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 }
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
-                   const char* timezoneID, void* win, int w, int h,
+                   const char* timezoneID, void* platformHandle, int w, int h,
                    float defaultFontSizeMultiplier)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
@@ -226,18 +226,18 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     }
 
 #if defined(USE_EFL)
-    if (!win) {
+    if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
-        win = wndObj;
+        platformHandle = wndObj;
     } else {
-        evas_object_resize((Evas_Object*)win, w, h);
+        evas_object_resize((Evas_Object*)platformHandle, w, h);
     }
 
-    m_nativeWindow = win;
 #endif
+    m_nativeHandle = platformHandle;
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
 
@@ -339,11 +339,11 @@ void StarFish::loadHTMLDocument(String* filePath)
     width = size.width;
     height = size.height;
 #elif defined(USE_EFL)
-    evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width,
+    evas_object_geometry_get((Evas_Object*)m_nativeHandle, NULL, NULL, &width,
                              &height);
 #endif
 
-    m_window = Window::create(this, m_nativeWindow, width, height);
+    m_window = Window::create(this, m_nativeHandle, width, height);
     URL* url =
         URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
 

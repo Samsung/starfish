@@ -17,11 +17,7 @@
 #ifndef __StarFishMessageLoop__
 #define __StarFishMessageLoop__
 
-#include "StarFishConfig.h"
 #include "core/modules/threading/Mutex.h"
-#ifdef USE_LIBUV
-#include <uv.h>
-#endif
 
 namespace StarFish {
 
@@ -30,15 +26,7 @@ class MessageLoop : public gc {
     friend class Window;
 
 public:
-    MessageLoop(StarFish* sf)
-        : m_starFish(sf)
-        , m_idlersFromOtherThreadMutex(new Mutex())
-    {
-#ifdef USE_LIBUV
-        uv_loop = uv_default_loop();
-#endif
-    }
-
+    MessageLoop(StarFish* sf);
     size_t addIdler(void (*fn)(size_t handle, void*), void* data);
     size_t addIdler(void (*fn)(size_t handle, void*, void*), void* data,
                     void* data1);
@@ -65,9 +53,7 @@ public:
     void clearPendingIdlers();
 
 protected:
-#ifdef USE_LIBUV
-    uv_loop_t* uv_loop;
-#endif
+    void* loop_handle;
     StarFish* m_starFish;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;

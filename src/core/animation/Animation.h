@@ -22,7 +22,6 @@
 #include "core/style/Style.h"
 
 #include <sys/time.h>
-#include <Elementary.h>
 
 namespace StarFish {
 class Node;

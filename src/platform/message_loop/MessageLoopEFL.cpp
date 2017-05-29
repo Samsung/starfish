@@ -14,8 +14,11 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
+#if defined(USE_EFL)
+
 #include "StarFish.h"
-#include "MessageLoop.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
@@ -24,6 +27,12 @@
 #include <Elementary.h>
 
 namespace StarFish {
+
+MessageLoop::MessageLoop(StarFish* sf)
+    : m_starFish(sf)
+    , m_idlersFromOtherThreadMutex(new Mutex())
+{
+}
 
 void MessageLoop::run()
 {
@@ -37,17 +46,12 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-#if defined(USE_EFL)
     Ecore_Animator* m_idler;
-#elif defined(USE_LIBUV)
-    uv_idle_t m_idler_uv;
-#endif
     MessageLoop* m_ml;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
 
-#if defined(USE_EFL)
 size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(isMainThread());
@@ -268,210 +272,5 @@ void MessageLoop::clearPendingIdlers()
         iter2++;
     }
 }
-
-#elif defined(USE_LIBUV)
-
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
-{
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_fn = fn;
-    id->m_data = data;
-    id->m_ml = this;
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        StarFishEnterer enter(id->m_ml->m_starFish);
-        id->m_fn((size_t)id, id->m_data);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-    });
-
-    return (size_t)id;
 }
-
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data,
-                             void* data1)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_ml = this;
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        StarFishEnterer enter(id->m_ml->m_starFish);
-        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                   id->m_data1);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-    });
-    return (size_t)id;
-}
-
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_data2 = data2;
-    id->m_ml = this;
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-
-        StarFishEnterer enter(id->m_ml->m_starFish);
-        ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-            (size_t)id, id->m_data, id->m_data1, id->m_data2);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-    });
-    return (size_t)id;
-}
-
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t,
-                                                                    void*),
-                                                         void* data)
-{
-    IdlerData* id = new IdlerData;
-    id->m_isMainThreadData = false;
-    id->m_shouldExecute = true;
-    id->m_fn = fn;
-    id->m_data = data;
-    id->m_ml = this;
-
-    {
-        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-        m_idlersFromOtherThread.insert((size_t)id);
-    }
-
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        {
-            Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-            id->m_ml->m_idlersFromOtherThread.erase(
-                id->m_ml->m_idlersFromOtherThread.find((size_t)id));
-        }
-        if (id->m_shouldExecute) {
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            id->m_fn((size_t)id, id->m_data);
-        }
-        uv_idle_stop(handle);
-        delete id;
-    });
-    return (size_t)id;
-}
-
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    void (*fn)(size_t, void*, void*), void* data, void* data1)
-{
-    IdlerData* id = new IdlerData;
-    id->m_isMainThreadData = false;
-    id->m_shouldExecute = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_ml = this;
-
-    {
-        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-        m_idlersFromOtherThread.insert((size_t)id);
-    }
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        {
-            Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-            id->m_ml->m_idlersFromOtherThread.erase(
-                id->m_ml->m_idlersFromOtherThread.find((size_t)id));
-        }
-        if (id->m_shouldExecute) {
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
-        }
-        uv_idle_stop(handle);
-        delete id;
-    });
-    return (size_t)id;
-}
-
-size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
-    void (*fn)(size_t handle, void*, void*), void* data, void* data1)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_ml = this;
-    uv_idle_init(uv_loop, &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                   id->m_data1);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-    });
-    return (size_t)id;
-}
-
-void MessageLoop::removeIdler(size_t handle)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = (IdlerData*)handle;
-    m_idlers.erase(m_idlers.find(handle));
-    uv_idle_stop(&id->m_idler_uv);
-    GC_FREE(id);
-}
-
-void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
-{
-    IdlerData* id = (IdlerData*)handle;
-    id->m_shouldExecute = false;
-}
-
-void MessageLoop::clearPendingIdlers()
-{
-    auto iter = m_idlers.begin();
-    while (iter != m_idlers.end()) {
-        IdlerData* id = (IdlerData*)*iter;
-        uv_idle_stop(&id->m_idler_uv);
-        GC_FREE(id);
-        iter++;
-    }
-    m_idlers.clear();
-
-    Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-    auto iter2 = m_idlersFromOtherThread.begin();
-    while (iter2 != m_idlersFromOtherThread.end()) {
-        IdlerData* id = (IdlerData*)*iter2;
-        id->m_shouldExecute = false;
-        iter2++;
-    }
-}
-
 #endif
-}
