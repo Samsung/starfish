@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,112 +23,173 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
 
+#include <dali-toolkit/dali-toolkit.h>
+
 namespace StarFish {
 
-PlatformTimer::PlatformTimer(StarFish* sf)
+TimerWrapper::TimerWrapper(StarFish* sf)
     : m_starFish(sf)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
+    m_AnimationCounter = 0;
 }
 
-struct TimeoutData {
-    PlatformTimer* m_timer;
+class AnimationTickData : public Dali::ConnectionTracker, public gc {
+public:
+    AnimationTickData(Dali::Application* platformHandle)
+        : m_platformHandle(platformHandle)
+    {
+    }
+
+    TimerWrapper* m_timer;
     int32_t m_id;
-    // Ecore_Timer* m_timerID;
+    Dali::Timer m_native_timer;
     void* m_data;
-    WindowSetTimeoutHandler m_handler;
+    GenericAnimationHandler m_handler;
+    Dali::Application* m_platformHandle;
+
+    bool AnimationTick()
+    {
+        StarFishEnterer enter(m_timer->starfish());
+        auto animationHandler = m_timer->animationHandler();
+        auto a = animationHandler.find(m_id);
+        if (m_handler(m_data)) {
+            return true;
+        }
+        a = animationHandler.find(m_id);
+        if (animationHandler.end() != a) {
+            animationHandler.erase(a);
+        }
+        GC_FREE(this);
+        return false;
+    }
 };
 
-size_t PlatformTimer::addTimer(double delay, WindowSetTimeoutHandler handler,
-                               void* data, bool repetitive)
+class TimeoutData : public Dali::ConnectionTracker, public gc {
+public:
+    TimeoutData(Dali::Application* platformHandle)
+        : m_platformHandle(platformHandle)
+    {
+    }
+
+    TimerWrapper* m_timer;
+    int32_t m_id;
+    Dali::Timer m_native_timer;
+    void* m_data;
+    WindowSetTimeoutHandler m_handler;
+    Dali::Application* m_platformHandle;
+
+    bool OnceTick()
+    {
+        StarFishEnterer enter(m_timer->starfish());
+        TimerWrapper* timer = m_timer;
+        int32_t id = m_id;
+        m_handler(m_timer->starfish()->window(), m_data);
+        auto timeoutHandler = timer->timeoutHandler();
+        auto iter = timeoutHandler.find(id);
+        if (iter != timeoutHandler.end()) {
+            timeoutHandler.erase(iter);
+            GC_FREE(this);
+        }
+        return false;
+    }
+
+    bool OnTick()
+    {
+        StarFishEnterer enter(m_timer->starfish());
+        auto timeoutHandler = m_timer->timeoutHandler();
+        auto a = timeoutHandler.find(m_id);
+        m_handler(m_timer->starfish()->window(), m_data);
+        return true;
+    }
+
+    bool AnimationTick()
+    {
+        StarFishEnterer enter(m_timer->starfish());
+        auto requestAnimationFrameHandler =
+            m_timer->requestAnimationFrameHandler();
+        auto a = requestAnimationFrameHandler.find(m_id);
+        m_handler(m_timer->starfish()->window(), m_data);
+        a = requestAnimationFrameHandler.find(m_id);
+        if (requestAnimationFrameHandler.end() != a) {
+            requestAnimationFrameHandler.erase(a);
+        }
+        GC_FREE(this);
+        return false;
+    }
+};
+
+size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
+                              void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
-    TimeoutData* td = new (NoGC) TimeoutData;
+    TimeoutData* td =
+        new (NoGC) TimeoutData((Dali::Application*)m_starFish->nativeHandle());
     td->m_timer = this;
     int32_t id = ++m_timeoutCounter;
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
-
+    td->m_native_timer = Dali::Timer::New(delay / 1000.0);
     if (repetitive) {
-        // td->m_timerID = ecore_timer_add(
-        //     delay / 1000.0,
-        //     [](void* data) -> Eina_Bool {
-        //         TimeoutData* td = (TimeoutData*)data;
-        //         StarFishEnterer enter(td->m_timer->m_starFish);
-        //         auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-        //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-        //         return ECORE_CALLBACK_RENEW;
-        //     },
-        //     td);
-
+        td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnTick);
     } else {
-        // td->m_timerID = ecore_timer_add(
-        //     delay / 1000.0,
-        //     [](void* data) -> Eina_Bool {
-        //         TimeoutData* td = (TimeoutData*)data;
-        //         StarFishEnterer enter(td->m_timer->m_starFish);
-        //         PlatformTimer* timer = td->m_timer;
-        //         int32_t id = td->m_id;
-        //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-        //         auto iter = timer->m_timeoutHandler.find(id);
-        //         if (iter != timer->m_timeoutHandler.end()) {
-        //             timer->m_timeoutHandler.erase(iter);
-        //             GC_FREE(td);
-        //         }
-        //         return ECORE_CALLBACK_DONE;
-        //     },
-        //     td);
+        td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnceTick);
     }
-
     m_timeoutHandler.insert(std::make_pair(id, td));
+    td->m_native_timer.Start();
     return id;
 }
 
-void PlatformTimer::removeTimer(size_t reqID)
+void TimerWrapper::removeTimer(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        // ecore_timer_del(td->m_timerID);
+        td->m_native_timer.Stop();
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
     }
 }
 
-size_t PlatformTimer::addAnimator(WindowSetTimeoutHandler handler, void* data)
+size_t TimerWrapper::addAnimator(WindowSetTimeoutHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    TimeoutData* td = new (NoGC) TimeoutData;
+    TimeoutData* td =
+        new (NoGC) TimeoutData((Dali::Application*)m_starFish->nativeHandle());
     td->m_timer = this;
     int32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
-    // td->m_timerID = (Ecore_Timer*)ecore_animator_add(
-    //     [](void* data) -> Eina_Bool {
-    //         TimeoutData* td = (TimeoutData*)data;
-    //         StarFishEnterer enter(td->m_timer->m_starFish);
-    //         auto a =
-    //         td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-    //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-    //         a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-    //         if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
-    //             td->m_timer->m_requestAnimationFrameHandler.erase(a);
-    //         }
-    //         GC_FREE(td);
-    //         return ECORE_CALLBACK_DONE;
-    //     },
-    //     td);
-
+    td->m_native_timer = Dali::Timer::New(0);
+    td->m_native_timer.TickSignal().Connect(td, &TimeoutData::AnimationTick);
     m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
-
+    td->m_native_timer.Start();
     return id;
 }
-void PlatformTimer::removeAnimator(size_t reqID)
+
+size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
+{
+    STARFISH_ASSERT(isMainThread());
+    AnimationTickData* ad = new (NoGC)
+        AnimationTickData((Dali::Application*)m_starFish->nativeHandle());
+    ad->m_timer = this;
+    int32_t id = ++m_AnimationCounter;
+    ad->m_data = data;
+    ad->m_handler = handler;
+    ad->m_native_timer = Dali::Timer::New(0);
+    ad->m_native_timer.TickSignal().Connect(ad,
+                                            &AnimationTickData::AnimationTick);
+    m_animationHandler.insert(std::make_pair(id, ad));
+    ad->m_native_timer.Start();
+    return id;
+}
+
+void TimerWrapper::removeWindowAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -136,18 +197,31 @@ void PlatformTimer::removeAnimator(size_t reqID)
 
     if (handlerData != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        // ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        td->m_native_timer.Stop();
         GC_FREE(td);
         m_requestAnimationFrameHandler.erase(handlerData);
     }
 }
 
-void PlatformTimer::clear()
+void TimerWrapper::removeGenericAnimator(size_t reqID)
+{
+    STARFISH_ASSERT(isMainThread());
+
+    auto handlerData = m_animationHandler.find(reqID);
+    if (handlerData != m_animationHandler.end()) {
+        AnimationTickData* ad = (AnimationTickData*)handlerData->second;
+        ad->m_native_timer.Stop();
+        GC_FREE(ad);
+        m_animationHandler.erase(handlerData);
+    }
+}
+
+void TimerWrapper::clear()
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        // ecore_timer_del(td->m_timerID);
+        td->m_native_timer.Stop();
         GC_FREE(td);
         timerIter++;
     }
@@ -156,11 +230,20 @@ void PlatformTimer::clear()
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        // ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        td->m_native_timer.Stop();
         GC_FREE(td);
         aniIter++;
     }
     m_requestAnimationFrameHandler.clear();
+
+    auto aniIter2 = m_animationHandler.begin();
+    while (aniIter2 != m_animationHandler.end()) {
+        AnimationTickData* td = (AnimationTickData*)aniIter2->second;
+        td->m_native_timer.Stop();
+        GC_FREE(td);
+        aniIter2++;
+    }
+    m_animationHandler.clear();
 }
 }
 #endif

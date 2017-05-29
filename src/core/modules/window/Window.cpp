@@ -688,7 +688,7 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
 
 void Window::cancelAnimationFrame(int32_t reqID)
 {
-    m_starFish->timer()->removeAnimator(reqID);
+    m_starFish->timer()->removeWindowAnimator(reqID);
 }
 
 Node* Window::hitTest(float x, float y)

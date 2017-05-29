@@ -250,7 +250,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     m_messageLoop = new MessageLoop(this);
-    m_timer = new PlatformTimer(this);
+    m_timer = new TimerWrapper(this);
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
@@ -341,11 +341,11 @@ void StarFish::loadHTMLDocument(String* filePath)
     width = size.width;
     height = size.height;
 #elif defined(PORT_GRAPHIC_BACKEND_EFL)
-    evas_object_geometry_get((Evas_Object*)m_nativeHandle, NULL, NULL, &width,
+    evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
                              &height);
 #endif
 
-    m_window = Window::create(this, m_nativeHandle, width, height);
+    m_window = Window::create(this, nativeHandle(), width, height);
     URL* url =
         URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
 
