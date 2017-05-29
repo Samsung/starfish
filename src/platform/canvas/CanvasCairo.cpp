@@ -748,7 +748,7 @@ public:
         UTF8NonGCString us =
             sv.originalString()->toUTF8NonGCString(sv.start(), sv.end(), true);
 
-        FT_Face face = lastState().m_font->FTFace();
+        FT_Face face = lastState().m_font->metrics().m_FTFace;
         cairo_font_face_t* fontFace;
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
         int size = lastState().m_font->size();

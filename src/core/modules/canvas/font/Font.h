@@ -95,13 +95,6 @@ public:
         return m_metrics;
     }
 
-#ifdef PORT_CANVAS_BACKEND_CAIRO
-    FT_Face FTFace()
-    {
-        return metrics().m_FTFace;
-    }
-#endif
-
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
     static inline size_t spaceSizeNumerator(char32_t c)

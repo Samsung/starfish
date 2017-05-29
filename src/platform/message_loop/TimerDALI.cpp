@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(PORT_EVENTLOOP_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_DALI)
 
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
@@ -35,7 +35,7 @@ PlatformTimer::PlatformTimer(StarFish* sf)
 struct TimeoutData {
     PlatformTimer* m_timer;
     int32_t m_id;
-    Ecore_Timer* m_timerID;
+    // Ecore_Timer* m_timerID;
     void* m_data;
     WindowSetTimeoutHandler m_handler;
 };
@@ -53,34 +53,34 @@ size_t PlatformTimer::addTimer(double delay, WindowSetTimeoutHandler handler,
     td->m_handler = handler;
 
     if (repetitive) {
-        td->m_timerID = ecore_timer_add(
-            delay / 1000.0,
-            [](void* data) -> Eina_Bool {
-                TimeoutData* td = (TimeoutData*)data;
-                StarFishEnterer enter(td->m_timer->m_starFish);
-                auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-                td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-                return ECORE_CALLBACK_RENEW;
-            },
-            td);
+        // td->m_timerID = ecore_timer_add(
+        //     delay / 1000.0,
+        //     [](void* data) -> Eina_Bool {
+        //         TimeoutData* td = (TimeoutData*)data;
+        //         StarFishEnterer enter(td->m_timer->m_starFish);
+        //         auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
+        //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
+        //         return ECORE_CALLBACK_RENEW;
+        //     },
+        //     td);
 
     } else {
-        td->m_timerID = ecore_timer_add(
-            delay / 1000.0,
-            [](void* data) -> Eina_Bool {
-                TimeoutData* td = (TimeoutData*)data;
-                StarFishEnterer enter(td->m_timer->m_starFish);
-                PlatformTimer* timer = td->m_timer;
-                int32_t id = td->m_id;
-                td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-                auto iter = timer->m_timeoutHandler.find(id);
-                if (iter != timer->m_timeoutHandler.end()) {
-                    timer->m_timeoutHandler.erase(iter);
-                    GC_FREE(td);
-                }
-                return ECORE_CALLBACK_DONE;
-            },
-            td);
+        // td->m_timerID = ecore_timer_add(
+        //     delay / 1000.0,
+        //     [](void* data) -> Eina_Bool {
+        //         TimeoutData* td = (TimeoutData*)data;
+        //         StarFishEnterer enter(td->m_timer->m_starFish);
+        //         PlatformTimer* timer = td->m_timer;
+        //         int32_t id = td->m_id;
+        //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
+        //         auto iter = timer->m_timeoutHandler.find(id);
+        //         if (iter != timer->m_timeoutHandler.end()) {
+        //             timer->m_timeoutHandler.erase(iter);
+        //             GC_FREE(td);
+        //         }
+        //         return ECORE_CALLBACK_DONE;
+        //     },
+        //     td);
     }
 
     m_timeoutHandler.insert(std::make_pair(id, td));
@@ -93,7 +93,7 @@ void PlatformTimer::removeTimer(size_t reqID)
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_timer_del(td->m_timerID);
+        // ecore_timer_del(td->m_timerID);
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
     }
@@ -108,20 +108,21 @@ size_t PlatformTimer::addAnimator(WindowSetTimeoutHandler handler, void* data)
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
-    td->m_timerID = (Ecore_Timer*)ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            TimeoutData* td = (TimeoutData*)data;
-            StarFishEnterer enter(td->m_timer->m_starFish);
-            auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-            td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
-            a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-            if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
-                td->m_timer->m_requestAnimationFrameHandler.erase(a);
-            }
-            GC_FREE(td);
-            return ECORE_CALLBACK_DONE;
-        },
-        td);
+    // td->m_timerID = (Ecore_Timer*)ecore_animator_add(
+    //     [](void* data) -> Eina_Bool {
+    //         TimeoutData* td = (TimeoutData*)data;
+    //         StarFishEnterer enter(td->m_timer->m_starFish);
+    //         auto a =
+    //         td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
+    //         td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
+    //         a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
+    //         if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
+    //             td->m_timer->m_requestAnimationFrameHandler.erase(a);
+    //         }
+    //         GC_FREE(td);
+    //         return ECORE_CALLBACK_DONE;
+    //     },
+    //     td);
 
     m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
 
@@ -135,7 +136,7 @@ void PlatformTimer::removeAnimator(size_t reqID)
 
     if (handlerData != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        // ecore_animator_del((Ecore_Animator*)td->m_timerID);
         GC_FREE(td);
         m_requestAnimationFrameHandler.erase(handlerData);
     }
@@ -146,7 +147,7 @@ void PlatformTimer::clear()
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        ecore_timer_del(td->m_timerID);
+        // ecore_timer_del(td->m_timerID);
         GC_FREE(td);
         timerIter++;
     }
@@ -155,7 +156,7 @@ void PlatformTimer::clear()
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        // ecore_animator_del((Ecore_Animator*)td->m_timerID);
         GC_FREE(td);
         aniIter++;
     }
