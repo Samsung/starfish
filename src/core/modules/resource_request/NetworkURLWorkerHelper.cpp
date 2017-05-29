@@ -16,15 +16,15 @@
 
 #include "StarFish.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
-#include "core/modules/network/NetworkWorkerHelper.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/modules/resource_request/NetworkURLWorkerHelper.h"
 #include "core/modules/threading/ThreadPool.h"
 
 namespace StarFish {
 
-void* NetworkWorkerHelper::networkWorker(void* data)
+void* NetworkURLWorkerHelper::networkWorker(void* data)
 {
-    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
     CURL* curl = requestData->curl;
     curl_slist* list = requestData->headerList;
     auto res = curl_easy_perform(curl);
@@ -40,10 +40,11 @@ void* NetworkWorkerHelper::networkWorker(void* data)
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
                 [](size_t, void* data) {
-                    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                    NetworkURLWorkerData* requestData =
+                        (NetworkURLWorkerData*)data;
                     if (requestData ==
-                        requestData->request->m_activeNetworkWorkerData) {
-                        requestData->request->m_activeNetworkWorkerData =
+                        requestData->request->m_activeNetworkURLWorkerData) {
+                        requestData->request->m_activeNetworkURLWorkerData =
                             nullptr;
                     }
                     GC_FREE(requestData);
@@ -56,9 +57,9 @@ void* NetworkWorkerHelper::networkWorker(void* data)
     return NULL;
 }
 
-void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
+void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 {
-    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(requestData->res != CURLE_ABORTED_BY_CALLBACK);
     if (requestData->isAborted) {
@@ -86,7 +87,7 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
                           requestData->request->m_url->urlString()->utf8Data(),
                           (int)requestData->responseCode);
         requestData->request->m_status = requestData->responseCode;
-        requestData->request->handleError(NetworkRequest::TIMEOUT);
+        requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
@@ -99,21 +100,21 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_LOG_INFO("failed to open %s\n",
                           requestData->request->m_url->urlString()->utf8Data());
         requestData->request->m_status = requestData->responseCode;
-        requestData->request->handleError(NetworkRequest::ERROR);
+        requestData->request->handleError(ResourceRequest::ERROR);
     }
 
-    requestData->request->m_activeNetworkWorkerData = nullptr;
+    requestData->request->m_activeNetworkURLWorkerData = nullptr;
     GC_FREE(requestData);
 }
 
 void SyncNetworkWorkHelper::responseHandlerWrapper(
-    int res, NetworkWorkerData* requestData)
+    int res, NetworkURLWorkerData* requestData)
 {
     responseHandler(res, requestData);
 }
 
 void AsyncNetworkWorkHelper::responseHandlerWrapper(
-    int res, NetworkWorkerData* requestData)
+    int res, NetworkURLWorkerData* requestData)
 {
     Locker<Mutex> locker(*requestData->request->m_mutex);
     requestData->request->m_pendingNetworkWorkerEndIdlerHandle =

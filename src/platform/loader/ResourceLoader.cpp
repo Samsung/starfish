@@ -20,7 +20,7 @@
 #include "core/dom/HTMLImageElement.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/layout/FrameReplacedImage.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/window/Window.h"

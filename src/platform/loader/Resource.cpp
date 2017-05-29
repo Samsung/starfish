@@ -19,7 +19,7 @@
 #include "platform/loader/Resource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/window/Window.h"
 
 namespace StarFish {
@@ -28,13 +28,13 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 {
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
-        m_networkRequest = new NetworkRequest(loader()->document());
-        m_networkRequest->addNetworkRequestClient(
+        m_resourceRequest = new ResourceRequest(loader()->document());
+        m_resourceRequest->addNetworkRequestClient(
             new ResourceNetworkRequestClient(this));
-        m_networkRequest->open(
-            NetworkRequest::GET_METHOD, url()->urlString(),
+        m_resourceRequest->open(
+            ResourceRequest::GET_METHOD, url()->urlString(),
             !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
-        m_networkRequest->send();
+        m_resourceRequest->send();
     }
 }
 
@@ -72,7 +72,7 @@ void Resource::didLoadFinished()
         (*iter)->didLoadFinished();
         iter++;
     }
-    m_networkRequest = nullptr;
+    m_resourceRequest = nullptr;
     m_resourceClients.clear();
 }
 
@@ -84,7 +84,7 @@ void Resource::didLoadFailed()
         (*iter)->didLoadFailed();
         iter++;
     }
-    m_networkRequest = nullptr;
+    m_resourceRequest = nullptr;
     m_resourceClients.clear();
 }
 
@@ -108,9 +108,9 @@ void Resource::didLoadCanceled()
     }
     m_requstedIdlers.clear();
 
-    if (!m_isReferencedByAnoterResource && m_networkRequest) {
-        m_networkRequest->abort(false);
-        m_networkRequest = nullptr;
+    if (!m_isReferencedByAnoterResource && m_resourceRequest) {
+        m_resourceRequest->abort(false);
+        m_resourceRequest = nullptr;
     }
 }
 }

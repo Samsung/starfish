@@ -20,7 +20,7 @@
 #include "core/dom/ProgressEvent.h"
 #include "core/fileapi/Blob.h"
 #include "core/xml/XMLHttpRequest.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/window/Window.h"
 
 namespace StarFish {
@@ -35,7 +35,7 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 
 XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
     : XMLHttpRequestEventTarget(document)
-    , m_networkRequest(new NetworkRequest(document))
+    , m_resourceRequest(new ResourceRequest(document))
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -45,7 +45,7 @@ XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
 
     m_responseType = ResponseType::Unspecified;
     initResponseData();
-    m_networkRequest->addNetworkRequestClient(this);
+    m_resourceRequest->addNetworkRequestClient(this);
 }
 
 void XMLHttpRequest::initResponseData()
@@ -69,22 +69,22 @@ void XMLHttpRequest::send(Nullable<String*> body)
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
+    if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
         throw new DOMException(DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
-    m_networkRequest->send(body);
+    m_resourceRequest->send(body);
 }
 
-static NetworkRequest::MethodType toMethodType(String* input)
+static ResourceRequest::MethodType toMethodType(String* input)
 {
     String* lowerMethod = input->toLower();
     if (lowerMethod->equals("post")) {
-        return NetworkRequest::POST_METHOD;
+        return ResourceRequest::POST_METHOD;
     } else if (lowerMethod->equals("get")) {
-        return NetworkRequest::GET_METHOD;
+        return ResourceRequest::GET_METHOD;
     }
-    return NetworkRequest::UNKNOWN_METHOD;
+    return ResourceRequest::UNKNOWN_METHOD;
 }
 
 DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
@@ -106,31 +106,31 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
     open(toMethodType(method), url, async, uValue, pValue);
 }
 
-void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url,
+void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
                           bool async, String* userName, String* password)
 {
-    if (method == NetworkRequest::UNKNOWN_METHOD) {
+    if (method == ResourceRequest::UNKNOWN_METHOD) {
         throw new DOMException(DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
-    if (!async && m_networkRequest->timeout() != 0) {
+    if (!async && m_resourceRequest->timeout() != 0) {
         throw new DOMException(DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
-    m_networkRequest->open(method, url, async, userName, password);
+    m_resourceRequest->open(method, url, async, userName, password);
     initResponseData();
 }
 
 void XMLHttpRequest::abort()
 {
-    m_networkRequest->abort();
+    m_resourceRequest->abort();
     initResponseData();
 }
 
 void XMLHttpRequest::setResponseType(ResponseType type)
 {
     // If the state is LOADING or DONE, throw an "InvalidStateError" exception.
-    if (m_networkRequest->readyState() == NetworkRequest::LOADING ||
-        m_networkRequest->readyState() == NetworkRequest::DONE) {
+    if (m_resourceRequest->readyState() == ResourceRequest::LOADING ||
+        m_resourceRequest->readyState() == ResourceRequest::DONE) {
         throw new DOMException(
             DOMException::INVALID_STATE_ERR,
             "The response type cannot be set if the object's state is LOADING "
@@ -138,7 +138,7 @@ void XMLHttpRequest::setResponseType(ResponseType type)
     }
     // If the JavaScript global environment is a document environment and the
     // synchronous flag is set, throw an "InvalidAccessError" exception.
-    if (/*isMainThread() &&*/ m_networkRequest->isSync()) {
+    if (/*isMainThread() &&*/ m_resourceRequest->isSync()) {
         throw new DOMException(
             DOMException::INVALID_ACCESS_ERR,
             "Failed to set the 'responseType' property on 'XMLHttpRequest': "
@@ -203,12 +203,12 @@ String* XMLHttpRequest::responseType() const
 
 uint8_t XMLHttpRequest::readyState() const
 {
-    return m_networkRequest->readyState();
+    return m_resourceRequest->readyState();
 }
 
 uint16_t XMLHttpRequest::status() const
 {
-    return m_networkRequest->status();
+    return m_resourceRequest->status();
 }
 
 ScriptValue XMLHttpRequest::response() const
@@ -261,58 +261,58 @@ String* XMLHttpRequest::responseText() const
 
 uint32_t XMLHttpRequest::timeout() const
 {
-    return m_networkRequest->timeout();
+    return m_resourceRequest->timeout();
 }
 
 void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
-    if (m_networkRequest->isSync() == true) {
+    if (m_resourceRequest->isSync() == true) {
         throw new DOMException(DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
-    m_networkRequest->setTimeout(timeout);
+    m_resourceRequest->setTimeout(timeout);
 }
 
 void XMLHttpRequest::setRequestHeader(String* h, String* c)
 {
     h = h->trim();
     c = c->trim();
-    if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
+    if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
         throw new DOMException(DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     if (h->length() == 0) {
         throw new DOMException(DOMException::SYNTAX_ERR, "InvalidStateError");
     }
-    m_networkRequest->setRequestHeader(h, c);
+    m_resourceRequest->setRequestHeader(h, c);
 }
 
-void XMLHttpRequest::onProgressEvent(NetworkRequest* request,
+void XMLHttpRequest::onProgressEvent(ResourceRequest* request,
                                      bool isExplicitAction)
 {
     String* eventName = String::emptyString;
-    NetworkRequest::ProgressState progState = request->progressState();
-    if (progState == NetworkRequest::PROGRESS) {
+    ResourceRequest::ProgressState progState = request->progressState();
+    if (progState == ResourceRequest::PROGRESS) {
         eventName =
             request->starFish()->staticStrings()->m_progress.localName();
-    } else if (progState == NetworkRequest::ERROR) {
+    } else if (progState == ResourceRequest::ERROR) {
         eventName = request->starFish()->staticStrings()->m_error.localName();
-        if (!m_networkRequest->url()->isFileURL() &&
-            !m_networkRequest->url()->isDataURL() && request->isSync()) {
+        if (!m_resourceRequest->url()->isFileURL() &&
+            !m_resourceRequest->url()->isDataURL() && request->isSync()) {
             throw new DOMException(DOMException::NETWORK_ERR, "NetworkError");
         }
-    } else if (progState == NetworkRequest::ABORT) {
+    } else if (progState == ResourceRequest::ABORT) {
         if (isExplicitAction) {
             return;
         }
         eventName = request->starFish()->staticStrings()->m_abort.localName();
-    } else if (progState == NetworkRequest::TIMEOUT) {
+    } else if (progState == ResourceRequest::TIMEOUT) {
         eventName = request->starFish()->staticStrings()->m_timeout.localName();
-    } else if (progState == NetworkRequest::LOAD) {
+    } else if (progState == ResourceRequest::LOAD) {
         eventName = request->starFish()->staticStrings()->m_load.localName();
-    } else if (progState == NetworkRequest::LOADEND) {
+    } else if (progState == ResourceRequest::LOADEND) {
         eventName = request->starFish()->staticStrings()->m_loadend.localName();
-    } else if (progState == NetworkRequest::LOADSTART) {
+    } else if (progState == ResourceRequest::LOADSTART) {
         eventName =
             request->starFish()->staticStrings()->m_loadstart.localName();
     } else {
@@ -325,52 +325,53 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request,
     EventTarget::dispatchEvent(this, pe);
 }
 
-void XMLHttpRequest::onReadyStateChange(NetworkRequest* request,
+void XMLHttpRequest::onReadyStateChange(ResourceRequest* request,
                                         bool fromExplicit)
 {
     if (fromExplicit) {
-        if (request->readyState() == NetworkRequest::ReadyState::DONE) {
+        if (request->readyState() == ResourceRequest::ReadyState::DONE) {
             if (m_responseType == ResponseType::Unspecified ||
                 m_responseType == ResponseType::Text) {
                 TextConverter textConverter(
-                    m_networkRequest->responseMimeType(),
+                    m_resourceRequest->responseMimeType(),
                     String::fromUTF8("UTF-8"),
-                    m_networkRequest->response().data(),
-                    m_networkRequest->response().size());
+                    m_resourceRequest->response().data(),
+                    m_resourceRequest->response().size());
                 m_responseText = textConverter.convert(
-                    m_networkRequest->response().data(),
-                    m_networkRequest->response().size(), true);
-                m_networkRequest->response().clear();
+                    m_resourceRequest->response().data(),
+                    m_resourceRequest->response().size(), true);
+                m_resourceRequest->response().clear();
             } else if (m_responseType == ResponseType::Json) {
-                TextConverter cvt(m_networkRequest->responseMimeType(),
+                TextConverter cvt(m_resourceRequest->responseMimeType(),
                                   String::fromUTF8("UTF-8"),
-                                  m_networkRequest->response().data(),
-                                  m_networkRequest->response().size());
+                                  m_resourceRequest->response().data(),
+                                  m_resourceRequest->response().size());
                 String* text =
-                    cvt.convert(m_networkRequest->response().data(),
-                                m_networkRequest->response().size(), true);
+                    cvt.convert(m_resourceRequest->response().data(),
+                                m_resourceRequest->response().size(), true);
                 m_responseJsonObject = parseJSON(text);
             } else if (m_responseType == ResponseType::Blob) {
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_networkRequest->response().size());
-                memcpy(buffer, m_networkRequest->response().data(),
-                       m_networkRequest->response().size());
-                m_responseBlob = new ::StarFish::Blob(
-                    m_networkRequest->starFish(),
-                    m_networkRequest->response().size(),
-                    m_networkRequest->responseMimeType(), buffer, false, false);
-                m_networkRequest->response().clear();
-                m_networkRequest->response().shrink_to_fit();
+                    m_resourceRequest->response().size());
+                memcpy(buffer, m_resourceRequest->response().data(),
+                       m_resourceRequest->response().size());
+                m_responseBlob =
+                    new ::StarFish::Blob(m_resourceRequest->starFish(),
+                                         m_resourceRequest->response().size(),
+                                         m_resourceRequest->responseMimeType(),
+                                         buffer, false, false);
+                m_resourceRequest->response().clear();
+                m_resourceRequest->response().shrink_to_fit();
             } else if (m_responseType == ResponseType::ArrayBuffer) {
 #ifdef USE_ES6_FEATURE
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_networkRequest->response().size());
-                memcpy(buffer, m_networkRequest->response().data(),
-                       m_networkRequest->response().size());
+                    m_resourceRequest->response().size());
+                memcpy(buffer, m_resourceRequest->response().data(),
+                       m_resourceRequest->response().size());
                 m_responseArrayBuffer = createArrayBuffer(
-                    buffer, m_networkRequest->response().size());
-                m_networkRequest->response().clear();
-                m_networkRequest->response().shrink_to_fit();
+                    buffer, m_resourceRequest->response().size());
+                m_resourceRequest->response().clear();
+                m_resourceRequest->response().shrink_to_fit();
 #else
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif

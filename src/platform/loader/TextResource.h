@@ -19,7 +19,7 @@
 
 #include "platform/loader/Resource.h"
 #include "core/util/TextConverter.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 

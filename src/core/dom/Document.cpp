@@ -980,8 +980,8 @@ void Document::close()
 
     resourceLoader().clear();
 
-    while (m_activeNetworkRequests.size()) {
-        m_activeNetworkRequests.back()->abort();
+    while (m_activeResourceRequests.size()) {
+        m_activeResourceRequests.back()->abort();
     }
 }
 

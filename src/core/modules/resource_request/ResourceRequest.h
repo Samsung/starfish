@@ -14,51 +14,52 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishNetworkRequest__
-#define __StarFishNetworkRequest__
+#ifndef __StarFishResourceRequest__
+#define __StarFishResourceRequest__
 
 #include "binding/DocumentHoldable.h"
 #include "core/util/URL.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Locker.h"
-#include "core/modules/network/NetworkRequestJob.h"
-#include "core/modules/network/NetworkWorkerHelper.h"
+#include "core/modules/resource_request/ResourceRequestJob.h"
+#include "core/modules/resource_request/NetworkURLWorkerHelper.h"
 
 namespace StarFish {
 
 class Document;
-class NetworkRequest;
-class NetworkWorkerHelper;
-struct NetworkWorkerData;
+class ResourceRequest;
+class NetworkURLWorkerHelper;
+struct NetworkURLWorkerData;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::basic_string<char> NetworkRequestResponseHeader;
 
-class NetworkRequestClient : public gc {
+class ResourceRequestClient : public gc {
 public:
-    virtual ~NetworkRequestClient()
+    virtual ~ResourceRequestClient()
     {
     }
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    virtual void onProgressEvent(ResourceRequest* request,
+                                 bool isExplicitAction)
     {
     }
-    virtual void onReadyStateChange(NetworkRequest* request,
+    virtual void onReadyStateChange(ResourceRequest* request,
                                     bool isExplicitAction)
     {
     }
 };
 
-class NetworkRequest : public gc,
-                       public DocumentHoldable,
-                       public NetworkRequestJobInterface {
+class ResourceRequest : public gc,
+                        public DocumentHoldable,
+                        public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
-    friend class NetworkWorkerHelper;
+    friend class NetworkURLWorkerHelper;
     friend class AsyncNetworkWorkHelper;
-    friend class FileURLNetworkRequestJobDelegate;
-    friend class DataURLNetworkRequestJobDelegate;
-    friend class BlobURLNetworkRequestJobDelegate;
-    friend class NetworkURLNetworkRequestJobDelegate;
+    friend class FileURLResourceRequestJobDelegate;
+    friend class DataURLResourceRequestJobDelegate;
+    friend class BlobURLResourceRequestJobDelegate;
+    friend class NetworkURLResourceRequestJobDelegate;
 
 public:
     enum MethodType { UNKNOWN_METHOD, POST_METHOD, GET_METHOD };
@@ -85,8 +86,8 @@ public:
         LOADEND,
     };
 
-    NetworkRequest(Document* document);
-    void open(NetworkRequest::MethodType method, String* url, bool async,
+    ResourceRequest(Document* document);
+    void open(ResourceRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
@@ -147,7 +148,7 @@ public:
         return m_responseMimeType;
     }
 
-    void addNetworkRequestClient(NetworkRequestClient* client)
+    void addNetworkRequestClient(ResourceRequestClient* client)
     {
         m_clients.push_back(client);
     }
@@ -200,7 +201,7 @@ protected:
     ResponseType m_responseType;
     uint16_t m_status;
     uint32_t m_timeout;
-    NetworkWorkerData* m_activeNetworkWorkerData;
+    NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;
     String* m_responseMimeType;
     NetworkRequestResponse m_response;
@@ -208,7 +209,7 @@ protected:
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
     // request job proxy
-    NetworkRequestJobInterface* m_networkRequestJobDelegate;
+    ResourceRequestJobInterface* m_networkRequestJobDelegate;
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
     volatile size_t m_pendingOnProgressEventIdlerHandle;
@@ -218,7 +219,7 @@ protected:
 
     volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
 
-    GCVector<NetworkRequestClient*> m_clients;
+    GCVector<ResourceRequestClient*> m_clients;
 };
 }
 

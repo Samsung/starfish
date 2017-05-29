@@ -20,37 +20,37 @@
 #include "core/fileapi/Blob.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
-#include "core/modules/network/NetworkRequestJob.h"
-#include "core/modules/network/NetworkWorkerHelper.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/modules/resource_request/ResourceRequestJob.h"
+#include "core/modules/resource_request/NetworkURLWorkerHelper.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 
 namespace StarFish {
 
-NetworkRequestJobInterface* NetworkRequestJobDelegateFactory::createJob(
-    NetworkRequest* proxy)
+ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
+    ResourceRequest* proxy)
 {
     if (proxy->url()->isFileURL()) {
-        return new FileURLNetworkRequestJobDelegate(proxy);
+        return new FileURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isDataURL()) {
-        return new DataURLNetworkRequestJobDelegate(proxy);
+        return new DataURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isBlobURL()) {
-        return new BlobURLNetworkRequestJobDelegate(proxy);
+        return new BlobURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isNetworkURL()) {
-        return new NetworkURLNetworkRequestJobDelegate(proxy);
+        return new NetworkURLResourceRequestJobDelegate(proxy);
     }
     STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
 }
 
-FileURLNetworkRequestJobDelegate::FileURLNetworkRequestJobDelegate(
-    NetworkRequest* proxy)
+FileURLResourceRequestJobDelegate::FileURLResourceRequestJobDelegate(
+    ResourceRequest* proxy)
     : m_orgProxy(proxy)
 {
 }
 
-void FileURLNetworkRequestJobDelegate::send(String* body)
+void FileURLResourceRequestJobDelegate::send(String* body)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isFileURL());
     // this area doesn't require lock.
@@ -63,24 +63,24 @@ void FileURLNetworkRequestJobDelegate::send(String* body)
     } else {
         size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
+                ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
-                FileURLNetworkRequestJobDelegate::worker((NetworkRequest*)data,
-                                                         (String*)data1);
+                FileURLResourceRequestJobDelegate::worker(
+                    (ResourceRequest*)data, (String*)data1);
             },
             m_orgProxy, filePath);
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
 
-void FileURLNetworkRequestJobDelegate::worker(NetworkRequest* res,
-                                              String* filePath)
+void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
+                                               String* filePath)
 {
     FileIO* fio = FileIO::create();
     if (fio->open(filePath)) {
         res->m_status = 200;
-        res->changeReadyState(NetworkRequest::HEADERS_RECEIVED, true);
-        res->changeReadyState(NetworkRequest::LOADING, true);
+        res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+        res->changeReadyState(ResourceRequest::LOADING, true);
         size_t responseLength = fio->length();
         res->m_response.resize(responseLength);
         fio->read(res->m_response.data(), sizeof(const char), responseLength);
@@ -90,18 +90,18 @@ void FileURLNetworkRequestJobDelegate::worker(NetworkRequest* res,
         STARFISH_LOG_INFO("failed to open %s\n",
                           res->m_url->urlString()->utf8Data());
         res->m_status = 0;
-        res->handleError(NetworkRequest::ERROR);
+        res->handleError(ResourceRequest::ERROR);
     }
     delete fio;
 }
 
-DataURLNetworkRequestJobDelegate::DataURLNetworkRequestJobDelegate(
-    NetworkRequest* proxy)
+DataURLResourceRequestJobDelegate::DataURLResourceRequestJobDelegate(
+    ResourceRequest* proxy)
     : m_orgProxy(proxy)
 {
 }
 
-void DataURLNetworkRequestJobDelegate::send(String* body)
+void DataURLResourceRequestJobDelegate::send(String* body)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isDataURL());
     // this area doesn't require lock.
@@ -111,17 +111,18 @@ void DataURLNetworkRequestJobDelegate::send(String* body)
     } else {
         size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
+                ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
-                DataURLNetworkRequestJobDelegate::worker((NetworkRequest*)data,
-                                                         (String*)data1);
+                DataURLResourceRequestJobDelegate::worker(
+                    (ResourceRequest*)data, (String*)data1);
             },
             m_orgProxy, m_orgProxy->m_url->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
 
-void DataURLNetworkRequestJobDelegate::worker(NetworkRequest* res, String* url)
+void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
+                                               String* url)
 {
     res->m_status = 200;
 
@@ -145,9 +146,9 @@ void DataURLNetworkRequestJobDelegate::worker(NetworkRequest* res, String* url)
             res->m_responseHeaderData.push_back((char)sub->charAt(i));
         }
     }
-    res->changeReadyState(NetworkRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
 
-    res->changeReadyState(NetworkRequest::LOADING, true);
+    res->changeReadyState(ResourceRequest::LOADING, true);
 
     // TODO filter url string correctly according RFC 3986
     String* decodedURL = decodeURL(url, idx + 1);
@@ -161,13 +162,13 @@ void DataURLNetworkRequestJobDelegate::worker(NetworkRequest* res, String* url)
     res->handleResponseEOF();
 }
 
-BlobURLNetworkRequestJobDelegate::BlobURLNetworkRequestJobDelegate(
-    NetworkRequest* proxy)
+BlobURLResourceRequestJobDelegate::BlobURLResourceRequestJobDelegate(
+    ResourceRequest* proxy)
     : m_orgProxy(proxy)
 {
 }
 
-void BlobURLNetworkRequestJobDelegate::send(String* body)
+void BlobURLResourceRequestJobDelegate::send(String* body)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isBlobURL());
     // this area doesn't require lock.
@@ -177,52 +178,53 @@ void BlobURLNetworkRequestJobDelegate::send(String* body)
     } else {
         size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data, void* data1) {
-                NetworkRequest* request = (NetworkRequest*)data;
+                ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
-                BlobURLNetworkRequestJobDelegate::worker((NetworkRequest*)data,
-                                                         (String*)data1);
+                BlobURLResourceRequestJobDelegate::worker(
+                    (ResourceRequest*)data, (String*)data1);
             },
             m_orgProxy, m_orgProxy->m_url->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
 
-void BlobURLNetworkRequestJobDelegate::worker(NetworkRequest* res, String* url)
+void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
+                                               String* url)
 {
     res->m_status = 200;
 
     BlobURLStore store;
     if (!StarFish::stringToBlobURLString(url, store)) {
-        res->handleError(NetworkRequest::ERROR);
+        res->handleError(ResourceRequest::ERROR);
         return;
     }
 
     if (!res->starFish()->isValidBlobURL(store)) {
-        res->handleError(NetworkRequest::ERROR);
+        res->handleError(ResourceRequest::ERROR);
         return;
     }
 
     res->m_responseMimeType = ((Blob*)store.m_blob)->type();
-    res->changeReadyState(NetworkRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
 
-    res->changeReadyState(NetworkRequest::LOADING, true);
+    res->changeReadyState(ResourceRequest::LOADING, true);
     char* buf = (char*)((Blob*)store.m_blob)->data();
     res->m_response.assign(buf, &buf[((Blob*)store.m_blob)->size()]);
 
     res->handleResponseEOF();
 }
 
-NetworkURLNetworkRequestJobDelegate::NetworkURLNetworkRequestJobDelegate(
-    NetworkRequest* proxy)
+NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
+    ResourceRequest* proxy)
     : m_orgProxy(proxy)
 {
 }
 
-void NetworkURLNetworkRequestJobDelegate::send(String* body)
+void NetworkURLResourceRequestJobDelegate::send(String* body)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
-    NetworkWorkerData* data = new (NoGC) NetworkWorkerData;
-    m_orgProxy->m_activeNetworkWorkerData = data;
+    NetworkURLWorkerData* data = new (NoGC) NetworkURLWorkerData;
+    m_orgProxy->m_activeNetworkURLWorkerData = data;
     {
         CURL* curl = curl_easy_init();
         STARFISH_ASSERT(curl);
@@ -310,10 +312,11 @@ void NetworkURLNetworkRequestJobDelegate::send(String* body)
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 
-        if (m_orgProxy->m_method == NetworkRequest::POST_METHOD) {
+        if (m_orgProxy->m_method == ResourceRequest::POST_METHOD) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body->utf8Data());
         } else {
-            STARFISH_ASSERT(m_orgProxy->m_method == NetworkRequest::GET_METHOD);
+            STARFISH_ASSERT(m_orgProxy->m_method ==
+                            ResourceRequest::GET_METHOD);
         }
     }
 
@@ -323,24 +326,24 @@ void NetworkURLNetworkRequestJobDelegate::send(String* body)
     } else {
         data->networkWorker = new AsyncNetworkWorkHelper();
         m_orgProxy->starFish()->threadPool()->addWork(
-            NetworkURLNetworkRequestJobDelegate::worker, data);
+            NetworkURLResourceRequestJobDelegate::worker, data);
         // Thread* t = new Thread();
         // t->run(networkWorker, data);
     }
 }
 
-void* NetworkURLNetworkRequestJobDelegate::worker(void* data)
+void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
-    NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
     return requestData->networkWorker->networkWorker(data);
 }
 
-int NetworkURLNetworkRequestJobDelegate::curlProgressCallback(
+int NetworkURLResourceRequestJobDelegate::curlProgressCallback(
     void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,
     curl_off_t ulnow)
 {
-    NetworkWorkerData* workerData = (NetworkWorkerData*)clientp;
-    NetworkRequest* request = workerData->request;
+    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)clientp;
+    ResourceRequest* request = workerData->request;
     Locker<Mutex> locker(*request->m_mutex);
     // check abort
     if (workerData->isAborted) {
@@ -352,12 +355,12 @@ int NetworkURLNetworkRequestJobDelegate::curlProgressCallback(
     return 0;
 }
 
-size_t NetworkURLNetworkRequestJobDelegate::curlWriteCallback(void* ptr,
-                                                              size_t size,
-                                                              size_t nmemb,
-                                                              void* data)
+size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
+                                                               size_t size,
+                                                               size_t nmemb,
+                                                               void* data)
 {
-    NetworkRequest* request = (NetworkRequest*)data;
+    ResourceRequest* request = (ResourceRequest*)data;
     Locker<Mutex> locker(*request->m_mutex);
 
     size_t realSize = size * nmemb;
@@ -368,15 +371,15 @@ size_t NetworkURLNetworkRequestJobDelegate::curlWriteCallback(void* ptr,
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         if (request->isSync()) {
-            request->changeReadyState(NetworkRequest::LOADING, true);
-            request->changeProgress(NetworkRequest::PROGRESS, true);
+            request->changeReadyState(ResourceRequest::LOADING, true);
+            request->changeProgress(ResourceRequest::PROGRESS, true);
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
                 request->starFish()
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
                         [](size_t handle, void* data) {
-                            NetworkRequest* request = (NetworkRequest*)data;
+                            ResourceRequest* request = (ResourceRequest*)data;
                             Locker<Mutex> locker(*request->m_mutex);
                             {
                                 STARFISH_ASSERT(
@@ -386,9 +389,9 @@ size_t NetworkURLNetworkRequestJobDelegate::curlWriteCallback(void* ptr,
                                 request->m_pendingOnProgressEventIdlerHandle =
                                     SIZE_MAX;
                             }
-                            request->changeReadyState(NetworkRequest::LOADING,
+                            request->changeReadyState(ResourceRequest::LOADING,
                                                       true);
-                            request->changeProgress(NetworkRequest::PROGRESS,
+                            request->changeProgress(ResourceRequest::PROGRESS,
                                                     true);
                         },
                         request);
@@ -398,11 +401,11 @@ size_t NetworkURLNetworkRequestJobDelegate::curlWriteCallback(void* ptr,
     return realSize;
 }
 
-size_t NetworkURLNetworkRequestJobDelegate::curlWriteHeaderCallback(
+size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     void* ptr, size_t size, size_t nmemb, void* data)
 {
     size_t realsize = size * nmemb;
-    NetworkWorkerData* request = (NetworkWorkerData*)data;
+    NetworkURLWorkerData* request = (NetworkURLWorkerData*)data;
     Locker<Mutex> locker(*request->request->m_mutex);
 
     size_t realSize = size * nmemb;

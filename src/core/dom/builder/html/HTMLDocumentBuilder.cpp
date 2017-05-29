@@ -80,7 +80,7 @@ public:
     {
         ResourceClient::didLoadFinished();
 
-        String* m = m_resource->networkRequest()->responseMimeType();
+        String* m = m_resource->resourceRequest()->responseMimeType();
         if (!m->contains("charset", false)) {
             // TODO check BOM
             size_t bufferLen = m_buffer.size();

@@ -21,7 +21,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/window/Window.h"
 #include "platform/loader/ElementResourceClient.h"
 
@@ -65,16 +65,22 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        if (isJavaScriptType(m_resource->networkRequest()
+        if (isJavaScriptType(m_resource->resourceRequest()
                                  ->responseMimeType()
                                  ->toLower()
                                  ->utf8Data()) ||
-            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
-                "text/plain") ||
-            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
-                "text/html") ||
-            m_resource->networkRequest()->responseMimeType()->toLower()->equals(
-                "application/json")) {
+            m_resource->resourceRequest()
+                ->responseMimeType()
+                ->toLower()
+                ->equals("text/plain") ||
+            m_resource->resourceRequest()
+                ->responseMimeType()
+                ->toLower()
+                ->equals("text/html") ||
+            m_resource->resourceRequest()
+                ->responseMimeType()
+                ->toLower()
+                ->equals("application/json")) {
             String* text = m_resource->asTextResource()->text();
             m_element->window()->scriptBindingInstance()->evaluate(text);
         }

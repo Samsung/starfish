@@ -20,7 +20,7 @@
 #include "platform/loader/ResourceLoader.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/window/Window.h"
 
 namespace StarFish {
@@ -86,16 +86,16 @@ void ImageResource::didLoadFinished()
 {
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
     if (!m_url->isFileURL()) {
-        m_imageData = ImageData::create(m_networkRequest->response().data(),
-                                        m_networkRequest->response().size());
+        m_imageData = ImageData::create(m_resourceRequest->response().data(),
+                                        m_resourceRequest->response().size());
         if (!m_imageData) {
             Resource::didLoadFailed();
             return;
         }
     }
 #else
-    m_imageData = ImageData::create(m_networkRequest->response().data(),
-                                    m_networkRequest->response().size());
+    m_imageData = ImageData::create(m_resourceRequest->response().data(),
+                                    m_resourceRequest->response().size());
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;
