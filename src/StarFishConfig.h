@@ -23,6 +23,7 @@
 #define USE_CAIRO
 #define USE_DALI
 #define USE_LIBUV
+#define USE_EXT_IMG_DECODER
 #endif
 
 #include <cstdlib>

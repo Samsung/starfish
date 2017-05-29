@@ -25,11 +25,12 @@
 #include "core/modules/window/Window.h"
 
 #include <pthread.h>
-#include <Elementary.h>
 
-#ifdef USE_DALI
+#if defined(USE_DALI)
 #include <dali-toolkit/dali-toolkit.h>
 #endif
+
+#include <Elementary.h>
 
 using namespace StarFish;
 
@@ -216,7 +217,7 @@ public:
     }
     void OnIdle()
     {
-        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+        m_sf->run();
         mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
     }
 

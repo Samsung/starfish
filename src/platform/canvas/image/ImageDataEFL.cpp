@@ -15,7 +15,9 @@
  */
 
 #include "StarFishConfig.h"
-#include "ImageData.h"
+
+#if defined(USE_EFL)
+#include "core/modules/canvas/image/ImageData.h"
 #include "platform/file/FileIO.h"
 
 #include <Elementary.h>
@@ -119,103 +121,6 @@ protected:
     size_t m_height;
 };
 
-class ImageDataEXT : public ImageData {
-public:
-    ImageDataEXT(String* localImageSrc)
-    {
-        // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
-        // localImageSrc->utf8Data());
-        m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(
-            m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(),
-            NULL);
-        evas_object_data_set(m_image, "local", "1");
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
-                                EVAS_COLORSPACE_ARGB8888);
-        int w, h, err;
-        err = evas_object_image_load_error_get(m_image);
-        if (err == EVAS_LOAD_ERROR_NONE) {
-            evas_object_image_size_get(m_image, &w, &h);
-            if (w >= 0 && h >= 0) {
-                m_width = w;
-                m_height = h;
-
-                reigsterFinalizer();
-                return;
-            }
-        }
-        evas_object_del(m_image);
-        m_image = NULL;
-    }
-
-    ImageDataEXT(const char* buf, size_t len)
-    {
-        m_image = evas_object_image_add(internalCanvas());
-        evas_object_data_set(m_image, "local", "0");
-        char format[4] = "";
-        evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format,
-                                      NULL);
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
-                                EVAS_COLORSPACE_ARGB8888);
-        int w, h, err;
-        err = evas_object_image_load_error_get(m_image);
-        if (err == EVAS_LOAD_ERROR_NONE) {
-            evas_object_image_size_get(m_image, &w, &h);
-            if (w >= 0 && h >= 0) {
-                m_width = w;
-                m_height = h;
-                reigsterFinalizer();
-                return;
-            }
-        }
-        evas_object_del(m_image);
-        m_image = NULL;
-    }
-
-    virtual size_t bufferSize()
-    {
-        if (m_image) {
-            return m_width * m_height * 4;
-        } else {
-            return 0;
-        }
-    }
-
-    void reigsterFinalizer()
-    {
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
-                                           Evas_Object* m = (Evas_Object*)cd;
-                                           evas_object_hide(m);
-                                           evas_object_del(m);
-                                       },
-                                       m_image, NULL, NULL);
-    }
-
-    virtual void* unwrap()
-    {
-        return m_image;
-    }
-
-    virtual size_t width()
-    {
-        return m_width;
-    }
-
-    virtual size_t height()
-    {
-        return m_height;
-    }
-
-protected:
-    Evas_Object* m_image;
-    size_t m_width;
-    size_t m_height;
-};
-
-#ifdef USE_EFL
-
 ImageData* ImageData::create(String* localImageSrc)
 {
     ImageData* imageData = new ImageDataEFL(localImageSrc);
@@ -233,26 +138,6 @@ ImageData* ImageData::create(const char* buf, size_t len)
     }
     return imageData;
 }
-
-#else
-
-ImageData* ImageData::create(String* localImageSrc)
-{
-    ImageData* imageData = new ImageDataEXT(localImageSrc);
-    if (imageData->unwrap() == NULL) {
-        return NULL;
-    }
-    return imageData;
-}
-
-ImageData* ImageData::create(const char* buf, size_t len)
-{
-    ImageData* imageData = new ImageDataEXT(buf, len);
-    if (imageData->unwrap() == NULL) {
-        return NULL;
-    }
-    return imageData;
 }
 
 #endif
-}
