@@ -151,12 +151,13 @@ void ImageDecoder::readPNGFile()
     png_set_bgr(png);
     png_read_update_info(png, info);
 
-    rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * m_height);
+    rowPointers = (png_bytep*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
+        sizeof(png_bytep) * m_height);
 
     png_uint_32 rowbytes = png_get_rowbytes(png, info);
 
-    if ((m_imageData = (unsigned char*)malloc(rowbytes * m_height)) ==
-        nullptr) {
+    if ((m_imageData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
+             rowbytes * m_height)) == nullptr) {
         png_destroy_read_struct(&png, &info, nullptr);
         return;
     }
@@ -167,6 +168,7 @@ void ImageDecoder::readPNGFile()
 
     png_read_image(png, rowPointers);
     png_read_end(png, nullptr);
+    png_destroy_read_struct(&png, &info, nullptr);
 }
 }
 #endif

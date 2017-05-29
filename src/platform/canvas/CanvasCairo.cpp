@@ -864,24 +864,21 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        Evas_Object* imgData = (Evas_Object*)data->unwrap();
 
+        void* imgData = data->unwrap();
         double surfaceWidth, surfaceHeight;
         cairo_surface_t* image;
-        if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
-            void* buffer = evas_object_image_data_get(imgData, EINA_TRUE);
+
+        if (imgData) {
+            int stride =
+                cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
             image = cairo_image_surface_create_for_data(
-                (unsigned char*)buffer, CAIRO_FORMAT, dst.width(), dst.width(),
-                evas_object_image_stride_get(imgData));
+                (unsigned char*)imgData, CAIRO_FORMAT, dst.width(),
+                dst.height(), stride);
             surfaceWidth = data->width();
             surfaceHeight = data->height();
         } else {
-            const char* path;
-            evas_object_image_file_get(imgData, &path, NULL);
-            // temp code!! need external-decoder? or use evas?
-            image = cairo_image_surface_create_from_png(path);
-            surfaceWidth = cairo_image_surface_get_width(image);
-            surfaceHeight = cairo_image_surface_get_height(image);
+            // TODO
         }
         drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
         cairo_surface_destroy(image);

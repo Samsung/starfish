@@ -19,6 +19,7 @@
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
 #include "core/modules/canvas/image/ImageData.h"
+#include "ImageDecoder.h"
 #include "platform/file/FileIO.h"
 
 namespace StarFish {
@@ -27,6 +28,10 @@ class ImageDataMISC : public ImageData {
 public:
     ImageDataMISC(String* localImageSrc)
     {
+        ImageDecoder* d = new ImageDecoder(localImageSrc->utf8Data());
+        m_image = (void*)d->buffer();
+        m_width = d->width();
+        m_height = d->height();
     }
 
     ImageDataMISC(const char* buf, size_t len)
