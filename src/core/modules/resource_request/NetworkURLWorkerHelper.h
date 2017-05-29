@@ -14,17 +14,17 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishNetworkWorkerHelper__
-#define __StarFishNetworkWorkerHelper__
+#ifndef __StarFishNetworkURLWorkerHelper__
+#define __StarFishNetworkURLWorkerHelper__
 
 namespace StarFish {
 
-class NetworkRequest;
-class NetworkWorkerHelper;
+class ResourceRequest;
+class NetworkURLWorkerHelper;
 
-struct NetworkWorkerData {
-    NetworkRequest* request;
-    NetworkWorkerHelper* networkWorker;
+struct NetworkURLWorkerData {
+    ResourceRequest* request;
+    NetworkURLWorkerHelper* networkWorker;
     CURL* curl;
     curl_slist* headerList;
     bool isSync;
@@ -33,33 +33,34 @@ struct NetworkWorkerData {
     int res;
 };
 
-class NetworkWorkerHelper : public gc {
+class NetworkURLWorkerHelper : public gc {
 public:
-    NetworkWorkerHelper()
+    NetworkURLWorkerHelper()
     {
     }
-    virtual ~NetworkWorkerHelper()
+    virtual ~NetworkURLWorkerHelper()
     {
     }
     void* networkWorker(void* data);
 
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkWorkerData* requestData)
+    virtual void responseHandlerWrapper(int res,
+                                        NetworkURLWorkerData* requestData)
     {
     }
     static void responseHandler(size_t handle, void* requestData);
 };
 
-class AsyncNetworkWorkHelper : public NetworkWorkerHelper {
+class AsyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
     virtual void responseHandlerWrapper(int res,
-                                        NetworkWorkerData* requestData);
+                                        NetworkURLWorkerData* requestData);
 };
 
-class SyncNetworkWorkHelper : public NetworkWorkerHelper {
+class SyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
     virtual void responseHandlerWrapper(int res,
-                                        NetworkWorkerData* requestData);
+                                        NetworkURLWorkerData* requestData);
 };
 }
 

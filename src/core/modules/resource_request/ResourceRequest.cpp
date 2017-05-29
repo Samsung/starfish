@@ -17,8 +17,8 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/network/NetworkRequest.h"
-#include "core/modules/network/NetworkRequestJob.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 #include "core/modules/window/Window.h"
@@ -29,15 +29,15 @@
 
 namespace StarFish {
 
-class ActiveNetworkRequestTracker : public NetworkRequestClient {
+class ActiveNetworkRequestTracker : public ResourceRequestClient {
 public:
-    virtual void onProgressEvent(NetworkRequest* request,
+    virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
-        if (request->progressState() == NetworkRequest::LOADSTART) {
-            request->document()->m_activeNetworkRequests.push_back(request);
-        } else if (request->progressState() == NetworkRequest::LOADEND) {
-            auto& v = request->document()->m_activeNetworkRequests;
+        if (request->progressState() == ResourceRequest::LOADSTART) {
+            request->document()->m_activeResourceRequests.push_back(request);
+        } else if (request->progressState() == ResourceRequest::LOADEND) {
+            auto& v = request->document()->m_activeResourceRequests;
             auto iter = std::find(v.begin(), v.end(), request);
             if (iter != v.end()) {
                 v.erase(iter);
@@ -46,7 +46,7 @@ public:
     }
 };
 
-NetworkRequest::NetworkRequest(Document* document)
+ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
     , m_url(nullptr)
     , m_readyState(UNSENT)
@@ -55,7 +55,7 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_responseType(DEFAULT_RESPONSE)
     , m_status(0)
     , m_timeout(0)
-    , m_activeNetworkWorkerData(nullptr)
+    , m_activeNetworkURLWorkerData(nullptr)
     , m_mutex(new Mutex())
     , m_networkRequestJobDelegate(nullptr)
     , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
@@ -67,8 +67,8 @@ NetworkRequest::NetworkRequest(Document* document)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest %p\n", obj);
-            NetworkRequest* nr = (NetworkRequest*)obj;
+            // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
+            ResourceRequest* nr = (ResourceRequest*)obj;
             NetworkRequestResponse().swap(nr->m_response);
             NetworkRequestResponseHeader().swap(nr->m_responseHeaderData);
         },
@@ -78,7 +78,7 @@ NetworkRequest::NetworkRequest(Document* document)
     addNetworkRequestClient(new ActiveNetworkRequestTracker());
 }
 
-void NetworkRequest::initVariables()
+void ResourceRequest::initVariables()
 {
     m_responseMimeType = String::emptyString;
     NetworkRequestResponse().swap(m_response);
@@ -92,7 +92,7 @@ void NetworkRequest::initVariables()
     m_status = 0;
 }
 
-void NetworkRequest::clearIdlers()
+void ResourceRequest::clearIdlers()
 {
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
@@ -119,13 +119,13 @@ void NetworkRequest::clearIdlers()
         m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
     }
 
-    if (m_activeNetworkWorkerData) {
-        m_activeNetworkWorkerData->isAborted = true;
-        m_activeNetworkWorkerData = nullptr;
+    if (m_activeNetworkURLWorkerData) {
+        m_activeNetworkURLWorkerData->isAborted = true;
+        m_activeNetworkURLWorkerData = nullptr;
     }
 }
 
-void NetworkRequest::handleResponseEOF()
+void ResourceRequest::handleResponseEOF()
 {
     changeProgress(PROGRESS, true);
     changeReadyState(DONE, true);
@@ -133,7 +133,7 @@ void NetworkRequest::handleResponseEOF()
     changeProgress(LOADEND, true);
 }
 
-void NetworkRequest::handleError(ProgressState error)
+void ResourceRequest::handleError(ProgressState error)
 {
     m_gotError = true;
     changeReadyState(DONE, true);
@@ -208,8 +208,8 @@ static std::vector<std::string> split(const std::string& s, char seperator)
     return output;
 }
 
-void NetworkRequest::changeReadyState(ReadyState readyState,
-                                      bool isExplicitAction)
+void ResourceRequest::changeReadyState(ReadyState readyState,
+                                       bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
     if (!m_gotError && readyState == LOADING && m_readyState == OPENED) {
@@ -290,7 +290,7 @@ void NetworkRequest::changeReadyState(ReadyState readyState,
     if (m_readyState == ReadyState::DONE) {
         starFish()->messageLoop()->addIdler(
             [](size_t, void* data, void* data2) {
-                NetworkRequest* self = (NetworkRequest*)data2;
+                ResourceRequest* self = (ResourceRequest*)data2;
                 ((StarFish*)data)->removePointerFromRootSet(data2);
             },
             starFish(), this);
@@ -300,8 +300,8 @@ void NetworkRequest::changeReadyState(ReadyState readyState,
     }
 }
 
-void NetworkRequest::changeProgress(ProgressState progress,
-                                    bool isExplicitAction)
+void ResourceRequest::changeProgress(ProgressState progress,
+                                     bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
     if (m_progressState != progress || (progress == ProgressState::PROGRESS)) {
@@ -317,8 +317,8 @@ void NetworkRequest::changeProgress(ProgressState progress,
     }
 }
 
-void NetworkRequest::open(MethodType method, String* url, bool async,
-                          String* userName, String* password)
+void ResourceRequest::open(MethodType method, String* url, bool async,
+                           String* userName, String* password)
 {
     bool shouldAbort = false;
     {
@@ -343,12 +343,12 @@ void NetworkRequest::open(MethodType method, String* url, bool async,
 
     STARFISH_ASSERT(!m_networkRequestJobDelegate);
     m_networkRequestJobDelegate =
-        NetworkRequestJobDelegateFactory::createJob(this);
+        ResourceRequestJobDelegateFactory::createJob(this);
 
     changeReadyState(OPENED, true);
 }
 
-void NetworkRequest::abort(bool isExplicitAction)
+void ResourceRequest::abort(bool isExplicitAction)
 {
     clearIdlers();
 
@@ -371,7 +371,7 @@ void NetworkRequest::abort(bool isExplicitAction)
     }
 }
 
-void NetworkRequest::send(String* body)
+void ResourceRequest::send(String* body)
 {
     starFish()->addPointerInRootSet(this);
     m_didSend = true;
@@ -382,7 +382,7 @@ void NetworkRequest::send(String* body)
     changeProgress(LOADSTART, true);
 }
 
-void NetworkRequest::setRequestHeader(String* h, String* c)
+void ResourceRequest::setRequestHeader(String* h, String* c)
 {
     m_requestHeaders.push_back(std::make_pair(h, c));
 }
@@ -531,9 +531,9 @@ static inline bool isBase64(unsigned char c)
 }
 
 template <typename StrType>
-NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str,
-                                                         size_t startAt,
-                                                         size_t endAt)
+NetworkRequestResponse ResourceRequest::parseBase64String(const StrType& str,
+                                                          size_t startAt,
+                                                          size_t endAt)
 {
     size_t inLen = endAt - startAt;
     size_t i = 0;

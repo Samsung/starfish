@@ -34,7 +34,7 @@ class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class ImageData;
-class NetworkRequest;
+class ResourceRequest;
 class Location;
 class Text;
 class URL;
@@ -365,7 +365,7 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     VisibilityState m_pageVisibilityState;
     size_t m_domVersion;
-    GCVector<NetworkRequest*> m_activeNetworkRequests;
+    GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     GCVector<Element*>
         m_elementExecutionStackForAttributeStringEventFunctionObject;

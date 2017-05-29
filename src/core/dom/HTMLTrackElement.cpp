@@ -52,17 +52,17 @@ public:
     virtual int GetChar(char* c)
     {
         if (c == NULL || m_resource == nullptr ||
-            m_resource->networkRequest() == nullptr) {
+            m_resource->resourceRequest() == nullptr) {
             return -1;
         }
 
-        unsigned int size = m_resource->networkRequest()->response().size();
+        unsigned int size = m_resource->resourceRequest()->response().size();
         unsigned int pointer = nextPointer();
         if (pointer >= size) {
             return 1;
         }
 
-        *c = m_resource->networkRequest()->response()[pointer];
+        *c = m_resource->resourceRequest()->response()[pointer];
         return 0;
     }
 

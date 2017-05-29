@@ -26,8 +26,8 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
     if (!m_converter) {
         if (m_preferredEncoding->equals(String::emptyString)) {
             m_converter = new TextConverter(
-                m_networkRequest->responseMimeType(),
-                m_networkRequest->document()->characterSet(), buffer, length);
+                m_resourceRequest->responseMimeType(),
+                m_resourceRequest->document()->characterSet(), buffer, length);
         } else {
             m_converter = new TextConverter(m_preferredEncoding);
         }

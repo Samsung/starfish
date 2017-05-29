@@ -18,7 +18,7 @@
 #define __StarFishXMLHttpRequest__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
@@ -46,7 +46,7 @@ public:
 };
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,
-                       public NetworkRequestClient {
+                       public ResourceRequestClient {
     friend class XMLHttpRequestEventEmitter;
 
 public:
@@ -57,9 +57,9 @@ public:
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isXMLHttpRequest() const override;
 
-    NetworkRequest* networkRequest()
+    ResourceRequest* resourceRequest()
     {
-        return m_networkRequest;
+        return m_resourceRequest;
     }
 
     // https://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute
@@ -77,7 +77,7 @@ public:
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,
               Nullable<String*> userName, Nullable<String*> password);
-    void open(NetworkRequest::MethodType method, String* url, bool async,
+    void open(ResourceRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
     void send(Nullable<String*> body);
@@ -88,9 +88,9 @@ public:
     void setTimeout(uint32_t timeout);
     void setRequestHeader(String* h, String* c);
 
-    virtual void onProgressEvent(NetworkRequest* request,
+    virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override;
-    virtual void onReadyStateChange(NetworkRequest* request,
+    virtual void onReadyStateChange(ResourceRequest* request,
                                     bool fromExplicit) override;
 
 #define VIRTUAL
@@ -101,7 +101,7 @@ public:
 
 protected:
     void initResponseData();
-    NetworkRequest* m_networkRequest;
+    ResourceRequest* m_resourceRequest;
     ResponseType m_responseType;
 
     // for responseType = "text"

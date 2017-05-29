@@ -14,66 +14,67 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishNetworkRequestJobInterface__
-#define __StarFishNetworkRequestJobInterface__
+#ifndef __StarFishResourceRequestJobInterface__
+#define __StarFishResourceRequestJobInterface__
 
 namespace StarFish {
 
-class NetworkRequest;
+class ResourceRequest;
 
 static String* decodeURL(String* src, size_t idx);
 
-class NetworkRequestJobInterface {
+class ResourceRequestJobInterface {
 public:
     // Currently, only 'send' is chosen as a common interface, but more
     // interfaces can be added later.
     virtual void send(String* body = String::emptyString) = 0;
 };
 
-class NetworkRequestJobDelegateFactory {
+class ResourceRequestJobDelegateFactory {
 public:
-    static NetworkRequestJobInterface* createJob(NetworkRequest* proxy);
+    static ResourceRequestJobInterface* createJob(ResourceRequest* proxy);
 
 private:
-    NetworkRequestJobDelegateFactory(){};
-    ~NetworkRequestJobDelegateFactory(){};
+    ResourceRequestJobDelegateFactory(){};
+    ~ResourceRequestJobDelegateFactory(){};
 };
 
-class FileURLNetworkRequestJobDelegate : public gc,
-                                         public NetworkRequestJobInterface {
+class FileURLResourceRequestJobDelegate : public gc,
+                                          public ResourceRequestJobInterface {
 public:
-    static void worker(NetworkRequest* res, String* filePath);
-    FileURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    static void worker(ResourceRequest* res, String* filePath);
+    FileURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString);
 
 private:
-    NetworkRequest* m_orgProxy;
+    ResourceRequest* m_orgProxy;
 };
 
-class DataURLNetworkRequestJobDelegate : public gc,
-                                         public NetworkRequestJobInterface {
+class DataURLResourceRequestJobDelegate : public gc,
+                                          public ResourceRequestJobInterface {
 public:
-    static void worker(NetworkRequest* res, String* filePath);
-    DataURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    static void worker(ResourceRequest* res, String* filePath);
+    DataURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString);
 
 private:
-    NetworkRequest* m_orgProxy;
+    ResourceRequest* m_orgProxy;
 };
 
-class BlobURLNetworkRequestJobDelegate : public gc,
-                                         public NetworkRequestJobInterface {
+class BlobURLResourceRequestJobDelegate : public gc,
+                                          public ResourceRequestJobInterface {
 public:
-    static void worker(NetworkRequest* res, String* filePath);
-    BlobURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    static void worker(ResourceRequest* res, String* filePath);
+    BlobURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString);
 
 private:
-    NetworkRequest* m_orgProxy;
+    ResourceRequest* m_orgProxy;
 };
 
-class NetworkURLNetworkRequestJobDelegate : public gc,
-                                            public NetworkRequestJobInterface {
+class NetworkURLResourceRequestJobDelegate
+    : public gc,
+      public ResourceRequestJobInterface {
 public:
     static void* worker(void* data);
     static int curlProgressCallback(void* clientp, curl_off_t dltotal,
@@ -83,11 +84,11 @@ public:
                                     void* data);
     static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
                                           void* data);
-    NetworkURLNetworkRequestJobDelegate(NetworkRequest* proxy);
+    NetworkURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString);
 
 private:
-    NetworkRequest* m_orgProxy;
+    ResourceRequest* m_orgProxy;
 };
 }
 

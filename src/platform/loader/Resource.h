@@ -19,14 +19,14 @@
 
 #include "core/util/URL.h"
 #include "platform/loader/ResourceClient.h"
-#include "core/modules/network/NetworkRequest.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
 class TextResource;
 class ImageResource;
 class ResourceLoader;
-class NetworkRequest;
+class ResourceRequest;
 
 class Resource : public gc {
     friend class ResourceLoader;
@@ -54,7 +54,7 @@ public:
         , m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
-        , m_networkRequest(nullptr)
+        , m_resourceRequest(nullptr)
     {
     }
 
@@ -100,9 +100,9 @@ public:
             std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
-    NetworkRequest* networkRequest()
+    ResourceRequest* resourceRequest()
     {
-        return m_networkRequest;
+        return m_resourceRequest;
     }
 
     URL* url()
@@ -179,38 +179,38 @@ protected:
     State m_state;
     URL* m_url;
     ResourceLoader* m_loader;
-    NetworkRequest* m_networkRequest;
+    ResourceRequest* m_resourceRequest;
     GCVector<ResourceClient*> m_resourceClients;
     GCVector<size_t> m_requstedIdlers;
 };
 
-class ResourceNetworkRequestClient : public NetworkRequestClient {
+class ResourceNetworkRequestClient : public ResourceRequestClient {
 public:
     ResourceNetworkRequestClient(Resource* resource)
         : m_resource(resource)
     {
     }
 
-    virtual void onReadyStateChange(NetworkRequest* request,
+    virtual void onReadyStateChange(ResourceRequest* request,
                                     bool isExplicitAction) override
     {
-        if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
+        if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
             m_resource->didHeaderReceived(
                 String::fromUTF8(request->responseHeaderData().data(),
                                  request->responseHeaderData().length()));
         }
     }
 
-    virtual void onProgressEvent(NetworkRequest* request,
+    virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
-        if (request->progressState() == NetworkRequest::LOAD) {
+        if (request->progressState() == ResourceRequest::LOAD) {
             m_resource->didDataReceived(request->response().data(),
                                         request->response().size());
             m_resource->didLoadFinished();
-        } else if (request->progressState() == NetworkRequest::ERROR) {
+        } else if (request->progressState() == ResourceRequest::ERROR) {
             m_resource->didLoadFailed();
-        } else if (request->progressState() == NetworkRequest::TIMEOUT) {
+        } else if (request->progressState() == ResourceRequest::TIMEOUT) {
             m_resource->didLoadFailed();
         }
     }
