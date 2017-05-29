@@ -38,6 +38,8 @@ public:
 
     int32_t viewportWidth() const;
     int32_t viewportHeight() const;
+    int32_t screenWidth() const;
+    int32_t screenHeight() const;
 
 private:
     Frame* m_frame;

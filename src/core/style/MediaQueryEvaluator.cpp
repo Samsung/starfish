@@ -96,6 +96,20 @@ static bool computeLength(MediaQueryExpValue& value, MediaValues* mediaValues,
     return false;
 }
 
+template <typename T>
+bool compareValue(T a, T b, MediaFeaturePrefix op)
+{
+    switch (op) {
+    case MinPrefix:
+        return a >= b;
+    case MaxPrefix:
+        return a <= b;
+    case NoPrefix:
+        return a == b;
+    }
+    return false;
+}
+
 bool compareDoubleValue(double a, double b, MediaFeaturePrefix op)
 {
     const double precision = std::numeric_limits<double>::epsilon();
@@ -142,8 +156,90 @@ static bool heightMediaFeatureEval(MediaQueryExpValue& value,
     return height;
 }
 
+static bool deviceWidthMediaFeatureEval(MediaQueryExpValue& value,
+                                        MediaValues* mediaValues,
+                                        MediaFeaturePrefix op)
+{
+    int32_t width = mediaValues->screenWidth();
+    if (value.isValid()) {
+        return computeLengthAndCompare(value, mediaValues, op, width);
+    }
+    return width;
+}
+
+static bool deviceHeightMediaFeatureEval(MediaQueryExpValue& value,
+                                         MediaValues* mediaValues,
+                                         MediaFeaturePrefix op)
+{
+    int32_t height = mediaValues->screenHeight();
+    if (value.isValid()) {
+        return computeLengthAndCompare(value, mediaValues, op, height);
+    }
+    return height;
+}
+
+static bool orientationMediaFeatureEval(MediaQueryExpValue& value,
+                                        MediaValues* mediaValues,
+                                        MediaFeaturePrefix op)
+{
+    int32_t width = mediaValues->viewportWidth();
+    int32_t height = mediaValues->viewportHeight();
+
+    // The ‘orientation’ media feature is ‘portrait’ when the value of the
+    // ‘height’ media feature is greater than or equal to the value of the
+    // ‘width’ media feature. Otherwise ‘orientation’ is ‘landscape’.
+    if (value.isID) {
+        if (width > height) {
+            return value.id->equals("landscape");
+        } else {
+            return value.id->equals("portrait");
+        }
+    }
+
+    // Expression for the orientation evaluates to true if width and height >=
+    // 0.
+    return width >= 0 && height >= 0;
+}
+
+static bool compareAspectRatioValue(MediaQueryExpValue& value, int32_t width,
+                                    int32_t height, MediaFeaturePrefix op)
+{
+    if (value.isRatio) {
+        return compareValue(width * static_cast<int32_t>(value.denominator),
+                            height * static_cast<int32_t>(value.numerator), op);
+    }
+    return false;
+}
+
+static bool aspectRatioMediaFeatureEval(MediaQueryExpValue& value,
+                                        MediaValues* mediaValues,
+                                        MediaFeaturePrefix op)
+{
+    if (value.isValid()) {
+        return compareAspectRatioValue(value, mediaValues->viewportWidth(),
+                                       mediaValues->viewportHeight(), op);
+    }
+    return false;
+}
+
+static bool deviceAspectRatioMediaFeatureEval(MediaQueryExpValue& value,
+                                              MediaValues* mediaValues,
+                                              MediaFeaturePrefix op)
+{
+    if (value.isValid()) {
+        return compareAspectRatioValue(value, mediaValues->screenWidth(),
+                                       mediaValues->screenHeight(), op);
+    }
+    return false;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
+    // MediaQueryExp can be nullptr when it has invalid expressions.
+    if (!exp) {
+        return false;
+    }
+
     // TODO: Consider remaining features.
     String* feature = exp->mediaFeature();
     MediaQueryExpValue value = exp->expValue();
@@ -159,6 +255,35 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return heightMediaFeatureEval(value, m_mediaValues, MinPrefix);
     } else if (feature->equals("max-height")) {
         return heightMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("device-width")) {
+        return deviceWidthMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-device-width")) {
+        return deviceWidthMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-device-width")) {
+        return deviceWidthMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("device-height")) {
+        return deviceHeightMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-device-height")) {
+        return deviceHeightMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-device-height")) {
+        return deviceHeightMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("orientation")) {
+        return orientationMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("aspect-ratio")) {
+        return aspectRatioMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-aspect-ratio")) {
+        return aspectRatioMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-aspect-ratio")) {
+        return aspectRatioMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("device-aspect-ratio")) {
+        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
+                                                 NoPrefix);
+    } else if (feature->equals("min-device-aspect-ratio")) {
+        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
+                                                 MinPrefix);
+    } else if (feature->equals("max-device-aspect-ratio")) {
+        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
+                                                 MaxPrefix);
     } else {
         STARFISH_LOG_INFO("unsupported media feature: %s\n",
                           exp->mediaFeature()->utf8Data());

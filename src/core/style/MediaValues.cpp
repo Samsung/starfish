@@ -23,8 +23,10 @@
 
 namespace StarFish {
 
+// TODO: We are considering continuous media only.
+// If we support paged media in the future, we should also consider this.
 // TODO: We should check again whether the existing code is available or not for
-//       the computation functions below.
+// the computation functions below.
 
 // These conversions are defined in css-values
 const double cssPixelsPerInch = 96;
@@ -117,6 +119,20 @@ int32_t MediaValues::viewportWidth() const
 
 int32_t MediaValues::viewportHeight() const
 {
+    return m_frame->document()->window()->innerHeight();
+}
+
+int32_t MediaValues::screenWidth() const
+{
+    // TODO: The current screen area is same as the viewport area.
+    // The screen area for the device area should be considered later.
+    return m_frame->document()->window()->innerWidth();
+}
+
+int32_t MediaValues::screenHeight() const
+{
+    // TODO: The current screen area is same as the viewport area.
+    // The screen area for the device area should be considered later.
     return m_frame->document()->window()->innerHeight();
 }
 

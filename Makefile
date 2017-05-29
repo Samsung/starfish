@@ -739,6 +739,8 @@ csswg_test_css3_transforms:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_transforms.res -p$(TEST_NPROCS)
 csswg_test_css3_selectors:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_selectors.res -p$(TEST_NPROCS)
+csswg_test_mediaqueries3:
+	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_mediaqueries3.res -p$(TEST_NPROCS)
 csswg_test_manual:
 	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_manual.res --font-dep -p$(TEST_NPROCS)
 csswg_test_rtl:
@@ -751,6 +753,7 @@ csswg_test_all:
 	make csswg_test_css3_transforms
 	make csswg_test_css3_backgrounds
 	make csswg_test_css3_selectors
+	make csswg_test_mediaqueries3
 	make csswg_test_manual
 
 internal_test:
