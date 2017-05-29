@@ -59,7 +59,7 @@ public:
         m_imageData = cache->asImageResource()->m_imageData;
         Resource::didLoadFinished();
     }
-#if defined(USE_EFL) || defined(USE_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
     static void doLoadFile(void*);
 #endif
 protected:

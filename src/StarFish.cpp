@@ -39,7 +39,7 @@
 #include <Ecore_X.h>
 #endif
 
-#ifdef USE_DALI
+#ifdef PORT_GRAPHIC_BACKEND_DALI
 #include <dali-toolkit/dali-toolkit.h>
 #endif
 
@@ -225,7 +225,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_force_unmap_on_gcollect(1);
     }
 
-#if defined(USE_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");
@@ -334,11 +334,11 @@ void StarFish::loadHTMLDocument(String* filePath)
     int width;
     int height;
 
-#if defined(USE_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_DALI)
     Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
     width = size.width;
     height = size.height;
-#elif defined(USE_EFL)
+#elif defined(PORT_GRAPHIC_BACKEND_EFL)
     evas_object_geometry_get((Evas_Object*)m_nativeHandle, NULL, NULL, &width,
                              &height);
 #endif
