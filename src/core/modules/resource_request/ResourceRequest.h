@@ -23,14 +23,12 @@
 #include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
-#include "core/modules/resource_request/NetworkURLWorkerHelper.h"
+#include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 
 namespace StarFish {
 
 class Document;
 class ResourceRequest;
-class NetworkURLWorkerHelper;
-struct NetworkURLWorkerData;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::basic_string<char> NetworkRequestResponseHeader;
@@ -62,7 +60,18 @@ class ResourceRequest : public gc,
     friend class NetworkURLResourceRequestJobDelegate;
 
 public:
-    enum MethodType { UNKNOWN_METHOD, POST_METHOD, GET_METHOD };
+    enum MethodType {
+        UNKNOWN_METHOD,
+        GET_METHOD,
+        HEAD_METHOD,
+        POST_METHOD,
+        PUT_METHOD,
+        DELETE_METHOD,
+        CONNTECT_METHOD,
+        OPTION_METHOD,
+        TRACE_METHOD,
+        PATCH_METHOD
+    };
 
     enum ResponseType {
         TEXT_RESPONSE,
@@ -208,7 +217,7 @@ protected:
     NetworkRequestResponseHeader m_responseHeaderData;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
-    // request job proxy
+
     ResourceRequestJobInterface* m_networkRequestJobDelegate;
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
