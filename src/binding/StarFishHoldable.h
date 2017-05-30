@@ -20,22 +20,27 @@
 namespace StarFish {
 
 class StarFish;
-class Window;
 
 class StarFishHoldable {
 public:
-    StarFishHoldable(StarFish* starFish)
-        : m_starFish(starFish)
-    {
-    }
-
     StarFish* starFish()
     {
         return m_starFish;
     }
 
 protected:
+    StarFishHoldable(StarFish* starFish)
+        : m_starFish(starFish)
+    {
+    }
+
     StarFish* m_starFish;
+
+private:
+    StarFishHoldable()
+        : StarFishHoldable(nullptr)
+    {
+    }
 };
 }
 #endif
