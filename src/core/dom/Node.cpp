@@ -309,16 +309,11 @@ Element* Node::firstElementChild()
         child = child->nextSibling();
     }
 
-#ifndef NDEBUG
-    // if debug mode, we can run-time type check
     if (child) {
         return child->asElement();
     } else {
         return nullptr;
     }
-#else
-    return child->asElement();
-#endif
 }
 
 Element* Node::lastElementChild()
@@ -331,16 +326,11 @@ Element* Node::lastElementChild()
         child = child->previousSibling();
     }
 
-#ifndef NDEBUG
-    // if debug mode, we can run-time type check
     if (child) {
         return child->asElement();
     } else {
         return nullptr;
     }
-#else
-    return child->asElement();
-#endif
 }
 
 Element* Node::nextElementSibling()
@@ -353,16 +343,11 @@ Element* Node::nextElementSibling()
         sibling = sibling->nextSibling();
     }
 
-#ifndef NDEBUG
-    // if debug mode, we can run-time type check
     if (sibling) {
         return sibling->asElement();
     } else {
         return nullptr;
     }
-#else
-    return sibling->asElement();
-#endif
 }
 
 Element* Node::previousElementSibling()
@@ -375,16 +360,11 @@ Element* Node::previousElementSibling()
         sibling = sibling->previousSibling();
     }
 
-#ifndef NDEBUG
-    // if debug mode, we can run-time type check
     if (sibling) {
         return sibling->asElement();
     } else {
         return nullptr;
     }
-#else
-    return sibling->asElement();
-#endif
 }
 
 unsigned long Node::childElementCount()
