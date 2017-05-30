@@ -23,10 +23,6 @@
 #include "core/util/URL.h"
 #include "core/modules/window/Window.h"
 
-#ifdef STARFISH_TIZEN_WEARABLE
-#include <net_connection.h>
-#endif
-
 namespace StarFish {
 
 class ActiveNetworkRequestTracker : public ResourceRequestClient {

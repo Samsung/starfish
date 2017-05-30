@@ -14,23 +14,24 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishNetworkURLWorkerHelper__
-#define __StarFishNetworkURLWorkerHelper__
+#ifndef __StarFishNetworkURLResourceRequestJobDelegate__
+#define __StarFishNetworkURLResourceRequestJobDelegate__
+
+#include "core/modules/resource_request/ResourceRequestJob.h"
 
 namespace StarFish {
 
 class ResourceRequest;
 class NetworkURLWorkerHelper;
+class HTTPHeaderList;
+class HTTPTransaction;
 
-struct NetworkURLWorkerData {
+struct NetworkURLWorkerData : public gc {
     ResourceRequest* request;
     NetworkURLWorkerHelper* networkWorker;
-    CURL* curl;
-    curl_slist* headerList;
-    bool isSync;
+    HTTPTransaction* httpTransaction;
     bool isAborted;
-    long responseCode;
-    int res;
+    long lastTransactionResponseCode;
 };
 
 class NetworkURLWorkerHelper : public gc {
@@ -61,6 +62,29 @@ class SyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
     virtual void responseHandlerWrapper(int res,
                                         NetworkURLWorkerData* requestData);
+};
+
+class NetworkURLResourceRequestJobDelegate
+    : public gc,
+      public ResourceRequestJobInterface {
+public:
+    static void* worker(void* data);
+    static int curlProgressCallback(void* clientp, curl_off_t dltotal,
+                                    curl_off_t dlnow, curl_off_t ultotal,
+                                    curl_off_t ulnow);
+    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb,
+                                    void* data);
+    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
+                                          void* data);
+    NetworkURLResourceRequestJobDelegate(ResourceRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    void fillHeadersWithGeneralHeaders(HTTPHeaderList* headers);
+    void fillHeadersWithClientHeaders(HTTPHeaderList* headers);
+    void fillHeadersWithResourceRequestHeader(HTTPHeaderList* headers);
+
+    ResourceRequest* m_orgProxy;
 };
 }
 

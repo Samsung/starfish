@@ -71,25 +71,6 @@ public:
 private:
     ResourceRequest* m_orgProxy;
 };
-
-class NetworkURLResourceRequestJobDelegate
-    : public gc,
-      public ResourceRequestJobInterface {
-public:
-    static void* worker(void* data);
-    static int curlProgressCallback(void* clientp, curl_off_t dltotal,
-                                    curl_off_t dlnow, curl_off_t ultotal,
-                                    curl_off_t ulnow);
-    static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb,
-                                    void* data);
-    static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
-                                          void* data);
-    NetworkURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
-
-private:
-    ResourceRequest* m_orgProxy;
-};
 }
 
 #endif
