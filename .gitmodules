@@ -1,15 +1,15 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
-	url = git@coding.sec.samsung.net:RS7-webtf/escargot.git
+	url = git@github.sec.samsung.net:RS7-webtf/escargot.git
 [submodule "third_party/deviceapi"]
 	path = third_party/deviceapi
-	url = git@coding.sec.samsung.net:RS7-webtf/tizen_wearable_device_api_loader.git
+	url = git@github.sec.samsung.net:RS7-webtf/tizen_wearable_device_api_loader.git
 [submodule "binding_generator"]
 	path = binding_generator
-	url = git@coding.sec.samsung.net:RS7-webtf/binding_generator.git
+	url = git@github.sec.samsung.net:RS7-webtf/binding_generator.git
 [submodule "test"]
 	path = test
-	url = git@coding.sec.samsung.net:RS7-webtf/widget-tc.git
+	url = git@github.sec.samsung.net:RS7-webtf/widget-tc.git
 [submodule "tool/gyp"]
 	path = tool/gyp
-	url = git@coding.sec.samsung.net:RS7-webtf/gyp.git
+	url = git@github.sec.samsung.net:RS7-webtf/gyp.git
