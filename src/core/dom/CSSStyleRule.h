@@ -45,11 +45,6 @@ public:
         return m_styleDeclaration;
     }
 
-    bool isStyleRule()
-    {
-        return true;
-    }
-
 protected:
     GCDeque<CSSSelector*>* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
@@ -79,18 +74,54 @@ public:
     CSSStyleRuleMedia(MediaQuerySet* media, GCVector<CSSRule*>& rules);
     CSSStyleRuleMedia(CSSStyleRuleMedia& o);
 
-    MediaQuerySet* mediaQueries()
+    MediaQuerySet* mediaQuerySet()
     {
-        return m_mediaQueries;
-    }
-
-    bool isMediaRule()
-    {
-        return true;
+        return m_mediaQuerySet;
     }
 
 protected:
-    MediaQuerySet* m_mediaQueries;
+    MediaQuerySet* m_mediaQuerySet;
+};
+
+class CSSStyleSheet;
+class Document;
+class TextResource;
+class CSSStyleRuleImport : public CSSRule {
+    friend class StyleResolver;
+    friend class ImportedStyleSheetDownloadClient;
+
+public:
+    CSSStyleRuleImport(String* href, MediaQuerySet* media);
+
+    MediaQuerySet* mediaQuerySet()
+    {
+        return m_mediaQuerySet;
+    }
+
+    void setParentStyleSheet(CSSStyleSheet* sheet)
+    {
+        STARFISH_ASSERT(sheet);
+        m_parentStyleSheet = sheet;
+    }
+
+    CSSStyleSheet* parentStyleSheet()
+    {
+        return m_parentStyleSheet;
+    }
+
+    Document* document();
+    void requestStyleSheet();
+    void unloadStyleSheetIfExists();
+
+protected:
+    void willStyleSheetLoad();
+    void didStyleSheetLoadComplete();
+
+    String* m_strHref;
+    MediaQuerySet* m_mediaQuerySet;
+    CSSStyleSheet* m_parentStyleSheet;
+    CSSStyleSheet* m_generatedSheet;
+    TextResource* m_styleSheetTextResource;
 };
 }
 

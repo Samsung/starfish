@@ -582,6 +582,7 @@ public:
 };
 
 class CSSStyleRuleMedia;
+class CSSStyleRuleImport;
 class CSSParser : public DocumentHoldable {
 public:
     enum NumericSign {
@@ -589,6 +590,23 @@ public:
         PlusSign,
         MinusSign,
     };
+
+    enum AllowedRulesType {
+        // As per css-syntax, css-cascade and css-namespaces, @charset rules
+        // must come first, followed by @import then @namespace.
+        // AllowImportRules actually means we allow @import and any rules they
+        // may follow it, i.e. @namespace rules and regular rules.
+        // AllowCharsetRules and AllowNamespaceRules behave similarly.
+        AllowCharsetRules,
+        AllowImportRules,
+        AllowNamespaceRules,
+        RegularRules,
+        KeyframeRules,
+        ApplyRules, // For @apply inside style rules
+        NoRules,    // For parsing at-rules inside declaration lists
+    };
+
+    enum RuleListType { TopLevelRuleList, RegularRuleList, KeyframesRuleList };
 
     CSSParser(Document* document)
         : DocumentHoldable(document)
@@ -598,14 +616,17 @@ public:
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
-    void parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule);
+    void parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
+                    RuleListType ruleListType);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
     bool parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
-                        bool aIsInsideMediaRule,
+                        AllowedRulesType allowedRules,
                         GCVector<GCDeque<CSSSelector*>*>* sList,
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
     CSSStyleRuleMedia* parseMediaRule();
+    CSSStyleRuleImport* parseImportRule();
+    String* parseURLString();
 
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);

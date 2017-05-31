@@ -925,6 +925,26 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
     }
 }
 
+void CSSStyleSheet::addRule(CSSStyleRule* rule)
+{
+    m_rules.push_back(rule);
+}
+
+void CSSStyleSheet::addRule(CSSRule* rule)
+{
+    if (rule->isImportRule()) {
+        STARFISH_ASSERT(m_allRules.size() == 0);
+
+        CSSStyleRuleImport* importRule = rule->asCSSStyleRuleImport();
+        m_importRules.push_back(importRule);
+        m_importRules.back()->setParentStyleSheet(this);
+        m_importRules.back()->requestStyleSheet();
+        return;
+    }
+
+    m_allRules.push_back(rule);
+}
+
 URL* CSSStyleSheet::url()
 {
     if (m_origin->isHTMLLinkElement()) {
@@ -993,6 +1013,11 @@ static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
     return specificity(r1->selectorList()) < specificity(r2->selectorList());
 }
 
+CSSStyleSheet* CSSStyleSheet::parentStyleSheet()
+{
+    return m_ownerRule ? m_ownerRule->parentStyleSheet() : nullptr;
+}
+
 void CSSStyleSheet::sortRulesBySpecificity()
 {
     std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
@@ -1019,7 +1044,7 @@ void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
             CSSStyleRuleMedia* media = (CSSStyleRuleMedia*)(*iter);
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
-            if (matchesMediaQueries(evaluator, media->mediaQueries())) {
+            if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
                 collectRulesForSheet(media->childRules());
             }
         }

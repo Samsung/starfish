@@ -14,11 +14,13 @@
  *    limitations under the License.
  */
 
+#include "core/dom/Document.h"
 #include "core/dom/CSSRule.h"
 #include "core/dom/CSSStyleDeclaration.h"
 #include "core/dom/CSSStyleRule.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/modules/window/Window.h"
 
 namespace StarFish {
 
@@ -57,19 +59,137 @@ CSSStyleRuleGroup::CSSStyleRuleGroup(CSSStyleRuleGroup& o)
 CSSStyleRuleMedia::CSSStyleRuleMedia(MediaQuerySet* media,
                                      GCVector<CSSRule*>& rules)
     : CSSStyleRuleGroup(CSSRule::MEDIA_RULE, rules)
-    , m_mediaQueries(media)
+    , m_mediaQuerySet(media)
 {
 }
 
 CSSStyleRuleMedia::CSSStyleRuleMedia(CSSStyleRuleMedia& o)
     : CSSStyleRuleGroup(o)
 {
-    if (o.mediaQueries()) {
-        m_mediaQueries = MediaQuerySet::create();
-        m_mediaQueries->queryVector().clear();
-        m_mediaQueries->queryVector().assign(
-            o.mediaQueries()->queryVector().begin(),
-            o.mediaQueries()->queryVector().end());
+    if (o.mediaQuerySet()) {
+        m_mediaQuerySet = MediaQuerySet::create();
+        m_mediaQuerySet->queryVector().clear();
+        m_mediaQuerySet->queryVector().assign(
+            o.mediaQuerySet()->queryVector().begin(),
+            o.mediaQuerySet()->queryVector().end());
     }
+}
+
+CSSStyleRuleImport::CSSStyleRuleImport(String* href, MediaQuerySet* media)
+    : CSSRule(CSSRule::IMPORT_RULE)
+    , m_strHref(href)
+    , m_mediaQuerySet(media)
+    , m_parentStyleSheet(nullptr)
+    , m_generatedSheet(nullptr)
+    , m_styleSheetTextResource(nullptr)
+{
+}
+
+Document* CSSStyleRuleImport::document()
+{
+    STARFISH_ASSERT(m_parentStyleSheet);
+    STARFISH_ASSERT(m_parentStyleSheet->origin());
+    return m_parentStyleSheet->origin()->document();
+}
+
+void CSSStyleRuleImport::willStyleSheetLoad()
+{
+    document()->window()->markHasPendingStyleSheet();
+}
+
+void CSSStyleRuleImport::didStyleSheetLoadComplete()
+{
+    document()->window()->unmarkHasPendingStyleSheet();
+}
+
+class ImportedStyleSheetDownloadClient : public ResourceClient {
+public:
+    ImportedStyleSheetDownloadClient(CSSStyleRuleImport* ownerRule,
+                                     Resource* res)
+        : ResourceClient(res)
+        , m_ownerRule(ownerRule)
+    {
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        m_ownerRule->m_styleSheetTextResource = nullptr;
+        m_ownerRule->didStyleSheetLoadComplete();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        String* text = m_resource->asTextResource()->text();
+
+        Document* doc = m_ownerRule->document();
+        if (!doc) {
+            return;
+        }
+
+        CSSStyleSheet* sheet = new CSSStyleSheet(
+            m_ownerRule->parentStyleSheet()->origin(), text, m_ownerRule);
+        if (sheet) {
+            m_ownerRule->m_generatedSheet = sheet;
+            doc->styleResolver().addSheet(sheet);
+            doc->window()->setWholeDocumentNeedsStyleRecalc();
+        }
+
+        m_ownerRule->m_styleSheetTextResource = nullptr;
+        m_ownerRule->didStyleSheetLoadComplete();
+    }
+
+protected:
+    CSSStyleRuleImport* m_ownerRule;
+};
+
+void CSSStyleRuleImport::unloadStyleSheetIfExists()
+{
+    if (m_styleSheetTextResource) {
+        m_styleSheetTextResource->cancel();
+        m_styleSheetTextResource = nullptr;
+    }
+    if (m_generatedSheet) {
+        Document* doc = document();
+        doc->styleResolver().removeSheet(m_generatedSheet);
+        doc->window()->setWholeDocumentNeedsStyleRecalc();
+        m_generatedSheet = nullptr;
+    }
+}
+
+void CSSStyleRuleImport::requestStyleSheet()
+{
+    if (!m_parentStyleSheet || !m_parentStyleSheet->origin()) {
+        return;
+    }
+
+    Document* doc = document();
+    if (!doc) {
+        return;
+    }
+
+    unloadStyleSheetIfExists();
+
+    URL* absURL = URL::createURL(doc->documentURI()->baseURI(), m_strHref);
+
+    CSSStyleSheet* rootSheet = m_parentStyleSheet;
+    for (CSSStyleSheet* sheet = m_parentStyleSheet; sheet;
+         sheet = sheet->parentStyleSheet()) {
+        if (absURL->getUrlPathString()->equals(
+                sheet->url()->getUrlPathString())) {
+            return;
+        }
+        rootSheet = sheet;
+    }
+
+    if (m_styleSheetTextResource) {
+        m_styleSheetTextResource->cancel();
+    }
+    m_styleSheetTextResource = doc->resourceLoader().fetchText(absURL);
+    m_styleSheetTextResource->addResourceClient(
+        new ImportedStyleSheetDownloadClient(this, m_styleSheetTextResource));
+
+    m_styleSheetTextResource->request();
 }
 }
