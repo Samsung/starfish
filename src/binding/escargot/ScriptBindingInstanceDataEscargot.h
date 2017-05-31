@@ -88,6 +88,8 @@
     F(NodeList)                                     \
     F(PositionError)                                \
     F(ProgressEvent)                                \
+    F(Storage)                                      \
+    F(StorageImpl)                                  \
     F(URL)                                          \
     F(Text)                                         \
     F(TouchEvent)                                   \

@@ -32,6 +32,7 @@ class Navigator;
 class ScriptBindingInstance;
 class StarFish;
 class StackingContext;
+class StorageNamespace;
 class URL;
 class WebApis;
 class Window;
@@ -54,6 +55,7 @@ public:
     void navigateAsync(URL* url);
     void navigateAsyncWithoutSetHistory(URL* url);
     void setHistory(URL* url);
+    void initStorage(URL* url);
 
     virtual void init(ScriptBindingInstance* instance) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
@@ -143,6 +145,8 @@ public:
     {
         return m_animationExecutor;
     }
+
+    Storage* localStorage();
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* Webapis()
@@ -397,6 +401,7 @@ protected:
     Navigator* m_navigator;
     Location* m_location;
     AnimationExecutor* m_animationExecutor;
+    StorageNamespace* m_localStorageNamespace;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;
 #endif
