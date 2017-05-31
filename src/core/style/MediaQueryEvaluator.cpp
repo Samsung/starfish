@@ -233,6 +233,86 @@ static bool deviceAspectRatioMediaFeatureEval(MediaQueryExpValue& value,
     return false;
 }
 
+static bool numberValue(const MediaQueryExpValue& value, float& result)
+{
+    if (value.isValue && value.unit == UnitType::Number) {
+        result = value.value;
+        return true;
+    }
+    return false;
+}
+
+static bool colorMediaFeatureEval(MediaQueryExpValue& value,
+                                  MediaValues* mediaValues,
+                                  MediaFeaturePrefix op)
+{
+    float number;
+    int32_t colorBitsPerComponent = mediaValues->colorBitsPerComponent();
+
+    if (value.isValid()) {
+        return numberValue(value, number) &&
+               compareValue(colorBitsPerComponent, static_cast<int32_t>(number),
+                            op);
+    }
+
+    return colorBitsPerComponent != 0;
+}
+
+static bool colorIndexMediaFeatureEval(MediaQueryExpValue& value,
+                                       MediaValues* mediaValues,
+                                       MediaFeaturePrefix op)
+{
+    // Assume that we do not support indexed displays because it is unknown how
+    // to retrieve the information if the display mode is indexed.
+    // This matches Firefox and Chrome.
+    if (!value.isValid()) {
+        return false;
+    }
+
+    // If the device does not use a color lookup table, the value is zero.
+    float number;
+    return numberValue(value, number) &&
+           compareValue(0, static_cast<int32_t>(number), op);
+}
+
+static bool monochromeMediaFeatureEval(MediaQueryExpValue& value,
+                                       MediaValues* mediaValues,
+                                       MediaFeaturePrefix op)
+{
+    // We do not support monochrome device.
+    return false;
+}
+
+static bool resolutionMediaFeatureEval(MediaQueryExpValue& value,
+                                       MediaValues* mediaValues,
+                                       MediaFeaturePrefix op)
+{
+    // TODO: Consider the resolution of the output device.
+    return false;
+}
+
+static bool scanMediaFeatureEval(MediaQueryExpValue& value,
+                                 MediaValues* mediaValues,
+                                 MediaFeaturePrefix op)
+{
+    // The ‘scan’ media feature describes the scanning process of "tv" output
+    // devices. But, we do not support "tv" media types now.
+    return false;
+}
+
+static bool gridMediaFeatureEval(MediaQueryExpValue& value,
+                                 MediaValues* mediaValues,
+                                 MediaFeaturePrefix op)
+{
+    // We do not support grid-based output devices (e.g., a "tty" terminal, or
+    // a phone display with only one fixed font). So, the value should be 0.
+    float number;
+    if (value.isValid() && numberValue(value, number)) {
+        return compareValue(static_cast<int32_t>(number), 0, op);
+    }
+    return false;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.
@@ -284,6 +364,34 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
     } else if (feature->equals("max-device-aspect-ratio")) {
         return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
                                                  MaxPrefix);
+    } else if (feature->equals("color")) {
+        return colorMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-color")) {
+        return colorMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-color")) {
+        return colorMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("color-index")) {
+        return colorIndexMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-color-index")) {
+        return colorIndexMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-color-index")) {
+        return colorIndexMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("monochrome")) {
+        return monochromeMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-monochrome")) {
+        return monochromeMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-monochrome")) {
+        return monochromeMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("resolution")) {
+        return resolutionMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("min-resolution")) {
+        return resolutionMediaFeatureEval(value, m_mediaValues, MinPrefix);
+    } else if (feature->equals("max-resolution")) {
+        return resolutionMediaFeatureEval(value, m_mediaValues, MaxPrefix);
+    } else if (feature->equals("scan")) {
+        return scanMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("grid")) {
+        return gridMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
         STARFISH_LOG_INFO("unsupported media feature: %s\n",
                           exp->mediaFeature()->utf8Data());

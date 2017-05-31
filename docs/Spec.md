@@ -677,6 +677,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | | orientation | portrait &#124; landscape| ‘portrait’ when the value of the ‘height’ media feature is greater than or equal to the value of the ‘width’ media feature. Otherwise ‘orientation’ is ‘landscape’. | |
 | | aspect-ratio | &lt;ratio&gt; | The ratio of the value of the ‘width’ media feature to the value of the ‘height’ media feature. | |
 | | device-aspect-ratio | &lt;ratio&gt; | The ratio of the value of the ‘device-width’ media feature to the value of the ‘device-height’ media feature. | |
+| | color | &lt;integer&gt; | Describes the number of bits per color component of the output device. If the device is not a color device, the value is zero. | |
+| | color-index | &lt;integer&gt; | Describes the number of entries in the color lookup table of the output device. If the device does not use a color lookup table, the value is zero. | |
+| | monochrome | &lt;integer&gt; | Describes the number of bits per pixel in a monochrome frame buffer. If the device is not a monochrome device, the output device value will be 0. | |
+| | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | |
+| | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | |
 
 
 ## Selectors
