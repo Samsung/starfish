@@ -40,6 +40,7 @@ public:
     int32_t viewportHeight() const;
     int32_t screenWidth() const;
     int32_t screenHeight() const;
+    int32_t colorBitsPerComponent() const;
 
 private:
     Frame* m_frame;

@@ -1,3 +1,4 @@
+## Media Queries Level 3 Conformance Test Suite
 test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/media-queries-001.htm
 # test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/calc-in-media-queries-001.htm
 # test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/calc-in-media-queries-002.htm
@@ -14,7 +15,7 @@ test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/device
 test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/device-aspect-ratio-004.htm
 test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/device-aspect-ratio-005.htm
 test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/device-aspect-ratio-006.htm
-# test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/media-queries-003.htm
+test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/media-queries-003.htm
 # test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/mq-calc-002.htm
 # test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/mq-calc-003.htm
 # test/reftest/csswg-test/mediaqueries-3_dev_original/nightly-unstable/html/mq-calc-004.htm

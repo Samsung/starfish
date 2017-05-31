@@ -136,4 +136,12 @@ int32_t MediaValues::screenHeight() const
     return m_frame->document()->window()->innerHeight();
 }
 
+int32_t MediaValues::colorBitsPerComponent() const
+{
+    // FIXME: We don't have any information related to the screen including
+    // this. Additional DOM bindings for the screen are also required.
+    // (https://drafts.csswg.org/cssom-view/#screen)
+    return 8;
+}
+
 } /* namespace StarFish */
