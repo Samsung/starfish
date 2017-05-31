@@ -1920,10 +1920,14 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
 }
 
 bool CSSParser::parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
-                               bool aIsInsideMediaRule,
+                               AllowedRulesType allowedRules,
                                GCVector<GCDeque<CSSSelector*>*>* sList,
                                bool isQueryingSelector)
 {
+    if (allowedRules > RegularRules) {
+        return false;
+    }
+
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
     // first let's see if we have a selector here...
@@ -2035,6 +2039,23 @@ void CSSParser::reportError(const char* aMsg)
     m_error = String::createASCIIString(aMsg);
 }
 
+static CSSParser::AllowedRulesType computeNewAllowedRules(
+    CSSParser::AllowedRulesType allowedRules, CSSRule* rule)
+{
+    if (!rule || allowedRules == CSSParser::KeyframeRules ||
+        allowedRules == CSSParser::NoRules) {
+        return allowedRules;
+    }
+    STARFISH_ASSERT(allowedRules <= CSSParser::RegularRules);
+    if (rule->isCharsetRule() || rule->isImportRule()) {
+        return CSSParser::AllowImportRules;
+    }
+    if (rule->isNamespaceRule()) {
+        return CSSParser::AllowNamespaceRules;
+    }
+    return CSSParser::RegularRules;
+}
+
 bool CSSParser::parseCharsetRule(GCVector<CSSRule*>& rules)
 {
     CSSToken* token = getToken(false, false);
@@ -2109,7 +2130,7 @@ CSSStyleRuleMedia* CSSParser::parseMediaRule()
     if (token->isSymbol('{') && hasMediaRule) {
         token = getToken(true, false);
         if (token->isNotNull()) {
-            parseRules(token, rootRule);
+            parseRules(token, rootRule, RuleListType::RegularRuleList);
             valid = rootRule.size() > 0;
         } else {
             return nullptr;
@@ -2122,6 +2143,46 @@ CSSStyleRuleMedia* CSSParser::parseMediaRule()
     }
     restoreState();
     return nullptr;
+}
+
+CSSStyleRuleImport* CSSParser::parseImportRule()
+{
+    String* url = parseURLString();
+    if (url->equals(String::emptyString)) {
+        return nullptr;
+    }
+
+    getToken(true, false);
+    MediaQuerySet* mediaQuery = parseMediaQuery();
+
+    return new CSSStyleRuleImport(url, mediaQuery);
+}
+
+String* CSSParser::parseURLString()
+{
+    CSSToken* token = getToken(true, false);
+
+    String* url = String::emptyString;
+    if (token->isString()) {
+        String* str = token->value();
+        if (str->charAt(0) != str->charAt(str->length() - 1)) {
+            return String::emptyString;
+        }
+        url = String::createASCIIString("url(");
+        url = url->concat(str);
+        url = url->concat(String::createASCIIString(")"));
+    } else if (token->isFunction() &&
+               token->value()->toLower()->equals("url(")) {
+        url = token->value();
+        url = url->concat(getToken(true, false)->value());
+        url = url->concat(getToken(true, false)->value());
+    } else {
+        return String::emptyString;
+    }
+
+    String* ret = String::emptyString;
+    CSSPropertyParser::parseUrl(url, &(ret));
+    return ret;
 }
 
 void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
@@ -2138,15 +2199,31 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
         parseCharsetRule(rules);
         token = getToken(false, false);
     }
-    parseRules(token, rules);
+    parseRules(token, rules, RuleListType::TopLevelRuleList);
 
     for (size_t i = 0; i < rules.size(); ++i) {
         target->addRule(rules[i]);
     }
 }
 
-void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule)
+void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
+                           RuleListType ruleListType)
 {
+    AllowedRulesType allowedRules = AllowedRulesType::RegularRules;
+    switch (ruleListType) {
+    case TopLevelRuleList:
+        allowedRules = AllowCharsetRules;
+        break;
+    case RegularRuleList:
+        allowedRules = RegularRules;
+        break;
+    case KeyframesRuleList:
+        allowedRules = KeyframeRules;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
     unsigned nestingLevel = 1;
     while (true) {
         if (!token->isNotNull()) {
@@ -2164,30 +2241,33 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule)
         if (token->isWhiteSpace()) {
         } else if (token->isComment()) {
         } else if (token->isAtRule()) {
-            if (token->isAtRule(String::createASCIIString("@media"))) {
-                CSSStyleRuleMedia* rule = parseMediaRule();
-                if (rule) {
-                    rootRule.push_back(rule);
-                } else {
-                    addUnknownAtRule(token->m_value);
-                }
-            } else {
-                addUnknownAtRule(token->m_value);
+            CSSRule* rule = nullptr;
+            if (allowedRules <= AllowImportRules &&
+                token->isAtRule(String::createASCIIString("@import"))) {
+                rule = parseImportRule();
+            } else if (token->isAtRule(String::createASCIIString("@media"))) {
+                rule = parseMediaRule();
             }
             /*
-            else if (token.isAtRule("@variables")) {
-            } else if (token.isAtRule("@import")) {
+             else if (token.isAtRule("@variables")) {
             } else if (token.isAtRule("@namespace")) {
             } else if (token.isAtRule("@font-face")) {
             } else if (token.isAtRule("@page")) {
             } else if (token.isAtRule("@keyframes")) {
             } else if (token.isAtRule("@charset")) {
+            }*/
+
+            if (rule) {
+                allowedRules = computeNewAllowedRules(allowedRules, rule);
+                rootRule.push_back(rule);
             } else {
-            } */
+                addUnknownAtRule(token->m_value);
+            }
         } else {
             // plain style rules
             GCVector<CSSRule*> rules;
-            if (parseStyleRule(token, rules, false, nullptr, false)) {
+            if (parseStyleRule(token, rules, allowedRules, nullptr, false)) {
+                allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());
             }
         }
@@ -2262,7 +2342,7 @@ MediaQuerySet* CSSParser::parseMediaQuery()
     initParseMediaQuery(MediaQuerySetParser);
 
     CSSToken* token = currentToken();
-    while (!token->isSymbol('{') && m_state != Done) {
+    while (token->isNotNull() && !token->isSymbol('{') && m_state != Done) {
         processToken(token);
         token = getToken(false, false);
     }
@@ -2381,9 +2461,7 @@ void CSSParser::readFeatureColon(CSSToken* token)
 
 void CSSParser::readFeatureValue(CSSToken* token)
 {
-    if (token->isDimension() &&
-        !(token->isNumber() || token->isPercentage() || token->isLength() ||
-          token->isAngle())) {
+    if (token->isDimension() && token->unitType() == UnitType::UnknownType) {
         m_state = SkipUntilComma;
     } else {
         if (m_mediaQueryData.tryAddParserToken(token))

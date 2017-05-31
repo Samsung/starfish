@@ -21,6 +21,10 @@
 
 namespace StarFish {
 
+class CSSStyleRule;
+class CSSStyleRuleMedia;
+class CSSStyleRuleImport;
+
 class CSSRule : public ScriptWrappable {
 public:
     enum RuleType {
@@ -56,12 +60,45 @@ public:
 
     virtual bool isStyleRule()
     {
-        return false;
+        return type() == RuleType::STYLE_RULE;
     }
 
     virtual bool isMediaRule()
     {
-        return false;
+        return type() == RuleType::MEDIA_RULE;
+    }
+
+    virtual bool isImportRule()
+    {
+        return type() == RuleType::IMPORT_RULE;
+    }
+
+    virtual bool isCharsetRule()
+    {
+        return type() == RuleType::CHARSET_RULE;
+    }
+
+    virtual bool isNamespaceRule()
+    {
+        return type() == RuleType::NAMESPACE_RULE;
+    }
+
+    CSSStyleRule* asCSSStyleRule()
+    {
+        STARFISH_ASSERT(isStyleRule());
+        return (CSSStyleRule*)this;
+    }
+
+    CSSStyleRuleMedia* asCSSStyleRuleMedia()
+    {
+        STARFISH_ASSERT(isMediaRule());
+        return (CSSStyleRuleMedia*)this;
+    }
+
+    CSSStyleRuleImport* asCSSStyleRuleImport()
+    {
+        STARFISH_ASSERT(isImportRule());
+        return (CSSStyleRuleImport*)this;
     }
 
 private:

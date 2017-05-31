@@ -25,6 +25,7 @@ namespace StarFish {
 
 class ComputedStyle;
 class CSSStyleRule;
+class CSSStyleRuleImport;
 class CSSRule;
 class Document;
 class Element;
@@ -1661,21 +1662,16 @@ protected:
 
 class CSSStyleSheet : public gc {
 public:
-    CSSStyleSheet(Node* origin, String* str)
+    CSSStyleSheet(Node* origin, String* str,
+                  CSSStyleRuleImport* ownerRule = nullptr)
     {
         m_sourceString = str;
         m_origin = origin;
+        m_ownerRule = ownerRule;
     }
 
-    void addRule(CSSStyleRule* rule)
-    {
-        m_rules.push_back(rule);
-    }
-
-    void addRule(CSSRule* rule)
-    {
-        m_allRules.push_back(rule);
-    }
+    void addRule(CSSStyleRule* rule);
+    void addRule(CSSRule* rule);
 
     URL* url();
     Node* origin()
@@ -1697,6 +1693,18 @@ public:
         return m_allRules;
     }
 
+    CSSStyleRuleImport* ownerRule()
+    {
+        return m_ownerRule;
+    }
+
+    void clearOwnerRule()
+    {
+        m_ownerRule = nullptr;
+    }
+
+    CSSStyleSheet* parentStyleSheet();
+
     void sortRulesBySpecificity();
 
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
@@ -1710,6 +1718,8 @@ protected:
     GCVector<CSSStyleRule*> m_rules;
     GCVector<CSSRule*> m_allRules;
     Node* m_origin;
+    GCVector<CSSStyleRuleImport*> m_importRules;
+    CSSStyleRuleImport* m_ownerRule;
 };
 
 using Declarations = GCVector<CSSStyleDeclaration*>;
