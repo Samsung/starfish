@@ -134,7 +134,7 @@ Window implements WindowOrWorkerGlobalScope;
 [PartialInterface,
  NoInterfaceObject]
 interface WindowLocalStorage {
-  [Unimplemented] readonly attribute Storage localStorage;
+  readonly attribute Storage localStorage;
 };
 Window implements WindowLocalStorage;
 

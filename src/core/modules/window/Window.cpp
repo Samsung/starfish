@@ -34,6 +34,10 @@
 #include "core/page/History.h"
 #include "core/page/Navigator.h"
 #include "core/page/Location.h"
+#include "core/page/SecurityOriginData.h"
+#include "core/storage/Storage.h"
+#include "core/storage/StorageNamespace.h"
+#include "browser/storage/WebStorageNamespaceProvider.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/WebApis.h"
 #endif
@@ -73,6 +77,7 @@ Window::Window(StarFish* starFish)
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_animationExecutor(nullptr)
+    , m_localStorageNamespace(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -125,10 +130,32 @@ void Window::navigate(URL* url)
     m_webapis = new WebApis(m_starFish);
 #endif
 
+    initStorage(url);
+
     m_document = new HTMLDocument(this, scriptBindingInstance(), url,
                                   String::createASCIIString("UTF-8"), true);
 
     m_document->open();
+}
+
+void Window::initStorage(URL* url)
+{
+    if (!m_localStorageNamespace) {
+        // TODO: The name of disk storage file name should be auto-generated
+        StorageNamespaceProvider* storageProvider =
+            WebStorageNamespaceProvider::create(
+                m_starFish, String::createASCIIString("./cache/cache.db"));
+        m_localStorageNamespace =
+            storageProvider->createLocalStorageNamespace();
+    }
+}
+
+Storage* Window::localStorage()
+{
+    URL* url = m_document->documentURI();
+    SecurityOriginData* origin = new SecurityOriginData(
+        url->protocol(), url->host(), String::parseInt(url->port()));
+    return m_localStorageNamespace->storage(origin);
 }
 
 void Window::setHistory(URL* url)
