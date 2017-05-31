@@ -189,6 +189,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_warn_proc(
             [](char* msg, GC_word arg) { STARFISH_LOG_ERROR(msg, arg); });
 
+#ifdef STARFISH_SHOW_MEMSTATE
         addGCCollectionListener([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef STARFISH_ENABLE_TEST
@@ -205,15 +206,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                     GC_get_memory_use() / 1024.f / 1024.f,
                     GC_get_heap_size() / 1024.f / 1024.f,
                     process_mem_usage() / 1024.f, stat.Private_Dirty / 1024.f);
-// malloc_stats();
 #else
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
 #endif
-                // malloc_stats();
             }
         });
+#endif
 
         GC_set_on_collection_event([](GC_EventType evtType) {
             auto iter = g_gcCollectionEventListenterList.begin();
