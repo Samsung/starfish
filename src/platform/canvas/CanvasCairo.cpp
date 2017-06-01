@@ -33,21 +33,7 @@
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
 
-// TODO : Should remove !
-#include <Evas.h>
-#include <Evas_Engine_Buffer.h>
-#include <Elementary.h>
-#include <Ecore_X.h>
-Evas* g_internalCanvas;
-
 namespace StarFish {
-
-// TODO : Should remove !
-Evas* internalCanvas()
-{
-    STARFISH_RELEASE_ASSERT(g_internalCanvas);
-    return g_internalCanvas;
-}
 
 extern bool g_enablePixelTest;
 
@@ -977,9 +963,6 @@ protected:
     unsigned m_width;
     unsigned m_height;
     size_t m_imageCount;
-    GCUnorderedMap<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
-                   std::hash<ImageData*>,
-                   std::equal_to<ImageData*>>* m_prevDrawnImageMap;
 };
 
 Canvas* Canvas::createDirect(void* data)

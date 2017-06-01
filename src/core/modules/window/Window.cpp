@@ -47,7 +47,7 @@
 #include "core/modules/window/Window.h"
 #include "core/modules/message_loop/Timer.h"
 
-#if defined(PORT_EVENTLOOP_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
 #include <Elementary.h>
 Evas_Object* g_imgBufferForScreehShot;
 #endif
@@ -437,7 +437,7 @@ void Window::rendering()
     m_needsRendering = false;
     m_inRendering = false;
 
-#if defined(PORT_EVENTLOOP_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {

@@ -18,6 +18,7 @@
 #ifdef PORT_GRAPHIC_BACKEND_DALI
 
 #include "StarFish.h"
+#include <dali-toolkit/dali-toolkit.h>
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
@@ -26,19 +27,9 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 
-#include <Elementary.h>
-#include <dali-toolkit/dali-toolkit.h>
-#if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
-#include <Ecore.h>
-#else
-#include <Ecore_X.h>
-#endif
-#include <Ecore_Input.h>
-#include <Ecore_Input_Evas.h>
-
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
-extern Evas_Object* g_imgBufferForScreehShot;
+// extern Evas_Object* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
@@ -106,8 +97,7 @@ public:
 
     virtual void* unwrap()
     {
-        return (void*)m_window_efl;
-        // return nullptr;
+        return nullptr;
     }
 
     virtual void clearResources();
@@ -118,8 +108,6 @@ public:
     float m_lastMouseX, m_lastMouseY;
     Dali::BufferImage m_image;
     Dali::Toolkit::ImageView m_mainView;
-    // Temp Soluation(should be removed!)
-    Evas_Object* m_window_efl;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -201,9 +189,6 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
 {
     auto wnd = new WindowImplDALI(sf);
     wnd->m_starFish = sf;
-
-    // Temp Code!!
-    wnd->m_window_efl = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
 
 #ifdef STARFISH_ENABLE_TEST
     {
