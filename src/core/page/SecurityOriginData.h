@@ -60,7 +60,11 @@ private:
 struct SecurityOriginDataHash {
     size_t operator()(const SecurityOriginData* data) const
     {
-        return 0;
+        size_t seed = 0;
+        seed = seed ^ std::hash<String*>{}(data->protocol());
+        seed = seed ^ (std::hash<String*>{}(data->host()) << 1);
+        seed = seed ^ (std::hash<unsigned>{}(data->port()) << 2);
+        return seed;
     }
 };
 
