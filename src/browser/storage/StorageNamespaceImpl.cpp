@@ -23,11 +23,15 @@
 namespace StarFish {
 
 StorageNamespaceImpl::StorageNamespaceImpl(StarFish* starfish,
-                                           StorageType storageType)
+                                           StorageType storageType,
+                                           String* localStoragePath)
     : StorageNamespace(starfish)
     , m_storageType(storageType)
-    , m_storageManager(new StorageManager())
+    , m_storageManager(nullptr)
 {
+    if (storageType == StorageType::Local) {
+        m_storageManager = new StorageManager(localStoragePath);
+    }
 }
 
 StorageNamespaceImpl::~StorageNamespaceImpl()

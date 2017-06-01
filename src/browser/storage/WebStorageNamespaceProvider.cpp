@@ -43,8 +43,8 @@ StorageNamespace* WebStorageNamespaceProvider::createLocalStorageNamespace()
 {
     auto itr = m_localStoragePathToStorageNamespace.find(m_localStoragePath);
     if (itr == m_localStoragePathToStorageNamespace.end()) {
-        StorageNamespaceImpl* storageNamespace =
-            new StorageNamespaceImpl(m_starFish, StorageType::Local);
+        StorageNamespaceImpl* storageNamespace = new StorageNamespaceImpl(
+            m_starFish, StorageType::Local, m_localStoragePath);
         m_localStoragePathToStorageNamespace.insert(
             std::pair<String*, StorageNamespaceImpl*>(m_localStoragePath,
                                                       storageNamespace));
