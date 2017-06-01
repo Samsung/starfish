@@ -65,13 +65,14 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 {
     m_scriptBindingInstance = scriptBindingInstance;
     setStyle(m_styleResolver.resolveDocumentStyle(this));
+    StaticStrings* sstrs = m_window->starFish()->staticStrings();
 
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::emptyString);
     userAgentStyleSheet->parseSheetIfneeds();
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("html"));
+            CSSSelector::Type::Tag, sstrs->m_htmlTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -84,7 +85,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("head"));
+            CSSSelector::Type::Tag, sstrs->m_headTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -97,7 +98,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("style"));
+            CSSSelector::Type::Tag, sstrs->m_styleTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -110,7 +111,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("script"));
+            CSSSelector::Type::Tag, sstrs->m_scriptTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -123,7 +124,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("meta"));
+            CSSSelector::Type::Tag, sstrs->m_metaTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -136,7 +137,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("body"));
+            CSSSelector::Type::Tag, sstrs->m_bodyTagName.localNameAtomic());
 
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
@@ -170,8 +171,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("div"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_divTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -183,8 +184,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("p"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_pTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -207,8 +208,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("pre"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_preTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -235,20 +236,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("span"));
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = { 0 };
-        data.m_display = DisplayValue::InlineDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("img"));
+            CSSSelector::Type::Tag, sstrs->m_spanTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -261,7 +249,20 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("table"));
+            CSSSelector::Type::Tag, sstrs->m_imgTagName.localNameAtomic());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = { 0 };
+        data.m_display = DisplayValue::InlineDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_tableTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -322,7 +323,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("caption"));
+            CSSSelector::Type::Tag, sstrs->m_captionTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -342,7 +343,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("thead"));
+            CSSSelector::Type::Tag, sstrs->m_theadTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -362,7 +363,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("tbody"));
+            CSSSelector::Type::Tag, sstrs->m_tbodyTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -382,7 +383,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("tfoot"));
+            CSSSelector::Type::Tag, sstrs->m_tfootTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -401,8 +402,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("th"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_thTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -452,8 +453,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("td"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_tdTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -491,8 +492,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("tr"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_trTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -510,8 +511,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("col"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_colTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -524,7 +525,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("colgroup"));
+            CSSSelector::Type::Tag, sstrs->m_colgroupTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -536,8 +537,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h1"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h1TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -581,8 +582,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h2"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h2TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -626,8 +627,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h3"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h3TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -671,8 +672,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h4"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h4TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -711,8 +712,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h5"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h5TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -756,8 +757,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("h6"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_h6TagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -801,8 +802,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("ul"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_ulTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -840,8 +841,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag,
-                                              String::createASCIIString("li"));
+        CSSStyleRule* rule = new CSSStyleRule(
+            CSSSelector::Type::Tag, sstrs->m_liTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -855,7 +856,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("strong"));
+            CSSSelector::Type::Tag, sstrs->m_strongTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -875,7 +876,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     {
         CSSStyleRule* rule = new CSSStyleRule(
-            CSSSelector::Type::Tag, String::createASCIIString("title"));
+            CSSSelector::Type::Tag, sstrs->m_titleTagName.localNameAtomic());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -1000,7 +1001,7 @@ Element* Document::getElementById(String* id)
         return nullptr;
     }
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isHTMLElement() &&
+        if (child->isHTMLElement() && child->asHTMLElement()->hasId() &&
             child->asHTMLElement()->id()->equals(id)) {
             return true;
         } else {

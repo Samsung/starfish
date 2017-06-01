@@ -136,7 +136,8 @@ bool isSameNamedAccess(Node* node, void* data)
 
         // HTML elements that have an id content attribute whose value is
         // name
-        if (htmlElement->id()->equals(namedAccess->localName())) {
+        if (htmlElement->hasId() &&
+            htmlElement->atomicId() == namedAccess->localNameAtomic()) {
             return true;
         }
     }

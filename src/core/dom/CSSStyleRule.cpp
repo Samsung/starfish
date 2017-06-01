@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-CSSStyleRule::CSSStyleRule(CSSSelector::Type type, String* selectorText)
+CSSStyleRule::CSSStyleRule(CSSSelector::Type type, AtomicString selectorText)
     : CSSRule(CSSRule::STYLE_RULE)
     , m_styleDeclaration(new CSSStyleDeclaration())
 {

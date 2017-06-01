@@ -27,7 +27,7 @@ class CSSStyleRule : public CSSRule {
     friend class StyleResolver;
 
 public:
-    CSSStyleRule(CSSSelector::Type type, String* selectorText);
+    CSSStyleRule(CSSSelector::Type type, AtomicString selectorText);
 
     CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
                  CSSStyleDeclaration* decl);

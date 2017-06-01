@@ -414,6 +414,7 @@ void Window::rendering()
                                          ->node()
                                          ->asHTMLElement()
                                          ->classNames()[i]
+                                         .string()
                                          ->utf8Data();
                         className += " ";
                     }

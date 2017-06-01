@@ -23,10 +23,11 @@
 
 namespace StarFish {
 
-static bool contains(const GCVector<String*>& vector, const String* string)
+static bool contains(const GCVector<AtomicString>& vector, const String* string)
 {
-    return std::any_of(vector.begin(), vector.end(),
-                       [&string](String* elm) { return string->equals(elm); });
+    return std::any_of(
+        vector.begin(), vector.end(),
+        [&string](AtomicString elm) { return string->equals(elm.string()); });
 }
 
 enum ClassElementListBehavior { AllElements, OnlyRoots };
@@ -271,11 +272,11 @@ void SelectorQuery::findTraverseRootsAndExecute(
     GCDeque<CSSSelector*> selectors = *m_selectorListContainer[0];
     for (auto it = selectors.begin(); it != selectors.end(); ++it) {
         GCVector<Element*> elements;
-        collectElementsById(rootNode, (*it)->selectorText(), elements,
+        collectElementsById(rootNode, (*it)->selectorText().string(), elements,
                             shouldOnlyMatchFirstElement);
         if ((*it)->type() == CSSSelector::Id && elements.size() == 1) {
-            Element* element =
-                rootNode.document()->getElementById((*it)->selectorText());
+            Element* element = rootNode.document()->getElementById(
+                (*it)->selectorText().string());
 
             Node* adjustedNode = &rootNode;
             if (element &&
@@ -309,7 +310,7 @@ void SelectorQuery::findTraverseRootsAndExecute(
             (*it)->type() == CSSSelector::Class) {
             if (isRightmostSelector) {
                 ClassElementList<AllElements> traverseRoots(
-                    rootNode, (*it)->selectorText());
+                    rootNode, (*it)->selectorText().string());
                 executeForTraverseRoots(selectors, traverseRoots,
                                         MatchesTraverseRoots, rootNode, output,
                                         shouldOnlyMatchFirstElement);
@@ -317,15 +318,16 @@ void SelectorQuery::findTraverseRootsAndExecute(
             }
             // Since there exists some ancestor element which has the class
             // name, we need to see all children of rootNode.
-            if (ancestorHasClassName(rootNode, (*it)->selectorText())) {
+            if (ancestorHasClassName(rootNode,
+                                     (*it)->selectorText().string())) {
                 executeForTraverseRoot(selectors, &rootNode,
                                        DoesNotMatchTraverseRoots, rootNode,
                                        output, shouldOnlyMatchFirstElement);
                 return;
             }
 
-            ClassElementList<OnlyRoots> traverseRoots(rootNode,
-                                                      (*it)->selectorText());
+            ClassElementList<OnlyRoots> traverseRoots(
+                rootNode, (*it)->selectorText().string());
             executeForTraverseRoots(selectors, traverseRoots,
                                     DoesNotMatchTraverseRoots, rootNode, output,
                                     shouldOnlyMatchFirstElement);
@@ -407,8 +409,8 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
     // Fast path for querySelector*('#id'), querySelector*('tag#id').
     if (CSSSelector* idSelector = selectorForIdLookup(selectors)) {
         GCVector<Element*> elements;
-        collectElementsById(rootNode, idSelector->selectorText(), elements,
-                            shouldOnlyMatchFirstElement);
+        collectElementsById(rootNode, idSelector->selectorText().string(),
+                            elements, shouldOnlyMatchFirstElement);
         if (elements.size() > 1) {
             size_t count = elements.size();
             for (size_t i = 0; i < count; ++i) {
@@ -428,8 +430,8 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
             return;
         }
 
-        Element* element =
-            rootNode.document()->getElementById(idSelector->selectorText());
+        Element* element = rootNode.document()->getElementById(
+            idSelector->selectorText().string());
         if (!element ||
             !(rootNode.isDocument() || element->isDescendantOf(&rootNode))) {
             return;
@@ -445,13 +447,14 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
         firstSelector->pseudoType() == CSSSelector::PseudoNone) {
         switch (firstSelector->type()) {
         case CSSSelector::Class:
-            collectElementsByClassName(rootNode, firstSelector->selectorText(),
+            collectElementsByClassName(rootNode,
+                                       firstSelector->selectorText().string(),
                                        output, shouldOnlyMatchFirstElement);
             return;
         case CSSSelector::Tag:
-            collectElementsByTagName(rootNode,
-                                     firstSelector->selectorText()->toUpper(),
-                                     output, shouldOnlyMatchFirstElement);
+            collectElementsByTagName(
+                rootNode, firstSelector->selectorText().string()->toUpper(),
+                output, shouldOnlyMatchFirstElement);
             return;
         default:
             break; // If we need another fast path, add here.

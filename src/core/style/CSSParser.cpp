@@ -1115,7 +1115,10 @@ CSSSelector* CSSParser::getPseudoSelector()
     selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass
                                   : CSSSelector::Type::PseudoElement);
     selector->setRelation(CSSSelector::RelationType::SubSelector);
-    selector->updatePseudoType(token->m_value->toLower(), token->isFunction());
+    selector->updatePseudoType(
+        starFish(),
+        AtomicString::createAtomicString(starFish(), token->m_value->toLower()),
+        token->isFunction());
 
     if (token->isIdent()) {
         if (selector->pseudoType() == CSSSelector::PseudoNone) {
@@ -1428,7 +1431,8 @@ CSSSelector* CSSParser::getClassSelector()
     }
 
     CSSSelector* selector = new CSSSelector(
-        CSSSelector::Type::Class, CSSSelector::SubSelector, token->m_value);
+        CSSSelector::Type::Class, CSSSelector::SubSelector,
+        AtomicString::createAtomicString(starFish(), token->m_value));
     getToken(false, true);
 
     return selector;
@@ -1442,7 +1446,8 @@ CSSSelector* CSSParser::getIdSelector()
     }
 
     CSSSelector* selector = new CSSSelector(
-        CSSSelector::Type::Id, CSSSelector::SubSelector, token->m_value);
+        CSSSelector::Type::Id, CSSSelector::SubSelector,
+        AtomicString::createAtomicString(starFish(), token->m_value));
     getToken(false, true);
 
     return selector;
@@ -1548,7 +1553,8 @@ void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
 
         CSSSelector* selector = new CSSSelector(
             CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector,
-            elementName->toLower());
+            AtomicString::createAtomicString(starFish(),
+                                             elementName->toLower()));
         if (elementName->equals(String::fromUTF8("*"))) {
             selector->setType(CSSSelector::Type::Universal);
         }
