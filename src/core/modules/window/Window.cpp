@@ -207,7 +207,12 @@ void Window::layoutIfNeeds()
                     document()->styleResolver().sheets()[i];
 
                 authorSheet->parseSheetIfneeds();
-                authorSheet->collectRulesForSheet(authorSheet->allRules());
+
+                if (authorSheet->ownerRule()) {
+                    authorSheet->collectRulesForImportedSheet();
+                } else {
+                    authorSheet->collectRulesForSheet(authorSheet->allRules());
+                }
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {

@@ -1709,6 +1709,7 @@ public:
 
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres);
+    void collectRulesForImportedSheet();
     void collectRulesForSheet(GCVector<CSSRule*>& rules);
 
 protected:

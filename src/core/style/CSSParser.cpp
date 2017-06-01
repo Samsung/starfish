@@ -2344,7 +2344,7 @@ MediaQuerySet* CSSParser::parseMediaQuery()
     CSSToken* token = currentToken();
     while (token->isNotNull() && !token->isSymbol('{') && m_state != Done) {
         processToken(token);
-        token = getToken(false, false);
+        token = getToken(false, true);
     }
 
     if (m_state != ReadAnd && m_state != ReadRestrictor && m_state != Done &&
