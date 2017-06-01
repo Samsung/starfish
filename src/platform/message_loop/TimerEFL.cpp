@@ -67,9 +67,9 @@ size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                StarFishEnterer enter(td->m_timer->starfish());
+                StarFishEnterer enter(td->m_timer->m_starFish);
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-                td->m_handler(td->m_timer->starfish()->window(), td->m_data);
+                td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
                 return ECORE_CALLBACK_RENEW;
             },
             td);
@@ -79,10 +79,10 @@ size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                StarFishEnterer enter(td->m_timer->starfish());
+                StarFishEnterer enter(td->m_timer->m_starFish);
                 TimerWrapper* timer = td->m_timer;
                 int32_t id = td->m_id;
-                td->m_handler(td->m_timer->starfish()->window(), td->m_data);
+                td->m_handler(td->m_timer->m_starFish->window(), td->m_data);
                 auto iter = timer->m_timeoutHandler.find(id);
                 if (iter != timer->m_timeoutHandler.end()) {
                     timer->m_timeoutHandler.erase(iter);
@@ -150,15 +150,14 @@ size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
     ad->m_timerID = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             AnimationTickData* ad = (AnimationTickData*)data;
-            StarFishEnterer enter(ad->m_timer->starfish());
-            auto animationHandler = ad->m_timer->animationHandler();
-            auto a = animationHandler.find(ad->m_id);
+            StarFishEnterer enter(ad->m_timer->m_starFish);
+            auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
             if (ad->m_handler(ad->m_data)) {
                 return ECORE_CALLBACK_RENEW;
             }
-            a = animationHandler.find(ad->m_id);
-            if (animationHandler.end() != a) {
-                animationHandler.erase(a);
+            a = ad->m_timer->m_animationHandler.find(ad->m_id);
+            if (ad->m_timer->m_animationHandler.end() != a) {
+                ad->m_timer->m_animationHandler.erase(a);
             }
             GC_FREE(ad);
             return ECORE_CALLBACK_CANCEL;
