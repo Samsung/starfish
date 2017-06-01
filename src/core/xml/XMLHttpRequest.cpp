@@ -45,7 +45,7 @@ XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
 
     m_responseType = ResponseType::Unspecified;
     initResponseData();
-    m_resourceRequest->addNetworkRequestClient(this);
+    m_resourceRequest->addResourceRequestClient(this);
 }
 
 void XMLHttpRequest::initResponseData()

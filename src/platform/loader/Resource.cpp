@@ -29,7 +29,20 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());
-        m_resourceRequest->addNetworkRequestClient(
+
+        if (isImageResource()) {
+            m_resourceRequest->setRequestHeader(
+                String::createASCIIString("Accept"),
+                String::createASCIIString("image/*"));
+        } else {
+            // The current implementation has no difference between
+            // text resource and default resouce.
+            m_resourceRequest->setRequestHeader(
+                String::createASCIIString("Accept"),
+                String::createASCIIString("text/html,text/plain,text/*"));
+        }
+
+        m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
         m_resourceRequest->open(
             ResourceRequest::GET_METHOD, url()->urlString(),

@@ -57,7 +57,7 @@ class Document : public Node {
     friend class DOMImplementation;
 #endif
     friend class Window;
-    friend class ActiveNetworkRequestTracker;
+    friend class ActiveResourceRequestTracker;
     friend class HTMLMetaElement;
     friend class DOMParser;
 
