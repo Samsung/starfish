@@ -476,6 +476,11 @@ public:
         return true;
     }
 
+    virtual bool isUTF32String() const
+    {
+        return false;
+    }
+
     String* concat(String* str);
     void split(char delim, GCVector<String*>& tokens);
     String* trim();
@@ -614,6 +619,11 @@ public:
     virtual bool isASCIIString() const override
     {
         return false;
+    }
+
+    virtual bool isUTF32String() const override
+    {
+        return true;
     }
 
     virtual UTF32String* asUTF32String() const override
@@ -1192,6 +1202,29 @@ private:
     unsigned char m_fastPathFlags;
     void (SegmentedString::*m_advanceFunc)();
     void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
+};
+}
+
+namespace std {
+template <>
+struct hash<StarFish::String*> {
+    std::size_t operator()(const StarFish::String* s) const
+    {
+        if (s->isASCIIString()) {
+            return hash<StarFish::ASCIIString>{}(*(s->asASCIIString()));
+        } else {
+            return hash<StarFish::UTF32String>{}(*(s->asUTF32String()));
+        }
+    }
+};
+
+template <>
+struct equal_to<StarFish::String*> {
+    bool operator()(const StarFish::String* s1,
+                    const StarFish::String* s2) const
+    {
+        return s1->equals(s2);
+    }
 };
 }
 #endif
