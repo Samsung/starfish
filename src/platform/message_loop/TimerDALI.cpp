@@ -51,15 +51,14 @@ public:
 
     bool AnimationTick()
     {
-        StarFishEnterer enter(m_timer->starfish());
-        auto animationHandler = m_timer->animationHandler();
-        auto a = animationHandler.find(m_id);
+        StarFishEnterer enter(m_timer->m_starFish);
+        auto a = m_timer->m_animationHandler.find(m_id);
         if (m_handler(m_data)) {
             return true;
         }
-        a = animationHandler.find(m_id);
-        if (animationHandler.end() != a) {
-            animationHandler.erase(a);
+        a = m_timer->m_animationHandler.find(m_id);
+        if (m_timer->m_animationHandler.end() != a) {
+            m_timer->m_animationHandler.erase(a);
         }
         GC_FREE(this);
         return false;
@@ -82,14 +81,13 @@ public:
 
     bool OnceTick()
     {
-        StarFishEnterer enter(m_timer->starfish());
+        StarFishEnterer enter(m_timer->m_starFish);
         TimerWrapper* timer = m_timer;
         int32_t id = m_id;
-        m_handler(m_timer->starfish()->window(), m_data);
-        auto timeoutHandler = timer->timeoutHandler();
-        auto iter = timeoutHandler.find(id);
-        if (iter != timeoutHandler.end()) {
-            timeoutHandler.erase(iter);
+        m_handler(m_timer->m_starFish->window(), m_data);
+        auto iter = m_timer->m_timeoutHandler.find(id);
+        if (iter != m_timer->m_timeoutHandler.end()) {
+            m_timer->m_timeoutHandler.erase(iter);
             GC_FREE(this);
         }
         return false;
@@ -97,23 +95,20 @@ public:
 
     bool OnTick()
     {
-        StarFishEnterer enter(m_timer->starfish());
-        auto timeoutHandler = m_timer->timeoutHandler();
-        auto a = timeoutHandler.find(m_id);
-        m_handler(m_timer->starfish()->window(), m_data);
+        StarFishEnterer enter(m_timer->m_starFish);
+        auto a = m_timer->m_timeoutHandler.find(m_id);
+        m_handler(m_timer->m_starFish->window(), m_data);
         return true;
     }
 
     bool AnimationTick()
     {
-        StarFishEnterer enter(m_timer->starfish());
-        auto requestAnimationFrameHandler =
-            m_timer->requestAnimationFrameHandler();
-        auto a = requestAnimationFrameHandler.find(m_id);
-        m_handler(m_timer->starfish()->window(), m_data);
-        a = requestAnimationFrameHandler.find(m_id);
-        if (requestAnimationFrameHandler.end() != a) {
-            requestAnimationFrameHandler.erase(a);
+        StarFishEnterer enter(m_timer->m_starFish);
+        auto a = m_timer->m_requestAnimationFrameHandler.find(m_id);
+        m_handler(m_timer->m_starFish->window(), m_data);
+        a = m_timer->m_requestAnimationFrameHandler.find(m_id);
+        if (m_timer->m_requestAnimationFrameHandler.end() != a) {
+            m_timer->m_requestAnimationFrameHandler.erase(a);
         }
         GC_FREE(this);
         return false;

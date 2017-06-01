@@ -38,27 +38,6 @@ public:
 
     void clear();
 
-    StarFish* starfish()
-    {
-        return m_starFish;
-    }
-
-    GCUnorderedMap<int32_t, void*> timeoutHandler()
-    {
-        return m_timeoutHandler;
-    }
-
-    GCUnorderedMap<int32_t, void*> requestAnimationFrameHandler()
-    {
-        return m_requestAnimationFrameHandler;
-    }
-
-    GCUnorderedMap<int32_t, void*> animationHandler()
-    {
-        return m_animationHandler;
-    }
-
-protected:
     StarFish* m_starFish;
 
     int32_t m_timeoutCounter;
