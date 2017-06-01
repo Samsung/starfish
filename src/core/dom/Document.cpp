@@ -1027,8 +1027,8 @@ Element* Document::createElement(AtomicString localName, bool shouldCheckName)
 
 Element* Document::createElement(String* name)
 {
-    AtomicString atomicName = AtomicString::createAttrAtomicString(
-        window()->starFish(), name->toUTF32String());
+    AtomicString atomicName =
+        AtomicString::createAttrAtomicString(window()->starFish(), name);
     return createElement(atomicName, true);
 }
 
