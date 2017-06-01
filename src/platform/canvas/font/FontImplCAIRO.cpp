@@ -125,7 +125,7 @@ public:
             }
 
         } else {
-            UTF8NonGCString s =
+            UTF8StringDataNonGCStd s =
                 str.originalString()->toUTF8NonGCString(str.start(), str.end());
             cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, s.c_str(),
                                              s.length(), &glyphs, &glyph_count,

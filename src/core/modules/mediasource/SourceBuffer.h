@@ -146,6 +146,7 @@ public:
             return String::createASCIIString("sequence");
         }
         STARFISH_ASSERT_NOT_REACHED();
+        return String::emptyString;
     }
 
     AppendMode modeValue() const

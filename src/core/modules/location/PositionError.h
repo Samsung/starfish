@@ -48,6 +48,7 @@ public:
         }
 
         STARFISH_ASSERT_NOT_REACHED();
+        return String::emptyString;
     }
 
     virtual void init(ScriptBindingInstance* instance) override;
