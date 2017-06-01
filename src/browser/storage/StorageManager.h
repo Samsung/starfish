@@ -23,7 +23,10 @@ namespace StarFish {
 
 class StorageManager : public gc {
 public:
-    StorageManager();
+    StorageManager(String* localStoragePath);
+
+private:
+    String* m_localStoragePath;
 };
 }
 

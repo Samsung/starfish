@@ -20,7 +20,8 @@
 
 namespace StarFish {
 
-StorageManager::StorageManager()
+StorageManager::StorageManager(String* localStoragePath)
+    : m_localStoragePath(localStoragePath)
 {
 }
 }
