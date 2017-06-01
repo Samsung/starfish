@@ -1033,6 +1033,17 @@ bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
     return evaluator.eval(mediaQueries);
 }
 
+void CSSStyleSheet::collectRulesForImportedSheet()
+{
+    CSSStyleRuleImport* importRule = ownerRule();
+
+    if (matchesMediaQueries(
+            origin()->document()->styleResolver().mediaQueryEvaluator(),
+            importRule->mediaQuerySet())) {
+        collectRulesForSheet(allRules());
+    }
+}
+
 void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
 {
     auto resolver = origin()->document()->styleResolver();
