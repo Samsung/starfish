@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -72,6 +73,6 @@ void SourceBufferList::clear()
 void SourceBufferList::scheduleEvent(String* eventName)
 {
     m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-        this, new Event(eventName));
+        this, new Event(document(), eventName));
 }
 }

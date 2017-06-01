@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/style/CSSStyleSheet.h"
 
 #include "core/dom/Document.h"
@@ -24,6 +25,11 @@
 #include "core/style/MediaQueryEvaluator.h"
 
 namespace StarFish {
+
+ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
+{
+    return origin()->scriptBindingInstance();
+}
 
 void CSSStyleSheet::addRule(CSSStyleRule* rule)
 {
@@ -45,7 +51,7 @@ void CSSStyleSheet::addRule(CSSRule* rule)
     m_allRules.push_back(rule);
 }
 
-URL* CSSStyleSheet::url()
+ResourceURL* CSSStyleSheet::url()
 {
     if (m_origin->isHTMLLinkElement()) {
         STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());

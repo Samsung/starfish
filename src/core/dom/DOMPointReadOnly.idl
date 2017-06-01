@@ -2,6 +2,7 @@
 
 [Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
              optional unrestricted double z = 0, optional unrestricted double w = 1),
+ ConstructorCallWith=Document,
  Exposed=(Window,Worker)]
 interface DOMPointReadOnly {
   [Unimplemented, NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other);

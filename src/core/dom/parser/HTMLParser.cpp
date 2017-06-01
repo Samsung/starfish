@@ -81,7 +81,7 @@ void HTMLParser::parseStep()
         m_treeBuilder.constructTree(&at);
 
         if (!rawToken.isUninitialized()) {
-            ASSERT(rawToken.type() == HTMLToken::Character);
+            STARFISH_ASSERT(rawToken.type() == HTMLToken::Character);
             rawToken.clear();
         }
     }

@@ -29,7 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLVideoElement() const override;
 
     virtual String* localName();

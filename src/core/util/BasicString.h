@@ -88,7 +88,7 @@ public:
         return *this;
     }
 
-    virtual ~BasicString()
+    ~BasicString()
     {
         deallocate();
     }
@@ -129,16 +129,16 @@ public:
         append(src, traits_type::length(src));
     }
 
-    virtual void append(const T* src, size_t len);
+    void append(const T* src, size_t len);
 
-    virtual void insert(size_t pos, const T val);
+    void insert(size_t pos, const T val);
 
     void erase(size_t pos)
     {
         erase(pos, pos + 1);
     }
 
-    virtual void erase(size_t start, size_t end);
+    void erase(size_t start, size_t end);
 
     BasicString<T, Allocator>& replace(size_t start, size_t len,
                                        BasicString<T, Allocator>& dst);
@@ -175,7 +175,7 @@ public:
         return m_size;
     }
 
-    virtual size_t capacity() const
+    size_t capacity() const
     {
         if (m_buffer) {
             return m_size + 1;
@@ -216,13 +216,13 @@ public:
 
     T& operator[](const size_t& idx)
     {
-        ASSERT(idx < m_size);
+        STARFISH_ASSERT(idx < m_size);
         return m_buffer[idx];
     }
 
     const T& operator[](const size_t& idx) const
     {
-        ASSERT(idx < m_size);
+        STARFISH_ASSERT(idx < m_size);
         return m_buffer[idx];
     }
 
@@ -234,11 +234,11 @@ public:
 
     T* data() const
     {
-        STARFISH_ASSERT(m_buffer);
+        STARFISH_ASSERT(m_buffer != nullptr);
         return m_buffer;
     }
 
-    virtual void resize(size_t newSize)
+    void resize(size_t newSize)
     {
         if (newSize == 0) {
             clear();
@@ -247,7 +247,7 @@ public:
         }
     }
 
-    virtual void reserve(size_t newSize)
+    void reserve(size_t newSize)
     {
         if (newSize == 0) {
             clear();
@@ -269,7 +269,7 @@ public:
     }
 
 protected:
-    virtual void makeEmpty()
+    void makeEmpty()
     {
         m_buffer = allocate(1);
         m_size = 0;
@@ -314,12 +314,12 @@ protected:
         m_buffer = newBuffer;
     }
 
-    virtual void pushBack(T val);
+    void pushBack(T val);
 
     std::tuple<T*, size_t> _substr(size_t pos, size_t len) const;
 
     // Important! `m_size` update should follow `deallocate()`
-    virtual void deallocate()
+    void deallocate()
     {
         if (m_buffer) {
             STARFISH_ASSERT(capacity() > 0);

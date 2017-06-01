@@ -22,6 +22,7 @@ namespace StarFish {
 class Document;
 class StarFish;
 class Window;
+class ScriptBindingInstance;
 
 class DocumentHoldable {
 public:
@@ -37,6 +38,7 @@ public:
 
     Window* window();
     StarFish* starFish();
+    ScriptBindingInstance* scriptBindingInstance();
 
 protected:
     Document* m_document;

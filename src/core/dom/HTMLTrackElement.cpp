@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTrackElement.h"
@@ -197,7 +198,8 @@ void HTMLTrackElement::load(String* srcURL)
         return;
     }
 
-    URL* url = URL::createURL(document()->documentURI()->baseURI(), srcURL);
+    ResourceURL* url =
+        new ResourceURL(srcURL, document()->documentURI()->baseURI());
     clearResource();
 
     m_VTTFileResource = document()->resourceLoader().fetch(url);

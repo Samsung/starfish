@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StorageImpl.h"
 
 #include "StorageManager.h"
@@ -21,8 +22,8 @@
 
 namespace StarFish {
 
-StorageImpl::StorageImpl(StarFish* starfish)
-    : Storage(starfish)
+StorageImpl::StorageImpl(Window* window)
+    : Storage(window)
 {
 }
 
@@ -30,10 +31,10 @@ StorageImpl::~StorageImpl()
 {
 }
 
-StorageImpl::StorageImpl(StarFish* starfish, StorageType storageType,
+StorageImpl::StorageImpl(Window* window, StorageType storageType,
                          SecurityOriginData* securityOriginData,
                          StorageManager* storageManager)
-    : Storage(starfish)
+    : Storage(window)
     , m_storageType(storageType)
     , m_securityOriginData(securityOriginData)
     , m_storageManager(storageManager)

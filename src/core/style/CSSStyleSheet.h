@@ -39,13 +39,15 @@ public:
         m_ownerRule = ownerRule;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSStyleSheet() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     void addRule(CSSStyleRule* rule);
     void addRule(CSSRule* rule);
 
-    URL* url();
+    ResourceURL* url();
     Node* origin()
     {
         return m_origin;

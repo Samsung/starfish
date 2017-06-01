@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
@@ -23,35 +24,32 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue windowWindowGetterFunction(ESVMInstance* instance)
+ValueRef* windowWindowGetterFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
 {
-    return instance->globalObject();
+    return ValueRef::create(state->context()->globalObject());
 }
 
 static void timeoutHandler(Window* wnd, void* data)
 {
-    ESFunctionObject* fn = (ESFunctionObject*)data;
-    std::jmp_buf tryPosition;
-    if (setjmp(ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) ==
-        0) {
-        ESFunctionObject::call(ESVMInstance::currentInstance(), fn, ESValue(),
-                               NULL, 0, false);
-        ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-    } else {
-        ESValue err = ESVMInstance::currentInstance()->getCatchedError();
-        STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
-    }
+    FunctionObjectRef* fn = (FunctionObjectRef*)data;
+    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
+                       nullptr, 0, scriptUndefined());
 }
 
 // TODO : Pass "any... arguments" if exist
-ESValue setTimeoutWindowFunction(ESVMInstance* instance)
+ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
+                                   ValueRef* thisValue, size_t argc,
+                                   ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    size_t argCount = argc;
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
@@ -61,36 +59,39 @@ ESValue setTimeoutWindowFunction(ESVMInstance* instance)
     }
     // Declare native value (empty when type is void)
     int32_t result;
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    ValueRef* arg2 = argv[2];
 
     // Handle argument arg2
     ScriptValue value2;
     value2 = arg2;
     // Handle argument arg1
     int32_t value1 = 0;
-    if (!arg1.isUndefinedOrNull()) {
-        value1 = arg1.toInt32();
+    if (!arg1->isUndefinedOrNull()) {
+        value1 = arg1->toInt32(state);
     }
 
-    if (arg0.isFunction()) {
-        return ESValue(
-            window->setTimeout(timeoutHandler, value1, arg0.asESPointer()));
+    if (arg0->isFunction()) {
+        return ValueRef::create(
+            window->setTimeout(timeoutHandler, value1, arg0->asObject()));
     } else {
-        String* bodyStr = toBrowserString(arg0.toString());
+        String* bodyStr = toBrowserString(state, arg0);
         String* name[] = { String::emptyString };
         bool error = false;
-        ScriptValue m_listener = createScriptFunction(name, 1, bodyStr, error);
-        return ESValue(window->setTimeout(timeoutHandler, value1,
-                                          m_listener.asESPointer()));
+        ScriptValue m_listener = createScriptFunction(
+            window->scriptBindingInstance(), name, 1, bodyStr, error);
+        return ValueRef::create(
+            window->setTimeout(timeoutHandler, value1, m_listener));
     }
 }
 
-ESValue setIntervalWindowFunction(ESVMInstance* instance)
+ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    size_t argCount = argc;
     if (argCount < 2) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
@@ -101,61 +102,50 @@ ESValue setIntervalWindowFunction(ESVMInstance* instance)
     }
     // Declare native value (empty when type is void)
     int32_t result;
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    ValueRef* arg2 = argv[2];
 
     // Handle argument arg2
     ScriptValue value2;
     value2 = arg2;
     // Handle argument arg1
     int32_t value1 = 0;
-    if (!arg1.isUndefinedOrNull()) {
-        value1 = arg1.toInt32();
+    if (!arg1->isUndefinedOrNull()) {
+        value1 = arg1->toInt32(state);
     }
 
-    if (arg0.isFunction()) {
-        return ESValue(
-            window->setInterval(timeoutHandler, value1, arg0.asESPointer()));
+    if (arg0->isFunction()) {
+        return ValueRef::create(
+            window->setInterval(timeoutHandler, value1, arg0->asObject()));
     } else {
-        String* bodyStr = toBrowserString(arg0.toString());
+        String* bodyStr = toBrowserString(state, arg0);
         String* name[] = { String::emptyString };
         bool error = false;
-        ScriptValue m_listener = createScriptFunction(name, 1, bodyStr, error);
-        return ESValue(window->setInterval(timeoutHandler, value1,
-                                           m_listener.asESPointer()));
+        ScriptValue m_listener = createScriptFunction(
+            window->scriptBindingInstance(), name, 1, bodyStr, error);
+        return ValueRef::create(
+            window->setInterval(timeoutHandler, value1, m_listener));
     }
 }
 
 static void animationFrameTimeoutHandler(Window* wnd, void* data)
 {
-    ESFunctionObject* fn = (ESFunctionObject*)data;
-    std::jmp_buf tryPosition;
-    if (setjmp(ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) ==
-        0) {
-        ESFunctionObject::call(ESVMInstance::currentInstance(), fn, ESValue(),
-                               NULL, 0, false);
-        ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-    } else {
-        std::jmp_buf tryPosition;
-        ESValue err = ESVMInstance::currentInstance()->getCatchedError();
-        if (setjmp(ESVMInstance::currentInstance()->registerTryPos(
-                &tryPosition)) == 0) {
-            STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
-            ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-        } else {
-            STARFISH_LOG_INFO("Uncaught Error\n");
-        }
-    }
+    FunctionObjectRef* fn = (FunctionObjectRef*)data;
+    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
+                       nullptr, 0, scriptUndefined());
 }
 
 // TODO : Pass "any... arguments" if exist
 // TODO : First argument can be function or script source (currently allow
 // function only)
-ESValue requestAnimationFrameWindowFunction(ESVMInstance* instance)
+ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
+                                              ValueRef* thisValue, size_t argc,
+                                              ValueRef** argv,
+                                              bool isNewExpression)
 {
     GENERATE_WINDOW();
-    size_t argCount = instance->currentExecutionContext()->argumentCount();
+    size_t argCount = argc;
     if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
@@ -166,18 +156,20 @@ ESValue requestAnimationFrameWindowFunction(ESVMInstance* instance)
     }
     // Declare native value (empty when type is void)
     uint32_t result;
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ValueRef* arg0 = argv[0];
 
-    if (arg0.isFunction()) {
-        return ESValue(window->requestAnimationFrame(
-            animationFrameTimeoutHandler, arg0.asESPointer()));
+    if (arg0->isFunction()) {
+        return ValueRef::create(
+            window->requestAnimationFrame(animationFrameTimeoutHandler, arg0));
     }
 
-    return ESValue();
+    return scriptUndefined();
 }
 
 #ifdef STARFISH_ENABLE_TEST
-static ESValue debugPauseFunction(ESVMInstance* instance)
+static ValueRef* debugPauseFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
@@ -187,10 +179,12 @@ static ESValue debugPauseFunction(ESVMInstance* instance)
             sf->pause();
         },
         window->starFish(), nullptr);
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue debugResumeFunction(ESVMInstance* instance)
+static ValueRef* debugResumeFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
@@ -200,62 +194,69 @@ static ESValue debugResumeFunction(ESVMInstance* instance)
             sf->resume();
         },
         window->starFish(), nullptr);
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue networkEnableFunction(ESVMInstance* instance)
+static ValueRef* networkEnableFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     window->setNetworkState(true);
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue networkDisableFunction(ESVMInstance* instance)
+static ValueRef* networkDisableFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     window->setNetworkState(false);
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue isPixelTestFunction(ESVMInstance* instance)
+static ValueRef* isPixelTestFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
-        return ESValue(ESValue::ESTrue);
+        return ValueRef::create(true);
     } else {
-        return ESValue(ESValue::ESFalse);
+        return ValueRef::create(false);
     }
 }
 
 static void screenShotTimeoutHandler(Window* wnd, void* data)
 {
-    ESFunctionObject* p = (ESFunctionObject*)data;
-    callScriptFunction(p, {}, 0,
-                       ESVMInstance::currentInstance()->globalObject());
+    FunctionObjectRef* p = (FunctionObjectRef*)data;
+    callScriptFunction(
+        wnd->scriptBindingInstance(), ValueRef::create(p), nullptr, 0,
+        ValueRef::create(
+            wnd->scriptBindingInstance()->scriptContext()->globalObject()));
 }
 
-static ESValue screenShotFunction(ESVMInstance* instance)
+static ValueRef* screenShotFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     std::string path = window->document()->documentURI()->baseURI()->utf8Data();
     path = path.substr(strlen("file://"));
-    path += ESVMInstance::currentInstance()
-                ->currentExecutionContext()
-                ->readArgument(0)
-                .toString()
-                ->utf8Data();
+    path += argv[0]->toString(state)->toStdUTF8String().data();
     window->screenShot(path);
-    window->setTimeout(
-        screenShotTimeoutHandler, 100,
-        instance->currentExecutionContext()->readArgument(1).asESPointer());
-    return ESValue();
+    window->setTimeout(screenShotTimeoutHandler, 100, argv[1]);
+    return ValueRef::createUndefined();
 }
 
-static ESValue screenShotRelativePathFunction(ESVMInstance* instance)
+static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
+                                                ValueRef* thisValue,
+                                                size_t argc, ValueRef** argv,
+                                                bool isNewExpression)
 {
     GENERATE_WINDOW();
 
@@ -267,127 +268,124 @@ static ESValue screenShotRelativePathFunction(ESVMInstance* instance)
             ->concat(String::fromUTF8(
                 getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
     window->screenShot(path->utf8Data());
-    callScriptFunction(instance->currentExecutionContext()->readArgument(0), {},
-                       0, instance->globalObject());
-    return ESValue();
+    callScriptFunction(
+        window->scriptBindingInstance(), argv[0], nullptr, 0,
+        ValueRef::create(
+            window->scriptBindingInstance()->scriptContext()->globalObject()));
+    return ValueRef::createUndefined();
 }
 
-static ESValue forceDisableOnloadCaptureFunction(ESVMInstance* instance)
+static ValueRef* forceDisableOnloadCaptureFunction(ExecutionStateRef* state,
+                                                   ValueRef* thisValue,
+                                                   size_t argc, ValueRef** argv,
+                                                   bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     window->forceDisableOnloadCapture();
-    return ESValue();
+    return ValueRef::createUndefined();
 }
 
-static ESValue getXYWHFunction(ESVMInstance* instance)
+static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
+                                 size_t argc, ValueRef** argv,
+                                 bool isNewExpression)
 {
     GENERATE_WINDOW();
 
     window->renderingIfNeeds();
 
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+    ValueRef* arg0 = argv[0];
     Node* value0 = nullptr;
-    if (!arg0.isUndefinedOrNull()) {
+    if (!arg0->isUndefinedOrNull()) {
         CHECK_TYPEOF(arg0, Node);
 
-        value0 = (Node*)(arg0.asESPointer()->asESObject()->extraPointerData());
+        value0 = (Node*)(arg0->asObject()->extraData());
     }
     Frame* fr = (Frame*)value0->frame();
     if (!fr) {
-        return ESValue(ESValue::ESNull);
+        return scriptNull();
     } else if (fr->isFrameBox()) {
         LayoutRect rect = fr->asFrameBox()->absoluteRect(
             value0->document()->frame()->asFrameBox());
-        ESObject* result = ESObject::create();
-        result->set(ESString::create("x"), ESValue(rect.x().toFloat()));
-        result->set(ESString::create("y"), ESValue(rect.y().toFloat()));
-        result->set(ESString::create("width"), ESValue(rect.width().toFloat()));
-        result->set(ESString::create("height"),
-                    ESValue(rect.height().toFloat()));
-        return ESValue(result);
+        ObjectRef* result = ObjectRef::create(state);
+        result->set(state, ValueRef::create(StringRef::fromASCII("x")),
+                    ValueRef::create(rect.x().toFloat()));
+        result->set(state, ValueRef::create(StringRef::fromASCII("y")),
+                    ValueRef::create(rect.y().toFloat()));
+        result->set(state, ValueRef::create(StringRef::fromASCII("width")),
+                    ValueRef::create(rect.width().toFloat()));
+        result->set(state, ValueRef::create(StringRef::fromASCII("height")),
+                    ValueRef::create(rect.height().toFloat()));
+        return ValueRef::create(result);
     } else {
         // TODO
     }
 
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue simulateClickFunction(ESVMInstance* instance)
+static ValueRef* simulateClickFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
 
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
-    double value0 = arg0.toNumber();
-    double value1 = arg1.toNumber();
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    double value0 = arg0->toNumber(state);
+    double value1 = arg1->toNumber(state);
 
     window->simulateClick(value0, value1);
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue simulateVisibilityChangeFunction(ESVMInstance* instance)
+static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
+                                                  ValueRef* thisValue,
+                                                  size_t argc, ValueRef** argv,
+                                                  bool isNewExpression)
 {
     GENERATE_WINDOW();
 
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    bool value0 = arg0.toBoolean();
+    ValueRef* arg0 = argv[0];
+    bool value0 = arg0->toBoolean(state);
 
     window->simulateVisibilitychange(value0);
 
-    return ESValue();
+    return scriptUndefined();
 }
 
-static ESValue testAssertFunction(ESVMInstance* instance)
+static ValueRef* testAssertFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
-    if (instance->currentExecutionContext()->readArgument(0).isESString()) {
-        std::jmp_buf tryPosition;
-        if (setjmp(ESVMInstance::currentInstance()->registerTryPos(
-                &tryPosition)) == 0) {
-            ESValue result =
-                instance->evaluate(instance->currentExecutionContext()
-                                       ->readArgument(0)
-                                       .asESString());
-            ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-            ESVMInstance::currentInstance()->unregisterCheckedObjectAll();
-            if (result.toBoolean()) {
-            } else {
-                ESStringBuilder builder;
-                builder.appendString("[FAIL]assertion fail : ");
-                builder.appendString(instance->currentExecutionContext()
-                                         ->readArgument(0)
-                                         .asESString());
-                ESString* s = builder.finalize();
-                puts(s->utf8Data());
-                STARFISH_LOG_ERROR("%s\n", s->utf8Data());
-                exit(-1);
-            }
-        } else {
-            ESStringBuilder builder;
-            builder.appendString("[FAIL]got exception while eval : ");
-            builder.appendString(instance->currentExecutionContext()
-                                     ->readArgument(0)
-                                     .asESString());
-            ESString* s = builder.finalize();
-            puts(s->utf8Data());
-            STARFISH_LOG_ERROR("%s\n", s->utf8Data());
-            exit(-1);
+    GENERATE_WINDOW();
+
+    if (argv[0]->isString()) {
+        bool su = false;
+        String* scriptString = toBrowserString(state, argv[0]);
+        ScriptValue result = evaluateString(
+            window->scriptBindingInstance(), scriptString,
+            String::createASCIIString("testAssertFunction"), &su);
+        if (su && result->toBoolean(state)) {
+            return scriptUndefined();
         }
+        std::string errString = "[FAIL]assertion fail";
+        STARFISH_LOG_ERROR("%s\n", errString.data());
+        exit(-1);
     } else {
-        if (instance->currentExecutionContext()->readArgument(0).toBoolean()) {
+        if (argv[0]->toBoolean(state)) {
         } else {
-            ESStringBuilder builder;
-            builder.appendString("[FAIL]testAssert fail");
-            ESString* s = builder.finalize();
-            puts(s->utf8Data());
-            STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+            std::string errString = "[FAIL]assertion fail";
+            STARFISH_LOG_ERROR("%s\n", errString.data());
             exit(-1);
         }
     }
-    return ESValue(ESValue::ESUndefined);
+    return scriptUndefined();
 }
 
-static ESValue testEndFunction(ESVMInstance* instance)
+static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
+                                 size_t argc, ValueRef** argv,
+                                 bool isNewExpression)
 {
     puts("[PASS]");
     STARFISH_LOG_ERROR("%s\n", "[PASS]");
@@ -397,29 +395,27 @@ static ESValue testEndFunction(ESVMInstance* instance)
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     exit(0);
-    return ESValue(ESValue::ESUndefined);
+    return scriptUndefined();
 }
 #endif
 
-static ESValue testImgDiffFunction(ESVMInstance* instance)
+static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
 {
+    GENERATE_WINDOW();
+
     std::string cmd = "./tool/imgdiff/imgdiff ";
 
-    Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+    Window* wnd = window;
     std::string path = wnd->document()->documentURI()->baseURI()->utf8Data();
     path = path.substr(strlen("file://"));
 
     cmd += path;
-    cmd += instance->currentExecutionContext()
-               ->readArgument(0)
-               .toString()
-               ->utf8Data();
+    cmd += argv[0]->toString(state)->toStdUTF8String().data();
     cmd += " ";
     cmd += path;
-    cmd += instance->currentExecutionContext()
-               ->readArgument(1)
-               .toString()
-               ->utf8Data();
+    cmd += argv[1]->toString(state)->toStdUTF8String().data();
 
     STARFISH_LOG_INFO("%s\n", cmd.c_str());
     FILE* fp = popen(cmd.c_str(), "r");
@@ -439,22 +435,13 @@ static ESValue testImgDiffFunction(ESVMInstance* instance)
     if (output.find("failed") != std::string::npos) {
         cmd = "test/tool/image_diff --diff ";
         cmd += path;
-        cmd += instance->currentExecutionContext()
-                   ->readArgument(0)
-                   .toString()
-                   ->utf8Data();
+        cmd += argv[0]->toString(state)->toStdUTF8String().data();
         cmd += " ";
         cmd += path;
-        cmd += instance->currentExecutionContext()
-                   ->readArgument(1)
-                   .toString()
-                   ->utf8Data();
+        cmd += argv[1]->toString(state)->toStdUTF8String().data();
         cmd += " ";
         cmd += path;
-        cmd += std::string(instance->currentExecutionContext()
-                               ->readArgument(0)
-                               .toString()
-                               ->utf8Data()) +
+        cmd += std::string(argv[0]->toString(state)->toStdUTF8String().data()) +
                "_diff.png";
         puts(cmd.c_str());
 
@@ -470,144 +457,86 @@ static ESValue testImgDiffFunction(ESVMInstance* instance)
             output += ch;
         }
 
-        ESStringBuilder builder;
-        builder.appendString("[FAIL]testImgDiff fail");
-        ESString* s = builder.finalize();
-        puts(s->utf8Data());
-        STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+        STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
         exit(-1);
     }
 
     pclose(fp);
-    return ESValue(ESValue::ESUndefined);
+    return scriptUndefined();
 }
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
+                                           ValueRef* key)
 {
-    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
-    Window* self = (Window*)obj->extraPointerData();
+    Window* self = fetchWindow(state->context());
 
-    if (self->document()
-            ->elementExecutionStackForAttributeStringEventFunctionObject()
-            .size()) {
-        ScriptValue v =
-            self->document()
-                ->elementExecutionStackForAttributeStringEventFunctionObject()
-                .back()
-                ->scriptValue();
-        bool t = v.asESPointer()->asESObject()->hasOwnProperty(key);
-        if (t) {
-            return v.asESPointer()->asESObject()->get(key);
+    auto callee = state->resolveCallee();
+    if (callee) {
+        void* data = callee->asObject()->extraData();
+        if (data) {
+            ScriptWrappable* w = (ScriptWrappable*)data;
+            if (w->isAttributeEventFunction()) {
+                auto elementDOMObject =
+                    ((AttributeEventFunction*)w)->element()->scriptValue();
+                if (elementDOMObject->isObject()) {
+                    bool exist = elementDOMObject->asObject()->hasOwnProperty(
+                        state, key);
+                    if (exist) {
+                        return elementDOMObject->asObject()->getOwnProperty(
+                            state, key);
+                    }
+                }
+            }
         }
     }
 
-    String* name = toBrowserString(key);
+    String* name = toBrowserString(state, key);
     HTMLCollection* coll = self->namedAccess(name);
     if (coll) {
         if (coll->length()) {
             if (coll->length() > 1) {
                 return coll->scriptValue();
             } else {
-                return coll->item(0)->scriptObject();
+                return coll->item(0)->scriptValue();
             }
         }
     }
-    return ESValue(ESValue::ESDeletedValue);
-}
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
-{
-    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
-    return false;
-}
-
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
-{
-    STARFISH_ASSERT(obj == ESVMInstance::currentInstance()->globalObject());
-    size_t len = 0;
-    ESValueVector v(len);
-    return v;
+    return ValueRef::createEmpty();
 }
 
 void Window::postInit(ScriptBindingInstance* instance)
 {
+    ContextRef* context = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+
+    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
+
 #ifdef STARFISH_ENABLE_TEST
-    scriptObject()->defineDataProperty(
-        ESString::create("debugPause"), true, true, true,
-        ESFunctionObject::create(NULL, debugPauseFunction,
-                                 ESString::create("debugPause"), 0, false));
+#define DEFINE_TEST_FUNCTION(name, length)                              \
+    scriptObject()->defineDataProperty(                                 \
+        state, ValueRef::create(StringRef::fromASCII(#name "")),        \
+        ValueRef::create(FunctionObjectRef::create(                     \
+            state, FunctionObjectRef::NativeFunctionInfo(               \
+                       AtomicStringRef::create(context, #name ""),      \
+                       name##Function, length, nullptr, true, false))), \
+        true, true, true);
 
-    scriptObject()->defineDataProperty(
-        ESString::create("debugResume"), true, true, true,
-        ESFunctionObject::create(NULL, debugResumeFunction,
-                                 ESString::create("debugResume"), 0, false));
+    DEFINE_TEST_FUNCTION(debugPause, 0);
+    DEFINE_TEST_FUNCTION(debugResume, 0);
+    DEFINE_TEST_FUNCTION(networkEnable, 0);
+    DEFINE_TEST_FUNCTION(networkDisable, 0);
+    DEFINE_TEST_FUNCTION(isPixelTest, 0);
+    DEFINE_TEST_FUNCTION(screenShot, 2);
+    DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
+    DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
+    DEFINE_TEST_FUNCTION(getXYWH, 1);
+    DEFINE_TEST_FUNCTION(simulateClick, 2);
+    DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
+    DEFINE_TEST_FUNCTION(testAssert, 1);
+    DEFINE_TEST_FUNCTION(testEnd, 0);
+    DEFINE_TEST_FUNCTION(testImgDiff, 2);
 
-    scriptObject()->defineDataProperty(
-        ESString::create("networkEnable"), true, true, true,
-        ESFunctionObject::create(NULL, networkEnableFunction,
-                                 ESString::create("networkEnable"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("networkDisable"), true, true, true,
-        ESFunctionObject::create(NULL, networkDisableFunction,
-                                 ESString::create("networkDisable"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("isPixelTest"), true, true, true,
-        ESFunctionObject::create(NULL, isPixelTestFunction,
-                                 ESString::create("isPixelTest"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("screenShot"), true, true, true,
-        ESFunctionObject::create(NULL, screenShotFunction,
-                                 ESString::create("screenShot"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("screenShotRelativePath"), true, true, true,
-        ESFunctionObject::create(NULL, screenShotRelativePathFunction,
-                                 ESString::create("screenShotRelativePath"), 0,
-                                 false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("forceDisableOnloadCapture"), true, true, true,
-        ESFunctionObject::create(NULL, forceDisableOnloadCaptureFunction,
-                                 ESString::create("forceDisableOnloadCapture"),
-                                 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("getXYWH"), true, true, true,
-        ESFunctionObject::create(NULL, getXYWHFunction,
-                                 ESString::create("getXYWH"), 2, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("simulateClick"), true, true, true,
-        ESFunctionObject::create(NULL, simulateClickFunction,
-                                 ESString::create("simulateClick"), 2, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("simulateVisibilitychange"), true, true, true,
-        ESFunctionObject::create(NULL, simulateVisibilityChangeFunction,
-                                 ESString::create("simulateVisibilitychange"),
-                                 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("testAssert"), true, true, true,
-        ESFunctionObject::create(NULL, testAssertFunction,
-                                 ESString::create("testAssert"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("testEnd"), true, true, true,
-        ESFunctionObject::create(NULL, testEndFunction,
-                                 ESString::create("testEnd"), 0, false));
-
-    scriptObject()->defineDataProperty(
-        ESString::create("testImgDiff"), true, true, true,
-        ESFunctionObject::create(NULL, testImgDiffFunction,
-                                 ESString::create("testImgDiff"), 0, false));
 #endif
-
-    scriptObject()->setPropertyInterceptor(
-        readCallbackFunction, writeCallbackFunction, enumerateCallbackFunction);
 }
 }

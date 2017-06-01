@@ -167,7 +167,7 @@ public:
         m_clients.clear();
     }
 
-    URL* url()
+    ResourceURL* url()
     {
         return m_url;
     }
@@ -203,7 +203,7 @@ protected:
     bool m_didSend;
     bool m_gotError;
     bool m_containsBase64Content;
-    URL* m_url;
+    ResourceURL* m_url;
     ReadyState m_readyState;
     ProgressState m_progressState;
     MethodType m_method;

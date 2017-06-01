@@ -91,6 +91,10 @@ public:
 
     void setItems(GCVector<Element*>& elements);
     void getherDescendant(GCVector<Node*>* collection, Node* root) const;
+    Node* root()
+    {
+        return m_root;
+    }
 
 private:
     void fillCacheIfNeed() const;

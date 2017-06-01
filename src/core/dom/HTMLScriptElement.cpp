@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLScriptElement.h"
@@ -82,7 +83,8 @@ public:
                 ->toLower()
                 ->equals("application/json")) {
             String* text = m_resource->asTextResource()->text();
-            m_element->window()->scriptBindingInstance()->evaluate(text);
+            evaluateString(m_element->window()->scriptBindingInstance(), text,
+                           ResourceClient::resource()->url()->urlString());
         }
         didScriptLoaded();
     }
@@ -123,7 +125,9 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             }
             String* script = text();
             m_isAlreadyStarted = true;
-            window()->scriptBindingInstance()->evaluate(script);
+            evaluateString(
+                window()->scriptBindingInstance(), script,
+                String::createASCIIString("HTMLScriptElement innerText"));
             m_didScriptExecuted = true;
             return false;
         } else {
@@ -138,7 +142,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
                 getAttributeOrEmpty(starFish()->staticStrings()->m_charset)
                     ->trim();
             TextResource* res = document()->resourceLoader().fetchText(
-                URL::createURL(document()->documentURI()->baseURI(), url),
+                new ResourceURL(url, document()->documentURI()->baseURI()),
                 charset);
             res->addResourceClient(
                 new ScriptDownloadClient(this, res, forceSync, inParser));
@@ -196,7 +200,8 @@ String* HTMLScriptElement::src()
 {
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_src);
 
-    return URL::getURLString(document()->documentURI()->baseURI(), url);
+    return ResourceURL::mergeDocumentURIWithURIString(
+        document()->documentURI()->baseURI(), url);
 }
 
 void HTMLScriptElement::setSrc(String* src)

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"

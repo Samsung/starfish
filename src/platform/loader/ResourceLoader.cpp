@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -48,19 +49,20 @@ ResourceLoader::ResourceLoader(Document* document)
 {
 }
 
-Resource* ResourceLoader::fetch(URL* url)
+Resource* ResourceLoader::fetch(ResourceURL* url)
 {
     Resource* res = new Resource(url, this);
     return res;
 }
 
-TextResource* ResourceLoader::fetchText(URL* url, String* preferredEncoding)
+TextResource* ResourceLoader::fetchText(ResourceURL* url,
+                                        String* preferredEncoding)
 {
     TextResource* res = new TextResource(url, this, preferredEncoding);
     return res;
 }
 
-ImageResource* ResourceLoader::fetchImage(URL* url)
+ImageResource* ResourceLoader::fetchImage(ResourceURL* url)
 {
     ImageResource* res = new ImageResource(url, this);
     return res;
@@ -204,8 +206,8 @@ static void traverseChildFrames(
     Frame* c = parent;
 
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
-        String* u = URL::getURLString(c->node()->document()->urlString(),
-                                      c->node()->asHTMLImageElement()->src());
+        String* u = ResourceURL::mergeDocumentURIWithURIString(
+            c->node()->document(), c->node()->asHTMLImageElement()->src());
         currentUsingResourcePaths.insert(u->utf8Data());
     }
 
@@ -386,7 +388,8 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                 Window* wnd = (Window*)data;
                 String* eventType =
                     wnd->starFish()->staticStrings()->m_load.localName();
-                Event* e = new Event(eventType, EventInit(false, false));
+                Event* e = new Event(wnd->document(), eventType,
+                                     EventInit(false, false));
                 wnd->EventTarget::dispatchEvent(e);
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;

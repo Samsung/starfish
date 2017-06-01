@@ -283,6 +283,7 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
 }
 
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
+    : String(false)
 {
     const char* end = src + len;
     while (end != src) {
@@ -420,10 +421,14 @@ NullableUTF8String String::toNullableUTF8String()
 
 const char* String::utf8Data()
 {
-    if (isASCIIString()) {
-        return asASCIIString()->data();
+    if (length()) {
+        if (isASCIIString()) {
+            return asASCIIString()->data();
+        } else {
+            return utf8DataSlowCase();
+        }
     } else {
-        return utf8DataSlowCase();
+        return "";
     }
 }
 

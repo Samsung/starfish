@@ -31,9 +31,10 @@ public:
 
     NodeList(Node* root, bool canCache = true);
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isNodeList() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     uint32_t length() const;
     Node* item(uint32_t index);

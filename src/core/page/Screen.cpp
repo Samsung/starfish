@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/page/Screen.h"
 #include "core/modules/window/Window.h"

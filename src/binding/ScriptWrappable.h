@@ -18,55 +18,75 @@
 #define __StarFishScriptWrappable__
 
 #include "binding/ScriptBindingInstance.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
-#include <Escargot.h>
 
 namespace StarFish {
-
-using namespace escargot;
 
 class Document;
 class Element;
 
-const uint32_t kEscargotObjectCheckMagic = 0x0fff;
-const uint32_t kEventStringAttributeCheckMagic = 0x0ffe;
-
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
 
-typedef ESValue ScriptValue;
-typedef ESObject* ScriptObject;
-typedef ESFunctionObject* ScriptFunction;
+typedef Escargot::ValueRef* ScriptValue;
+typedef Escargot::ObjectRef* ScriptObject;
+typedef Escargot::StringRef* ScriptString;
+typedef Escargot::FunctionObjectRef* ScriptFunction;
+
+ScriptValue scriptNull();
+ScriptValue scriptUndefined();
+ScriptValue scriptStringToScriptValue(ScriptString s);
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-    ESObject* obj, ESString* propertyName, NativeFunctionType getter,
-    NativeFunctionType setter, bool isEnumerable = true,
+    Escargot::ExecutionStateRef* state, Escargot::ObjectRef* obj,
+    Escargot::StringRef* propertyName,
+    Escargot::ScriptNativeFunctionPointer getter,
+    Escargot::ScriptNativeFunctionPointer setter, bool isEnumerable = true,
     bool isConfigurable = true);
 
-ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance);
+StarFish* fetchStarFish(Escargot::ContextRef* context);
+Window* fetchWindow(Escargot::ContextRef* context);
+Document* fetchDocument(Escargot::ContextRef* context);
 
-Document* fetchDocument(ESVMInstance* instance);
-StarFish* fetchStarFish(ESVMInstance* instance);
+String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
+                        bool* result = nullptr);
+String* toBrowserString(Escargot::ExecutionStateRef* state,
+                        Escargot::ValueRef* v);
+String* toBrowserString(Escargot::ExecutionStateRef* state,
+                        Escargot::StringRef* v);
+ScriptString toJSString(String* v);
 
-String* toBrowserString(const ESValue& v);
-String* toBrowserString(const ESString* v);
-ESString* toJSString(String* v);
+ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
+                                       Escargot::ValueRef* thisValue,
+                                       size_t argc, Escargot::ValueRef** argv,
+                                       bool isNewExpression);
+void throwJSTypeErrorException(Escargot::ExecutionStateRef* state,
+                               String* message);
 
-ESValue defaultFunction(ESVMInstance* instance);
-ESValue errorOnConstructorFunction(ESVMInstance* instance);
-
-ESString* createScriptString(String* str);
-ScriptValue createScriptFunction(String** argNames, size_t argc,
+ScriptString createScriptString(String* str);
+ScriptValue createScriptFunction(ScriptBindingInstance* instance,
+                                 String** argNames, size_t argc,
                                  String* functionBody, bool& error);
 ScriptValue createAttributeStringEventFunction(Element* target,
                                                String* functionBody,
                                                bool& result);
-ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
+ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
+                               ScriptValue* argv, size_t argc,
                                ScriptValue thisValue);
-ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
-ScriptValue parseJSON(String* jsonData);
+ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
+                           String* fileName = String::emptyString,
+                           bool* result = nullptr);
+ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
+                              size_t len);
+ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
+
+void throwScriptTypeError(String* message);
 
 bool isCallableScriptValue(ScriptValue v);
+bool isObjectScriptValue(ScriptValue v);
+
+#ifdef STARFISH_ENABLE_TEST
+void invokeTestStartFunction(ScriptBindingInstance* instance);
+#endif
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
@@ -76,38 +96,32 @@ STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
     throw new DOMException(INSTANCE, ERR_CODE, MSG); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-#define THROW_EXCEPTION(MSG)                                \
-    ESVMInstance::currentInstance()->throwError(            \
-        ESValue(TypeError::create(ESString::create(MSG)))); \
+#define THROW_EXCEPTION(MSG)                                         \
+    state->throwException(                                           \
+        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create( \
+            state, Escargot::ErrorObjectRef::TypeError,              \
+            Escargot::StringRef::fromASCII(MSG))));                  \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-#define _CHECK_TYPEOF(v, type)                                              \
-    (v.isObject() && (v.asESPointer()->asESObject()->extraData() ==         \
-                      kEscargotObjectCheckMagic) &&                         \
-     (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData()) \
-          ->is##type()))
+#define _CHECK_TYPEOF(v, type)                        \
+    (v->isObject() && (v->asObject()->extraData()) && \
+     (((ScriptWrappable*)v->asObject()->extraData())->is##type()))
 
 #define CHECK_TYPEOF(v, type)            \
     if (!_CHECK_TYPEOF(v, type)) {       \
         THROW_EXCEPTION(ILLEGAL_INVOKE); \
     }
 
-#define GENERATE_THIS_AND_CHECK_TYPE(type)                         \
-    ESValue thisValue =                                            \
-        instance->currentExecutionContext()->resolveThisBinding(); \
-    CHECK_TYPEOF(thisValue, type);                                 \
-    type* originalObj =                                            \
-        (type*)(thisValue.asESPointer()->asESObject()->extraPointerData());
+#define GENERATE_THIS_AND_CHECK_TYPE(type) \
+    CHECK_TYPEOF(thisValue, type);         \
+    type* originalObj = (type*)(thisValue->asObject()->extraData());
 
-#define GENERATE_WINDOW()                                          \
-    ESValue thisValue =                                            \
-        instance->currentExecutionContext()->resolveThisBinding(); \
-    if (!(thisValue.isUndefinedOrNull() ||                         \
-          thisValue.asESPointer()->asESObject() ==                 \
-              instance->globalObject())) {                         \
-        THROW_EXCEPTION(ILLEGAL_INVOKE);                           \
-    }                                                              \
-    Window* window = (Window*)instance->globalObject()->extraPointerData();
+#define GENERATE_WINDOW()                                                    \
+    if (!(thisValue->isUndefinedOrNull() ||                                  \
+          thisValue->toObject(state) == state->context()->globalObject())) { \
+        THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
+    }                                                                        \
+    Window* window = (Window*)state->context()->globalObject()->extraData();
 
 class ScriptWrappable : public gc {
 public:
@@ -139,14 +153,14 @@ public:
     ScriptObject scriptObject()
     {
         if (UNLIKELY(isGivenUpScriptValue())) {
-            return scriptObjectSlowCase();
+            return generateScriptObject();
         }
         return m_object;
     }
 
     void giveUpScriptValue()
     {
-        m_object = (ESObject*)1;
+        m_object = (Escargot::ObjectRef*)1;
     }
 
     bool isGivenUpScriptValue()
@@ -154,27 +168,57 @@ public:
         return ((size_t)m_object & (size_t)1);
     }
 
-    ScriptObject scriptObjectSlowCase();
-    ScriptValue scriptValue()
-    {
-        return scriptObject();
-    }
+    ScriptObject generateScriptObject();
+    ScriptValue scriptValue();
 
-    virtual void init(ScriptBindingInstance* instance) = 0;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) = 0;
     virtual void postInit(ScriptBindingInstance* instance)
     {
     }
+    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
 
-    bool hasProperty(String* name);
+    virtual bool isAttributeEventFunction()
+    {
+        return false;
+    }
 
-private:
-    ESObject* m_object;
+protected:
+    Escargot::ObjectRef* m_object;
 };
 
-#ifdef USE_ES6_FEATURE
+class AttributeEventFunction : public ScriptWrappable {
+public:
+    AttributeEventFunction(Element* element)
+        : ScriptWrappable(element)
+    {
+        m_element = element;
+    }
+
+    virtual void init(ScriptBindingInstance* instance, void* domObjectPointer)
+    {
+    }
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return nullptr;
+    }
+
+    virtual bool isAttributeEventFunction()
+    {
+        return true;
+    }
+
+    Element* element()
+    {
+        return m_element;
+    }
+
+    Element* m_element;
+};
+
 class Promise : public gc {
 public:
-    Promise();
+    Promise(ScriptBindingInstance* instance);
     void fulfill(ScriptValue v);
     void reject(ScriptValue v);
     ScriptValue scriptValue()
@@ -184,8 +228,8 @@ public:
 
 protected:
     ScriptValue m_scriptValue;
+    ScriptBindingInstance* m_instance;
 };
-#endif
 }
 
 #endif

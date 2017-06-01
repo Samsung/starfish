@@ -65,7 +65,7 @@
             'include_dirs': [
                 '<(starfish_root)/src',
                 '<(starfish_root)/inc',
-                '<(escargot_root)/src',
+                '<(escargot_root)/include',
                 'third_party/clipper/cpp',
                 'third_party/MP4Parse/source/include',
                 'third_party/skia_matrix',
@@ -119,7 +119,8 @@
                'defines': [
                    'ESCARGOT_64=1',
                    'ESCARGOT',
-                   'USE_ES6_FEATURE',
+                   'ESCARGOT_ENABLE_TYPEDARRAY=1',
+                   'ESCARGOT_ENABLE_PROMISE=1',
                    '<@(defines_extra)',
                ],
                'include_dirs': [
@@ -144,7 +145,7 @@
                        ],
                        'cflags' : [
                            '-O2',
-                           '-funswitch-loops',
+                           '-g3',
                        ],
                    },
                },

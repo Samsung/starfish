@@ -25,7 +25,8 @@ class HTMLUnknownElement : public HTMLElement {
 public:
     HTMLUnknownElement(Document* document, AtomicString localName);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLUnknownElement() const override;
 
     /* 4.4 Interface Node */

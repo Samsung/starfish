@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
@@ -191,7 +192,7 @@ protected:
     String* m_htmlSource;
 };
 
-void HTMLDocumentBuilder::build(URL* url)
+void HTMLDocumentBuilder::build(ResourceURL* url)
 {
     m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));

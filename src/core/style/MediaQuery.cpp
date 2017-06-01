@@ -41,6 +41,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "StarFishConfig.h"
 #include "MediaQuery.h"
 #include "CSSParser.h"
 #include "core/util/String.h"

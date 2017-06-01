@@ -17,7 +17,6 @@ test/reftest/vendor/webkit/fast/dom/constructor-proto.html
 test/reftest/vendor/webkit/fast/dom/createElement-with-column.html
 test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-properties-case-sensitive.html
 test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-style-item.html
-test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/cssstyledeclaration-properties-descriptor.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-invalid-names.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-valid-names.html
 test/reftest/vendor/webkit/fast/dom/document-head.html

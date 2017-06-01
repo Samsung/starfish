@@ -61,7 +61,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isElement() const override;
 
     /* 4.4 Interface Node */

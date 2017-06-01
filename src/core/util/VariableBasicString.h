@@ -68,38 +68,59 @@ public:
         return *this;
     }
 
-    virtual ~VariableBasicString()
+    ~VariableBasicString()
     {
         deallocate();
     }
 
-    virtual void resize(size_t newSize) override
+    void resize(size_t newSize)
     {
         BasicString<T, Allocator>::resize(newSize);
         m_capacity = newSize + 1;
     }
 
-    virtual void reserve(size_t newSize) override
+    void reserve(size_t newSize)
     {
         BasicString<T, Allocator>::reserve(newSize);
         m_capacity = newSize + 1;
     }
 
-    virtual void pushBack(T val) override;
-    virtual void append(const T* src, size_t len) override;
+    void pushBack(T val);
+    void append(const T* src, size_t len);
     void append(VariableBasicString<T, Allocator> other)
     {
         BasicString<T, Allocator>::append(other);
     }
-    virtual void insert(size_t pos, const T val) override;
-    virtual void erase(size_t start, size_t end) override;
+    void insert(size_t pos, const T val);
+    void erase(size_t start, size_t end);
     VariableBasicString<T, Allocator>& replace(size_t start, size_t len,
                                                BasicString<T, Allocator>& dst);
     VariableBasicString<T, Allocator> substr(size_t pos, size_t len) const;
 
-    virtual size_t capacity() const override
+    size_t capacity() const
     {
         return m_capacity;
+    }
+
+    const VariableBasicString<T, Allocator> operator+(
+        const VariableBasicString<T, Allocator>& other)
+    {
+        VariableBasicString ret(*this);
+        ret.append(other);
+        return ret;
+    }
+
+    const VariableBasicString<T, Allocator>& operator+=(
+        const VariableBasicString<T, Allocator>& other)
+    {
+        append(other);
+        return *this;
+    }
+
+    const VariableBasicString<T, Allocator>& operator+=(T other)
+    {
+        pushBack(other);
+        return *this;
     }
 
 protected:
@@ -113,13 +134,13 @@ protected:
         return capacity;
     }
 
-    virtual void makeEmpty() override
+    void makeEmpty()
     {
         BasicString<T, Allocator>::makeEmpty();
         m_capacity = 1;
     }
 
-    virtual void deallocate() override
+    void deallocate()
     {
         BasicString<T, Allocator>::deallocate();
         m_capacity = 0;

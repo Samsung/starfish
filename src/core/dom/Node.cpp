@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
@@ -588,19 +589,19 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
     // 4.2.1 pre-insertion validity
     if (!(isDocument() || isElement() || isDocumentFragment())) {
         throw new DOMException(
-            DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     if (node == this) {
         throw new DOMException(
-            DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Node is a host-including inclusive ancestor of parent.");
     } else {
         for (Node* p = this; p != nullptr; p = p->parentNode()) {
             if (p == node) {
                 throw new DOMException(
-                    DOMException::HIERARCHY_REQUEST_ERR,
+                    document(), DOMException::HIERARCHY_REQUEST_ERR,
                     "Node is a host-including inclusive ancestor of parent.");
             }
         }
@@ -608,19 +609,19 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
 
     if (child != nullptr && child->parentNode() != this) {
         throw new DOMException(
-            DOMException::Code::NOT_FOUND_ERR,
+            document(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
     }
     if (!(node->isDocumentType() || node->isElement() || node->isText() ||
           node->isComment() || node->isDocumentFragment())) {
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "
                                "Comment.");
     }
     if ((node->isText() && isDocument()) ||
         (node->isDocumentType() && !isDocument())) {
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Either node is a Text node and parent is a "
                                "document, or node is a doctype and parent is "
                                "not a document.");
@@ -631,7 +632,8 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                 (child != nullptr && child->isElement()) ||
                 (child != nullptr && child->nextSibling() != nullptr &&
                  child->nextSibling()->isDocumentType())) {
-                throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has an element child, child is "
                                        "a doctype, or child is not null and a "
                                        "doctype is following child.");
@@ -641,7 +643,8 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                 (child != nullptr && child->previousSibling() != nullptr &&
                  child->previousSibling()->isElement()) ||
                 (child == nullptr && firstElementChild() != nullptr)) {
-                throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has a doctype child, child is "
                                        "non-null and an element is preceding "
                                        "child, or child is null and parent has "
@@ -751,7 +754,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
 {
     // Spec does not say what to do when node is null
     if (child == nullptr) {
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is null.");
     }
 
@@ -796,19 +799,19 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
     // 4.2.1 replace validity
     if (!(isDocument() || isElement())) {
         throw new DOMException(
-            DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     if (child == this) {
         throw new DOMException(
-            DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Node is a host-including inclusive ancestor of parent.");
     } else {
         for (Node* p = this; p != nullptr; p = p->parentNode()) {
             if (p == child) {
                 throw new DOMException(
-                    DOMException::HIERARCHY_REQUEST_ERR,
+                    document(), DOMException::HIERARCHY_REQUEST_ERR,
                     "Node is a host-including inclusive ancestor of parent.");
             }
         }
@@ -816,19 +819,19 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
 
     if (childRef != nullptr && childRef->parentNode() != this) {
         throw new DOMException(
-            DOMException::Code::NOT_FOUND_ERR,
+            document(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
     }
     if (!(child->isDocumentType() || child->isElement() || child->isText() ||
           child->isComment())) {
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "
                                "Comment.");
     }
     if ((child->isText() && isDocument()) ||
         (child->isDocumentType() && !isDocument())) {
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Either node is a Text node and parent is a "
                                "document, or node is a doctype and parent is "
                                "not a document.");
@@ -839,7 +842,8 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
                 (childRef != nullptr && childRef->isElement()) ||
                 (childRef != nullptr && childRef->nextSibling() != nullptr &&
                  childRef->nextSibling()->isDocumentType())) {
-                throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has an element child that is "
                                        "not child or a doctype is following "
                                        "child.");
@@ -850,7 +854,8 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
                 (childRef != nullptr &&
                  childRef->previousSibling() != nullptr &&
                  childRef->previousSibling()->isElement())) {
-                throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR,
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has a doctype child that is not "
                                        "child, or an element is preceding "
                                        "child.");
@@ -894,7 +899,7 @@ Node* Node::removeChild(Node* child)
     STARFISH_ASSERT(child);
 
     if (child->parentNode() != this) {
-        throw new DOMException(DOMException::NOT_FOUND_ERR,
+        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
                                "Child's parent is not parent.");
     }
 
@@ -999,14 +1004,14 @@ void Node::parserRemoveChild(Node* child)
 
 void Node::parserInsertBefore(Node* child, Node* childRef)
 {
-    ASSERT(child);
+    STARFISH_ASSERT(child);
 
     if (childRef == nullptr) {
         appendChild(child);
         return;
     }
 
-    ASSERT(childRef->parentNode() == this);
+    STARFISH_ASSERT(childRef->parentNode() == this);
     if (childRef->previousSibling() == child || childRef == child) {
         // nothing to do
         return;
@@ -1104,7 +1109,7 @@ void Node::parseSelector(
     GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors)
 {
     if (selectors->equals(String::emptyString)) {
-        throw new DOMException(DOMException::SYNTAX_ERR,
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
                                "Failed to execute 'querySelector' on "
                                "'Document': The provided selector is empty.");
     }
@@ -1118,7 +1123,7 @@ void Node::parseSelector(
                           &selectorListContainer, true);
 
     if (selectorListContainer.size() < 1) {
-        throw new DOMException(DOMException::SYNTAX_ERR,
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
                                "Failed to execute 'querySelector' on "
                                "'Document': The provided selector is invalid.");
     }
@@ -1338,7 +1343,11 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
 
 CSSStyleDeclaration* Node::getComputedStyle()
 {
-    CSSStyleDeclaration* d = new CSSStyleDeclaration();
+    Element* e = nullptr;
+    if (isElement()) {
+        e = asElement();
+    }
+    CSSStyleDeclaration* d = new CSSStyleDeclaration(e);
 
     // TODO: change below code to resolve DOM style
     window()->layoutIfNeeds();

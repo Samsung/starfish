@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLImageElement.h"
@@ -170,7 +171,7 @@ void HTMLImageElement::loadImage(String* src)
 {
     unloadImage();
     m_imageResource = document()->resourceLoader().fetchImage(
-        URL::createURL(document()->documentURI()->baseURI(), src));
+        new ResourceURL(src, document()->documentURI()->baseURI()));
     m_imageResource->addResourceClient(
         new ImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(

@@ -27,12 +27,13 @@ class StorageManager;
 
 class StorageImpl : public Storage {
 public:
-    StorageImpl(StarFish* starfish, StorageType storageType,
+    StorageImpl(Window* window, StorageType storageType,
                 SecurityOriginData* securityOriginData,
                 StorageManager* storageManager);
     virtual ~StorageImpl();
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isStorageImpl() const override;
 
     unsigned long length();
@@ -43,7 +44,7 @@ public:
     void clear();
 
 private:
-    StorageImpl(StarFish* starfish);
+    StorageImpl(Window* window);
 
     StorageType m_storageType;
     SecurityOriginData* m_securityOriginData;

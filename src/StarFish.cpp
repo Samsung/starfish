@@ -20,6 +20,7 @@
 #include <iostream>
 #include <fstream>
 #endif
+
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
@@ -28,7 +29,7 @@
 #include "core/modules/window/Window.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/canvas/image/ImageData.h"
-#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
 
@@ -259,6 +260,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
     m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
+
+    m_scriptEngineInstance = new ScriptEngineInstance(this);
 }
 
 StarFish::~StarFish()
@@ -288,7 +291,6 @@ void StarFish::enter()
         g_internalCanvas =
             evas_object_evas_get((Evas_Object*)m_window->unwrap());
 #endif
-        m_window->scriptBindingInstance()->enter();
     }
     m_enterCount++;
 }
@@ -299,7 +301,6 @@ void StarFish::exit()
 #ifdef PORT_GRAPHIC_BACKEND_EFL
         g_internalCanvas = nullptr;
 #endif
-        m_window->scriptBindingInstance()->exit();
     }
     m_enterCount--;
 }
@@ -354,10 +355,9 @@ void StarFish::loadHTMLDocument(String* filePath)
 #endif
 
     m_window = Window::create(this, nativeHandle(), width, height);
-    URL* url =
-        URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
+    ResourceURL* url =
+        new ResourceURL(String::emptyString, String::fromUTF8(path.c_str()));
 
-    m_window->setHistory(url);
     m_window->navigate(url);
 }
 
@@ -384,7 +384,9 @@ void StarFish::close()
 
 String* StarFish::evaluate(String* s)
 {
-    return m_window->scriptBindingInstance()->evaluate(s);
+    return toBrowserString(
+        m_window->scriptBindingInstance(),
+        evaluateString(m_window->scriptBindingInstance(), s));
 }
 
 void StarFish::addPointerInRootSet(void* ptr)

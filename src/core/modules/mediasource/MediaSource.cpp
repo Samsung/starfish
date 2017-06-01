@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -57,7 +58,8 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // If type is an empty string then throw a TypeError exception and abort
     // these steps.
     if (type->equals(String::emptyString)) {
-        throw new DOMException(DOMException::TYPE_ERR, "Unsupport type");
+        throw new DOMException(document(), DOMException::TYPE_ERR,
+                               "Unsupport type");
     }
 
     // If type contains a MIME type that is not supported or contains a MIME
@@ -65,7 +67,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // SourceBuffer objects in sourceBuffers, then throw a NotSupportedError
     // exception and abort these steps.
     if (!isTypeSupported(type)) {
-        throw new DOMException(DOMException::NOT_SUPPORTED_ERR,
+        throw new DOMException(document(), DOMException::NOT_SUPPORTED_ERR,
                                "Unsupport type");
     }
 
@@ -74,7 +76,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // SourceBuffer configuration, then throw a QuotaExceededError exception and
     // abort these steps.
     if (m_isActiveBufferComputed) {
-        throw new DOMException(DOMException::QUOTA_EXCEEDED_ERR,
+        throw new DOMException(document(), DOMException::QUOTA_EXCEEDED_ERR,
                                "This MediaSource has reached the limit of "
                                "SourceBuffer objects it can handle. No "
                                "additional SourceBuffer objects may be added.");
@@ -83,7 +85,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // If the readyState attribute is not in the "open" state then throw an
     // InvalidStateError exception and abort these steps.
     if (m_readyState != Open) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "When execute appendSourceBuffer, readyState of "
                                "MediaSource must be 'open'");
     }
@@ -119,8 +121,8 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
         buffer->setMode(SourceBuffer::AppendMode::Segments);
     }
 
-    Event* e =
-        new Event(String::fromUTF8("addsourcebuffer"), EventInit(false, false));
+    Event* e = new Event(document(), String::fromUTF8("addsourcebuffer"),
+                         EventInit(false, false));
     m_sourceBuffers->dispatchEvent(m_sourceBuffers, e);
     return buffer;
 }
@@ -140,7 +142,7 @@ void MediaSource::endOfStream(EndOfStreamError error)
     // If the readyState attribute is not in the "open" state then throw an
     // InvalidStateError exception and abort these steps.
     if (m_readyState != Open) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "readyState must be OPEN");
     }
 
@@ -148,7 +150,7 @@ void MediaSource::endOfStream(EndOfStreamError error)
     // sourceBuffers, then throw an InvalidStateError exception and abort these
     // steps.
     if (anySourceBufferInUpdatingState()) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "When execute endOfStream, updating state of "
                                "child SourceBuffer must be false");
     }
@@ -218,14 +220,14 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     // If the value being set is negative or NaN then throw a TypeError
     // exception and abort these steps.
     if (d < 0 || std::isnan(d)) {
-        throw new DOMException(DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::TYPE_ERR,
                                "duration must be postive and not NaN.");
     }
 
     // If the readyState attribute is not "open" then throw an InvalidStateError
     // exception and abort these steps.
     if (m_readyState != ReadyState::Open) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "readyState must be OPEN");
     }
 
@@ -233,7 +235,7 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     // sourceBuffers, then throw an InvalidStateError exception and abort these
     // steps.
     if (anySourceBufferInUpdatingState()) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "when updating duration of MediaSource, every "
                                "SourceBuffer must has non-updating state");
     }
@@ -268,7 +270,7 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     STARFISH_LOG_INFO("MediaSource got new duration -> %lf %lf\n", d,
                       (lastTimeStamp / 1000.0));
     if (checkCurrentDuration && (d < (lastTimeStamp / 1000.0))) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "when updating duration of MediaSource, new "
                                "duration value should be larger than the "
                                "lagest value of current buffer stream.");
@@ -318,8 +320,8 @@ void MediaSource::setReadyState(MediaSource::ReadyState state)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    m_attachedMediaElement->addEventToOperationQueue(this,
-                                                     new Event(eventName));
+    m_attachedMediaElement->addEventToOperationQueue(
+        this, new Event(document(), eventName));
 }
 
 // https://www.w3.org/TR/media-source/

@@ -5,7 +5,8 @@
 //      Constructor(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4)
 [
   Constructor(DOMPointInit p1, DOMPointInit p2, DOMPointInit p3, DOMPointInit p4),
- Exposed=(Window,Worker)]
+  ConstructorCallWith=Document,
+  Exposed=(Window,Worker)]
 interface DOMQuad {
   [Unimplemented, NewObject] static DOMQuad fromRect(optional DOMRectInit other);
   [Unimplemented, NewObject] static DOMQuad fromQuad(optional DOMQuadInit other);

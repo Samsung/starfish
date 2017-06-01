@@ -41,10 +41,13 @@ class ResourceLoader : public gc, public DocumentHoldable {
 public:
     ResourceLoader(Document* doc);
 
-    Resource* fetch(URL* url);
-    TextResource* fetchText(URL* url,
+    // TODO these fetch methods are just copying `pointer of url`
+    // but, url is mutable not likes string
+    // we should copy url inside of method
+    Resource* fetch(ResourceURL* url);
+    TextResource* fetchText(ResourceURL* url,
                             String* preferredEncoding = String::emptyString);
-    ImageResource* fetchImage(URL* url);
+    ImageResource* fetchImage(ResourceURL* url);
 
     void markDocumentOpenState()
     {

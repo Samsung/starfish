@@ -44,7 +44,8 @@ public:
     Avplay(StarFish* starFish);
     ~Avplay();
 
-    virtual void init(ScriptBindingInstance* instance) override
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override
     {
         scriptObject()->set__proto__(
             fetchData(instance)->fnAvplay()->protoType());

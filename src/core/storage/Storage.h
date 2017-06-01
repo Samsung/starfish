@@ -18,14 +18,19 @@
 #define __StarFishStorage__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/WindowHoldable.h"
 
 namespace StarFish {
 
-class Storage : public ScriptWrappable, public StarFishHoldable {
+class Storage : public ScriptWrappable, public WindowHoldable {
 public:
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isStorage() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return WindowHoldable::scriptBindingInstance();
+    }
 
     // 4.1 Storage interface in IDL
     virtual unsigned long length() = 0;
@@ -36,9 +41,9 @@ public:
     virtual void clear() = 0;
 
 protected:
-    Storage(StarFish* starfish)
+    Storage(Window* window)
         : ScriptWrappable(this)
-        , StarFishHoldable(starfish)
+        , WindowHoldable(window)
     {
     }
 };

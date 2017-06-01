@@ -18,20 +18,25 @@
 #define __StarFishScreen__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
-class Screen : public ScriptWrappable, public StarFishHoldable {
+class Screen : public ScriptWrappable, public DocumentHoldable {
 public:
-    Screen(StarFish* starFish)
+    Screen(Document* document)
         : ScriptWrappable(this)
-        , StarFishHoldable(starFish)
+        , DocumentHoldable(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isScreen() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
     int32_t width();
     int32_t height();

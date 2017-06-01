@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/MouseEvent.h"
 
 namespace StarFish {

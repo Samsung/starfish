@@ -61,12 +61,14 @@ private:
 
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(String* eventType, const MouseEventInit& init = MouseEventInit())
-        : UIEvent(eventType, init)
+    MouseEvent(Document* document, String* eventType,
+               const MouseEventInit& init = MouseEventInit())
+        : UIEvent(document, eventType, init)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
 };
 }

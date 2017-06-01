@@ -13,23 +13,28 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#include "StarFishConfig.h"
 #include "core/dom/CharacterData.h"
+
+#include <EscargotPublic.h>
 
 namespace StarFish {
 
-using namespace escargot;
+using namespace Escargot;
 
-ESValue lengthCharacterDataGetterFunction(ESVMInstance* instance)
+ValueRef* lengthCharacterDataGetterFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
     String* data = originalObj->data();
     if (data->isASCIIString()) {
-        return ESValue(originalObj->length());
+        return ValueRef::create(originalObj->length());
     } else {
         // TODO: measure length without converting
-        ESString* data2 = toJSString(data);
-        return ESValue(data2->length());
+        StringRef* data2 = toJSString(data);
+        return ValueRef::create(data2->length());
     }
 }
 }

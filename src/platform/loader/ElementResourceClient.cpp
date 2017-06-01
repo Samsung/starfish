@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Event.h"
@@ -29,7 +30,8 @@ void ElementResourceClient::didLoadFinished()
         Element* element = (Element*)data;
         String* eventType =
             element->starFish()->staticStrings()->m_load.localName();
-        Event* e = new Event(eventType, EventInit(false, false));
+        Event* e =
+            new Event(element->document(), eventType, EventInit(false, false));
         element->EventTarget::dispatchEvent(element, e);
     };
     if (m_needsSyncEventDispatch) {
@@ -46,7 +48,8 @@ void ElementResourceClient::didLoadFailed()
         Element* element = (Element*)data;
         String* eventType =
             element->starFish()->staticStrings()->m_error.localName();
-        Event* e = new Event(eventType, EventInit(false, false));
+        Event* e =
+            new Event(element->document(), eventType, EventInit(false, false));
         element->EventTarget::dispatchEvent(element, e);
     };
     if (m_needsSyncEventDispatch) {

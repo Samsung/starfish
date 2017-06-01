@@ -17,8 +17,6 @@
 #ifndef __FileIO__
 #define __FileIO__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class Window;

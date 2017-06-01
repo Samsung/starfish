@@ -13,6 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/page/History.h"
@@ -22,9 +24,9 @@
 
 namespace StarFish {
 
-History::History(StarFish* starFish)
+History::History(Document* doc)
     : ScriptWrappable(this)
-    , StarFishHoldable(starFish)
+    , DocumentHoldable(doc)
     , m_offset(std::numeric_limits<uint32_t>::max())
 {
 }
@@ -45,12 +47,13 @@ void History::go(int delta)
         // navigate according to history
         navigate(delta);
     } else {
-        starFish()->window()->navigateAsyncWithoutSetHistory(
-            currentHistoryEntry()->url());
+        starFish()->window()->navigateAsync(currentHistoryEntry()->url());
+        // starFish()->window()->navigateAsyncWithoutSetHistory(
+        //    currentHistoryEntry()->url());
     }
 }
 
-URL* History::getURL()
+ResourceURL* History::getURL()
 {
     return m_historyEntries[m_offset]->url();
 }
@@ -73,9 +76,10 @@ bool History::navigate(int delta)
 
     m_offset += delta;
 
-    URL* url = currentHistoryEntry()->url();
+    ResourceURL* url = currentHistoryEntry()->url();
     if (!isPushState()) {
-        starFish()->window()->navigateAsyncWithoutSetHistory(url);
+        // starFish()->window()->navigateAsyncWithoutSetHistory(url);
+        starFish()->window()->navigateAsync(url);
     } else {
         starFish()->window()->document()->setDocumentURI(url);
     }
@@ -104,8 +108,8 @@ void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
     if (url.hasValue()) {
         urlValue = url.getValue();
     }
-    URL* newURL =
-        URL::createURL(starFish()->window()->document()->urlString(), urlValue);
+    ResourceURL* newURL = new ResourceURL(
+        urlValue, starFish()->window()->document()->urlString());
     setHistory(state, title, newURL, true);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
@@ -117,13 +121,13 @@ void History::replaceState(ScriptValue state, String* title,
     if (url.hasValue()) {
         urlValue = url.getValue();
     }
-    URL* newURL =
-        URL::createURL(starFish()->window()->document()->urlString(), urlValue);
+    ResourceURL* newURL = new ResourceURL(
+        urlValue, starFish()->window()->document()->urlString());
     m_historyEntries[m_offset]->replaceState(state, title, newURL);
     starFish()->window()->document()->setDocumentURI(newURL);
 }
 
-void History::setHistory(ScriptValue state, String* title, URL* url,
+void History::setHistory(ScriptValue state, String* title, ResourceURL* url,
                          bool isPushState)
 {
     if (starFish()->window()->document() &&

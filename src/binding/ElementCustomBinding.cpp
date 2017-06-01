@@ -14,38 +14,25 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue namespaceURIElementGetterFunction(ESVMInstance* instance)
+ValueRef* namespaceURIElementGetterFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Element);
     if (originalObj->name().namespaceURIAtomic() ==
         AtomicString::emptyAtomicString()) {
-        return ESValue(ESValue::ESNull);
+        return scriptNull();
     }
-    return toJSString(originalObj->name().namespaceURI());
-}
-
-ESValue classListElementSetterFunction(ESVMInstance* instance)
-{
-    /* GENERATE_THIS_AND_CHECK_TYPE(Element);
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    // Handle argument arg0
-    String* value0 = String::emptyString;
-    value0 = toBrowserString(arg0);
-    // Declare native value (empty when type is void)
-    DOMTokenList* forwards = nullptr;
-    forwards = originalObj->classList();
-    if (forwards) {
-        forwards->setValue(value0);
-    }
-    return ESValue(); */
-    STARFISH_ASSERT_NOT_REACHED();
-    return ESValue();
+    return ValueRef::create(toJSString(originalObj->name().namespaceURI()));
 }
 }

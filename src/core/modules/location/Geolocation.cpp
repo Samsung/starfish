@@ -14,24 +14,26 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/modules/location/PositionError.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
 #if !defined(STARFISH_TIZEN_MOBILE) && !defined(STARFISH_TIZEN_WEARABLE)
-Geolocation* Geolocation::create(StarFish* starFish)
+Geolocation* Geolocation::create(Document* document)
 {
-    return new Geolocation(starFish);
+    return new Geolocation(document);
 }
 #endif
 
-Geolocation::Geolocation(StarFish* starFish)
+Geolocation::Geolocation(Document* document)
     : ScriptWrappable(this)
-    , StarFishHoldable(starFish)
+    , DocumentHoldable(document)
 {
 }
 
@@ -41,13 +43,14 @@ bool Geolocation::getCurrentPositionPreprocessing(
     int32_t maximumAge)
 {
     if (timeout == 0) {
-        m_starFish->messageLoop()->addIdler(
+        m_document->starFish()->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
-                StarFish* sf = (StarFish*)data;
+                Document* sf = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(PositionError::Error::TIMEOUT), data3);
+                cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT),
+                   data3);
             },
-            m_starFish, (void*)errorCb, errorCbData);
+            m_document, (void*)errorCb, errorCbData);
         return false;
     }
     return true;
@@ -61,15 +64,20 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
     if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
-        m_starFish->messageLoop()->addIdler(
+        m_document->starFish()->messageLoop()->addIdler(
             [](size_t, void* data, void* data2, void* data3) {
-                StarFish* sf = (StarFish*)data;
+                Document* sf = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
                 cb(sf, new PositionError(
-                           PositionError::Error::POSITION_UNAVAILABLE),
+                           sf, PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
-            m_starFish, (void*)errorCb, errorCbData);
+            m_document, (void*)errorCb, errorCbData);
     }
+}
+
+ScriptBindingInstance* Geolocation::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 }

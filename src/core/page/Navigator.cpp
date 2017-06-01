@@ -13,14 +13,17 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+#include "StarFishConfig.h"
 #include "Navigator.h"
+#include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
 
 namespace StarFish {
 
-Navigator::Navigator(StarFish* starFish)
+Navigator::Navigator(Document* document)
     : ScriptWrappable(this)
-    , StarFishHoldable(starFish)
+    , DocumentHoldable(document)
     , m_geolocation(nullptr)
 {
 }
@@ -28,7 +31,7 @@ Navigator::Navigator(StarFish* starFish)
 Geolocation* Navigator::geolocation()
 {
     if (m_geolocation == nullptr) {
-        m_geolocation = Geolocation::create(m_starFish);
+        m_geolocation = Geolocation::create(document());
     }
     return m_geolocation;
 }
@@ -38,5 +41,10 @@ void Navigator::close()
     if (m_geolocation) {
         m_geolocation->close();
     }
+}
+
+ScriptBindingInstance* Navigator::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 }

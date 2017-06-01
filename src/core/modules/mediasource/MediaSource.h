@@ -50,7 +50,8 @@ public:
 
     MediaSource(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isMediaSource() const override;
 
     SourceBuffer* addSourceBuffer(String* type);
@@ -149,6 +150,7 @@ protected:
     void didSourceBufferUpdated(SourceBuffer* src);
     ReadyState m_readyState;
     bool m_isActiveBufferComputed;
+    ScriptBindingInstance* m_scriptBindingInstance;
     HTMLMediaElement* m_attachedMediaElement;
     SourceBuffer* m_activeVideoSourceBuffer;
     size_t m_activeVideoStreamIndex;

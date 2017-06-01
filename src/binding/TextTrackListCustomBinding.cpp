@@ -16,50 +16,50 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "core/dom/TextTrackList.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
 
 namespace StarFish {
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult TextTrackListGetOwnPropertyCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackList* self = (TextTrackList*)obj->extraPointerData();
+    TextTrackList* self = (TextTrackList*)jsObj->extraData();
     STARFISH_ASSERT(self->isTextTrackList());
-    uint32_t idx = key.toIndex();
-    if (idx != ESValue::ESInvalidIndexValue && idx < self->size()) {
+    uint64_t idx = key->toArrayIndex(state);
+    if (idx < self->size()) {
         TextTrack* e = (*self)[idx];
         if (e != nullptr) {
-            return e->scriptValue();
+            return ExposableObjectGetOwnPropertyCallbackResult(
+                e->scriptValue(), false, true, false);
         }
     }
-    return ESValue(ESValue::ESDeletedValue);
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void TextTrackListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                            ObjectRef* self,
+                                            ValueRef* propertyName,
+                                            ValueRef* value)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    // do nothing
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector TextTrackListEnumerationCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackList* self = (TextTrackList*)obj->extraPointerData();
+    TextTrackList* self = (TextTrackList*)jsObj->extraData();
     STARFISH_ASSERT(self->isTextTrackList());
     size_t len = self->size();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void TextTrackList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }
 

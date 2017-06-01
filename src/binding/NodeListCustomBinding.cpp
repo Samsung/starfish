@@ -14,49 +14,47 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/NodeList.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult NodeListGetOwnPropertyCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    NodeList* self = (NodeList*)obj->extraPointerData();
+    NodeList* self = (NodeList*)jsObj->extraData();
     STARFISH_ASSERT(self->isNodeList());
-    uint32_t idx = key.toIndex();
+
+    uint32_t idx = key->toArrayIndex(state);
     if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
+        return ExposableObjectGetOwnPropertyCallbackResult(
+            self->item(idx)->scriptValue(), false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void NodeListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                       ObjectRef* jsObj, ValueRef* key,
+                                       ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector NodeListEnumerationCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    NodeList* self = (NodeList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isNodeList());
+    NodeList* self = (NodeList*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void NodeList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

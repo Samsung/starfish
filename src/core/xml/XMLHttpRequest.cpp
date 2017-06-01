@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -51,11 +52,9 @@ XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
 void XMLHttpRequest::initResponseData()
 {
     m_responseText = String::emptyString;
-    m_responseJsonObject = ESValue(ESValue::ESNull);
+    m_responseJsonObject = scriptNull();
     m_responseBlob = nullptr;
-#ifdef USE_ES6_FEATURE
-    m_responseArrayBuffer = ESValue(ESValue::ESNull);
-#endif
+    m_responseArrayBuffer = scriptNull();
 }
 
 void XMLHttpRequest::send(Nullable<String*> body)
@@ -70,7 +69,8 @@ void XMLHttpRequest::send(Nullable<String*> body)
 void XMLHttpRequest::send(String* body)
 {
     if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     m_resourceRequest->send(body);
@@ -110,10 +110,12 @@ void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
                           bool async, String* userName, String* password)
 {
     if (method == ResourceRequest::UNKNOWN_METHOD) {
-        throw new DOMException(DOMException::SYNTAX_ERR, "SYNTAX_ERR");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
     if (!async && m_resourceRequest->timeout() != 0) {
-        throw new DOMException(DOMException::INVALID_ACCESS_ERR,
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
     m_resourceRequest->open(method, url, async, userName, password);
@@ -132,14 +134,16 @@ void XMLHttpRequest::setResponseType(ResponseType type)
     if (m_resourceRequest->readyState() == ResourceRequest::LOADING ||
         m_resourceRequest->readyState() == ResourceRequest::DONE) {
         throw new DOMException(
+            scriptBindingInstance()->ownerDocument(),
             DOMException::INVALID_STATE_ERR,
             "The response type cannot be set if the object's state is LOADING "
             "or DONE.");
     }
     // If the JavaScript global environment is a document environment and the
     // synchronous flag is set, throw an "InvalidAccessError" exception.
-    if (/*isMainThread() &&*/ m_resourceRequest->isSync()) {
+    if (m_resourceRequest->isSync()) {
         throw new DOMException(
+            scriptBindingInstance()->ownerDocument(),
             DOMException::INVALID_ACCESS_ERR,
             "Failed to set the 'responseType' property on 'XMLHttpRequest': "
             "The response type cannot be changed for synchronous requests made "
@@ -156,9 +160,7 @@ void XMLHttpRequest::setResponseType(String* typeStr)
     XMLHttpRequest::ResponseType type = Unspecified;
 
     if (typeStr->equals("arraybuffer")) {
-#ifdef USE_ES6_FEATURE
         type = ArrayBuffer;
-#endif
     } else if (typeStr->equals("blob")) {
         type = Blob;
     } else if (typeStr->equals("document")) {
@@ -217,21 +219,17 @@ ScriptValue XMLHttpRequest::response() const
 
     if (m_responseType == ResponseType::Unspecified ||
         m_responseType == ResponseType::Text) {
-        result = createScriptString(responseText());
+        result = scriptStringToScriptValue(createScriptString(responseText()));
     } else if (m_responseType == ResponseType::Json) {
         result = m_responseJsonObject;
     } else if (m_responseType == ResponseType::Blob) {
         if (m_responseBlob) {
             result = m_responseBlob->scriptValue();
         } else {
-            result = ESValue(ESValue::ESNull);
+            result = scriptNull();
         }
     } else if (m_responseType == ResponseType::ArrayBuffer) {
-#ifdef USE_ES6_FEATURE
         result = m_responseArrayBuffer;
-#else
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-#endif
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -247,6 +245,9 @@ String* XMLHttpRequest::responseText() const
     if (!(m_responseType == ResponseType::Unspecified ||
           m_responseType == ResponseType::Text)) {
         throw new DOMException(
+            const_cast<XMLHttpRequest*>(this)
+                ->scriptBindingInstance()
+                ->ownerDocument(),
             DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseText' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
@@ -267,7 +268,8 @@ uint32_t XMLHttpRequest::timeout() const
 void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
     if (m_resourceRequest->isSync() == true) {
-        throw new DOMException(DOMException::INVALID_ACCESS_ERR,
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
     m_resourceRequest->setTimeout(timeout);
@@ -278,11 +280,13 @@ void XMLHttpRequest::setRequestHeader(String* h, String* c)
     h = h->trim();
     c = c->trim();
     if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     if (h->length() == 0) {
-        throw new DOMException(DOMException::SYNTAX_ERR, "InvalidStateError");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::SYNTAX_ERR, "InvalidStateError");
     }
     m_resourceRequest->setRequestHeader(h, c);
 }
@@ -299,7 +303,8 @@ void XMLHttpRequest::onProgressEvent(ResourceRequest* request,
         eventName = request->starFish()->staticStrings()->m_error.localName();
         if (!m_resourceRequest->url()->isFileURL() &&
             !m_resourceRequest->url()->isDataURL() && request->isSync()) {
-            throw new DOMException(DOMException::NETWORK_ERR, "NetworkError");
+            throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                                   DOMException::NETWORK_ERR, "NetworkError");
         }
     } else if (progState == ResourceRequest::ABORT) {
         if (isExplicitAction) {
@@ -320,8 +325,9 @@ void XMLHttpRequest::onProgressEvent(ResourceRequest* request,
     }
 
     ProgressEvent* pe = new ProgressEvent(
-        eventName, ProgressEventInit(false, false, request->total() > 0,
-                                     request->loaded(), request->total()));
+        scriptBindingInstance()->ownerDocument(), eventName,
+        ProgressEventInit(false, false, request->total() > 0, request->loaded(),
+                          request->total()));
     EventTarget::dispatchEvent(this, pe);
 }
 
@@ -349,32 +355,29 @@ void XMLHttpRequest::onReadyStateChange(ResourceRequest* request,
                 String* text =
                     cvt.convert(m_resourceRequest->response().data(),
                                 m_resourceRequest->response().size(), true);
-                m_responseJsonObject = parseJSON(text);
+                m_responseJsonObject = parseJSON(scriptBindingInstance(), text);
             } else if (m_responseType == ResponseType::Blob) {
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
                     m_resourceRequest->response().size());
                 memcpy(buffer, m_resourceRequest->response().data(),
                        m_resourceRequest->response().size());
-                m_responseBlob =
-                    new ::StarFish::Blob(m_resourceRequest->starFish(),
-                                         m_resourceRequest->response().size(),
-                                         m_resourceRequest->responseMimeType(),
-                                         buffer, false, false);
+                m_responseBlob = new ::StarFish::Blob(
+                    scriptBindingInstance()->ownerDocument(),
+                    m_resourceRequest->response().size(),
+                    m_resourceRequest->responseMimeType(), buffer, false,
+                    false);
                 m_resourceRequest->response().clear();
                 m_resourceRequest->response().shrink_to_fit();
             } else if (m_responseType == ResponseType::ArrayBuffer) {
-#ifdef USE_ES6_FEATURE
                 void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
                     m_resourceRequest->response().size());
                 memcpy(buffer, m_resourceRequest->response().data(),
                        m_resourceRequest->response().size());
-                m_responseArrayBuffer = createArrayBuffer(
-                    buffer, m_resourceRequest->response().size());
+                m_responseArrayBuffer =
+                    createArrayBuffer(scriptBindingInstance(), buffer,
+                                      m_resourceRequest->response().size());
                 m_resourceRequest->response().clear();
                 m_resourceRequest->response().shrink_to_fit();
-#else
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-#endif
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -383,7 +386,8 @@ void XMLHttpRequest::onReadyStateChange(ResourceRequest* request,
         String* eventType = request->starFish()
                                 ->staticStrings()
                                 ->m_readystatechange.localName();
-        Event* e = new Event(eventType, EventInit(true, true));
+        Event* e = new Event(scriptBindingInstance()->ownerDocument(),
+                             eventType, EventInit(true, true));
         EventTarget::dispatchEvent(this, e);
     }
 }

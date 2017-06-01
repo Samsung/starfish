@@ -23,7 +23,12 @@ namespace StarFish {
 
 class DOMPointReadOnly : public ScriptWrappable {
 public:
-    DOMPointReadOnly(double x, double y, double z, double w);
+    DOMPointReadOnly(Document* document, double x, double y, double z,
+                     double w);
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return m_scriptBindingInstance;
+    }
 
     double x() const
     {
@@ -45,13 +50,15 @@ public:
         return m_w;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMPointReadOnly() const override;
 
     // to do : doesn't appear to be supported anywhere yet.
     // DOMPoint matrixTransform(DOMMatrixReadOnly matrix);
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     double m_x;
     double m_y;
     double m_z;

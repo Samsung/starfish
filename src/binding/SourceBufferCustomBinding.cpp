@@ -14,51 +14,49 @@
  *    limitations under the License.
  */
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+
+#include "StarFishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/mediasource/SourceBuffer.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue appendBufferSourceBufferFunction(ESVMInstance* instance)
+ValueRef* appendBufferSourceBufferFunction(ExecutionStateRef* state,
+                                           ValueRef* thisValue, size_t argc,
+                                           ValueRef** argv,
+                                           bool isNewExpression)
 {
-    ESValue thisValue =
-        instance->currentExecutionContext()->resolveThisBinding();
     CHECK_TYPEOF(thisValue, SourceBuffer);
-    SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()
-                                     ->asESObject()
-                                     ->extraPointerData();
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+    SourceBuffer* sourceBuffer =
+        (SourceBuffer*)thisValue->asObject()->extraData();
+    ValueRef* firstArg = argv[0];
 
     try {
-        if (false) {
-        }
-#ifdef USE_ES6_FEATURE
-        else if (firstArg.isESPointer() &&
-                 firstArg.asESPointer()->isESArrayBufferObject()) {
-            ESArrayBufferObject* v =
-                firstArg.asESPointer()->asESArrayBufferObject();
-            sourceBuffer->appendBuffer((uint8_t*)v->data(), v->bytelength());
-        } else if (firstArg.isESPointer() &&
-                   firstArg.asESPointer()->isESArrayBufferView()) {
-            ESArrayBufferView* v =
-                firstArg.asESPointer()->asESArrayBufferView();
-            uint8_t* p = (uint8_t*)v->buffer()->data();
+        if (firstArg->isObject() &&
+            firstArg->asObject()->isArrayBufferObject()) {
+            ArrayBufferObjectRef* v =
+                firstArg->asObject()->asArrayBufferObject();
+            sourceBuffer->appendBuffer((uint8_t*)v->rawBuffer(),
+                                       v->bytelength());
+        } else if (firstArg->isObject() &&
+                   firstArg->asObject()->isArrayBufferView()) {
+            ArrayBufferViewRef* v = firstArg->asObject()->asArrayBufferView();
+            uint8_t* p = (uint8_t*)v->buffer()->rawBuffer();
             sourceBuffer->appendBuffer(p, v->bytelength());
-        }
-#endif
-        else {
+        } else {
             COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "appendBuffer",
                             "SourceBuffer", SIGNATURE_NOT_FOUND);
             THROW_EXCEPTION(msg);
         }
     } catch (DOMException* e) {
-        ESVMInstance::currentInstance()->throwError(e->scriptValue());
+        state->throwException(e->scriptValue());
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    return ESValue(ESValue::ESUndefined);
+    return scriptUndefined();
 }
 }
 #endif

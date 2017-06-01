@@ -50,8 +50,14 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSRule() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        // TODO child classes must override this function
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     RuleType type()
     {

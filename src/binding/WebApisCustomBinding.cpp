@@ -17,7 +17,7 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "StarFishConfig.h"
-#include "binding/escargot/ScriptBindingInstanceDataEscargot.h"
+#include "binding/escargot/ScriptBindingInstance.h"
 
 #include "core/dom/DOMException.h"
 #include "core/extra/Avplay.h"

@@ -39,6 +39,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Comment.h"
 #include "core/dom/Document.h"
@@ -289,7 +290,7 @@ void HTMLConstructionSite::flushPendingText()
     // Hold onto the current pending text on the stack so that queueTask doesn't
     // recurse infinitely.
     m_pendingText.swap(pendingText);
-    ASSERT(m_pendingText.isEmpty());
+    STARFISH_ASSERT(m_pendingText.isEmpty());
 
     // Splitting text nodes into smaller chunks contradicts HTML5 spec, but is
     // necessary
@@ -304,7 +305,7 @@ void HTMLConstructionSite::flushPendingText()
         // unsigned breakIndex = findBreakIndexBetween(string, currentPosition,
         // proposedBreakIndex);
         unsigned breakIndex = string.length();
-        ASSERT(breakIndex <= string.length());
+        STARFISH_ASSERT(breakIndex <= string.length());
         String* substring = String::createASCIIStringFromUTF32SourceIfPossible(
             string.substr(currentPosition, breakIndex - currentPosition));
         substring =
@@ -391,7 +392,8 @@ HTMLConstructionSite::HTMLConstructionSite(Document* document)
 {
     m_form = nullptr;
     m_head = nullptr;
-    // ASSERT(m_document->isHTMLDocument() || m_document->isXHTMLDocument());
+    // STARFISH_ASSERT(m_document->isHTMLDocument() ||
+    // m_document->isXHTMLDocument());
 }
 
 HTMLConstructionSite::HTMLConstructionSite(DocumentFragment* fragment)
@@ -681,7 +683,7 @@ void HTMLConstructionSite::insertDoctype(AtomicHTMLToken* token)
     // hit this code
     // in a fragment, as changing the owning document's compatibility mode would
     // be wrong.
-    ASSERT(!m_isParsingFragment);
+    STARFISH_ASSERT(!m_isParsingFragment);
     if (m_isParsingFragment) {
         return;
     }
@@ -762,7 +764,7 @@ void HTMLConstructionSite::insertHTMLElement(AtomicHTMLToken* token)
 
 void HTMLConstructionSite::insertSelfClosingHTMLElement(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     // Normally HTMLElementStack is responsible for calling
     // finishParsingChildren,
     // but self-closing elements are never in the element stack so the stack
@@ -956,7 +958,7 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     Element* element =
         ownerDocumentForCurrentNode().createElement(tagName, false);
     setAttributes(element, token);
-    ASSERT(element->isHTMLElement());
+    STARFISH_ASSERT(element->isHTMLElement());
     return element;
 }
 
@@ -1005,7 +1007,7 @@ void HTMLConstructionSite::reconstructTheActiveFormattingElements()
     }
 
     unsigned unopenEntryIndex = firstUnopenElementIndex;
-    ASSERT(unopenEntryIndex < m_activeFormattingElements.size());
+    STARFISH_ASSERT(unopenEntryIndex < m_activeFormattingElements.size());
     for (; unopenEntryIndex < m_activeFormattingElements.size();
          ++unopenEntryIndex) {
         HTMLFormattingElementList::Entry& unopenedEntry =

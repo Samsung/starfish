@@ -37,7 +37,7 @@ class ImageData;
 class ResourceRequest;
 class Location;
 class Text;
-class URL;
+class ResourceURL;
 class Window;
 
 #ifdef STARFISH_EXP
@@ -63,7 +63,8 @@ class Document : public Node {
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
-             URL* url, String* charSet, bool doesParticipateInRendering);
+             ResourceURL* url, String* charSet,
+             bool doesParticipateInRendering);
 
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
@@ -72,7 +73,8 @@ public:
         m_compatibilityMode = m;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDocument() const override;
 
     CompatibilityMode compatibilityMode() const
@@ -223,12 +225,12 @@ public:
 
     String* urlString();
 
-    URL* documentURI()
+    ResourceURL* documentURI()
     {
         return m_documentURI;
     }
 
-    void setDocumentURI(URL* newURL)
+    void setDocumentURI(ResourceURL* newURL)
     {
         m_documentURI = newURL;
     }
@@ -252,12 +254,6 @@ public:
 
     HTMLCollection* namedAccess(String* name);
     void invalidNamedAccessCacheIfNeeded();
-
-    GCVector<Element*>&
-    elementExecutionStackForAttributeStringEventFunctionObject()
-    {
-        return m_elementExecutionStackForAttributeStringEventFunctionObject;
-    }
 
     Element* elementFromPoint(float x, float y);
     ImageData* brokenImage();
@@ -356,7 +352,7 @@ protected:
 
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
-    URL* m_documentURI;
+    ResourceURL* m_documentURI;
     String* m_characterSet;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
@@ -367,8 +363,6 @@ protected:
     size_t m_domVersion;
     GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
-    GCVector<Element*>
-        m_elementExecutionStackForAttributeStringEventFunctionObject;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

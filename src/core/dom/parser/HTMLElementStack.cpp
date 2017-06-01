@@ -39,6 +39,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/parser/HTMLElementStack.h"
@@ -194,7 +195,7 @@ bool HTMLElementStack::secondElementIsHTMLBodyElement() const
     // insertion mode.
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/
     //      tokenization.html#parsing-main-inbody
-    ASSERT(m_rootNode);
+    STARFISH_ASSERT(m_rootNode);
     // If we have a body element, it must always be the second element on the
     // stack, as we always start with an html element, and any other element
     // would cause the implicit creation of a body element.
@@ -203,14 +204,14 @@ bool HTMLElementStack::secondElementIsHTMLBodyElement() const
 
 void HTMLElementStack::popHTMLHeadElement()
 {
-    ASSERT(top() == m_headElement);
+    STARFISH_ASSERT(top() == m_headElement);
     m_headElement = 0;
     popCommon();
 }
 
 void HTMLElementStack::popHTMLBodyElement()
 {
-    ASSERT(top() == m_bodyElement);
+    STARFISH_ASSERT(top() == m_bodyElement);
     m_bodyElement = 0;
     popCommon();
 }
@@ -350,7 +351,7 @@ void HTMLElementStack::popUntilForeignContentScopeMarker()
 
 void HTMLElementStack::pushRootNode(HTMLStackItem* rootItem)
 {
-    ASSERT(rootItem->isDocumentFragmentNode());
+    STARFISH_ASSERT(rootItem->isDocumentFragmentNode());
     pushRootNodeCommon(rootItem);
 }
 
@@ -395,7 +396,7 @@ void HTMLElementStack::push(HTMLStackItem* item)
         topStackItem()->node()->starFish()->staticStrings()->m_headTagName));
     STARFISH_ASSERT(!item->hasTagName(
         topStackItem()->node()->starFish()->staticStrings()->m_bodyTagName));
-    ASSERT(m_rootNode);
+    STARFISH_ASSERT(m_rootNode);
     pushCommon(item);
 }
 
@@ -707,7 +708,7 @@ void HTMLElementStack::removeNonTopCommon(Element* element)
             return;
         }
     }
-    ASSERT_NOT_REACHED();
+    STARFISH_ASSERT_NOT_REACHED();
 }
 
 HTMLElementStack::ElementRecord*

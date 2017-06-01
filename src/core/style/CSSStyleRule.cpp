@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Document.h"
 #include "core/modules/window/Window.h"
 #include "core/style/CSSRule.h"
@@ -27,7 +28,7 @@ namespace StarFish {
 
 CSSStyleRule::CSSStyleRule(CSSSelector::Type type, AtomicString selectorText)
     : CSSRule(CSSRule::STYLE_RULE)
-    , m_styleDeclaration(new CSSStyleDeclaration())
+    , m_styleDeclaration(new CSSStyleDeclaration(nullptr))
 {
     CSSSelector* selector =
         new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
@@ -268,7 +269,8 @@ void CSSImportRule::requestStyleSheet()
 
     unloadStyleSheetIfExists();
 
-    URL* absURL = URL::createURL(doc->documentURI()->baseURI(), m_strHref);
+    ResourceURL* absURL =
+        new ResourceURL(m_strHref, doc->documentURI()->baseURI());
 
     CSSStyleSheet* rootSheet = m_parentStyleSheet;
     for (CSSStyleSheet* sheet = m_parentStyleSheet; sheet;

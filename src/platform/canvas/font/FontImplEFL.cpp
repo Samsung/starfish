@@ -15,7 +15,9 @@
  */
 
 #include "StarFishConfig.h"
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
+#include "StarFish.h"
 
 #include "StarFish.h"
 #include <Evas.h>

@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -39,7 +40,7 @@ void TextTrackCue::dispatchEnterEvent()
     } else {
         eventType = String::fromUTF8("enter");
     }
-    Event* e = new Event(eventType, EventInit(false, false));
+    Event* e = new Event(document(), eventType, EventInit(false, false));
     dispatchEvent(e);
 }
 
@@ -54,7 +55,7 @@ void TextTrackCue::dispatchExitEvent()
     } else {
         eventType = String::fromUTF8("exit");
     }
-    Event* e = new Event(eventType, EventInit(false, false));
+    Event* e = new Event(document(), eventType, EventInit(false, false));
     dispatchEvent(e);
 }
 

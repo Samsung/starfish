@@ -120,7 +120,7 @@ public:
         flushPendingText();
         executeQueuedTasks(); // NOTE: Possible reentrancy via JavaScript
                               // execution.
-        ASSERT(!hasPendingTasks());
+        STARFISH_ASSERT(!hasPendingTasks());
     }
 
     bool hasPendingTasks()

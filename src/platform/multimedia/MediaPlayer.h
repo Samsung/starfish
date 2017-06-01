@@ -57,7 +57,7 @@ public:
         return m_isLooping;
     }
 
-    virtual void prepare(URL* url) = 0;
+    virtual void prepare(ResourceURL* url) = 0;
     virtual double currentTime() = 0;
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;

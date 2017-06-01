@@ -53,7 +53,7 @@ public:
     void setVolume(double volume);
     void setMuted(bool muted);
 
-    virtual void prepare(URL* url);
+    virtual void prepare(ResourceURL* url);
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);
     virtual void printNativePlayerError(int errorCode);
@@ -127,7 +127,7 @@ public:
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;
     Mutex* m_audioBufferMutex;
-    URL* m_currentURL;
+    ResourceURL* m_currentURL;
     void (*m_preparedCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;

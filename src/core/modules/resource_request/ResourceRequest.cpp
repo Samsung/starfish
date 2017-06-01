@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -327,7 +328,7 @@ void ResourceRequest::open(MethodType method, String* url, bool async,
     {
         initVariables();
         m_method = method;
-        m_url = URL::createURL(document()->documentURI()->baseURI(), url);
+        m_url = new ResourceURL(url, document()->documentURI()->baseURI());
         if (userName->length()) {
             m_url->setUsername(userName);
         }

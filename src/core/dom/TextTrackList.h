@@ -29,8 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isTextTrackList() const override;
 
     // JS Bindings

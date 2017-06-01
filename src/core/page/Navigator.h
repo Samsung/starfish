@@ -18,19 +18,21 @@
 #define __StarFishNavigator__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class StarFish;
 class Geolocation;
 
-class Navigator : public ScriptWrappable, public StarFishHoldable {
+class Navigator : public ScriptWrappable, public DocumentHoldable {
 public:
-    Navigator(StarFish* starFish);
+    Navigator(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isNavigator() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance();
 
     String* appCodeName()
     {

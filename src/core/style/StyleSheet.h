@@ -28,7 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isStyleSheet() const override;
 
     virtual String* type() const = 0;

@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -129,7 +130,7 @@ void HTMLMediaElement::load()
     // promises in the order the corresponding tasks were queued.
     // Remove each task in pending tasks from its task queue
     abortEveryPendingOperation(new DOMException(
-        DOMException::DOM_EXCEPTION,
+        document(), DOMException::DOM_EXCEPTION,
         "The play() request was interrupted by a new load request."));
 
     // If the media element's networkState is set to NETWORK_LOADING or
@@ -167,13 +168,11 @@ void HTMLMediaElement::load()
             // the result and an "AbortError" DOMException.
             auto iter = m_playOperationQueue.begin();
             while (iter != m_playOperationQueue.end()) {
-#ifdef USE_ES6_FEATURE
                 DOMException* exception = new DOMException(
-                    DOMException::ABORT_ERR,
+                    document(), DOMException::ABORT_ERR,
                     "play request is aborted by load operation");
                 ((MediaOperationQueueDataRequestPlay*)(*iter))
                     ->m_promise->reject(exception->scriptValue());
-#endif
                 m_playOperationQueue.erase(iter++);
             }
         }
@@ -251,8 +250,8 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
 
     // Reject pending play promises with promises and a "NotSupportedError"
     // DOMException.
-    abortEveryPendingOperation(
-        new DOMException(DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    abortEveryPendingOperation(new DOMException(
+        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 
     // Set the element's delaying-the-load-event flag to false. This stops
     // delaying the load event.
@@ -279,15 +278,11 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 
     m_resourceSelectionContext = nullptr;
     // Abort the overall resource selection algorithm
-    abortEveryPendingOperation(
-        new DOMException(DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    abortEveryPendingOperation(new DOMException(
+        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 }
 
-#ifdef USE_ES6_FEATURE
 Promise* HTMLMediaElement::play()
-#else
-void HTMLMediaElement::play()
-#endif
 {
     // TODO If the media element is not allowed to play, return a promise
     // rejected with a "NotAllowedError" DOMException and abort these steps.
@@ -350,10 +345,8 @@ void HTMLMediaElement::play()
     // Set the media element's autoplaying flag to false.
     m_autoplayingFlag = false;
 
-// Return promise.
-#ifdef USE_ES6_FEATURE
+    // Return promise.
     return playRequest->m_promise;
-#endif
 }
 
 void HTMLMediaElement::pause()
@@ -406,12 +399,15 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
                                           String* language)
 {
     TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
+    // TODO (escargot2) change Typeof kind to TextTrack::Kind
+    // TODO (escargot2) move this exception to binding layer
+    /*
     if (kindEnum == TextTrack::Kind::InvalidKind) {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_ENUM, "TextTrackKind");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "addTextTrack",
                         "HTMLMediaElement", reason);
         THROW_EXCEPTION(msg);
-    }
+    }*/
     TextTrack* textTrack = new TextTrack(m_document, kindEnum, label, language);
     m_textTracks->push_back(textTrack);
     return textTrack;
@@ -542,7 +538,7 @@ TimeRanges* HTMLMediaElement::played()
 TimeRanges* HTMLMediaElement::seekable()
 {
     if (!m_mediaPlayer) {
-        return new TimeRanges();
+        return new TimeRanges(document());
     }
     if (m_mediaPlayer->activeMediaSource()) {
         SourceBufferList* bufferList =
@@ -551,7 +547,7 @@ TimeRanges* HTMLMediaElement::seekable()
         unsigned nbuffer = bufferList->length();
 
         if (nbuffer == 0) {
-            return new TimeRanges();
+            return new TimeRanges(document());
         }
 
         TimeRanges* result = (*bufferList)[0]->buffered();
@@ -559,7 +555,7 @@ TimeRanges* HTMLMediaElement::seekable()
             TimeRanges* buffered = (*bufferList)[i]->buffered();
             unsigned bufferedSize = buffered->size();
             unsigned resultSize = result->size();
-            TimeRanges* newResult = new TimeRanges();
+            TimeRanges* newResult = new TimeRanges(document());
 
             unsigned t = 0, j = 0;
             while (t != bufferedSize && j != resultSize) {
@@ -588,7 +584,7 @@ TimeRanges* HTMLMediaElement::seekable()
         }
         return result;
     } else {
-        TimeRanges* r = new TimeRanges();
+        TimeRanges* r = new TimeRanges(document());
         r->emplace_back(0, m_mediaPlayer->duration());
         return r;
     }
@@ -760,7 +756,7 @@ void HTMLMediaElement::setControls(bool controls)
 void HTMLMediaElement::setVolume(double volume)
 {
     if (volume < 0.0f || volume > 1.0f) {
-        throw new DOMException(DOMException::INDEX_SIZE_ERR,
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR,
                                "volume should be in the range 0.0 to 1.0");
     }
 
@@ -958,13 +954,13 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
     void HTMLMediaElement::dispatch##Name##EventNow()                          \
     {                                                                          \
         String* eventType = starFish()->staticStrings()->m_##name.localName(); \
-        Event* e = new Event(eventType, EventInit(false, false));              \
+        Event* e = new Event(document(), eventType, EventInit(false, false));  \
         dispatchEvent(e);                                                      \
     }                                                                          \
     void HTMLMediaElement::dispatch##Name##Event()                             \
     {                                                                          \
         String* eventType = starFish()->staticStrings()->m_##name.localName(); \
-        Event* e = new Event(eventType, EventInit(false, false));              \
+        Event* e = new Event(document(), eventType, EventInit(false, false));  \
         addEventToOperationQueue(this, e);                                     \
     }
 
@@ -1097,7 +1093,8 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
     // Queue a task to fire an event named error at the candidate element.
     String* eventType =
         m_mediaElement->starFish()->staticStrings()->m_error.localName();
-    Event* e = new Event(eventType, EventInit(false, false));
+    Event* e =
+        new Event(candidate->document(), eventType, EventInit(false, false));
     m_mediaElement->addEventToOperationQueue(candidate, e);
 }
 
@@ -1160,7 +1157,8 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 
         // If urlString was obtained successfully, set the currentSrc attribute
         // to urlString.
-        URL* url = URL::createURL(self->document()->urlString(), self->src());
+        ResourceURL* url =
+            new ResourceURL(self->src(), self->document()->urlString());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
@@ -1205,8 +1203,8 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
                 new MediaOperationQueueDataRequestResourceSelection(self));
             return;
         }
-        URL* url =
-            URL::createURL(self->document()->urlString(), candidate->src());
+        ResourceURL* url =
+            new ResourceURL(candidate->src(), self->document()->urlString());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
@@ -1294,12 +1292,11 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
     // DOMException.
     auto iter = m_mediaElement->m_playOperationQueue.begin();
     while (iter != m_mediaElement->m_playOperationQueue.end()) {
-#ifdef USE_ES6_FEATURE
         DOMException* exception = new DOMException(
-            DOMException::ABORT_ERR, "play request is aborted by pause()");
+            m_mediaElement->document(), DOMException::ABORT_ERR,
+            "play request is aborted by pause()");
         ((MediaOperationQueueDataRequestPlay*)(*iter))
             ->m_promise->reject(exception->scriptValue());
-#endif
         m_mediaElement->m_playOperationQueue.erase(iter++);
     }
     // Set the official playback position to the current playback position.
@@ -1316,22 +1313,15 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     m_target->dispatchEvent(m_event);
 }
 
-#ifdef USE_ES6_FEATURE
 MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(
     HTMLMediaElement* p, Promise* pm)
-#else
-MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(
-    HTMLMediaElement* p)
-#endif
     : MediaOperationQueueData(p)
 {
-#ifdef USE_ES6_FEATURE
     if (pm) {
         m_promise = pm;
     } else {
-        m_promise = new Promise();
+        m_promise = new Promise(p->scriptBindingInstance());
     }
-#endif
 }
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()
@@ -1339,17 +1329,13 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
     STARFISH_LOG_INFO(
         "MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
     mediaPlayer()->play();
-#ifdef USE_ES6_FEATURE
-    m_promise->fulfill(ESValue());
-#endif
+    m_promise->fulfill(scriptUndefined());
 }
 
 void MediaOperationQueueDataRequestPlay::cancelOperation(
     DOMException* exception)
 {
-#ifdef USE_ES6_FEATURE
     m_promise->reject(exception->scriptValue());
-#endif
 }
 }
 

@@ -47,23 +47,22 @@
 #ifndef __StarFishString__
 #define __StarFishString__
 
-#include "StarFishConfig.h"
 #include "core/util/BasicString.h"
 #include "core/util/VariableBasicString.h"
 
 namespace StarFish {
 
-typedef VariableBasicString<char,
-                            gc_malloc_atomic_ignore_off_page_allocator<char>>
+typedef VariableBasicString<
+    char, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
     ASCIIString;
-typedef VariableBasicString<char,
-                            gc_malloc_atomic_ignore_off_page_allocator<char>>
+typedef VariableBasicString<
+    char, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
     UTF8String;
 typedef VariableBasicString<
-    char16_t, gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
+    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
     UTF16String;
 typedef VariableBasicString<
-    char32_t, gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
+    char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
     UTF32String;
 
 typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;
@@ -246,13 +245,23 @@ public:
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
 
-    virtual ASCIIString* asASCIIString() const
+    ASCIIString* asASCIIString() const
     {
-        STARFISH_ASSERT_NOT_REACHED();
+        STARFISH_ASSERT(isASCIIString());
+#ifdef NDEBUG
+        return (ASCIIString*)(((size_t) this) + sizeof(size_t));
+#else
+        return (ASCIIString*)(((size_t) this) + sizeof(String));
+#endif
     }
-    virtual UTF32String* asUTF32String() const
+    UTF32String* asUTF32String() const
     {
-        STARFISH_ASSERT_NOT_REACHED();
+        STARFISH_ASSERT(isUTF32String());
+#ifdef NDEBUG
+        return (UTF32String*)(((size_t) this) + sizeof(size_t));
+#else
+        return (UTF32String*)(((size_t) this) + sizeof(String));
+#endif
     }
 
     UTF16String toUTF16String() const;
@@ -471,14 +480,14 @@ public:
     String* toUpper();
     String* toLower();
     String* replaceAll(String* from, String* to);
-    virtual bool isASCIIString() const
+    bool isASCIIString() const
     {
-        return true;
+        return m_isASCIIString;
     }
 
-    virtual bool isUTF32String() const
+    bool isUTF32String() const
     {
-        return false;
+        return !m_isASCIIString;
     }
 
     String* concat(String* str);
@@ -557,12 +566,14 @@ protected:
     }
 
     const char* utf8DataSlowCase(bool ignoreZeroWidthChar = false);
-    String()
+    String(bool ascii)
     {
+        m_isASCIIString = ascii;
     }
 
     bool isASCIIStringData(const char* str);
 
+    bool m_isASCIIString;
 #ifndef NDEBUG
     union {
         const char* string8Ptr;
@@ -574,61 +585,71 @@ protected:
 class StringDataASCII : public String, public ASCIIString {
 public:
     StringDataASCII(ASCIIString&& str)
-        : ASCIIString(str)
+        : String(true)
+        , ASCIIString(str)
     {
         putDebugInfo();
     }
 
     StringDataASCII(const char* str)
-        : ASCIIString(str)
+        : String(true)
+        , ASCIIString(str)
     {
         putDebugInfo();
     }
 
     StringDataASCII(const char* str, size_t len)
-        : ASCIIString(str, len)
+        : String(true)
+        , ASCIIString(str, len)
     {
         putDebugInfo();
     }
+};
 
-    virtual ASCIIString* asASCIIString() const override
+class StringDataNonGCASCII
+    : public String,
+      public VariableBasicString<char, std::allocator<char>> {
+public:
+    StringDataNonGCASCII(const char* str)
+        : String(true)
+        , VariableBasicString<char, std::allocator<char>>(str)
     {
-        return const_cast<ASCIIString*>(static_cast<const ASCIIString*>(this));
+#ifndef NDEBUG
+        m_debugInfo.string8Ptr = str;
+#endif
+    }
+
+    inline void* operator new(size_t size)
+    {
+        return malloc(size);
     }
 };
+
+static_assert(sizeof(StringDataNonGCASCII) == sizeof(StringDataASCII), "");
 
 class StringDataUTF32 : public String, public UTF32String {
 public:
     StringDataUTF32(const UTF32String& str)
-        : UTF32String(str)
+        : String(false)
+        , UTF32String(str)
     {
+        m_isASCIIString = false;
         putDebugInfo();
     }
     StringDataUTF32(UTF32String&& str)
-        : UTF32String(str)
+        : String(false)
+        , UTF32String(str)
     {
+        m_isASCIIString = false;
         putDebugInfo();
     }
     StringDataUTF32(const char* src, size_t len);
     StringDataUTF32(const char32_t* str)
-        : UTF32String(str)
+        : String(false)
+        , UTF32String(str)
     {
+        m_isASCIIString = false;
         putDebugInfo();
-    }
-
-    virtual bool isASCIIString() const override
-    {
-        return false;
-    }
-
-    virtual bool isUTF32String() const override
-    {
-        return true;
-    }
-
-    virtual UTF32String* asUTF32String() const override
-    {
-        return const_cast<UTF32String*>(static_cast<const UTF32String*>(this));
     }
 };
 

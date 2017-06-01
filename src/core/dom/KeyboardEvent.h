@@ -71,9 +71,9 @@ private:
 
 class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(String* eventType,
+    KeyboardEvent(Document* document, String* eventType,
                   const KeyboardEventInit& init = KeyboardEventInit())
-        : UIEvent(eventType, init)
+        : UIEvent(document, eventType, init)
         , m_metaKey(false)
     {
         m_keyCode = convertKeyCodeFromEcore(init.key());
@@ -84,7 +84,8 @@ public:
                     (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isKeyboardEvent() const override;
 
     unsigned long keyCode()

@@ -14,54 +14,64 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/modules/location/Geoposition.h"
 #include "core/modules/location/PositionError.h"
+#include "core/dom/Document.h"
+
+#include <EscargotPublic.h>
 
 namespace StarFish {
 
-using namespace escargot;
+using namespace Escargot;
 
-static void geopositionCallbackFunction(StarFish* starfish, Geoposition* pos,
+static void geopositionCallbackFunction(Document* document, Geoposition* pos,
                                         void* data)
 {
     if (data) {
-        ESFunctionObject* fn = (ESFunctionObject*)data;
-        ESValue a = pos->scriptValue();
-        callScriptFunction(fn, &a, 1, ESValue());
+        FunctionObjectRef* fn = (FunctionObjectRef*)data;
+        ValueRef* a = pos->scriptValue();
+        callScriptFunction(document->scriptBindingInstance(),
+                           ValueRef::create(fn), &a, 1, scriptUndefined());
     }
 }
 
-static void geopositionErrorCallbackFunction(StarFish* starfish,
+static void geopositionErrorCallbackFunction(Document* document,
                                              PositionError* error, void* data)
 {
     if (data) {
-        ESFunctionObject* fn = (ESFunctionObject*)data;
-        ESValue a = error->scriptValue();
-        callScriptFunction(fn, &a, 1, ESValue());
+        FunctionObjectRef* fn = (FunctionObjectRef*)data;
+        ValueRef* a = error->scriptValue();
+        callScriptFunction(document->scriptBindingInstance(),
+                           ValueRef::create(fn), &a, 1, scriptUndefined());
     }
 }
 
-ESValue getCurrentPositionGeolocationFunction(ESVMInstance* instance)
+ValueRef* getCurrentPositionGeolocationFunction(ExecutionStateRef* state,
+                                                ValueRef* thisValue,
+                                                size_t argc, ValueRef** argv,
+                                                bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Geolocation);
 
-    ESValue opt = instance->currentExecutionContext()->readArgument(2);
+    ValueRef* opt = argc >= 3 ? argv[2] : scriptUndefined();
     int32_t maximumAgeNumber = 0;
     int32_t timeoutNumber = std::numeric_limits<int32_t>::max();
     bool enableHighAccuracy = false;
-    if (opt.isObject()) {
-        ESValue maximumAge =
-            opt.asObject()->get(ESString::create("maximumAge"));
-        double maximumAgeNumberDouble = maximumAge.toNumber();
+    if (opt->isObject()) {
+        ValueRef* maximumAge = opt->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("maximumAge")));
+        double maximumAgeNumberDouble = maximumAge->toNumber(state);
         if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumberDouble < 0) {
             maximumAgeNumber = 0;
         } else {
             maximumAgeNumber = maximumAgeNumberDouble;
         }
 
-        ESValue timeout = opt.asObject()->get(ESString::create("timeout"));
-        double timeoutNumberDouble = timeout.toNumber();
+        ValueRef* timeout = opt->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("timeout")));
+        double timeoutNumberDouble = timeout->toNumber(state);
         if (std::isnan(timeoutNumberDouble)) {
             timeoutNumber = std::numeric_limits<int32_t>::max();
         } else if (timeoutNumberDouble < 0) {
@@ -70,20 +80,22 @@ ESValue getCurrentPositionGeolocationFunction(ESVMInstance* instance)
             timeoutNumber = timeoutNumberDouble;
         }
 
-        enableHighAccuracy = opt.asObject()
-                                 ->get(ESString::create("enableHighAccuracy"))
-                                 .toBoolean();
+        enableHighAccuracy =
+            opt->asObject()
+                ->get(state, ValueRef::create(
+                                 StringRef::fromASCII("enableHighAccuracy")))
+                ->toBoolean(state);
     }
 
-    ESValue cb0 = instance->currentExecutionContext()->readArgument(0);
-    ESValue cb1 = instance->currentExecutionContext()->readArgument(1);
+    ValueRef* cb0 = argv[0];
+    ValueRef* cb1 = argc >= 2 ? argv[1] : scriptUndefined();
     originalObj->getCurrentPosition(
         geopositionCallbackFunction,
-        cb0.isFunction() ? cb0.asFunction() : nullptr,
+        cb0->isFunction() ? cb0->asFunction() : nullptr,
         geopositionErrorCallbackFunction,
-        cb1.isFunction() ? cb1.asFunction() : nullptr, enableHighAccuracy,
+        cb1->isFunction() ? cb1->asFunction() : nullptr, enableHighAccuracy,
         timeoutNumber, maximumAgeNumber);
 
-    return ESValue();
+    return scriptUndefined();
 }
 }

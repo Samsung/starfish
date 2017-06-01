@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLSourceElement.h"
 

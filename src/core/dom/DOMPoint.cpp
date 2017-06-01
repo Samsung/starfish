@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMPoint.h"
 
 namespace StarFish {
@@ -65,13 +66,14 @@ void DOMPointInit::setW(double w)
     m_w = w;
 }
 
-DOMPoint::DOMPoint(double x, double y, double z, double w)
-    : DOMPointReadOnly(x, y, z, w)
+DOMPoint::DOMPoint(Document* document, double x, double y, double z, double w)
+    : DOMPointReadOnly(document, x, y, z, w)
 {
 }
 
 DOMPoint::DOMPoint(const DOMPointInit& pi)
-    : DOMPointReadOnly(pi.x(), pi.y(), pi.z(), pi.w())
+    : DOMPointReadOnly(scriptBindingInstance()->ownerDocument(), pi.x(), pi.y(),
+                       pi.z(), pi.w())
 {
 }
 }

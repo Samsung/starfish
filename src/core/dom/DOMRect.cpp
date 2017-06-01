@@ -13,6 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#include "StarFishConfig.h"
 #include "core/dom/DOMRect.h"
 
 namespace StarFish {
@@ -25,13 +26,15 @@ DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
 {
 }
 
-DOMRect::DOMRect(double x, double y, double width, double height)
-    : DOMRectReadOnly(x, y, width, height)
+DOMRect::DOMRect(Document* document, double x, double y, double width,
+                 double height)
+    : DOMRectReadOnly(document, x, y, width, height)
 {
 }
 
-DOMRect::DOMRect(const DOMRectReadOnly* rect)
-    : DOMRect(rect->x(), rect->y(), rect->width(), rect->height())
+DOMRect::DOMRect(DOMRectReadOnly* rect)
+    : DOMRect(rect->scriptBindingInstance()->ownerDocument(), rect->x(),
+              rect->y(), rect->width(), rect->height())
 {
 }
 

@@ -13,11 +13,9 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
- 
+
 #ifndef __StarFishImageDecoder__
 #define __StarFishImageDecoder__
-
-#include "StarFishConfig.h"
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 

@@ -32,7 +32,7 @@ public:
         InlineStyle,
     };
 
-    CSSStyleDeclaration(Element* element = NULL,
+    CSSStyleDeclaration(Element* element = nullptr,
                         StyleType styleType = InternalStyle)
         : ScriptWrappable(this)
     {
@@ -46,9 +46,10 @@ public:
 
     CSSStyleDeclaration* clone(Element* element);
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSStyleDeclaration() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     StyleType styleType()
     {

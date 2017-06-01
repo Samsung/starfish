@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 #ifdef STARFISH_ENABLE_DOMPARSER
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/CDATASection.h"
 #include "core/dom/Comment.h"
@@ -32,6 +33,11 @@
 #include <../third_party/rapidxml/rapidxml.hpp>
 
 namespace StarFish {
+
+ScriptBindingInstance* DOMParser::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
+}
 
 static void buildDocumentFromXML(
     rapidxml::xml_node<char>* node, StarFish* sf, Node* parent,
@@ -166,7 +172,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
     } else {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_ENUM, "SupportedType");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser");
-        throw new DOMException(DOMException::TYPE_ERR, msg);
+        throw new DOMException(document(), DOMException::TYPE_ERR, msg);
     }
 }
 }

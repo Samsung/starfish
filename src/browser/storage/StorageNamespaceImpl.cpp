@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StorageNamespaceImpl.h"
 
 #include "core/storage/StorageType.h"
@@ -22,10 +23,10 @@
 
 namespace StarFish {
 
-StorageNamespaceImpl::StorageNamespaceImpl(StarFish* starfish,
+StorageNamespaceImpl::StorageNamespaceImpl(Window* window,
                                            StorageType storageType,
                                            String* localStoragePath)
-    : StorageNamespace(starfish)
+    : StorageNamespace(window)
     , m_storageType(storageType)
     , m_storageManager(nullptr)
 {
@@ -43,7 +44,7 @@ Storage* StorageNamespaceImpl::storage(SecurityOriginData* securityOriginData)
     auto itr = m_originToStorage.find(securityOriginData);
     if (itr == m_originToStorage.end()) {
         StorageImpl* storage = new StorageImpl(
-            m_starFish, m_storageType, securityOriginData, m_storageManager);
+            window(), m_storageType, securityOriginData, m_storageManager);
         m_originToStorage.insert(std::make_pair(securityOriginData, storage));
         return storage;
     }

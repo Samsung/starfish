@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -13,7 +14,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"

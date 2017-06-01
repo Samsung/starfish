@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
@@ -23,58 +24,112 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 #include "core/style/CSSStyleLookupTrie.h"
-#include "vm/ESVMInstance.h"
+
+#include <EscargotPublic.h>
+
+using namespace Escargot;
 
 namespace StarFish {
 
-using namespace escargot;
+ScriptValue scriptNull()
+{
+    return ValueRef::createNull();
+}
+
+ScriptValue scriptUndefined()
+{
+    return ValueRef::createUndefined();
+}
+
+ScriptValue scriptStringToScriptValue(ScriptString s)
+{
+    return ValueRef::create(s);
+}
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-    ESObject* obj, ESString* propertyName, NativeFunctionType getter,
-    NativeFunctionType setter, bool isEnumerable, bool isConfigurable)
+    ExecutionStateRef* state, ObjectRef* obj, StringRef* propertyName,
+    ScriptNativeFunctionPointer getter, ScriptNativeFunctionPointer setter,
+    bool isEnumerable, bool isConfigurable)
 {
-    bool isWritable = setter;
-
-    ESPropertyAccessorData* accData = new ESPropertyAccessorData();
-    accData->setJSGetter(ESFunctionObject::create(
-        nullptr, getter, ESVMInstance::currentInstance()->strings().emptyString,
-        0, false, false));
+    FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
+        AtomicStringRef::emptyAtomicString(),
+        (FunctionObjectRef::NativeFunctionPointer)getter, 0, nullptr, true,
+        false);
+    ValueRef* getterValue =
+        ValueRef::create(FunctionObjectRef::create(state, nativeFunctionInfo));
+    ValueRef* setterValue = ValueRef::createEmpty();
     if (setter) {
-        accData->setJSSetter(ESFunctionObject::create(
-            nullptr, setter,
-            ESVMInstance::currentInstance()->strings().emptyString, 1, false,
-            false));
+        FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
+            AtomicStringRef::emptyAtomicString(),
+            (FunctionObjectRef::NativeFunctionPointer)setter, 1, nullptr, true,
+            false);
+        setterValue = ValueRef::create(
+            FunctionObjectRef::create(state, nativeFunctionInfo));
     }
-    obj->defineAccessorProperty(propertyName, accData, isWritable, isEnumerable,
-                                isConfigurable);
+    ObjectRef::PresentAttribute attr = (ObjectRef::PresentAttribute)0;
+    if (isEnumerable) {
+        attr = (ObjectRef::PresentAttribute)(
+            attr | ObjectRef::PresentAttribute::EnumerablePresent);
+    }
+    if (isConfigurable) {
+        attr = (ObjectRef::PresentAttribute)(
+            attr | ObjectRef::PresentAttribute::ConfigurablePresent);
+    }
+    obj->defineAccessorProperty(
+        state, ValueRef::create(propertyName),
+        ObjectRef::AccessorPropertyDescriptor(getterValue, setterValue, attr));
 }
 
-ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
+Window* fetchWindow(ContextRef* ctx)
 {
-    return (ScriptBindingInstanceDataEscargot*)instance->data();
+    Window* window = (Window*)ctx->globalObject()->extraData();
+    return window;
 }
 
-Document* fetchDocument(ESVMInstance* instance)
+Document* fetchDocument(ContextRef* ctx)
 {
-    Window* window = (Window*)instance->globalObject()->extraPointerData();
+    Window* window = (Window*)ctx->globalObject()->extraData();
     return window->document();
 }
 
-StarFish* fetchStarFish(ESVMInstance* instance)
+StarFish* fetchStarFish(ContextRef* ctx)
 {
-    Window* window = ((Window*)instance->globalObject()->extraPointerData());
+    Window* window = (Window*)ctx->globalObject()->extraData();
     return window->starFish();
 }
 
-String* toBrowserString(const ESValue& v)
+String* toBrowserString(ExecutionStateRef* state, ValueRef* v)
 {
-    return toBrowserString(v.toString());
+    return toBrowserString(state, v->toString(state));
 }
 
-String* toBrowserString(const ESString* v)
+String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
+                        bool* result)
 {
-    escargot::NullableUTF8String s = v->toNullableUTF8String();
-    String* newStr = String::fromUTF8(s.m_buffer, s.m_bufferSize);
+    ContextRef* ctx = instance->scriptContext();
+    SandBoxRef* sb = SandBoxRef::create(ctx);
+
+    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+        return ValueRef::create(v->toString(state));
+    });
+    if (!sbresult.error->isEmpty()) {
+        if (result) {
+            *result = false;
+        }
+        return String::emptyString;
+    } else {
+        if (result) {
+            *result = true;
+        }
+        std::string s = sbresult.result->asString()->toStdUTF8String();
+        return String::fromUTF8(s.data(), s.length());
+    }
+}
+
+String* toBrowserString(ExecutionStateRef* state, StringRef* v)
+{
+    std::string s = v->toStdUTF8String();
+    String* newStr = String::fromUTF8(s.data(), s.length());
     // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored
     // as '\','n'
     // The right way is, input string should already have '\n', and white spaces
@@ -87,54 +142,55 @@ String* toBrowserString(const ESString* v)
     return newStr;
 }
 
-ESString* toJSString(String* v)
+StringRef* toJSString(String* v)
 {
     return createScriptString(v);
 }
 
-ESValue defaultFunction(ESVMInstance* instance)
+ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
+                                       Escargot::ValueRef* thisValue,
+                                       size_t argc, Escargot::ValueRef** argv,
+                                       bool isNewExpression)
 {
-    return ESValue();
+    StringRef* msg = StringRef::fromASCII("Illegal constructor");
+    ObjectRef* err =
+        ErrorObjectRef::create(state, ErrorObjectRef::Code::TypeError, msg);
+    state->throwException(ValueRef::create(err));
+    return Escargot::ValueRef::createUndefined();
 }
 
-ESValue errorOnConstructorFunction(ESVMInstance* instance)
+void throwJSTypeErrorException(ExecutionStateRef* state, String* message)
 {
-    ESVMInstance::currentInstance()->throwError(
-        ESValue(TypeError::create(ESString::create("Illegal constructor"))));
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return ESValue();
+    StringRef* msg = toJSString(message);
+    ObjectRef* err =
+        ErrorObjectRef::create(state, ErrorObjectRef::Code::TypeError, msg);
+    state->throwException(ValueRef::create(err));
 }
 
 ScriptWrappable::ScriptWrappable(void* extraPointerData)
 {
     STARFISH_ASSERT(!((size_t)extraPointerData & (size_t)1));
-    m_object = (ESFunctionObject*)((size_t)extraPointerData | (size_t)1);
+    m_object = (ObjectRef*)((size_t)extraPointerData | (size_t)1);
 }
 
-ScriptObject ScriptWrappable::scriptObjectSlowCase()
+ScriptObject ScriptWrappable::generateScriptObject()
 {
+    void* domObjectPointer;
     if (isWindow()) {
-        m_object = ESVMInstance::currentInstance()->globalObject();
-        m_object->setExtraPointerData(this);
+        domObjectPointer = this;
     } else {
-        void* extraPointerData = (void*)((size_t)m_object - 1);
-        m_object = ESObject::create(0);
-        STARFISH_ASSERT(!isGivenUpScriptValue());
-        m_object->setExtraPointerData(extraPointerData);
+        domObjectPointer = (void*)((size_t)m_object - 1);
     }
-    m_object->setExtraData(kEscargotObjectCheckMagic);
 
-    Window* window = (Window*)ESVMInstance::currentInstance()
-                         ->globalObject()
-                         ->extraPointerData();
-    init(window->scriptBindingInstance());
+    init(scriptBindingInstance(), domObjectPointer);
+    STARFISH_ASSERT(!isGivenUpScriptValue());
 
     return m_object;
 }
 
-bool ScriptWrappable::hasProperty(String* name)
+ScriptValue ScriptWrappable::scriptValue()
 {
-    return m_object->ESObject::hasProperty(createScriptString(name));
+    return ValueRef::create(scriptObject());
 }
 
 static int utf32ToUtf16(char32_t i, char16_t* u)
@@ -154,14 +210,13 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
     }
 }
 
-ESString* createScriptString(String* str)
+StringRef* createScriptString(String* str)
 {
     if (str->isASCIIString()) {
-        escargot::ASCIIString s(str->asASCIIString()->begin(),
-                                str->asASCIIString()->end());
-        return ESString::create(std::move(s));
+        return StringRef::fromASCII(str->asASCIIString()->data(),
+                                    str->asASCIIString()->length());
     } else {
-        escargot::UTF16String out;
+        UTF16StringDataNonGCStd out;
         for (size_t i = 0; i < str->length(); i++) {
             char32_t src = str->charAt(i);
             char16_t dst[2];
@@ -177,124 +232,50 @@ ESString* createScriptString(String* str)
             }
         }
 
-        return ESString::create(std::move(out));
+        return StringRef::fromUTF16(out.data(), out.length());
     }
 }
 
-ScriptValue createScriptFunction(String** argNames, size_t argc,
+ScriptValue createScriptFunction(ScriptBindingInstance* instance,
+                                 String** argNames, size_t argc,
                                  String* functionBody, bool& error)
 {
     error = false;
-    ESVMInstance* instance = ESVMInstance::currentInstance();
 
-    ESValueVector arg(0);
-    for (size_t i = 0; i < argc; i++) {
-        arg.push_back(createScriptString(argNames[i]));
-    }
+    ContextRef* ctx = instance->scriptContext();
 
-    arg.push_back(createScriptString(functionBody));
+    SandBoxRef* sb = SandBoxRef::create(ctx);
+    auto result = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+        ValueRef** argv = (ValueRef**)alloca(sizeof(ValueRef*) * (1 + argc));
+        for (size_t i = 0; i < argc; i++) {
+            argv[i] = ValueRef::create(createScriptString(argNames[i]));
+        }
+        argv[argc] = ValueRef::create(createScriptString(functionBody));
+        return state->context()->globalObject()->function()->call(
+            state, ValueRef::createUndefined(), argc + 1, argv);
+    });
 
-    ScriptValue result;
-    std::jmp_buf tryPosition;
-    if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-        result = ESFunctionObject::call(instance,
-                                        instance->globalObject()->function(),
-                                        ESValue(), arg.data(), argc + 1, false);
-        instance->unregisterTryPos(&tryPosition);
-    } else {
-        result = instance->getCatchedError();
+    if (!result.error->isEmpty()) {
         error = true;
-        STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
-    }
-    return result;
-}
+        STARFISH_LOG_ERROR(
+            "Uncaught %s\n",
+            toBrowserString(instance, ValueRef::create(result.error))
+                ->utf8Data());
 
-struct AttributeStringEventFunctionInnerData : public gc {
-    ESValue function;
-    Element* m_target;
-};
-
-static ESValue globalObjectReadCallbackFunction(const ESValue& key,
-                                                ESObject* obj)
-{
-    Window* wnd = (Window*)ESVMInstance::currentInstance()
-                      ->globalObject()
-                      ->extraPointerData();
-    Element* e =
-        wnd->document()
-            ->elementExecutionStackForAttributeStringEventFunctionObject()
-            .back();
-    if (e->scriptValue().asESPointer()->asESObject()->hasOwnProperty(key,
-                                                                     true)) {
-        return e->scriptValue().asESPointer()->asESObject()->getOwnProperty(
-            key);
-    }
-    return ESValue(ESValue::ESDeletedValue);
-}
-
-static ESValue attributeStringEventFunction(ESVMInstance* instance)
-{
-    FunctionEnvironmentRecordWithArgumentsObject* record =
-        (FunctionEnvironmentRecordWithArgumentsObject*)
-            ESVMInstance::currentInstance()
-                ->currentExecutionContext()
-                ->environment()
-                ->record();
-    ESFunctionObject* callee = record->callee();
-    STARFISH_ASSERT(callee->extraData() == kEventStringAttributeCheckMagic);
-    AttributeStringEventFunctionInnerData* data =
-        (AttributeStringEventFunctionInnerData*)callee->extraPointerData();
-
-    Window* wnd = (Window*)ESVMInstance::currentInstance()
-                      ->globalObject()
-                      ->extraPointerData();
-    wnd->document()
-        ->elementExecutionStackForAttributeStringEventFunctionObject()
-        .push_back(data->m_target);
-
-    ESVMInstance::currentInstance()->globalObject()->setIdentifierInterceptor(
-        globalObjectReadCallbackFunction);
-
-    std::jmp_buf tryPosition;
-    bool hasError = false;
-    ESValue result;
-    if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-        result = ESFunctionObject::call(ESVMInstance::currentInstance(),
-                                        data->function,
-                                        ESVMInstance::currentInstance()
-                                            ->currentExecutionContext()
-                                            ->resolveThisBinding(),
-                                        ESVMInstance::currentInstance()
-                                            ->currentExecutionContext()
-                                            ->arguments(),
-                                        ESVMInstance::currentInstance()
-                                            ->currentExecutionContext()
-                                            ->argumentCount(),
-                                        false);
-        instance->unregisterTryPos(&tryPosition);
-        hasError = false;
+        for (size_t i = 0; i < result.stackTraceData.size(); i++) {
+            STARFISH_LOG_ERROR(
+                "-> %s(%d:%d)\n",
+                toBrowserString(
+                    instance,
+                    ValueRef::create(result.stackTraceData[i].fileName))
+                    ->utf8Data(),
+                (int)result.stackTraceData[i].loc.line,
+                (int)result.stackTraceData[i].loc.column);
+        }
+        return result.error;
     } else {
-        hasError = true;
-        result = instance->getCatchedError();
+        return result.result;
     }
-
-    wnd->document()
-        ->elementExecutionStackForAttributeStringEventFunctionObject()
-        .pop_back();
-
-    if (wnd->document()
-            ->elementExecutionStackForAttributeStringEventFunctionObject()
-            .size() == 0) {
-        ESVMInstance::currentInstance()
-            ->globalObject()
-            ->setIdentifierInterceptor(nullptr);
-    }
-
-    if (hasError) {
-        instance->throwError(result);
-    }
-
-    return result;
 }
 
 ScriptValue createAttributeStringEventFunction(Element* target,
@@ -302,88 +283,164 @@ ScriptValue createAttributeStringEventFunction(Element* target,
                                                bool& result)
 {
     String* name[] = { String::createASCIIString("event") };
-    ESValue fn = createScriptFunction(name, 1, functionBody, result);
-    ESFunctionObject* wrapper = ESFunctionObject::create(
-        NULL, attributeStringEventFunction, ESString::create(""), 0, false);
+    ScriptValue fn = createScriptFunction(target->scriptBindingInstance(), name,
+                                          1, functionBody, result);
 
-    wrapper->codeBlock()->m_needsToPrepareGenerateArgumentsObject = true;
-    wrapper->setExtraData(kEventStringAttributeCheckMagic);
-    AttributeStringEventFunctionInnerData* data =
-        new AttributeStringEventFunctionInnerData();
-    data->m_target = target;
-    data->function = fn;
-    wrapper->setExtraPointerData(data);
-    return wrapper;
+    if (fn->isFunction()) {
+        fn->asFunction()->setExtraData(new AttributeEventFunction(target));
+        fn->asFunction()->markFunctionNeedsSlowVirtualIdentifierOperation();
+    }
+
+    return fn;
 }
 
-ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc,
+ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
+                               ScriptValue* argv, size_t argc,
                                ScriptValue thisValue)
 {
-    ScriptValue result;
-    if (fn.isESPointer() && fn.asESPointer()->isESFunctionObject()) {
-        ESVMInstance* instance = ESVMInstance::currentInstance();
-        std::jmp_buf tryPosition;
-        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-            result = ESFunctionObject::call(instance, fn, thisValue, argv, argc,
-                                            false);
-            instance->unregisterTryPos(&tryPosition);
+    ScriptValue result = ValueRef::createUndefined();
+    if (fn->isFunction()) {
+        ContextRef* ctx = instance->scriptContext();
+        SandBoxRef* sb = SandBoxRef::create(ctx);
+        auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+            return fn->asFunction()->call(state, thisValue, argc, argv);
+        });
+        if (!sbresult.error->isEmpty()) {
+            STARFISH_LOG_ERROR(
+                "Uncaught %s\n",
+                toBrowserString(instance, ValueRef::create(sbresult.error))
+                    ->utf8Data());
+            for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
+                STARFISH_LOG_ERROR(
+                    "-> %s(%d:%d)\n",
+                    toBrowserString(
+                        instance,
+                        ValueRef::create(sbresult.stackTraceData[i].fileName))
+                        ->utf8Data(),
+                    (int)sbresult.stackTraceData[i].loc.line,
+                    (int)sbresult.stackTraceData[i].loc.column);
+            }
         } else {
-            result = instance->getCatchedError();
-            STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
+            result = sbresult.result;
         }
     }
     return result;
 }
 
-ScriptValue createArrayBuffer(void* bufferSrc, size_t len)
+ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
+                           String* fileName, bool* result)
 {
-#ifdef USE_ES6_FEATURE
-    ESArrayBufferObject* obj = ESArrayBufferObject::create();
-    obj->attachArrayBuffer(bufferSrc, len);
-    return obj;
-#else
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-#endif
+    ContextRef* ctx = instance->scriptContext();
+    SandBoxRef* sb = SandBoxRef::create(ctx);
+
+    ScriptParserRef::ScriptParserResult scriptRef =
+        ctx->scriptParser()->parse(toJSString(string), toJSString(fileName));
+    if (scriptRef.m_error->length()) {
+        STARFISH_LOG_ERROR(
+            "Script parse error %s\n",
+            toBrowserString(instance, ValueRef::create(scriptRef.m_error))
+                ->utf8Data());
+        if (result)
+            *result = false;
+        return scriptUndefined();
+    }
+    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+        return scriptRef.m_script->execute(state);
+    });
+    if (!sbresult.error->isEmpty()) {
+        STARFISH_LOG_ERROR(
+            "Uncaught %s\n",
+            toBrowserString(instance, sbresult.error)->utf8Data());
+        for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
+            STARFISH_LOG_ERROR(
+                "-> %s(%d:%d)\n",
+                toBrowserString(
+                    instance,
+                    ValueRef::create(sbresult.stackTraceData[i].fileName))
+                    ->utf8Data(),
+                (int)sbresult.stackTraceData[i].loc.line,
+                (int)sbresult.stackTraceData[i].loc.column);
+        }
+        if (result)
+            *result = true;
+        return sbresult.error;
+    } else {
+        if (result)
+            *result = true;
+        return sbresult.result;
+    }
 }
 
-ScriptValue parseJSON(String* jsonData)
+ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
+                              size_t len)
 {
-    ScriptValue ret;
-    ESVMInstance* instance = ESVMInstance::currentInstance();
-    ScriptValue json_arg[1] = { ScriptValue(createScriptString(jsonData)) };
-    ScriptValue json_parse_fn = instance->globalObject()->json()->get(
-        ScriptValue(createScriptString(String::fromUTF8("parse"))));
-    return callScriptFunction(json_parse_fn, json_arg, 1,
-                              instance->globalObject()->json());
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
+    obj->attachBuffer(bufferSrc, len);
+    state->destroy();
+    return ValueRef::create(obj);
+}
+
+ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ScriptValue jsonArg[1] = { ValueRef::create(createScriptString(jsonData)) };
+    FunctionObjectRef* jsonParseFn = ctx->globalObject()->jsonParse();
+    return callScriptFunction(instance, ValueRef::create(jsonParseFn), jsonArg,
+                              1, ValueRef::create(ctx->globalObject()->json()));
 }
 
 bool isCallableScriptValue(ScriptValue v)
 {
-    if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+    if (v->isFunction()) {
         return true;
     }
     return false;
 }
 
-#ifdef USE_ES6_FEATURE
-Promise::Promise()
-    : m_scriptValue(ESPromiseObject::create())
+bool isObjectScriptValue(ScriptValue v)
 {
-    // TODO remove below line if escargot fixed
-    m_scriptValue.asESPointer()->asESPromiseObject()->set__proto__(
-        ESVMInstanceCurrentInstance()->globalObject()->promisePrototype());
+    if (v->isObject()) {
+        return true;
+    }
+    return false;
+}
+
+#ifdef STARFISH_ENABLE_TEST
+void invokeTestStartFunction(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    ScriptValue fn = ctx->globalObject()->get(
+        state, ValueRef::create(StringRef::fromASCII("testStart")));
+    state->destroy();
+    callScriptFunction(instance, fn, nullptr, 0, scriptUndefined());
+}
+#endif
+
+Promise::Promise(ScriptBindingInstance* instance)
+{
+    m_instance = instance;
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    m_scriptValue = ValueRef::create(PromiseObjectRef::create(state));
+    state->destroy();
 }
 
 void Promise::fulfill(ScriptValue v)
 {
-    m_scriptValue.asESPointer()->asESPromiseObject()->fulfillPromise(
-        ESVMInstanceCurrentInstance(), v);
+    ContextRef* ctx = m_instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    m_scriptValue->asObject()->asPromiseObject()->fulfill(state, v);
+    state->destroy();
 }
 
 void Promise::reject(ScriptValue v)
 {
-    m_scriptValue.asESPointer()->asESPromiseObject()->rejectPromise(
-        ESVMInstanceCurrentInstance(), v);
+    ContextRef* ctx = m_instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    m_scriptValue->asObject()->asPromiseObject()->reject(state, v);
+    state->destroy();
 }
-#endif
 }

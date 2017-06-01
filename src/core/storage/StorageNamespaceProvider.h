@@ -17,13 +17,13 @@
 #ifndef __StarFishStorageNamespaceProvider__
 #define __StarFishStorageNamespaceProvider__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/WindowHoldable.h"
 
 namespace StarFish {
 
 class StorageNamespace;
 
-class StorageNamespaceProvider : public StarFishHoldable, public gc {
+class StorageNamespaceProvider : public WindowHoldable, public gc {
 public:
     virtual ~StorageNamespaceProvider()
     {
@@ -33,8 +33,8 @@ public:
     virtual StorageNamespace* createSessionStorageNamespace() = 0;
 
 protected:
-    StorageNamespaceProvider(StarFish* starfish)
-        : StarFishHoldable(starfish)
+    StorageNamespaceProvider(Window* window)
+        : WindowHoldable(window)
     {
     }
 };

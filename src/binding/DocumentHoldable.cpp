@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
@@ -29,5 +30,10 @@ Window* DocumentHoldable::window()
 StarFish* DocumentHoldable::starFish()
 {
     return window()->starFish();
+}
+
+ScriptBindingInstance* DocumentHoldable::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 }

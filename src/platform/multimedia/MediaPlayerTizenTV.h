@@ -54,7 +54,7 @@ public:
     {
     }
 
-    virtual void setNativePlayerDefaultOptions(URL* url);
+    virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
     virtual double currentTime();

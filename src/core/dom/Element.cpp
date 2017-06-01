@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
@@ -90,8 +91,8 @@ String* Element::getAttributeOrEmpty(QualifiedName name)
 void Element::setAttribute(String* name, String* value)
 {
     if (!QualifiedName::checkNameProductionRule(name)) {
-        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
-                               nullptr);
+        throw new DOMException(
+            document(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
     }
     setAttribute(document()->createAttributeName(name), value);
 }
@@ -271,7 +272,7 @@ void Element::getClientQuads(std::vector<DOMQuad>& quads)
                 ->absoluteRect((FrameBox*)document()->rootElement()->frame());
 
         DOMQuad* q = new DOMQuad(
-            DOMPointInit(rect.location().x(), rect.location().y()),
+            document(), DOMPointInit(rect.location().x(), rect.location().y()),
             DOMPointInit(rect.location().x() + rect.size().width(),
                          rect.location().y()),
             DOMPointInit(rect.location().x() + rect.size().width(),
@@ -295,11 +296,11 @@ DOMRectList* Element::getClientRects()
     getClientQuads(quads);
 
     if (quads.empty()) {
-        return DOMRectList::create();
+        return DOMRectList::create(document());
     }
 
     // todo : Apply the transforms
-    return DOMRectList::create(quads);
+    return DOMRectList::create(document(), quads);
 }
 
 DOMRect* Element::getBoundingClientRect()
@@ -307,7 +308,7 @@ DOMRect* Element::getBoundingClientRect()
     std::vector<DOMQuad> quads;
     getClientQuads(quads);
     if (quads.empty()) {
-        return new DOMRect();
+        return new DOMRect(document());
     }
 
     DOMRect* rect = quads[0].getBounds();

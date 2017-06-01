@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -31,6 +33,11 @@ NodeList::NodeList(Node* root, bool canCache)
     : ScriptWrappable(this)
     , m_nodeListImpl(root, canCache)
 {
+}
+
+ScriptBindingInstance* NodeList::scriptBindingInstance()
+{
+    return m_nodeListImpl.root()->document()->scriptBindingInstance();
 }
 
 uint32_t NodeList::length() const

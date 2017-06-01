@@ -25,7 +25,8 @@ class URL;
 
 class HistoryEntry : public gc {
 public:
-    HistoryEntry(ScriptValue state, String* title, URL* url, bool isPushState)
+    HistoryEntry(ScriptValue state, String* title, ResourceURL* url,
+                 bool isPushState)
         : m_state(state)
         , m_title(title)
         , m_url(url)
@@ -40,7 +41,7 @@ public:
     {
         return m_title;
     }
-    inline URL* url()
+    inline ResourceURL* url()
     {
         return m_url;
     }
@@ -49,7 +50,7 @@ public:
         return m_isPushState;
     }
 
-    void replaceState(ScriptValue state, String* title, URL* url)
+    void replaceState(ScriptValue state, String* title, ResourceURL* url)
     {
         m_state = state;
         m_title = title;
@@ -59,7 +60,7 @@ public:
 private:
     ScriptValue m_state;
     String* m_title;
-    URL* m_url;
+    ResourceURL* m_url;
     bool m_isPushState;
 };
 }

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
@@ -46,7 +47,8 @@
 namespace StarFish {
 
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                   URL* uri, String* charSet, bool doesParticipateInRendering)
+                   ResourceURL* uri, String* charSet,
+                   bool doesParticipateInRendering)
     : Node(this)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
@@ -931,7 +933,7 @@ void Document::notifyDomContentLoaded()
 {
     String* eventType =
         window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
-    Event* e = new Event(eventType, EventInit(true, true));
+    Event* e = new Event(this, eventType, EventInit(true, true));
     EventTarget::dispatchEvent(e);
 
     m_resourceLoader.notifyEndParseDocument();
@@ -975,7 +977,7 @@ void Document::close()
     if (body) {
         String* eventType =
             window()->starFish()->staticStrings()->m_unload.localName();
-        Event* e = new Event(eventType, EventInit(false, false));
+        Event* e = new Event(this, eventType, EventInit(false, false));
         EventTarget::dispatchEvent(body, e);
     }
 
@@ -1020,7 +1022,7 @@ Element* Document::createElement(AtomicString localName, bool shouldCheckName)
 {
     if (shouldCheckName &&
         !QualifiedName::checkNameProductionRule(localName.string())) {
-        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -1060,7 +1062,7 @@ Attr* Document::createAttribute(String* name)
 Attr* Document::createAttribute(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.localName())) {
-        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -1126,7 +1128,7 @@ void Document::setBody(HTMLElement* element)
                         "HTMLBodyElement", "HTMLFrameSetElement");
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "body", "Document",
                         reason);
-        throw new DOMException(DOMException::HIERARCHY_REQUEST_ERR, msg);
+        throw new DOMException(this, DOMException::HIERARCHY_REQUEST_ERR, msg);
     }
 
     HTMLElement* body = this->body();
@@ -1150,7 +1152,7 @@ void Document::setVisibilityState(VisibilityState visibilityState)
         m_pageVisibilityState = visibilityState;
         String* eventType =
             starFish()->staticStrings()->m_visibilitychange.localName();
-        Event* e = new Event(eventType, EventInit(true, false));
+        Event* e = new Event(this, eventType, EventInit(true, false));
         EventTarget::dispatchEvent(this->asNode(), e);
     }
 }
@@ -1233,7 +1235,7 @@ ImageData* Document::brokenImage()
             "Vh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVDjLY2AYBaNgFIy"
             "CUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader().fetchImage(
-            URL::createURL(String::emptyString, brokenImg));
+            new ResourceURL(brokenImg, String::emptyString));
         res->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;

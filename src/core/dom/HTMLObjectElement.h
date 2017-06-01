@@ -35,7 +35,8 @@ public:
         m_content = nullptr;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLObjectElement() const override;
 
     /* 4.4 Interface Node */

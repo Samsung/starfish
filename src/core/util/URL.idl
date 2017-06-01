@@ -2,6 +2,7 @@
 // NOTE Using DOMString instead of USVString
 
 [Constructor(DOMString url, optional DOMString base),
+ ConstructorCallWith=Window,
  Exposed=(Window,Worker)]
 interface URL {
   [STARFISH_ENABLE_TEST] stringifier attribute DOMString href;

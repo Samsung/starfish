@@ -14,19 +14,23 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
 #include "core/dom/DOMQuad.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
-DOMRectList::DOMRectList()
+DOMRectList::DOMRectList(Document* document)
     : ScriptWrappable(this)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
 {
 }
 
-DOMRectList::DOMRectList(const std::vector<DOMQuad>& quads)
+DOMRectList::DOMRectList(Document* document, const std::vector<DOMQuad>& quads)
     : ScriptWrappable(this)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {

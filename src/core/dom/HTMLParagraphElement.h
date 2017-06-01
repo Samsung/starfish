@@ -28,7 +28,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLParagraphElement() const;
 
     /* 4.4 Interface Node */

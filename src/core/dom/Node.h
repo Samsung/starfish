@@ -300,7 +300,8 @@ public:
         NodeStateTarget = 1 << 3,
     };
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isNode() const override;
 
     void setFirstChild(Node* s)

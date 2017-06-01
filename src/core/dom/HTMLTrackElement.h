@@ -34,7 +34,8 @@ public:
 
     HTMLTrackElement(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLTrackElement() const override;
 
     virtual String* localName();

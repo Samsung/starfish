@@ -43,7 +43,8 @@ public:
         m_value = value;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMSettableTokenList() const override;
 
 private:

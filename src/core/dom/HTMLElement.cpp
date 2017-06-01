@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLElement.h"
@@ -132,13 +133,13 @@ void HTMLElement::setDir(String* dir)
 void HTMLElement::click()
 {
     String* eventType = starFish()->staticStrings()->m_click.localName();
-    dispatchEvent(new Event(eventType, EventInit(true, true)));
+    dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
 }
 
 void HTMLElement::focus()
 {
     String* eventType = starFish()->staticStrings()->m_focus.localName();
-    dispatchEvent(new Event(eventType, EventInit(true, true)));
+    dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
 }
 
 DEFINE_EVENT_LISTENER(HTMLElement, abort);
