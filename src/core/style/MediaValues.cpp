@@ -20,6 +20,7 @@
 #include "core/layout/Frame.h"
 #include "core/modules/window/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/UnitHelper.h"
 
 namespace StarFish {
 
@@ -27,13 +28,6 @@ namespace StarFish {
 // If we support paged media in the future, we should also consider this.
 // TODO: We should check again whether the existing code is available or not for
 // the computation functions below.
-
-// These conversions are defined in css-values
-const double cssPixelsPerInch = 96;
-const double cssPixelsPerCentimeter = cssPixelsPerInch / 2.54; // 2.54 cm/in
-const double cssPixelsPerMillimeter = cssPixelsPerCentimeter / 10;
-const double cssPixelsPerPoint = cssPixelsPerInch / 72;
-const double cssPixelsPerPica = cssPixelsPerInch / 6;
 
 float defaultFontSize(Frame* frame)
 {
@@ -74,19 +68,19 @@ bool computeLengthImpl(double value, UnitType type, float defaultFontSize,
         result = (value * std::max(viewportWidth, viewportHeight)) / 100.0;
         return true;
     case UnitType::Centimeters:
-        result = value * cssPixelsPerCentimeter;
+        result = value * unitPxPerCm;
         return true;
     case UnitType::Millimeters:
-        result = value * cssPixelsPerMillimeter;
+        result = value * unitPxPerMm;
         return true;
     case UnitType::Inches:
-        result = value * cssPixelsPerInch;
+        result = value * unitPxPerIn;
         return true;
     case UnitType::Points:
-        result = value * cssPixelsPerPoint;
+        result = value * unitPxPerPt;
         return true;
     case UnitType::Picas:
-        result = value * cssPixelsPerPica;
+        result = value * unitPxPerPc;
         return true;
     default:
         return false;
@@ -134,6 +128,12 @@ int32_t MediaValues::screenHeight() const
     // TODO: The current screen area is same as the viewport area.
     // The screen area for the device area should be considered later.
     return m_frame->document()->window()->innerHeight();
+}
+
+float MediaValues::devicePixelRatio() const
+{
+    // FIXME: We don't have any information about this.
+    return 1;
 }
 
 int32_t MediaValues::colorBitsPerComponent() const

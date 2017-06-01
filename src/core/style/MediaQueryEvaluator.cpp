@@ -16,6 +16,7 @@
 
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/layout/LayoutUtil.h"
+#include "core/style/UnitHelper.h"
 
 namespace StarFish {
 
@@ -77,6 +78,64 @@ bool MediaQueryEvaluator::eval(MediaQuery* query) const
 static bool isLength(UnitType type)
 {
     return type >= UnitType::Ems && type <= UnitType::UserUnits;
+}
+
+static bool isResolution(UnitType type)
+{
+    return type >= UnitType::DotsPerPixel &&
+           type <= UnitType::DotsPerCentimeter;
+}
+
+double conversionToCanonicalUnitsScaleFactor(UnitType unitType)
+{
+    double factor = 1.0;
+    switch (unitType) {
+    // These are "canonical" units in their respective categories.
+    case UnitType::Pixels:
+    case UnitType::UserUnits:
+    case UnitType::Degrees:
+    case UnitType::Milliseconds:
+    case UnitType::Hertz:
+        break;
+    case UnitType::Centimeters:
+        factor = unitPxPerCm;
+        break;
+    case UnitType::DotsPerCentimeter:
+        factor = 1 / unitPxPerCm;
+        break;
+    case UnitType::Millimeters:
+        factor = unitPxPerMm;
+        break;
+    case UnitType::Inches:
+        factor = unitPxPerIn;
+        break;
+    case UnitType::DotsPerInch:
+        factor = 1 / unitPxPerIn;
+        break;
+    case UnitType::Points:
+        factor = unitPxPerPt;
+        break;
+    case UnitType::Picas:
+        factor = unitPxPerPc;
+        break;
+    case UnitType::Radians:
+        factor = 180 / M_PI;
+        break;
+    case UnitType::Gradians:
+        factor = 0.9;
+        break;
+    case UnitType::Turns:
+        factor = 360;
+        break;
+    case UnitType::Seconds:
+    case UnitType::Kilohertz:
+        factor = 1000;
+        break;
+    default:
+        break;
+    }
+
+    return factor;
 }
 
 static bool computeLength(MediaQueryExpValue& value, MediaValues* mediaValues,
@@ -283,12 +342,43 @@ static bool monochromeMediaFeatureEval(MediaQueryExpValue& value,
     return false;
 }
 
+static bool evalResolution(MediaQueryExpValue& value, MediaValues* mediaValues,
+                           MediaFeaturePrefix op)
+{
+    if (!value.isValid() || !value.isValue || !isResolution(value.unit)) {
+        return false;
+    }
+
+    float actualResolution = mediaValues->devicePixelRatio();
+
+    if (value.unit == UnitType::Number) {
+        return compareValue(actualResolution, clampTo<float>(value.value), op);
+    }
+
+    double canonicalFactor = conversionToCanonicalUnitsScaleFactor(value.unit);
+    double dppxFactor =
+        conversionToCanonicalUnitsScaleFactor(UnitType::DotsPerPixel);
+    float valueInDppx =
+        clampTo<float>(value.value * (canonicalFactor / dppxFactor));
+    if (value.unit == UnitType::DotsPerCentimeter) {
+        // To match DPCM to DPPX values, we limit to 2 decimal points.
+        // The http://dev.w3.org/csswg/css3-values/#absolute-lengths recommends
+        // "that the pixel unit refer to the whole number of device pixels that
+        // best approximates the reference pixel". With that in mind, allowing 2
+        // decimal point precision seems appropriate.
+        return compareValue(floorf(0.5 + 100 * actualResolution) / 100,
+                            floorf(0.5 + 100 * valueInDppx) / 100, op);
+    }
+
+    return compareValue(actualResolution, valueInDppx, op);
+}
+
 static bool resolutionMediaFeatureEval(MediaQueryExpValue& value,
                                        MediaValues* mediaValues,
                                        MediaFeaturePrefix op)
 {
-    // TODO: Consider the resolution of the output device.
-    return false;
+    return (!value.isValid() || isResolution(value.unit)) &&
+           evalResolution(value, mediaValues, op);
 }
 
 static bool scanMediaFeatureEval(MediaQueryExpValue& value,
