@@ -14,7 +14,9 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Event.h"
+#include "core/dom/Document.h"
 #include "core/modules/profiling/Profiling.h"
 
 namespace StarFish {
@@ -66,14 +68,15 @@ void EventInit::setComposed(bool composed)
     m_composed = composed;
 }
 
-Event::Event()
-    : Event(String::emptyString)
+Event::Event(Document* document)
+    : Event(document, String::emptyString)
 {
 }
 
-Event::Event(String* eventType, const EventInit& init)
+Event::Event(Document* document, String* eventType, const EventInit& init)
     : ScriptWrappable(this)
     , m_isInitialized(true)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_type(eventType)
     , m_target(nullptr)
     , m_currentTarget(nullptr)
@@ -86,5 +89,10 @@ Event::Event(String* eventType, const EventInit& init)
     , m_isDispatched(false)
 {
     m_timeStamp = timestamp();
+}
+
+ScriptBindingInstance* Event::scriptBindingInstance()
+{
+    return m_scriptBindingInstance;
 }
 }

@@ -2,7 +2,7 @@
 // NOTE Using DOMString instead of USVString
 
 
-[PrimaryGlobal, LegacyUnenumerableNamedProperties]
+[PrimaryGlobal, LegacyUnenumerableNamedProperties, ObjectType=Global]
 interface Window : EventTarget {
   // the current browsing context
   [Custom, Unforgeable] readonly attribute WindowProxy window;

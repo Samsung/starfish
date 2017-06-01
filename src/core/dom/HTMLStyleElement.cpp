@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -160,7 +161,8 @@ void HTMLStyleElement::dispatchLoadEvent()
             if (!element->hasLoaded()) {
                 String* eventType =
                     element->starFish()->staticStrings()->m_load.localName();
-                Event* e = new Event(eventType, EventInit(false, false));
+                Event* e = new Event(element->document(), eventType,
+                                     EventInit(false, false));
                 element->dispatchEvent(e);
                 element->setLoaded();
             }

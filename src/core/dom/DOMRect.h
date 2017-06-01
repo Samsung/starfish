@@ -33,8 +33,9 @@ struct DOMRectInit {
 
 class DOMRect : public DOMRectReadOnly {
 public:
-    DOMRect(double x = 0, double y = 0, double width = 0, double height = 0);
-    DOMRect(const DOMRectReadOnly*);
+    DOMRect(Document* document, double x = 0, double y = 0, double width = 0,
+            double height = 0);
+    DOMRect(DOMRectReadOnly*);
 
     void setX(double x)
     {
@@ -58,7 +59,8 @@ public:
 
     void unite(const DOMRect*);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMRect() const override;
 };
 }

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/DOMException.h"
 #ifdef STARFISH_ENABLE_MULTI_PAGE
@@ -152,7 +153,7 @@ Element* HTMLDocument::createElement(AtomicString localName,
 {
     if (shouldCheckName &&
         !QualifiedName::checkNameProductionRule(localName.string())) {
-        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -204,7 +205,9 @@ static void createHtmlCaseInsensitiveAttributesSet(
 bool HTMLDocument::isCaseSensitiveAttribute(Document* document,
                                             const QualifiedName& attributeName)
 {
-    static GCUnorderedMap<String*, size_t> caseInsensitiveAttrSet;
+    GCUnorderedMap<String*, size_t>& caseInsensitiveAttrSet =
+        document->starFish()->m_caseInsensitiveAttrSet;
+
     if (caseInsensitiveAttrSet.size() == 0)
         createHtmlCaseInsensitiveAttributesSet(document,
                                                caseInsensitiveAttrSet);

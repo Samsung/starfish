@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/modules/location/Geolocation.h"
 
 #if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE)

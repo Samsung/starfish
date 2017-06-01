@@ -18,25 +18,30 @@
 #define __StarFishLocation__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class StarFish;
-class URL;
+class ResourceURL;
 
-class Location : public ScriptWrappable, public StarFishHoldable {
+class Location : public ScriptWrappable, public DocumentHoldable {
 public:
-    Location(StarFish* starFish)
+    Location(Document* document)
         : ScriptWrappable(this)
-        , StarFishHoldable(starFish)
+        , DocumentHoldable(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isLocation() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
-    URL* url();
+    ResourceURL* url();
     String* href();
     String* host();
     String* hostname();

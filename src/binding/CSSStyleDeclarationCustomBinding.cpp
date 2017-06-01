@@ -14,99 +14,106 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
 
+#include <EscargotPublic.h>
+
 namespace StarFish {
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+using namespace Escargot;
+
+ExposableObjectGetOwnPropertyCallbackResult
+CSSStyleDeclarationGetOwnPropertyCallback(ExecutionStateRef* state,
+                                          ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
+    CSSStyleDeclaration* self = (CSSStyleDeclaration*)jsObj->extraData();
     STARFISH_ASSERT(self->isCSSStyleDeclaration());
-    uint32_t idx = key.toIndex();
+
+    uint32_t idx = key->toArrayIndex(state);
     if (idx < self->length()) {
-        return ESString::create(self->item(idx)->utf8Data());
+        return ExposableObjectGetOwnPropertyCallbackResult(
+            ValueRef::create(toJSString(self->item(idx))), true, true, false);
     }
 
-    if (idx == ESValue::ESInvalidIndexValue) {
-        const char* str = toBrowserString(key)->utf8Data();
+    if (idx == ValueRef::InvalidArrayIndexValue) {
+        const char* str = toBrowserString(state, key)->utf8Data();
         CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
 
         if (kind == CSSStyleKind::Unknown) {
             kind = lookupCSSStyle(str, strlen(str));
         }
         if (kind == CSSStyleKind::Unknown) {
-            return ESValue(ESValue::ESDeletedValue);
+            return ExposableObjectGetOwnPropertyCallbackResult();
         } else {
             if (false) {
             }
-#define GET_ATTR(name, nameLower, nameCSSCase)   \
-    else if (kind == CSSStyleKind::name)         \
-    {                                            \
-        return createScriptString(self->name()); \
+#define GET_ATTR(name, nameLower, nameCSSCase)                              \
+    else if (kind == CSSStyleKind::name)                                    \
+    {                                                                       \
+        return ExposableObjectGetOwnPropertyCallbackResult(                 \
+            ValueRef::create(createScriptString(self->name())), true, true, \
+            false);                                                         \
     }
             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
 #undef GET_ATTR
         }
     }
 
-    return ESString::create("");
+    return ExposableObjectGetOwnPropertyCallbackResult(
+        ValueRef::create(StringRef::fromASCII("")), false, false, false);
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void CSSStyleDeclarationDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                                  ObjectRef* jsObj,
+                                                  ValueRef* key, ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
+    CSSStyleDeclaration* self = (CSSStyleDeclaration*)jsObj->extraData();
     STARFISH_ASSERT(self->isCSSStyleDeclaration());
-    const char* str = toBrowserString(key)->utf8Data();
+    const char* str = toBrowserString(state, key)->utf8Data();
     CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
 
     if (kind == CSSStyleKind::Unknown) {
         kind = lookupCSSStyle(str, strlen(str));
     }
     if (kind == CSSStyleKind::Unknown) {
-        return false;
+        return;
     } else {
         if (false) {
         }
-#define SET_ATTR(name, nameLower, nameCSSCase)        \
-    else if (kind == CSSStyleKind::name)              \
-    {                                                 \
-        self->set##name(toBrowserString(val), false); \
-        return true;                                  \
+#define SET_ATTR(name, nameLower, nameCSSCase)               \
+    else if (kind == CSSStyleKind::name)                     \
+    {                                                        \
+        self->set##name(toBrowserString(state, val), false); \
+        return;                                              \
     }
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
     }
 
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector
+CSSStyleDeclarationEnumerationCallback(ExecutionStateRef* state,
+                                       ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isCSSStyleDeclaration());
+    CSSStyleDeclaration* self = (CSSStyleDeclaration*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), true, true, false));
     }
 
-#define ENUM_ATTR(name, nameLower, nameCSSCase) \
-    v.push_back(ESString::create(#nameLower));
+#define ENUM_ATTR(name, nameLower, nameCSSCase)                         \
+    v.push_back(ExposableObjectEnumerationCallbackResult(               \
+        ValueRef::create(StringRef::fromASCII(#nameLower)), true, true, \
+        false));
 
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ENUM_ATTR)
 #undef ENUM_ATTR
     return v;
-}
-
-void CSSStyleDeclaration::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

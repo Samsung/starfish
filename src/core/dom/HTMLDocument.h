@@ -26,13 +26,15 @@ class Window;
 class HTMLDocument : public Document {
 public:
     HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                 URL* url, String* charSet, bool doesParticipateInRendering)
+                 ResourceURL* url, String* charSet,
+                 bool doesParticipateInRendering)
         : Document(window, scriptBindingInstance, url, charSet,
                    doesParticipateInRendering)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLDocument() const override;
 
     virtual Element* createElement(AtomicString localName,

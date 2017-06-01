@@ -42,7 +42,8 @@ public:
         return m_timestamp;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isGeoposition() const override;
 
 protected:

@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -26,6 +28,11 @@ HTMLCollection::HTMLCollection(Node* root,
     : ScriptWrappable(this)
     , m_nodeListImpl(root, filterType, data, canCache)
 {
+}
+
+ScriptBindingInstance* HTMLCollection::scriptBindingInstance()
+{
+    return m_nodeListImpl.root()->document()->scriptBindingInstance();
 }
 
 size_t HTMLCollection::length() const

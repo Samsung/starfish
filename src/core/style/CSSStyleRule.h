@@ -32,7 +32,8 @@ public:
     CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
                  CSSStyleDeclaration* decl);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSStyleRule() const override;
 
     GCDeque<CSSSelector*>* selectorList() const
@@ -64,7 +65,8 @@ public:
     CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules);
     CSSGroupingRule(CSSGroupingRule& o);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSGroupingRule() const override;
 
     GCVector<CSSRule*>& childRules()
@@ -87,7 +89,8 @@ public:
     CSSConditionRule(RuleType, GCVector<CSSRule*>& rules);
     CSSConditionRule(CSSConditionRule&);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSConditionRule() const override;
 
     String* ConditionText() const
@@ -107,7 +110,8 @@ public:
     CSSMediaRule(MediaQuerySet* media, GCVector<CSSRule*>& rules);
     CSSMediaRule(CSSMediaRule& o);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSMediaRule() const override;
 
     MediaQuerySet* mediaQuerySet() const
@@ -131,7 +135,8 @@ class CSSImportRule : public CSSRule {
 public:
     CSSImportRule(String* href, MediaQuerySet* media);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCSSImportRule() const override;
 
     MediaQuerySet* mediaQuerySet() const

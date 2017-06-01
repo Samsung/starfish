@@ -47,7 +47,7 @@ public:
         TextResourceType,
     };
 
-    Resource(URL* url, ResourceLoader* loader)
+    Resource(ResourceURL* url, ResourceLoader* loader)
         : m_isIncludedInComputingWindowOnLoadEvent(true)
         , m_isReferencedByAnoterResource(false)
         , m_isCanceledButContinueLoadingDueToCache(false)
@@ -105,7 +105,7 @@ public:
         return m_resourceRequest;
     }
 
-    URL* url()
+    ResourceURL* url()
     {
         return m_url;
     }
@@ -177,7 +177,7 @@ protected:
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
     State m_state;
-    URL* m_url;
+    ResourceURL* m_url;
     ResourceLoader* m_loader;
     ResourceRequest* m_resourceRequest;
     GCVector<ResourceClient*> m_resourceClients;

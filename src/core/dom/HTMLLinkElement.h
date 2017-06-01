@@ -36,7 +36,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLLinkElement() const override;
 
     /* 4.4 Interface Node */
@@ -58,7 +59,7 @@ public:
     String* type();
     void setType(String* type);
 
-    URL* url();
+    ResourceURL* url();
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

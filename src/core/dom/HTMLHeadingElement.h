@@ -25,7 +25,8 @@ class HTMLHeadingElement : public HTMLElement {
 public:
     HTMLHeadingElement(Document* document, AtomicString name);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLHeadingElement() const override;
 
     /* 4.4 Interface Node */

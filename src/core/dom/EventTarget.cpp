@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
@@ -31,7 +32,7 @@ ScriptValue EventListener::scriptValue() const
             m_scriptStringNeedToParse->m_target,
             m_scriptStringNeedToParse->m_scriptStringNeedToParse, error);
         if (error) {
-            m_listener = ESValue(ESValue::ESNull);
+            m_listener = scriptNull();
         }
         m_isNeedToParse = false;
     }
@@ -43,10 +44,15 @@ ScriptValue EventListener::call(Event* event)
     ScriptValue listenerFunc = scriptValue();
     if (isCallableScriptValue(listenerFunc)) {
         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-        callScriptFunction(listenerFunc, argv, 1,
-                           event->currentTarget()->scriptValue());
+        callScriptFunction(event->scriptBindingInstance(), listenerFunc, argv,
+                           1, event->currentTarget()->scriptValue());
     }
     return listenerFunc;
+}
+
+ScriptBindingInstance* EventTarget::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 
 GCVector<EventListener*>* EventTarget::getEventListeners(
@@ -144,7 +150,7 @@ bool EventTarget::dispatchEvent(Event* event)
 
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
-    ASSERT(origin);
+    STARFISH_ASSERT(origin);
     // https://www.w3.org/TR/dom/#dispatching-events
     // 1. Let event be the event that is dispatched.
     // 2. Set event's dispatch flag.

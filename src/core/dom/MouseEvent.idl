@@ -11,7 +11,7 @@ dictionary MouseEventInit : EventModifierInit {
 };
 
 // https://w3c.github.io/uievents/#idl-mouseevent
-[Constructor(DOMString type, optional MouseEventInit eventInitDict)]
+[Constructor(DOMString type, optional MouseEventInit eventInitDict), ConstructorCallWith=Document]
 interface MouseEvent : UIEvent {
   [Unimplemented] readonly attribute long screenX;
   [Unimplemented] readonly attribute long screenY;

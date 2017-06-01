@@ -47,7 +47,8 @@ private:
 
 class DOMPoint : public DOMPointReadOnly {
 public:
-    DOMPoint(double x = 0, double y = 0, double z = 0, double w = 1);
+    DOMPoint(Document* document, double x = 0, double y = 0, double z = 0,
+             double w = 1);
     DOMPoint(const DOMPointInit&);
 
     void setX(double x)
@@ -70,7 +71,8 @@ public:
         m_w = w;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMPoint() const override;
 };
 }

@@ -50,7 +50,8 @@ public:
               String* label = String::emptyString,
               String* language = String::emptyString);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isTextTrack() const override;
 
 #define VIRTUAL

@@ -19,21 +19,28 @@
 #define __StarFishTextTrackCueList__
 
 #include "TextTrackCue.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class TextTrackCueList : public ScriptWrappable,
+                         public DocumentHoldable,
                          public GCVector<TextTrackCue*> {
 public:
-    TextTrackCueList()
+    TextTrackCueList(Document* document)
         : ScriptWrappable(this)
+        , DocumentHoldable(document)
         , GCVector<TextTrackCue*>()
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isTextTrackCueList() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
     uint32_t length()
     {

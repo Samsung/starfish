@@ -1,6 +1,6 @@
 // https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webidl
 
-[ArrayClass]
+[ArrayClass, ConstructorCallWith=Document, ObjectType=Exposable]
 interface DOMRectList {
   readonly attribute unsigned long length;
   getter DOMRect? item(unsigned long index);

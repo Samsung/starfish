@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameTableCaptionBox.h"
 #include "core/layout/FrameTreeBuilder.h"

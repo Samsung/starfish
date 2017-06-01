@@ -14,74 +14,68 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/fileapi/Blob.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
 
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue blobConstructor(ESVMInstance* instance)
+ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
+                          size_t argCount, ValueRef** argv,
+                          bool isNewExpression)
 {
     // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
-    int argCount = instance->currentExecutionContext()->argumentCount();
     if (argCount == 0) {
-        StarFish* starFish = fetchStarFish(instance);
+        Document* document = fetchDocument(state->context());
         Blob* b =
-            new Blob(starFish, 0, String::emptyString, nullptr, false, false);
+            new Blob(document, 0, String::emptyString, nullptr, false, false);
         return b->scriptValue();
     }
-    ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+    ValueRef* firstArg = argv[0];
 
     void* bytes = 0;
-    ESValue lengthString = currentInstance->strings().length.string();
-    ESObject* obj = nullptr;
-    ESValue lengthValue;
+    ValueRef* lengthString = ValueRef::create(
+        AtomicStringRef::create(state->context(), "length")->string());
+    ObjectRef* obj = nullptr;
+    ValueRef* lengthValue = ValueRef::createUndefined();
 
-    if (!firstArg.isObject() ||
-        (lengthValue = (obj = firstArg.toObject())->get(lengthString))
-            .isUndefinedOrNull()) {
+    if (!firstArg->isObject() ||
+        (lengthValue = (obj = firstArg->asObject())->get(state, lengthString))
+            ->isUndefinedOrNull()) {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_INDEXABLE_TYPE, "0",
                         "blobParts");
         COMPOSE_MESSAGE(msg, FAILED_TO_CONSTRUCT, "Blob", reason);
         THROW_EXCEPTION(msg);
     }
 
-    size_t length = (size_t)lengthValue.toNumber();
+    size_t length = (size_t)lengthValue->toNumber(state);
 
     GCVector<std::pair<void*, size_t>> bufferInfo;
     size_t totalByteLength = 0;
     for (size_t i = 0; i < length; i++) {
-        ESValue element = obj->get(ESValue(i));
+        ValueRef* element = obj->get(state, ValueRef::create(i));
 
-#ifdef USE_ES6_FEATURE
-        // ESArrayBufferView
-        if (element.isESPointer() &&
-            element.asESPointer()->isESArrayBufferView()) {
-            ESArrayBufferView* v = element.asESPointer()->asESArrayBufferView();
-            const char* p = (const char*)v->buffer()->data();
-            p += v->byteoffset();
+        // ArrayBufferView
+        if (element->isObject() && element->asObject()->isArrayBufferView()) {
+            ArrayBufferViewRef* v = element->asObject()->asArrayBufferView();
+            const char* p = (const char*)v->buffer()->rawBuffer();
             bufferInfo.push_back(std::make_pair((void*)p, v->bytelength()));
             totalByteLength += v->bytelength();
             continue;
-        }
-
-        // ESArrayBufferObject
-        if (element.isESPointer() &&
-            element.asESPointer()->isESArrayBufferObject()) {
-            ESArrayBufferObject* v =
-                element.asESPointer()->asESArrayBufferObject();
+        } else if (element->isObject() &&
+                   element->asObject()->isArrayBufferObject()) {
+            ArrayBufferObjectRef* v =
+                element->asObject()->asArrayBufferObject();
             bufferInfo.push_back(
-                std::make_pair((void*)v->data(), v->bytelength()));
+                std::make_pair((void*)v->rawBuffer(), v->bytelength()));
             totalByteLength += v->bytelength();
             continue;
-        }
-#endif
-        // Blob
-        if (element.isObject()) {
-            ESObject* o = element.toObject();
-            if (o->extraData() == kEscargotObjectCheckMagic &&
-                ((ScriptWrappable*)o->extraPointerData())->isBlob()) {
-                Blob* bb = (Blob*)o->extraPointerData();
+        } else if (element->isObject() && element->asObject()->extraData()) {
+            void* extraData = element->asObject()->extraData();
+            if (((ScriptWrappable*)extraData)->isBlob()) {
+                Blob* bb = (Blob*)extraData;
                 bufferInfo.push_back(std::make_pair(bb->data(), bb->size()));
                 totalByteLength += bb->size();
                 continue;
@@ -90,7 +84,7 @@ ESValue blobConstructor(ESVMInstance* instance)
 
         // otherwise, toString()
         NullableUTF8String s =
-            toBrowserString(element.toString())->toNullableUTF8String();
+            toBrowserString(state, element)->toNullableUTF8String();
         bufferInfo.push_back(std::make_pair((void*)s.m_buffer, s.m_bufferSize));
         totalByteLength += s.m_bufferSize;
     }
@@ -104,15 +98,15 @@ ESValue blobConstructor(ESVMInstance* instance)
 
     STARFISH_ASSERT(offset == totalByteLength);
 
-    ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+    ValueRef* secondArg = argCount >= 2 ? argv[1] : scriptUndefined();
     String* type = String::emptyString;
-    if (!secondArg.isUndefinedOrNull()) {
-        type = toBrowserString(secondArg.toString())->toLower();
+    if (secondArg->isUndefinedOrNull()) {
+        type = toBrowserString(state, secondArg)->toLower();
     }
 
-    StarFish* starFish = fetchStarFish(instance);
+    Document* document = fetchDocument(state->context());
     Blob* newBlob =
-        new Blob(starFish, totalByteLength, type, buffer, false, false);
+        new Blob(document, totalByteLength, type, buffer, false, false);
     return newBlob->scriptValue();
 }
 }

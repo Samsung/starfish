@@ -348,40 +348,11 @@ fi
 cd $CU
 
 
-#exit
-
-cd third_party/escargot/
-./build_third_party.sh
-make clean
-make x64.interpreter.release.static -j8
-make x64.interpreter.debug.static -j8
-
-if [ -n "$TIZEN_SDK_HOME" ]; then
-make tizen_wearable_arm.interpreter.debug.static -j8
-make tizen_wearable_arm.interpreter.release.static -j8
-make tizen_wearable_emulator.interpreter.debug.static -j8
-make tizen_wearable_emulator.interpreter.release.static -j8
-fi
-if [ -n "$TIZEN_SDK_HOME" ]; then
-make tizen3_wearable_arm.interpreter.debug.static -j8
-make tizen3_wearable_arm.interpreter.release.static -j8
-make tizen3_wearable_emulator.interpreter.debug.static -j8
-make tizen3_wearable_emulator.interpreter.release.static -j8
-fi
-if [ -n "$TIZEN_SDK_HOME" ]; then
-make tizen24_mobile_arm.interpreter.release.static  -j8
-make tizen24_mobile_emulator.interpreter.release.static -j8
-make tizen24_mobile_arm.interpreter.debug.static  -j8
-make tizen24_mobile_emulator.interpreter.debug.static -j8
-fi
-
-cd -
-
 ./build_gc.sh
 
-cd third_party/escargot2/
+cd third_party/escargot/
 git submodule init
-git submodule update
+git submodule update third_party/GCutil
 #./build_third_party.sh
 make clean
 make x64.interpreter.release.static -j8

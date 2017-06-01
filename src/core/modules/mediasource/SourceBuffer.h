@@ -111,7 +111,8 @@ public:
 
     SourceBuffer(Document* document, String* type);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isSourceBuffer() const override;
 
 #define VIRTUAL

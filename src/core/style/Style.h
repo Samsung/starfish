@@ -17,7 +17,6 @@
 #ifndef __StarFishStyle__
 #define __StarFishStyle__
 
-#include "StarFishConfig.h"
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
 
@@ -32,7 +31,6 @@ class Element;
 class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
-class URL;
 
 enum UnitType {
     UnknownType,
@@ -1032,7 +1030,7 @@ public:
         return m_value.m_stringValue;
     }
 
-    String* urlValue(URL* urlOfStyleSheet);
+    String* urlValue(ResourceURL* urlOfStyleSheet);
 
     String* urlStringValue()
     {

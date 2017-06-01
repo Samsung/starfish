@@ -107,7 +107,7 @@ public:
 
 class MediaOperationQueueDataRequestPrepare : public MediaOperationQueueData {
 public:
-    MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, URL* u)
+    MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, ResourceURL* u)
         : MediaOperationQueueData(p)
         , m_url(u)
     {
@@ -116,17 +116,13 @@ public:
     virtual void processOperationQueue();
     virtual void cancelOperation();
 
-    URL* m_url;
+    ResourceURL* m_url;
 };
 
 class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
 public:
-#ifdef USE_ES6_FEATURE
     MediaOperationQueueDataRequestPlay(HTMLMediaElement* p,
                                        Promise* pm = nullptr);
-#else
-    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p);
-#endif
     virtual void processOperationQueue();
     void cancelOperation(DOMException* exception);
     virtual bool isPlayRequest()
@@ -134,9 +130,7 @@ public:
         return true;
     }
 
-#ifdef USE_ES6_FEATURE
     Promise* m_promise;
-#endif
 };
 
 class MediaOperationQueueDataRequestPause : public MediaOperationQueueData {
@@ -226,7 +220,8 @@ public:
 
     HTMLMediaElement(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLMediaElement() const override;
 
     virtual void didNodeInserted(Node* parent, Node* newChild);
@@ -273,11 +268,7 @@ public:
     TimeRanges* seekable();
 
     void load();
-#ifdef USE_ES6_FEATURE
     Promise* play();
-#else
-    void play();
-#endif
     void pause();
     bool ended();
     bool autoplay();

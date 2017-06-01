@@ -14,11 +14,18 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
+
+ScriptBindingInstance* DOMTokenList::scriptBindingInstance()
+{
+    return m_element->document()->scriptBindingInstance();
+}
 
 void DOMTokenList::tokenize(GCVector<String*>* tokens, String* src)
 {
@@ -292,11 +299,13 @@ void DOMTokenList::validateToken(String* token)
 {
     std::string stdToken = token->utf8Data();
     if (stdToken.length() == 0) {
-        throw new DOMException(DOMException::Code::SYNTAX_ERR);
+        throw new DOMException(m_element->document(),
+                               DOMException::Code::SYNTAX_ERR);
     }
     auto f = [](char c) { return std::isspace(static_cast<unsigned char>(c)); };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
-        throw new DOMException(DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(m_element->document(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
 }
 

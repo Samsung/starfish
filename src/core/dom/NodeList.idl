@@ -1,6 +1,6 @@
 // https://dom.spec.whatwg.org/#nodelist
 
-[Exposed=Window]
+[Exposed=Window, ObjectType=Exposable]
 interface NodeList {
   getter Node? item(unsigned long index);
   readonly attribute unsigned long length;

@@ -46,7 +46,7 @@ private:
 
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(String* eventType,
+    ProgressEvent(Document* document, String* eventType,
                   const ProgressEventInit& init = ProgressEventInit());
 
     bool lengthComputable() const
@@ -64,7 +64,8 @@ public:
 
     /* Other methods (not in ProgressEvent interface) */
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isProgressEvent() const override;
 
 private:

@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
@@ -34,8 +35,8 @@ TextTrack::TextTrack(Document* document, Kind kind, String* label,
     , m_kind(kind)
     , m_label(label)
     , m_language(language)
-    , m_cues(new TextTrackCueList())
-    , m_activeCues(new TextTrackCueList())
+    , m_cues(new TextTrackCueList(document))
+    , m_activeCues(new TextTrackCueList(document))
     , m_trackElement(nullptr)
     , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
     , m_cachedIdx(0)
@@ -54,7 +55,7 @@ void TextTrack::dispatchCueChangeEvent()
     } else {
         eventType = String::fromUTF8("cuechange");
     }
-    Event* e = new Event(eventType, EventInit(false, false));
+    Event* e = new Event(document(), eventType, EventInit(false, false));
     dispatchEvent(e);
 }
 

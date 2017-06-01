@@ -29,7 +29,8 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isXMLHttpRequestEventTarget() const override;
 
 #define VIRTUAL
@@ -54,7 +55,8 @@ public:
 
     enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isXMLHttpRequest() const override;
 
     ResourceRequest* resourceRequest()
@@ -113,10 +115,8 @@ protected:
     // for responseType = "blob
     ::StarFish::Blob* m_responseBlob;
 
-#ifdef USE_ES6_FEATURE
     // for responseType = "arraybuffer"
     ScriptValue m_responseArrayBuffer;
-#endif
 };
 }
 

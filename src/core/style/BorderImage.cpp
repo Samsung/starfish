@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/style/BorderImage.h"
 #include "platform/loader/ImageResource.h"
 #include "core/modules/canvas/image/ImageData.h"

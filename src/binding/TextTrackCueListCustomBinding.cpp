@@ -16,50 +16,52 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "core/dom/TextTrackCueList.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
 
 namespace StarFish {
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult
+TextTrackCueListGetOwnPropertyCallback(ExecutionStateRef* state,
+                                       ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
+    TextTrackCueList* self = (TextTrackCueList*)jsObj->extraData();
     STARFISH_ASSERT(self->isTextTrackCueList());
-    uint32_t idx = key.toIndex();
-    if (idx != ESValue::ESInvalidIndexValue && idx < self->size()) {
+
+    uint32_t idx = key->toArrayIndex(state);
+
+    if (idx < self->length()) {
         TextTrackCue* e = (*self)[idx];
-        if (e != nullptr) {
-            return e->scriptValue();
-        }
+        STARFISH_ASSERT(e);
+        return ExposableObjectGetOwnPropertyCallbackResult(e->scriptValue(),
+                                                           false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void TextTrackCueListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                               ObjectRef* jsObj, ValueRef* key,
+                                               ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector
+TextTrackCueListEnumerationCallback(ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    TextTrackCueList* self = (TextTrackCueList*)obj->extraPointerData();
+    TextTrackCueList* self = (TextTrackCueList*)jsObj->extraData();
     STARFISH_ASSERT(self->isTextTrackCueList());
     size_t len = self->size();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void TextTrackCueList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }
 

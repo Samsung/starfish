@@ -38,12 +38,14 @@ private:
 
 class FocusEvent : public UIEvent {
 public:
-    FocusEvent(String* eventType, const FocusEventInit& init = FocusEventInit())
-        : UIEvent(eventType, init)
+    FocusEvent(Document* document, String* eventType,
+               const FocusEventInit& init = FocusEventInit())
+        : UIEvent(document, eventType, init)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isFocusEvent() const override;
 
     EventTarget* relatedTarget()

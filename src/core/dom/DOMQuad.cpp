@@ -14,10 +14,12 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectReadOnly.h"
 #include "core/dom/DOMPoint.h"
 #include "core/dom/DOMQuad.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -52,14 +54,17 @@ DOMRect* DOMQuad::getBounds() const
         double bottom =
             saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
 
-        m_bounds = new DOMRect(left, top, right - left, bottom - top);
+        m_bounds = new DOMRect(m_scriptBindingInstance->ownerDocument(), left,
+                               top, right - left, bottom - top);
     }
     return m_bounds;
 }
 
-DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2,
-                 const DOMPointInit& p3, const DOMPointInit& p4)
+DOMQuad::DOMQuad(Document* document, const DOMPointInit& p1,
+                 const DOMPointInit& p2, const DOMPointInit& p3,
+                 const DOMPointInit& p4)
     : ScriptWrappable(this)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_p1(new DOMPoint(p1))
     , m_p2(new DOMPoint(p2))
     , m_p3(new DOMPoint(p3))
@@ -69,7 +74,8 @@ DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2,
 }
 
 DOMQuad::DOMQuad(const DOMRectInit& rect)
-    : DOMQuad(DOMPointInit(rect.x, rect.y),
+    : DOMQuad(m_scriptBindingInstance->ownerDocument(),
+              DOMPointInit(rect.x, rect.y),
               DOMPointInit(rect.x + rect.width, rect.y),
               DOMPointInit(rect.x + rect.width, rect.y + rect.height),
               DOMPointInit(rect.x, rect.y + rect.height))

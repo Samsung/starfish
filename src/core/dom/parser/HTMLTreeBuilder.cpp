@@ -39,6 +39,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/Element.h"
@@ -161,7 +162,7 @@ public:
         , m_current(0)
         , m_end(token->characters()->length())
     {
-        ASSERT(!isEmpty());
+        STARFISH_ASSERT(!isEmpty());
     }
 
     explicit CharacterTokenBuffer(String* characters)
@@ -169,12 +170,12 @@ public:
         , m_current(0)
         , m_end(characters->length())
     {
-        ASSERT(!isEmpty());
+        STARFISH_ASSERT(!isEmpty());
     }
 
     ~CharacterTokenBuffer()
     {
-        ASSERT(isEmpty());
+        STARFISH_ASSERT(isEmpty());
     }
 
     bool isEmpty() const
@@ -184,7 +185,7 @@ public:
 
     void skipAtMostOneLeadingNewline()
     {
-        ASSERT(!isEmpty());
+        STARFISH_ASSERT(!isEmpty());
         if ((*m_characters)[m_current] == '\n') {
             ++m_current;
         }
@@ -262,7 +263,7 @@ private:
     template <bool characterPredicate(char32_t)>
     void skipLeading()
     {
-        ASSERT(!isEmpty());
+        STARFISH_ASSERT(!isEmpty());
         while (characterPredicate((*m_characters)[m_current])) {
             if (++m_current == m_end) {
                 return;
@@ -273,7 +274,7 @@ private:
     template <bool characterPredicate(char32_t)>
     String* takeLeading()
     {
-        ASSERT(!isEmpty());
+        STARFISH_ASSERT(!isEmpty());
         const unsigned start = m_current;
         skipLeading<characterPredicate>();
         if (start == m_current) {
@@ -322,7 +323,7 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, DocumentFragment* fragment,
     m_scriptToProcess = nullptr;
     // FIXME: This assertion will become invalid if <http://webkit.org/b/60316>
     // is fixed.
-    ASSERT(contextElement);
+    STARFISH_ASSERT(contextElement);
     if (contextElement) {
         // Steps 4.2-4.6 of the HTML5 Fragment Case parsing algorithm:
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/
@@ -444,7 +445,7 @@ void HTMLTreeBuilder::processToken(AtomicHTMLToken* token)
     switch (token->type()) {
     case HTMLToken::Uninitialized:
     case HTMLToken::Character:
-        ASSERT_NOT_REACHED();
+        STARFISH_ASSERT_NOT_REACHED();
         break;
     case HTMLToken::DOCTYPE:
         processDoctypeToken(token);
@@ -466,7 +467,7 @@ void HTMLTreeBuilder::processToken(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processDoctypeToken(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::DOCTYPE);
+    STARFISH_ASSERT(token->type() == HTMLToken::DOCTYPE);
     if (m_insertionMode == InitialMode) {
         m_tree.insertDoctype(token);
         setInsertionMode(BeforeHTMLMode);
@@ -684,7 +685,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         if (!m_tree.openElements()->secondElementIsHTMLBodyElement() ||
             m_tree.openElements()->hasOnlyOneElement() ||
             m_tree.openElements()->hasTemplateInHTMLScope()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
         m_framesetOk = false;
@@ -695,7 +696,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         parseError(token);
         if (!m_tree.openElements()->secondElementIsHTMLBodyElement() ||
             m_tree.openElements()->hasOnlyOneElement()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
         if (!m_framesetOk) {
@@ -705,8 +706,8 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.openElements()->bodyElement()->remove();
         m_tree.openElements()->popUntil(m_tree.openElements()->bodyElement());
         m_tree.openElements()->popHTMLBodyElement();
-        ASSERT(m_tree.openElements()->top() ==
-               m_tree.openElements()->htmlElement());
+        STARFISH_ASSERT(m_tree.openElements()->top() ==
+                        m_tree.openElements()->htmlElement());
         m_tree.insertHTMLElement(token);
         setInsertionMode(InFramesetMode);
         return;
@@ -997,7 +998,7 @@ void HTMLTreeBuilder::processTemplateStartTag(AtomicHTMLToken* token)
 bool HTMLTreeBuilder::processTemplateEndTag(AtomicHTMLToken* token)
 {
     StaticStrings* s = token->starFish()->staticStrings();
-    ASSERT(token->name() == s->m_templateTagName);
+    STARFISH_ASSERT(token->name() == s->m_templateTagName);
     if (!m_tree.openElements()->hasTemplateInHTMLScope()) {
         STARFISH_ASSERT((m_templateInsertionModes.size() == 0) ||
                         (m_templateInsertionModes.size() == 1 &&
@@ -1037,7 +1038,7 @@ bool HTMLTreeBuilder::processColgroupEndTagForInColumnGroup()
         (m_tree.currentNode()->isElement() &&
          m_tree.currentNode()->asElement()->name() ==
              (m_tree.starFish()->staticStrings()->m_templateTagName))) {
-        ASSERT(isParsingFragmentOrTemplateContents());
+        STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error
         return false;
     }
@@ -1049,7 +1050,7 @@ bool HTMLTreeBuilder::processColgroupEndTagForInColumnGroup()
 // http://www.whatwg.org/specs/web-apps/current-work/#adjusted-current-node
 HTMLStackItem* HTMLTreeBuilder::adjustedCurrentStackItem() const
 {
-    ASSERT(!m_tree.isEmpty());
+    STARFISH_ASSERT(!m_tree.isEmpty());
     if (isParsingFragment() && m_tree.openElements()->hasOnlyOneElement()) {
         return m_fragmentContext.contextElementStackItem();
     }
@@ -1075,7 +1076,7 @@ void HTMLTreeBuilder::closeTheCell()
 
 void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (token->name() == s->m_captionTagName) {
         m_tree.openElements()->popUntilTableScopeMarker();
@@ -1092,7 +1093,7 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
     }
     if (token->name() == s->m_colTagName) {
         processFakeStartTag(s->m_colgroupTagName);
-        ASSERT(InColumnGroupMode);
+        STARFISH_ASSERT(InColumnGroupMode);
         processStartTag(token);
         return;
     }
@@ -1105,14 +1106,14 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
     if (isTableCellContextTag(s, token->name()) ||
         token->name() == s->m_trTagName) {
         processFakeStartTag(s->m_tbodyTagName);
-        ASSERT(insertionMode() == InTableBodyMode);
+        STARFISH_ASSERT(insertionMode() == InTableBodyMode);
         processStartTag(token);
         return;
     }
     if (token->name() == s->m_tableTagName) {
         parseError(token);
         if (!processTableEndTagForInTable()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
         processStartTag(token);
@@ -1155,14 +1156,14 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
 void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     switch (insertionMode()) {
     case InitialMode:
-        ASSERT(insertionMode() == InitialMode);
+        STARFISH_ASSERT(insertionMode() == InitialMode);
         defaultForInitial();
     // Fall through.
     case BeforeHTMLMode:
-        ASSERT(insertionMode() == BeforeHTMLMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHTMLMode);
         if (token->name() == s->m_htmlTagName) {
             m_tree.insertHTMLHtmlStartTagBeforeHTML(token);
             setInsertionMode(BeforeHeadMode);
@@ -1171,7 +1172,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         defaultForBeforeHTML();
     // Fall through.
     case BeforeHeadMode:
-        ASSERT(insertionMode() == BeforeHeadMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHeadMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1184,14 +1185,14 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         defaultForBeforeHead();
     // Fall through.
     case InHeadMode:
-        ASSERT(insertionMode() == InHeadMode);
+        STARFISH_ASSERT(insertionMode() == InHeadMode);
         if (processStartTagForInHead(token)) {
             return;
         }
         defaultForInHead();
     // Fall through.
     case AfterHeadMode:
-        ASSERT(insertionMode() == AfterHeadMode);
+        STARFISH_ASSERT(insertionMode() == AfterHeadMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1218,7 +1219,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             token->name() == s->m_templateTagName ||
             token->name() == s->m_titleTagName) {
             parseError(token);
-            ASSERT(m_tree.head());
+            STARFISH_ASSERT(m_tree.head());
             m_tree.openElements()->pushHTMLHeadElement(m_tree.headStackItem());
             processStartTagForInHead(token);
             m_tree.openElements()->removeHTMLHeadElement(m_tree.head());
@@ -1231,22 +1232,22 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         defaultForAfterHead();
     // Fall through
     case InBodyMode:
-        ASSERT(insertionMode() == InBodyMode);
+        STARFISH_ASSERT(insertionMode() == InBodyMode);
         processStartTagForInBody(token);
         break;
     case InTableMode:
-        ASSERT(insertionMode() == InTableMode);
+        STARFISH_ASSERT(insertionMode() == InTableMode);
         processStartTagForInTable(token);
         break;
     case InCaptionMode:
-        ASSERT(insertionMode() == InCaptionMode);
+        STARFISH_ASSERT(insertionMode() == InCaptionMode);
         if (isCaptionColOrColgroupTag(s, token->name()) ||
             isTableBodyContextTag(s, token->name()) ||
             isTableCellContextTag(s, token->name()) ||
             token->name() == s->m_trTagName) {
             parseError(token);
             if (!processCaptionEndTagForInCaption()) {
-                ASSERT(isParsingFragment());
+                STARFISH_ASSERT(isParsingFragment());
                 return;
             }
             processStartTag(token);
@@ -1255,7 +1256,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         processStartTagForInBody(token);
         break;
     case InColumnGroupMode:
-        ASSERT(insertionMode() == InColumnGroupMode);
+        STARFISH_ASSERT(insertionMode() == InColumnGroupMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1269,13 +1270,13 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             return;
         }
         if (!processColgroupEndTagForInColumnGroup()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
         processStartTag(token);
         break;
     case InTableBodyMode:
-        ASSERT(insertionMode() == InTableBodyMode);
+        STARFISH_ASSERT(insertionMode() == InTableBodyMode);
         if (token->name() == s->m_trTagName) {
             // How is there ever anything to pop?
             m_tree.openElements()->popUntilTableBodyScopeMarker();
@@ -1286,7 +1287,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         if (isTableCellContextTag(s, token->name())) {
             parseError(token);
             processFakeStartTag(s->m_trTagName);
-            ASSERT(insertionMode() == InRowMode);
+            STARFISH_ASSERT(insertionMode() == InRowMode);
             processStartTag(token);
             return;
         }
@@ -1296,12 +1297,12 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             if (!m_tree.openElements()->inTableScope(s->m_tbodyTagName) &&
                 !m_tree.openElements()->inTableScope(s->m_theadTagName) &&
                 !m_tree.openElements()->inTableScope(s->m_tfootTagName)) {
-                ASSERT(isParsingFragmentOrTemplateContents());
+                STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
                 parseError(token);
                 return;
             }
             m_tree.openElements()->popUntilTableBodyScopeMarker();
-            ASSERT(isTableBodyContextTag(
+            STARFISH_ASSERT(isTableBodyContextTag(
                 s, m_tree.currentStackItem()->localName()));
             processFakeEndTag(m_tree.currentStackItem()->localName());
             processStartTag(token);
@@ -1310,7 +1311,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         processStartTagForInTable(token);
         break;
     case InRowMode:
-        ASSERT(insertionMode() == InRowMode);
+        STARFISH_ASSERT(insertionMode() == InRowMode);
         if (isTableCellContextTag(s, token->name())) {
             m_tree.openElements()->popUntilTableRowScopeMarker();
             m_tree.insertHTMLElement(token);
@@ -1322,17 +1323,17 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             isCaptionColOrColgroupTag(s, token->name()) ||
             isTableBodyContextTag(s, token->name())) {
             if (!processTrEndTagForInRow()) {
-                ASSERT(isParsingFragmentOrTemplateContents());
+                STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
                 return;
             }
-            ASSERT(insertionMode() == InTableBodyMode);
+            STARFISH_ASSERT(insertionMode() == InTableBodyMode);
             processStartTag(token);
             return;
         }
         processStartTagForInTable(token);
         break;
     case InCellMode:
-        ASSERT(insertionMode() == InCellMode);
+        STARFISH_ASSERT(insertionMode() == InCellMode);
         if (isCaptionColOrColgroupTag(s, token->name()) ||
             isTableCellContextTag(s, token->name()) ||
             token->name() == s->m_trTagName ||
@@ -1340,7 +1341,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             // FIXME: This could be more efficient.
             if (!m_tree.openElements()->inTableScope(s->m_tdTagName) &&
                 !m_tree.openElements()->inTableScope(s->m_thTagName)) {
-                ASSERT(isParsingFragment());
+                STARFISH_ASSERT(isParsingFragment());
                 parseError(token);
                 return;
             }
@@ -1352,8 +1353,8 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         break;
     case AfterBodyMode:
     case AfterAfterBodyMode:
-        ASSERT(insertionMode() == AfterBodyMode ||
-               insertionMode() == AfterAfterBodyMode);
+        STARFISH_ASSERT(insertionMode() == AfterBodyMode ||
+                        insertionMode() == AfterAfterBodyMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1362,7 +1363,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         processStartTag(token);
         break;
     case InHeadNoscriptMode:
-        ASSERT(insertionMode() == InHeadNoscriptMode);
+        STARFISH_ASSERT(insertionMode() == InHeadNoscriptMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1386,7 +1387,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         processToken(token);
         break;
     case InFramesetMode:
-        ASSERT(insertionMode() == InFramesetMode);
+        STARFISH_ASSERT(insertionMode() == InFramesetMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1411,8 +1412,8 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         break;
     case AfterFramesetMode:
     case AfterAfterFramesetMode:
-        ASSERT(insertionMode() == AfterFramesetMode ||
-               insertionMode() == AfterAfterFramesetMode);
+        STARFISH_ASSERT(insertionMode() == AfterFramesetMode ||
+                        insertionMode() == AfterAfterFramesetMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1424,7 +1425,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         parseError(token);
         break;
     case InSelectInTableMode:
-        ASSERT(insertionMode() == InSelectInTableMode);
+        STARFISH_ASSERT(insertionMode() == InSelectInTableMode);
         if (token->name() == s->m_captionTagName ||
             token->name() == s->m_tableTagName ||
             isTableBodyContextTag(s, token->name()) ||
@@ -1439,8 +1440,8 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         }
     // Fall through
     case InSelectMode:
-        ASSERT(insertionMode() == InSelectMode ||
-               insertionMode() == InSelectInTableMode);
+        STARFISH_ASSERT(insertionMode() == InSelectMode ||
+                        insertionMode() == InSelectInTableMode);
         if (token->name() == s->m_htmlTagName) {
             processHtmlStartTagForInBody(token);
             return;
@@ -1481,7 +1482,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             token->name() == s->m_textareaTagName) {
             parseError(token);
             if (!m_tree.openElements()->inSelectScope(s->m_selectTagName)) {
-                ASSERT(isParsingFragment());
+                STARFISH_ASSERT(isParsingFragment());
                 return;
             }
             AtomicHTMLToken endSelect(token->starFish(), HTMLToken::EndTag,
@@ -1505,7 +1506,7 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         processStartTag(token);
         break;
     case TextMode:
-        ASSERT_NOT_REACHED();
+        STARFISH_ASSERT_NOT_REACHED();
         break;
     case TemplateContentsMode:
         if (token->name() == s->m_templateTagName) {
@@ -1537,8 +1538,9 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
             insertionMode = InBodyMode;
         }
 
-        ASSERT(insertionMode != TemplateContentsMode);
-        ASSERT(m_templateInsertionModes.back() == TemplateContentsMode);
+        STARFISH_ASSERT(insertionMode != TemplateContentsMode);
+        STARFISH_ASSERT(m_templateInsertionModes.back() ==
+                        TemplateContentsMode);
         m_templateInsertionModes.back() = insertionMode;
         setInsertionMode(insertionMode);
 
@@ -1551,7 +1553,7 @@ void HTMLTreeBuilder::processHtmlStartTagForInBody(AtomicHTMLToken* token)
 {
     parseError(token);
     if (m_tree.openElements()->hasTemplateInHTMLScope()) {
-        ASSERT(isParsingTemplateContents());
+        STARFISH_ASSERT(isParsingTemplateContents());
         return;
     }
     m_tree.insertHTMLHtmlStartTagInBody(token);
@@ -1560,8 +1562,8 @@ void HTMLTreeBuilder::processHtmlStartTagForInBody(AtomicHTMLToken* token)
 bool HTMLTreeBuilder::processBodyEndTagForInBody(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndTag);
-    ASSERT(token->name() == s->m_bodyTagName);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->name() == s->m_bodyTagName);
     if (!m_tree.openElements()->inScope(s->m_bodyTagName)) {
         parseError(token);
         return false;
@@ -1574,7 +1576,7 @@ bool HTMLTreeBuilder::processBodyEndTagForInBody(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processAnyOtherEndTagForInBody(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     HTMLElementStack::ElementRecord* record =
         m_tree.openElements()->topRecord();
     while (1) {
@@ -1648,7 +1650,7 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
             return;
         }
         // 7.
-        ASSERT(furthestBlock->isAbove(formattingElementRecord));
+        STARFISH_ASSERT(furthestBlock->isAbove(formattingElementRecord));
         HTMLStackItem* commonAncestor =
             formattingElementRecord->next()->stackItem();
         // 8.
@@ -1662,7 +1664,7 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
         for (int i = 0; i < innerIterationLimit; ++i) {
             // 9.4
             node = nextNode;
-            ASSERT(node);
+            STARFISH_ASSERT(node);
             nextNode = node->next(); // Save node->next() for the next iteration
                                      // in case node is deleted in 9.5.
             // 9.5
@@ -1783,11 +1785,11 @@ void HTMLTreeBuilder::resetInsertionModeAppropriately()
                 return setInsertionMode(AfterHeadMode);
             }
 
-            ASSERT(isParsingFragment());
+            STARFISH_ASSERT(isParsingFragment());
             return setInsertionMode(BeforeHeadMode);
         }
         if (last) {
-            ASSERT(isParsingFragment());
+            STARFISH_ASSERT(isParsingFragment());
             return setInsertionMode(InBodyMode);
         }
         nodeRecord = nodeRecord->next();
@@ -1797,7 +1799,7 @@ void HTMLTreeBuilder::resetInsertionModeAppropriately()
 void HTMLTreeBuilder::processEndTagForInTableBody(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     if (isTableBodyContextTag(s, token->name())) {
         if (!m_tree.openElements()->inTableScope(token->name())) {
             parseError(token);
@@ -1813,12 +1815,12 @@ void HTMLTreeBuilder::processEndTagForInTableBody(AtomicHTMLToken* token)
         if (!m_tree.openElements()->inTableScope(s->m_tbodyTagName) &&
             !m_tree.openElements()->inTableScope(s->m_theadTagName) &&
             !m_tree.openElements()->inTableScope(s->m_tfootTagName)) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             parseError(token);
             return;
         }
         m_tree.openElements()->popUntilTableBodyScopeMarker();
-        ASSERT(
+        STARFISH_ASSERT(
             isTableBodyContextTag(s, m_tree.currentStackItem()->localName()));
         processFakeEndTag(m_tree.currentStackItem()->localName());
         processEndTag(token);
@@ -1838,17 +1840,17 @@ void HTMLTreeBuilder::processEndTagForInTableBody(AtomicHTMLToken* token)
 void HTMLTreeBuilder::processEndTagForInRow(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     if (token->name() == s->m_trTagName) {
         processTrEndTagForInRow();
         return;
     }
     if (token->name() == s->m_tableTagName) {
         if (!processTrEndTagForInRow()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
-        ASSERT(insertionMode() == InTableBodyMode);
+        STARFISH_ASSERT(insertionMode() == InTableBodyMode);
         processEndTag(token);
         return;
     }
@@ -1858,7 +1860,7 @@ void HTMLTreeBuilder::processEndTagForInRow(AtomicHTMLToken* token)
             return;
         }
         processFakeEndTag(s->m_trTagName);
-        ASSERT(insertionMode() == InTableBodyMode);
+        STARFISH_ASSERT(insertionMode() == InTableBodyMode);
         processEndTag(token);
         return;
     }
@@ -1874,7 +1876,7 @@ void HTMLTreeBuilder::processEndTagForInRow(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processEndTagForInCell(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (isTableCellContextTag(s, token->name())) {
         if (!m_tree.openElements()->inTableScope(token->name())) {
@@ -1899,9 +1901,10 @@ void HTMLTreeBuilder::processEndTagForInCell(AtomicHTMLToken* token)
     if (token->name() == s->m_tableTagName || token->name() == s->m_trTagName ||
         isTableBodyContextTag(s, token->name())) {
         if (!m_tree.openElements()->inTableScope(token->name())) {
-            ASSERT(isTableBodyContextTag(s, token->name()) ||
-                   m_tree.openElements()->inTableScope(s->m_templateTagName) ||
-                   isParsingFragment());
+            STARFISH_ASSERT(
+                isTableBodyContextTag(s, token->name()) ||
+                m_tree.openElements()->inTableScope(s->m_templateTagName) ||
+                isParsingFragment());
             parseError(token);
             return;
         }
@@ -1914,7 +1917,7 @@ void HTMLTreeBuilder::processEndTagForInCell(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processEndTagForInBody(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (token->name() == s->m_bodyTagName) {
         processBodyEndTagForInBody(token);
@@ -1977,7 +1980,7 @@ void HTMLTreeBuilder::processEndTagForInBody(AtomicHTMLToken* token)
         if (!m_tree.openElements()->inButtonScope(token->name())) {
             parseError(token);
             processFakeStartTag(s->m_pTagName);
-            ASSERT(m_tree.openElements()->inScope(token->name()));
+            STARFISH_ASSERT(m_tree.openElements()->inScope(token->name()));
             processEndTag(token);
             return;
         }
@@ -2059,7 +2062,7 @@ bool HTMLTreeBuilder::processCaptionEndTagForInCaption()
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_captionTagName)) {
-        ASSERT(isParsingFragment());
+        STARFISH_ASSERT(isParsingFragment());
         // FIXME: parse error
         return false;
     }
@@ -2076,12 +2079,12 @@ bool HTMLTreeBuilder::processTrEndTagForInRow()
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_trTagName)) {
-        ASSERT(isParsingFragmentOrTemplateContents());
+        STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error
         return false;
     }
     m_tree.openElements()->popUntilTableRowScopeMarker();
-    ASSERT(m_tree.currentStackItem()->hasTagName(s->m_trTagName));
+    STARFISH_ASSERT(m_tree.currentStackItem()->hasTagName(s->m_trTagName));
     m_tree.openElements()->pop();
     setInsertionMode(InTableBodyMode);
     return true;
@@ -2091,7 +2094,7 @@ bool HTMLTreeBuilder::processTableEndTagForInTable()
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
     if (!m_tree.openElements()->inTableScope(s->m_tableTagName)) {
-        ASSERT(isParsingFragmentOrTemplateContents());
+        STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
         // FIXME: parse error.
         return false;
     }
@@ -2103,7 +2106,7 @@ bool HTMLTreeBuilder::processTableEndTagForInTable()
 void HTMLTreeBuilder::processEndTagForInTable(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     if (token->name() == s->m_tableTagName) {
         processTableEndTagForInTable();
         return;
@@ -2126,14 +2129,14 @@ void HTMLTreeBuilder::processEndTagForInTable(AtomicHTMLToken* token)
 void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndTag);
     switch (insertionMode()) {
     case InitialMode:
-        ASSERT(insertionMode() == InitialMode);
+        STARFISH_ASSERT(insertionMode() == InitialMode);
         defaultForInitial();
     // Fall through.
     case BeforeHTMLMode:
-        ASSERT(insertionMode() == BeforeHTMLMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHTMLMode);
         if (token->name() != s->m_headTagName &&
             token->name() != s->m_bodyTagName &&
             token->name() != s->m_htmlTagName &&
@@ -2144,7 +2147,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         defaultForBeforeHTML();
     // Fall through.
     case BeforeHeadMode:
-        ASSERT(insertionMode() == BeforeHeadMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHeadMode);
         if (token->name() != s->m_headTagName &&
             token->name() != s->m_bodyTagName &&
             token->name() != s->m_htmlTagName &&
@@ -2155,7 +2158,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         defaultForBeforeHead();
     // Fall through.
     case InHeadMode:
-        ASSERT(insertionMode() == InHeadMode);
+        STARFISH_ASSERT(insertionMode() == InHeadMode);
         // FIXME: This case should be broken out into processEndTagForInHead,
         // because other end tag cases now refer to it ("process the token for
         // using the rules of the "in head" insertion mode").
@@ -2179,7 +2182,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         defaultForInHead();
     // Fall through.
     case AfterHeadMode:
-        ASSERT(insertionMode() == AfterHeadMode);
+        STARFISH_ASSERT(insertionMode() == AfterHeadMode);
         if (token->name() != s->m_bodyTagName &&
             token->name() != s->m_htmlTagName &&
             token->name() != s->m_brTagName) {
@@ -2189,15 +2192,15 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         defaultForAfterHead();
     // Fall through
     case InBodyMode:
-        ASSERT(insertionMode() == InBodyMode);
+        STARFISH_ASSERT(insertionMode() == InBodyMode);
         processEndTagForInBody(token);
         break;
     case InTableMode:
-        ASSERT(insertionMode() == InTableMode);
+        STARFISH_ASSERT(insertionMode() == InTableMode);
         processEndTagForInTable(token);
         break;
     case InCaptionMode:
-        ASSERT(insertionMode() == InCaptionMode);
+        STARFISH_ASSERT(insertionMode() == InCaptionMode);
         if (token->name() == s->m_captionTagName) {
             processCaptionEndTagForInCaption();
             return;
@@ -2205,7 +2208,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         if (token->name() == s->m_tableTagName) {
             parseError(token);
             if (!processCaptionEndTagForInCaption()) {
-                ASSERT(isParsingFragment());
+                STARFISH_ASSERT(isParsingFragment());
                 return;
             }
             processEndTag(token);
@@ -2224,7 +2227,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         processEndTagForInBody(token);
         break;
     case InColumnGroupMode:
-        ASSERT(insertionMode() == InColumnGroupMode);
+        STARFISH_ASSERT(insertionMode() == InColumnGroupMode);
         if (token->name() == s->m_colgroupTagName) {
             processColgroupEndTagForInColumnGroup();
             return;
@@ -2238,25 +2241,25 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
             return;
         }
         if (!processColgroupEndTagForInColumnGroup()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             return;
         }
         processEndTag(token);
         break;
     case InRowMode:
-        ASSERT(insertionMode() == InRowMode);
+        STARFISH_ASSERT(insertionMode() == InRowMode);
         processEndTagForInRow(token);
         break;
     case InCellMode:
-        ASSERT(insertionMode() == InCellMode);
+        STARFISH_ASSERT(insertionMode() == InCellMode);
         processEndTagForInCell(token);
         break;
     case InTableBodyMode:
-        ASSERT(insertionMode() == InTableBodyMode);
+        STARFISH_ASSERT(insertionMode() == InTableBodyMode);
         processEndTagForInTableBody(token);
         break;
     case AfterBodyMode:
-        ASSERT(insertionMode() == AfterBodyMode);
+        STARFISH_ASSERT(insertionMode() == AfterBodyMode);
         if (token->name() == s->m_htmlTagName) {
             if (isParsingFragment()) {
                 parseError(token);
@@ -2267,19 +2270,20 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         }
     // Fall through.
     case AfterAfterBodyMode:
-        ASSERT(insertionMode() == AfterBodyMode ||
-               insertionMode() == AfterAfterBodyMode);
+        STARFISH_ASSERT(insertionMode() == AfterBodyMode ||
+                        insertionMode() == AfterAfterBodyMode);
         parseError(token);
         setInsertionMode(InBodyMode);
         processEndTag(token);
         break;
     case InHeadNoscriptMode:
-        ASSERT(insertionMode() == InHeadNoscriptMode);
+        STARFISH_ASSERT(insertionMode() == InHeadNoscriptMode);
         if (token->name() == s->m_noscriptTagName) {
-            ASSERT(m_tree.currentStackItem()->localName() ==
-                   s->m_noscriptTagName);
+            STARFISH_ASSERT(m_tree.currentStackItem()->localName() ==
+                            s->m_noscriptTagName);
             m_tree.openElements()->pop();
-            ASSERT(m_tree.currentStackItem()->localName() == s->m_headTagName);
+            STARFISH_ASSERT(m_tree.currentStackItem()->localName() ==
+                            s->m_headTagName);
             setInsertionMode(InHeadMode);
             return;
         }
@@ -2294,7 +2298,8 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         if (token->name() == s->m_scriptTagName) {
             // Pause ourselves so that parsing stops until the script can be
             // processed by the caller.
-            ASSERT(m_tree.currentStackItem()->hasTagName(s->m_scriptTagName));
+            STARFISH_ASSERT(
+                m_tree.currentStackItem()->hasTagName(s->m_scriptTagName));
             // if (scriptingContentIsAllowed(m_tree.parserContentPolicy()))
             if (true) {
                 STARFISH_ASSERT(!m_scriptToProcess);
@@ -2306,8 +2311,8 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
             if (m_parser->tokenizer()) {
                 // We must set the tokenizer's state to DataState explicitly
                 // if the tokenizer didn't have a chance to.
-                ASSERT(m_parser->tokenizer()->state() ==
-                       HTMLTokenizer::DataState);
+                STARFISH_ASSERT(m_parser->tokenizer()->state() ==
+                                HTMLTokenizer::DataState);
                 m_parser->tokenizer()->setState(HTMLTokenizer::DataState);
             }
             return;
@@ -2316,14 +2321,14 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         setInsertionMode(m_originalInsertionMode);
         break;
     case InFramesetMode:
-        ASSERT(insertionMode() == InFramesetMode);
+        STARFISH_ASSERT(insertionMode() == InFramesetMode);
         if (token->name() == s->m_framesetTagName) {
             bool ignoreFramesetForFragmentParsing = m_tree.currentIsRootNode();
             ignoreFramesetForFragmentParsing =
                 ignoreFramesetForFragmentParsing ||
                 m_tree.openElements()->hasTemplateInHTMLScope();
             if (ignoreFramesetForFragmentParsing) {
-                ASSERT(isParsingFragmentOrTemplateContents());
+                STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
                 parseError(token);
                 return;
             }
@@ -2340,19 +2345,19 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         }
         break;
     case AfterFramesetMode:
-        ASSERT(insertionMode() == AfterFramesetMode);
+        STARFISH_ASSERT(insertionMode() == AfterFramesetMode);
         if (token->name() == s->m_htmlTagName) {
             setInsertionMode(AfterAfterFramesetMode);
             return;
         }
     // Fall through.
     case AfterAfterFramesetMode:
-        ASSERT(insertionMode() == AfterFramesetMode ||
-               insertionMode() == AfterAfterFramesetMode);
+        STARFISH_ASSERT(insertionMode() == AfterFramesetMode ||
+                        insertionMode() == AfterAfterFramesetMode);
         parseError(token);
         break;
     case InSelectInTableMode:
-        ASSERT(insertionMode() == InSelectInTableMode);
+        STARFISH_ASSERT(insertionMode() == InSelectInTableMode);
         if (token->name() == s->m_captionTagName ||
             token->name() == s->m_tableTagName ||
             isTableBodyContextTag(s, token->name()) ||
@@ -2369,8 +2374,8 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         }
     // Fall through.
     case InSelectMode:
-        ASSERT(insertionMode() == InSelectMode ||
-               insertionMode() == InSelectInTableMode);
+        STARFISH_ASSERT(insertionMode() == InSelectMode ||
+                        insertionMode() == InSelectInTableMode);
         if (token->name() == s->m_optgroupTagName) {
             if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName) &&
                 m_tree.oneBelowTop() &&
@@ -2393,7 +2398,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
         }
         if (token->name() == s->m_selectTagName) {
             if (!m_tree.openElements()->inSelectScope(token->name())) {
-                ASSERT(isParsingFragment());
+                STARFISH_ASSERT(isParsingFragment());
                 parseError(token);
                 return;
             }
@@ -2421,7 +2426,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processComment(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::Comment);
+    STARFISH_ASSERT(token->type() == HTMLToken::Comment);
     if (m_insertionMode == InitialMode || m_insertionMode == BeforeHTMLMode ||
         m_insertionMode == AfterAfterBodyMode ||
         m_insertionMode == AfterAfterFramesetMode) {
@@ -2442,7 +2447,7 @@ void HTMLTreeBuilder::processComment(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processCharacter(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::Character);
+    STARFISH_ASSERT(token->type() == HTMLToken::Character);
     CharacterTokenBuffer buffer(token);
     processCharacterBuffer(buffer);
 }
@@ -2473,7 +2478,7 @@ ReprocessBuffer:
     StaticStrings* s = m_tree.starFish()->staticStrings();
     switch (insertionMode()) {
     case InitialMode: {
-        ASSERT(insertionMode() == InitialMode);
+        STARFISH_ASSERT(insertionMode() == InitialMode);
         buffer.skipLeadingWhitespace();
         if (buffer.isEmpty()) {
             return;
@@ -2482,7 +2487,7 @@ ReprocessBuffer:
         // Fall through.
     }
     case BeforeHTMLMode: {
-        ASSERT(insertionMode() == BeforeHTMLMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHTMLMode);
         buffer.skipLeadingWhitespace();
         if (buffer.isEmpty()) {
             return;
@@ -2491,7 +2496,7 @@ ReprocessBuffer:
         // Fall through.
     }
     case BeforeHeadMode: {
-        ASSERT(insertionMode() == BeforeHeadMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHeadMode);
         buffer.skipLeadingWhitespace();
         if (buffer.isEmpty()) {
             return;
@@ -2500,7 +2505,7 @@ ReprocessBuffer:
         // Fall through.
     }
     case InHeadMode: {
-        ASSERT(insertionMode() == InHeadMode);
+        STARFISH_ASSERT(insertionMode() == InHeadMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
             m_tree.insertTextNode(leadingWhitespace, AllWhitespace);
@@ -2512,7 +2517,7 @@ ReprocessBuffer:
         // Fall through.
     }
     case AfterHeadMode: {
-        ASSERT(insertionMode() == AfterHeadMode);
+        STARFISH_ASSERT(insertionMode() == AfterHeadMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
             m_tree.insertTextNode(leadingWhitespace, AllWhitespace);
@@ -2527,21 +2532,21 @@ ReprocessBuffer:
     case InCaptionMode:
     case TemplateContentsMode:
     case InCellMode: {
-        ASSERT(insertionMode() == InBodyMode ||
-               insertionMode() == InCaptionMode ||
-               insertionMode() == InCellMode ||
-               insertionMode() == TemplateContentsMode);
+        STARFISH_ASSERT(insertionMode() == InBodyMode ||
+                        insertionMode() == InCaptionMode ||
+                        insertionMode() == InCellMode ||
+                        insertionMode() == TemplateContentsMode);
         processCharacterBufferForInBody(buffer);
         break;
     }
     case InTableMode:
     case InTableBodyMode:
     case InRowMode: {
-        ASSERT(insertionMode() == InTableMode ||
-               insertionMode() == InTableBodyMode ||
-               insertionMode() == InRowMode);
+        STARFISH_ASSERT(insertionMode() == InTableMode ||
+                        insertionMode() == InTableBodyMode ||
+                        insertionMode() == InRowMode);
         // TODO enable this
-        // ASSERT(m_pendingTableCharacters.size() == 0);
+        // STARFISH_ASSERT(m_pendingTableCharacters.size() == 0);
         if (m_tree.currentStackItem()->isElementNode() &&
             (m_tree.currentStackItem()->hasTagName(s->m_tableTagName) ||
              m_tree.currentStackItem()->hasTagName(s->m_tbodyTagName) ||
@@ -2564,7 +2569,7 @@ ReprocessBuffer:
         break;
     }
     case InColumnGroupMode: {
-        ASSERT(insertionMode() == InColumnGroupMode);
+        STARFISH_ASSERT(insertionMode() == InColumnGroupMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
             m_tree.insertTextNode(leadingWhitespace, AllWhitespace);
@@ -2573,7 +2578,7 @@ ReprocessBuffer:
             return;
         }
         if (!processColgroupEndTagForInColumnGroup()) {
-            ASSERT(isParsingFragmentOrTemplateContents());
+            STARFISH_ASSERT(isParsingFragmentOrTemplateContents());
             // The spec tells us to drop these characters on the floor.
             buffer.skipLeadingNonWhitespace();
             if (buffer.isEmpty())
@@ -2583,19 +2588,19 @@ ReprocessBuffer:
     }
     case AfterBodyMode:
     case AfterAfterBodyMode: {
-        ASSERT(insertionMode() == AfterBodyMode ||
-               insertionMode() == AfterAfterBodyMode);
+        STARFISH_ASSERT(insertionMode() == AfterBodyMode ||
+                        insertionMode() == AfterAfterBodyMode);
         // FIXME: parse error
         setInsertionMode(InBodyMode);
         goto ReprocessBuffer;
     }
     case TextMode: {
-        ASSERT(insertionMode() == TextMode);
+        STARFISH_ASSERT(insertionMode() == TextMode);
         m_tree.insertTextNode(buffer.takeRemaining());
         break;
     }
     case InHeadNoscriptMode: {
-        ASSERT(insertionMode() == InHeadNoscriptMode);
+        STARFISH_ASSERT(insertionMode() == InHeadNoscriptMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
             m_tree.insertTextNode(leadingWhitespace, AllWhitespace);
@@ -2608,9 +2613,9 @@ ReprocessBuffer:
     }
     case InFramesetMode:
     case AfterFramesetMode: {
-        ASSERT(insertionMode() == InFramesetMode ||
-               insertionMode() == AfterFramesetMode ||
-               insertionMode() == AfterAfterFramesetMode);
+        STARFISH_ASSERT(insertionMode() == InFramesetMode ||
+                        insertionMode() == AfterFramesetMode ||
+                        insertionMode() == AfterAfterFramesetMode);
         String* leadingWhitespace = buffer.takeRemainingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
             m_tree.insertTextNode(leadingWhitespace, AllWhitespace);
@@ -2621,8 +2626,8 @@ ReprocessBuffer:
     }
     case InSelectInTableMode:
     case InSelectMode: {
-        ASSERT(insertionMode() == InSelectMode ||
-               insertionMode() == InSelectInTableMode);
+        STARFISH_ASSERT(insertionMode() == InSelectMode ||
+                        insertionMode() == InSelectInTableMode);
         m_tree.insertTextNode(buffer.takeRemaining());
         break;
     }
@@ -2653,36 +2658,36 @@ void HTMLTreeBuilder::processCharacterBufferForInBody(
 void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::EndOfFile);
+    STARFISH_ASSERT(token->type() == HTMLToken::EndOfFile);
     switch (insertionMode()) {
     case InitialMode:
-        ASSERT(insertionMode() == InitialMode);
+        STARFISH_ASSERT(insertionMode() == InitialMode);
         defaultForInitial();
     // Fall through.
     case BeforeHTMLMode:
-        ASSERT(insertionMode() == BeforeHTMLMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHTMLMode);
         defaultForBeforeHTML();
     // Fall through.
     case BeforeHeadMode:
-        ASSERT(insertionMode() == BeforeHeadMode);
+        STARFISH_ASSERT(insertionMode() == BeforeHeadMode);
         defaultForBeforeHead();
     // Fall through.
     case InHeadMode:
-        ASSERT(insertionMode() == InHeadMode);
+        STARFISH_ASSERT(insertionMode() == InHeadMode);
         defaultForInHead();
     // Fall through.
     case AfterHeadMode:
-        ASSERT(insertionMode() == AfterHeadMode);
+        STARFISH_ASSERT(insertionMode() == AfterHeadMode);
         defaultForAfterHead();
     // Fall through
     case InBodyMode:
     case InCellMode:
     case InCaptionMode:
     case InRowMode:
-        ASSERT(insertionMode() == InBodyMode || insertionMode() == InCellMode ||
-               insertionMode() == InCaptionMode ||
-               insertionMode() == InRowMode ||
-               insertionMode() == TemplateContentsMode);
+        STARFISH_ASSERT(
+            insertionMode() == InBodyMode || insertionMode() == InCellMode ||
+            insertionMode() == InCaptionMode || insertionMode() == InRowMode ||
+            insertionMode() == TemplateContentsMode);
         // notImplemented(); // Emit parse error based on what elements are
         // still open.
         if (!(m_templateInsertionModes.size() == 0) &&
@@ -2692,28 +2697,28 @@ void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
         break;
     case AfterBodyMode:
     case AfterAfterBodyMode:
-        ASSERT(insertionMode() == AfterBodyMode ||
-               insertionMode() == AfterAfterBodyMode);
+        STARFISH_ASSERT(insertionMode() == AfterBodyMode ||
+                        insertionMode() == AfterAfterBodyMode);
         break;
     case InHeadNoscriptMode:
-        ASSERT(insertionMode() == InHeadNoscriptMode);
+        STARFISH_ASSERT(insertionMode() == InHeadNoscriptMode);
         defaultForInHeadNoscript();
         processEndOfFile(token);
         return;
     case AfterFramesetMode:
     case AfterAfterFramesetMode:
-        ASSERT(insertionMode() == AfterFramesetMode ||
-               insertionMode() == AfterAfterFramesetMode);
+        STARFISH_ASSERT(insertionMode() == AfterFramesetMode ||
+                        insertionMode() == AfterAfterFramesetMode);
         break;
     case InColumnGroupMode:
         if (m_tree.currentIsRootNode()) {
-            ASSERT(isParsingFragment());
+            STARFISH_ASSERT(isParsingFragment());
             return; // FIXME: Should we break here instead of returning?
         }
-        ASSERT(m_tree.currentNode()->asElement()->name() ==
-                   (s->m_colgroupTagName) ||
-               m_tree.currentNode()->asElement()->name() ==
-                   (s->m_templateTagName));
+        STARFISH_ASSERT(m_tree.currentNode()->asElement()->name() ==
+                            (s->m_colgroupTagName) ||
+                        m_tree.currentNode()->asElement()->name() ==
+                            (s->m_templateTagName));
         processColgroupEndTagForInColumnGroup();
     // Fall through
     case InFramesetMode:
@@ -2721,12 +2726,12 @@ void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
     case InTableBodyMode:
     case InSelectInTableMode:
     case InSelectMode:
-        ASSERT(insertionMode() == InSelectMode ||
-               insertionMode() == InSelectInTableMode ||
-               insertionMode() == InTableMode ||
-               insertionMode() == InFramesetMode ||
-               insertionMode() == InTableBodyMode ||
-               insertionMode() == InColumnGroupMode);
+        STARFISH_ASSERT(insertionMode() == InSelectMode ||
+                        insertionMode() == InSelectInTableMode ||
+                        insertionMode() == InTableMode ||
+                        insertionMode() == InFramesetMode ||
+                        insertionMode() == InTableBodyMode ||
+                        insertionMode() == InColumnGroupMode);
         if (m_tree.currentNode() != m_tree.openElements()->rootNode()) {
             parseError(token);
         }
@@ -2746,7 +2751,7 @@ void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
             // mark the script element as "already started".
         }
         m_tree.openElements()->pop();
-        ASSERT(m_originalInsertionMode != TextMode);
+        STARFISH_ASSERT(m_originalInsertionMode != TextMode);
         setInsertionMode(m_originalInsertionMode);
         processEndOfFile(token);
         return;
@@ -2830,7 +2835,7 @@ void HTMLTreeBuilder::defaultForInTableText()
 bool HTMLTreeBuilder::processStartTagForInHead(AtomicHTMLToken* token)
 {
     StaticStrings* s = m_tree.starFish()->staticStrings();
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     if (token->name() == s->m_htmlTagName) {
         processHtmlStartTagForInBody(token);
         return true;
@@ -2882,7 +2887,7 @@ bool HTMLTreeBuilder::processStartTagForInHead(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processGenericRCDATAStartTag(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertHTMLElement(token);
     if (m_parser->tokenizer()) {
         m_parser->tokenizer()->setState(HTMLTokenizer::RCDATAState);
@@ -2893,7 +2898,7 @@ void HTMLTreeBuilder::processGenericRCDATAStartTag(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processGenericRawTextStartTag(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertHTMLElement(token);
     if (m_parser->tokenizer()) {
         m_parser->tokenizer()->setState(HTMLTokenizer::RAWTEXTState);
@@ -2904,7 +2909,7 @@ void HTMLTreeBuilder::processGenericRawTextStartTag(AtomicHTMLToken* token)
 
 void HTMLTreeBuilder::processScriptStartTag(AtomicHTMLToken* token)
 {
-    ASSERT(token->type() == HTMLToken::StartTag);
+    STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertScriptElement(token);
     if (m_parser->tokenizer()) {
         m_parser->tokenizer()->setState(HTMLTokenizer::ScriptDataState);
@@ -2979,7 +2984,7 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
 
     switch (token->type()) {
     case HTMLToken::Uninitialized:
-        ASSERT_NOT_REACHED();
+        STARFISH_ASSERT_NOT_REACHED();
         break;
     case HTMLToken::DOCTYPE:
         parseError(token);
@@ -3093,7 +3098,7 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
         break;
     case HTMLToken::Character:
     case HTMLToken::EndOfFile:
-        ASSERT_NOT_REACHED();
+        STARFISH_ASSERT_NOT_REACHED();
         break;
     }
 }
@@ -3104,8 +3109,8 @@ void HTMLTreeBuilder::finished()
         return;
     }
 
-    ASSERT(m_templateInsertionModes.size() == 0);
-    ASSERT(m_isAttached);
+    STARFISH_ASSERT(m_templateInsertionModes.size() == 0);
+    STARFISH_ASSERT(m_isAttached);
     // Warning, this may detach the parser. Do not do anything else after this.
     m_tree.finishedParsing();
 }

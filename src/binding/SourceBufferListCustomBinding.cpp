@@ -14,52 +14,52 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
+
+#include "StarFishConfig.h"
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult
+SourceBufferListGetOwnPropertyCallback(ExecutionStateRef* state,
+                                       ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
+    SourceBufferList* self = (SourceBufferList*)jsObj->extraData();
     STARFISH_ASSERT(self->isSourceBufferList());
-    uint32_t idx = key.toIndex();
-    if (idx != ESValue::ESInvalidIndexValue && idx < self->length()) {
+
+    uint32_t idx = key->toArrayIndex(state);
+    if (idx < self->length()) {
         SourceBuffer* e = (*self)[idx];
         STARFISH_ASSERT(e);
-        return e->scriptValue();
+        return ExposableObjectGetOwnPropertyCallbackResult(e->scriptValue(),
+                                                           false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void SourceBufferListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                               ObjectRef* jsObj, ValueRef* key,
+                                               ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector
+SourceBufferListEnumerationCallback(ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    SourceBufferList* self = (SourceBufferList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isSourceBufferList());
+    SourceBufferList* self = (SourceBufferList*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void SourceBufferList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }
 #endif

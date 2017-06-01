@@ -23,10 +23,16 @@ namespace StarFish {
 
 class DOMRectReadOnly : public ScriptWrappable {
 public:
-    DOMRectReadOnly(double x, double y, double width, double height);
+    DOMRectReadOnly(Document* document, double x, double y, double width,
+                    double height);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMRectReadOnly() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return m_scriptBindingInstance;
+    }
 
     double x() const
     {
@@ -69,6 +75,7 @@ public:
     }
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     double m_x;
     double m_y;
     double m_width;

@@ -60,6 +60,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
@@ -2228,7 +2229,7 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
         allowedRules = KeyframeRules;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
     unsigned nestingLevel = 1;
@@ -2577,7 +2578,8 @@ const String* transform3dMediaFeature =
 const String* aspectRatioMediaFeature =
     String::createASCIIStringWithNoGC("aspect-ratio");
 const String* colorMediaFeature = String::createASCIIStringWithNoGC("color");
-const String* colorIndexMediaFeature = String::createASCIIStringWithNoGC("color-index");
+const String* colorIndexMediaFeature =
+    String::createASCIIStringWithNoGC("color-index");
 const String* deviceAspectRatioMediaFeature =
     String::createASCIIStringWithNoGC("device-aspect-ratio");
 const String* deviceHeightMediaFeature =
@@ -2590,7 +2592,8 @@ const String* gridMediaFeature = String::createASCIIStringWithNoGC("grid");
 const String* heightMediaFeature = String::createASCIIStringWithNoGC("height");
 const String* maxAspectRatioMediaFeature =
     String::createASCIIStringWithNoGC("max-aspect-ratio");
-const String* maxColorMediaFeature = String::createASCIIStringWithNoGC("max-color");
+const String* maxColorMediaFeature =
+    String::createASCIIStringWithNoGC("max-color");
 const String* maxColorIndexMediaFeature =
     String::createASCIIStringWithNoGC("max-color-index");
 const String* maxDeviceAspectRatioMediaFeature =
@@ -2599,15 +2602,18 @@ const String* maxDeviceHeightMediaFeature =
     String::createASCIIStringWithNoGC("max-device-height");
 const String* maxDeviceWidthMediaFeature =
     String::createASCIIStringWithNoGC("max-device-width");
-const String* maxHeightMediaFeature = String::createASCIIStringWithNoGC("max-height");
+const String* maxHeightMediaFeature =
+    String::createASCIIStringWithNoGC("max-height");
 const String* maxMonochromeMediaFeature =
     String::createASCIIStringWithNoGC("max-monochrome");
 const String* maxResolutionMediaFeature =
     String::createASCIIStringWithNoGC("max-resolution");
-const String* maxWidthMediaFeature = String::createASCIIStringWithNoGC("max-width");
+const String* maxWidthMediaFeature =
+    String::createASCIIStringWithNoGC("max-width");
 const String* minAspectRatioMediaFeature =
     String::createASCIIStringWithNoGC("min-aspect-ratio");
-const String* minColorMediaFeature = String::createASCIIStringWithNoGC("min-color");
+const String* minColorMediaFeature =
+    String::createASCIIStringWithNoGC("min-color");
 const String* minColorIndexMediaFeature =
     String::createASCIIStringWithNoGC("min-color-index");
 const String* minDeviceAspectRatioMediaFeature =
@@ -2616,16 +2622,20 @@ const String* minDeviceHeightMediaFeature =
     String::createASCIIStringWithNoGC("min-device-height");
 const String* minDeviceWidthMediaFeature =
     String::createASCIIStringWithNoGC("min-device-width");
-const String* minHeightMediaFeature = String::createASCIIStringWithNoGC("min-height");
+const String* minHeightMediaFeature =
+    String::createASCIIStringWithNoGC("min-height");
 const String* minMonochromeMediaFeature =
     String::createASCIIStringWithNoGC("min-monochrome");
 const String* minResolutionMediaFeature =
     String::createASCIIStringWithNoGC("min-resolution");
-const String* minWidthMediaFeature = String::createASCIIStringWithNoGC("min-width");
-const String* monochromeMediaFeature = String::createASCIIStringWithNoGC("monochrome");
+const String* minWidthMediaFeature =
+    String::createASCIIStringWithNoGC("min-width");
+const String* monochromeMediaFeature =
+    String::createASCIIStringWithNoGC("monochrome");
 const String* orientationMediaFeature =
     String::createASCIIStringWithNoGC("orientation");
-const String* resolutionMediaFeature = String::createASCIIStringWithNoGC("resolution");
+const String* resolutionMediaFeature =
+    String::createASCIIStringWithNoGC("resolution");
 const String* scanMediaFeature = String::createASCIIStringWithNoGC("scan");
 const String* widthMediaFeature = String::createASCIIStringWithNoGC("width");
 

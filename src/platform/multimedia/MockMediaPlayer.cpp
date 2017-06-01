@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
@@ -169,7 +170,7 @@ void MockMediaPlayer::pause()
     }
 }
 
-void MockMediaPlayer::prepare(URL* url)
+void MockMediaPlayer::prepare(ResourceURL* url)
 {
     if (url->isBlobURL()) {
         BlobURLStore store;

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/ProgressEvent.h"
 
 namespace StarFish {
@@ -65,8 +66,9 @@ void ProgressEventInit::setTotal(uint64_t total)
     m_total = total;
 }
 
-ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
-    : Event(eventType, init)
+ProgressEvent::ProgressEvent(Document* document, String* eventType,
+                             const ProgressEventInit& init)
+    : Event(document, eventType, init)
     , m_lengthComputable(init.lengthComputable())
     , m_loaded(init.loaded())
     , m_total(init.total())

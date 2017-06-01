@@ -25,27 +25,32 @@ class DOMRect;
 
 class DOMRectList : public ScriptWrappable {
 public:
-    static DOMRectList* create()
+    static DOMRectList* create(Document* document)
     {
-        return new DOMRectList;
+        return new DOMRectList(document);
     }
 
-    static DOMRectList* create(const std::vector<DOMQuad>& quads)
+    static DOMRectList* create(Document* document,
+                               const std::vector<DOMQuad>& quads)
     {
-        return new DOMRectList(quads);
+        return new DOMRectList(document, quads);
     }
 
     uint32_t length() const;
     DOMRect* item(uint32_t index);
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return m_scriptBindingInstance;
+    }
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDOMRectList() const override;
 
 private:
-    DOMRectList();
-    explicit DOMRectList(const std::vector<DOMQuad>&);
-
+    DOMRectList(Document* document);
+    explicit DOMRectList(Document* document, const std::vector<DOMQuad>&);
+    ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<DOMRect*> m_list;
 };
 }

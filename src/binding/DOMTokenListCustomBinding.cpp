@@ -13,53 +13,52 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#include "StarFishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMTokenList.h"
 
+#include <EscargotPublic.h>
+
 namespace StarFish {
 
-using namespace escargot;
+using namespace Escargot;
 
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult DOMTokenListGetOwnPropertyCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
+    DOMTokenList* self = (DOMTokenList*)jsObj->extraData();
     STARFISH_ASSERT(self->isDOMTokenList());
-    uint32_t idx = key.toIndex();
+
+    uint32_t idx = key->toArrayIndex(state);
     if (idx < self->length()) {
         Nullable<String*> result = self->item(idx);
         if (result.hasValue()) {
-            return createScriptString(result.getValue());
+            return ExposableObjectGetOwnPropertyCallbackResult(
+                ValueRef::create(toJSString(result.getValue())), false, true,
+                false);
         }
     }
-    return ESValue(ESValue::ESDeletedValue);
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void DOMTokenListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                           ObjectRef* self,
+                                           ValueRef* propertyName,
+                                           ValueRef* value)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    // do nothing
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector DOMTokenListEnumerationCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMTokenList());
+    DOMTokenList* self = (DOMTokenList*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void DOMTokenList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

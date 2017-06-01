@@ -14,54 +14,62 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult
+HTMLCollectionGetOwnPropertyCallback(ExecutionStateRef* state, ObjectRef* jsObj,
+                                     ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
+    HTMLCollection* self = (HTMLCollection*)jsObj->extraData();
     STARFISH_ASSERT(self->isHTMLCollection());
-    uint32_t idx = key.toIndex();
-    if (idx == ESValue::ESInvalidIndexValue) {
-        Element* e = self->namedItem(toBrowserString(key));
+
+    uint32_t idx = key->toArrayIndex(state);
+    if (idx == ValueRef::InvalidArrayIndexValue) {
+        ObjectRef* ref = jsObj->getPrototypeObject();
+        while (ref) {
+            if (ref->hasOwnProperty(state, key)) {
+                return ExposableObjectGetOwnPropertyCallbackResult();
+            }
+            ref = ref->getPrototypeObject();
+        }
+
+        Element* e = self->namedItem(toBrowserString(state, key));
         if (e != nullptr) {
-            return e->scriptValue();
+            return ExposableObjectGetOwnPropertyCallbackResult(
+                e->scriptValue(), false, false, false);
         }
     } else if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
+        return ExposableObjectGetOwnPropertyCallbackResult(
+            self->item(idx)->scriptValue(), false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void HTMLCollectionDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                             ObjectRef* jsObj, ValueRef* key,
+                                             ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector
+HTMLCollectionEnumerationCallback(ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isHTMLCollection());
+    HTMLCollection* self = (HTMLCollection*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void HTMLCollection::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

@@ -452,7 +452,7 @@ void MediaPlayerTizen::initDisplay()
     m_canvasSurface->clear();
 }
 
-void MediaPlayerTizen::setNativePlayerDefaultOptions(URL* url)
+void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
 {
     player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
     player_display_type_e displayType = PLAYER_DISPLAY_TYPE_EVAS;
@@ -486,7 +486,7 @@ void MediaPlayerTizen::endOfStream()
     handleEnded();
 }
 
-void MediaPlayerTizen::prepare(URL* url)
+void MediaPlayerTizen::prepare(ResourceURL* url)
 {
     m_currentURL = url;
     STARFISH_LOG_INFO("MediaPlayerTizen::prepare\n");

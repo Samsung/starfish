@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFishConfig.h"
 #include "NamedColors.h"
 
 namespace StarFish {

@@ -45,7 +45,7 @@ public:
                                           bool isAttribute = false,
                                           bool useCapture = false)
     {
-        if (isAttribute && !fn.isObject()) {
+        if (isAttribute && !isObjectScriptValue(fn)) {
             return nullptr;
         }
         return new EventListener(fn, isAttribute, useCapture);
@@ -128,7 +128,9 @@ protected:
     }
 
 public:
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
     virtual bool isEventTarget() const override;
 
     GCVector<EventListener*>* getEventListeners(const String* eventType);

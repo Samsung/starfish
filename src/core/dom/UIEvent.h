@@ -112,12 +112,14 @@ private:
 
 class UIEvent : public Event {
 public:
-    UIEvent(String* eventType, const UIEventInit& init = UIEventInit())
-        : Event(eventType, init)
+    UIEvent(Document* document, String* eventType,
+            const UIEventInit& init = UIEventInit())
+        : Event(document, eventType, init)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isUIEvent() const override;
 };
 }

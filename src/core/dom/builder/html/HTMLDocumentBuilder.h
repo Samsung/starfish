@@ -36,7 +36,7 @@ public:
     {
     }
 
-    virtual void build(URL* url);
+    virtual void build(ResourceURL* url);
     virtual void build(String* str);
     virtual void resume();
     HTMLParser* parser()

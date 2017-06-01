@@ -24,116 +24,25 @@ namespace StarFish {
 class Blob;
 class MediaSource;
 
-class URL : public ScriptWrappable {
-    enum Protocol {
-        FILE_PROTOCOL,
-        BLOB_PROTOCOL,
-        DATA_PROTOCOL,
-        // FILE, BLOB, DATA should be smaller than HTTP
-        // (there's code which assumes this)
-        HTTP_PROTOCOL,
-        HTTPS_PROTOCOL,
-        UNKNOWN,
-    };
-
+class URL : public ScriptWrappable, public ResourceURL {
 public:
-    URL(String* url);
-    URL(String* url, String* baseURL);
+    URL(Window* window, String* url);
+    URL(Window* window, String* url, String* baseURL);
+    URL(ScriptBindingInstance* ins, String* url, String* baseURL);
 
-    static String* getURLString(String* baseURL, String* url);
-    static String* createObjectURL(Blob* blob);
     static void revokeObjectURL(StarFish* sf, String* blobURLRef);
+    static String* createObjectURL(Blob* blob);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    static String* createObjectURL(MediaSource* blob);
+    static String* createObjectURL(MediaSource* mediaSource);
 #endif
-    static URL* createURL(String* baseURL, String* url)
-    {
-        return new URL(url, baseURL);
-    }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isURL() const override;
-
-    String* baseURI() const;
-
-    bool isNetworkURL()
-    {
-        return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
-    }
-
-    bool isFileURL() const
-    {
-        return m_protocol == FILE_PROTOCOL;
-    }
-
-    bool isDataURL() const
-    {
-        return m_protocol == DATA_PROTOCOL;
-    }
-
-    bool isBlobURL() const
-    {
-        return m_protocol == BLOB_PROTOCOL;
-    }
-
-    String* string() const
-    {
-        return m_string;
-    }
-
-    String* urlString() const
-    {
-        return m_urlString;
-    }
-
-    // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
-    String* urlStringWithoutSearchPart() const;
-    String* getUrlPathString() const;
-    bool operator==(const URL& other) const
-    {
-        return other.urlString()->equals(m_urlString);
-    }
-
-    String* origin();
-    String* href();
-    void setHref(String* newHref);
-    String* protocol();
-    void setProtocol(String* newProtocol);
-    String* username();
-    void setUsername(String* newPath);
-    String* password();
-    void setPassword(String* newPath);
-    String* host();
-    void setHost(String* newHost);
-    String* hostname();
-    void setHostname(String* newHostname);
-    String* port();
-    void setPort(String* newPost);
-    String* pathname();
-    void setPathname(String* newPath, bool needRemovingDots = true);
-    String* search();
-    void setSearch(String* newPath);
-    String* hash();
-    void setHash(String* newPath);
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
 protected:
-    void resolvePositions();
-    void parseURLString(String* baseURL, String* url);
-
-    String* m_string;
-    String* m_urlString;
-
-    unsigned int m_protocolEnd;
-    unsigned int m_userStart;
-    unsigned int m_userEnd;
-    unsigned int m_passwordEnd;
-    unsigned int m_hostEnd;
-    unsigned int m_portEnd;
-    unsigned int m_pathEnd;
-    unsigned int m_queryEnd;
-    unsigned int m_fragmentEnd;
-
-    enum Protocol m_protocol;
+    ScriptBindingInstance* m_scriptBindingInstance;
 };
 }
 

@@ -13,6 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/page/Location.h"
@@ -21,9 +23,9 @@
 
 namespace StarFish {
 
-URL* Location::url()
+ResourceURL* Location::url()
 {
-    return m_starFish->window()->document()->documentURI();
+    return document()->documentURI();
 }
 
 String* Location::href()
@@ -111,7 +113,7 @@ void Location::setHash(String* search)
 
 void Location::setLocation(String* newURL)
 {
-    m_starFish->window()->navigateAsync(URL::createURL(
-        m_starFish->window()->document()->documentURI()->urlString(), newURL));
+    document()->window()->navigateAsync(
+        new ResourceURL(newURL, document()->documentURI()->urlString()));
 }
 }

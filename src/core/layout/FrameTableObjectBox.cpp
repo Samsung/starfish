@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/HTMLTDElement.h"

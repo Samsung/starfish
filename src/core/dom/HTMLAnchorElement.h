@@ -29,7 +29,8 @@ public:
         setTabIndex(0);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLAnchorElement() const;
 
     /* 4.4 Interface Node */

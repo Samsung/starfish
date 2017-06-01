@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -41,13 +42,13 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
-                    window()->navigateAsync(URL::createURL(
+                    window()->navigateAsync(new ResourceURL(
+                        hrefStr,
                         document()->urlString()->substring(
-                            0, document()->urlString()->indexOf('#')),
-                        hrefStr));
+                            0, document()->urlString()->indexOf('#'))));
                 } else {
                     window()->navigateAsync(
-                        URL::createURL(document()->urlString(), hrefStr));
+                        new ResourceURL(hrefStr, document()->urlString()));
                 }
             } else {
                 window()->navigateAsync(document()->documentURI());

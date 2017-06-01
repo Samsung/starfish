@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/modules/canvas/Canvas.h"

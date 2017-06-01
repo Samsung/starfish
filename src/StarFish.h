@@ -17,7 +17,6 @@
 #ifndef __StarFish__
 #define __StarFish__
 
-#include "StarFishConfig.h"
 #include "platform/public/ScreenInfo.h"
 
 namespace StarFish {
@@ -25,6 +24,7 @@ namespace StarFish {
 class MessageLoop;
 class TimerWrapper;
 class Window;
+class ScriptEngineInstance;
 class ScriptBindingInstance;
 class ImageData;
 class ThreadPool;
@@ -391,6 +391,7 @@ class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
     friend class StarFishEnterer;
+    friend class HTMLDocument; // m_caseInsensitiveAttrSet
 
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
@@ -513,6 +514,11 @@ public:
         return m_console;
     }
 
+    ScriptEngineInstance* scriptEngineInstance()
+    {
+        return m_scriptEngineInstance;
+    }
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
     {
@@ -531,6 +537,7 @@ protected:
         return str.find(prefix);
     }
     StaticStrings* m_staticStrings;
+    ScriptEngineInstance* m_scriptEngineInstance;
     icu::Locale m_locale;
     icu::BreakIterator* m_lineBreaker;
     String* m_timezoneID;
@@ -555,6 +562,7 @@ protected:
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
     GCUnorderedMap<std::string, AtomicString> m_atomicStringMap;
+    GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
 };
 
 class StarFishEnterer {

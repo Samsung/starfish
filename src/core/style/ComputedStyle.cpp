@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Node.h"
@@ -119,9 +120,9 @@ void ComputedStyle::loadResources(
     size_t bgIndex = 0;
     while (bgIndex < backgroundLayerSize()) {
         if (!backgroundImage(bgIndex)->equals(String::emptyString)) {
-            URL* u =
-                URL::createURL(consumer->document()->documentURI()->baseURI(),
-                               backgroundImage(bgIndex));
+            ResourceURL* u =
+                new ResourceURL(backgroundImage(bgIndex),
+                                consumer->document()->documentURI()->baseURI());
 
             if (prevComputedStyleValueForReferenceLoadedResources &&
                 prevComputedStyleValueForReferenceLoadedResources
@@ -170,8 +171,9 @@ void ComputedStyle::loadResources(
     }
 
     if (!borderImageSource()->equals(String::emptyString)) {
-        URL* u = URL::createURL(consumer->document()->documentURI()->baseURI(),
-                                borderImageSource());
+        ResourceURL* u =
+            new ResourceURL(borderImageSource(),
+                            consumer->document()->documentURI()->baseURI());
 
         if (prevComputedStyleValueForReferenceLoadedResources &&
             prevComputedStyleValueForReferenceLoadedResources

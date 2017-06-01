@@ -14,58 +14,65 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/NamedNodeMap.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult NamedNodeMapGetOwnPropertyCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+    NamedNodeMap* self = (NamedNodeMap*)jsObj->extraData();
     STARFISH_ASSERT(self->isNamedNodeMap());
-    uint32_t idx = key.toIndex();
-    if (idx == ESValue::ESInvalidIndexValue) {
-        String* str = toBrowserString(key);
+
+    uint32_t idx = key->toArrayIndex(state);
+    if (idx == ValueRef::InvalidArrayIndexValue) {
+        ObjectRef* ref = jsObj->getPrototypeObject();
+        while (ref) {
+            if (ref->hasOwnProperty(state, key)) {
+                return ExposableObjectGetOwnPropertyCallbackResult();
+            }
+            ref = ref->getPrototypeObject();
+        }
+
+        String* str = toBrowserString(state, key);
         auto attrName = self->element()->document()->createAttributeName(str);
         Attr* e = self->getNamedItem(attrName);
         if (e != nullptr) {
-            return e->scriptValue();
+            return ExposableObjectGetOwnPropertyCallbackResult(
+                e->scriptValue(), false, false, false);
         }
     } else if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
+        return ExposableObjectGetOwnPropertyCallbackResult(
+            self->item(idx)->scriptValue(), false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void NamedNodeMapDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                           ObjectRef* jsObj, ValueRef* key,
+                                           ValueRef* val)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    return;
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector NamedNodeMapEnumerationCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isNamedNodeMap());
+    NamedNodeMap* self = (NamedNodeMap*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void NamedNodeMap::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

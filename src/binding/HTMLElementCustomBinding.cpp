@@ -14,14 +14,18 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/HTMLElement.h"
 #include "core/style/CSSStyleDeclaration.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue styleHTMLElementGetterFunction(ESVMInstance* instance)
+ValueRef* styleHTMLElementGetterFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
@@ -29,14 +33,16 @@ ESValue styleHTMLElementGetterFunction(ESVMInstance* instance)
     return result->scriptValue();
 }
 
-ESValue styleHTMLElementSetterFunction(ESVMInstance* instance)
+ValueRef* styleHTMLElementSetterFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(HTMLElement);
 
-    ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-    String* value0 = toBrowserString(arg0);
+    ValueRef* arg0 = argv[0];
+    String* value0 = toBrowserString(state, arg0);
 
     originalObj->setStyleAttr(value0);
-    return ESValue();
+    return scriptUndefined();
 }
 }

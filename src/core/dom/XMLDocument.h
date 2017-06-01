@@ -27,13 +27,15 @@ class URL;
 class XMLDocument : public Document {
 public:
     XMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                URL* uri, String* charSet, bool doesParticipateInRendering)
+                ResourceURL* uri, String* charSet,
+                bool doesParticipateInRendering)
         : Document(window, scriptBindingInstance, uri, charSet,
                    doesParticipateInRendering)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isXMLDocument() const override;
 };
 }

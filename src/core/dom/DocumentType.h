@@ -37,7 +37,8 @@ public:
 #endif
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isDocumentType() const override;
 
     String* name() const

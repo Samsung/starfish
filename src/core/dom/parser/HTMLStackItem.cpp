@@ -37,6 +37,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/parser/AtomicHTMLToken.h"

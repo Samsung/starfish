@@ -52,10 +52,7 @@
 #include <clocale>
 #include <cwchar>
 
-#include <gc_cpp.h>
-#include <gc_allocator.h>
-
-#include <Escargot.h>
+#include <GCUtil.h>
 
 #include <SkMatrix.h>
 
@@ -332,5 +329,6 @@ protected:
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
+#include "platform/loader/ResourceURL.h"
 
 #endif

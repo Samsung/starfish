@@ -31,9 +31,10 @@ public:
     HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
                    void* data, bool canCache = false);
 
-    virtual void init(ScriptBindingInstance* instance) override;
-    virtual void postInit(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLCollection() const;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     size_t length() const;
     Element* item(unsigned long index);

@@ -28,7 +28,7 @@ class StorageManager;
 
 class StorageNamespaceImpl : public StorageNamespace {
 public:
-    StorageNamespaceImpl(StarFish* starfish, StorageType storageType,
+    StorageNamespaceImpl(Window* window, StorageType storageType,
                          String* localStoragePath);
     virtual ~StorageNamespaceImpl();
 

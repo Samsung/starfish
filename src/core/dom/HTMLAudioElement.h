@@ -35,7 +35,8 @@ public:
         setSrc(src);
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isHTMLAudioElement() const override;
 
     virtual String* localName();

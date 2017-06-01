@@ -14,23 +14,30 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/fileapi/Blob.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
+
+ScriptBindingInstance* Blob::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
+}
 
 void Blob::addBlobToBlobURLStore()
 {
     STARFISH_ASSERT(!m_isEntryOfBlobURLStore);
     m_isEntryOfBlobURLStore = true;
-    STARFISH_ASSERT(!m_starFish->isValidBlobURL(this));
-    m_starFish->addBlobInBlobURLStore(this);
+    STARFISH_ASSERT(!document()->starFish()->isValidBlobURL(this));
+    document()->starFish()->addBlobInBlobURLStore(this);
 }
 
 void Blob::removeBlobFromBlobURLStore()
 {
-    STARFISH_ASSERT(m_starFish->isValidBlobURL(this));
-    m_starFish->removeBlobFromBlobURLStore(this);
+    STARFISH_ASSERT(document()->starFish()->isValidBlobURL(this));
+    document()->starFish()->removeBlobFromBlobURLStore(this);
 }
 
 Blob* Blob::slice(int64_t start)
@@ -67,6 +74,6 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     size_t span = (size_t)std::max(relativeEnd - relativeStart, (int64_t)0);
     STARFISH_ASSERT(relativeStart >= 0);
     void* newStart = ((char*)m_data) + relativeStart;
-    return new Blob(m_starFish, span, newType, newStart, m_isClosed, false);
+    return new Blob(document(), span, newType, newStart, m_isClosed, false);
 }
 }

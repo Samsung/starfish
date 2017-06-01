@@ -23,8 +23,8 @@
 namespace StarFish {
 
 WebStorageNamespaceProvider::WebStorageNamespaceProvider(
-    StarFish* starfish, String* localStoragePath)
-    : StorageNamespaceProvider(starfish)
+    Window* window, String* localStoragePath)
+    : StorageNamespaceProvider(window)
     , m_localStoragePath(localStoragePath)
 {
 }
@@ -34,9 +34,9 @@ WebStorageNamespaceProvider::~WebStorageNamespaceProvider()
 }
 
 WebStorageNamespaceProvider* WebStorageNamespaceProvider::create(
-    StarFish* starfish, String* localStoragePath)
+    Window* window, String* localStoragePath)
 {
-    return new WebStorageNamespaceProvider(starfish, localStoragePath);
+    return new WebStorageNamespaceProvider(window, localStoragePath);
 }
 
 StorageNamespace* WebStorageNamespaceProvider::createLocalStorageNamespace()
@@ -44,7 +44,7 @@ StorageNamespace* WebStorageNamespaceProvider::createLocalStorageNamespace()
     auto itr = m_localStoragePathToStorageNamespace.find(m_localStoragePath);
     if (itr == m_localStoragePathToStorageNamespace.end()) {
         StorageNamespaceImpl* storageNamespace = new StorageNamespaceImpl(
-            m_starFish, StorageType::Local, m_localStoragePath);
+            window(), StorageType::Local, m_localStoragePath);
         m_localStoragePathToStorageNamespace.insert(
             std::pair<String*, StorageNamespaceImpl*>(m_localStoragePath,
                                                       storageNamespace));
@@ -57,7 +57,7 @@ StorageNamespace* WebStorageNamespaceProvider::createLocalStorageNamespace()
 StorageNamespace* WebStorageNamespaceProvider::createSessionStorageNamespace()
 {
     StorageNamespaceImpl* storageNamespace =
-        new StorageNamespaceImpl(m_starFish, StorageType::Session, nullptr);
+        new StorageNamespaceImpl(window(), StorageType::Session, nullptr);
 
     return storageNamespace;
 }

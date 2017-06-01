@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 
 #include "core/animation/Animation.h"
@@ -112,42 +113,40 @@ void Window::initFlags()
     m_lastRenderingTime = 0;
 }
 
-void Window::navigate(URL* url)
+void Window::navigate(ResourceURL* url)
 {
     close();
     initFlags();
     STARFISH_LOG_INFO("Window::navigate %s\n", url->urlString()->utf8Data());
 
-    // WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     m_isActive = true;
 
-    m_scriptBindingInstance = new ScriptBindingInstance();
     StarFishEnterer enter(m_starFish);
-    m_scriptBindingInstance->initBinding(m_starFish);
-    scriptObjectSlowCase();
-
-    m_history = new History(m_starFish);
-    m_navigator = new Navigator(m_starFish);
-    m_location = new Location(m_starFish);
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    m_webapis = new WebApis(m_starFish);
-#endif
+    m_scriptBindingInstance =
+        new ScriptBindingInstance(m_starFish->scriptEngineInstance(), this);
 
     initStorage(url);
 
     m_document = new HTMLDocument(this, scriptBindingInstance(), url,
                                   String::createASCIIString("UTF-8"), true);
-
+    m_scriptBindingInstance->initBinding(m_document);
+    m_history = new History(m_document);
+    m_navigator = new Navigator(m_document);
+    m_location = new Location(m_document);
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    m_webapis = new WebApis(m_document);
+#endif
+    m_history->setHistory(scriptNull(), String::emptyString, url);
     m_document->open();
 }
 
-void Window::initStorage(URL* url)
+void Window::initStorage(ResourceURL* url)
 {
     if (!m_localStorageNamespace) {
         // TODO: The name of disk storage file name should be auto-generated
         StorageNamespaceProvider* storageProvider =
             WebStorageNamespaceProvider::create(
-                m_starFish, String::createASCIIString("./cache/cache.db"));
+                this, String::createASCIIString("./cache/cache.db"));
         m_localStorageNamespace =
             storageProvider->createLocalStorageNamespace();
         m_sessionStorageNamespace =
@@ -157,7 +156,7 @@ void Window::initStorage(URL* url)
 
 Storage* Window::localStorage()
 {
-    URL* url = m_document->documentURI();
+    ResourceURL* url = m_document->documentURI();
     SecurityOriginData* origin = new SecurityOriginData(
         url->protocol(), url->host(), String::parseInt(url->port()));
     return m_localStorageNamespace->storage(origin);
@@ -165,25 +164,16 @@ Storage* Window::localStorage()
 
 Storage* Window::sessionStorage()
 {
-    URL* url = m_document->documentURI();
+    ResourceURL* url = m_document->documentURI();
     SecurityOriginData* origin = new SecurityOriginData(
         url->protocol(), url->host(), String::parseInt(url->port()));
     return m_sessionStorageNamespace->storage(origin);
 }
 
-void Window::setHistory(URL* url)
-{
-    if (!m_history) {
-        m_history = new History(m_starFish);
-    }
-    m_history->setHistory(ScriptValue(ScriptValue::ESNull), String::emptyString,
-                          url);
-}
-
 Screen* Window::screen()
 {
     if (!m_screen) {
-        m_screen = new Screen(m_starFish);
+        m_screen = new Screen(m_document);
     }
     return m_screen;
 }
@@ -193,21 +183,11 @@ float Window::devicePixelRatio()
     return starFish()->devicePixelRatio();
 }
 
-void Window::navigateAsync(URL* url)
+void Window::navigateAsync(ResourceURL* url)
 {
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
         [](size_t a, void* data, void* data2) {
-            ((Window*)data2)->setHistory((URL*)data);
-            ((Window*)data2)->navigate((URL*)data);
-        },
-        url, this);
-}
-
-void Window::navigateAsyncWithoutSetHistory(URL* url)
-{
-    starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
-        [](size_t a, void* data, void* data2) {
-            ((Window*)data2)->navigate((URL*)data);
+            ((Window*)data2)->navigate((ResourceURL*)data);
         },
         url, this);
 }
@@ -650,12 +630,7 @@ void Window::simulateVisibilitychange(bool show)
 
 void Window::testStart()
 {
-    ESValue v = ESVMInstance::currentInstance()->globalObject()->get(
-        ESString::create("testStart"));
-    if (!v.isUndefined()) {
-        callScriptFunction(v, {}, 0,
-                           ESVMInstance::currentInstance()->globalObject());
-    }
+    invokeTestStartFunction(scriptBindingInstance());
 }
 #endif
 
@@ -805,12 +780,12 @@ void Window::setFocusedNode(Node* n)
     if (t) {
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_blur.localName();
-            e = new FocusEvent(eventType, FocusEventInit());
+            e = new FocusEvent(document(), eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusout.localName();
-            e = new FocusEvent(eventType, FocusEventInit(true));
+            e = new FocusEvent(document(), eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);
         }
     }
@@ -821,12 +796,12 @@ void Window::setFocusedNode(Node* n)
     if (t) {
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_focus.localName();
-            e = new FocusEvent(eventType, FocusEventInit());
+            e = new FocusEvent(document(), eventType, FocusEventInit());
             EventTarget::dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusin.localName();
-            e = new FocusEvent(eventType, FocusEventInit(true));
+            e = new FocusEvent(document(), eventType, FocusEventInit(true));
             EventTarget::dispatchEvent(t->asNode(), e);
         }
     }
@@ -984,10 +959,11 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         Event* e;
         if (isMobile) {
             eventType = starFish()->staticStrings()->m_touchstart.localName();
-            e = new TouchEvent(eventType, UIEventInit(true, true));
+            e = new TouchEvent(document(), eventType, UIEventInit(true, true));
         } else {
             eventType = starFish()->staticStrings()->m_mousedown.localName();
-            e = new MouseEvent(eventType, MouseEventInit(true, true));
+            e = new MouseEvent(document(), eventType,
+                               MouseEventInit(true, true));
         }
 
         if (m_activeNodes.size() > 0) {
@@ -1020,8 +996,8 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
 
                 String* eventType =
                     starFish()->staticStrings()->m_mouseover.localName();
-                Event* e =
-                    new MouseEvent(eventType, MouseEventInit(true, true));
+                Event* e = new MouseEvent(document(), eventType,
+                                          MouseEventInit(true, true));
 
                 if (t) {
                     EventTarget::dispatchEvent(t, e);
@@ -1035,10 +1011,11 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         Event* e;
         if (isMobile) {
             eventType = starFish()->staticStrings()->m_touchmove.localName();
-            e = new TouchEvent(eventType, UIEventInit(true, true));
+            e = new TouchEvent(document(), eventType, UIEventInit(true, true));
         } else {
             eventType = starFish()->staticStrings()->m_mousemove.localName();
-            e = new MouseEvent(eventType, MouseEventInit(true, true));
+            e = new MouseEvent(document(), eventType,
+                               MouseEventInit(true, true));
         }
 
         if (t) {
@@ -1071,14 +1048,18 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
             String* eventType2;
             Event* e2;
             if (isMobile) {
-                e = new TouchEvent(eventType, UIEventInit(true, true));
+                e = new TouchEvent(document(), eventType,
+                                   UIEventInit(true, true));
                 eventType2 =
                     starFish()->staticStrings()->m_touchend.localName();
-                e2 = new TouchEvent(eventType2, UIEventInit(true, true));
+                e2 = new TouchEvent(document(), eventType2,
+                                    UIEventInit(true, true));
             } else {
-                e = new MouseEvent(eventType, MouseEventInit(true, true));
+                e = new MouseEvent(document(), eventType,
+                                   MouseEventInit(true, true));
                 eventType2 = starFish()->staticStrings()->m_mouseup.localName();
-                e2 = new MouseEvent(eventType2, MouseEventInit(true, true));
+                e2 = new MouseEvent(document(), eventType2,
+                                    MouseEventInit(true, true));
             }
 
             if (t) {
@@ -1115,7 +1096,7 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
     }
     KeyboardEventInit eventInit(true, true);
     eventInit.setKey(key);
-    KeyboardEvent* e = new KeyboardEvent(eventType, eventInit);
+    KeyboardEvent* e = new KeyboardEvent(document(), eventType, eventInit);
 
     if (e->ctrlKey()) {
         m_ctrlKeyDown = kind == KeyEventKind::KeyEventDown ? m_ctrlKeyDown + 1

@@ -32,7 +32,8 @@ public:
         m_data = data;
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isCharacterData() const override;
 
     /* 4.9. Interface CharacterData */

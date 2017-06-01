@@ -25,7 +25,8 @@ namespace StarFish {
 
 class TextResource : public Resource {
     friend class ResourceLoader;
-    TextResource(URL* url, ResourceLoader* loader, String* preferredEncoding)
+    TextResource(ResourceURL* url, ResourceLoader* loader,
+                 String* preferredEncoding)
         : Resource(url, loader)
         , m_converter(nullptr)
         , m_preferredEncoding(preferredEncoding)

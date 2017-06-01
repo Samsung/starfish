@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLLinkElement.h"
@@ -43,7 +44,8 @@ String* HTMLLinkElement::href()
 {
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_href);
 
-    return URL::getURLString(document()->documentURI()->baseURI(), url);
+    return ResourceURL::mergeDocumentURIWithURIString(
+        document()->documentURI()->baseURI(), url);
 }
 
 void HTMLLinkElement::setHref(String* href)
@@ -81,14 +83,15 @@ void HTMLLinkElement::setType(String* type)
     setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
-URL* HTMLLinkElement::url()
+ResourceURL* HTMLLinkElement::url()
 {
     Nullable<String*> url = getAttribute(starFish()->staticStrings()->m_href);
 
     if (!url.hasValue()) {
         return nullptr;
     }
-    return URL::createURL(document()->documentURI()->baseURI(), url.getValue());
+    return new ResourceURL(url.getValue(),
+                           document()->documentURI()->baseURI());
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumenTree()
@@ -170,7 +173,8 @@ void HTMLLinkElement::loadStyleSheet()
     unloadStyleSheetIfExists();
     String* urlString =
         getAttributeOrEmpty(starFish()->staticStrings()->m_href);
-    URL* url = URL::createURL(document()->documentURI()->baseURI(), urlString);
+    ResourceURL* url =
+        new ResourceURL(urlString, document()->documentURI()->baseURI());
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();

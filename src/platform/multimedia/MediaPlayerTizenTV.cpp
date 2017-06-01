@@ -74,7 +74,7 @@ void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
     }
 }
 
-void MediaPlayerTizenTV::setNativePlayerDefaultOptions(URL* url)
+void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
 {
     if (url->isNetworkURL()) {
         player_set_streaming_type(m_nativePlayer,

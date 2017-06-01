@@ -14,12 +14,16 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/DOMPointReadOnly.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
-DOMPointReadOnly::DOMPointReadOnly(double x, double y, double z, double w)
+DOMPointReadOnly::DOMPointReadOnly(Document* document, double x, double y,
+                                   double z, double w)
     : ScriptWrappable(this)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_x(x)
     , m_y(y)
     , m_z(z)

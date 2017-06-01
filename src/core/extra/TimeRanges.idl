@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges
 
-[STARFISH_ENABLE_MULTIMEDIA]
+[ConstructorCallWith=Document, STARFISH_ENABLE_MULTIMEDIA]
 interface TimeRanges {
   readonly attribute unsigned long length;
   double start(unsigned long index);

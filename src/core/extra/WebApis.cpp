@@ -15,6 +15,8 @@
  *    limitations under the License.
  */
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/extra/Avplay.h"
 #include "core/extra/WebApis.h"

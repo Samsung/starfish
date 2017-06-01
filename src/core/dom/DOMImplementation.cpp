@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_EXP
 
+#include "StarFishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/DOMImplementation.h"

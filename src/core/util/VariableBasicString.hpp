@@ -55,7 +55,7 @@ template <typename T, typename Allocator>
 void VariableBasicString<T, Allocator>::insert(size_t pos, const T val)
 {
     size_t size = this->m_size;
-    ASSERT(pos < size);
+    STARFISH_ASSERT(pos < size);
     size_t newLen = size + 1;
     if (capacity() > newLen) {
         T* data = this->data();
@@ -73,9 +73,9 @@ template <typename T, typename Allocator>
 void VariableBasicString<T, Allocator>::erase(size_t start, size_t end)
 {
     size_t size = this->m_size;
-    ASSERT(start < end);
-    ASSERT(start >= 0);
-    ASSERT(end <= size);
+    STARFISH_ASSERT(start < end);
+    STARFISH_ASSERT(start >= 0);
+    STARFISH_ASSERT(end <= size);
 
     size_t howMuch = end - start;
     size_t newLen = size - howMuch;

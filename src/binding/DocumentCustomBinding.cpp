@@ -14,20 +14,25 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/dom/Document.h"
 #include "core/modules/window/Window.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-ESValue defaultViewDocumentGetterFunction(ESVMInstance* instance)
+ValueRef* defaultViewDocumentGetterFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
 {
     GENERATE_THIS_AND_CHECK_TYPE(Document);
     Window* window = originalObj->window();
     if (window != nullptr) {
         return window->scriptValue();
     }
-    return ESValue(ESValue::ESNull);
+    return ValueRef::createNull();
 }
 }

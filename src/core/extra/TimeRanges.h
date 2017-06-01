@@ -18,18 +18,27 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/extra/TimeRange.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
-class TimeRanges : public ScriptWrappable, public GCVector<TimeRange> {
+class TimeRanges : public ScriptWrappable,
+                   public GCVector<TimeRange>,
+                   public DocumentHoldable {
 public:
-    TimeRanges()
+    TimeRanges(Document* document)
         : ScriptWrappable(this)
+        , DocumentHoldable(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isTimeRanges() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
     double start(uint32_t idx)
     {

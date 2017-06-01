@@ -17,14 +17,14 @@
 #ifndef __StarFishWebStorageNamespace__
 #define __StarFishWebStorageNamespace__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/WindowHoldable.h"
 
 namespace StarFish {
 
 class SecurityOriginData;
 class Storage;
 
-class StorageNamespace : public StarFishHoldable, public gc {
+class StorageNamespace : public WindowHoldable, public gc {
 public:
     virtual Storage* storage(SecurityOriginData* origin) = 0;
     virtual ~StorageNamespace()
@@ -32,8 +32,8 @@ public:
     }
 
 protected:
-    StorageNamespace(StarFish* starfish)
-        : StarFishHoldable(starfish)
+    StorageNamespace(Window* window)
+        : WindowHoldable(window)
     {
     }
 };

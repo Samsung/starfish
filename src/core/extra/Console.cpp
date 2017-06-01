@@ -13,6 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/extra/Console.h"
 #include "core/inspector/Inspector.h"

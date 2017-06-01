@@ -16,6 +16,7 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
@@ -467,9 +468,10 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
             if (state == SourceBuffer::Success) {
                 m_parentMediaSource->attachedMediaElement()
                     ->addEventToOperationQueue(
-                        this, new Event(m_parentMediaSource->starFish()
-                                            ->staticStrings()
-                                            ->m_update.localName()));
+                        this,
+                        new Event(document(), m_parentMediaSource->starFish()
+                                                  ->staticStrings()
+                                                  ->m_update.localName()));
                 eventName = m_parentMediaSource->starFish()
                                 ->staticStrings()
                                 ->m_updateend.localName();
@@ -489,7 +491,7 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
         }
 
         m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-            this, new Event(eventName));
+            this, new Event(document(), eventName));
 
         if (flag == false) {
             // propagate update state to mediaSource now.
@@ -507,7 +509,7 @@ void SourceBuffer::abort()
     // parent media source then throw an InvalidStateError exception and abort
     // these steps.
     if (!m_isAttachedToParent) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer has been removed from from parent "
                                "MediaSource, when executing 'abort' of "
                                "SourceBuffer");
@@ -517,7 +519,7 @@ void SourceBuffer::abort()
     // "open" state then throw an InvalidStateError exception and abort these
     // steps.
     if (m_parentMediaSource->readyStateValue() != MediaSource::Open) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "readyState of parentMediaSource is not open, "
                                "when executing 'abort' of SourceBuffer");
     }
@@ -531,15 +533,15 @@ void SourceBuffer::abort()
         // Queue a task to fire a simple event named abort at this SourceBuffer
         // object.
         m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-            this, new Event(m_parentMediaSource->starFish()
-                                ->staticStrings()
-                                ->m_abort.localName()));
+            this, new Event(document(), m_parentMediaSource->starFish()
+                                            ->staticStrings()
+                                            ->m_abort.localName()));
         // Queue a task to fire a simple event named updateend at this
         // SourceBuffer object.
         m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-            this, new Event(m_parentMediaSource->starFish()
-                                ->staticStrings()
-                                ->m_updateend.localName()));
+            this, new Event(document(), m_parentMediaSource->starFish()
+                                            ->staticStrings()
+                                            ->m_updateend.localName()));
 
         m_updating = false;
     }
@@ -610,14 +612,14 @@ void SourceBuffer::prepareAppend()
     // abort these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -647,14 +649,14 @@ void SourceBuffer::remove(double start, double end)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -663,14 +665,14 @@ void SourceBuffer::remove(double start, double end)
     double duration = m_parentMediaSource->duration();
     if (std::isnan(duration)) {
         throw new DOMException(
-            DOMException::TYPE_ERR,
+            document(), DOMException::TYPE_ERR,
             "If Duration is NaN, can not execute remove method");
     }
 
     // If start is negative or greater than duration, then throw a TypeError
     // exception and abort these steps.
     if (start < 0 || start > duration) {
-        throw new DOMException(DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::TYPE_ERR,
                                "when executing remove, start must be greater "
                                "than zero and smaller than duration");
     }
@@ -678,7 +680,7 @@ void SourceBuffer::remove(double start, double end)
     // If end is less than or equal to start or end equals NaN, then throw a
     // TypeError exception and abort these steps.
     if (end <= start || std::isnan(end)) {
-        throw new DOMException(DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::TYPE_ERR,
                                "when executing remove, end must be greater "
                                "than start and not NaN");
     }
@@ -1226,14 +1228,14 @@ void SourceBuffer::setMode(AppendMode mode)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1286,14 +1288,14 @@ void SourceBuffer::setTimestampOffset(double timeoffset)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1330,14 +1332,14 @@ void SourceBuffer::setAppendWindowStart(double timeStamp)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1345,7 +1347,7 @@ void SourceBuffer::setAppendWindowStart(double timeStamp)
     // appendWindowEnd then throw a TypeError exception and abort these steps.
     if (timeStamp < 0 || timeStamp >= m_appendWindowEnd) {
         throw new DOMException(
-            DOMException::TYPE_ERR,
+            document(), DOMException::TYPE_ERR,
             "appendWindowStart should be between 0 and appendWindowEnd");
     }
 
@@ -1360,21 +1362,21 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            DOMException::INVALID_STATE_ERR,
+            document(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(DOMException::INVALID_STATE_ERR,
+        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
     // If the new value equals NaN, then throw a TypeError and abort these
     // steps.
     if (std::isnan(timeStamp)) {
-        throw new DOMException(DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::TYPE_ERR,
                                "appendWindowEnd should not be NaN");
     }
 
@@ -1382,7 +1384,7 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // TypeError exception and abort these steps.
     if (timeStamp <= m_appendWindowStart) {
         throw new DOMException(
-            DOMException::TYPE_ERR,
+            document(), DOMException::TYPE_ERR,
             "appendWindowEnd should be greater than appendWindowStart");
     }
 
@@ -1399,7 +1401,7 @@ TimeRanges* SourceBuffer::buffered()
 
     // If sourceBuffer does not have packetGroups yet, return empty timeRanges
     if (m_streamInfo.size() == 0 || m_packetGroup.size() == 0) {
-        return new TimeRanges();
+        return new TimeRanges(document());
     }
 
     // https://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
@@ -1408,7 +1410,8 @@ TimeRanges* SourceBuffer::buffered()
     //    then throw an InvalidStateError exception and abort these steps.
     // --> Binding layer would catch that
     if (!parentMediaSource()) {
-        throw new DOMException(DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(document(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
 
     // 2. Let highest end time be the largest track buffer ranges end time
@@ -1517,7 +1520,7 @@ TimeRanges* SourceBuffer::buffered()
     // information as the current value of this attribute,
     //    then update the current value of this attribute to intersection
     //    ranges.
-    m_buffered = new TimeRanges();
+    m_buffered = new TimeRanges(document());
     for (auto i = intersection.begin(); i != intersection.end(); i++) {
         m_buffered->emplace_back((double)(i->first) / 1000.0,
                                  (double)(i->second) / 1000.0);

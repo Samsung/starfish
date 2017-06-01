@@ -18,18 +18,18 @@
 #define __StarFishBlob__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class Document;
 
-class Blob : public ScriptWrappable, public StarFishHoldable {
+class Blob : public ScriptWrappable, public DocumentHoldable {
 public:
-    Blob(StarFish* starFish, uint64_t size, String* type, void* data,
+    Blob(Document* document, uint64_t size, String* type, void* data,
          bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
-        , StarFishHoldable(starFish)
+        , DocumentHoldable(document)
         , m_size(size)
         , m_type(type)
         , m_data(data)
@@ -40,8 +40,10 @@ public:
         }
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isBlob() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance();
 
     void* data()
     {

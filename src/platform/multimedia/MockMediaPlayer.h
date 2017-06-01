@@ -44,7 +44,7 @@ public:
         m_currentTimestamp = time * 1000;
     }
 
-    virtual void prepare(URL* url);
+    virtual void prepare(ResourceURL* url);
     virtual double currentTime()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

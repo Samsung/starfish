@@ -33,7 +33,7 @@ class ScriptBindingInstance;
 class StarFish;
 class StackingContext;
 class StorageNamespace;
-class URL;
+class ResourceURL;
 class WebApis;
 class Window;
 class Screen;
@@ -52,13 +52,13 @@ class Window : public EventTarget {
 public:
     static Window* create(StarFish* sf, void* win, int width, int height);
     ~Window();
-    void navigate(URL* url);
-    void navigateAsync(URL* url);
-    void navigateAsyncWithoutSetHistory(URL* url);
-    void setHistory(URL* url);
-    void initStorage(URL* url);
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    void navigate(ResourceURL* url);
+    void navigateAsync(ResourceURL* url);
+    void initStorage(ResourceURL* url);
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
     virtual bool isWindow() const;
 

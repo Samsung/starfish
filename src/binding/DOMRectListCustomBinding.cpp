@@ -13,50 +13,46 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#include "StarFishConfig.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 namespace StarFish {
 
-using namespace escargot;
-
-static ESValue readCallbackFunction(const ESValue& key, ESObject* obj)
+ExposableObjectGetOwnPropertyCallbackResult DOMRectListGetOwnPropertyCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj, ValueRef* key)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMRectList* self = (DOMRectList*)obj->extraPointerData();
+    DOMRectList* self = (DOMRectList*)jsObj->extraData();
     STARFISH_ASSERT(self->isDOMRectList());
-    uint32_t idx = key.toIndex();
+    uint32_t idx = key->toArrayIndex(state);
     if (idx < self->length()) {
-        return self->item(idx)->scriptValue();
+        return ExposableObjectGetOwnPropertyCallbackResult(
+            self->item(idx)->scriptValue(), false, true, false);
     }
-    return ESValue(ESValue::ESDeletedValue);
+    return ExposableObjectGetOwnPropertyCallbackResult();
 }
 
-static bool writeCallbackFunction(const ESValue& key, const ESValue& val,
-                                  ESObject* obj)
+void DOMRectListDefineOwnPropertyCallback(ExecutionStateRef* state,
+                                          ObjectRef* self,
+                                          ValueRef* propertyName,
+                                          ValueRef* value)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    return false;
+    // do nothing
 }
 
-static ESValueVector enumerateCallbackFunction(ESObject* obj)
+ExposableObjectEnumerationCallbackResultVector DOMRectListEnumerationCallback(
+    ExecutionStateRef* state, ObjectRef* jsObj)
 {
-    STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
-    DOMRectList* self = (DOMRectList*)obj->extraPointerData();
-    STARFISH_ASSERT(self->isDOMRectList());
+    DOMRectList* self = (DOMRectList*)jsObj->extraData();
     size_t len = self->length();
-    ESValueVector v(len);
+    ExposableObjectEnumerationCallbackResultVector v;
     for (size_t i = 0; i < len; i++) {
-        v[i] = ESValue(i);
+        v.push_back(ExposableObjectEnumerationCallbackResult(
+            ValueRef::create(i), false, true, false));
     }
     return v;
-}
-
-void DOMRectList::postInit(ScriptBindingInstance* instance)
-{
-    scriptObject()->setPropertyInterceptor(readCallbackFunction,
-                                           writeCallbackFunction,
-                                           enumerateCallbackFunction, true);
 }
 }

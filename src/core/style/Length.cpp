@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/style/Length.h"
 

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
@@ -33,7 +34,6 @@
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/NamedColors.h"
 #include "core/style/Style.h"
-#include "core/util/URL.h"
 
 namespace StarFish {
 
@@ -253,10 +253,11 @@ bool CSSStyleValuePair::updateValueCommon(GCVector<String*>* tokens)
     return true;
 }
 
-String* CSSStyleValuePair::urlValue(URL* urlOfStyleSheet)
+String* CSSStyleValuePair::urlValue(ResourceURL* urlOfStyleSheet)
 {
     STARFISH_ASSERT(m_valueKind == UrlValueKind);
-    return URL::getURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
+    return ResourceURL::mergeDocumentURIWithURIString(
+        urlOfStyleSheet->baseURI(), m_value.m_stringValue);
 }
 
 static String* BorderString(String* width, bool isWidthCombined, String* style,
@@ -2613,7 +2614,7 @@ void StyleResolver::apply(Element* element,
                           ComputedStyle* style, ComputedStyle* parentStyle,
                           bool isImportant)
 {
-    URL* origin = element->document()->documentURI();
+    ResourceURL* origin = element->document()->documentURI();
     for (unsigned k = 0; k < cssValues.size(); k++) {
         if (isImportant != cssValues[k].flagImportant()) {
             continue;

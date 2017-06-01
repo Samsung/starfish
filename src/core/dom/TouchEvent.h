@@ -24,12 +24,14 @@ namespace StarFish {
 
 class TouchEvent : public UIEvent {
 public:
-    TouchEvent(String* eventType, const UIEventInit& init = UIEventInit())
-        : UIEvent(eventType, init)
+    TouchEvent(Document* document, String* eventType,
+               const UIEventInit& init = UIEventInit())
+        : UIEvent(document, eventType, init)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
     virtual bool isTouchEvent() const override;
 };
 }
