@@ -745,7 +745,7 @@ public:
 
         cairo_translate(m_canvas, xx, yy);
 
-        UTF8NonGCString us =
+        UTF8StringDataNonGCStd us =
             sv.originalString()->toUTF8NonGCString(sv.start(), sv.end(), true);
 
         FT_Face face = lastState().m_font->metrics().m_FTFace;
@@ -866,8 +866,8 @@ public:
         }
 
         void* imgData = data->unwrap();
-        double surfaceWidth, surfaceHeight;
-        cairo_surface_t* image;
+        double surfaceWidth = 0, surfaceHeight = 0;
+        cairo_surface_t* image = nullptr;
 
         if (imgData) {
             int stride =

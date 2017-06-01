@@ -15,7 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifdef STARFISH_TIZEN
+#ifdef STARFISH_TIZEN_TV
 
 #include "StarFishConfig.h"
 #include "core/util/URL.h"

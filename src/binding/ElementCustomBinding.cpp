@@ -46,5 +46,6 @@ ESValue classListElementSetterFunction(ESVMInstance* instance)
     }
     return ESValue(); */
     STARFISH_ASSERT_NOT_REACHED();
+    return ESValue();
 }
 }

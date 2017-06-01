@@ -58,6 +58,15 @@ public:
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
 
+        Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
+        m_image = Dali::BufferImage::New(size.width, size.height,
+                                         Dali::Pixel::BGRA8888);
+        m_mainView = Dali::Toolkit::ImageView::New(m_image);
+        m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+        m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+        m_mainView.SetPosition(0, 0);
+        Dali::Stage::GetCurrent().Add(m_mainView);
+
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
@@ -263,13 +272,6 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     }
 #endif
 
-    Dali::Actor rootLayer = Dali::Stage::GetCurrent().GetRootLayer();
-
-    for (unsigned int i = 1; i < rootLayer.GetChildCount(); ++i) {
-        Dali::Actor child = rootLayer.GetChildAt(i);
-        Dali::Stage::GetCurrent().Remove(child);
-    }
-
     int width, height;
     Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
     width = size.width;
@@ -284,15 +286,8 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     dummy* d = new dummy;
     d->w = width;
     d->h = height;
-
-    m_image = Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
     d->image = m_image;
-    m_mainView = Dali::Toolkit::ImageView::New(d->image);
-    m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
-    m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
     m_mainView.SetSize(width, height);
-    m_mainView.SetPosition(0, 0);
-    Dali::Stage::GetCurrent().Add(m_mainView);
 
     Canvas* canvas = Canvas::createDirect(d);
     delete d;

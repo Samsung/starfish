@@ -13,6 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#ifndef __StarFishImageDecorder__
+#define __StarFishImageDecorder__
 
 #include "StarFishConfig.h"
 
@@ -46,4 +48,5 @@ protected:
     }
 };
 }
+#endif
 #endif

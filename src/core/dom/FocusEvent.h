@@ -49,6 +49,7 @@ public:
     EventTarget* relatedTarget()
     {
         STARFISH_ASSERT_NOT_REACHED();
+        return nullptr;
     }
 };
 }

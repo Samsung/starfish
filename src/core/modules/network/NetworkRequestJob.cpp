@@ -41,6 +41,7 @@ NetworkRequestJobInterface* NetworkRequestJobDelegateFactory::createJob(
         return new NetworkURLNetworkRequestJobDelegate(proxy);
     }
     STARFISH_ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
 FileURLNetworkRequestJobDelegate::FileURLNetworkRequestJobDelegate(

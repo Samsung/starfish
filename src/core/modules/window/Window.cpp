@@ -463,7 +463,7 @@ void Window::paintWindowBackground(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->m_tizenWidgetTransparentBackground) {
-        canvas->clearColor(Color(255, 255, 255, 255));
+        canvas->clearColor(Unit::Color(255, 255, 255, 255));
     }
 #else
     canvas->clearColor(Unit::Color(255, 255, 255, 255));
