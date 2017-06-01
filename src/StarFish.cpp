@@ -33,18 +33,21 @@
 #include "core/extra/Console.h"
 
 #include <malloc.h>
+#ifdef PORT_GRAPHIC_BACKEND_EFL
 #include <Elementary.h>
+
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
 #else
 #include <Ecore_X.h>
 #endif
 
+extern Evas* g_internalCanvas;
+#endif
+
 #ifdef PORT_GRAPHIC_BACKEND_DALI
 #include <dali-toolkit/dali-toolkit.h>
 #endif
-
-extern Evas* g_internalCanvas;
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <tizen.h>
@@ -280,8 +283,10 @@ void StarFish::run()
 void StarFish::enter()
 {
     if (m_enterCount == 0) {
+#ifdef PORT_GRAPHIC_BACKEND_EFL
         g_internalCanvas =
             evas_object_evas_get((Evas_Object*)m_window->unwrap());
+#endif
         m_window->scriptBindingInstance()->enter();
     }
     m_enterCount++;
@@ -290,7 +295,9 @@ void StarFish::enter()
 void StarFish::exit()
 {
     if (m_enterCount == 1) {
+#ifdef PORT_GRAPHIC_BACKEND_EFL
         g_internalCanvas = nullptr;
+#endif
         m_window->scriptBindingInstance()->exit();
     }
     m_enterCount--;
