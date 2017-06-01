@@ -34,10 +34,8 @@ public:
 
     static AtomicString createAtomicString(StarFish* sf, String* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str);
-    static AtomicString createAtomicString(StarFish* sf, UTF32String str);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
-    static AtomicString createAttrAtomicString(StarFish* sf, UTF32String str);
     static AtomicString emptyAtomicString();
 
     bool operator==(const AtomicString& src) const

@@ -512,7 +512,7 @@ protected:
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
-    GCUnorderedMap<UTF32String, AtomicString> m_atomicStringMap;
+    GCUnorderedMap<std::string, AtomicString> m_atomicStringMap;
 };
 
 class StarFishEnterer {
