@@ -67,7 +67,7 @@ public:
         POST_METHOD,
         PUT_METHOD,
         DELETE_METHOD,
-        CONNTECT_METHOD,
+        CONNECT_METHOD,
         OPTION_METHOD,
         TRACE_METHOD,
         PATCH_METHOD
@@ -157,12 +157,12 @@ public:
         return m_responseMimeType;
     }
 
-    void addNetworkRequestClient(ResourceRequestClient* client)
+    void addResourceRequestClient(ResourceRequestClient* client)
     {
         m_clients.push_back(client);
     }
 
-    void clearNetworkRequestClient()
+    void clearResourceRequestClient()
     {
         m_clients.clear();
     }

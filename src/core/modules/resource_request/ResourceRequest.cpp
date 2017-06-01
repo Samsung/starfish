@@ -25,7 +25,7 @@
 
 namespace StarFish {
 
-class ActiveNetworkRequestTracker : public ResourceRequestClient {
+class ActiveResourceRequestTracker : public ResourceRequestClient {
 public:
     virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
@@ -71,7 +71,7 @@ ResourceRequest::ResourceRequest(Document* document)
         NULL, NULL, NULL);
 
     initVariables();
-    addNetworkRequestClient(new ActiveNetworkRequestTracker());
+    addResourceRequestClient(new ActiveResourceRequestTracker());
 }
 
 void ResourceRequest::initVariables()

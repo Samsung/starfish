@@ -196,7 +196,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
     // Set General header
     //  * Cache-Control, Connection, Date, Pragma, Trailer, Transfer-Encoding,
     //  * Upgrade, Via, Warning ...
-
     headers->append("Connection:keep-alive");
 }
 
@@ -219,7 +218,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     tmpStr.replace(tmpStr.begin(), tmpStr.end(), '_', '-');
     headers->append(tmpStr.data());
     headers->append("User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
-
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
         headers->append("Origin:null");
     } else {
@@ -236,8 +234,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
     HTTPHeaderList* headers)
 {
     std::string tmpStr;
-    // currently, m_requestHeaders is used only in
-    // XMLHttpRequest:setRequestHeader
     for (size_t i = 0; i < m_orgProxy->m_requestHeaders.size(); i++) {
         tmpStr =
             std::string(m_orgProxy->m_requestHeaders[i].first->utf8Data()) +
