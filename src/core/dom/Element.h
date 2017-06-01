@@ -57,8 +57,7 @@ public:
         , m_focused(false)
         , m_tabIndex(0)
         , m_tabIndexWasSetExplicitly(false)
-        , m_id(String::emptyString)
-        , m_className(String::emptyString)
+        , m_id(AtomicString::emptyAtomicString())
     {
     }
 
@@ -124,10 +123,10 @@ public:
     {
         Node::dump();
 
-        printf("id:%s, ", m_id->utf8Data());
+        printf("id:%s, ", id()->utf8Data());
         std::string className;
         for (unsigned i = 0; i < m_classNames.size(); i++) {
-            className += m_classNames[i]->utf8Data();
+            className += m_classNames[i].string()->utf8Data();
             className += " ";
         }
 
@@ -175,19 +174,23 @@ public:
     bool hasPseudoElement(StyleResolver::PseudoElementType type);
     void setPseudoElement(StyleResolver::PseudoElementType type);
 
-    String* id()
+    AtomicString& atomicId()
     {
         return m_id;
     }
 
-    String* idAttr();
-    void setIdAttr(String* id);
+    String* id()
+    {
+        return m_id.string();
+    }
+
+    void setId(String* id);
 
     String* className();
     void setClassName(String* className);
 
     // DO NOT MODIFY THIS VECTOR
-    const GCVector<String*>& classNames()
+    const GCVector<AtomicString>& classNames()
     {
         return m_classNames;
     }
@@ -195,7 +198,17 @@ public:
     bool hasClassName(String* className)
     {
         for (unsigned i = 0; i < m_classNames.size(); i++) {
-            if (className->equals(m_classNames[i])) {
+            if (className->equals(m_classNames[i].string())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool hasClassName(AtomicString className)
+    {
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
+            if (className == m_classNames[i]) {
                 return true;
             }
         }
@@ -259,7 +272,7 @@ public:
     }
     inline bool hasId()
     {
-        return !m_id->equals(String::emptyString);
+        return !m_id.isEmptyAtomicString();
     }
 
     String* getLaunguage();
@@ -284,9 +297,8 @@ protected:
     bool m_tabIndexWasSetExplicitly;
 
 private:
-    String* m_id;
-    String* m_className;
-    GCVector<String*> m_classNames;
+    AtomicString m_id;
+    GCVector<AtomicString> m_classNames;
     GCVector<Attribute> m_attributes;
 };
 

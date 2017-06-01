@@ -74,4 +74,9 @@ AtomicString AtomicString::emptyAtomicString()
 {
     return AtomicString(String::emptyString);
 }
+
+bool AtomicString::isEmptyAtomicString()
+{
+    return m_string == String::emptyString;
+}
 }

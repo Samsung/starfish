@@ -38,6 +38,8 @@ public:
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
     static AtomicString emptyAtomicString();
 
+    bool isEmptyAtomicString();
+
     bool operator==(const AtomicString& src) const
     {
         return m_string == src.m_string;

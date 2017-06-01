@@ -728,74 +728,76 @@ void CSSSelector::setValue(String* value, bool matchLowerCase)
     m_value = value;
 }
 
-CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name,
+CSSSelector::PseudoType CSSSelector::parsePseudoType(StarFish* sf,
+                                                     AtomicString name,
                                                      bool hasArguments)
 {
-    if (name == nullptr || !name->isASCIIString()) {
+    if (name.isEmptyAtomicString() || !name.string()->isASCIIString()) {
         return CSSSelector::PseudoNone;
     }
-
-    if (name->equals(String::fromUTF8("first-child"))) {
+    StaticStrings* sstrs = sf->staticStrings();
+    if (name == sstrs->m_firstChild.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoFirstChild;
-    } else if (name->equals(String::fromUTF8("first-of-type"))) {
+    } else if (name == sstrs->m_firstOfType.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoFirstOfType;
-    } else if (name->equals(String::fromUTF8("last-child"))) {
+    } else if (name == sstrs->m_lastChild.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoLastChild;
-    } else if (name->equals(String::fromUTF8("last-of-type"))) {
+    } else if (name == sstrs->m_lastOfType.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoLastOfType;
-    } else if (name->equals(String::fromUTF8("only-child"))) {
+    } else if (name == sstrs->m_onlyChild.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoOnlyChild;
-    } else if (name->equals(String::fromUTF8("only-of-type"))) {
+    } else if (name == sstrs->m_onlyOfType.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoOnlyOfType;
-    } else if (name->equals(String::fromUTF8("empty"))) {
+    } else if (name == sstrs->m_empty.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoEmpty;
-    } else if (name->equals(String::fromUTF8("first-line"))) {
+    } else if (name == sstrs->m_firstLine.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoFirstLine;
-    } else if (name->equals(String::fromUTF8("first-letter"))) {
+    } else if (name == sstrs->m_firstLetter.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoFirstLetter;
-    } else if (name->equals(String::fromUTF8("nth-child("))) {
+    } else if (name == sstrs->m_nthChildP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoNthChild;
-    } else if (name->equals(String::fromUTF8("nth-last-child("))) {
+    } else if (name == sstrs->m_nthLastChildP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoNthLastChild;
-    } else if (name->equals(String::fromUTF8("nth-of-type("))) {
+    } else if (name == sstrs->m_nthOfTypeP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoNthOfType;
-    } else if (name->equals(String::fromUTF8("nth-last-of-type("))) {
+    } else if (name == sstrs->m_nthLastOfTypeP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoNthLastOfType;
-    } else if (name->equals(String::fromUTF8("link"))) {
+    } else if (name == sstrs->m_link.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoLink;
-    } else if (name->equals(String::fromUTF8("hover"))) {
+    } else if (name == sstrs->m_hover.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoHover;
-    } else if (name->equals(String::fromUTF8("focus"))) {
+    } else if (name == sstrs->m_focus.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoFocus;
-    } else if (name->equals(String::fromUTF8("active"))) {
+    } else if (name == sstrs->m_active.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoActive;
-    } else if (name->equals(String::fromUTF8("enabled"))) {
+    } else if (name == sstrs->m_enabled.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoEnabled;
-    } else if (name->equals(String::fromUTF8("disabled"))) {
+    } else if (name == sstrs->m_disabled.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoDisabled;
-    } else if (name->equals(String::fromUTF8("target"))) {
+    } else if (name == sstrs->m_target.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoTarget;
-    } else if (name->equals(String::fromUTF8("before"))) {
+    } else if (name == sstrs->m_before.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoBefore;
-    } else if (name->equals(String::fromUTF8("after"))) {
+    } else if (name == sstrs->m_after.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoAfter;
-    } else if (name->equals(String::fromUTF8("lang("))) {
+    } else if (name == sstrs->m_langP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoLang;
-    } else if (name->equals(String::fromUTF8("not("))) {
+    } else if (name == sstrs->m_notP.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoNot;
-    } else if (name->equals(String::fromUTF8("selection"))) {
+    } else if (name == sstrs->m_selection.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoSelection;
-    } else if (name->equals(String::fromUTF8("root"))) {
+    } else if (name == sstrs->m_root.localNameAtomic()) {
         return CSSSelector::PseudoType::PseudoRoot;
     } else {
         return CSSSelector::PseudoNone;
     }
 }
 
-void CSSSelector::updatePseudoType(String* name, bool hasArguments)
+void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
+                                   bool hasArguments)
 {
     setSelectorText(name);
-    setPseudoType(parsePseudoType(name, hasArguments));
+    setPseudoType(parsePseudoType(sf, name, hasArguments));
 
     switch (pseudoType()) {
     case PseudoAfter:
@@ -4255,10 +4257,10 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector,
     case CSSSelector::Type::Universal:
         return true;
     case CSSSelector::Type::Tag:
-        return element->localName()->equalsWithoutCase(
-            selector->selectorText());
+        return (element->name() == selector->selectorText());
     case CSSSelector::Type::Id:
-        return element->id()->equalsWithoutCase(selector->selectorText());
+        return (element->hasId() &&
+                element->atomicId() == selector->selectorText());
     case CSSSelector::Type::Class:
         return element->hasClassName(selector->selectorText());
     case CSSSelector::AttributeExact:   // Example: E[foo="bar"]

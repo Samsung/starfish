@@ -153,13 +153,23 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 
     StaticStrings* ss = starFish()->staticStrings();
     if (name == ss->m_id) {
-        m_id = value;
+        if (attributeRemoved) {
+            m_id = AtomicString::emptyAtomicString();
+        } else {
+            m_id = AtomicString::createAtomicString(starFish(), value);
+        }
         // Style should be recalculated from root node because of combinators.
         window()->setWholeDocumentNeedsStyleRecalc();
 
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
-        DOMTokenList::tokenize(&m_classNames, value);
+        GCVector<String*> tokens;
+        DOMTokenList::tokenize(&tokens, value);
+        m_classNames.clear();
+        for (size_t i = 0; i < tokens.size(); i++) {
+            m_classNames.push_back(
+                AtomicString::createAtomicString(starFish(), tokens[i]));
+        }
         // Style should be recalculated from root node because of combinators.
         window()->setWholeDocumentNeedsStyleRecalc();
 
@@ -444,12 +454,7 @@ void Element::setPseudoElement(StyleResolver::PseudoElementType type)
     rareMembers->m_pseudoElementData->setPseudoElement(type);
 }
 
-String* Element::idAttr()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_id);
-}
-
-void Element::setIdAttr(String* id)
+void Element::setId(String* id)
 {
     setAttribute(starFish()->staticStrings()->m_id, id);
 }

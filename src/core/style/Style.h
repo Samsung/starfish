@@ -1485,7 +1485,7 @@ public:
         : m_type(UnKnown)
         , m_relation(None)
         , m_pseudotype(PseudoNone)
-        , m_selectorText(String::emptyString)
+        , m_selectorText(AtomicString::emptyAtomicString())
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
         , m_argument(String::emptyString)
@@ -1495,7 +1495,7 @@ public:
     {
     }
 
-    CSSSelector(Type type, RelationType relation, String* text)
+    CSSSelector(Type type, RelationType relation, AtomicString text)
         : m_type(type)
         , m_relation(relation)
         , m_pseudotype(PseudoNone)
@@ -1554,12 +1554,12 @@ public:
         m_pseudotype = pseudoType;
     }
 
-    String* selectorText()
+    AtomicString& selectorText()
     {
         return m_selectorText;
     }
 
-    void setSelectorText(String* selectorText)
+    void setSelectorText(AtomicString& selectorText)
     {
         m_selectorText = selectorText;
     }
@@ -1640,14 +1640,15 @@ public:
     {
         return relation() == RelationType::None;
     }
-    PseudoType parsePseudoType(String* name, bool hasArguments);
-    void updatePseudoType(String* name, bool hasArguments);
+    PseudoType parsePseudoType(StarFish* sf, AtomicString name,
+                               bool hasArguments);
+    void updatePseudoType(StarFish* sf, AtomicString name, bool hasArguments);
 
 protected:
     Type m_type;
     RelationType m_relation;
     PseudoType m_pseudotype;
-    String* m_selectorText;
+    AtomicString m_selectorText;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
     GCDeque<CSSSelector*> m_pseudoSelectorList;
