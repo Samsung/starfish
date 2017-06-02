@@ -147,6 +147,7 @@ public:
     }
 
     Storage* localStorage();
+    Storage* sessionStorage();
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* Webapis()
@@ -402,6 +403,7 @@ protected:
     Location* m_location;
     AnimationExecutor* m_animationExecutor;
     StorageNamespace* m_localStorageNamespace;
+    StorageNamespace* m_sessionStorageNamespace;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;
 #endif

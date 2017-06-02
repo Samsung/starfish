@@ -30,6 +30,7 @@ public:
     }
 
     virtual StorageNamespace* createLocalStorageNamespace() = 0;
+    virtual StorageNamespace* createSessionStorageNamespace() = 0;
 
 protected:
     StorageNamespaceProvider(StarFish* starfish)
