@@ -147,6 +147,8 @@ void Window::initStorage(URL* url)
                 m_starFish, String::createASCIIString("./cache/cache.db"));
         m_localStorageNamespace =
             storageProvider->createLocalStorageNamespace();
+        m_sessionStorageNamespace =
+            storageProvider->createSessionStorageNamespace();
     }
 }
 
@@ -156,6 +158,14 @@ Storage* Window::localStorage()
     SecurityOriginData* origin = new SecurityOriginData(
         url->protocol(), url->host(), String::parseInt(url->port()));
     return m_localStorageNamespace->storage(origin);
+}
+
+Storage* Window::sessionStorage()
+{
+    URL* url = m_document->documentURI();
+    SecurityOriginData* origin = new SecurityOriginData(
+        url->protocol(), url->host(), String::parseInt(url->port()));
+    return m_sessionStorageNamespace->storage(origin);
 }
 
 void Window::setHistory(URL* url)

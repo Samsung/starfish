@@ -53,4 +53,12 @@ StorageNamespace* WebStorageNamespaceProvider::createLocalStorageNamespace()
 
     return itr->second;
 }
+
+StorageNamespace* WebStorageNamespaceProvider::createSessionStorageNamespace()
+{
+    StorageNamespaceImpl* storageNamespace =
+        new StorageNamespaceImpl(m_starFish, StorageType::Session, nullptr);
+
+    return storageNamespace;
+}
 }

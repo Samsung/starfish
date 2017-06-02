@@ -31,6 +31,7 @@ public:
     virtual ~WebStorageNamespaceProvider();
 
     StorageNamespace* createLocalStorageNamespace();
+    StorageNamespace* createSessionStorageNamespace();
 
 private:
     WebStorageNamespaceProvider(StarFish* starfish, String* localStoragePath);
