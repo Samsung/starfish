@@ -43,6 +43,9 @@ public:
     String* type();
     void setType(String* type);
 
+    String* media();
+    void setMedia(String* media);
+
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();

@@ -625,6 +625,7 @@ public:
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
     CSSStyleRuleMedia* parseMediaRule();
+    MediaQuerySet* parseMediaQuery();
     CSSStyleRuleImport* parseImportRule();
     String* parseURLString();
 
@@ -683,7 +684,6 @@ protected:
     };
 
     void initParseMediaQuery(MediaQueryParserType parserType);
-    MediaQuerySet* parseMediaQuery();
 
     void processToken(CSSToken* token);
 

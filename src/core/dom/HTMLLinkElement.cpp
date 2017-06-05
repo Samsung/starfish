@@ -22,6 +22,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 #include "core/style/CSSParser.h"
+#include "core/style/MediaQueryEvaluator.h"
 
 namespace StarFish {
 
@@ -57,6 +58,16 @@ String* HTMLLinkElement::rel()
 void HTMLLinkElement::setRel(String* rel)
 {
     setAttribute(starFish()->staticStrings()->m_rel, rel);
+}
+
+String* HTMLLinkElement::media()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_media);
+}
+
+void HTMLLinkElement::setMedia(String* media)
+{
+    setAttribute(starFish()->staticStrings()->m_media, media);
 }
 
 String* HTMLLinkElement::type()
@@ -134,8 +145,12 @@ public:
         String* text = m_resource->asTextResource()->text();
 
         CSSParser parser(m_element->document());
-        CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
-        if (sheet) {
+        CSSToken* token = parser.makeToken(m_element->media());
+        MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
+        const MediaQueryEvaluator& evaluator =
+            m_element->document()->styleResolver().mediaQueryEvaluator();
+        if (evaluator.eval(mediaQuerySet)) {
+            CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
             m_element->m_generatedSheet = sheet;
             m_element->document()->styleResolver().addSheet(sheet);
             m_element->window()->setWholeDocumentNeedsStyleRecalc();
@@ -195,6 +210,10 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
         checkLoadStyleSheet();
     } else if (name == starFish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
+    } else if (name == starFish()->staticStrings()->m_media) {
+        if (!old->equals(value)) {
+            checkLoadStyleSheet();
+        }
     }
 }
 

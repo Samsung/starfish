@@ -13,11 +13,13 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element)  |  |  | &lt;head&gt;SAMSUNG&lt;/head&gt; |  |
 |  [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element)  | rel | stylesheet | &lt;link rel="stylesheet"&gt; |  |
 |  | href | &lt;URL&gt; | &lt;link rel="stylesheet" href="mystyle.css"&gt; |  |
+|  | media | media query | &lt;link rel="stylesheet" href="mystyle.css" media="screen"&gt; |  |
 |  | type | text/css | &lt;link rel="stylesheet" href="mystyle.css" type="text/css"&gt; |  |
 |  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | Only UTF-8 is supported  |
 |  | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
 |  | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |  |
-|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | type | text/css | &lt;style type="text/css"&gt;&lt;\style&gt; | Only "text/css" type is supported. |
+|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query | &lt;style type="text/css" media="screen"&gt;&lt;/style&gt; | |
+|  | type | text/css | &lt;style type="text/css"&gt;&lt;/style&gt; | Only "text/css" type is supported. |
 |  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
 |  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  |  |  | &lt;h1&gt;&lt;\h1&gt;, &lt;h2&gt;&lt;\h2&gt;, &lt;h3&gt;&lt;\h3&gt;, etc. |  |
 |  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
@@ -248,6 +250,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
+|  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
 | [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
@@ -301,7 +304,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |
 | [HTMLSpanElement](https://html.spec.whatwg.org/multipage/semantics.html#the-span-element) | interface | HTMLSpanElement | The span element is a generic inline container for phrasing content. |
 | [HTMLStyleElement](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) | interface | HTMLStyleElement | The style element allows authors to embed style information in their documents. |
-|  | attribute | type | Type of embedded resource<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
+|  | attribute | media | Applicable media. |
+|  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
 |    | attribute |  bgColor  |  bgcolor content attributes  |
@@ -680,6 +684,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | color | &lt;integer&gt; | Describes the number of bits per color component of the output device. If the device is not a color device, the value is zero. | |
 | | color-index | &lt;integer&gt; | Describes the number of entries in the color lookup table of the output device. If the device does not use a color lookup table, the value is zero. | |
 | | monochrome | &lt;integer&gt; | Describes the number of bits per pixel in a monochrome frame buffer. If the device is not a monochrome device, the output device value will be 0. | |
+| | resolution | &lt;resolution&gt; | Describes the resolution of the output device, i.e. the density of the pixels.  | |
 | | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | |
 | | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | |
 

@@ -20,6 +20,7 @@
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
 #include "core/style/CSSParser.h"
+#include "core/style/MediaQueryEvaluator.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"
 
@@ -53,6 +54,16 @@ String* HTMLStyleElement::type()
 void HTMLStyleElement::setType(String* type)
 {
     setAttribute(starFish()->staticStrings()->m_type, type);
+}
+
+String* HTMLStyleElement::media()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_media);
+}
+
+void HTMLStyleElement::setMedia(String* media)
+{
+    setAttribute(starFish()->staticStrings()->m_media, media);
 }
 
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
@@ -119,10 +130,16 @@ void HTMLStyleElement::generateStyleSheet()
         child = child->nextSibling();
     }
 
-    CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
-    m_generatedSheet = sheet;
-    document()->styleResolver().addSheet(sheet);
-    window()->setWholeDocumentNeedsStyleRecalc();
+    CSSToken* token = parser.makeToken(media());
+    MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
+    const MediaQueryEvaluator& evaluator =
+        document()->styleResolver().mediaQueryEvaluator();
+    if (evaluator.eval(mediaQuerySet)) {
+        CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
+        m_generatedSheet = sheet;
+        document()->styleResolver().addSheet(sheet);
+        window()->setWholeDocumentNeedsStyleRecalc();
+    }
 }
 
 void HTMLStyleElement::removeStyleSheet()
