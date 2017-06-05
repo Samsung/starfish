@@ -51,6 +51,7 @@ public:
     }
 
     void clearPendingIdlers();
+    void run();
 
 protected:
     void* loop_handle;
@@ -58,7 +59,6 @@ protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
-    void run();
 };
 }
 

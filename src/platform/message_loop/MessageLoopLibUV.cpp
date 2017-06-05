@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) && defined(PORT_GRAPHIC_BACKEND_DALI)
 
 #include "StarFish.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -25,19 +25,50 @@
 #include "core/modules/window/Window.h"
 
 #include <uv.h>
+#include <dali-toolkit/dali-toolkit.h>
 
 namespace StarFish {
+
+// TODO: Should pause idler when there is no task on it's queue.
+class DaliIdler : public Dali::ConnectionTracker, public gc {
+public:
+    const int IdlerInterval = 20; // ms(unit)
+    DaliIdler(MessageLoop* loop)
+        : m_messageLoop(loop)
+        , m_isActive(false)
+    {
+        m_native_timer = Dali::Timer::New(IdlerInterval);
+        m_native_timer.TickSignal().Connect(this, &DaliIdler::IdleTick);
+        m_native_timer.Start();
+    }
+
+    bool isRunning()
+    {
+        return m_isActive;
+    }
+
+    bool IdleTick()
+    {
+        m_messageLoop->run();
+        return true;
+    }
+
+private:
+    Dali::Timer m_native_timer;
+    MessageLoop* m_messageLoop;
+    bool m_isActive;
+};
 
 MessageLoop::MessageLoop(StarFish* sf)
     : m_starFish(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
 {
-    loop_handle = (void*)uv_default_loop();
+    loop_handle = new (NoGC) DaliIdler(this);
 }
 
 void MessageLoop::run()
 {
-    uv_run((uv_loop_t*)loop_handle, UV_RUN_DEFAULT);
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 struct IdlerData {
@@ -58,7 +89,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
@@ -83,7 +114,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data,
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
@@ -109,7 +140,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*),
     id->m_data1 = data1;
     id->m_data2 = data2;
     id->m_ml = this;
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
@@ -140,7 +171,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t,
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
@@ -174,7 +205,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
         m_idlersFromOtherThread.insert((size_t)id);
     }
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
@@ -205,7 +236,7 @@ size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
-    uv_idle_init((uv_loop_t*)loop_handle, &id->m_idler_uv);
+    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;

@@ -37,8 +37,7 @@ TimerWrapper::TimerWrapper(StarFish* sf)
 
 class AnimationTickData : public Dali::ConnectionTracker, public gc {
 public:
-    AnimationTickData(Dali::Application* platformHandle)
-        : m_platformHandle(platformHandle)
+    AnimationTickData()
     {
     }
 
@@ -47,7 +46,6 @@ public:
     Dali::Timer m_native_timer;
     void* m_data;
     GenericAnimationHandler m_handler;
-    Dali::Application* m_platformHandle;
 
     bool AnimationTick()
     {
@@ -67,8 +65,7 @@ public:
 
 class TimeoutData : public Dali::ConnectionTracker, public gc {
 public:
-    TimeoutData(Dali::Application* platformHandle)
-        : m_platformHandle(platformHandle)
+    TimeoutData()
     {
     }
 
@@ -77,7 +74,6 @@ public:
     Dali::Timer m_native_timer;
     void* m_data;
     WindowSetTimeoutHandler m_handler;
-    Dali::Application* m_platformHandle;
 
     bool OnceTick()
     {
@@ -120,8 +116,7 @@ size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
 {
     STARFISH_ASSERT(isMainThread());
 
-    TimeoutData* td =
-        new (NoGC) TimeoutData((Dali::Application*)m_starFish->nativeHandle());
+    TimeoutData* td = new (NoGC) TimeoutData();
     td->m_timer = this;
     int32_t id = ++m_timeoutCounter;
     td->m_id = id;
@@ -153,8 +148,7 @@ void TimerWrapper::removeTimer(size_t reqID)
 size_t TimerWrapper::addAnimator(WindowSetTimeoutHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    TimeoutData* td =
-        new (NoGC) TimeoutData((Dali::Application*)m_starFish->nativeHandle());
+    TimeoutData* td = new (NoGC) TimeoutData();
     td->m_timer = this;
     int32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
@@ -170,8 +164,7 @@ size_t TimerWrapper::addAnimator(WindowSetTimeoutHandler handler, void* data)
 size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    AnimationTickData* ad = new (NoGC)
-        AnimationTickData((Dali::Application*)m_starFish->nativeHandle());
+    AnimationTickData* ad = new (NoGC) AnimationTickData();
     ad->m_timer = this;
     int32_t id = ++m_AnimationCounter;
     ad->m_data = data;
