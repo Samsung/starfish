@@ -133,9 +133,9 @@ public:
         int width = 360, height = 360;
         int flag = 0;
 
-        m_sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag,
-                                      "ko-KR", "Asia/Seoul", &application,
-                                      width, height, 1);
+        m_sf =
+            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
+                                   "Asia/Seoul", nullptr, width, height, 1);
         m_sf->loadHTMLDocument(String::createASCIIString(url));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::OnStageTouched);
@@ -190,7 +190,8 @@ public:
                        m_sf);
 
         m_sf->run();
-        mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
+        // mApplication.AddIdle(MakeCallback(this,
+        // &DaliShellController::OnIdle));
     }
     bool OnStageTouched(Dali::Actor actor, const Dali::TouchData& data)
     {
