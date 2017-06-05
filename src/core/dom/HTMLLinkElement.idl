@@ -8,7 +8,7 @@ interface HTMLLinkElement : HTMLElement {
   [CEReactions] attribute DOMString rel;
   [Unimplemented, CEReactions] attribute RequestDestination as; // (default "")
   [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
-  [Unimplemented, CEReactions] attribute DOMString media;
+  [CEReactions] attribute DOMString media;
   [Unimplemented, CEReactions] attribute DOMString nonce;
   [Unimplemented, CEReactions] attribute DOMString integrity;
   [Unimplemented, CEReactions] attribute DOMString hreflang;

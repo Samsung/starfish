@@ -239,6 +239,7 @@ public:
     QualifiedName m_span;
     QualifiedName m_scope;
     QualifiedName m_disabled;
+    QualifiedName m_media;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

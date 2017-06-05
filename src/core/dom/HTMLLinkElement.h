@@ -49,6 +49,9 @@ public:
     String* href();
     void setHref(String* href);
 
+    String* media();
+    void setMedia(String* media);
+
     String* rel();
     void setRel(String* rel);
 
