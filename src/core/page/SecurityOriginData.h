@@ -72,7 +72,7 @@ struct SecurityOriginDataEqual {
     bool operator()(const SecurityOriginData* data1,
                     const SecurityOriginData* data2) const
     {
-        return *data1 == *data2;
+        return data1 == data2 ? true : *data1 == *data2;
     }
 };
 }
