@@ -758,67 +758,37 @@ StaticStrings::StaticStrings(StarFish* sf)
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
 
-    m_firstChild =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "first-child"));
-    m_firstOfType =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "first-of-type"));
-    m_lastChild =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "last-child"));
-    m_lastOfType =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "last-of-type"));
-    m_onlyChild =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "only-child"));
-    m_onlyOfType =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "only-of-type"));
-    m_empty = QualifiedName(AtomicString::emptyAtomicString(),
-                            AtomicString::createAtomicString(sf, "empty"));
-    m_firstLine =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "first-line"));
-    m_firstLetter =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "first-letter"));
-    m_nthChildP =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "nth-child("));
-    m_nthLastChildP =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "nth-last-child("));
-    m_nthOfTypeP =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "nth-of-type("));
-    m_nthLastOfTypeP = QualifiedName(
-        AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(sf, "nth-last-of-type("));
-    m_link = QualifiedName(AtomicString::emptyAtomicString(),
-                           AtomicString::createAtomicString(sf, "link"));
-    m_hover = QualifiedName(AtomicString::emptyAtomicString(),
-                            AtomicString::createAtomicString(sf, "hover"));
-    m_active = QualifiedName(AtomicString::emptyAtomicString(),
-                             AtomicString::createAtomicString(sf, "active"));
-    m_enabled = QualifiedName(AtomicString::emptyAtomicString(),
-                              AtomicString::createAtomicString(sf, "enabled"));
-    m_target = QualifiedName(AtomicString::emptyAtomicString(),
-                             AtomicString::createAtomicString(sf, "target"));
-    m_before = QualifiedName(AtomicString::emptyAtomicString(),
-                             AtomicString::createAtomicString(sf, "before"));
-    m_after = QualifiedName(AtomicString::emptyAtomicString(),
-                            AtomicString::createAtomicString(sf, "after"));
-    m_langP = QualifiedName(AtomicString::emptyAtomicString(),
-                            AtomicString::createAtomicString(sf, "lang("));
-    m_notP = QualifiedName(AtomicString::emptyAtomicString(),
-                           AtomicString::createAtomicString(sf, "not("));
-    m_selection =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "selection"));
-    m_root = QualifiedName(AtomicString::emptyAtomicString(),
-                           AtomicString::createAtomicString(sf, "root"));
+    m_firstChildSelector = AtomicString::createAtomicString(sf, "first-child");
+    m_firstOfTypeSelector =
+        AtomicString::createAtomicString(sf, "first-of-type");
+    m_lastChildSelector = AtomicString::createAtomicString(sf, "last-child");
+    m_lastOfTypeSelector = AtomicString::createAtomicString(sf, "last-of-type");
+    m_onlyChildSelector = AtomicString::createAtomicString(sf, "only-child");
+    m_onlyOfTypeSelector = AtomicString::createAtomicString(sf, "only-of-type");
+    m_emptySelector = AtomicString::createAtomicString(sf, "empty");
+    m_firstLineSelector = AtomicString::createAtomicString(sf, "first-line");
+    m_firstLetterSelector =
+        AtomicString::createAtomicString(sf, "first-letter");
+    m_nthChildPSelector = AtomicString::createAtomicString(sf, "nth-child(");
+    m_nthLastChildPSelector =
+        AtomicString::createAtomicString(sf, "nth-last-child(");
+    m_nthOfTypePSelector = AtomicString::createAtomicString(sf, "nth-of-type(");
+    m_nthLastOfTypePSelector =
+        AtomicString::createAtomicString(sf, "nth-last-of-type(");
+    m_linkSelector = AtomicString::createAtomicString(sf, "link");
+    m_hoverSelector = AtomicString::createAtomicString(sf, "hover");
+    m_focusSelector = AtomicString::createAtomicString(sf, "focus");
+    m_activeSelector = AtomicString::createAtomicString(sf, "active");
+    m_enabledSelector = AtomicString::createAtomicString(sf, "enabled");
+    m_disabledSelector = AtomicString::createAtomicString(sf, "disabled");
+    m_targetSelector = AtomicString::createAtomicString(sf, "target");
+    m_beforeSelector = AtomicString::createAtomicString(sf, "before");
+    m_afterSelector = AtomicString::createAtomicString(sf, "after");
+    m_langPSelector = AtomicString::createAtomicString(sf, "lang(");
+    m_notPSelector = AtomicString::createAtomicString(sf, "not(");
+    m_selectionSelector = AtomicString::createAtomicString(sf, "selection");
+    m_rootSelector = AtomicString::createAtomicString(sf, "root");
+
     m_id = QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::createAtomicString(sf, "id"));
     m_name = QualifiedName(AtomicString::emptyAtomicString(),

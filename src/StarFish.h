@@ -183,36 +183,38 @@ public:
     AtomicString m_cdataSectionLocalName;
     AtomicString m_commentLocalName;
 
+    // Pseudo Selector Name Tokens
+    AtomicString m_firstChildSelector;
+    AtomicString m_firstOfTypeSelector;
+    AtomicString m_lastChildSelector;
+    AtomicString m_lastOfTypeSelector;
+    AtomicString m_onlyChildSelector;
+    AtomicString m_onlyOfTypeSelector;
+    AtomicString m_emptySelector;
+    AtomicString m_firstLineSelector;
+    AtomicString m_firstLetterSelector;
+    AtomicString m_nthChildPSelector;
+    AtomicString m_nthLastChildPSelector;
+    AtomicString m_nthOfTypePSelector;
+    AtomicString m_nthLastOfTypePSelector;
+    AtomicString m_linkSelector;
+    AtomicString m_hoverSelector;
+    AtomicString m_focusSelector;
+    AtomicString m_activeSelector;
+    AtomicString m_enabledSelector;
+    AtomicString m_disabledSelector;
+    AtomicString m_targetSelector;
+    AtomicString m_beforeSelector;
+    AtomicString m_afterSelector;
+    AtomicString m_langPSelector;
+    AtomicString m_notPSelector;
+    AtomicString m_selectionSelector;
+    AtomicString m_rootSelector;
+
 // HTML Tag Names
 #define DEFINE_HTML_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
-
-    // Pseudo Selector Name Tokens
-    QualifiedName m_firstChild;
-    QualifiedName m_firstOfType;
-    QualifiedName m_lastChild;
-    QualifiedName m_lastOfType;
-    QualifiedName m_onlyChild;
-    QualifiedName m_onlyOfType;
-    QualifiedName m_empty;
-    QualifiedName m_firstLine;
-    QualifiedName m_firstLetter;
-    QualifiedName m_nthChildP;
-    QualifiedName m_nthLastChildP;
-    QualifiedName m_nthOfTypeP;
-    QualifiedName m_nthLastOfTypeP;
-    QualifiedName m_link;
-    QualifiedName m_hover;
-    QualifiedName m_active;
-    QualifiedName m_enabled;
-    QualifiedName m_target;
-    QualifiedName m_before;
-    QualifiedName m_after;
-    QualifiedName m_langP;
-    QualifiedName m_notP;
-    QualifiedName m_selection;
-    QualifiedName m_root;
 
     // Attribute Names
     QualifiedName m_id;
