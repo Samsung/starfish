@@ -34,6 +34,7 @@
 #include "core/page/History.h"
 #include "core/page/Navigator.h"
 #include "core/page/Location.h"
+#include "core/page/Screen.h"
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
@@ -76,6 +77,7 @@ Window::Window(StarFish* starFish)
     , m_history(nullptr)
     , m_navigator(nullptr)
     , m_location(nullptr)
+    , m_screen(nullptr)
     , m_animationExecutor(nullptr)
     , m_localStorageNamespace(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -175,6 +177,19 @@ void Window::setHistory(URL* url)
     }
     m_history->setHistory(ScriptValue(ScriptValue::ESNull), String::emptyString,
                           url);
+}
+
+Screen* Window::screen()
+{
+    if (!m_screen) {
+        m_screen = new Screen(m_starFish);
+    }
+    return m_screen;
+}
+
+float Window::devicePixelRatio()
+{
+    return starFish()->devicePixelRatio();
 }
 
 void Window::navigateAsync(URL* url)

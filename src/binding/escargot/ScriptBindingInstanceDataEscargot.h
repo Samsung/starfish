@@ -88,6 +88,7 @@
     F(NodeList)                                     \
     F(PositionError)                                \
     F(ProgressEvent)                                \
+    F(Screen)                                       \
     F(Storage)                                      \
     F(StorageImpl)                                  \
     F(URL)                                          \

@@ -394,7 +394,7 @@ class StarFish : public gc {
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h,
-             float defaultFontSizeMultiplier);
+             float defaultFontSizeMultiplier, float devicePixelRatio = 1);
     ~StarFish();
     void run();
 
@@ -474,6 +474,12 @@ public:
         return m_nativeHandle;
     }
 
+    float devicePixelRatio()
+    {
+        // TODO: consider page zoom factor.
+        return m_devicePixelRatio;
+    }
+
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG
@@ -537,6 +543,7 @@ protected:
 #endif
     size_t m_enterCount;
     unsigned int m_seed;
+    float m_devicePixelRatio;
 
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;

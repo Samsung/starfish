@@ -166,7 +166,7 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
-                   float defaultFontSizeMultiplier)
+                   float defaultFontSizeMultiplier, float devicePixelRatio)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
@@ -177,6 +177,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     , m_enterCount(0)
     , m_seed((unsigned int)time(NULL))
+    , m_devicePixelRatio(devicePixelRatio)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;

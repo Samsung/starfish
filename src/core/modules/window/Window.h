@@ -36,6 +36,7 @@ class StorageNamespace;
 class URL;
 class WebApis;
 class Window;
+class Screen;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -140,6 +141,8 @@ public:
     {
         return m_location;
     }
+
+    Screen* screen();
 
     AnimationExecutor* animationExecutor()
     {
@@ -247,6 +250,8 @@ public:
     {
         return height();
     }
+
+    float devicePixelRatio();
 
     // These attributes should return the real coordinate when we support
     // scroll.
@@ -401,6 +406,7 @@ protected:
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;
+    Screen* m_screen;
     AnimationExecutor* m_animationExecutor;
     StorageNamespace* m_localStorageNamespace;
     StorageNamespace* m_sessionStorageNamespace;

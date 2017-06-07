@@ -132,8 +132,7 @@ int32_t MediaValues::screenHeight() const
 
 float MediaValues::devicePixelRatio() const
 {
-    // FIXME: We don't have any information about this.
-    return 1;
+    return m_frame->document()->window()->starFish()->devicePixelRatio();
 }
 
 int32_t MediaValues::colorBitsPerComponent() const
