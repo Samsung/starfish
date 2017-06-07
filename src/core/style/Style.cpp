@@ -736,57 +736,57 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(StarFish* sf,
         return CSSSelector::PseudoNone;
     }
     StaticStrings* sstrs = sf->staticStrings();
-    if (name == sstrs->m_firstChild.localNameAtomic()) {
+    if (name == sstrs->m_firstChildSelector) {
         return CSSSelector::PseudoType::PseudoFirstChild;
-    } else if (name == sstrs->m_firstOfType.localNameAtomic()) {
+    } else if (name == sstrs->m_firstOfTypeSelector) {
         return CSSSelector::PseudoType::PseudoFirstOfType;
-    } else if (name == sstrs->m_lastChild.localNameAtomic()) {
+    } else if (name == sstrs->m_lastChildSelector) {
         return CSSSelector::PseudoType::PseudoLastChild;
-    } else if (name == sstrs->m_lastOfType.localNameAtomic()) {
+    } else if (name == sstrs->m_lastOfTypeSelector) {
         return CSSSelector::PseudoType::PseudoLastOfType;
-    } else if (name == sstrs->m_onlyChild.localNameAtomic()) {
+    } else if (name == sstrs->m_onlyChildSelector) {
         return CSSSelector::PseudoType::PseudoOnlyChild;
-    } else if (name == sstrs->m_onlyOfType.localNameAtomic()) {
+    } else if (name == sstrs->m_onlyOfTypeSelector) {
         return CSSSelector::PseudoType::PseudoOnlyOfType;
-    } else if (name == sstrs->m_empty.localNameAtomic()) {
+    } else if (name == sstrs->m_emptySelector) {
         return CSSSelector::PseudoType::PseudoEmpty;
-    } else if (name == sstrs->m_firstLine.localNameAtomic()) {
+    } else if (name == sstrs->m_firstLineSelector) {
         return CSSSelector::PseudoType::PseudoFirstLine;
-    } else if (name == sstrs->m_firstLetter.localNameAtomic()) {
+    } else if (name == sstrs->m_firstLetterSelector) {
         return CSSSelector::PseudoType::PseudoFirstLetter;
-    } else if (name == sstrs->m_nthChildP.localNameAtomic()) {
+    } else if (name == sstrs->m_nthChildPSelector) {
         return CSSSelector::PseudoType::PseudoNthChild;
-    } else if (name == sstrs->m_nthLastChildP.localNameAtomic()) {
+    } else if (name == sstrs->m_nthLastChildPSelector) {
         return CSSSelector::PseudoType::PseudoNthLastChild;
-    } else if (name == sstrs->m_nthOfTypeP.localNameAtomic()) {
+    } else if (name == sstrs->m_nthOfTypePSelector) {
         return CSSSelector::PseudoType::PseudoNthOfType;
-    } else if (name == sstrs->m_nthLastOfTypeP.localNameAtomic()) {
+    } else if (name == sstrs->m_nthLastOfTypePSelector) {
         return CSSSelector::PseudoType::PseudoNthLastOfType;
-    } else if (name == sstrs->m_link.localNameAtomic()) {
+    } else if (name == sstrs->m_linkSelector) {
         return CSSSelector::PseudoType::PseudoLink;
-    } else if (name == sstrs->m_hover.localNameAtomic()) {
+    } else if (name == sstrs->m_hoverSelector) {
         return CSSSelector::PseudoType::PseudoHover;
-    } else if (name == sstrs->m_focus.localNameAtomic()) {
+    } else if (name == sstrs->m_focusSelector) {
         return CSSSelector::PseudoType::PseudoFocus;
-    } else if (name == sstrs->m_active.localNameAtomic()) {
+    } else if (name == sstrs->m_activeSelector) {
         return CSSSelector::PseudoType::PseudoActive;
-    } else if (name == sstrs->m_enabled.localNameAtomic()) {
+    } else if (name == sstrs->m_enabledSelector) {
         return CSSSelector::PseudoType::PseudoEnabled;
-    } else if (name == sstrs->m_disabled.localNameAtomic()) {
+    } else if (name == sstrs->m_disabledSelector) {
         return CSSSelector::PseudoType::PseudoDisabled;
-    } else if (name == sstrs->m_target.localNameAtomic()) {
+    } else if (name == sstrs->m_targetSelector) {
         return CSSSelector::PseudoType::PseudoTarget;
-    } else if (name == sstrs->m_before.localNameAtomic()) {
+    } else if (name == sstrs->m_beforeSelector) {
         return CSSSelector::PseudoType::PseudoBefore;
-    } else if (name == sstrs->m_after.localNameAtomic()) {
+    } else if (name == sstrs->m_afterSelector) {
         return CSSSelector::PseudoType::PseudoAfter;
-    } else if (name == sstrs->m_langP.localNameAtomic()) {
+    } else if (name == sstrs->m_langPSelector) {
         return CSSSelector::PseudoType::PseudoLang;
-    } else if (name == sstrs->m_notP.localNameAtomic()) {
+    } else if (name == sstrs->m_notPSelector) {
         return CSSSelector::PseudoType::PseudoNot;
-    } else if (name == sstrs->m_selection.localNameAtomic()) {
+    } else if (name == sstrs->m_selectionSelector) {
         return CSSSelector::PseudoType::PseudoSelection;
-    } else if (name == sstrs->m_root.localNameAtomic()) {
+    } else if (name == sstrs->m_rootSelector) {
         return CSSSelector::PseudoType::PseudoRoot;
     } else {
         return CSSSelector::PseudoNone;
