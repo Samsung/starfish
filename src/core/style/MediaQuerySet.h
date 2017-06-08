@@ -32,11 +32,15 @@ public:
     {
         return new MediaQuerySet();
     }
+
     void addMediaQuery(MediaQuery* mediaQuery);
+
     GCVector<MediaQuery*>& queryVector()
     {
         return m_queries;
     }
+
+    String* mediaText() const;
 
 protected:
     MediaQuerySet();

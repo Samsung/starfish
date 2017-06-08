@@ -35,7 +35,7 @@ public:
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isCSSStyleRule() const override;
 
-    GCDeque<CSSSelector*>* selectorList()
+    GCDeque<CSSSelector*>* selectorList() const
     {
         return m_selectorList;
     }
@@ -45,39 +45,77 @@ public:
         return m_styleDeclaration;
     }
 
+    String* selectorText() const;
+    void setSelectorText(String* selectorText)
+    {
+    }
+
+    String* cssText() const override;
+
 protected:
     GCDeque<CSSSelector*>* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
 };
 
-class CSSStyleRuleGroup : public CSSRule {
+class CSSGroupingRule : public CSSRule {
     friend class StyleResolver;
 
 public:
-    CSSStyleRuleGroup(RuleType type, GCVector<CSSRule*>& rules);
-    CSSStyleRuleGroup(CSSStyleRuleGroup& o);
+    CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules);
+    CSSGroupingRule(CSSGroupingRule& o);
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCSSGroupingRule() const override;
 
     GCVector<CSSRule*>& childRules()
     {
         return m_childRules;
     }
 
+    unsigned length() const;
+
 protected:
     GCVector<CSSRule*> m_childRules;
+
+    void appendCSSTextForItems(String* result) const;
+};
+
+class CSSConditionRule : public CSSGroupingRule {
+public:
+    CSSConditionRule(RuleType, String* condition_text,
+                     GCVector<CSSRule*>& adopt_rule);
+    CSSConditionRule(RuleType, GCVector<CSSRule*>& adopt_rule);
+    CSSConditionRule(CSSConditionRule&);
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCSSConditionRule() const override;
+
+    String* ConditionText() const
+    {
+        return condition_text_;
+    }
+
+protected:
+    String* condition_text_;
 };
 
 class MediaQuerySet;
-class CSSStyleRuleMedia : public CSSStyleRuleGroup {
+class CSSMediaRule : public CSSConditionRule {
     friend class StyleResolver;
 
 public:
-    CSSStyleRuleMedia(MediaQuerySet* media, GCVector<CSSRule*>& rules);
-    CSSStyleRuleMedia(CSSStyleRuleMedia& o);
+    CSSMediaRule(MediaQuerySet* media, GCVector<CSSRule*>& rules);
+    CSSMediaRule(CSSMediaRule& o);
 
-    MediaQuerySet* mediaQuerySet()
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCSSMediaRule() const override;
+
+    MediaQuerySet* mediaQuerySet() const
     {
         return m_mediaQuerySet;
     }
+
+    String* cssText() const override;
 
 protected:
     MediaQuerySet* m_mediaQuerySet;
@@ -86,12 +124,15 @@ protected:
 class CSSStyleSheet;
 class Document;
 class TextResource;
-class CSSStyleRuleImport : public CSSRule {
+class CSSImportRule : public CSSRule {
     friend class StyleResolver;
     friend class ImportedStyleSheetDownloadClient;
 
 public:
-    CSSStyleRuleImport(String* href, MediaQuerySet* media);
+    CSSImportRule(String* href, MediaQuerySet* media);
+
+    virtual void init(ScriptBindingInstance* instance) override;
+    virtual bool isCSSImportRule() const override;
 
     MediaQuerySet* mediaQuerySet()
     {
@@ -112,6 +153,8 @@ public:
     Document* document();
     void requestStyleSheet();
     void unloadStyleSheetIfExists();
+
+    String* cssText() const override;
 
 protected:
     void willStyleSheetLoad();

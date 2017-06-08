@@ -55,6 +55,78 @@ static bool isQuote(char c)
     return false;
 }
 
+static const char* unitTypeToString(UnitType type)
+{
+    switch (type) {
+    case UnitType::Number:
+    case UnitType::Integer:
+    case UnitType::UserUnits:
+        return "";
+    case UnitType::Percentage:
+        return "%";
+    case UnitType::Ems:
+        return "em";
+    case UnitType::Exs:
+        return "ex";
+    case UnitType::Rems:
+        return "rem";
+    case UnitType::Chs:
+        return "ch";
+    case UnitType::Pixels:
+        return "px";
+    case UnitType::Centimeters:
+        return "cm";
+    case UnitType::DotsPerPixel:
+        return "dppx";
+    case UnitType::DotsPerInch:
+        return "dpi";
+    case UnitType::DotsPerCentimeter:
+        return "dpcm";
+    case UnitType::Millimeters:
+        return "mm";
+    case UnitType::Inches:
+        return "in";
+    case UnitType::Points:
+        return "pt";
+    case UnitType::Picas:
+        return "pc";
+    case UnitType::Degrees:
+        return "deg";
+    case UnitType::Radians:
+        return "rad";
+    case UnitType::Gradians:
+        return "grad";
+    case UnitType::Milliseconds:
+        return "ms";
+    case UnitType::Seconds:
+        return "s";
+    case UnitType::Hertz:
+        return "hz";
+    case UnitType::Kilohertz:
+        return "khz";
+    case UnitType::Turns:
+        return "turn";
+    case UnitType::Fraction:
+        return "fr";
+    case UnitType::ViewportWidth:
+        return "vw";
+    case UnitType::ViewportHeight:
+        return "vh";
+    case UnitType::ViewportMin:
+        return "vmin";
+    case UnitType::ViewportMax:
+        return "vmax";
+    case UnitType::UnknownType:
+    case UnitType::ValueID:
+    case UnitType::Calc:
+    case UnitType::CalcPercentageWithNumber:
+    case UnitType::CalcPercentageWithLength:
+        break;
+    };
+    STARFISH_ASSERT_NOT_REACHED();
+    return "";
+}
+
 class CSSPropertyParser : public gc {
 public:
     CSSPropertyParser(char* value)
@@ -581,8 +653,8 @@ public:
     }
 };
 
-class CSSStyleRuleMedia;
-class CSSStyleRuleImport;
+class CSSMediaRule;
+class CSSImportRule;
 class CSSParser : public DocumentHoldable {
 public:
     enum NumericSign {
@@ -624,9 +696,9 @@ public:
                         GCVector<GCDeque<CSSSelector*>*>* sList,
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
-    CSSStyleRuleMedia* parseMediaRule();
+    CSSMediaRule* parseMediaRule();
     MediaQuerySet* parseMediaQuery();
-    CSSStyleRuleImport* parseImportRule();
+    CSSImportRule* parseImportRule();
     String* parseURLString();
 
 protected:
@@ -751,16 +823,19 @@ struct MediaQueryExpValue {
     {
         return (isID || isValue || isRatio);
     }
-    String cssText() const;
+    String* cssText() const;
     bool equals(const MediaQueryExpValue& expValue) const
     {
-        if (isID)
+        if (isID) {
             return (id->equals(expValue.id));
-        if (isValue)
+        }
+        if (isValue) {
             return (value == expValue.value);
-        if (isRatio)
+        }
+        if (isRatio) {
             return (numerator == expValue.numerator &&
                     denominator == expValue.denominator);
+        }
         return !expValue.isValid();
     }
 };
@@ -788,6 +863,8 @@ public:
     bool isDeviceDependent() const;
 
     MediaQueryExp(MediaQueryExp& other);
+
+    String* serialize() const;
 
 protected:
     MediaQueryExp(String*, MediaQueryExpValue);

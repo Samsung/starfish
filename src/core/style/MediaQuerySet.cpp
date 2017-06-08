@@ -35,4 +35,20 @@ void MediaQuerySet::addMediaQuery(MediaQuery* mediaQuery)
 {
     m_queries.push_back(mediaQuery);
 }
+
+String* MediaQuerySet::mediaText() const
+{
+    String* text = String::emptyString;
+
+    bool first = true;
+    for (size_t i = 0; i < m_queries.size(); ++i) {
+        if (!first) {
+            text->concat(String::createASCIIString(", "));
+        } else {
+            first = false;
+        }
+        text->concat(m_queries[i]->cssText());
+    }
+    return text;
+}
 }
