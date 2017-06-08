@@ -42,12 +42,12 @@ sfmatchLocation_cb matchLocation_cb = nullptr;
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     void* window, int windowWidth, int windowHeight, const char* locale,
-    const char* timezoneID, float defaultFontSizeMultiplier)
+    const char* timezoneID, float defaultFontSizeMultiplier, ScreenInfo& info)
 {
     StarFishInstance* instance = new (NoGC) StarFishInstance;
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
-        windowWidth, windowHeight, defaultFontSizeMultiplier);
+        windowWidth, windowHeight, defaultFontSizeMultiplier, info);
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif

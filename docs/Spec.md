@@ -673,7 +673,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
 | [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
-| [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | | | ‘all’ means suitable for all supported devices. |
+| [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by web widget engine. | ‘all’ means suitable for all supported devices. |
 | [Media Queries - Media Features](https://www.w3.org/TR/css3-mediaqueries/#media1) | width | &lt;length&gt; | Describes the width of the targeted display area of the output device. | |
 | | height | &lt;length&gt; | Describes the height of the targeted display area of the output device. | |
 | | device-width | &lt;length&gt; | Describes the width of the rendering surface of the output device. | |
@@ -685,8 +685,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | color-index | &lt;integer&gt; | Describes the number of entries in the color lookup table of the output device. If the device does not use a color lookup table, the value is zero. | |
 | | monochrome | &lt;integer&gt; | Describes the number of bits per pixel in a monochrome frame buffer. If the device is not a monochrome device, the output device value will be 0. | |
 | | resolution | &lt;resolution&gt; | Describes the resolution of the output device, i.e. the density of the pixels.  | |
-| | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | |
-| | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | |
+| | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | The Web widget engine doesn't support this feature. |
+| | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The Web widget engine supports only bitmap device. |
 
 
 ## Selectors

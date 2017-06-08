@@ -18,6 +18,7 @@
 #define __StarFish__
 
 #include "StarFishConfig.h"
+#include "platform/public/ScreenInfo.h"
 
 namespace StarFish {
 
@@ -394,7 +395,7 @@ class StarFish : public gc {
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h,
-             float defaultFontSizeMultiplier, float devicePixelRatio = 1);
+             float defaultFontSizeMultiplier, ScreenInfo& info);
     ~StarFish();
     void run();
 
@@ -474,10 +475,15 @@ public:
         return m_nativeHandle;
     }
 
+    ScreenInfo& screenInfo()
+    {
+        return m_screenInfo;
+    }
+
     float devicePixelRatio()
     {
         // TODO: consider page zoom factor.
-        return m_devicePixelRatio;
+        return screenInfo().deviceScaleFactor;
     }
 
     void addPointerInRootSet(void* ptr);
@@ -543,7 +549,7 @@ protected:
 #endif
     size_t m_enterCount;
     unsigned int m_seed;
-    float m_devicePixelRatio;
+    ScreenInfo m_screenInfo;
 
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;

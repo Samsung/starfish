@@ -329,9 +329,17 @@ int main(int argc, char* argv[])
         NULL);
 #endif
 
+    // TODO: Need to get screen info from X11.
+    // Temporally, rect's width and height are set to window size.
+    ScreenInfo info;
+    info.rect.setWidth(width);
+    info.rect.setHeight(height);
+    info.availableRect.setWidth(width);
+    info.availableRect.setHeight(height);
+
     StarFish::StarFish* sf =
         new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                               "Asia/Seoul", nullptr, width, height, 1);
+                               "Asia/Seoul", nullptr, width, height, 1, info);
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

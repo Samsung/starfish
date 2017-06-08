@@ -41,6 +41,7 @@ public:
     int32_t screenHeight() const;
     float devicePixelRatio() const;
     int32_t colorBitsPerComponent() const;
+    bool isMonochrome() const;
 
 private:
     Frame* m_frame;

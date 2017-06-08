@@ -338,8 +338,17 @@ static bool monochromeMediaFeatureEval(MediaQueryExpValue& value,
                                        MediaValues* mediaValues,
                                        MediaFeaturePrefix op)
 {
-    // We do not support monochrome device.
-    return false;
+    if (!value.isValid()) {
+        return false;
+    }
+
+    if (!mediaValues->isMonochrome()) {
+        float number;
+        return numberValue(value, number) &&
+               compareValue(0, static_cast<int>(number), op);
+    }
+
+    return colorMediaFeatureEval(value, mediaValues, op);
 }
 
 static bool evalResolution(MediaQueryExpValue& value, MediaValues* mediaValues,
