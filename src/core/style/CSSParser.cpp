@@ -2111,7 +2111,7 @@ CSSToken* CSSParser::makeToken(String* str)
     return getToken(false, false);
 }
 
-CSSStyleRuleMedia* CSSParser::parseMediaRule()
+CSSMediaRule* CSSParser::parseMediaRule()
 {
     preserveState();
 
@@ -2145,13 +2145,13 @@ CSSStyleRuleMedia* CSSParser::parseMediaRule()
 
     if (valid) {
         forgetState();
-        return new CSSStyleRuleMedia(mediaQuerySet, rootRule);
+        return new CSSMediaRule(mediaQuerySet, rootRule);
     }
     restoreState();
     return nullptr;
 }
 
-CSSStyleRuleImport* CSSParser::parseImportRule()
+CSSImportRule* CSSParser::parseImportRule()
 {
     String* url = parseURLString();
     if (url->equals(String::emptyString)) {
@@ -2161,7 +2161,7 @@ CSSStyleRuleImport* CSSParser::parseImportRule()
     getToken(true, false);
     MediaQuerySet* mediaQuery = parseMediaQuery();
 
-    return new CSSStyleRuleImport(url, mediaQuery);
+    return new CSSImportRule(url, mediaQuery);
 }
 
 String* CSSParser::parseURLString()
@@ -2857,5 +2857,36 @@ MediaQueryExp* MediaQueryExp::createIfValid(
     }
 
     return new MediaQueryExp(lowerMediaFeature, expValue);
+}
+
+String* MediaQueryExp::serialize() const
+{
+    String* result = String::emptyString;
+    result->concat(String::createASCIIString("("));
+    result->concat(m_mediaFeature->toLower());
+    if (m_expValue.isValid()) {
+        result->concat(String::createASCIIString(": "));
+        result->concat(m_expValue.cssText());
+    }
+    result->concat(String::createASCIIString(")"));
+
+    return result;
+}
+
+String* MediaQueryExpValue::cssText() const
+{
+    String* output = String::emptyString;
+    if (isValue) {
+        output->concat(String::fromFloat(value));
+        output->concat(String::fromUTF8(unitTypeToString(unit)));
+    } else if (isRatio) {
+        output->concat(String::fromFloat(numerator));
+        output->concat(String::createASCIIString("/"));
+        output->concat(String::fromFloat(denominator));
+    } else if (isID) {
+        output->concat(id);
+    }
+
+    return output;
 }
 }

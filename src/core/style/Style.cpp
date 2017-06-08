@@ -937,7 +937,7 @@ void CSSStyleSheet::addRule(CSSRule* rule)
     if (rule->isImportRule()) {
         STARFISH_ASSERT(m_allRules.size() == 0);
 
-        CSSStyleRuleImport* importRule = rule->asCSSStyleRuleImport();
+        CSSImportRule* importRule = rule->asCSSStyleRuleImport();
         m_importRules.push_back(importRule);
         m_importRules.back()->setParentStyleSheet(this);
         m_importRules.back()->requestStyleSheet();
@@ -1037,7 +1037,7 @@ bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
 
 void CSSStyleSheet::collectRulesForImportedSheet()
 {
-    CSSStyleRuleImport* importRule = ownerRule();
+    CSSImportRule* importRule = ownerRule();
 
     if (matchesMediaQueries(
             origin()->document()->styleResolver().mediaQueryEvaluator(),
@@ -1054,7 +1054,7 @@ void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
         if ((*iter)->isCSSStyleRule()) {
             m_rules.push_back((CSSStyleRule*)(*iter));
         } else if ((*iter)->isMediaRule()) {
-            CSSStyleRuleMedia* media = (CSSStyleRuleMedia*)(*iter);
+            CSSMediaRule* media = (CSSMediaRule*)(*iter);
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
             if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {

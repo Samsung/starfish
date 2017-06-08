@@ -32,6 +32,10 @@
     F(CSSRule)                                      \
     F(CSSStyleDeclaration)                          \
     F(CSSStyleRule)                                 \
+    F(CSSConditionRule)                             \
+    F(CSSGroupingRule)                              \
+    F(CSSImportRule)                                \
+    F(CSSMediaRule)                                 \
     F(Document)                                     \
     F(DocumentFragment)                             \
     F(DocumentType)                                 \

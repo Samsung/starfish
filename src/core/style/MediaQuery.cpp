@@ -42,6 +42,7 @@
  */
 
 #include "MediaQuery.h"
+#include "CSSParser.h"
 #include "core/util/String.h"
 
 namespace StarFish {
@@ -72,5 +73,43 @@ MediaQuery::MediaQuery(const MediaQuery& o)
 {
     m_expressions.clear();
     m_expressions.assign(o.m_expressions.begin(), o.m_expressions.end());
+}
+
+String* MediaQuery::serialize() const
+{
+    String* result = String::emptyString;
+    switch (m_restrictor) {
+    case MediaQuery::Only:
+        result->concat(String::createASCIIString("only "));
+        break;
+    case MediaQuery::Not:
+        result->concat(String::createASCIIString("not "));
+        break;
+    case MediaQuery::None:
+        break;
+    }
+
+    if (m_expressions.empty()) {
+        result->concat(m_mediaType);
+        return result;
+    }
+
+    if (!m_mediaType->equals(String::createASCIIString("all")) ||
+        m_restrictor != None) {
+        result->concat(m_mediaType);
+        result->concat(String::createASCIIString(" and "));
+    }
+
+    result->concat(m_expressions.at(0)->serialize());
+    for (size_t i = 1; i < m_expressions.size(); ++i) {
+        result->concat(String::createASCIIString(" and "));
+        result->concat(m_expressions.at(i)->serialize());
+    }
+    return result;
+}
+
+String* MediaQuery::cssText() const
+{
+    return serialize();
 }
 }

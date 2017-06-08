@@ -1,6 +1,30 @@
 // https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface
 
 interface CSSStyleRule : CSSRule {
-  [Unimplemented] attribute DOMString selectorText;
+  attribute DOMString selectorText;
   [Unimplemented, SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+};
+
+// https://drafts.csswg.org/cssom/#the-cssimportrule-interface
+interface CSSImportRule : CSSRule {
+  [Unimplemented] readonly attribute USVString href;
+  [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+  [Unimplemented, SameObject] readonly attribute CSSStyleSheet styleSheet;
+};
+
+// https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface
+interface CSSGroupingRule : CSSRule {
+  [Unimplemented, SameObject] readonly attribute CSSRuleList cssRules;
+  [Unimplemented] unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
+  [Unimplemented] void deleteRule(unsigned long index);
+};
+
+// https://drafts.csswg.org/css-conditional-3/#cssconditionrule
+interface CSSConditionRule : CSSGroupingRule {
+    [Unimplemented] attribute CSSOMString conditionText;
+};
+
+// https://drafts.csswg.org/css-conditional-3/#cssmediarule
+interface CSSMediaRule : CSSConditionRule {
+    [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
 };

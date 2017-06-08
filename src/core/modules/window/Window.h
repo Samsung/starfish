@@ -47,7 +47,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
     friend class Node;
-    friend class CSSStyleRuleImport;
+    friend class CSSImportRule;
 
 public:
     static Window* create(StarFish* sf, void* win, int width, int height);

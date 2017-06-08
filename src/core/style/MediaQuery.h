@@ -66,11 +66,16 @@ public:
     {
         return m_expressions;
     }
+
     String* mediaType() const
     {
         return m_mediaType;
     }
+
     bool operator==(const MediaQuery& other) const;
+
+    String* serialize() const;
+    String* cssText() const;
 
 protected:
     MediaQuery(RestrictorType, String* mediaType,

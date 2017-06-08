@@ -43,28 +43,92 @@ CSSStyleRule::CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
 {
 }
 
-CSSStyleRuleGroup::CSSStyleRuleGroup(RuleType type, GCVector<CSSRule*>& rules)
+String* CSSStyleRule::selectorText() const
+{
+    String* result = String::emptyString;
+    GCDeque<CSSSelector*>* selectors = this->selectorList();
+    for (size_t i = 0; i < selectors->size(); ++i) {
+        if (i != 0) {
+            result->concat(String::createASCIIString(", "));
+        }
+        result->concat((*selectors)[i]->selectorText().string());
+    }
+
+    return result;
+}
+
+String* CSSStyleRule::cssText() const
+{
+    String* result = selectorText();
+    result->concat(String::createASCIIString(" { "));
+    String* decls = m_styleDeclaration->generateCSSText();
+    result->concat(decls);
+    if (!decls->equals(String::emptyString))
+        result->concat(String::createASCIIString(" "));
+    result->concat(String::createASCIIString("}"));
+    return result;
+}
+
+CSSGroupingRule::CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules)
     : CSSRule(type)
 {
     m_childRules.clear();
     m_childRules.assign(rules.begin(), rules.end());
 }
-CSSStyleRuleGroup::CSSStyleRuleGroup(CSSStyleRuleGroup& o)
+CSSGroupingRule::CSSGroupingRule(CSSGroupingRule& o)
     : CSSRule(o.type())
 {
     m_childRules.clear();
     m_childRules.assign(o.childRules().begin(), o.childRules().end());
 }
 
-CSSStyleRuleMedia::CSSStyleRuleMedia(MediaQuerySet* media,
-                                     GCVector<CSSRule*>& rules)
-    : CSSStyleRuleGroup(CSSRule::MEDIA_RULE, rules)
+unsigned CSSGroupingRule::length() const
+{
+    return m_childRules.size();
+}
+
+void CSSGroupingRule::appendCSSTextForItems(String* result) const
+{
+    unsigned size = length();
+    for (unsigned i = 0; i < size; ++i) {
+        result->concat(String::createASCIIString("  "));
+        result->concat(m_childRules[i]->cssText());
+        result->concat(String::createASCIIString("\n"));
+    }
+}
+
+CSSConditionRule::CSSConditionRule(RuleType type, String* condition_text,
+                                   GCVector<CSSRule*>& adopt_rules)
+    : CSSGroupingRule(type, adopt_rules)
+    , condition_text_(condition_text)
+{
+}
+
+CSSConditionRule::CSSConditionRule(RuleType type,
+                                   GCVector<CSSRule*>& adopt_rules)
+    : CSSGroupingRule(type, adopt_rules)
+{
+    condition_text_ = String::emptyString;
+}
+
+CSSConditionRule::CSSConditionRule(CSSConditionRule& condition_rule)
+    : CSSConditionRule(condition_rule)
+{
+    if (condition_rule.condition_text_) {
+        condition_text_ = condition_rule.condition_text_;
+    } else {
+        condition_text_ = String::emptyString;
+    }
+}
+
+CSSMediaRule::CSSMediaRule(MediaQuerySet* media, GCVector<CSSRule*>& rules)
+    : CSSConditionRule(CSSRule::MEDIA_RULE, rules)
     , m_mediaQuerySet(media)
 {
 }
 
-CSSStyleRuleMedia::CSSStyleRuleMedia(CSSStyleRuleMedia& o)
-    : CSSStyleRuleGroup(o)
+CSSMediaRule::CSSMediaRule(CSSMediaRule& o)
+    : CSSConditionRule(o)
 {
     if (o.mediaQuerySet()) {
         m_mediaQuerySet = MediaQuerySet::create();
@@ -75,7 +139,21 @@ CSSStyleRuleMedia::CSSStyleRuleMedia(CSSStyleRuleMedia& o)
     }
 }
 
-CSSStyleRuleImport::CSSStyleRuleImport(String* href, MediaQuerySet* media)
+String* CSSMediaRule::cssText() const
+{
+    String* result = String::emptyString;
+    result->concat(String::createASCIIString("@media "));
+    if (mediaQuerySet()) {
+        result->concat(mediaQuerySet()->mediaText());
+        result->concat(String::createASCIIString(" "));
+    }
+    result->concat(String::createASCIIString("{ \n"));
+    appendCSSTextForItems(result);
+    result->concat(String::createASCIIString("}"));
+    return result;
+}
+
+CSSImportRule::CSSImportRule(String* href, MediaQuerySet* media)
     : CSSRule(CSSRule::IMPORT_RULE)
     , m_strHref(href)
     , m_mediaQuerySet(media)
@@ -85,27 +163,31 @@ CSSStyleRuleImport::CSSStyleRuleImport(String* href, MediaQuerySet* media)
 {
 }
 
-Document* CSSStyleRuleImport::document()
+Document* CSSImportRule::document()
 {
     STARFISH_ASSERT(m_parentStyleSheet);
     STARFISH_ASSERT(m_parentStyleSheet->origin());
     return m_parentStyleSheet->origin()->document();
 }
 
-void CSSStyleRuleImport::willStyleSheetLoad()
+void CSSImportRule::willStyleSheetLoad()
 {
     document()->window()->markHasPendingStyleSheet();
 }
 
-void CSSStyleRuleImport::didStyleSheetLoadComplete()
+void CSSImportRule::didStyleSheetLoadComplete()
 {
     document()->window()->unmarkHasPendingStyleSheet();
 }
 
+String* CSSImportRule::cssText() const
+{
+    return String::emptyString;
+}
+
 class ImportedStyleSheetDownloadClient : public ResourceClient {
 public:
-    ImportedStyleSheetDownloadClient(CSSStyleRuleImport* ownerRule,
-                                     Resource* res)
+    ImportedStyleSheetDownloadClient(CSSImportRule* ownerRule, Resource* res)
         : ResourceClient(res)
         , m_ownerRule(ownerRule)
     {
@@ -141,10 +223,10 @@ public:
     }
 
 protected:
-    CSSStyleRuleImport* m_ownerRule;
+    CSSImportRule* m_ownerRule;
 };
 
-void CSSStyleRuleImport::unloadStyleSheetIfExists()
+void CSSImportRule::unloadStyleSheetIfExists()
 {
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
@@ -158,7 +240,7 @@ void CSSStyleRuleImport::unloadStyleSheetIfExists()
     }
 }
 
-void CSSStyleRuleImport::requestStyleSheet()
+void CSSImportRule::requestStyleSheet()
 {
     if (!m_parentStyleSheet || !m_parentStyleSheet->origin()) {
         return;

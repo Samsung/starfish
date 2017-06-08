@@ -22,8 +22,8 @@
 namespace StarFish {
 
 class CSSStyleRule;
-class CSSStyleRuleMedia;
-class CSSStyleRuleImport;
+class CSSMediaRule;
+class CSSImportRule;
 
 class CSSRule : public ScriptWrappable {
 public:
@@ -89,16 +89,21 @@ public:
         return (CSSStyleRule*)this;
     }
 
-    CSSStyleRuleMedia* asCSSStyleRuleMedia()
+    CSSMediaRule* asCSSStyleRuleMedia()
     {
         STARFISH_ASSERT(isMediaRule());
-        return (CSSStyleRuleMedia*)this;
+        return (CSSMediaRule*)this;
     }
 
-    CSSStyleRuleImport* asCSSStyleRuleImport()
+    CSSImportRule* asCSSStyleRuleImport()
     {
         STARFISH_ASSERT(isImportRule());
-        return (CSSStyleRuleImport*)this;
+        return (CSSImportRule*)this;
+    }
+
+    virtual String* cssText() const = 0;
+    void setCssText(String*)
+    {
     }
 
 private:
