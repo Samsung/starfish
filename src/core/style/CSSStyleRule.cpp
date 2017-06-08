@@ -63,8 +63,9 @@ String* CSSStyleRule::cssText() const
     result->concat(String::createASCIIString(" { "));
     String* decls = m_styleDeclaration->generateCSSText();
     result->concat(decls);
-    if (!decls->equals(String::emptyString))
+    if (!decls->equals(String::emptyString)) {
         result->concat(String::createASCIIString(" "));
+    }
     result->concat(String::createASCIIString("}"));
     return result;
 }
@@ -97,27 +98,26 @@ void CSSGroupingRule::appendCSSTextForItems(String* result) const
     }
 }
 
-CSSConditionRule::CSSConditionRule(RuleType type, String* condition_text,
-                                   GCVector<CSSRule*>& adopt_rules)
-    : CSSGroupingRule(type, adopt_rules)
-    , condition_text_(condition_text)
+CSSConditionRule::CSSConditionRule(RuleType type, String* conditionText,
+                                   GCVector<CSSRule*>& rules)
+    : CSSGroupingRule(type, rules)
+    , m_conditionText(conditionText)
 {
 }
 
-CSSConditionRule::CSSConditionRule(RuleType type,
-                                   GCVector<CSSRule*>& adopt_rules)
-    : CSSGroupingRule(type, adopt_rules)
+CSSConditionRule::CSSConditionRule(RuleType type, GCVector<CSSRule*>& rules)
+    : CSSGroupingRule(type, rules)
 {
-    condition_text_ = String::emptyString;
+    m_conditionText = String::emptyString;
 }
 
 CSSConditionRule::CSSConditionRule(CSSConditionRule& condition_rule)
     : CSSConditionRule(condition_rule)
 {
-    if (condition_rule.condition_text_) {
-        condition_text_ = condition_rule.condition_text_;
+    if (condition_rule.m_conditionText) {
+        m_conditionText = condition_rule.m_conditionText;
     } else {
-        condition_text_ = String::emptyString;
+        m_conditionText = String::emptyString;
     }
 }
 
@@ -182,7 +182,21 @@ void CSSImportRule::didStyleSheetLoadComplete()
 
 String* CSSImportRule::cssText() const
 {
-    return String::emptyString;
+    String* result = String::emptyString;
+    result->concat(String::createASCIIString("@import url(\""));
+    result->concat(m_strHref);
+    result->concat(String::createASCIIString("\")"));
+
+    if (mediaQuerySet()) {
+        String* mediaText = mediaQuerySet()->mediaText();
+        if (!mediaText->equals(String::emptyString)) {
+            result->concat(String::createASCIIString(" "));
+            result->concat(mediaText);
+        }
+    }
+    result->concat(String::createASCIIString(";"));
+
+    return result;
 }
 
 class ImportedStyleSheetDownloadClient : public ResourceClient {

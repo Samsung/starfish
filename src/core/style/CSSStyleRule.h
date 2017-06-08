@@ -83,8 +83,8 @@ protected:
 class CSSConditionRule : public CSSGroupingRule {
 public:
     CSSConditionRule(RuleType, String* condition_text,
-                     GCVector<CSSRule*>& adopt_rule);
-    CSSConditionRule(RuleType, GCVector<CSSRule*>& adopt_rule);
+                     GCVector<CSSRule*>& rules);
+    CSSConditionRule(RuleType, GCVector<CSSRule*>& rules);
     CSSConditionRule(CSSConditionRule&);
 
     virtual void init(ScriptBindingInstance* instance) override;
@@ -92,11 +92,11 @@ public:
 
     String* ConditionText() const
     {
-        return condition_text_;
+        return m_conditionText;
     }
 
 protected:
-    String* condition_text_;
+    String* m_conditionText;
 };
 
 class MediaQuerySet;
@@ -134,7 +134,7 @@ public:
     virtual void init(ScriptBindingInstance* instance) override;
     virtual bool isCSSImportRule() const override;
 
-    MediaQuerySet* mediaQuerySet()
+    MediaQuerySet* mediaQuerySet() const
     {
         return m_mediaQuerySet;
     }
