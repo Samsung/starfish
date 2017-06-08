@@ -62,6 +62,7 @@ ESValue blobConstructor(ESVMInstance* instance)
             p += v->byteoffset();
             bufferInfo.push_back(std::make_pair((void*)p, v->bytelength()));
             totalByteLength += v->bytelength();
+            continue;
         }
 
         // ESArrayBufferObject
@@ -72,6 +73,7 @@ ESValue blobConstructor(ESVMInstance* instance)
             bufferInfo.push_back(
                 std::make_pair((void*)v->data(), v->bytelength()));
             totalByteLength += v->bytelength();
+            continue;
         }
 #endif
         // Blob
