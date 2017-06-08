@@ -17,7 +17,7 @@
 #ifndef __StarFishCSSStyleRule__
 #define __StarFishCSSStyleRule__
 
-#include "core/dom/CSSRule.h"
+#include "core/style/CSSRule.h"
 #include "core/style/Style.h"
 
 namespace StarFish {

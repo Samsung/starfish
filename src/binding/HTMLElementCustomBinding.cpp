@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#include "core/dom/CSSStyleDeclaration.h"
 #include "core/dom/HTMLElement.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
