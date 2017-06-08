@@ -15,12 +15,12 @@
  */
 
 #include "core/dom/Document.h"
-#include "core/dom/CSSRule.h"
-#include "core/dom/CSSStyleDeclaration.h"
-#include "core/dom/CSSStyleRule.h"
+#include "core/modules/window/Window.h"
+#include "core/style/CSSRule.h"
+#include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSStyleRule.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
-#include "core/modules/window/Window.h"
 
 namespace StarFish {
 

@@ -17,7 +17,6 @@
 #include "StarFish.h"
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
-#include "core/dom/CSSStyleDeclaration.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/DOMException.h"
@@ -30,9 +29,10 @@
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/modules/window/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
-#include "core/modules/window/Window.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 

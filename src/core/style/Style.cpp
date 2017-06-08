@@ -16,8 +16,6 @@
 
 #include "StarFish.h"
 #include "core/animation/Animation.h"
-#include "core/dom/CSSStyleDeclaration.h"
-#include "core/dom/CSSStyleRule.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
@@ -30,6 +28,8 @@
 #include "core/modules/window/Window.h"
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
+#include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSStyleRule.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/NamedColors.h"

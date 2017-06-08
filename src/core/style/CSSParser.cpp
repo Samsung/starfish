@@ -63,12 +63,12 @@
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
-#include "core/dom/CSSStyleDeclaration.h"
-#include "core/dom/CSSStyleRule.h"
-#include "core/style/CSSParser.h"
-#include "core/style/CSSStyleLookupTrie.h"
-#include "core/style/Style.h"
 #include "core/modules/window/Window.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSStyleLookupTrie.h"
+#include "core/style/CSSStyleRule.h"
+#include "core/style/Style.h"
 
 namespace StarFish {
 
