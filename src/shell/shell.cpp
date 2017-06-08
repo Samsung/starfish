@@ -133,9 +133,17 @@ public:
         int width = 360, height = 360;
         int flag = 0;
 
-        m_sf =
-            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                                   "Asia/Seoul", nullptr, width, height, 1);
+        // TODO: Need to get screen info from X11.
+        // Temporally, rect's width and height are set to window size.
+        ScreenInfo info;
+        info.rect.setWidth(width);
+        info.rect.setHeight(height);
+        info.availableRect.setWidth(width);
+        info.availableRect.setHeight(height);
+
+        m_sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag,
+                                      "ko-KR", "Asia/Seoul", nullptr, width,
+                                      height, 1, info);
         m_sf->loadHTMLDocument(String::createASCIIString(url));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::OnStageTouched);
