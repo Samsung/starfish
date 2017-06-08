@@ -246,6 +246,14 @@ public:
         restore();
     }
 
+    bool shouldApplyMatrix()
+    {
+        if (lastState().m_opacity != 1) {
+            return true;
+        }
+        return hasValidMatrixValue();
+    }
+
     virtual void clip(const Unit::Rect& rt)
     {
         if (lastState().m_hasPathClip) {
@@ -347,7 +355,9 @@ public:
                     SkFloatToScalar((float)rt.height()));
             }
 
-            if (SkRect::Intersects(lastState().m_clipRect, sss)) {
+            if (!SkRect::Intersects(lastState().m_clipRect, sss)) {
+                lastState().m_clipRect.setEmpty();
+            } else {
                 lastState().m_clipRect.sort();
                 sss.sort();
 
@@ -383,22 +393,18 @@ public:
                         for (size_t i = 0; i < clipPaths.size(); i++) {
                             Unit::Rect rt = boundingRect(clipPaths[i]);
                             if (rt.width() && rt.height()) {
-                                cairo_save(m_canvas);
                                 cairo_translate(m_canvas, -rt.x(), -rt.y());
-
                                 const ClipperLib::Path& path = clipPaths[i];
                                 cairo_move_to(m_canvas, path[0].X, path[0].Y);
                                 for (size_t j = 1; j < path.size(); j++) {
                                     cairo_line_to(m_canvas, path[j].X,
                                                   path[j].Y);
                                 }
-                                cairo_clip(m_canvas);
-                                // cairo_fill(m_canvas);
-
-                                cairo_restore(m_canvas);
+                                cairo_translate(m_canvas, rt.x(), rt.y());
                             }
                         }
                     }
+                    cairo_clip(m_canvas);
                 }
             } else {
                 cairo_rectangle(m_canvas, lastState().m_clipRect.x(),
@@ -434,8 +440,6 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr_;
-
-        // Change RGB for RGBA8888 <->  ARGB conversion (mh.byun)
         cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
     }
 
@@ -517,7 +521,6 @@ public:
         cairo_new_path(m_canvas);
 
         cairo_translate(m_canvas, xx, yy);
-
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_fill(m_canvas);
         cairo_restore(m_canvas);
@@ -815,20 +818,27 @@ public:
         resizePattern = cairo_pattern_create_for_surface(localSurface);
         cairo_translate(m_canvas, xx, yy);
 
-        cairo_matrix_init_scale(&matrix, 1, 1);
-        cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
-        cairo_pattern_set_matrix(resizePattern, &matrix);
+        if (lastState().m_mapMode) {
+            cairo_matrix_init(&matrix, lastState().m_matrix.getScaleX(),
+                              lastState().m_matrix.getSkewY(),
+                              lastState().m_matrix.getSkewX(),
+                              lastState().m_matrix.getScaleY(),
+                              lastState().m_matrix.getTranslateX(),
+                              lastState().m_matrix.getTranslateY());
+
+            cairo_set_matrix(m_canvas, &matrix);
+        } else {
+            cairo_matrix_init_identity(&matrix);
+            cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
+            cairo_pattern_set_matrix(resizePattern, &matrix);
+        }
+        cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_NEAREST);
 
         cairo_set_source(m_canvas, resizePattern);
-        cairo_pattern_set_filter(cairo_get_source(m_canvas),
-                                 CAIRO_FILTER_NEAREST);
+
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
-        if (isFromSurface) {
-            cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
-        } else {
-            cairo_fill(m_canvas);
-        }
+        cairo_clip(m_canvas);
+        cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_restore(m_canvas);
@@ -838,8 +848,8 @@ public:
     {
         cairo_save(m_canvas);
 
-        cairo_set_source_rgba(m_canvas, 1, 0, 0, 1);
-        cairo_rectangle(m_canvas, 0, 0, ww, hh);
+        cairo_set_source_rgba(m_canvas, 1, 1, 0, 1);
+        cairo_rectangle(m_canvas, xx, yy, ww, hh);
         cairo_stroke(m_canvas);
 
         cairo_restore(m_canvas);
@@ -859,8 +869,8 @@ public:
             int stride =
                 cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
             image = cairo_image_surface_create_for_data(
-                (unsigned char*)imgData, CAIRO_FORMAT, dst.width(),
-                dst.height(), stride);
+                (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
+                data->height(), stride);
             surfaceWidth = data->width();
             surfaceHeight = data->height();
         } else {
@@ -877,8 +887,8 @@ public:
         }
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
-            (unsigned char*)data->unwrap(), CAIRO_FORMAT, dst.width(),
-            dst.width(),
+            (unsigned char*)data->unwrap(), CAIRO_FORMAT, data->width(),
+            data->height(),
             cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, data->width()));
 
         drawImageCairo(image, dst, data->width(), data->height(), true);
@@ -898,9 +908,95 @@ public:
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat, bool isRootElement)
     {
-        // TODO : It's not implemented yet!
-        drawImage(data, dst);
-        return;
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        cairo_save(m_canvas);
+        applyClippers();
+        cairo_new_path(m_canvas);
+
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)dst.x()),
+                                          SkFloatToScalar((float)dst.y()),
+                                          SkFloatToScalar((float)dst.width()),
+                                          SkFloatToScalar((float)dst.height()));
+            lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            xx = lastState().m_baseX;
+            yy = lastState().m_baseY;
+            ww = dst.width();
+            hh = dst.height();
+        }
+
+        float x = 0.0, y = 0.0;
+        if (xRepeat) {
+            x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
+                imageWidth;
+            if (isRootElement) {
+                x += xx;
+            }
+        } else {
+            xx += dst.x();
+        }
+        if (yRepeat) {
+            y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
+                imageHeight;
+            if (isRootElement) {
+                y += yy;
+            }
+        } else {
+            yy += dst.y();
+        }
+
+        cairo_pattern_t* pattern;
+        cairo_matrix_t matrix;
+        cairo_surface_t* image = nullptr;
+
+        void* imgData = data->unwrap();
+        double surfaceWidth = 0, surfaceHeight = 0;
+
+        if (imgData) {
+            int stride =
+                cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
+            image = cairo_image_surface_create_for_data(
+                (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
+                data->height(), stride);
+            surfaceWidth = data->width();
+            surfaceHeight = data->height();
+        } else {
+            // TODO
+        }
+
+        pattern = cairo_pattern_create_for_surface(image);
+
+        // cairo_matrix_init_translate(&matrix,x,y);
+        // cairo_matrix_translate(&matrix, surfaceWidth / imageWidth,
+        // surfaceHeight / imageHeight);
+        cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
+                                surfaceHeight / imageHeight);
+        cairo_matrix_translate(&matrix, -x, -y);
+
+        cairo_pattern_set_matrix(pattern, &matrix);
+        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+
+        cairo_translate(m_canvas, xx, yy);
+        cairo_set_source(m_canvas, pattern);
+
+        cairo_rectangle(m_canvas, 0, 0, ww, hh);
+        cairo_clip(m_canvas);
+        cairo_paint_with_alpha(m_canvas, 0.5);
+        // cairo_fill(m_canvas);
+
+        cairo_pattern_destroy(pattern);
+        cairo_surface_destroy(image);
+
+        cairo_restore(m_canvas);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)
