@@ -1661,70 +1661,9 @@ protected:
     QualifiedName m_attribute;
 };
 
-class CSSStyleSheet : public gc {
-public:
-    CSSStyleSheet(Node* origin, String* str, CSSImportRule* ownerRule = nullptr)
-    {
-        m_sourceString = str;
-        m_origin = origin;
-        m_ownerRule = ownerRule;
-    }
-
-    void addRule(CSSStyleRule* rule);
-    void addRule(CSSRule* rule);
-
-    URL* url();
-    Node* origin()
-    {
-        return m_origin;
-    }
-
-    void parseSheetIfneeds();
-
-    GCVector<CSSStyleRule*>& rules()
-    {
-        STARFISH_ASSERT(m_sourceString == String::emptyString);
-        return m_rules;
-    }
-
-    GCVector<CSSRule*>& allRules()
-    {
-        STARFISH_ASSERT(m_sourceString == String::emptyString);
-        return m_allRules;
-    }
-
-    CSSImportRule* ownerRule()
-    {
-        return m_ownerRule;
-    }
-
-    void clearOwnerRule()
-    {
-        m_ownerRule = nullptr;
-    }
-
-    CSSStyleSheet* parentStyleSheet();
-
-    void sortRulesBySpecificity();
-
-    bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
-                             MediaQuerySet* mediaQueres);
-    void collectRulesForImportedSheet();
-    void collectRulesForSheet(GCVector<CSSRule*>& rules);
-
-protected:
-    // m_stringString != String::emptyString means we need to parse style sheet
-    // before access style rules.
-    String* m_sourceString;
-    GCVector<CSSStyleRule*> m_rules;
-    GCVector<CSSRule*> m_allRules;
-    Node* m_origin;
-    GCVector<CSSImportRule*> m_importRules;
-    CSSImportRule* m_ownerRule;
-};
-
 using Declarations = GCVector<CSSStyleDeclaration*>;
 
+class CSSStyleSheet;
 class StyleResolver : public DocumentHoldable {
 public:
     enum PseudoElementType {

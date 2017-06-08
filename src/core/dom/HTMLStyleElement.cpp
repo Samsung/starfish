@@ -20,6 +20,7 @@
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
 #include "core/style/CSSParser.h"
+#include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/window/Window.h"

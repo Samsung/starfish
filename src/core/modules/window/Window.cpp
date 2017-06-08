@@ -38,6 +38,7 @@
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
+#include "core/style/CSSStyleSheet.h"
 #include "browser/storage/WebStorageNamespaceProvider.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/WebApis.h"

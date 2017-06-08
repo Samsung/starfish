@@ -19,6 +19,7 @@
 #include "core/style/CSSRule.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
+#include "core/style/CSSStyleSheet.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
 
