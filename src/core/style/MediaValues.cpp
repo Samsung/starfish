@@ -120,14 +120,24 @@ int32_t MediaValues::screenWidth() const
 {
     // TODO: The current screen area is same as the viewport area.
     // The screen area for the device area should be considered later.
-    return m_frame->document()->window()->innerWidth();
+    return m_frame->document()
+        ->window()
+        ->starFish()
+        ->screenInfo()
+        .rect.size()
+        .width();
 }
 
 int32_t MediaValues::screenHeight() const
 {
     // TODO: The current screen area is same as the viewport area.
     // The screen area for the device area should be considered later.
-    return m_frame->document()->window()->innerHeight();
+    return m_frame->document()
+        ->window()
+        ->starFish()
+        ->screenInfo()
+        .rect.size()
+        .height();
 }
 
 float MediaValues::devicePixelRatio() const
@@ -137,10 +147,16 @@ float MediaValues::devicePixelRatio() const
 
 int32_t MediaValues::colorBitsPerComponent() const
 {
-    // FIXME: We don't have any information related to the screen including
-    // this. Additional DOM bindings for the screen are also required.
-    // (https://drafts.csswg.org/cssom-view/#screen)
-    return 8;
+    return m_frame->document()
+        ->window()
+        ->starFish()
+        ->screenInfo()
+        .depthPerComponent;
+}
+
+bool MediaValues::isMonochrome() const
+{
+    return m_frame->document()->window()->starFish()->screenInfo().isMonochrome;
 }
 
 } /* namespace StarFish */
