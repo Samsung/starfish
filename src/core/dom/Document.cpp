@@ -40,6 +40,7 @@
 #include "core/modules/window/Window.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
+#include "core/style/CSSStyleSheet.h"
 #include "platform/loader/ImageResource.h"
 
 namespace StarFish {

@@ -1,0 +1,16 @@
+// NOTE Using DOMString instead of USVString
+// REF1. https://drafts.csswg.org/cssom/#the-stylesheet-interface
+// REF2. https://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheet
+
+interface StyleSheet {
+    // [REF1]--------------------------------------------------------------
+    readonly attribute CSSOMString type;
+    readonly attribute USVString? href;
+    [Unimplemented] readonly attribute StyleSheet? parentStyleSheet;
+    [Unimplemented] readonly attribute DOMString? title;
+    [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+    [Unimplemented] attribute boolean disabled;
+
+    // [REF2]--------------------------------------------------------------
+    readonly attribute Node ownerNode;
+};

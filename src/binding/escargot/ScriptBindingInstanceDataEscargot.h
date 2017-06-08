@@ -29,13 +29,14 @@
     F(CharacterData)                                \
     F(Comment)                                      \
     F(Coordinates)                                  \
-    F(CSSRule)                                      \
-    F(CSSStyleDeclaration)                          \
-    F(CSSStyleRule)                                 \
     F(CSSConditionRule)                             \
     F(CSSGroupingRule)                              \
     F(CSSImportRule)                                \
     F(CSSMediaRule)                                 \
+    F(CSSRule)                                      \
+    F(CSSStyleDeclaration)                          \
+    F(CSSStyleRule)                                 \
+    F(CSSStyleSheet)                                \
     F(Document)                                     \
     F(DocumentFragment)                             \
     F(DocumentType)                                 \
@@ -95,6 +96,7 @@
     F(Screen)                                       \
     F(Storage)                                      \
     F(StorageImpl)                                  \
+    F(StyleSheet)                                   \
     F(URL)                                          \
     F(Text)                                         \
     F(TouchEvent)                                   \

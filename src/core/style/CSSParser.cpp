@@ -68,6 +68,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleRule.h"
+#include "core/style/CSSStyleSheet.h"
 #include "core/style/Style.h"
 
 namespace StarFish {

@@ -26,13 +26,13 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/modules/window/Window.h"
-#include "core/style/Style.h"
-#include "core/style/CSSParser.h"
+#include "core/style/ComputedStyle.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
-#include "core/style/ComputedStyle.h"
+#include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/NamedColors.h"
+#include "core/style/Style.h"
 #include "core/util/URL.h"
 
 namespace StarFish {
@@ -924,144 +924,6 @@ void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
             setPseudoType(PseudoNone);
         }
         break;
-    }
-}
-
-void CSSStyleSheet::addRule(CSSStyleRule* rule)
-{
-    m_rules.push_back(rule);
-}
-
-void CSSStyleSheet::addRule(CSSRule* rule)
-{
-    if (rule->isImportRule()) {
-        STARFISH_ASSERT(m_allRules.size() == 0);
-
-        CSSImportRule* importRule = rule->asCSSStyleRuleImport();
-        m_importRules.push_back(importRule);
-        m_importRules.back()->setParentStyleSheet(this);
-        m_importRules.back()->requestStyleSheet();
-        return;
-    }
-
-    m_allRules.push_back(rule);
-}
-
-URL* CSSStyleSheet::url()
-{
-    if (m_origin->isHTMLLinkElement()) {
-        STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
-        return m_origin->asHTMLLinkElement()->url();
-    }
-    return m_origin->document()->documentURI();
-}
-
-void CSSStyleSheet::parseSheetIfneeds()
-{
-    if (m_sourceString != String::emptyString) {
-        CSSParser parser(m_origin->document());
-        parser.parseStyleSheet(m_sourceString, this);
-        m_sourceString = String::emptyString;
-    }
-}
-
-// http://www.w3.org/TR/css3-selectors/#specificity
-// We use 256 as the base of the specificity number system.
-static unsigned specificity(GCDeque<CSSSelector*>* selectorList)
-{
-    // Make sure the result doesn't overflow
-    static const unsigned idMask =
-        0xff0000; // count the number of ID selectors in the selector (= a)
-    static const unsigned classMask =
-        0x00ff00; // count the number of class selectors, attributes selectors,
-                  // and pseudo-classes in the selector (= b)
-    static const unsigned elementMask =
-        0x0000ff; // count the number of type selectors and pseudo-elements in
-                  // the selector (= c)
-
-    unsigned total = 0;
-    unsigned temp = 0;
-
-    for (unsigned i = 0; i < selectorList->size(); i++) {
-        CSSSelector* selector = (*selectorList)[i];
-        temp = total + selector->specificityForOneSelector();
-
-        // The negation pseudo-class has another simple selector in own data
-        // structure.
-        if (selector->type() == CSSSelector::Type::PseudoClass &&
-            selector->pseudoType() == CSSSelector::PseudoType::PseudoNot) {
-            temp +=
-                total +
-                selector->pseudoSelectorList()[0]->specificityForOneSelector();
-        }
-
-        // Clamp each component to its max in the case of overflow.
-        if ((temp & idMask) < (total & idMask)) {
-            total |= idMask;
-        } else if ((temp & classMask) < (total & classMask)) {
-            total |= classMask;
-        } else if ((temp & elementMask) < (total & elementMask)) {
-            total |= elementMask;
-        } else {
-            total = temp;
-        }
-    }
-
-    return total;
-}
-
-static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
-{
-    return specificity(r1->selectorList()) < specificity(r2->selectorList());
-}
-
-CSSStyleSheet* CSSStyleSheet::parentStyleSheet()
-{
-    return m_ownerRule ? m_ownerRule->parentStyleSheet() : nullptr;
-}
-
-void CSSStyleSheet::sortRulesBySpecificity()
-{
-    std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
-}
-
-bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
-                                        MediaQuerySet* mediaQueries)
-{
-    if (!mediaQueries) {
-        return true;
-    }
-
-    return evaluator.eval(mediaQueries);
-}
-
-void CSSStyleSheet::collectRulesForImportedSheet()
-{
-    CSSImportRule* importRule = ownerRule();
-
-    if (matchesMediaQueries(
-            origin()->document()->styleResolver().mediaQueryEvaluator(),
-            importRule->mediaQuerySet())) {
-        collectRulesForSheet(allRules());
-    }
-}
-
-void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
-{
-    auto resolver = origin()->document()->styleResolver();
-    auto iter = rules.begin();
-    while (iter != rules.end()) {
-        if ((*iter)->isCSSStyleRule()) {
-            m_rules.push_back((CSSStyleRule*)(*iter));
-        } else if ((*iter)->isMediaRule()) {
-            CSSMediaRule* media = (CSSMediaRule*)(*iter);
-            const MediaQueryEvaluator& evaluator =
-                resolver.mediaQueryEvaluator();
-            if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
-                collectRulesForSheet(media->childRules());
-            }
-        }
-        iter++;
     }
 }
 
@@ -2687,6 +2549,7 @@ StyleResolver::StyleResolver(Document* document)
     , m_mediumFontSize(starFish()->defaultFontSizeMultiplier() *
                        DEFAULT_FONT_SIZE)
     , m_usesFirstLineRule(false)
+    , m_mediaQueryEvaluator(nullptr)
 {
 }
 

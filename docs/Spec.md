@@ -484,6 +484,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
 |  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
 |    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
+| [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | attribute | type | Specifies the style sheet language for this style sheet. |
+| | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
+| | attribute | ownerNode | The node that associates this style sheet with the document. |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |
 |  | method | double start(unsigned long index) | Returns the time for the start of the range with the given index. |
