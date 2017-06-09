@@ -180,7 +180,7 @@ Screen* Window::screen()
 
 float Window::devicePixelRatio()
 {
-    return starFish()->devicePixelRatio();
+    return m_screen->devicePixelRatio();
 }
 
 void Window::navigateAsync(ResourceURL* url)

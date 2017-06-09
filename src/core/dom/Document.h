@@ -158,7 +158,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    Window* window()
+    Window* window() const
     {
         return m_window;
     }

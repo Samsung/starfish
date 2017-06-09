@@ -1,11 +1,10 @@
 // https://drafts.csswg.org/cssom-view/#the-screen-interface
 
 interface Screen {
-  [Unimplemented] readonly attribute long availWidth;
-  [Unimplemented] readonly attribute long availHeight;
+  readonly attribute long availWidth;
+  readonly attribute long availHeight;
   readonly attribute long width;
   readonly attribute long height;
-  [Unimplemented] readonly attribute unsigned long colorDepth;
-  [Unimplemented] readonly attribute unsigned long pixelDepth;
+  readonly attribute unsigned long colorDepth;
+  readonly attribute unsigned long pixelDepth;
 };
-

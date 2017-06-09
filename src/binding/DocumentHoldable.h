@@ -36,8 +36,8 @@ public:
         return m_document;
     }
 
-    Window* window();
-    StarFish* starFish();
+    Window* window() const;
+    StarFish* starFish() const;
     ScriptBindingInstance* scriptBindingInstance();
 
 protected:
