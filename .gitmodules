@@ -15,4 +15,4 @@
 	url = git@github.sec.samsung.net:RS7-webtf/gcutil.git
 [submodule "third_party/escargot2"]
 	path = third_party/escargot
-	url = http://10.113.64.74/webtf/escargot2.git
+	url = git@github.sec.samsung.net:RS7-webtf/escargot2.git
