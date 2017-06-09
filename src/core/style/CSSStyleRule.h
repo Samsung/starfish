@@ -22,6 +22,7 @@
 
 namespace StarFish {
 
+class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule : public CSSRule {
     friend class StyleResolver;
@@ -74,10 +75,14 @@ public:
         return m_childRules;
     }
 
+    CSSRuleList* cssRules();
+
     unsigned length() const;
+    CSSRule* item(unsigned index) const;
 
 protected:
     GCVector<CSSRule*> m_childRules;
+    CSSRuleList* m_ruleList;
 
     void appendCSSTextForItems(String* result) const;
 };
@@ -144,12 +149,6 @@ public:
         return m_mediaQuerySet;
     }
 
-    void setParentStyleSheet(CSSStyleSheet* sheet)
-    {
-        STARFISH_ASSERT(sheet);
-        m_parentStyleSheet = sheet;
-    }
-
     CSSStyleSheet* parentStyleSheet()
     {
         return m_parentStyleSheet;
@@ -167,7 +166,6 @@ protected:
 
     String* m_strHref;
     MediaQuerySet* m_mediaQuerySet;
-    CSSStyleSheet* m_parentStyleSheet;
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
 };

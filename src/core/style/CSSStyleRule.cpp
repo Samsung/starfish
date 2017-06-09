@@ -23,6 +23,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/style/CSSRuleList.h"
 
 namespace StarFish {
 
@@ -74,20 +75,43 @@ String* CSSStyleRule::cssText() const
 
 CSSGroupingRule::CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules)
     : CSSRule(type)
+    , m_ruleList(nullptr)
 {
     m_childRules.clear();
     m_childRules.assign(rules.begin(), rules.end());
 }
 CSSGroupingRule::CSSGroupingRule(CSSGroupingRule& o)
     : CSSRule(o.type())
+    , m_ruleList(o.m_ruleList)
 {
     m_childRules.clear();
     m_childRules.assign(o.childRules().begin(), o.childRules().end());
 }
 
+CSSRuleList* CSSGroupingRule::cssRules()
+{
+    if (!m_ruleList) {
+        m_ruleList = new LiveCSSRuleList<CSSGroupingRule>(
+            const_cast<CSSGroupingRule*>(this));
+    }
+    return m_ruleList;
+}
+
 unsigned CSSGroupingRule::length() const
 {
     return m_childRules.size();
+}
+
+CSSRule* CSSGroupingRule::item(unsigned index) const
+{
+    if (index >= length()) {
+        return nullptr;
+    }
+    CSSRule* rule = m_childRules[index];
+    if (!rule->parentRule()) {
+        rule->setParentRule(const_cast<CSSGroupingRule*>(this));
+    }
+    return rule;
 }
 
 void CSSGroupingRule::appendCSSTextForItems(String* result) const
@@ -159,7 +183,6 @@ CSSImportRule::CSSImportRule(String* href, MediaQuerySet* media)
     : CSSRule(CSSRule::IMPORT_RULE)
     , m_strHref(href)
     , m_mediaQuerySet(media)
-    , m_parentStyleSheet(nullptr)
     , m_generatedSheet(nullptr)
     , m_styleSheetTextResource(nullptr)
 {

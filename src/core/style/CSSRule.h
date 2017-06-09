@@ -24,6 +24,7 @@ namespace StarFish {
 class CSSStyleRule;
 class CSSMediaRule;
 class CSSImportRule;
+class CSSStyleSheet;
 
 class CSSRule : public ScriptWrappable {
 public:
@@ -41,12 +42,16 @@ public:
     CSSRule(RuleType ruleType)
         : ScriptWrappable(this)
         , m_ruleType(ruleType)
+        , m_parentRule(nullptr)
+        , m_parentStyleSheet(nullptr)
     {
     }
 
     CSSRule(CSSRule& o)
         : ScriptWrappable(this)
         , m_ruleType(o.type())
+        , m_parentRule(o.m_parentRule)
+        , m_parentStyleSheet(o.m_parentStyleSheet)
     {
     }
 
@@ -112,8 +117,31 @@ public:
     {
     }
 
-private:
+    void setParentStyleSheet(CSSStyleSheet* parentSheet = nullptr)
+    {
+        m_parentStyleSheet = parentSheet;
+    }
+
+    void setParentRule(CSSRule* parentRule = nullptr)
+    {
+        m_parentRule = parentRule;
+    }
+
+    CSSRule* parentRule()
+    {
+        return m_parentRule;
+    }
+
+    CSSStyleSheet* parentStyleSheet()
+    {
+        return m_parentStyleSheet;
+    }
+
+protected:
     RuleType m_ruleType;
+
+    CSSRule* m_parentRule;
+    CSSStyleSheet* m_parentStyleSheet;
 };
 }
 
