@@ -52,6 +52,7 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
     F(CSSStyleDeclaration)                          \
     F(CSSStyleRule)                                 \
     F(CSSStyleSheet)                                \
+    F(CSSRuleList)                                  \
     F(Document)                                     \
     F(DocumentFragment)                             \
     F(DocumentType)                                 \

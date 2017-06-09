@@ -14,7 +14,7 @@ interface CSSImportRule : CSSRule {
 
 // https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface
 interface CSSGroupingRule : CSSRule {
-  [Unimplemented, SameObject] readonly attribute CSSRuleList cssRules;
+  [SameObject] readonly attribute CSSRuleList cssRules;
   [Unimplemented] unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
   [Unimplemented] void deleteRule(unsigned long index);
 };
