@@ -17,7 +17,6 @@
 #ifndef __StarFishVariableBasicString__
 #define __StarFishVariableBasicString__
 
-#include "StarFishConfig.h"
 #include "core/util/BasicString.h"
 
 namespace StarFish {

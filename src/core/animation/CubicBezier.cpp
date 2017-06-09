@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#include <core/animation/CubicBezier.h>
+#include "StarFishConfig.h"
+#include "core/animation/CubicBezier.h"
 #include <cmath>
 
 namespace StarFish {

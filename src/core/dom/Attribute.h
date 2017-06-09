@@ -17,8 +17,6 @@
 #ifndef __StarFishAttribute__
 #define __StarFishAttribute__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class Attribute;

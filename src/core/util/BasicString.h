@@ -17,8 +17,6 @@
 #ifndef __StarFishBasicString__
 #define __StarFishBasicString__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 template <typename T, typename Allocator>

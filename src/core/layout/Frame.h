@@ -17,7 +17,6 @@
 #ifndef __StarFishFrame__
 #define __StarFishFrame__
 
-#include "StarFishConfig.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 

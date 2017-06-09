@@ -17,8 +17,6 @@
 #ifndef __StarFishStorageManager__
 #define __StarFishStorageManager__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class StorageManager : public gc {

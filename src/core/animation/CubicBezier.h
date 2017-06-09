@@ -26,7 +26,6 @@
 
 #ifndef __StarFishCubicBezier__
 #define __StarFishCubicBezier__
-#include "StarFishConfig.h"
 
 namespace StarFish {
 

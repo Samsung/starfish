@@ -17,7 +17,6 @@
 #ifndef __StarFishStyleBackgroundData__
 #define __StarFishStyleBackgroundData__
 
-#include "StarFishConfig.h"
 #include "core/style/Style.h"
 
 namespace StarFish {

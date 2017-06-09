@@ -17,8 +17,6 @@
 #ifndef __Canvas__
 #define __Canvas__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class ImageData;

@@ -17,8 +17,6 @@
 #ifndef __Font__
 #define __Font__
 
-#include "StarFishConfig.h"
-
 #ifdef PORT_CANVAS_BACKEND_CAIRO
 #include <ft2build.h>
 #include FT_FREETYPE_H

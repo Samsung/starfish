@@ -17,8 +17,6 @@
 #ifndef __StarFishMessages__
 #define __StarFishMessages__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 // Reasons
 static const char* CALLED_CONSTRUCTOR_WITHOUT_NEW =

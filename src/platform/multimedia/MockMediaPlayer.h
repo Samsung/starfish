@@ -17,7 +17,6 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaPlayer__)
 #define __StarFishMockMediaPlayer__
 
-#include "StarFishConfig.h"
 #include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
