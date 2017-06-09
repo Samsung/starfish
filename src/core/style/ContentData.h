@@ -17,8 +17,6 @@
 #ifndef __StarFishContentData__
 #define __StarFishContentData__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class TextContentData {

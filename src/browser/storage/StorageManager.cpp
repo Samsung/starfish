@@ -15,7 +15,6 @@
  */
 
 #include "StarFishConfig.h"
-
 #include "StorageManager.h"
 
 namespace StarFish {

@@ -17,8 +17,6 @@
 #ifndef __StarFishUnit__
 #define __StarFishUnit__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class String;

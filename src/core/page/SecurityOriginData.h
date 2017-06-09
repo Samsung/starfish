@@ -17,8 +17,6 @@
 #ifndef __StarFishSecurityOriginData__
 #define __StarFishSecurityOriginData__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class SecurityOriginData : public gc {

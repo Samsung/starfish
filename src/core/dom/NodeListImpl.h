@@ -17,8 +17,6 @@
 #ifndef __StarFishNodeListImpl__
 #define __StarFishNodeListImpl__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class Node;

@@ -17,7 +17,6 @@
 #ifndef __StarFishAnimation__
 #define __StarFishAnimation__
 
-#include "StarFishConfig.h"
 #include "core/animation/CubicBezier.h"
 #include "core/style/Style.h"
 

@@ -17,7 +17,6 @@
 #ifndef __StarFishMediaQueryEvaluator__
 #define __StarFishMediaQueryEvaluator__
 
-#include "StarFishConfig.h"
 #include "core/style/CSSParser.h"
 #include "core/style/MediaValues.h"
 

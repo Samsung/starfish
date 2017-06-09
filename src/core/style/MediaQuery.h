@@ -44,8 +44,6 @@
 #ifndef __StarFishMediaQuery__
 #define __StarFishMediaQuery__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class String;

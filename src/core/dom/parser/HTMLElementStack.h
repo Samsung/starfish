@@ -42,8 +42,6 @@
 #ifndef __StarFishHTMLElementStack__
 #define __StarFishHTMLElementStack__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class DocumentFragment;

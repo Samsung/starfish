@@ -17,7 +17,6 @@
 #ifndef __StarFishBorderImage__
 #define __StarFishBorderImage__
 
-#include "StarFishConfig.h"
 #include "core/style/BorderImageLength.h"
 #include "core/style/Style.h"
 

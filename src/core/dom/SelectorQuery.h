@@ -17,8 +17,6 @@
 #ifndef __StarFishSelectorQuery__
 #define __StarFishSelectorQuery__
 
-#include "StarFishConfig.h"
-
 namespace StarFish {
 
 class Element;
