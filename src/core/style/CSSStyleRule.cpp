@@ -113,11 +113,11 @@ CSSConditionRule::CSSConditionRule(RuleType type, GCVector<CSSRule*>& rules)
     m_conditionText = String::emptyString;
 }
 
-CSSConditionRule::CSSConditionRule(CSSConditionRule& condition_rule)
-    : CSSConditionRule(condition_rule)
+CSSConditionRule::CSSConditionRule(CSSConditionRule& conditionRule)
+    : CSSGroupingRule(conditionRule)
 {
-    if (condition_rule.m_conditionText) {
-        m_conditionText = condition_rule.m_conditionText;
+    if (conditionRule.m_conditionText) {
+        m_conditionText = conditionRule.m_conditionText;
     } else {
         m_conditionText = String::emptyString;
     }
