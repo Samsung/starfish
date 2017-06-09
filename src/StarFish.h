@@ -481,12 +481,6 @@ public:
         return m_screenInfo;
     }
 
-    float devicePixelRatio()
-    {
-        // TODO: consider page zoom factor.
-        return screenInfo().deviceScaleFactor;
-    }
-
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG

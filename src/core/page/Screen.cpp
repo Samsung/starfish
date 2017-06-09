@@ -18,16 +18,48 @@
 #include "StarFish.h"
 #include "core/page/Screen.h"
 #include "core/modules/window/Window.h"
+#include "platform/public/ScreenInfo.h"
 
 namespace StarFish {
 
-int32_t Screen::width()
+int32_t Screen::availWidth() const
 {
-    return starFish()->window()->width();
+    return starFish()->screenInfo().availableRect.size().width();
 }
 
-int32_t Screen::height()
+int32_t Screen::availHeight() const
 {
-    return starFish()->window()->height();
+    return starFish()->screenInfo().availableRect.size().height();
+}
+
+int32_t Screen::width() const
+{
+    return starFish()->screenInfo().rect.size().width();
+}
+
+int32_t Screen::height() const
+{
+    return starFish()->screenInfo().rect.size().height();
+}
+
+uint32_t Screen::colorDepth() const
+{
+    return starFish()->screenInfo().depth;
+}
+
+uint32_t Screen::pixelDepth() const
+{
+    return starFish()->screenInfo().depthPerComponent;
+}
+
+float Screen::devicePixelRatio() const
+{
+    // TODO: consider page zoom factor.
+    return starFish()->screenInfo().deviceScaleFactor;
+}
+
+bool Screen::isMonochrome() const
+{
+    return starFish()->screenInfo().isMonochrome;
 }
 }

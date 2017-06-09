@@ -22,12 +22,12 @@
 
 namespace StarFish {
 
-Window* DocumentHoldable::window()
+Window* DocumentHoldable::window() const
 {
     return m_document->window();
 }
 
-StarFish* DocumentHoldable::starFish()
+StarFish* DocumentHoldable::starFish() const
 {
     return window()->starFish();
 }

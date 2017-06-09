@@ -159,7 +159,7 @@ public:
     }
 #endif
 
-    StarFish* starFish()
+    StarFish* starFish() const
     {
         return m_starFish;
     }

@@ -22,6 +22,7 @@
 #include "core/modules/window/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/UnitHelper.h"
+#include "core/page/Screen.h"
 
 namespace StarFish {
 
@@ -121,43 +122,29 @@ int32_t MediaValues::screenWidth() const
 {
     // TODO: The current screen area is same as the viewport area.
     // The screen area for the device area should be considered later.
-    return m_frame->document()
-        ->window()
-        ->starFish()
-        ->screenInfo()
-        .rect.size()
-        .width();
+    return m_frame->document()->window()->screen()->width();
 }
 
 int32_t MediaValues::screenHeight() const
 {
     // TODO: The current screen area is same as the viewport area.
     // The screen area for the device area should be considered later.
-    return m_frame->document()
-        ->window()
-        ->starFish()
-        ->screenInfo()
-        .rect.size()
-        .height();
+    return m_frame->document()->window()->screen()->height();
 }
 
 float MediaValues::devicePixelRatio() const
 {
-    return m_frame->document()->window()->starFish()->devicePixelRatio();
+    return m_frame->document()->window()->screen()->devicePixelRatio();
 }
 
 int32_t MediaValues::colorBitsPerComponent() const
 {
-    return m_frame->document()
-        ->window()
-        ->starFish()
-        ->screenInfo()
-        .depthPerComponent;
+    return m_frame->document()->window()->screen()->pixelDepth();
 }
 
 bool MediaValues::isMonochrome() const
 {
-    return m_frame->document()->window()->starFish()->screenInfo().isMonochrome;
+    return m_frame->document()->window()->screen()->isMonochrome();
 }
 
 } /* namespace StarFish */

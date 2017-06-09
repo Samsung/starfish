@@ -38,8 +38,14 @@ public:
         return DocumentHoldable::scriptBindingInstance();
     }
 
-    int32_t width();
-    int32_t height();
+    int32_t availWidth() const;
+    int32_t availHeight() const;
+    int32_t width() const;
+    int32_t height() const;
+    uint32_t colorDepth() const;
+    uint32_t pixelDepth() const;
+    float devicePixelRatio() const;
+    bool isMonochrome() const;
 };
 }
 

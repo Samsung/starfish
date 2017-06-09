@@ -23,7 +23,7 @@ class StarFish;
 
 class StarFishHoldable {
 public:
-    StarFish* starFish()
+    StarFish* starFish() const
     {
         return m_starFish;
     }
