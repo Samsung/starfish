@@ -53,6 +53,7 @@ public:
     }
 
     String* cssText() const override;
+    CSSStyleDeclaration* style() const;
 
 protected:
     GCDeque<CSSSelector*>* m_selectorList;

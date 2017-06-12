@@ -212,4 +212,14 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
 #undef SET_ATTR
     }
 }
+
+String* CSSStyleDeclaration::cssText() const
+{
+    return generateCSSText();
+}
+
+void CSSStyleDeclaration::setCssText(String* text)
+{
+    // TODO
+}
 }

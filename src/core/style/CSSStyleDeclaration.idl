@@ -2,7 +2,7 @@
 
 [ObjectType=Exposable]
 interface CSSStyleDeclaration {
-  [Unimplemented, CEReactions] attribute DOMString cssText;
+  [CEReactions] attribute DOMString cssText;
   readonly attribute unsigned long length;
   getter DOMString item(unsigned long index);
   [STARFISH_ENABLE_TEST] DOMString getPropertyValue(DOMString property);

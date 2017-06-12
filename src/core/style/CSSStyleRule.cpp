@@ -73,6 +73,11 @@ String* CSSStyleRule::cssText() const
     return result;
 }
 
+CSSStyleDeclaration* CSSStyleRule::style() const
+{
+    return m_styleDeclaration;
+}
+
 CSSGroupingRule::CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules)
     : CSSRule(type)
     , m_ruleList(nullptr)

@@ -2,7 +2,7 @@
 
 interface CSSStyleRule : CSSRule {
   attribute DOMString selectorText;
-  [Unimplemented, SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+  [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };
 
 // https://drafts.csswg.org/cssom/#the-cssimportrule-interface
