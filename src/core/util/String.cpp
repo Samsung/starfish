@@ -760,6 +760,9 @@ void String::split(char delim, GCVector<String*>& tokens)
         prev_pos = ++pos;
     }
 
+    if (pos == SIZE_MAX)
+        pos = length();
+
     tokens.push_back(new StringView(this, prev_pos, pos)); // Last word
 }
 
@@ -782,6 +785,8 @@ String* String::trim()
                 break;
             }
         } while (last--);
+    } else {
+        return this;
     }
 
     if (first == 0 && ((last + 1) == length())) {

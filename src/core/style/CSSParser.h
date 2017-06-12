@@ -23,7 +23,8 @@
 
 namespace StarFish {
 
-static bool isDigit(char c)
+template <typename CharType>
+inline bool isDigit(CharType c)
 {
     if (c >= '0' && c <= '9') {
         return true;
@@ -31,7 +32,8 @@ static bool isDigit(char c)
     return false;
 }
 
-static bool isAlpha(char c)
+template <typename CharType>
+inline bool isAlpha(CharType c)
 {
     if (c >= 'a' && c <= 'z') {
         return true;
@@ -39,7 +41,8 @@ static bool isAlpha(char c)
     return false;
 }
 
-static bool isNameChar(char c)
+template <typename CharType>
+inline bool isNameChar(CharType c)
 {
     if (isAlpha(c) || isDigit(c) || c == '_' || c == '-') {
         return true;
@@ -47,7 +50,8 @@ static bool isNameChar(char c)
     return false;
 }
 
-static bool isQuote(char c)
+template <typename CharType>
+inline bool isQuote(CharType c)
 {
     if (c == '"' || c == '\'') {
         return true;

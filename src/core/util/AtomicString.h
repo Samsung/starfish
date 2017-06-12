@@ -22,6 +22,10 @@ namespace StarFish {
 class StarFish;
 class String;
 
+typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
+                           GCUtil::gc_malloc_ignore_off_page_allocator<String*>>
+    AtomicStringMap;
+
 class AtomicString {
     friend class StarFish;
     explicit AtomicString(String* str)
@@ -34,8 +38,12 @@ public:
 
     static AtomicString createAtomicString(StarFish* sf, String* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str);
+    static AtomicString createAtomicString(StarFish* sf, const char* str,
+                                           size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
+    static AtomicString createAttrAtomicString(StarFish* sf, const char* str,
+                                               size_t length);
     static AtomicString emptyAtomicString();
 
     bool isEmptyAtomicString();
@@ -57,25 +65,6 @@ public:
 
 private:
     String* m_string;
-};
-}
-
-namespace std {
-template <>
-struct hash<StarFish::AtomicString> {
-    size_t operator()(const StarFish::AtomicString& qn) const
-    {
-        return hash<StarFish::String*>()(qn.string());
-    }
-};
-
-template <>
-struct equal_to<StarFish::AtomicString> {
-    size_t operator()(const StarFish::AtomicString& lqn,
-                      const StarFish::AtomicString& rqn) const
-    {
-        return lqn.string() == rqn.string();
-    }
 };
 }
 #endif

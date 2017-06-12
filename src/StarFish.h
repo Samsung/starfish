@@ -561,7 +561,7 @@ protected:
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
-    GCUnorderedMap<std::string, AtomicString> m_atomicStringMap;
+    AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
 };
 

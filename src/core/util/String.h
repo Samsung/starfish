@@ -501,6 +501,42 @@ protected:
     TightASCIIString m_data;
 };
 
+// WARNING: this class does not copy buffer
+class StringDataOnStackASCII : public String {
+public:
+    StringDataOnStackASCII(const char* str, size_t length)
+        : m_data(str)
+        , m_length(length)
+    {
+    }
+
+    inline void* operator new(size_t size) = delete;
+
+    virtual size_t length() const override
+    {
+        return m_length;
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.hasASCIIContent = true;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data;
+        ret.length = m_length;
+        return ret;
+    }
+
+protected:
+    const char* m_data;
+    size_t m_length;
+};
+
 class StringDataNonGCASCII : public String {
 public:
     StringDataNonGCASCII(const char* str)
@@ -589,6 +625,42 @@ protected:
     TightUTF32String m_data;
 };
 
+// WARNING: this class does not copy buffer
+class StringDataOnStackUTF32 : public String {
+public:
+    StringDataOnStackUTF32(const char32_t* str, size_t length)
+        : m_data(str)
+        , m_length(length)
+    {
+    }
+
+    inline void* operator new(size_t size) = delete;
+
+    virtual size_t length() const override
+    {
+        return m_length;
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.hasASCIIContent = false;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data;
+        ret.length = m_length;
+        return ret;
+    }
+
+protected:
+    const char32_t* m_data;
+    size_t m_length;
+};
+
 class StringView : public String {
 public:
     StringView(String* string, size_t start, size_t end)
@@ -596,6 +668,8 @@ public:
         , m_start(start)
         , m_end(end)
     {
+        STARFISH_ASSERT(start <= end);
+        STARFISH_ASSERT(end <= m_string->length());
     }
 
     StringView(String* string)

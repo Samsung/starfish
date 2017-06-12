@@ -27,47 +27,96 @@ AtomicString::AtomicString()
 
 AtomicString AtomicString::createAtomicString(StarFish* sf, String* str)
 {
-    return createAtomicString(sf, str->utf8Data());
+    auto iter = sf->m_atomicStringMap.find(str);
+    if (sf->m_atomicStringMap.end() == iter) {
+        sf->m_atomicStringMap.insert(str);
+        return AtomicString(str);
+    } else {
+        return AtomicString(iter.operator*());
+    }
 }
 
 AtomicString AtomicString::createAtomicString(StarFish* sf, const char* str)
 {
-    std::string data = str;
-    auto& map = sf->m_atomicStringMap;
-    auto iter = map.find(data);
+    return createAtomicString(sf, str, strlen(str));
+}
 
-    if (iter != map.end()) {
-        return iter->second;
+AtomicString AtomicString::createAtomicString(StarFish* sf, const char* cStr,
+                                              size_t length)
+{
+    StringDataOnStackASCII str(cStr, length);
+    auto iter = sf->m_atomicStringMap.find(&str);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataASCII(cStr, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
     }
-
-    String* s = String::fromUTF8(data.c_str());
-    AtomicString name(s);
-    map.insert(std::make_pair(data, name));
-
-    return name;
 }
 
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 {
-    return createAttrAtomicString(sf, str->utf8Data());
+    auto data = str->bufferAccessData();
+    if (data.hasASCIIContent) {
+        char* buf = (char*)alloca(data.length + 1);
+        buf[data.length] = 0;
+        for (size_t i = 0; i < data.length; i++) {
+            buf[i] = ::tolower(data.asciiData()[i]);
+        }
+        StringDataOnStackASCII str(buf, data.length);
+
+        auto iter = sf->m_atomicStringMap.find(&str);
+        if (sf->m_atomicStringMap.end() == iter) {
+            String* string = new StringDataASCII(buf, data.length);
+            sf->m_atomicStringMap.insert(string);
+            return AtomicString(string);
+        } else {
+            return AtomicString(iter.operator*());
+        }
+    } else {
+        char32_t* buf = (char32_t*)alloca((data.length + 1) * sizeof(char32_t));
+        buf[data.length] = 0;
+        for (size_t i = 0; i < data.length; i++) {
+            buf[i] = ::tolower(data.utf32Data()[i]);
+        }
+        StringDataOnStackUTF32 str(buf, data.length);
+
+        auto iter = sf->m_atomicStringMap.find(&str);
+        if (sf->m_atomicStringMap.end() == iter) {
+            String* string = new StringDataUTF32(
+                std::move(TightUTF32String(buf, data.length)));
+            sf->m_atomicStringMap.insert(string);
+            return AtomicString(string);
+        } else {
+            return AtomicString(iter.operator*());
+        }
+    }
 }
 
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
 {
-    std::string data = str;
-    std::transform(data.begin(), data.end(), data.begin(), ::tolower);
-    auto& map = sf->m_atomicStringMap;
-    auto iter = map.find(data);
+    return AtomicString::createAttrAtomicString(sf, str, strlen(str));
+}
 
-    if (iter != map.end()) {
-        return iter->second;
+AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
+                                                  size_t length)
+{
+    char* buf = (char*)alloca(length);
+    buf[length] = 0;
+    for (size_t i = 0; i < length; i++) {
+        buf[i] = ::tolower(str[i]);
     }
+    StringDataOnStackASCII newStr(buf, length);
 
-    String* s = String::fromUTF8(data.c_str());
-    AtomicString name(s);
-    map.insert(std::make_pair(data, name));
-
-    return name;
+    auto iter = sf->m_atomicStringMap.find(&newStr);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataASCII(buf, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
+    }
 }
 
 AtomicString AtomicString::emptyAtomicString()
