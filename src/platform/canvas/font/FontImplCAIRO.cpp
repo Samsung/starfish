@@ -107,13 +107,12 @@ public:
         int glyph_count;
         cairo_text_extents_t extents;
 
-        if (str.originalString()->isASCIIString()) {
+        if (str.originalString()->hasASCIIContent()) {
             bool isShort = str.length() < 128;
+            auto data = str.bufferAccessData();
             char* buf =
                 isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
-            strncpy(buf,
-                    str.originalString()->asASCIIString()->data() + str.start(),
-                    str.end() - str.start());
+            strncpy(buf, data.asciiData(), data.length);
             buf[str.length()] = 0;
 
             cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, buf,
