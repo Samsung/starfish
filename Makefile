@@ -870,6 +870,36 @@ test_all:
 	make csswg_test_all
 	make internal_test
 
+test_pr:
+	make vendor_test_blink_fast_html
+	make vendor_test_blink_fast_dom
+	make vendor_test_blink_fast_css
+	make vendor_test_blink_fast_etc
+	make vendor_test_gecko_layout
+	make vendor_test_webkit_fast_html
+	make vendor_test_webkit_fast_css
+	make vendor_test_webkit_fast_etc
+	make vendor_test_webkit_fast_dom
+	make web_platform_test_dom
+	make web_platform_test_html
+	make web_platform_test_dom_events
+	make web_platform_test_progress_events
+	make web_platform_test_page_visibility
+	make web_platform_test_xhr
+	make dom_conformance_test
+	make dom_conformance_test_webkit
+	make dom_conformance_test_blink
+	make dom_conformance_test_gecko
+	make csswg_test_all
+	make bidi_test
+	make internal_test_gitlab_prerequisite div=5
+	make internal_test_part1
+	make internal_test_part2
+	make internal_test_part3
+	make internal_test_part4
+	make internal_test_part5
+	make internal_test_manual
+
 reftest_emulator_2.3:
 	./tool/reftest/reftest_runner.sh emulator 2.3 all
 reftest_emulator_3.0:
@@ -882,4 +912,7 @@ reftest_target_3.0:
 tidy:
 	./tool/check_tidy.py > error_report
 
-.PHONY: clean tct
+tidy-update:
+	./tool/check_tidy.py -up ./src/
+
+.PHONY: clean tct test_pr tidy tidy-update
