@@ -122,6 +122,17 @@ public:
         return *this;
     }
 
+    BasicString<T, Allocator> toBasicStringAndMakeEmpty()
+    {
+        BasicString<T, Allocator> basicString;
+
+        basicString.m_buffer = BasicString<T, Allocator>::m_buffer;
+        basicString.m_size = BasicString<T, Allocator>::m_size;
+
+        makeEmpty();
+        return basicString;
+    }
+
 protected:
     constexpr size_t toCapacity(size_t size) const
     {

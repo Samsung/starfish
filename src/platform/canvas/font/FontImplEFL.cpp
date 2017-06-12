@@ -172,13 +172,12 @@ public:
             return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
-        if (str.originalString()->isASCIIString()) {
+        if (str.originalString()->hasASCIIContent()) {
             bool isShort = str.length() < 128;
+            auto data = str.bufferAccessData();
             char* buf =
                 isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
-            strncpy(buf,
-                    str.originalString()->asASCIIString()->data() + str.start(),
-                    str.end() - str.start());
+            strncpy(buf, data.asciiData(), data.length);
             buf[str.length()] = 0;
             evas_object_text_text_set(m_text, buf);
             if (!isShort) {

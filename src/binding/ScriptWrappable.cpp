@@ -212,9 +212,9 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
 
 StringRef* createScriptString(String* str)
 {
-    if (str->isASCIIString()) {
-        return StringRef::fromASCII(str->asASCIIString()->data(),
-                                    str->asASCIIString()->length());
+    if (str->hasASCIIContent()) {
+        auto data = str->bufferAccessData();
+        return StringRef::fromASCII(data.asciiData(), data.length);
     } else {
         UTF16StringDataNonGCStd out;
         for (size_t i = 0; i < str->length(); i++) {

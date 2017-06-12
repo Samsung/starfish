@@ -733,7 +733,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(StarFish* sf,
                                                      AtomicString name,
                                                      bool hasArguments)
 {
-    if (name.isEmptyAtomicString() || !name.string()->isASCIIString()) {
+    // FIXME(ksh8281) check hasASCIIContent is not enough for checking ascii
+    if (name.isEmptyAtomicString() || !name.string()->hasASCIIContent()) {
         return CSSSelector::PseudoNone;
     }
     StaticStrings* sstrs = sf->staticStrings();

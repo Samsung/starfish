@@ -85,19 +85,20 @@ static String* stripLeadingAndTrailingHTMLSpaces(String* string,
 
 String* stripLeadingAndTrailingHTMLSpaces(String* string)
 {
-    unsigned length = string->length();
+    auto data = string->bufferAccessData();
+    unsigned length = data.length;
 
     if (!length) {
         return String::emptyString;
     }
 
-    if (string->isASCIIString()) {
-        return stripLeadingAndTrailingHTMLSpaces<char>(
-            string, string->asASCIIString()->data(), length);
+    if (data.hasASCIIContent) {
+        return stripLeadingAndTrailingHTMLSpaces<char>(string, data.asciiData(),
+                                                       length);
     }
 
-    return stripLeadingAndTrailingHTMLSpaces<char32_t>(
-        string, string->asUTF32String()->data(), length);
+    return stripLeadingAndTrailingHTMLSpaces<char32_t>(string, data.utf32Data(),
+                                                       length);
 }
 /*
 String serializeForNumberType(const Decimal& number)

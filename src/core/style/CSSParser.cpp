@@ -274,7 +274,8 @@ public:
     UnitType getUnitType(String* unit)
     {
         if (unit == nullptr || unit->equals(String::emptyString) ||
-            !unit->isASCIIString()) {
+            !unit->hasASCIIContent()) { // FIXME(ksh8281) check hasASCIIContent
+                                        // is not enough for checking ascii
             return UnitType::UnknownType;
         }
 

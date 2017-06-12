@@ -199,7 +199,7 @@ public:
 
     double toDouble() const;
     // Note: toString method supports infinity and nan but fromString not.
-    String toString() const;
+    String* toString() const;
 
     static Decimal fromDouble(double);
     // fromString supports following syntax EBNF:
@@ -261,8 +261,8 @@ inline String* stripLeadingAndTrailingHTMLSpaces(const UTF32String& vector)
 
 // An implementation of the HTML specification's algorithm to convert a number
 // to a string for number and range types.
-String serializeForNumberType(const Decimal&);
-String serializeForNumberType(double);
+String* serializeForNumberType(const Decimal&);
+String* serializeForNumberType(double);
 
 // Convert the specified string to a decimal/double. If the conversion fails,
 // the return value is fallback value or NaN if not specified.

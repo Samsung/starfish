@@ -20,7 +20,12 @@
 namespace StarFish {
 
 template <typename T, typename Allocator>
+class VariableBasicString;
+
+template <typename T, typename Allocator>
 class BasicString : public gc {
+    friend class VariableBasicString<T, Allocator>; // for
+                                                    // toBasicStringAndMakeEmpty
 protected:
     typedef typename Allocator::template rebind<T>::other TAllocType;
 
@@ -270,6 +275,7 @@ protected:
     void makeEmpty()
     {
         m_buffer = allocate(1);
+        m_buffer[0] = 0;
         m_size = 0;
     }
 
@@ -319,12 +325,10 @@ protected:
     // Important! `m_size` update should follow `deallocate()`
     void deallocate()
     {
-        if (m_buffer) {
-            STARFISH_ASSERT(capacity() > 0);
+        if (m_buffer)
             Allocator().deallocate(m_buffer, capacity());
-            m_buffer = nullptr;
-            m_size = 0;
-        }
+        m_buffer = nullptr;
+        m_size = 0;
     }
 
     static int _compare(size_t n1, size_t n2)
