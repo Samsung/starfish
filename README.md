@@ -7,6 +7,8 @@ Starfish is a lightweight Web browser engine for mobile and wearable devices.
 ```sh
 git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
 cd starfish
+git submodule init
+git submodule update
 ./build_third_party.sh
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
 ninja -C out/debug starfish.x64.debug
@@ -51,6 +53,8 @@ The following Makefile-based build system is to be deprecated.
 ``` sh
 git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
 cd starfish
+git submodule init
+git submodule update
 ./build_third_party.sh
 make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
 ```
