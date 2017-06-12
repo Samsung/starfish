@@ -148,7 +148,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    String* toString()
+    String* toString() const
     {
         std::string stdStr = String::fromFloat(m_value)->utf8Data();
         if (m_kind == PX)
@@ -853,7 +853,7 @@ public:
     {
     }
 
-    KeyKind keyKind()
+    KeyKind keyKind() const
     {
         return m_keyKind;
     }
@@ -863,9 +863,9 @@ public:
         m_keyKind = kind;
     }
 
-    String* keyName();
+    String* keyName() const;
 
-    ValueKind valueKind()
+    ValueKind valueKind() const
     {
         return m_valueKind;
     }
@@ -897,134 +897,134 @@ public:
         return valueKind() == Inherit;
     }
 
-    DisplayValue displayValue()
+    DisplayValue displayValue() const
     {
         STARFISH_ASSERT(m_valueKind == DisplayValueKind);
         return m_value.m_display;
     }
 
-    PositionValue positionValue()
+    PositionValue positionValue() const
     {
         STARFISH_ASSERT(m_valueKind == PositionValueKind);
         return m_value.m_position;
     }
 
-    FloatValue floatValue()
+    FloatValue floatValue() const
     {
         STARFISH_ASSERT(m_valueKind == FloatValueKind);
         return m_value.m_float;
     }
 
-    ClearValue clearValue()
+    ClearValue clearValue() const
     {
         STARFISH_ASSERT(m_valueKind == ClearValueKind);
         return m_value.m_clear;
     }
 
-    VerticalAlignValue verticalAlignValue()
+    VerticalAlignValue verticalAlignValue() const
     {
         STARFISH_ASSERT(m_valueKind == VerticalAlignValueKind);
         return m_value.m_verticalAlign;
     }
 
-    SideValue sideValue()
+    SideValue sideValue() const
     {
         STARFISH_ASSERT(m_valueKind == SideValueKind);
         return m_value.m_side;
     }
 
-    FontSizeValue fontSizeValue()
+    FontSizeValue fontSizeValue() const
     {
         STARFISH_ASSERT(m_valueKind == FontSizeValueKind);
         return m_value.m_fontSize;
     }
 
-    FontStyleValue fontStyleValue()
+    FontStyleValue fontStyleValue() const
     {
         STARFISH_ASSERT(m_valueKind == FontStyleValueKind);
         return m_value.m_fontStyle;
     }
 
-    FontWeightValue fontWeightValue()
+    FontWeightValue fontWeightValue() const
     {
         STARFISH_ASSERT(m_valueKind == FontWeightValueKind);
         return m_value.m_fontWeight;
     }
 
-    DirectionValue directionValue()
+    DirectionValue directionValue() const
     {
         STARFISH_ASSERT(m_valueKind == DirectionValueKind);
         return m_value.m_direction;
     }
 
-    WhiteSpaceValue whiteSpaceValue()
+    WhiteSpaceValue whiteSpaceValue() const
     {
         STARFISH_ASSERT(m_valueKind == WhiteSpaceValueKind);
         return m_value.m_whiteSpace;
     }
 
-    UnicodeBidiValue unicodeBidiValue()
+    UnicodeBidiValue unicodeBidiValue() const
     {
         STARFISH_ASSERT(m_valueKind == UnicodeBidiValueKind);
         return m_value.m_unicodeBidi;
     }
 
-    BorderStyleValue borderStyleValue()
+    BorderStyleValue borderStyleValue() const
     {
         STARFISH_ASSERT(m_valueKind == BorderStyleValueKind);
         return m_value.m_borderStyle;
     }
 
-    BorderWidthValue borderWidthValue()
+    BorderWidthValue borderWidthValue() const
     {
         STARFISH_ASSERT(m_valueKind == BorderWidthValueKind);
         return m_value.m_borderWidth;
     }
 
-    CSSLength lengthValue()
+    CSSLength lengthValue() const
     {
         STARFISH_ASSERT(m_valueKind == Length);
         return m_value.m_length;
     }
 
-    CSSAngle angleValue()
+    CSSAngle angleValue() const
     {
         STARFISH_ASSERT(m_valueKind == Angle);
         return m_value.m_angle;
     }
 
-    CSSTime timeValue()
+    CSSTime timeValue() const
     {
         STARFISH_ASSERT(m_valueKind == Time);
         return m_value.m_time;
     }
 
-    CSSTransformFunctions* transformValue()
+    CSSTransformFunctions* transformValue() const
     {
         STARFISH_ASSERT(m_valueKind == TransformFunctions);
         return m_value.m_transforms;
     }
 
-    float numberValue()
+    float numberValue() const
     {
         STARFISH_ASSERT(m_valueKind == Number);
         return m_value.m_floatValue;
     }
 
-    int32_t int32Value()
+    int32_t int32Value() const
     {
         STARFISH_ASSERT(m_valueKind == Int32);
         return m_value.m_int32Value;
     }
 
     // 0~1
-    float percentageValue()
+    float percentageValue() const
     {
         STARFISH_ASSERT(m_valueKind == Percentage);
         return m_value.m_floatValue;
     }
 
-    String* stringValue()
+    String* stringValue() const
     {
         STARFISH_ASSERT(m_valueKind == StringValueKind);
         return m_value.m_stringValue;
@@ -1032,7 +1032,7 @@ public:
 
     String* urlValue(ResourceURL* urlOfStyleSheet);
 
-    String* urlStringValue()
+    String* urlStringValue() const
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
         return m_value.m_stringValue;
@@ -1044,78 +1044,78 @@ public:
         m_value.m_stringValue = value;
     }
 
-    BackgroundRepeatValue backgroundRepeatValue()
+    BackgroundRepeatValue backgroundRepeatValue() const
     {
         STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
         return m_value.m_backgroundRepeat;
     }
 
-    ValueList* multiValue()
+    ValueList* multiValue() const
     {
         STARFISH_ASSERT(m_valueKind == ValueListKind);
         return m_value.m_multiValue;
     }
 
-    OverflowValue overflowValue()
+    OverflowValue overflowValue() const
     {
         STARFISH_ASSERT(m_valueKind == OverflowValueKind);
         return m_value.m_overflow;
     }
 
-    VisibilityValue visibility()
+    VisibilityValue visibility() const
     {
         STARFISH_ASSERT(m_valueKind == VisibilityValueKind);
         return m_value.m_visibility;
     }
 
-    TextDecorationValue textDecoration()
+    TextDecorationValue textDecoration() const
     {
         return m_value.m_textDecoration;
     }
 
-    Unit::Color colorValue()
+    Unit::Color colorValue() const
     {
         STARFISH_ASSERT(m_valueKind == ColorValueKind);
         return m_value.m_color;
     }
 
-    NamedColor::NamedColorValue namedColorValue()
+    NamedColor::NamedColorValue namedColorValue() const
     {
         STARFISH_ASSERT(m_valueKind == NamedColorValueKind);
         return m_value.m_namedColor;
     }
 
-    BorderCollapseValue borderCollapseValue()
+    BorderCollapseValue borderCollapseValue() const
     {
         STARFISH_ASSERT(m_valueKind == BorderCollapseValueKind);
         return m_value.m_borderCollapse;
     }
 
-    CaptionSideValue captionSideValue()
+    CaptionSideValue captionSideValue() const
     {
         STARFISH_ASSERT(m_valueKind == CaptionSideValueKind);
         return m_value.m_captionSide;
     }
 
-    TableLayoutValue tableLayoutValue()
+    TableLayoutValue tableLayoutValue() const
     {
         STARFISH_ASSERT(m_valueKind == TableLayoutValueKind);
         return m_value.m_tableLayout;
     }
 
-    TransitionPropertyValue transitionPropertyValue()
+    TransitionPropertyValue transitionPropertyValue() const
     {
         STARFISH_ASSERT(m_valueKind == TransitionPropertyValueKind);
         return m_value.m_transitionProperty;
     }
 
-    TransitionTimingFunctionValue transitionTimingFunctionValue()
+    TransitionTimingFunctionValue transitionTimingFunctionValue() const
     {
         STARFISH_ASSERT(m_valueKind == TransitionTimingFunctionValueKind);
         return m_value.m_transitionTimingFunction;
     }
 
-    String* attrValue()
+    String* attrValue() const
     {
         STARFISH_ASSERT(m_valueKind == Attr);
         return m_value.m_stringValue;
@@ -1298,7 +1298,7 @@ public:
         return m_value;
     }
 
-    String* toString();
+    String* toString() const;
 
     void setLengthValue(const char* value);
 

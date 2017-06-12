@@ -61,7 +61,7 @@ public:
         m_styleType = styleType;
     }
 
-    String* generateCSSText();
+    String* generateCSSText() const;
 
     void notifyNeedsStyleRecalc();
 
@@ -125,6 +125,9 @@ public:
     uint32_t length() const;
 
     String* item(uint32_t index);
+
+    String* cssText() const;
+    void setCssText(String* text);
 
     String* getPropertyValue(String* name);
     void setProperty(String* name, String* value, String* priority);

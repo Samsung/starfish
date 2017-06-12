@@ -222,7 +222,7 @@ String* CSSTransformFunctions::toString()
     return result;
 }
 
-String* CSSStyleValuePair::keyName()
+String* CSSStyleValuePair::keyName() const
 {
     switch (keyKind()) {
 #define ADD_CASE_FOR_KEYNAME(Name, name, cssname) \
@@ -929,7 +929,7 @@ void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
     }
 }
 
-String* CSSStyleDeclaration::generateCSSText()
+String* CSSStyleDeclaration::generateCSSText() const
 {
     String* txt = String::emptyString;
     for (size_t i = 0; i < m_cssValues.size(); i++) {
@@ -1116,7 +1116,7 @@ void CSSStyleDeclaration::setBorder(String* value, bool isImportant)
 GEN_FOURSIDE(ADD_SET_BORDER)
 #undef ADD_SET_BORDER
 
-String* CSSStyleValuePair::toString()
+String* CSSStyleValuePair::toString() const
 {
     switch (valueKind()) {
     case CSSStyleValuePair::ValueKind::Initial:
