@@ -40,6 +40,7 @@ private:
 
     ImageFormat parseImageFormat();
     void readPNGFile();
+    void readJPGFile();
 
 protected:
     ImageDecoder()
