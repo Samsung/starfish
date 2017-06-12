@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,30 +14,36 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishStyleSheet__
-#define __StarFishStyleSheet__
+#ifndef __StarFishStyleSheetList__
+#define __StarFishStyleSheetList__
 
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class StyleSheet : public ScriptWrappable {
+class Document;
+class StyleSheet;
+
+class StyleSheetList : public ScriptWrappable {
 public:
-    StyleSheet()
+    StyleSheetList(Document* document)
         : ScriptWrappable(this)
+        , m_document(document)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isStyleSheet() const override;
+    virtual bool isStyleSheetList() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     /* DOM APIs */
-    virtual String* type() const = 0;
-    virtual String* href() const = 0;
-    virtual Node* ownerNode() const = 0;
+    StyleSheet* item(unsigned long index);
+    size_t length() const;
+
+private:
+    Document* m_document;
 };
+}
 
-} /* namespace StarFish */
-
-#endif /* __StarFishStyleSheet__ */
+#endif

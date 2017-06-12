@@ -34,8 +34,9 @@ class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class ImageData;
-class ResourceRequest;
 class Location;
+class ResourceRequest;
+class StyleSheetList;
 class Text;
 class ResourceURL;
 class Window;
@@ -256,6 +257,9 @@ public:
     void invalidNamedAccessCacheIfNeeded();
 
     Element* elementFromPoint(float x, float y);
+
+    StyleSheetList* styleSheets();
+
     ImageData* brokenImage();
     String* characterSet()
     {
@@ -357,6 +361,7 @@ protected:
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;
+    StyleSheetList* m_styleSheetList;
     ImageData* m_brokenImage;
     ScriptBindingInstance* m_scriptBindingInstance;
     VisibilityState m_pageVisibilityState;

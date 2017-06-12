@@ -83,7 +83,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | The childNodes interface contains methods that are particular to Node objects that can have a parent. |
 |  | method | void remove() | Removes this childNodes from the children list of its parent. |
 | [Comment](https://dom.spec.whatwg.org/#interface-comment) | interface | Comment | The Comment interface represents textual notations within markup; although it is generally not visually shown, such comments are available to be read in the source view |
-||constructor|Comment(optional DOMString data = "")|Returns a Comment object with the parameter as its textual content.|
+| | constructor | Comment(optional DOMString data = "") | Returns a Comment object with the parameter as its textual content. |
 | [CSSRule](https://drafts.csswg.org/cssom/#the-cssrule-interface) | interface | CSSRule | The CSSRule interface represents an abstract, base CSS style rule. Each distinct CSS style rule type is represented by a distinct interface that inherits from this interface. |
 |  | constant | STYLE_RULE = 1 |  |
 |  | constant | CHARSET_RULE = 2 |  |
@@ -487,6 +487,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | attribute | type | Specifies the style sheet language for this style sheet. |
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
+| [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | method | item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
+| | attribute | length | Return the number of CSS style sheets represented by the collection. |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |
 |  | method | double start(unsigned long index) | Returns the time for the start of the range with the given index. |
