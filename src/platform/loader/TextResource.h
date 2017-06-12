@@ -44,8 +44,7 @@ public:
 
     virtual size_t contentSize()
     {
-        return m_text->isASCIIString() ? m_text->length()
-                                       : 4 * m_text->length();
+        return m_text->contentLength();
     }
 
     virtual Type type()

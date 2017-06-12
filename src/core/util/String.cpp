@@ -205,17 +205,17 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len,
     return result;
 }
 
-UTF8StringDataNonGCStd utf32ToUtf8(const UTF32String& str, size_t start,
+UTF8StringDataNonGCStd utf32ToUtf8(const char32_t* str, size_t start,
                                    size_t end, bool ignoreZeroWidthChar)
 {
     UTF8StringDataNonGCStd ret;
     ret.reserve((end - start) * 2);
     char buffer[8];
     for (size_t i = start; i < end; i++) {
-        if (ignoreZeroWidthChar && String::isZeroWidthChar(str.data()[i])) {
+        if (ignoreZeroWidthChar && String::isZeroWidthChar(str[i])) {
             continue;
         }
-        size_t length = utf32ToUtf8(str.data()[i], buffer);
+        size_t length = utf32ToUtf8(str[i], buffer);
         if (length == 1) {
             ret.push_back(buffer[0]);
         } else if (length == 2) {
@@ -283,25 +283,235 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
 }
 
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
-    : String(false)
+    : String()
 {
+    UTF32String data;
     const char* end = src + len;
     while (end != src) {
         char32_t c;
         src += utf8ToUtf32(src, &src[len], c);
-        UTF32String::operator+=(c);
+        data += c;
     }
-    putDebugInfo();
+    m_data = data.toBasicStringAndMakeEmpty();
 }
 
-const char* String::utf8DataSlowCase(bool ignoreZeroWidthChar)
+// TODO use BufferAccessData for performance
+size_t String::indexOf(char32_t ch) const
 {
-    STARFISH_ASSERT(!isASCIIString());
-    if (ignoreZeroWidthChar) {
-        return utf32ToUtf8IgnoreZeroWidthChar(asUTF32String()->data(),
-                                              asUTF32String()->length());
+    for (size_t i = 0; i < length(); i++) {
+        if (charAt(i) == ch) {
+            return i;
+        }
     }
-    return utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length());
+    return SIZE_MAX;
+}
+
+// TODO use BufferAccessData for performance
+size_t String::lastIndexOf(char32_t ch) const
+{
+    for (size_t i = length(); i > 0; i--) {
+        if (charAt(i - 1) == ch) {
+            return i - 1;
+        }
+    }
+    return SIZE_MAX;
+}
+
+// TODO use BufferAccessData for performance
+bool String::equalsWithoutCase(const char* str) const
+{
+#ifndef NDEBUG
+    {
+        const char* c = str;
+        while (*c) {
+            STARFISH_ASSERT(!(*c & 0x80));
+            c++;
+        }
+    }
+#endif
+    size_t srcLen = strlen(str);
+    if (srcLen != length()) {
+        return false;
+    }
+    for (size_t i = 0; i < length(); i++) {
+        if (tolower(charAt(i)) != tolower((char32_t)str[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool String::equals(const char* str) const
+{
+    size_t srcLen = 0;
+    for (; str[srcLen]; srcLen++) {
+    }
+
+    auto data = bufferAccessData();
+
+    if (srcLen != data.length) {
+        return false;
+    }
+
+    if (data.hasASCIIContent) {
+        for (size_t i = 0; i < data.length; i++) {
+            if (data.asciiData()[i] != str[i]) {
+                return false;
+            }
+        }
+    } else {
+        for (size_t i = 0; i < data.length; i++) {
+            if (data.utf32Data()[i] != (char32_t)str[i]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// TODO use BufferAccessData for performance
+bool String::equals(const char32_t* str) const
+{
+    size_t srcLen = 0;
+    for (; str[srcLen]; srcLen++) {
+    }
+
+    if (srcLen != length()) {
+        return false;
+    }
+    for (size_t i = 0; i < length(); i++) {
+        if (charAt(i) != str[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// TODO use BufferAccessData for performance
+bool String::containsWhitespace(size_t start, size_t end)
+{
+    if (end == SIZE_MAX) {
+        end = length();
+    }
+
+    for (size_t i = start; i < end; i++) {
+        if (isASCIISpace(charAt(i))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// TODO use BufferAccessData for performance
+bool String::containsOnlyWhitespace(size_t start, size_t end)
+{
+    if (end == SIZE_MAX) {
+        end = length();
+    }
+
+    for (size_t i = start; i < end; i++) {
+        if (!isASCIISpace(charAt(i))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// TODO use BufferAccessData for performance
+bool String::containsOnlyASCIIChars() const
+{
+    for (size_t i = 0; i < length(); i++) {
+        const char32_t c = charAt(i);
+        if (c > 127) {
+            return false;
+        }
+    }
+    return true;
+}
+
+icu::UnicodeString String::toUnicodeString() const
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        return icu::UnicodeString((const char*)data.buffer, data.length,
+                                  US_INV);
+    } else {
+        return icu::UnicodeString::fromUTF32((const UChar32*)data.buffer,
+                                             data.length);
+    }
+}
+
+icu::UnicodeString String::toUnicodeString(size_t start, size_t end) const
+{
+    auto data = bufferAccessData();
+    size_t len = end - start;
+    if (data.hasASCIIContent) {
+        return icu::UnicodeString(((const char*)data.buffer) + start, len,
+                                  US_INV);
+    } else {
+        return icu::UnicodeString::fromUTF32(
+            ((const UChar32*)data.buffer) + start, len);
+    }
+}
+
+size_t String::hashValue() const
+{
+    auto data = bufferAccessData();
+    size_t len = data.length;
+    size_t hash;
+    if (LIKELY(data.hasASCIIContent)) {
+        auto ptr = (const char*)data.buffer;
+        hash = stringHash(ptr, len);
+    } else {
+        auto ptr = (const char32_t*)data.buffer;
+        hash = stringHash(ptr, len);
+    }
+
+    if (UNLIKELY((hash % sizeof(size_t)) == 0)) {
+        hash++;
+    }
+
+    return hash;
+}
+
+const char* String::utf8Data()
+{
+    auto data = bufferAccessData();
+    if (data.isNullTerminated) {
+        if (data.hasASCIIContent) {
+            return data.asciiData();
+        } else {
+            return utf32ToUtf8(data.utf32Data(), data.length);
+        }
+    } else {
+        if (data.hasASCIIContent) {
+            char* newBuffer =
+                (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(data.length + 1);
+            memcpy(newBuffer, data.asciiData(), data.length);
+            newBuffer[data.length] = 0;
+            data.buffer = newBuffer;
+            return data.asciiData();
+        } else {
+            return utf32ToUtf8(data.utf32Data(), data.length);
+        }
+    }
+}
+
+const char* String::utf8DataIgnoreZeroWidthChar()
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        ASCIIString newStr;
+        for (size_t i = 0; i < data.length; i++) {
+            if (!String::isZeroWidthChar(data.asciiData()[i])) {
+                newStr += data.asciiData();
+            }
+        }
+        return newStr.data();
+    } else {
+        return utf32ToUtf8IgnoreZeroWidthChar(data.utf32Data(), data.length);
+    }
 }
 
 String* String::fromUTF8(const char* src, size_t len)
@@ -407,66 +617,30 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(
 
 NullableUTF8String String::toNullableUTF8String()
 {
-    if (isASCIIString()) {
-        void* ptr = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(asASCIIString()->size());
-        memcpy(ptr, asASCIIString()->data(), asASCIIString()->size());
-        return NullableUTF8String((const char*)ptr, asASCIIString()->size());
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        return NullableUTF8String(data.asciiData(), data.length);
     } else {
-        size_t len;
-        const char* ptr = utf32ToUtf8(asUTF32String()->data(),
-                                      asUTF32String()->length(), &len);
+        size_t len = 0;
+        const char* ptr = utf32ToUtf8(data.utf32Data(), data.length, &len);
         return NullableUTF8String(ptr, len - 1);
-    }
-}
-
-const char* String::utf8Data()
-{
-    if (length()) {
-        if (isASCIIString()) {
-            return asASCIIString()->data();
-        } else {
-            return utf8DataSlowCase();
-        }
-    } else {
-        return "";
-    }
-}
-
-const char* String::utf8DataIgnoreZeroWidthChar()
-{
-    if (isASCIIString()) {
-        StringDataASCII* newStr = new StringDataASCII("");
-        for (size_t i = 0; i < length(); i++) {
-            if (!String::isZeroWidthChar(charAt(i))) {
-                newStr->insert(asASCIIString()->length(),
-                               (*asASCIIString())[i]);
-            }
-        }
-        return newStr->data();
-    } else {
-        return utf8DataSlowCase(true);
     }
 }
 
 String* String::substring(size_t pos, size_t len)
 {
-    if (isASCIIString()) {
-        ASCIIString str = asASCIIString()->substr(pos, len);
-        return new StringDataASCII(std::move(str));
-    } else {
-        return new StringDataUTF32(
-            std::move(asUTF32String()->substr(pos, len)));
-    }
+    return new StringView(this, pos, pos + len);
 }
 
 String* String::toUpper()
 {
-    if (isASCIIString()) {
-        ASCIIString str = *asASCIIString();
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        TightASCIIString str(data.asciiData(), data.length);
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataASCII(std::move(str));
     } else {
-        UTF32String str = *asUTF32String();
+        TightUTF32String str(data.utf32Data(), data.length);
         // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataUTF32(std::move(str));
@@ -475,12 +649,13 @@ String* String::toUpper()
 
 String* String::toLower()
 {
-    if (isASCIIString()) {
-        ASCIIString str = *asASCIIString();
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        TightASCIIString str(data.asciiData(), data.length);
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataASCII(std::move(str));
     } else {
-        UTF32String str = *asUTF32String();
+        TightUTF32String str(data.utf32Data(), data.length);
         // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataUTF32(std::move(str));
@@ -492,24 +667,54 @@ String* String::concat(String* str)
     if (length() == 0) {
         return str;
     }
-    if (isASCIIString() && str->isASCIIString()) {
-        ASCIIString s = *asASCIIString();
-        s.append(str->asASCIIString()->data());
-        return new StringDataASCII(std::move(s));
+    if (str->length() == 0) {
+        return this;
+    }
+
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+
+    if (dataA.hasASCIIContent && dataB.hasASCIIContent) {
+        ASCIIString str;
+        str.reserve(dataA.length + dataB.length);
+        str.append(dataA.asciiData(), dataA.length);
+        str.append(dataB.asciiData(), dataB.length);
+        return new StringDataASCII(std::move(str));
     } else {
-        UTF32String a = toUTF32String();
-        UTF32String b = str->toUTF32String();
-        a.append(b);
-        return new StringDataUTF32(std::move(a));
+        UTF32String str;
+        str.resize(dataA.length + dataB.length);
+        if (dataA.hasASCIIContent) {
+            for (size_t i = 0; i < dataA.length; i++) {
+                str[i] = dataA.asciiData()[i];
+            }
+        } else {
+            for (size_t i = 0; i < dataA.length; i++) {
+                str[i] = dataA.utf32Data()[i];
+            }
+        }
+
+        if (dataB.hasASCIIContent) {
+            for (size_t i = 0; i < dataB.length; i++) {
+                str[i + dataA.length] = dataB.asciiData()[i];
+            }
+        } else {
+            for (size_t i = 0; i < dataB.length; i++) {
+                str[i + dataA.length] = dataB.utf32Data()[i];
+            }
+        }
+
+        return new StringDataUTF32(std::move(str));
     }
 }
 
 String* String::replaceAll(String* from, String* to)
 {
-    if (isASCIIString()) {
-        std::string str = std::string(utf8Data());
-        std::string from_str = std::string(from->utf8Data());
-        std::string to_str = std::string(to->utf8Data());
+    auto data = bufferAccessData();
+
+    if (data.hasASCIIContent) {
+        std::string str = std::string(toUTF8NonGCString());
+        std::string from_str = std::string(from->toUTF8NonGCString());
+        std::string to_str = std::string(to->toUTF8NonGCString());
 
         size_t start_pos = 0;
         while ((start_pos = str.find(from_str, start_pos)) !=
@@ -518,7 +723,7 @@ String* String::replaceAll(String* from, String* to)
             start_pos += to_str.length(); // Handles case where 'to' is a
                                           // substring of 'from'
         }
-        return createASCIIString(str.c_str());
+        return fromUTF8(str.c_str(), str.length());
     } else {
         UTF32String str(toUTF32String().data());
         UTF32String from_str(from->toUTF32String().data());
@@ -546,40 +751,16 @@ String* String::fromInt(int i)
 {
     return String::fromUTF8(std::to_string(i).c_str());
 }
-template <typename StringType, typename VectorType>
-static VectorType splitString(const StringType& s, char seperator)
-{
-    VectorType output;
-    size_t prev_pos = 0, pos = 0;
-    while ((pos = s.find(seperator, pos)) != SIZE_MAX) {
-        StringType substring(s.substr(prev_pos, pos - prev_pos));
-        output.push_back(std::move(substring));
-        prev_pos = ++pos;
-    }
-
-    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
-    return output;
-}
 
 void String::split(char delim, GCVector<String*>& tokens)
 {
-    if (isASCIIString()) {
-        GCVector<ASCIIString> ss =
-            splitString<ASCIIString, GCVector<ASCIIString>>(*asASCIIString(),
-                                                            delim);
-        for (size_t i = 0; i < ss.size(); i++) {
-            ASCIIString& item = ss[i];
-            tokens.push_back(new StringDataASCII(std::move(item)));
-        }
-    } else {
-        GCVector<UTF32String> ss =
-            splitString<UTF32String, GCVector<UTF32String>>(*asUTF32String(),
-                                                            delim);
-        for (size_t i = 0; i < ss.size(); i++) {
-            UTF32String& item = ss[i];
-            tokens.push_back(new StringDataUTF32(std::move(item)));
-        }
+    size_t prev_pos = 0, pos = 0;
+    while ((pos = find(delim, pos)) != SIZE_MAX) {
+        tokens.push_back(new StringView(this, prev_pos, pos));
+        prev_pos = ++pos;
     }
+
+    tokens.push_back(new StringView(this, prev_pos, pos)); // Last word
 }
 
 String* String::trim()
@@ -660,19 +841,40 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
     }
 }
 
+UTF8String String::toUTF8String()
+{
+    UTF8String result;
+
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        result.append(data.asciiData(), data.length);
+    } else {
+        result.reserve(data.length);
+        for (size_t i = 0; i < data.length; i++) {
+            char buffer[16];
+            size_t len = utf32ToUtf8(data.utf32Data()[i], buffer);
+            result.append(buffer, len);
+        }
+    }
+
+    return result;
+}
+
 UTF32String String::toUTF32String()
 {
-    if (isASCIIString()) {
-        UTF32String str;
-        const ASCIIString& src = *asASCIIString();
-        size_t len = src.length();
-        for (size_t i = 0; i < len; i++) {
-            str.push_back(src[i]);
+    UTF32String result;
+
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        result.reserve(data.length);
+        for (size_t i = 0; i < data.length; i++) {
+            result.push_back(data.asciiData()[i]);
         }
-        return str;
     } else {
-        return *asUTF32String();
+        result.append(data.utf32Data(), data.length);
     }
+
+    return result;
 }
 
 UTF16String String::toUTF16String() const
@@ -701,9 +903,10 @@ UTF16StringDataNonGCStd String::toUTF16NonGCString(size_t start,
                                                    size_t end) const
 {
     UTF16StringDataNonGCStd out;
-    if (isASCIIString()) {
-        out.assign(asASCIIString()->begin() + start,
-                   asASCIIString()->begin() + end);
+
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        out.assign(data.asciiData() + start, data.asciiData() + end);
     } else {
         out.reserve(end - start);
         for (size_t i = start; i < end; i++) {
@@ -732,41 +935,54 @@ UTF16StringDataNonGCStd String::toUTF16NonGCString() const
 UTF8StringDataNonGCStd String::toUTF8NonGCString(size_t start, size_t end,
                                                  bool ignoreZeroWidthChar) const
 {
-    if (isASCIIString()) {
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
         UTF8StringDataNonGCStd ret;
         ret.reserve(end - start);
         for (size_t i = start; i < end; i++) {
-            if (ignoreZeroWidthChar &&
-                String::isZeroWidthChar(asASCIIString()->data()[i])) {
+            char ch = data.asciiData()[i];
+            if (ignoreZeroWidthChar && String::isZeroWidthChar(ch)) {
                 continue;
             }
-            ret.push_back(asASCIIString()->data()[i]);
+            ret.push_back(ch);
         }
         return ret;
     } else {
-        return utf32ToUtf8(*asUTF32String(), start, end, ignoreZeroWidthChar);
+        return utf32ToUtf8(data.utf32Data(), start, end, ignoreZeroWidthChar);
+    }
+}
+
+UTF8StringDataNonGCStd String::toUTF8NonGCString() const
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        UTF8StringDataNonGCStd ret(data.asciiData(), data.length);
+        return ret;
+    } else {
+        return utf32ToUtf8(data.utf32Data(), 0, data.length, false);
     }
 }
 
 bool String::equals(const String* str) const
 {
-    size_t lenA = length();
-    size_t lenB = str->length();
-    if (lenA == lenB) {
-        bool aa = isASCIIString();
-        bool bb = str->isASCIIString();
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+
+    if (dataA.length == dataB.length) {
+        bool aa = dataA.hasASCIIContent;
+        bool bb = dataB.hasASCIIContent;
         if (aa && bb) {
-            return stringEqual(asASCIIString()->data(),
-                               str->asASCIIString()->data(), lenA);
+            return stringEqual(dataA.asciiData(), dataB.asciiData(),
+                               dataA.length);
         } else if (aa && !bb) {
-            return stringEqual(str->asUTF32String()->data(),
-                               asASCIIString()->data(), lenA);
+            return stringEqual(dataB.utf32Data(), dataA.asciiData(),
+                               dataA.length);
         } else if (!aa && bb) {
-            return stringEqual(asUTF32String()->data(),
-                               str->asASCIIString()->data(), lenA);
+            return stringEqual(dataA.utf32Data(), dataB.asciiData(),
+                               dataA.length);
         } else {
-            return stringEqual(asUTF32String()->data(),
-                               str->asUTF32String()->data(), lenA);
+            return stringEqual(dataA.utf32Data(), dataB.utf32Data(),
+                               dataA.length);
         }
     }
     return false;
@@ -796,23 +1012,24 @@ bool stringEqualWithoutCase(const char32_t* s, const char* s1,
 
 bool String::equalsWithoutCase(const String* str) const
 {
-    size_t lenA = length();
-    size_t lenB = str->length();
-    if (lenA == lenB) {
-        bool aa = isASCIIString();
-        bool bb = str->isASCIIString();
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+
+    if (dataA.length == dataB.length) {
+        bool aa = dataA.hasASCIIContent;
+        bool bb = dataB.hasASCIIContent;
         if (aa && bb) {
-            return stringEqualWithoutCase(asASCIIString()->data(),
-                                          str->asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(dataA.asciiData(), dataB.asciiData(),
+                                          dataA.length);
         } else if (aa && !bb) {
-            return stringEqualWithoutCase(str->asUTF32String()->data(),
-                                          asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(dataB.utf32Data(), dataA.asciiData(),
+                                          dataA.length);
         } else if (!aa && bb) {
-            return stringEqualWithoutCase(asUTF32String()->data(),
-                                          str->asASCIIString()->data(), lenA);
+            return stringEqualWithoutCase(dataA.utf32Data(), dataB.asciiData(),
+                                          dataA.length);
         } else {
-            return stringEqualWithoutCase(asUTF32String()->data(),
-                                          str->asUTF32String()->data(), lenA);
+            return stringEqualWithoutCase(dataA.utf32Data(), dataB.utf32Data(),
+                                          dataA.length);
         }
     }
     return false;
@@ -947,6 +1164,22 @@ size_t String::find(const char* str, size_t pos)
                 if (same) {
                     return pos;
                 }
+            }
+        }
+    }
+    return SIZE_MAX;
+}
+
+size_t String::find(const char ch, size_t pos)
+{
+    const size_t srcLen = 1;
+    const size_t dstLen = length();
+
+    if (srcLen <= dstLen) {
+        char32_t src0 = (char32_t)ch;
+        for (; pos <= dstLen - srcLen; ++pos) {
+            if (charAt(pos) == src0) {
+                return pos;
             }
         }
     }

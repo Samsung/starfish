@@ -65,6 +65,19 @@ typedef VariableBasicString<
     char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
     UTF32String;
 
+typedef BasicString<char,
+                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
+    TightASCIIString;
+typedef BasicString<char,
+                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
+    TightUTF8String;
+typedef BasicString<
+    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
+    TightUTF16String;
+typedef BasicString<
+    char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
+    TightUTF32String;
+
 typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;
 typedef std::basic_string<char, std::char_traits<char>> UTF8StringDataNonGCStd;
 typedef std::basic_string<char16_t, std::char_traits<char16_t>>
@@ -164,7 +177,7 @@ inline CharType toASCIILower(CharType c)
 #endif
 }
 
-struct NullableUTF8String {
+struct NullableUTF8String : public gc {
     NullableUTF8String(const char* buffer, const size_t& bufferSize)
     {
         m_buffer = buffer;
@@ -225,7 +238,35 @@ enum CharCategory {
 class StringDataASCII;
 class StringDataUTF32;
 
-class String {
+struct StringBufferAccessData {
+    bool hasASCIIContent;
+    bool isNullTerminated;
+    size_t length;
+    const void* buffer;
+
+    char32_t charAt(size_t idx) const
+    {
+        if (hasASCIIContent) {
+            return asciiData()[idx];
+        } else {
+            return utf32Data()[idx];
+        }
+    }
+
+    const char* asciiData() const
+    {
+        STARFISH_ASSERT(hasASCIIContent);
+        return (const char*)buffer;
+    }
+
+    const char32_t* utf32Data() const
+    {
+        STARFISH_ASSERT(!hasASCIIContent);
+        return (const char32_t*)buffer;
+    }
+};
+
+class String : public gc {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
 
@@ -245,24 +286,36 @@ public:
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
 
-    ASCIIString* asASCIIString() const
+    virtual size_t length() const = 0;
+    virtual char32_t charAt(const size_t& idx) const = 0;
+    virtual StringBufferAccessData bufferAccessData() const = 0;
+
+    char32_t operator[](const size_t& idx) const
     {
-        STARFISH_ASSERT(isASCIIString());
-#ifdef NDEBUG
-        return (ASCIIString*)(((size_t) this) + sizeof(size_t));
-#else
-        return (ASCIIString*)(((size_t) this) + sizeof(String));
-#endif
+        return charAt(idx);
     }
-    UTF32String* asUTF32String() const
+
+    size_t contentLength() const
     {
-        STARFISH_ASSERT(isUTF32String());
-#ifdef NDEBUG
-        return (UTF32String*)(((size_t) this) + sizeof(size_t));
-#else
-        return (UTF32String*)(((size_t) this) + sizeof(String));
-#endif
+        auto data = bufferAccessData();
+        return data.hasASCIIContent ? data.length : data.length * 4;
     }
+
+    bool hasASCIIContent() const
+    {
+        auto data = bufferAccessData();
+        return data.hasASCIIContent;
+    }
+
+    bool equals(const String* src) const;
+    bool equals(const char* src) const;
+
+    bool equalsWithoutCase(const String* str) const;
+    bool equalsWithoutCase(const char* str) const;
+    bool equals(const char32_t* str) const;
+
+    size_t indexOf(char32_t ch) const;
+    size_t lastIndexOf(char32_t ch) const;
 
     UTF16String toUTF16String() const;
     UTF16StringDataNonGCStd toUTF16NonGCString() const;
@@ -271,120 +324,13 @@ public:
     UTF8StringDataNonGCStd toUTF8NonGCString(
         size_t start, size_t end, bool ignoreZeroWidthChar = false) const;
 
+    UTF8StringDataNonGCStd toUTF8NonGCString() const;
     // 1. this method always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
     NullableUTF8String toNullableUTF8String();
 
-    const char* utf8Data();
-    const char* utf8DataIgnoreZeroWidthChar();
-
-    bool equals(const String* str) const;
-    bool equalsWithoutCase(const String* str) const;
-    bool equals(const char* str)
-    {
-#ifndef NDEBUG
-        {
-            const char* c = str;
-            while (*c) {
-                STARFISH_ASSERT(!(*c & 0x80));
-                c++;
-            }
-        }
-#endif
-        size_t srcLen = strlen(str);
-        if (srcLen != length()) {
-            return false;
-        }
-        for (size_t i = 0; i < length(); i++) {
-            if (charAt(i) != (char32_t)str[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool equalsWithoutCase(const char* str)
-    {
-#ifndef NDEBUG
-        {
-            const char* c = str;
-            while (*c) {
-                STARFISH_ASSERT(!(*c & 0x80));
-                c++;
-            }
-        }
-#endif
-        size_t srcLen = strlen(str);
-        if (srcLen != length()) {
-            return false;
-        }
-        for (size_t i = 0; i < length(); i++) {
-            if (tolower(charAt(i)) != tolower((char32_t)str[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool equals(const char32_t* str)
-    {
-        size_t srcLen = 0;
-        for (; str[srcLen]; srcLen++) {
-        }
-
-        if (srcLen != length()) {
-            return false;
-        }
-        for (size_t i = 0; i < length(); i++) {
-            if (charAt(i) != str[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    size_t length() const
-    {
-        if (isASCIIString()) {
-            return asASCIIString()->length();
-        } else {
-            return asUTF32String()->length();
-        }
-    }
-
-    char32_t charAt(size_t idx) const
-    {
-        if (isASCIIString()) {
-            return (*asASCIIString())[idx];
-        } else {
-            return (*asUTF32String())[idx];
-        }
-    }
-
-    char32_t operator[](size_t idx) const
-    {
-        return charAt(idx);
-    }
-
-    size_t indexOf(char32_t ch) const
-    {
-        for (size_t i = 0; i < length(); i++) {
-            if (charAt(i) == ch) {
-                return i;
-            }
-        }
-        return SIZE_MAX;
-    }
-
-    size_t lastIndexOf(char32_t ch) const
-    {
-        for (size_t i = length(); i > 0; i--) {
-            if (charAt(i - 1) == ch) {
-                return i - 1;
-            }
-        }
-        return SIZE_MAX;
-    }
+    const char* utf8Data();                    // TODO remove this method
+    const char* utf8DataIgnoreZeroWidthChar(); // TODO remove this method
 
     static inline bool isASCIISpace(char32_t c)
     {
@@ -422,57 +368,30 @@ public:
         return false;
     }
 
-    bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX)
-    {
-        if (end == SIZE_MAX) {
-            end = length();
-        }
+    bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX);
+    bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX);
+    bool containsOnlyASCIIChars() const;
 
-        for (size_t i = start; i < end; i++) {
-            if (isASCIISpace(charAt(i))) {
-                return true;
-            }
-        }
-        return false;
+    template <typename T>
+    static inline size_t stringHash(T* src, size_t length)
+    {
+        size_t hash = static_cast<size_t>(0xc70f6907UL);
+        for (; length; --length)
+            hash = (hash * 131) + *src++;
+        return hash;
     }
 
-    bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX)
-    {
-        if (end == SIZE_MAX) {
-            end = length();
-        }
-
-        for (size_t i = start; i < end; i++) {
-            if (!isASCIISpace(charAt(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool containsOnlyASCIIChars() const
-    {
-        if (isASCIIString()) {
-            return true;
-        }
-        for (size_t i = 0; i < length(); i++) {
-            const char32_t c = charAt(i);
-            if (c > 127) {
-                return false;
-            }
-        }
-        return true;
-    }
+    size_t hashValue() const;
 
     static String* fromFloat(float f);
     static String* fromInt(int i);
     static int parseInt(String* s)
     {
-        return atoi(s->utf8Data());
+        return atoi(s->toUTF8NonGCString().data());
     }
     static float parseFloat(String* s)
     {
-        return atof(s->utf8Data());
+        return atof(s->toUTF8NonGCString().data());
     }
 
     String* substring(size_t pos, size_t len);
@@ -480,15 +399,6 @@ public:
     String* toUpper();
     String* toLower();
     String* replaceAll(String* from, String* to);
-    bool isASCIIString() const
-    {
-        return m_isASCIIString;
-    }
-
-    bool isUTF32String() const
-    {
-        return !m_isASCIIString;
-    }
 
     String* concat(String* str);
     void split(char delim, GCVector<String*>& tokens);
@@ -497,31 +407,11 @@ public:
     // token is only 1-byte char now.
     GCVector<String*> tokenize(const char* tokens, size_t tokensLength);
 
-    icu::UnicodeString toUnicodeString() const
-    {
-        if (isASCIIString()) {
-            return icu::UnicodeString(asASCIIString()->data(),
-                                      asASCIIString()->length(), US_INV);
-        } else {
-            return icu::UnicodeString::fromUTF32(
-                (const UChar32*)asUTF32String()->data(),
-                asUTF32String()->length());
-        }
-    }
-
-    icu::UnicodeString toUnicodeString(size_t start, size_t end) const
-    {
-        size_t len = end - start;
-        if (isASCIIString()) {
-            return icu::UnicodeString(asASCIIString()->data() + start, len,
-                                      US_INV);
-        } else {
-            return icu::UnicodeString::fromUTF32(
-                (const UChar32*)asUTF32String()->data() + start, len);
-        }
-    }
+    icu::UnicodeString toUnicodeString() const;
+    icu::UnicodeString toUnicodeString(size_t start, size_t end) const;
 
     UTF32String toUTF32String();
+    UTF8String toUTF8String();
 
     bool startsWith(const char* str, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
@@ -530,22 +420,12 @@ public:
     bool endsWith(String* str, bool caseSensitive = true);
 
     size_t find(const char* str, size_t pos = 0);
+    size_t find(const char ch, size_t pos = 0);
     size_t find(String* str, size_t pos = 0);
     size_t find(String* str, size_t pos, bool caseSensitive);
 
     bool contains(const char* str, bool caseSensitive = true);
     bool contains(String* str, bool caseSensitive = true);
-
-    ALWAYS_INLINE void putDebugInfo()
-    {
-#ifndef NDEBUG
-        if (isASCIIString()) {
-            m_debugInfo.string8Ptr = asASCIIString()->data();
-        } else {
-            m_debugInfo.string32Ptr = asUTF32String()->data();
-        }
-#endif
-    }
 
 protected:
     template <typename T>
@@ -566,95 +446,214 @@ protected:
     }
 
     const char* utf8DataSlowCase(bool ignoreZeroWidthChar = false);
-    String(bool ascii)
-    {
-        m_isASCIIString = ascii;
-    }
 
     bool isASCIIStringData(const char* str);
-
-    bool m_isASCIIString;
-#ifndef NDEBUG
-    union {
-        const char* string8Ptr;
-        const char32_t* string32Ptr;
-    } m_debugInfo;
-#endif
 };
 
-class StringDataASCII : public String, public ASCIIString {
+class StringDataASCII : public String {
 public:
-    StringDataASCII(ASCIIString&& str)
-        : String(true)
-        , ASCIIString(str)
+    StringDataASCII(TightASCIIString&& str)
+        : String()
+        , m_data(str)
     {
-        putDebugInfo();
+    }
+
+    StringDataASCII(ASCIIString&& str)
+        : String()
+    {
+        ASCIIString r(str);
+        m_data = r.toBasicStringAndMakeEmpty();
     }
 
     StringDataASCII(const char* str)
-        : String(true)
-        , ASCIIString(str)
+        : String()
+        , m_data(str)
     {
-        putDebugInfo();
     }
 
     StringDataASCII(const char* str, size_t len)
-        : String(true)
-        , ASCIIString(str, len)
+        : String()
+        , m_data(str, len)
     {
-        putDebugInfo();
     }
+
+    virtual size_t length() const override
+    {
+        return m_data.length();
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.hasASCIIContent = true;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data.data();
+        ret.length = m_data.length();
+        return ret;
+    }
+
+protected:
+    TightASCIIString m_data;
 };
 
-class StringDataNonGCASCII
-    : public String,
-      public VariableBasicString<char, std::allocator<char>> {
+class StringDataNonGCASCII : public String {
 public:
     StringDataNonGCASCII(const char* str)
-        : String(true)
-        , VariableBasicString<char, std::allocator<char>>(str)
+        : m_data(str)
     {
-#ifndef NDEBUG
-        m_debugInfo.string8Ptr = str;
-#endif
     }
 
     inline void* operator new(size_t size)
     {
         return malloc(size);
     }
+
+    virtual size_t length() const override
+    {
+        return m_data.length();
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.hasASCIIContent = true;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data.data();
+        ret.length = m_data.length();
+        return ret;
+    }
+
+protected:
+    BasicString<char, std::allocator<char>> m_data;
 };
 
-static_assert(sizeof(StringDataNonGCASCII) == sizeof(StringDataASCII), "");
-
-class StringDataUTF32 : public String, public UTF32String {
+class StringDataUTF32 : public String {
 public:
-    StringDataUTF32(const UTF32String& str)
-        : String(false)
-        , UTF32String(str)
+    StringDataUTF32(const TightUTF32String& str)
+        : String()
+        , m_data(str)
     {
-        m_isASCIIString = false;
-        putDebugInfo();
     }
+    StringDataUTF32(TightUTF32String&& str)
+        : String()
+        , m_data(str)
+    {
+    }
+
     StringDataUTF32(UTF32String&& str)
-        : String(false)
-        , UTF32String(str)
+        : String()
+        , m_data()
     {
-        m_isASCIIString = false;
-        putDebugInfo();
+        UTF32String r(str);
+        m_data = r.toBasicStringAndMakeEmpty();
     }
+
     StringDataUTF32(const char* src, size_t len);
     StringDataUTF32(const char32_t* str)
-        : String(false)
-        , UTF32String(str)
+        : String()
+        , m_data(str)
     {
-        m_isASCIIString = false;
-        putDebugInfo();
     }
+
+    virtual size_t length() const override
+    {
+        return m_data.length();
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.hasASCIIContent = false;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data.data();
+        ret.length = m_data.length();
+        return ret;
+    }
+
+protected:
+    TightUTF32String m_data;
+};
+
+class StringView : public String {
+public:
+    StringView(String* string, size_t start, size_t end)
+        : m_string(string)
+        , m_start(start)
+        , m_end(end)
+    {
+    }
+
+    StringView(String* string)
+        : StringView(string, 0, string->length())
+    {
+    }
+
+    String* substring() const
+    {
+        return m_string->substring(m_start, m_end - m_start);
+    }
+
+    String* originalString() const
+    {
+        return m_string;
+    }
+
+    size_t start() const
+    {
+        return m_start;
+    }
+
+    size_t end() const
+    {
+        return m_end;
+    }
+
+    virtual char32_t charAt(const size_t& idx) const
+    {
+        return m_string->charAt(idx + m_start);
+    }
+
+    virtual size_t length() const
+    {
+        return m_end - m_start;
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const
+    {
+        auto srcData = m_string->bufferAccessData();
+        StringBufferAccessData data;
+        data.hasASCIIContent = srcData.hasASCIIContent;
+        data.isNullTerminated = false;
+        data.length = m_end - m_start;
+        if (srcData.hasASCIIContent) {
+            data.buffer = ((const char*)srcData.buffer) + m_start;
+        } else {
+            data.buffer = ((char32_t*)srcData.buffer) + m_start;
+        }
+        return data;
+    }
+
+protected:
+    String* m_string;
+    size_t m_start, m_end;
 };
 
 class SegmentedString;
-
 class SegmentedSubstring {
 public:
     SegmentedSubstring()
@@ -672,12 +671,14 @@ public:
         , m_string(str)
     {
         if (m_length) {
-            if (m_string->isASCIIString()) {
+            auto data = m_string->bufferAccessData();
+
+            if (data.hasASCIIContent) {
                 m_is8Bit = true;
-                m_data.string8Ptr = m_string->asASCIIString()->data();
+                m_data.string8Ptr = (const char*)data.buffer;
             } else {
                 m_is8Bit = false;
-                m_data.string32Ptr = m_string->asUTF32String()->data();
+                m_data.string32Ptr = (const char32_t*)data.buffer;
             }
         } else {
             m_is8Bit = false;
@@ -789,50 +790,6 @@ private:
     bool m_doNotExcludeLineNumbers;
     bool m_is8Bit;
     String* m_string;
-};
-
-class StringView : public gc {
-public:
-    StringView(String* string, size_t start, size_t end)
-        : m_string(string)
-        , m_start(start)
-        , m_end(end)
-    {
-    }
-
-    StringView(String* string)
-        : StringView(string, 0, string->length())
-    {
-    }
-
-    String* substring() const
-    {
-        return m_string->substring(m_start, m_end - m_start);
-    }
-
-    String* originalString() const
-    {
-        return m_string;
-    }
-
-    size_t start() const
-    {
-        return m_start;
-    }
-
-    size_t end() const
-    {
-        return m_end;
-    }
-
-    size_t length() const
-    {
-        return m_end - m_start;
-    }
-
-protected:
-    String* m_string;
-    size_t m_start, m_end;
 };
 
 // An abstract number of element in a sequence. The sequence has a first
@@ -1231,11 +1188,7 @@ template <>
 struct hash<StarFish::String*> {
     std::size_t operator()(const StarFish::String* s) const
     {
-        if (s->isASCIIString()) {
-            return hash<StarFish::ASCIIString>{}(*(s->asASCIIString()));
-        } else {
-            return hash<StarFish::UTF32String>{}(*(s->asUTF32String()));
-        }
+        return s->hashValue();
     }
 };
 

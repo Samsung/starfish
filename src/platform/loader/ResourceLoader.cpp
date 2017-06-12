@@ -312,7 +312,8 @@ bool ResourceLoader::requestResourcePreprocess(
     // TODO cache every resource
     if (res->isImageResource() &&
         syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
-        ASCIIString url = *res->url()->urlString()->asASCIIString();
+        ASCIIString url(res->url()->urlString()->bufferAccessData().asciiData(),
+                        res->url()->urlString()->length());
         auto iter = m_imageResourceCache.find(url);
         if (iter == m_imageResourceCache.end()) {
             ResourceCacheData data;

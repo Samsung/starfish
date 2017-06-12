@@ -922,7 +922,7 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir,
                 }
 
                 if (shouldReplaceString) {
-                    if (sv.originalString()->isASCIIString()) {
+                    if (sv.originalString()->hasASCIIContent()) {
                         ASCIIString str;
                         for (size_t j = sv.start(); j < sv.end(); j++) {
                             char32_t ch = sv.originalString()->charAt(j);
