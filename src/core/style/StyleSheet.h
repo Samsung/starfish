@@ -32,6 +32,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isStyleSheet() const override;
 
+    /* DOM APIs */
     virtual String* type() const = 0;
     virtual String* href() const = 0;
     virtual Node* ownerNode() const = 0;

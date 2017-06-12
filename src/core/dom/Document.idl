@@ -128,7 +128,7 @@ interface Document : Node {
 
 
   // [REF6]--------------------------------------------------------------
-  [Unimplemented, SameObject] readonly attribute StyleSheetList styleSheets;
+  [SameObject] readonly attribute StyleSheetList styleSheets;
 };
 
 

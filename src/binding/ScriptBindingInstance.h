@@ -113,6 +113,7 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
     F(Storage)                                      \
     F(StorageImpl)                                  \
     F(StyleSheet)                                   \
+    F(StyleSheetList)                               \
     F(URL)                                          \
     F(Text)                                         \
     F(TouchEvent)                                   \

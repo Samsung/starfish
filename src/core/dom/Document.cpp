@@ -42,6 +42,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/StyleSheetList.h"
 #include "platform/loader/ImageResource.h"
 
 namespace StarFish {
@@ -60,6 +61,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_resourceLoader(this)
     , m_styleResolver(this)
     , m_documentBuilder(nullptr)
+    , m_styleSheetList(nullptr)
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
 #ifdef STARFISH_TIZEN
@@ -1219,6 +1221,14 @@ Element* Document::elementFromPoint(float x, float y)
     }
 
     return rootElement();
+}
+
+StyleSheetList* Document::styleSheets()
+{
+    if (!m_styleSheetList) {
+        m_styleSheetList = new StyleSheetList(this);
+    }
+    return m_styleSheetList;
 }
 
 ImageData* Document::brokenImage()
