@@ -22,6 +22,7 @@
 namespace StarFish {
 
 class CSSRule;
+class CSSRuleList;
 class CSSStyleRule;
 class CSSStyleRuleImport;
 class MediaQueryEvaluator;
@@ -33,10 +34,11 @@ class CSSStyleSheet : public StyleSheet {
 public:
     CSSStyleSheet(Node* origin, String* str, CSSImportRule* ownerRule = nullptr)
         : StyleSheet()
+        , m_sourceString(str)
+        , m_origin(origin)
+        , m_ownerRule(ownerRule)
+        , m_ruleList(nullptr)
     {
-        m_sourceString = str;
-        m_origin = origin;
-        m_ownerRule = ownerRule;
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -99,6 +101,8 @@ public:
         return m_origin;
     }
 
+    CSSRuleList* cssRules();
+
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
@@ -108,6 +112,7 @@ protected:
     Node* m_origin;
     GCVector<CSSImportRule*> m_importRules;
     CSSImportRule* m_ownerRule;
+    CSSRuleList* m_ruleList;
 };
 
 } /* namespace StarFish */
