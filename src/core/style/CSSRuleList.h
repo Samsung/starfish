@@ -17,6 +17,7 @@
 #ifndef __StarFishCSSRuleList__
 #define __StarFishCSSRuleList__
 
+#include "binding/ScriptWrappable.h"
 #include "core/style/CSSStyleRule.h"
 
 namespace StarFish {
@@ -50,6 +51,12 @@ public:
     {
     }
 
+    ScriptBindingInstance* scriptBindingInstance() override
+    {
+        // TODO: Implement
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     GCVector<CSSRule*>& rules()
     {
         return m_rules;
@@ -60,7 +67,6 @@ public:
         return 0;
     }
 
-private:
     unsigned length() const override
     {
         return m_rules.size();
@@ -71,6 +77,7 @@ private:
         return index < m_rules.size() ? m_rules[index] : nullptr;
     }
 
+private:
     GCVector<CSSRule*> m_rules;
 };
 
@@ -82,7 +89,11 @@ public:
     {
     }
 
-private:
+    ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return styleSheet()->origin()->scriptBindingInstance();
+    }
+
     unsigned length() const override
     {
         return m_rule->length();
@@ -98,6 +109,7 @@ private:
         return m_rule->parentStyleSheet();
     }
 
+private:
     Rule* m_rule;
 };
 }

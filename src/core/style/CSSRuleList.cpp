@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#include "CSSRuleList.h"
+#include "core/style/CSSRuleList.h"
 
 namespace StarFish {
 

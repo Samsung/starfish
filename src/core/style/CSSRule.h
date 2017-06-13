@@ -69,27 +69,27 @@ public:
         return m_ruleType;
     }
 
-    virtual bool isStyleRule()
+    bool isStyleRule()
     {
         return type() == RuleType::STYLE_RULE;
     }
 
-    virtual bool isMediaRule()
+    bool isMediaRule()
     {
         return type() == RuleType::MEDIA_RULE;
     }
 
-    virtual bool isImportRule()
+    bool isImportRule()
     {
         return type() == RuleType::IMPORT_RULE;
     }
 
-    virtual bool isCharsetRule()
+    bool isCharsetRule()
     {
         return type() == RuleType::CHARSET_RULE;
     }
 
-    virtual bool isNamespaceRule()
+    bool isNamespaceRule()
     {
         return type() == RuleType::NAMESPACE_RULE;
     }
