@@ -100,6 +100,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
+| [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | The CSSStyleSheet interface represents a CSS style sheet. |
+| | attribute | CSSRule? ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
+| | attribute | CSSRuleList cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
 | [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |
@@ -121,6 +124,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | head | Returns head element or null if not exists |
 |  | attribute | defaultView | Returns this Document's browsing context's WindowProxy object, if this Document has an associated browsing context, or null otherwise |
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
@@ -155,7 +159,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | INVALID_NODE_TYPE_ERR = 24 | The supplied node is incorrect or has an incorrect ancestor for this operation. |
 |  | constant | DATA_CLONE_ERR = 25 | The object can not be cloned. |
 | [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
-|| constructor |DOMParser()| Create a new DOMParser |
+| | constructor | DOMParser() | Create a new DOMParser |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
 | [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
 |  | constructor | DOMPoint(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double w = 1) | Creates a new DOMPoint object. |
@@ -172,7 +176,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  z  |  Return z coordinate value of the object  |
 |    |  attribute  |  w  |  Return w perspective value of the object  |
 | [DOMQuad](https://drafts.fxtf.org/geometry/#DOMQuad) | interface | DOMQuad | Objects implementing the DOMQuad interface represents a quadrilateral. |
-||constructor|DOMQuad(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4)||
+| | constructor | DOMQuad(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4) | |
 |  | attribute | p1 | Return a DOMPoint that represents p1 of the quadrilateral |
 |  | attribute | p2 | Return a DOMPoint that represents p2 of the quadrilateral |
 |  | attribute | p3 | Return a DOMPoint that represents p3 of the quadrilateral |
@@ -432,7 +436,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | TextTrack (unsigned long index) | Returns the TextTrack object representing the nth text track in the media element's list of text tracks. |
 |  | method | TextTrack? getTrackById(DOMString id) | Returns the TextTrack object with the given identifier, or null if no track has that identifier. |
 | [VTTCue](https://w3c.github.io/webvtt/#vttcue) | interface | VTTCue | VTTCues represent a cue in a text track. |
-|| constructor | VTTCue(double startTime, double endTime, DOMString text) | Create a new VTTCue |
+| | constructor | VTTCue(double startTime, double endTime, DOMString text) | Create a new VTTCue |
 |  | enum | AutoKeyword | "auto" |
 |  | typedef | (double or AutoKeyword) LineAndPositionSetting |  |
 |  | enum | DirectionSetting | "", "rl", "lr" |
@@ -484,10 +488,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
 |  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
 |    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
-| [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | attribute | type | Specifies the style sheet language for this style sheet. |
+| [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | Interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
+| | attribute | type | Specifies the style sheet language for this style sheet. |
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
-| [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | method | item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
+| [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | Interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
+| | method | item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
 | | attribute | length | Return the number of CSS style sheets represented by the collection. |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |
@@ -507,7 +513,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
 | [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
-|| constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
+| | constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
 |  | attribute | href | A DOMString containing the whole URL. |
 |  | attribute | origin | A DOMString containing the origin of the URL, that is its scheme, its domain and its port. |
 |  | attribute | protocol | A DOMString containing the protocol scheme of the URL, including the final ':'. |
@@ -563,7 +569,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | typedef | (OnErrorEventHandlerNonNull?) OnErrorEventHandler | |
 | | typedef | (OnBeforeUnloadEventHandlerNonNull?) OnBeforeUnloadEventHandler | |
 | [FocusEvent](https://w3c.github.io/uievents/#interface-focusevent) | interface | FocusEvent | The FocusEvent interface represents focus-related events like focus, blur, focusin, or focusout. |
-|| constructor | FocusEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new FocusEvent |
+| | constructor | FocusEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new FocusEvent |
 | | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |
 | [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
 | | attribute | onabort | Fired at the Window when the download was aborted by the user |
@@ -588,7 +594,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
 | [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent) | interface | ProgressEvent | The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an \<img\>, \<audio\>, \<video\>, \<style\> or \<link\>). |
-|| constructor | ProgressEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new ProgressEvent |
+| | constructor | ProgressEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new ProgressEvent |
 | | attribute | lengthComputable | Is a Boolean flag indicating if the total work to be done, and the amount of work already done, by the underlying process is calculable. In other words, it tells if the progress is measurable or not. |
 | | attribute | loaded | Is an unsigned long long representing the amount of work already performed by the underlying process. The ratio of work done can be calculated with the property and ProgressEvent.total. When downloading a resource using HTTP, this only represent the part of the content itself, not headers and other overhead. |
 | | attribute | total | Is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing. When downloading a resource using HTTP, this only represent the content itself, not headers and other overhead. |

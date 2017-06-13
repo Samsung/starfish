@@ -19,11 +19,43 @@
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/Node.h"
 #include "core/style/CSSParser.h"
+#include "core/style/CSSRuleList.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 
 namespace StarFish {
+
+class StyleSheetCSSRuleList : public CSSRuleList {
+public:
+    StyleSheetCSSRuleList(CSSStyleSheet* sheet)
+        : m_styleSheet(sheet)
+    {
+    }
+
+    ScriptBindingInstance* scriptBindingInstance()
+    {
+        return m_styleSheet->scriptBindingInstance();
+    }
+
+private:
+    unsigned length() const override
+    {
+        return m_styleSheet->allRules().size();
+    }
+
+    CSSRule* item(unsigned index) const override
+    {
+        return index < length() ? m_styleSheet->allRules()[index] : nullptr;
+    }
+
+    CSSStyleSheet* styleSheet() const override
+    {
+        return m_styleSheet;
+    }
+
+    CSSStyleSheet* m_styleSheet;
+};
 
 ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
 {
@@ -175,6 +207,16 @@ String* CSSStyleSheet::href() const
         return m_origin->asHTMLLinkElement()->href();
     }
     return String::emptyString;
+}
+
+CSSRuleList* CSSStyleSheet::cssRules()
+{
+    // TODO: If we add an origin policy, we need to be able to verify that the
+    // rules are accessible.
+    if (!m_ruleList) {
+        m_ruleList = new StyleSheetCSSRuleList(this);
+    }
+    return m_ruleList;
 }
 
 } /* namespace StarFish */
