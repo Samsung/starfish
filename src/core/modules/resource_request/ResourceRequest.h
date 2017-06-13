@@ -32,6 +32,7 @@ class ResourceRequest;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::basic_string<char> NetworkRequestResponseHeader;
+typedef std::unordered_map<std::string, std::string> ResponseHeaderMap;
 
 class ResourceRequestClient : public gc {
 public:
@@ -141,10 +142,9 @@ public:
     {
         return m_isSync;
     }
-
-    const NetworkRequestResponseHeader& responseHeaderData()
+    const ResponseHeaderMap& responseHeaderMap()
     {
-        return m_responseHeaderData;
+        return m_responseHeaderMap;
     }
 
     NetworkRequestResponse& response()
@@ -214,7 +214,6 @@ protected:
     Mutex* m_mutex;
     String* m_responseMimeType;
     NetworkRequestResponse m_response;
-    NetworkRequestResponseHeader m_responseHeaderData;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
 
@@ -229,6 +228,8 @@ protected:
     volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
 
     GCVector<ResourceRequestClient*> m_clients;
+
+    ResponseHeaderMap m_responseHeaderMap;
 };
 }
 

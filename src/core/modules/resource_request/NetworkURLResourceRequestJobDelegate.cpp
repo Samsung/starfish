@@ -21,8 +21,9 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/threading/ThreadPool.h"
-#include "platform/network/http/HTTPHeaderList.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPRequest.h"
+#include "platform/network/http/HTTPResponse.h"
 #include "platform/network/http/HTTPTransaction.h"
 
 namespace StarFish {
@@ -48,6 +49,7 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
                         requestData->request->m_activeNetworkURLWorkerData =
                             nullptr;
                     }
+                    requestData->~NetworkURLWorkerData();
                     GC_FREE(requestData);
                 },
                 requestData);
@@ -75,7 +77,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
         requestData->request->m_status =
-            requestData->httpTransaction->responseCode();
+            requestData->httpTransaction->httpResponse().responseCode();
+        requestData->request->m_response = std::move(
+            requestData->httpTransaction->httpResponse().entityBody());
         requestData->request->handleResponseEOF();
     } else if (requestData->httpTransaction->res() ==
                CURLE_OPERATION_TIMEDOUT) {
@@ -87,11 +91,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
-        STARFISH_LOG_INFO("got timeout %s[%d]\n",
-                          requestData->request->m_url->urlString()->utf8Data(),
-                          (int)requestData->httpTransaction->responseCode());
+        STARFISH_LOG_INFO(
+            "got timeout %s[%d]\n",
+            requestData->request->m_url->urlString()->utf8Data(),
+            (int)requestData->httpTransaction->httpResponse().responseCode());
         requestData->request->m_status =
-            requestData->httpTransaction->responseCode();
+            requestData->httpTransaction->httpResponse().responseCode();
         requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
         if (!requestData->request->isSync()) {
@@ -105,11 +110,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_LOG_INFO("failed to open %s\n",
                           requestData->request->m_url->urlString()->utf8Data());
         requestData->request->m_status =
-            requestData->httpTransaction->responseCode();
+            requestData->httpTransaction->httpResponse().responseCode();
         requestData->request->handleError(ResourceRequest::ERROR);
     }
 
     requestData->request->m_activeNetworkURLWorkerData = nullptr;
+    requestData->~NetworkURLWorkerData();
     GC_FREE(requestData);
 }
 
@@ -139,19 +145,19 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 void NetworkURLResourceRequestJobDelegate::send(String* body)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
-    NetworkURLWorkerData* data = new NetworkURLWorkerData();
+    NetworkURLWorkerData* data = new (NoGC) NetworkURLWorkerData();
     data->request = m_orgProxy;
     data->isAborted = false;
     m_orgProxy->m_activeNetworkURLWorkerData = data;
 
-    String* method = String::emptyString;
+    std::string method;
     switch (m_orgProxy->m_method) {
     case ResourceRequest::GET_METHOD: {
-        method = String::createASCIIString("GET");
+        method = "GET";
         break;
     }
     case ResourceRequest::POST_METHOD: {
-        method = String::createASCIIString("POST");
+        method = "POST";
         break;
     }
     case ResourceRequest::UNKNOWN_METHOD: {
@@ -162,22 +168,25 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    HTTPHeaderList* headers = HTTPHeaderList::create();
+    data->httpTransaction = HTTPTransaction::create();
+
+    HTTPHeaderMap headers;
     fillHeadersWithGeneralHeaders(headers);
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithResourceRequestHeader(headers);
 
-    HTTPRequest* httpRequest = HTTPRequest::create(
-        m_orgProxy->m_url->urlString(), method, headers, body);
+    data->httpTransaction->setHTTPRequest(
+        HTTPRequest::create(m_orgProxy->m_url->urlString()->utf8Data(), method,
+                            headers, body->utf8Data()));
 
-    HTTPTransaction* httpTransaction = HTTPTransaction::create(
-        httpRequest, static_cast<unsigned long>(m_orgProxy->m_timeout));
-    httpTransaction->setProgressCallbackAndData(curlProgressCallback, data);
-    httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
-                                                   data);
-    httpTransaction->setWriteCallbackAndData(curlWriteCallback, m_orgProxy);
+    data->httpTransaction->setTimeout(
+        static_cast<unsigned long>(m_orgProxy->m_timeout));
 
-    data->httpTransaction = httpTransaction;
+    data->httpTransaction->setProgressCallbackAndData(curlProgressCallback,
+                                                      data);
+    data->httpTransaction->setWriteHeaderCallbackAndData(
+        curlWriteHeaderCallback, data);
+    data->httpTransaction->setWriteCallbackAndData(curlWriteCallback, data);
 
     if (m_orgProxy->isSync()) {
         data->networkWorker = new SyncNetworkWorkHelper();
@@ -190,57 +199,48 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
-    HTTPHeaderList* headers)
+    HTTPHeaderMap& headers)
 {
-    STARFISH_ASSERT(headers);
-
     // Set General header
     //  * Cache-Control, Connection, Date, Pragma, Trailer, Transfer-Encoding,
     //  * Upgrade, Via, Warning ...
-    headers->append("Connection:keep-alive");
+    headers.setHeader(HTTPHeaderMap::kConnection, "keep-alive");
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
-    HTTPHeaderList* headers)
+    HTTPHeaderMap& headers)
 {
-    STARFISH_ASSERT(headers);
-
     // Set Client Request header
     //  * Accept, Accept-Charset, Accept-Encoding, Accept-Language,
     //  * Authorization, Cookie, Expect, From, Host, If-Match,
-    //  If-Modified-Since,
-    //  * If-None-Match, If-Range, If-Unmodified-Since, Max-Forwards, Origin,
-    //  * Proxy-Authorization, Range, Referer, TE, User-Agent ...
-
+    //  * If-Modified-Since, If-None-Match, If-Range, If-Unmodified-Since,
+    //  * Max-Forwards, Origin, Proxy-Authorization, Range, Referer, TE,
+    //  * User-Agent ...
     std::string tmpStr;
-    headers->append("Accept-Charset:utf-8");
-    tmpStr = "Accept-Language:";
-    tmpStr += m_orgProxy->starFish()->locale().getName();
+    tmpStr = m_orgProxy->starFish()->locale().getName();
     tmpStr.replace(tmpStr.begin(), tmpStr.end(), '_', '-');
-    headers->append(tmpStr.data());
-    headers->append("User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
+    headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
+
+    headers.setHeader(HTTPHeaderMap::kAcceptCharset, "utf-8");
+
+    headers.setHeader(HTTPHeaderMap::kUserAgent,
+                      USER_AGENT(APP_CODE_NAME, VERSION));
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
-        headers->append("Origin:null");
+        headers.setHeader(HTTPHeaderMap::kOrigin, "null");
     } else {
-        tmpStr = "Host:";
-        tmpStr += m_orgProxy->m_url->hostname()->utf8Data();
-        headers->append(tmpStr.data());
-        tmpStr = "Referer:";
-        tmpStr += m_orgProxy->m_document->urlString()->utf8Data();
-        headers->append(tmpStr.data());
+        headers.setHeader(HTTPHeaderMap::kHost,
+                          m_orgProxy->m_url->hostname()->utf8Data());
+        headers.setHeader(HTTPHeaderMap::kReferer,
+                          m_orgProxy->m_document->urlString()->utf8Data());
     }
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
-    HTTPHeaderList* headers)
+    HTTPHeaderMap& headers)
 {
-    std::string tmpStr;
     for (size_t i = 0; i < m_orgProxy->m_requestHeaders.size(); i++) {
-        tmpStr =
-            std::string(m_orgProxy->m_requestHeaders[i].first->utf8Data()) +
-            ":";
-        tmpStr += m_orgProxy->m_requestHeaders[i].second->utf8Data();
-        headers->append(tmpStr.data());
+        headers.setHeader(m_orgProxy->m_requestHeaders[i].first->utf8Data(),
+                          m_orgProxy->m_requestHeaders[i].second->utf8Data());
     }
 }
 
@@ -272,14 +272,16 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                                                size_t nmemb,
                                                                void* data)
 {
-    ResourceRequest* request = (ResourceRequest*)data;
+    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = workerData->request;
+
     Locker<Mutex> locker(*request->m_mutex);
 
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
-    request->m_response.insert(request->m_response.end(), memPtr,
-                               memPtr + realSize);
+    auto& entityBody = workerData->httpTransaction->httpResponse().entityBody();
+    entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         if (request->isSync()) {
@@ -316,23 +318,58 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
 size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     void* ptr, size_t size, size_t nmemb, void* data)
 {
-    size_t realsize = size * nmemb;
-    NetworkURLWorkerData* request = (NetworkURLWorkerData*)data;
-    Locker<Mutex> locker(*request->request->m_mutex);
+    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = workerData->request;
 
+    Locker<Mutex> locker(*request->m_mutex);
+
+    workerData->httpTransaction->httpResponse().updateResponseStatus();
     size_t realSize = size * nmemb;
-    const char* memPtr = (const char*)ptr;
+    std::string header(static_cast<const char*>(ptr), realSize);
 
-    long resCode = request->httpTransaction->responseCode();
+    if (workerData->httpTransaction->httpResponse()
+            .isSuccessfulResponseStatus()) {
+        if ((header.compare("\r\n") == 0) || (header.compare("\n") == 0)) {
+            request->m_responseHeaderMap =
+                std::move(workerData->httpTransaction->httpResponse()
+                              .headers()
+                              .headerMap());
 
-    if (request->lastTransactionResponseCode != resCode) {
-        request->lastTransactionResponseCode = resCode;
-        request->request->m_responseHeaderData.clear();
+            if (request->m_pendingOnHeaderReceivedEventIdlerHandle ==
+                SIZE_MAX) {
+                if (request->isSync()) {
+                    request->changeReadyState(ResourceRequest::HEADERS_RECEIVED,
+                                              true);
+                } else {
+                    request->m_pendingOnHeaderReceivedEventIdlerHandle =
+                        request->starFish()
+                            ->messageLoop()
+                            ->addIdlerWithNoGCRootingInOtherThread(
+                                [](size_t handle, void* data) {
+                                    ResourceRequest* request =
+                                        (ResourceRequest*)data;
+                                    Locker<Mutex> locker(*request->m_mutex);
+                                    {
+                                        STARFISH_ASSERT(
+                                            handle ==
+                                            request
+                                                ->m_pendingOnHeaderReceivedEventIdlerHandle);
+                                        request
+                                            ->m_pendingOnHeaderReceivedEventIdlerHandle =
+                                            SIZE_MAX;
+                                    }
+                                    request->changeReadyState(
+                                        ResourceRequest::HEADERS_RECEIVED,
+                                        true);
+                                },
+                                request);
+                }
+            }
+        } else {
+            workerData->httpTransaction->didReceiveHeader(header);
+        }
     }
 
-    request->request->m_responseHeaderData.insert(
-        request->request->m_responseHeaderData.end(), memPtr,
-        memPtr + realSize);
-    return realsize;
+    return realSize;
 }
 }

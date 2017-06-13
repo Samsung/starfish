@@ -59,11 +59,12 @@ void Resource::cancel()
     }
 }
 
-void Resource::didHeaderReceived(String* header)
+void Resource::didHeaderReceived(
+    const std::unordered_map<std::string, std::string>& headrs)
 {
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
-        (*iter)->didHeaderReceived(header);
+        (*iter)->didHeaderReceived(headrs);
         iter++;
     }
 }

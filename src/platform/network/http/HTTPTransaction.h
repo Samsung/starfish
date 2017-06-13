@@ -18,11 +18,12 @@
 #define __StarFishHTTPTransaction__
 
 #include <curl/curl.h>
-#include "core/util/String.h"
 
 namespace StarFish {
 
 class HTTPRequest;
+class HTTPResponse;
+
 typedef int (*ProgressCallBack)(void* clientp, curl_off_t dltotal,
                                 curl_off_t dlnow, curl_off_t ultotal,
                                 curl_off_t ulnow);
@@ -31,28 +32,44 @@ typedef size_t (*WriteHeaderCallback)(void* ptr, size_t size, size_t nmemb,
 typedef size_t (*WriteCallback)(void* ptr, size_t size, size_t nmemb,
                                 void* data);
 
-class HTTPTransaction : public gc {
+class HTTPTransaction {
 public:
-    static HTTPTransaction* create(HTTPRequest* request,
-                                   unsigned long timeout = 0)
+    static std::unique_ptr<HTTPTransaction> create()
     {
-        return new HTTPTransaction(request, timeout);
+        return std::unique_ptr<HTTPTransaction>(new HTTPTransaction());
     }
 
-    void start();
+    ~HTTPTransaction();
 
+    // Transaction interface
+    void start();
     void abort()
     {
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    void setHTTPRequest(std::unique_ptr<HTTPRequest> httpRequest)
+    {
+        m_httpRequest = std::move(httpRequest);
+    }
+
+    HTTPResponse& httpResponse()
+    {
+        return *m_httpResponse;
+    }
+    void updateTransactionStatus();
+    void didReceiveHeader(const std::string& header);
+
+    void setTimeout(const long timeout)
+    {
+        m_timeout = timeout;
+    }
+
     CURLcode res()
     {
         return m_res;
     }
-
-    long responseCode();
 
     void setProgressCallbackAndData(ProgressCallBack cb, void* data = nullptr)
     {
@@ -74,26 +91,26 @@ public:
     }
 
 private:
-    HTTPTransaction(HTTPRequest* request, unsigned long timeout);
-    ~HTTPTransaction();
+    HTTPTransaction();
 
-    HTTPRequest* m_httpRequest;
+    std::unique_ptr<HTTPRequest> m_httpRequest;
+    std::unique_ptr<HTTPResponse> m_httpResponse;
+
     unsigned long m_timeout;
     CURL* m_curl;
     CURLcode m_res;
-    long m_response_code;
 
     // progress
     ProgressCallBack m_procCB;
-    void* m_procData;
+    void* m_procData; // NetworkURLWorkerData
 
     // writeheader
     WriteHeaderCallback m_writeHeaderCB;
-    void* m_writeHeaderData;
+    void* m_writeHeaderData; // ResourceRequest
 
     // write
     WriteCallback m_writeCB;
-    void* m_writeData;
+    void* m_writeData; // NetworkURLWorkerData
 };
 }
 

@@ -17,58 +17,51 @@
 #ifndef __StarFishHTTPRequest__
 #define __StarFishHTTPRequest__
 
-#include "core/util/String.h"
-
 namespace StarFish {
 
-class HTTPHeaderList;
+class HTTPHeaderMap;
 
-class HTTPRequest : public gc {
+class HTTPRequest {
 public:
-    static HTTPRequest* create(String* url, String* method,
-                               HTTPHeaderList* header, String* body)
+    static std::unique_ptr<HTTPRequest> create(const std::string& url,
+                                               const std::string& method,
+                                               const HTTPHeaderMap& headers,
+                                               const std::string& entityBody)
     {
-        return new HTTPRequest(url, method, header, body);
+        return std::unique_ptr<HTTPRequest>(
+            new HTTPRequest(url, method, headers, entityBody));
     }
 
-    HTTPHeaderList* headers()
+    ~HTTPRequest();
+
+    HTTPHeaderMap& headers()
     {
         return m_headers;
     }
 
-    String* method()
+    std::string method()
     {
         return m_method;
     }
 
-    String* url()
+    std::string url()
     {
         return m_url;
     }
 
-    String* body()
+    std::string entityBody()
     {
-        return m_body;
+        return m_entityBody;
     }
 
 private:
-    HTTPRequest(String* url, String* method, HTTPHeaderList* headers,
-                String* body)
-        : m_url(url)
-        , m_method(method)
-        , m_headers(headers)
-        , m_body(body)
-    {
-    }
+    HTTPRequest(const std::string& url, const std::string& method,
+                const HTTPHeaderMap& headers, const std::string& entityBody);
 
-    ~HTTPRequest()
-    {
-    }
-
-    String* m_url;
-    String* m_method;
-    HTTPHeaderList* m_headers;
-    String* m_body;
+    std::string m_url;
+    std::string m_method;
+    HTTPHeaderMap m_headers;
+    std::string m_entityBody;
 };
 }
 

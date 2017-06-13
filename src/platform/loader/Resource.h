@@ -117,7 +117,8 @@ public:
     };
     virtual void request(ResourceRequestSyncLevel syncLevel = NeverSync);
     virtual void cancel();
-    virtual void didHeaderReceived(String* header);
+    virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headrs);
     virtual void didDataReceived(const char*, size_t length);
     virtual void didLoadFinished();
     virtual void didLoadFailed();
@@ -195,9 +196,7 @@ public:
                                     bool isExplicitAction) override
     {
         if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
-            m_resource->didHeaderReceived(
-                String::fromUTF8(request->responseHeaderData().data(),
-                                 request->responseHeaderData().length()));
+            m_resource->didHeaderReceived(request->responseHeaderMap());
         }
     }
 
