@@ -67,7 +67,7 @@ ResourceRequest::ResourceRequest(Document* document)
             // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
             NetworkRequestResponse().swap(nr->m_response);
-            NetworkRequestResponseHeader().swap(nr->m_responseHeaderData);
+            ResponseHeaderMap().swap(nr->m_responseHeaderMap);
         },
         NULL, NULL, NULL);
 
@@ -79,7 +79,7 @@ void ResourceRequest::initVariables()
 {
     m_responseMimeType = String::emptyString;
     NetworkRequestResponse().swap(m_response);
-    NetworkRequestResponseHeader().swap(m_responseHeaderData);
+    ResponseHeaderMap().swap(m_responseHeaderMap);
     m_isSync = false;
     m_gotError = false;
     m_containsBase64Content = false;
@@ -139,72 +139,6 @@ void ResourceRequest::handleError(ProgressState error)
     changeProgress(LOADEND, true);
 }
 
-// trim from start (in place)
-static inline void ltrim(std::string& s)
-{
-    s.erase(s.begin(),
-            std::find_if(s.begin(), s.end(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-static inline void rtrim(std::string& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace)))
-                .base(),
-            s.end());
-}
-
-// trim from both ends (in place)
-static inline void trim(std::string& s)
-{
-    ltrim(s);
-    rtrim(s);
-}
-
-// trim from start (copying)
-static inline std::string ltrimmed(std::string s)
-{
-    ltrim(s);
-    return s;
-}
-
-// trim from end (copying)
-static inline std::string rtrimmed(std::string s)
-{
-    rtrim(s);
-    return s;
-}
-
-// trim from both ends (copying)
-static inline std::string trimmed(std::string s)
-{
-    trim(s);
-    return s;
-}
-
-static void skipSpaces(const std::string& input, unsigned long int& startIndex)
-{
-    while (startIndex < input.length() && input[startIndex] == ' ') {
-        ++startIndex;
-    }
-}
-
-static std::vector<std::string> split(const std::string& s, char seperator)
-{
-    std::vector<std::string> output;
-    std::string::size_type prev_pos = 0, pos = 0;
-    while ((pos = s.find(seperator, pos)) != std::string::npos) {
-        std::string substring(s.substr(prev_pos, pos - prev_pos));
-        output.push_back(substring);
-        prev_pos = ++pos;
-    }
-
-    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
-    return output;
-}
-
 void ResourceRequest::changeReadyState(ReadyState readyState,
                                        bool isExplicitAction)
 {
@@ -219,58 +153,31 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         changeReadyState(HEADERS_RECEIVED, true);
         changeReadyState(LOADING, true);
     }
-
     if (readyState == HEADERS_RECEIVED) {
-        std::vector<std::string> s = split(m_responseHeaderData, '\n');
-        std::string::size_type index;
-        for (size_t i = 0; i < s.size(); i++) {
-            std::string& header = s[i];
-            if (header == "\r") {
-                continue;
-            }
-            index = header.find(':', 0);
-            if (index != std::string::npos) {
-                std::string h = header.substr(0, index);
-                std::string d = header.substr(index + 1);
-                if (h == "Content-Type") {
-                    std::istringstream is(d);
-                    std::string part = d;
-                    trim(part);
-
-                    // parsed content-type
-                    unsigned long int index = 0;
-                    unsigned long int contentTypeLength = part.length();
-                    skipSpaces(part, index);
-                    if (index >= contentTypeLength) {
-                        STARFISH_LOG_ERROR("Invalid Content-Type string '%s'\n",
-                                           part.c_str());
-                        continue;
-                    }
-
-                    // There should not be any quoted strings until we reach the
-                    // parameters.
-                    size_t semiColonIndex = part.find(";", index);
-                    if (semiColonIndex < 0) {
-                        m_responseMimeType = String::fromUTF8(
-                            part.substr(index, contentTypeLength - index)
-                                .data());
-                        continue;
-                    }
-
-                    m_responseMimeType = String::fromUTF8(
-                        part.substr(index, semiColonIndex - index).data());
-                    index = semiColonIndex + 1;
-                } else if (h == "Content-Transfer-Encoding") {
-                    std::string part = d;
-                    trim(part);
-                    std::transform(part.begin(), part.end(), part.begin(),
-                                   ::tolower);
-                    if (part == "base64") {
-                        m_containsBase64Content = true;
-                    }
+        {
+            auto it = m_responseHeaderMap.find("Content-Type");
+            if (it != m_responseHeaderMap.end()) {
+                size_t pos = it->second.find(";");
+                if (pos != std::string::npos) {
+                    m_responseMimeType = String::fromUTF8(it->second.data());
+                } else {
+                    m_responseMimeType =
+                        String::fromUTF8(it->second.substr(0, pos).data());
                 }
             }
         }
+        {
+            auto it = m_responseHeaderMap.find("Content-Transfer-Encoding");
+            if (it != m_responseHeaderMap.end()) {
+                std::string part = it->second;
+                std::transform(part.begin(), part.end(), part.begin(),
+                               ::tolower);
+                if (part.compare("base64") == 0) {
+                    m_containsBase64Content = true;
+                }
+            }
+        }
+
     } else if (readyState == DONE) {
         if (m_containsBase64Content) {
             m_response = parseBase64String(m_response, 0, m_response.size());
@@ -310,7 +217,7 @@ void ResourceRequest::changeProgress(ProgressState progress,
 
     if (m_progressState == ProgressState::LOADEND) {
         NetworkRequestResponse().swap(m_response);
-        NetworkRequestResponseHeader().swap(m_responseHeaderData);
+        ResponseHeaderMap().swap(m_responseHeaderMap);
     }
 }
 

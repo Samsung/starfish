@@ -15,9 +15,10 @@
  */
 
 #include "StarFishConfig.h"
-#include "HTTPTransaction.h"
+#include "HTTPHeaderMap.h"
 #include "HTTPRequest.h"
-#include "HTTPHeaderList.h"
+#include "HTTPResponse.h"
+#include "HTTPTransaction.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <net_connection.h>
@@ -25,12 +26,78 @@
 
 namespace StarFish {
 
-HTTPTransaction::HTTPTransaction(HTTPRequest* request, unsigned long timeout)
-    : m_httpRequest(request)
-    , m_timeout(timeout)
+// trim from start (in place)
+static inline void ltrim(std::string& s)
+{
+    s.erase(s.begin(),
+            std::find_if(s.begin(), s.end(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string& s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace)))
+                .base(),
+            s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string& s)
+{
+    ltrim(s);
+    rtrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrimmed(std::string s)
+{
+    ltrim(s);
+    return s;
+}
+
+// trim from end (copying)
+static inline std::string rtrimmed(std::string s)
+{
+    rtrim(s);
+    return s;
+}
+
+// trim from both ends (copying)
+static inline std::string trimmed(std::string s)
+{
+    trim(s);
+    return s;
+}
+
+static void skipSpaces(const std::string& input, unsigned long int& startIndex)
+{
+    while (startIndex < input.length() && input[startIndex] == ' ') {
+        ++startIndex;
+    }
+}
+
+static std::vector<std::string> split(const std::string& s, char seperator)
+{
+    std::vector<std::string> output;
+    std::string::size_type prev_pos = 0, pos = 0;
+    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+        std::string substring(s.substr(prev_pos, pos - prev_pos));
+        output.push_back(substring);
+        prev_pos = ++pos;
+    }
+
+    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
+    return output;
+}
+
+HTTPTransaction::HTTPTransaction()
+    : m_httpRequest()
+    , m_httpResponse()
+    , m_timeout(0)
     , m_curl(nullptr)
     , m_res()
-    , m_response_code(0)
     , m_procCB(nullptr)
     , m_procData(nullptr)
     , m_writeHeaderCB(nullptr)
@@ -40,17 +107,23 @@ HTTPTransaction::HTTPTransaction(HTTPRequest* request, unsigned long timeout)
 {
 }
 
+HTTPTransaction::~HTTPTransaction()
+{
+}
+
 void HTTPTransaction::start()
 {
     m_curl = curl_easy_init();
+    m_httpResponse = HTTPResponse::create(m_curl);
+
+    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     STARFISH_ASSERT(m_curl);
 
-    curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url()->utf8Data());
+    curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
     STARFISH_LOG_INFO("sending network request to %s\n",
-                      m_httpRequest->url()->utf8Data());
+                      m_httpRequest->url().data());
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
-    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER,
-                     m_httpRequest->headers()->unwrap());
+    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
     curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -77,6 +150,7 @@ void HTTPTransaction::start()
     if (m_writeCB) {
         curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, m_writeCB);
     }
+
     if (m_writeData) {
         // curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_orgProxy);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
@@ -85,10 +159,10 @@ void HTTPTransaction::start()
 #ifdef STARFISH_ENABLE_TEST
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
-    if (m_httpRequest->method()->equals("POST")) {
+    if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS,
-                         m_httpRequest->body()->utf8Data());
-    } else if (!m_httpRequest->method()->equals("GET")) {
+                         m_httpRequest->entityBody().data());
+    } else if (!(m_httpRequest->method().compare("GET") == 0)) {
         STARFISH_ASSERT_NOT_REACHED();
     }
 
@@ -110,19 +184,25 @@ void HTTPTransaction::start()
     }
 #endif
     m_res = curl_easy_perform(m_curl);
-
-    curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &m_response_code);
+    m_httpResponse->updateResponseStatus();
 
     // TODO : reuse curl for persistant conntection
     curl_easy_cleanup(m_curl);
+    curl_slist_free_all(list);
     m_curl = nullptr;
 }
 
-long HTTPTransaction::responseCode()
+void HTTPTransaction::didReceiveHeader(const std::string& header)
 {
-    if (m_curl) {
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &m_response_code);
+    size_t pos = header.find(":");
+    if (pos != std::string::npos) {
+        std::string key = header.substr(0, pos);
+        std::string value = header.substr(pos + 1);
+
+        trim(key);
+        trim(value);
+
+        m_httpResponse->headers().setHeader(key, value);
     }
-    return m_response_code;
 }
 }

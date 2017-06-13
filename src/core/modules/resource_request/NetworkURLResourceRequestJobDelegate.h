@@ -23,13 +23,13 @@ namespace StarFish {
 
 class ResourceRequest;
 class NetworkURLWorkerHelper;
-class HTTPHeaderList;
+class HTTPHeaderMap;
 class HTTPTransaction;
 
-struct NetworkURLWorkerData : public gc {
+struct NetworkURLWorkerData {
     ResourceRequest* request;
     NetworkURLWorkerHelper* networkWorker;
-    HTTPTransaction* httpTransaction;
+    std::unique_ptr<HTTPTransaction> httpTransaction;
     bool isAborted;
     long lastTransactionResponseCode;
 };
@@ -80,9 +80,9 @@ public:
     virtual void send(String* body = String::emptyString);
 
 private:
-    void fillHeadersWithGeneralHeaders(HTTPHeaderList* headers);
-    void fillHeadersWithClientHeaders(HTTPHeaderList* headers);
-    void fillHeadersWithResourceRequestHeader(HTTPHeaderList* headers);
+    void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);
+    void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
+    void fillHeadersWithResourceRequestHeader(HTTPHeaderMap& headers);
 
     ResourceRequest* m_orgProxy;
 };

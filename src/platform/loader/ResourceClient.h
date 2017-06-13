@@ -48,7 +48,8 @@ public:
     {
     }
 
-    virtual void didHeaderReceived(String* header)
+    virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headrs)
     {
     }
 

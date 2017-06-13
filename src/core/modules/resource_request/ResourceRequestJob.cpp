@@ -135,16 +135,10 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 
         if (base64 == sub->length() - 7) {
             sub = sub->substring(0, base64);
-            res->m_responseHeaderData =
-                "Content-Transfer-Encoding:base64\r\nContent-Type:";
-        } else {
-            res->m_responseHeaderData = "Content-Type:";
-        }
-
-        for (size_t i = 0; i < sub->length(); i++) {
-            res->m_responseHeaderData.push_back((char)sub->charAt(i));
+            res->m_containsBase64Content = true;
         }
     }
+
     res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
 
     res->changeReadyState(ResourceRequest::LOADING, true);

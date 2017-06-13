@@ -14,34 +14,23 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTTPHeaderList__
-#define __StarFishHTTPHeaderList__
-
-#include <curl/curl.h>
-#include "core/util/String.h"
+#include "StarFishConfig.h"
+#include "HTTPHeaderMap.h"
+#include "HTTPRequest.h"
 
 namespace StarFish {
 
-class HTTPHeaderList : public gc {
-public:
-    static HTTPHeaderList* create()
-    {
-        return new HTTPHeaderList();
-    }
-    void append(String* header);
-    void append(const char* header);
-    const void* unwrap() const
-    {
-        return this->m_head;
-    }
-
-private:
-    HTTPHeaderList();
-    ~HTTPHeaderList(){};
-
-    int m_length;
-    struct curl_slist* m_head;
-};
+HTTPRequest::HTTPRequest(const std::string& url, const std::string& method,
+                         const HTTPHeaderMap& headers,
+                         const std::string& entityBody)
+    : m_url(url)
+    , m_method(method)
+    , m_headers(headers)
+    , m_entityBody(entityBody)
+{
 }
 
-#endif
+HTTPRequest::~HTTPRequest()
+{
+}
+}
