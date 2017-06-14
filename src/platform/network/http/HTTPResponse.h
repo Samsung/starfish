@@ -27,14 +27,22 @@ class HTTPResponse {
 public:
     typedef std::vector<char> EntityBody;
 
-    static std::unique_ptr<HTTPResponse> create(CURL* curl)
+    static std::unique_ptr<HTTPResponse> create()
     {
-        return std::unique_ptr<HTTPResponse>(new HTTPResponse(curl));
+        return std::unique_ptr<HTTPResponse>(new HTTPResponse());
     }
 
     ~HTTPResponse();
-    void updateResponseStatus();
-    long responseCode();
+    void setResponseCode(long responseCode)
+    {
+        m_responseCode = responseCode;
+    }
+
+    long responseCode()
+    {
+        return m_responseCode;
+    }
+
     bool isSuccessfulResponseStatus();
 
     void setReasonPhrase(const std::string& reasonPhrase)
@@ -53,7 +61,7 @@ public:
     }
 
 private:
-    HTTPResponse(CURL* curl);
+    HTTPResponse();
     CURL* m_curl;
     long m_responseCode;
     std::string m_reasonPhrase;
