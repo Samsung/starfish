@@ -17,7 +17,8 @@ test/reftest/vendor/blink/fast/dom/createElement-with-column.html
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-properties-case-sensitive.html
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-named-getter.html
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-named-setter.html
-test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-item.html
+# NOTE Disable duplicated test with webkit
+# test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-item.html
 test/reftest/vendor/blink/fast/dom/css-stylesheet-candidate-ordering.html
 test/reftest/vendor/blink/fast/dom/custom/element-upgrade-no-register-and-leak.html
 test/reftest/vendor/blink/fast/dom/Document/createElement-invalid-names.html

@@ -222,4 +222,65 @@ void CSSStyleDeclaration::setCssText(String* text)
 {
     // TODO
 }
+
+Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
+{
+    const char* nameData = name->utf8Data();
+    size_t nameLength = name->contentLength();
+
+    CSSStyleKind kind = lookupCSSStyleCamelCase(nameData, nameLength);
+    if (kind == CSSStyleKind::Unknown) {
+        kind = lookupCSSStyle(nameData, nameLength);
+    }
+    if (kind == CSSStyleKind::Unknown) {
+        return Nullable<String*>();
+    }
+    if (false) {
+    }
+#define GET_ATTR(name, ...)               \
+    else if (kind == CSSStyleKind::name)  \
+    {                                     \
+        return Nullable<String*>(name()); \
+    }
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
+#undef GET_ATTR
+    return Nullable<String*>();
+}
+
+void CSSStyleDeclaration::defaultNamedEnumerator(
+    std::vector<const char*>& enums)
+{
+#define ENUM_ATTR(name, nameLower, ...) enums.push_back(#nameLower);
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ENUM_ATTR)
+#undef ENUM_ATTR
+}
+
+void CSSStyleDeclaration::defaultSetter(String* name, Nullable<String*> value)
+{
+    const char* nameData = name->utf8Data();
+    size_t nameLength = name->contentLength();
+
+    CSSStyleKind kind = lookupCSSStyleCamelCase(nameData, nameLength);
+    if (kind == CSSStyleKind::Unknown) {
+        kind = lookupCSSStyle(nameData, nameLength);
+    }
+    if (kind == CSSStyleKind::Unknown) {
+        return;
+    }
+    // Empty string let setter remove its value
+    String* valueTo = String::emptyString;
+    if (value.hasValue()) {
+        valueTo = value.getValue();
+    }
+    if (false) {
+    }
+#define SET_ATTR(name, ...)              \
+    else if (kind == CSSStyleKind::name) \
+    {                                    \
+        set##name(valueTo, false);       \
+        return;                          \
+    }
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+#undef SET_ATTR
+}
 }

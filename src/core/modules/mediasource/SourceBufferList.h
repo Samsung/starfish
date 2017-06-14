@@ -60,6 +60,12 @@ public:
 
     void scheduleEvent(String* eventName);
 
+    // DOM binding API
+    SourceBuffer* defaultIndexedGetter(uint32_t idx)
+    {
+        return m_list[idx];
+    }
+
 protected:
     GCVector<SourceBuffer*> m_list;
     StarFish* m_starFish;

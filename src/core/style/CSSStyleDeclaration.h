@@ -132,6 +132,12 @@ public:
     String* getPropertyValue(String* name);
     void setProperty(String* name, String* value, String* priority);
 
+    // NOTE Based on IDL,
+    // CSSStyleDeclaration has namedGetter, namedEnumerator, setter
+    Nullable<String*> defaultNamedGetter(String* name);
+    void defaultSetter(String* name, Nullable<String*> value);
+    void defaultNamedEnumerator(std::vector<const char*>& enums);
+
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
     Element* m_element;

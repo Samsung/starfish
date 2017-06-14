@@ -95,7 +95,8 @@ test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-assignment.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-call-as-function.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-index.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-name.html
-test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-name-getter-properties.html
+# NOTE Disable webkit specific test
+# test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-name-getter-properties.html
 test/reftest/vendor/webkit/fast/dom/NodeList/no-named-getter.html
 test/reftest/vendor/webkit/fast/dom/no-elements.html
 test/reftest/vendor/webkit/fast/dom/objc-big-method-name.html
