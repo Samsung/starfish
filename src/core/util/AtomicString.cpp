@@ -36,6 +36,18 @@ AtomicString AtomicString::createAtomicString(StarFish* sf, String* str)
     }
 }
 
+AtomicString AtomicString::createAtomicString(StarFish* sf, StringView str)
+{
+    auto iter = sf->m_atomicStringMap.find(&str);
+    if (sf->m_atomicStringMap.end() == iter) {
+        auto sv = new StringView(str);
+        sf->m_atomicStringMap.insert(sv);
+        return AtomicString(sv);
+    } else {
+        return AtomicString(iter.operator*());
+    }
+}
+
 AtomicString AtomicString::createAtomicString(StarFish* sf, const char* str)
 {
     return createAtomicString(sf, str, strlen(str));
@@ -86,6 +98,39 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
         if (sf->m_atomicStringMap.end() == iter) {
             String* string = new StringDataUTF32(
                 std::move(TightUTF32String(buf, data.length)));
+            sf->m_atomicStringMap.insert(string);
+            return AtomicString(string);
+        } else {
+            return AtomicString(iter.operator*());
+        }
+    }
+}
+
+AtomicString AtomicString::createAttrAtomicString(StarFish* sf, char32_t str)
+{
+    if (str < 128) {
+        char* buf = (char*)alloca(2);
+        buf[0] = (char)str;
+        buf[1] = 0;
+        StringDataOnStackASCII str(buf, 1);
+
+        auto iter = sf->m_atomicStringMap.find(&str);
+        if (sf->m_atomicStringMap.end() == iter) {
+            String* string = new StringDataASCII(buf, 1);
+            sf->m_atomicStringMap.insert(string);
+            return AtomicString(string);
+        } else {
+            return AtomicString(iter.operator*());
+        }
+    } else {
+        char32_t* buf = (char32_t*)alloca(sizeof(char32_t) * 2);
+        buf[0] = str;
+        buf[1] = 0;
+        StringDataOnStackUTF32 str(buf, 1);
+
+        auto iter = sf->m_atomicStringMap.find(&str);
+        if (sf->m_atomicStringMap.end() == iter) {
+            String* string = new StringDataUTF32(buf);
             sf->m_atomicStringMap.insert(string);
             return AtomicString(string);
         } else {

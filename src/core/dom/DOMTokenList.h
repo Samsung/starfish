@@ -39,15 +39,15 @@ public:
     virtual bool isDOMTokenList() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    static void tokenize(GCVector<String*>* tokens, String* src);
+    static GCVector<StringView> tokenize(String* src);
     static void concatTokensInsideParentheses(GCVector<String*>* tokens);
     uint32_t length();
     Nullable<String*> item(unsigned long index);
     bool contains(String* token);
-    String* addSingleToken(String* src, GCVector<String*>* tokens,
+    String* addSingleToken(String* src, const GCVector<StringView>& tokens,
                            String* token);
     void add(GCVector<String*>& tokens);
-    int checkMatchedTokens(bool* flags, GCVector<String*>* tokens,
+    int checkMatchedTokens(bool* flags, const GCVector<StringView>& tokens,
                            String* token);
     void remove(String* token);
     void remove(GCVector<String*>& tokens);

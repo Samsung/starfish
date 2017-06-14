@@ -139,15 +139,89 @@ char kLexTable[] = {
 size_t kLexTableSize = sizeof kLexTable / sizeof(int);
 
 class CSSToken : public gc {
-public:
-    CSSToken(char type, String* value = String::emptyString,
-             String* unit = String::emptyString, float numericValue = 0)
+    CSSToken(char type)
     {
         m_type = type;
-        m_value = value;
-        m_unit = unit;
-        m_unitType = getUnitType(m_unit->toLower());
-        m_numericValue = numericValue;
+        m_stringValue = String::emptyString;
+        m_unitType = UnitType::UnknownType;
+        m_hasStringValue = false;
+        m_hasCharValue = false;
+        m_hasNumberValue = false;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(char type, String* value)
+    {
+        m_type = type;
+        m_stringValue = value;
+        m_unitType = UnitType::UnknownType;
+        m_hasStringValue = true;
+        m_hasCharValue = false;
+        m_hasNumberValue = false;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(char type, char32_t value)
+    {
+        m_type = type;
+        m_charValue = value;
+        m_unitType = UnitType::UnknownType;
+        m_hasStringValue = false;
+        m_hasCharValue = true;
+        m_hasNumberValue = false;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(char type, float number, String* source, UnitType u,
+             bool hasSourceOfNumberValueDot, bool hasAlphabetNInUnit)
+    {
+        m_type = type;
+        m_numericValue = number;
+        m_numericValueSource = source;
+        m_unitType = u;
+        m_hasStringValue = false;
+        m_hasCharValue = false;
+        m_hasNumberValue = true;
+        m_hasAlphabetNInUnit = hasAlphabetNInUnit;
+        m_hasSourceOfNumberValueDot = hasSourceOfNumberValueDot;
+    }
+
+public:
+    static CSSToken* createNullToken()
+    {
+        return new CSSToken(CSSToken::NULL_TYPE);
+    }
+
+    static CSSToken* createToken(char type)
+    {
+        return new CSSToken(type);
+    }
+
+    static CSSToken* createStringValueToken(char type, String* value)
+    {
+        return new CSSToken(type, value);
+    }
+
+    static CSSToken* createCharValueToken(char type, char32_t ch)
+    {
+        return new CSSToken(type, ch);
+    }
+
+    static CSSToken* createNumberValueToken(char type, float number,
+                                            String* source, UnitType u,
+                                            bool hasSourceOfNumberValueDot,
+                                            bool hasAlphabetNInUnit)
+    {
+        return new CSSToken(type, number, source, u, hasSourceOfNumberValueDot,
+                            hasAlphabetNInUnit);
+    }
+
+    bool hasStringValue()
+    {
+        return m_hasStringValue;
     }
 
     bool isNotNull()
@@ -155,13 +229,23 @@ public:
         return m_type;
     }
 
-    bool isOfType(char aType, String* aValue = nullptr)
+    bool isOfType(char aType, char32_t aValue)
     {
-        return (m_type == aType &&
-                (!aValue || m_value->equalsWithoutCase(aValue)));
+        return (m_type == aType && (!aValue || charValue() == aValue));
     }
 
-    bool isWhiteSpace(String* w = nullptr)
+    bool isOfType(char aType, const char* aValue)
+    {
+        return (m_type == aType &&
+                (!aValue || value()->equalsWithoutCase(aValue)));
+    }
+
+    bool isOfType(char aType)
+    {
+        return m_type == aType;
+    }
+
+    bool isWhiteSpace(char32_t w = 0)
     {
         return isOfType(CSSToken::WHITESPACE_TYPE, w);
     }
@@ -181,24 +265,45 @@ public:
         return isOfType(CSSToken::SGML_COMMENT_TYPE);
     }
 
-    bool isNumber(String* n = nullptr)
+    bool isNumber()
     {
-        return isOfType(CSSToken::NUMBER_TYPE, n);
+        return isOfType(CSSToken::NUMBER_TYPE);
     }
 
-    bool isIdent(String* i = nullptr)
+    bool hasSourceOfNumberValueDot()
     {
-        return isOfType(CSSToken::IDENT_TYPE, i);
+        return m_hasSourceOfNumberValueDot;
     }
 
-    bool isFunction(String* f = nullptr)
+    bool hasAlphabetNInUnit()
+    {
+        return m_hasAlphabetNInUnit;
+    }
+
+    bool isIdent()
+    {
+        return isOfType(CSSToken::IDENT_TYPE);
+    }
+
+    bool isIdent(char c)
+    {
+        char s[2] = { c, '\0' };
+        return isOfType(CSSToken::IDENT_TYPE) && value()->equals(s);
+    }
+
+    bool isIdent(const char* s)
+    {
+        return isOfType(CSSToken::IDENT_TYPE) && value()->equalsWithoutCase(s);
+    }
+
+    bool isFunction(const char* f = nullptr)
     {
         return isOfType(CSSToken::FUNCTION_TYPE, f);
     }
 
-    bool isAtRule(String* a = nullptr)
+    bool isAtRule(const char* f = nullptr)
     {
-        return isOfType(CSSToken::ATRULE_TYPE, a);
+        return isOfType(CSSToken::ATRULE_TYPE, f);
     }
 
     bool isIncludes()
@@ -226,13 +331,7 @@ public:
         return isOfType(CSSToken::CONTAINSMATCH_TYPE);
     }
 
-    bool isSymbol(char32_t c)
-    {
-        return (m_type == CSSToken::SYMBOL_TYPE &&
-                ((m_value->length() == 1) && (m_value->charAt(0) == c)));
-    }
-
-    bool isSymbol(String* c = nullptr)
+    bool isSymbol(char32_t c = 0)
     {
         return isOfType(CSSToken::SYMBOL_TYPE, c);
     }
@@ -252,34 +351,38 @@ public:
         return isOfType(CSSToken::HEX_TYPE);
     }
 
-    bool isDimensionOfUnit(const char* aUnit)
+    bool isDimensionOfUnit(UnitType aUnit)
     {
-        return (isDimension() && m_unit->equals(aUnit));
+        return (isDimension() && m_unitType == aUnit);
     }
 
     bool isLength()
     {
-        return (isDimensionOfUnit("cm") || isDimensionOfUnit("mm") ||
-                isDimensionOfUnit("in") || isDimensionOfUnit("pc") ||
-                isDimensionOfUnit("px") || isDimensionOfUnit("em") ||
-                isDimensionOfUnit("ex") || isDimensionOfUnit("pt"));
+        STARFISH_ASSERT(m_hasNumberValue);
+        switch (m_unitType) {
+        case UnitType::Centimeters:
+        case UnitType::Millimeters:
+        case UnitType::Inches:
+        case UnitType::Picas:
+        case UnitType::Pixels:
+        case UnitType::Ems:
+        case UnitType::Exs:
+        case UnitType::Points:
+            return true;
+        }
+        return false;
     }
 
     bool isAngle()
     {
-        return (isDimensionOfUnit("deg") || isDimensionOfUnit("rad") ||
-                isDimensionOfUnit("grad"));
-    }
-
-    UnitType getUnitType(String* unit)
-    {
-        if (unit == nullptr || unit->equals(String::emptyString) ||
-            !unit->hasASCIIContent()) { // FIXME(ksh8281) check hasASCIIContent
-                                        // is not enough for checking ascii
-            return UnitType::UnknownType;
+        STARFISH_ASSERT(m_hasNumberValue);
+        switch (m_unitType) {
+        case UnitType::Degrees:
+        case UnitType::Radians:
+        case UnitType::Gradians:
+            return true;
         }
-
-        return lookupUnitType(unit->utf8Data(), unit->length());
+        return false;
     }
 
     char type()
@@ -289,31 +392,55 @@ public:
 
     String* value()
     {
-        return m_value;
+        STARFISH_ASSERT(m_hasStringValue);
+        return m_stringValue;
+    }
+
+    char32_t charValue()
+    {
+        STARFISH_ASSERT(m_hasCharValue);
+        return m_charValue;
+    }
+
+    AtomicString toAttrAtomicString(StarFish* sf)
+    {
+        STARFISH_ASSERT(m_hasCharValue || m_hasStringValue);
+        if (m_hasCharValue) {
+            return AtomicString::createAttrAtomicString(sf, charValue());
+        } else {
+            return AtomicString::createAttrAtomicString(sf, value());
+        }
+    }
+
+    String* toStringValue()
+    {
+        if (m_hasCharValue) {
+            return String::createUTF32String(charValue());
+        } else if (m_hasNumberValue) {
+            return m_numericValueSource;
+        } else if (m_hasStringValue) {
+            return value();
+        }
+        return String::emptyString;
     }
 
     float numericValue()
     {
-        STARFISH_ASSERT(m_type == NUMBER_TYPE || m_type == PERCENTAGE_TYPE ||
-                        m_type == DIMENSION_TYPE);
+        STARFISH_ASSERT(m_hasNumberValue);
         return m_numericValue;
     }
 
-    String* unit()
+    String* numericValueSource()
     {
-        return m_unit;
+        STARFISH_ASSERT(m_hasNumberValue);
+        return m_numericValueSource;
     }
 
     UnitType unitType()
     {
+        STARFISH_ASSERT(m_hasNumberValue);
         return m_unitType;
     }
-
-    char m_type;
-    String* m_value;
-    String* m_unit;
-    UnitType m_unitType;
-    float m_numericValue;
 
     static const char NULL_TYPE = 0;
     static const char WHITESPACE_TYPE = 1;
@@ -333,11 +460,31 @@ public:
     static const char PERCENTAGE_TYPE = 15;
     static const char HEX_TYPE = 16;
     static const char SGML_COMMENT_TYPE = 17;
+
+protected:
+    char m_type : 8;
+    UnitType m_unitType : 8;
+    bool m_hasStringValue : 1;
+    bool m_hasCharValue : 1;
+    bool m_hasNumberValue : 1;
+    bool m_hasSourceOfNumberValueDot : 1;
+    bool m_hasAlphabetNInUnit : 1;
+
+    union {
+        String* m_stringValue;
+        char32_t m_charValue;
+        struct {
+            float m_numericValue;
+            String* m_numericValueSource;
+        };
+    };
 };
 
 class CSSScanner : public gc {
 public:
     CSSScanner(String* str)
+        : m_string(str)
+        , m_stringBufferData(str->bufferAccessData())
     {
         m_string = str;
         m_pos = 0;
@@ -375,16 +522,24 @@ public:
 
     int read()
     {
-        if (m_pos < m_string->length()) {
-            return m_string->charAt(m_pos++);
+        if (LIKELY(m_pos < m_stringBufferData.length)) {
+            if (m_stringBufferData.hasASCIIContent) {
+                return m_stringBufferData.asciiData()[m_pos++];
+            } else {
+                return m_stringBufferData.utf32Data()[m_pos++];
+            }
         }
         return -1;
     }
 
     int peek()
     {
-        if (m_pos < m_string->length()) {
-            return m_string->charAt(m_pos);
+        if (LIKELY(m_pos < m_stringBufferData.length)) {
+            if (m_stringBufferData.hasASCIIContent) {
+                return m_stringBufferData.asciiData()[m_pos];
+            } else {
+                return m_stringBufferData.utf32Data()[m_pos];
+            }
         }
         return -1;
     }
@@ -415,11 +570,13 @@ public:
         m_pos--;
     }
 
+    /*
+    // unused method
     CSSToken* nextHexValue()
     {
         int c = read();
         if (c == -1 || !isHexDigit((char32_t)c)) {
-            return new CSSToken(CSSToken::NULL_TYPE, String::emptyString);
+            return CSSToken::createNullToken();
         }
         String* s = String::createUTF32String((char32_t)c);
         c = read();
@@ -430,13 +587,14 @@ public:
         if (c != -1)
             pushback();
         return new CSSToken(CSSToken::HEX_TYPE, s);
-    }
+    }*/
 
-    String* gatherEscape()
+    // returns char32_t code
+    int gatherEscape()
     {
         int c = peek();
         if (c == -1) {
-            return String::emptyString;
+            return -1;
         }
         if (isHexDigit((char32_t)c)) {
             int code = 0;
@@ -460,81 +618,86 @@ public:
                 if (isWhiteSpace((char32_t)c))
                     read();
             }
-            return String::createUTF32String((char32_t)code);
+            return code;
         }
         c = read();
         if (c != '\n') {
-            return String::createUTF32String((char32_t)c);
+            return c;
         }
-        return String::emptyString;
+        return -1;
     }
 
-    String* gatherIdent(int c)
+    StringBuilder gatherIdent(int c)
     {
-        String* s = String::emptyString;
+        StringBuilder builder;
         if (c == CSS_ESCAPE) {
-            s = s->concat(gatherEscape());
+            int code = gatherEscape();
+            if (code != -1)
+                builder.appendChar((char32_t)code);
         } else {
-            s = s->concat(String::createUTF32String((char32_t)c));
+            builder.appendChar((char32_t)c);
         }
         c = read();
         while (c != -1 && (isIdent(c) || c == CSS_ESCAPE)) {
             if (c == CSS_ESCAPE) {
-                String* tmp = gatherEscape();
-                if (!tmp->length()) {
-                    return String::emptyString;
+                int code = gatherEscape();
+                if (code == -1) {
+                    return StringBuilder();
                 } else {
-                    s = s->concat(tmp);
+                    builder.appendChar((char32_t)code);
                 }
             } else {
-                s = s->concat(String::createUTF32String((char32_t)c));
+                builder.appendChar((char32_t)c);
             }
             c = read();
         }
         if (c != -1) {
             pushback();
         }
-        return s;
+        return builder;
     }
 
     CSSToken* parseIdent(int c)
     {
-        String* value = gatherIdent(c);
+        StringBuilder builder = gatherIdent(c);
         int nextChar = peek();
         if ((char32_t)nextChar == '(') {
-            value = value->concat(String::createUTF32String(read()));
-            return new CSSToken(CSSToken::FUNCTION_TYPE, value);
+            builder.appendChar((char32_t)read());
+            return CSSToken::createStringValueToken(
+                CSSToken::FUNCTION_TYPE, builder.finalize()->toLower());
         }
-        return new CSSToken(CSSToken::IDENT_TYPE, value);
+        return CSSToken::createStringValueToken(CSSToken::IDENT_TYPE,
+                                                builder.finalize());
     }
 
     CSSToken* parseURL(int c)
     {
-        String* value = String::emptyString;
+        StringBuilder builder;
         if (c == CSS_ESCAPE) {
-            value = value->concat(gatherEscape());
+            builder.appendChar((char32_t)gatherEscape());
         } else {
-            value = value->concat(String::createUTF32String((char32_t)c));
+            builder.appendChar((char32_t)c);
         }
         c = read();
         while (c != -1 && c != ' ' && c != ')') {
             if (c == CSS_ESCAPE) {
-                String* tmp = gatherEscape();
-                if (!tmp->length()) {
-                    return new CSSToken(CSSToken::STRING_TYPE,
-                                        String::emptyString);
+                int code = gatherEscape();
+                if (code == -1) {
+                    return CSSToken::createStringValueToken(
+                        CSSToken::STRING_TYPE, String::emptyString);
                 } else {
-                    value = value->concat(tmp);
+                    builder.appendChar((char32_t)code);
                 }
             } else {
-                value = value->concat(String::createUTF32String((char32_t)c));
+                builder.appendChar((char32_t)c);
             }
             c = read();
         }
         if (c != -1) {
             pushback();
         }
-        return new CSSToken(CSSToken::STRING_TYPE, value);
+        return CSSToken::createStringValueToken(CSSToken::STRING_TYPE,
+                                                builder.finalize());
     }
 
     bool isDigit(char32_t c)
@@ -544,69 +707,83 @@ public:
 
     CSSToken* parseComment(int c)
     {
-        String* s = String::createUTF32String((char32_t)c);
+        // StringBuilder s;
+        // s.appendChar((char32_t)c);
         while ((c = read()) != -1) {
-            s = s->concat(String::createUTF32String((char32_t)c));
+            // s.appendChar((char32_t)c);
             if (c == '*') {
                 c = read();
                 if (c == -1) {
                     break;
                 }
                 if (c == '/') {
-                    s = s->concat(String::createUTF32String((char32_t)c));
+                    // s.appendChar((char32_t)c);
                     break;
                 }
                 pushback();
             }
         }
-        return new CSSToken(CSSToken::COMMENT_TYPE, s);
+        return CSSToken::createToken(CSSToken::COMMENT_TYPE);
     }
 
     CSSToken* parseNumber(int c)
     {
-        String* s = String::createUTF32String((char32_t)c);
+        StringBuilder s;
+        s.appendChar((char32_t)c);
         bool foundDot = false;
         while ((c = read()) != -1) {
             if (c == '.') {
                 if (foundDot) {
                     break;
                 } else {
-                    s = s->concat(String::createUTF32String((char32_t)c));
+                    s.appendChar((char32_t)c);
                     foundDot = true;
                 }
             } else if (isDigit(c)) {
-                s = s->concat(String::createUTF32String((char32_t)c));
+                s.appendChar((char32_t)c);
             } else {
                 break;
             }
         }
 
         if (c != -1 && startsWithIdent(c, peek())) { // DIMENSION
-            String* unit = gatherIdent(c);
-            float f = String::parseFloat(s);
-            s = s->concat(unit);
-            return new CSSToken(CSSToken::DIMENSION_TYPE, s, unit, f);
+            String* unit = gatherIdent(c).finalize();
+            String* ss = s.finalize();
+            float f = String::parseFloat(ss);
+            UnitType type = (UnitType)unit->peekUTF8Buffer(
+                [](const char* buf, size_t len, void* data) -> size_t {
+                    return lookupUnitType(buf, len);
+                },
+                nullptr);
+            return CSSToken::createNumberValueToken(
+                CSSToken::DIMENSION_TYPE, f, ss->concat(unit), type, foundDot,
+                unit->equals("n"));
         } else if (c == '%') {
-            float f = String::parseFloat(s);
-            s = s->concat(String::createUTF32String('%'));
-            return new CSSToken(CSSToken::PERCENTAGE_TYPE, s,
-                                String::emptyString, f);
+            String* ss = s.finalize();
+            float f = String::parseFloat(ss);
+            return CSSToken::createNumberValueToken(
+                CSSToken::PERCENTAGE_TYPE, f, ss->concat("%"),
+                UnitType::Percentage, foundDot, false);
         } else if (c != -1) {
             pushback();
         }
 
-        float f = String::parseFloat(s);
-        return new CSSToken(CSSToken::NUMBER_TYPE, s, String::emptyString, f);
+        String* ss = s.finalize();
+        float f = String::parseFloat(ss);
+        return CSSToken::createNumberValueToken(CSSToken::NUMBER_TYPE, f, ss,
+                                                UnitType::UnknownType, foundDot,
+                                                false);
     }
 
     CSSToken* parseString(int aStop)
     {
-        String* s = String::createUTF32String((char32_t)aStop);
+        StringBuilder s;
+        s.appendChar((char32_t)aStop);
         int previousChar = aStop;
         int c;
         while ((c = read()) != -1) {
             if (c == aStop && previousChar != CSS_ESCAPE) {
-                s = s->concat(String::createUTF32String((char32_t)c));
+                s.appendChar((char32_t)c);
                 break;
             } else if (c == CSS_ESCAPE) {
                 c = peek();
@@ -623,17 +800,18 @@ public:
                         }
                     }
                 } else {
-                    s = s->concat(gatherEscape());
+                    s.appendChar((char32_t)gatherEscape());
                     c = peek();
                 }
             } else if (c == '\n' || c == '\r' || c == '\f') {
                 break;
             } else {
-                s = s->concat(String::createUTF32String((char32_t)c));
+                s.appendChar((char32_t)c);
             }
             previousChar = c;
         }
-        return new CSSToken(CSSToken::STRING_TYPE, s);
+        return CSSToken::createStringValueToken(CSSToken::STRING_TYPE,
+                                                s.finalize());
     }
 
     bool isWhiteSpace(char32_t c)
@@ -642,31 +820,32 @@ public:
         return code < 256 && (kLexTable[code] & IS_WHITESPACE) != 0;
     }
 
-    String* eatWhiteSpace(int c)
+    bool eatWhiteSpace(int c)
     {
-        String* s = String::createUTF32String((char32_t)c);
+        bool solo = true;
         while ((c = read()) != -1) {
             if (!isWhiteSpace(c)) {
                 break;
             }
-            s = s->concat(String::createUTF32String((char32_t)c));
+            solo = false;
         }
         if (c != -1) {
             pushback();
         }
-        return s;
+        return solo;
     }
 
     CSSToken* parseAtKeyword(int c)
     {
-        return new CSSToken(CSSToken::ATRULE_TYPE, gatherIdent(c));
+        return CSSToken::createStringValueToken(CSSToken::ATRULE_TYPE,
+                                                gatherIdent(c).finalize());
     }
 
     CSSToken* nextToken(bool isURL = false)
     {
         int c = read();
         if (c == -1) {
-            return new CSSToken(CSSToken::NULL_TYPE, String::emptyString);
+            return CSSToken::createNullToken();
         }
 
         // url starts without \' nor \"
@@ -693,8 +872,8 @@ public:
             if (read() == '!') {
                 if (read() == '-') {
                     if (read() == '-') {
-                        return new CSSToken(CSSToken::SGML_COMMENT_TYPE,
-                                            String::createASCIIString("<!--"));
+                        return CSSToken::createToken(
+                            CSSToken::SGML_COMMENT_TYPE);
                     }
                     pushback();
                 }
@@ -706,8 +885,7 @@ public:
         if (c == '-') {
             if (read() == '-') {
                 if (read() == '>') {
-                    return new CSSToken(CSSToken::SGML_COMMENT_TYPE,
-                                        String::createASCIIString("-->"));
+                    return CSSToken::createToken(CSSToken::SGML_COMMENT_TYPE);
                 }
                 pushback();
             }
@@ -737,8 +915,10 @@ public:
         }
 
         if (isWhiteSpace(c)) {
-            String* s = eatWhiteSpace(c);
-            return new CSSToken(CSSToken::WHITESPACE_TYPE, s);
+            bool solo = eatWhiteSpace(c);
+            char32_t ch = solo ? ' ' : '\0';
+            return CSSToken::createCharValueToken(CSSToken::WHITESPACE_TYPE,
+                                                  ch);
         }
 
         if (c == '|' || c == '~' || c == '^' || c == '$' || c == '*') {
@@ -746,20 +926,15 @@ public:
             if (nextChar == '=') {
                 switch (c) {
                 case '~':
-                    return new CSSToken(CSSToken::INCLUDES_TYPE,
-                                        String::createASCIIString("~="));
+                    return CSSToken::createToken(CSSToken::INCLUDES_TYPE);
                 case '|':
-                    return new CSSToken(CSSToken::DASHMATCH_TYPE,
-                                        String::createASCIIString("|="));
+                    return CSSToken::createToken(CSSToken::DASHMATCH_TYPE);
                 case '^':
-                    return new CSSToken(CSSToken::BEGINSMATCH_TYPE,
-                                        String::createASCIIString("^="));
+                    return CSSToken::createToken(CSSToken::BEGINSMATCH_TYPE);
                 case '$':
-                    return new CSSToken(CSSToken::ENDSMATCH_TYPE,
-                                        String::createASCIIString("$="));
+                    return CSSToken::createToken(CSSToken::ENDSMATCH_TYPE);
                 case '*':
-                    return new CSSToken(CSSToken::CONTAINSMATCH_TYPE,
-                                        String::createASCIIString("*="));
+                    return CSSToken::createToken(CSSToken::CONTAINSMATCH_TYPE);
                 default:
                     break;
                 }
@@ -772,14 +947,15 @@ public:
             return parseComment(c);
         }
 
-        return new CSSToken(CSSToken::SYMBOL_TYPE,
-                            String::createUTF32String((char32_t)c));
+        return CSSToken::createCharValueToken(CSSToken::SYMBOL_TYPE,
+                                              (char32_t)c);
     }
 
 protected:
     String* m_string;
+    StringBufferAccessData m_stringBufferData;
     size_t m_pos;
-    GCVector<size_t> m_preservedPos;
+    GCAtomicVector<size_t> m_preservedPos;
 };
 
 CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment, bool isURL)
@@ -840,202 +1016,6 @@ void CSSParser::forgetState()
         m_scanner->forgetState();
         m_preservedTokens.pop_back();
     }
-}
-
-String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain,
-                                       bool canNegate, bool& validSelector)
-{
-    String* s = String::emptyString;
-    // var specificity = {a: 0, b: 0, c: 0, d: 0}; // CSS 2.1 section 6.4.3
-
-    if (isFirstInChain &&
-        (token->isSymbol('*') || token->isSymbol('|') || token->isIdent())) {
-        // type or universal selector
-        if (token->isSymbol('*') || token->isIdent()) {
-            // we don't know yet if it's a prefix or a universal
-            // selector
-            s = s->concat(token->m_value);
-            // bool isIdent = token->isIdent();
-            token = getToken(false, true);
-            if (token->isSymbol('|')) {
-                // it's a prefix
-                s = s->concat(token->m_value);
-                token = getToken(false, true);
-                if (token->isIdent() || token->isSymbol('*')) {
-                    // ok we now have a type element or universal
-                    // selector
-                    s = s->concat(token->m_value);
-                    /*
-                    if (token->isIdent()) {
-                        specificity.d++;
-                    }
-                    */
-                } else { // oops that's an error...
-                    return String::emptyString;
-                }
-            } else {
-                ungetToken();
-                /*
-                if (isIdent) {
-                    specificity.d++;
-                }
-                */
-            }
-        } else if (token->isSymbol('|')) {
-            s = s->concat(token->m_value);
-            token = getToken(false, true);
-            if (token->isIdent() || token->isSymbol('*')) {
-                s = s->concat(token->m_value);
-                /*
-                if (token->isIdent()) {
-                    specificity.d++;
-                }
-                */
-            } else { // oops that's an error
-                return String::emptyString;
-            }
-        }
-    } else if (token->isSymbol('.') || token->isSymbol('#')) {
-        // bool isClass = token->isSymbol('.');
-        s = s->concat(token->m_value);
-        token = getToken(false, true);
-        if (token->isIdent()) {
-            if (token->m_value->length()) {
-                s = s->concat(token->m_value);
-            } else {
-                validSelector = false;
-                return String::emptyString;
-            }
-            /*
-            if (isClass) {
-                specificity.c++;
-            } else {
-                specificity.b++;
-            }
-            */
-        } else {
-            return String::emptyString;
-        }
-    } else if (token->isSymbol(':')) {
-        s = s->concat(token->m_value);
-        token = getToken(false, true);
-        if (token->isSymbol(':')) {
-            s = s->concat(token->m_value);
-            token = getToken(false, true);
-        }
-        if (token->isIdent()) {
-            s = s->concat(token->m_value);
-            /*
-            if (isPseudoElement(token->value)) {
-                specificity.d++;
-            }
-            else {
-                specificity.c++;
-            }
-            */
-        } else if (token->isFunction()) {
-            s = s->concat(token->m_value);
-            if (token->isFunction(String::createASCIIString(":not("))) {
-                if (!canNegate) {
-                    return String::emptyString;
-                }
-                token = getToken(true, true);
-                String* simpleSelector = parseSimpleSelector(
-                    token, isFirstInChain, false, validSelector);
-                if (simpleSelector->length() == 0) {
-                    return String::emptyString;
-                } else {
-                    // s += simpleSelector.selector;
-                    s = s->concat(simpleSelector);
-                    token = getToken(true, true);
-                    if (token->isSymbol(')')) {
-                        s = s->concat(String::createASCIIString(")"));
-                    } else {
-                        return String::emptyString;
-                    }
-                }
-                // specificity.c++;
-            } else {
-                while (true) {
-                    token = getToken(false, true);
-                    if (token->isSymbol(')')) {
-                        s = s->concat(String::createASCIIString(")"));
-                        break;
-                    } else {
-                        s = s->concat(token->m_value);
-                    }
-                }
-                // specificity.c++;
-            }
-        } else {
-            return String::emptyString;
-        }
-    } else if (token->isSymbol('[')) {
-        s = s->concat(String::createASCIIString("["));
-        token = getToken(true, true);
-        if (token->isIdent() || token->isSymbol('*')) {
-            s = s->concat(token->m_value);
-            CSSToken* nextToken = getToken(true, true);
-            if (nextToken->isSymbol('|')) {
-                s = s->concat(String::createASCIIString("|"));
-                token = getToken(true, true);
-                if (token->isIdent()) {
-                    s = s->concat(token->m_value);
-                } else {
-                    return String::emptyString;
-                }
-            } else {
-                ungetToken();
-            }
-        } else if (token->isSymbol('|')) {
-            s = s->concat(String::createASCIIString("|"));
-            token = getToken(true, true);
-            if (token->isIdent()) {
-                s = s->concat(token->m_value);
-            } else {
-                return String::emptyString;
-            }
-        } else {
-            return String::emptyString;
-        }
-
-        // nothing, =, *=, $=, ^=, |=
-        token = getToken(true, true);
-        if (token->isIncludes() || token->isDashmatch() ||
-            token->isBeginsmatch() || token->isEndsmatch() ||
-            token->isContainsmatch() || token->isSymbol('=')) {
-            s = s->concat(token->m_value);
-            token = getToken(true, true);
-            if (token->isString() || token->isIdent()) {
-                s = s->concat(token->m_value);
-                token = getToken(true, true);
-            } else {
-                return String::emptyString;
-            }
-
-            if (token->isSymbol(']')) {
-                s = s->concat(token->m_value);
-                // specificity.c++;
-            } else {
-                return String::emptyString;
-            }
-        } else if (token->isSymbol(']')) {
-            s = s->concat(token->m_value);
-            // specificity.c++;
-        } else {
-            return String::emptyString;
-        }
-    } else if (token->isWhiteSpace()) {
-        CSSToken* t = lookAhead(true, true);
-        if (t->isSymbol('{')) {
-            return String::emptyString;
-        }
-    }
-    if (s->length()) {
-        return s;
-    }
-
-    return String::emptyString;
 }
 
 void CSSParser::parseSelector(GCVector<GCDeque<CSSSelector*>*>& list,
@@ -1110,7 +1090,7 @@ CSSSelector* CSSParser::getPseudoSelector()
         return nullptr;
     }
 
-    if (token->isIdent() && token->m_value->indexOf('(') != SIZE_MAX) {
+    if (token->isIdent() && token->value()->indexOf('(') != SIZE_MAX) {
         return nullptr;
     }
 
@@ -1119,9 +1099,7 @@ CSSSelector* CSSParser::getPseudoSelector()
                                   : CSSSelector::Type::PseudoElement);
     selector->setRelation(CSSSelector::RelationType::SubSelector);
     selector->updatePseudoType(
-        starFish(),
-        AtomicString::createAtomicString(starFish(), token->m_value->toLower()),
-        token->isFunction());
+        starFish(), token->toAttrAtomicString(starFish()), token->isFunction());
 
     if (token->isIdent()) {
         if (selector->pseudoType() == CSSSelector::PseudoNone) {
@@ -1163,7 +1141,7 @@ CSSSelector* CSSParser::getPseudoSelector()
             return nullptr;
         }
 
-        selector->setArgument(token->m_value);
+        selector->setArgument(token->toStringValue());
         token = getToken(true, true);
         if (!token->isSymbol(')')) {
             return nullptr;
@@ -1203,18 +1181,18 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     CSSToken* token = currentToken();
 
     // in case of only number
-    if (token->isNumber() && !token->m_value->contains(".")) {
-        result = std::make_pair(0, String::parseInt(token->m_value));
+    if (token->isNumber() && !token->hasSourceOfNumberValueDot()) {
+        result = std::make_pair(0, (int)token->numericValue());
         return true;
     }
 
     // in case of string (odd and even)
     if (token->isIdent()) {
-        if (token->m_value->equalsWithoutCase(String::fromUTF8("odd"))) {
+        if (token->value()->equalsWithoutCase("odd")) {
             result = std::make_pair(2, 1);
             return true;
         }
-        if (token->m_value->equalsWithoutCase(String::fromUTF8("even"))) {
+        if (token->value()->equalsWithoutCase("even")) {
             result = std::make_pair(2, 0);
             return true;
         }
@@ -1225,22 +1203,23 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     // in case of 'an + b'
     if (token->isSymbol('+') && lookAhead(false, true)->isIdent()) { // +n
         result.first = 1;
-        nString = getToken(false, true)->m_value;
-    } else if (token->isDimension() && !token->m_value->contains(".")) { // an+b
-        result.first = String::parseInt(token->m_value);
-        size_t pos = token->m_value->find("n");
+        nString = getToken(false, true)->toStringValue();
+    } else if (token->isDimension() &&
+               !token->hasSourceOfNumberValueDot()) { // an+b
+        result.first = token->numericValue();
+        size_t pos = token->numericValueSource()->find("n");
         if (pos < 0) {
             return false;
         }
-        nString =
-            token->m_value->substring(pos, token->m_value->length() - pos);
+        nString = token->numericValueSource()->substring(
+            pos, token->numericValueSource()->length() - pos);
     } else if (token->isIdent()) {              // -n or n
-        if (token->m_value->charAt(0) == '-') { // -n
+        if (token->value()->charAt(0) == '-') { // -n
             result.first = -1;
-            nString = token->m_value->substring(1, 1);
+            nString = token->value()->substring(1, 1);
         } else { // n
             result.first = 1;
-            nString = token->m_value;
+            nString = token->value();
         }
     }
 
@@ -1268,13 +1247,15 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
         token = getToken(true, true);
         if (token->isSymbol('+')) {
             sign = PlusSign;
-            if (lookAhead(false, true)->m_value->charAt(0) == '+' ||
-                lookAhead(false, true)->m_value->charAt(0) == '-') {
+            CSSToken* ahead = lookAhead(false, true);
+            if (ahead->hasStringValue() && (ahead->value()->charAt(0) == '+' ||
+                                            ahead->value()->charAt(0) == '-')) {
                 return false;
             }
         } else if (token->isSymbol('-')) {
-            if (lookAhead(false, true)->m_value->charAt(0) == '+' ||
-                lookAhead(false, true)->m_value->charAt(0) == '-') {
+            CSSToken* ahead = lookAhead(false, true);
+            if (ahead->hasStringValue() && (ahead->value()->charAt(0) == '+' ||
+                                            ahead->value()->charAt(0) == '-')) {
                 return false;
             }
             sign = MinusSign;
@@ -1292,7 +1273,7 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     }
 
     CSSToken* b = getToken(false, true);
-    if (!b->isNumber() || b->m_value->contains(".")) {
+    if (!b->isNumber() || b->toStringValue()->contains(".")) {
         return false;
     }
     /*
@@ -1300,7 +1281,10 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
             return false;
         }
     */
-    result.second = String::parseInt(b->m_value);
+    if (!b->isNumber())
+        result.second = String::parseInt(b->toStringValue());
+    else
+        result.second = b->numericValue();
     if (sign == MinusSign) {
         result.second = -result.second;
     }
@@ -1333,7 +1317,7 @@ CSSSelector::AttributeMatchType CSSParser::getAttributeFlags()
         return CSSSelector::CaseSensitive;
     }
     CSSToken* flag = getToken(true, true);
-    if (flag->m_value->equalsWithoutCase("i")) {
+    if (flag->toStringValue()->equalsWithoutCase("i")) {
         return CSSSelector::CaseInsensitive;
     }
     m_failedParsing = true;
@@ -1413,7 +1397,8 @@ CSSSelector* CSSParser::getAttributeSelector()
     }
 
     selector->setRelation(CSSSelector::RelationType::SubSelector);
-    selector->setValue(getStringWithoutQuotationMarks(attributeValue->m_value));
+    selector->setValue(
+        getStringWithoutQuotationMarks(attributeValue->toStringValue()));
     selector->setAttribute(attrQualifiedName, getAttributeFlags());
 
     token = getToken(true, false);
@@ -1435,7 +1420,7 @@ CSSSelector* CSSParser::getClassSelector()
 
     CSSSelector* selector = new CSSSelector(
         CSSSelector::Type::Class, CSSSelector::SubSelector,
-        AtomicString::createAtomicString(starFish(), token->m_value));
+        AtomicString::createAtomicString(starFish(), token->value()));
     getToken(false, true);
 
     return selector;
@@ -1450,7 +1435,7 @@ CSSSelector* CSSParser::getIdSelector()
 
     CSSSelector* selector = new CSSSelector(
         CSSSelector::Type::Id, CSSSelector::SubSelector,
-        AtomicString::createAtomicString(starFish(), token->m_value));
+        AtomicString::createAtomicString(starFish(), token->value()));
     getToken(false, true);
 
     return selector;
@@ -1483,7 +1468,7 @@ bool CSSParser::parseName(String** name)
 {
     CSSToken* firstToken = currentToken();
     if (firstToken->isIdent()) {
-        *name = firstToken->m_value;
+        *name = firstToken->value();
         getToken(false, true);
     } else if (firstToken->isSymbol('*')) {
         *name = String::fromUTF8("*");
@@ -1500,7 +1485,7 @@ bool CSSParser::parseName(String** name)
 
     CSSToken* nameToken = getToken(true, true);
     if (nameToken->isIdent()) {
-        *name = nameToken->m_value;
+        *name = nameToken->value();
     } else if (nameToken->isSymbol('*')) {
         *name = String::fromUTF8("*");
     } else {
@@ -1698,7 +1683,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
             }
             break;
         }
-        if (token->isIdent(String::inheritString)) {
+        if (token->isIdent("inherit")) {
             /*
             if (values.size()) {
                 return;
@@ -1711,7 +1696,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 break;
             }*/
             if (willBeConcat.size() > 0) {
-                return combineAndTrimTokenValues(&willBeConcat);
+                return combineAndTrimTokenValues(willBeConcat);
             } else {
                 willBeConcat.clear();
                 willBeConcat.push_back(token);
@@ -1720,14 +1705,13 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
             }
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
                    token->isSymbol('[') || token->isFunction()) {
-            if (token->isFunction() &&
-                token->m_value->toLower()->equals("url(")) {
-                blocks.push_back(String::createASCIIString("url("));
+            if (token->isFunction() && token->value()->equals("url(")) {
+                blocks.push_back(token->toStringValue());
                 isURLFunc = true;
             } else {
                 blocks.push_back(token->isFunction()
                                      ? String::createASCIIString("(")
-                                     : token->m_value);
+                                     : token->toStringValue());
             }
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
@@ -1737,7 +1721,8 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                     (token->isSymbol(')') && ontop->equals("(")) ||
                     (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
-                } else if (token->isSymbol(')') && ontop->equals("url(")) {
+                } else if (token->isSymbol(')') &&
+                           ontop->equalsWithoutCase("url(")) {
                     blocks.pop_back();
                     if (urlTokens > 2) {
                         return String::emptyString;
@@ -1770,32 +1755,17 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
     if (willBeConcat.size() > 0) {
         forgetState();
     }
-    return combineAndTrimTokenValues(&willBeConcat);
+    return combineAndTrimTokenValues(willBeConcat);
 }
 
 // Remove comments from both sides of a tokenList & Concat
-String* CSSParser::combineAndTrimTokenValues(GCVector<CSSToken*>* list)
+String* CSSParser::combineAndTrimTokenValues(const GCVector<CSSToken*>& list)
 {
-    String* result = String::emptyString;
-    if (list != nullptr) {
-        GCVector<CSSToken*> stashed;
-        bool seenNoneComment = false;
-        for (CSSToken* item : *list) {
-            if (seenNoneComment && item->isComment()) {
-                stashed.push_back(item);
-            } else {
-                seenNoneComment = true;
-                if (stashed.size()) {
-                    for (CSSToken* commentItem : stashed) {
-                        result = result->concat(commentItem->m_value);
-                    }
-                    stashed.clear();
-                }
-                result = result->concat(item->m_value);
-            }
-        }
+    StringBuilder result;
+    for (CSSToken* item : list) {
+        result.appendString(item->toStringValue());
     }
-    return result;
+    return result.finalize();
 }
 
 void CSSParser::parseDeclaration(CSSToken* aToken,
@@ -1804,10 +1774,6 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
     preserveState();
     GCVector<String*> blocks;
     if (aToken->isIdent()) {
-        String* descriptor = aToken->m_value->toLower();
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("+++style:%s\n", descriptor->utf8Data());
-#endif
         CSSToken* token = getToken(true, true);
         if (token->isSymbol(':')) {
             token = getToken(true, true);
@@ -1818,12 +1784,11 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
                 bool priority = false;
                 if (token->isSymbol('!')) {
                     token = getToken(true, true);
-                    if (token->isIdent(
-                            String::createASCIIString("important"))) {
+                    if (token->isIdent("important")) {
                         priority = true;
                         token = getToken(true, true);
                         if (token->isSymbol(';') || token->isSymbol('}') ||
-                            token->m_type == CSSToken::NULL_TYPE) {
+                            token->type() == CSSToken::NULL_TYPE) {
                             if (token->isSymbol('}')) {
                                 ungetToken();
                             }
@@ -1845,27 +1810,45 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
                 }
                 return descriptor + ": " + value + ";";
                 */
-                if (!descriptor) {
-                    return;
-                }
 
-                const char* name = descriptor->toLower()->utf8Data();
-                CSSStyleKind kind = lookupCSSStyle(name, strlen(name));
+                String* descriptor = aToken->value();
+                struct Sender {
+                    bool priority;
+                    String* value;
+                    CSSStyleDeclaration* declaration;
+                } sender;
+                sender.value = value;
+                sender.priority = priority;
+                sender.declaration = declaration;
+                descriptor->peekUTF8Buffer(
+                    [](const char* buf, size_t len, void* data) -> size_t {
+                        String* value = ((Sender*)data)->value;
+                        bool priority = ((Sender*)data)->priority;
+                        CSSStyleDeclaration* declaration =
+                            ((Sender*)data)->declaration;
+                        char* name = ALLOCA(len, char);
+                        for (size_t i = 0; i < len; i++) {
+                            name[i] = tolower(buf[i]);
+                        }
+                        CSSStyleKind kind = lookupCSSStyle(name, len);
 
-                if (false) {
-                }
+                        if (false) {
+                        }
 #define SET_ATTR(name, nameLower, nameCSSCase)   \
     else if (kind == CSSStyleKind::name)         \
     {                                            \
         declaration->set##name(value, priority); \
     }
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                else
-                {
-                    STARFISH_LOG_ERROR(
-                        "unsupported property name(CSSParser) -> %s\n",
-                        descriptor->utf8Data());
-                }
+                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                        else
+                        {
+                            STARFISH_LOG_ERROR(
+                                "unsupported property name(CSSParser) -> %s\n",
+                                buf);
+                        }
+                        return 0;
+                    },
+                    &sender);
                 return;
             }
         }
@@ -1897,13 +1880,13 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
                    token->isSymbol('[') || token->isFunction()) {
             if (token->isFunction() &&
-                token->m_value->toLower()->equals("url(")) {
-                blocks.push_back(String::createASCIIString("url("));
+                token->value()->equalsWithoutCase("url(")) {
+                blocks.push_back(token->value());
                 isURLFunc = true;
             } else {
                 blocks.push_back(token->isFunction()
                                      ? String::createASCIIString("(")
-                                     : token->m_value);
+                                     : token->toStringValue());
             }
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
@@ -1913,7 +1896,8 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
                     (token->isSymbol(')') && ontop->equals("(")) ||
                     (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
-                } else if (token->isSymbol(')') && ontop->equals("url(")) {
+                } else if (token->isSymbol(')') &&
+                           ontop->equalsWithoutCase("url(")) {
                     blocks.pop_back();
                     isURLFunc = false;
                 }
@@ -2005,26 +1989,23 @@ bool CSSParser::parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
         return true;
     }
     restoreState();
-    String* s = currentToken()->m_value;
-    addUnknownAtRule(s);
+    addUnknownAtRule();
 
     return false;
 }
 
-void CSSParser::addUnknownAtRule(String* aString)
+void CSSParser::addUnknownAtRule()
 {
     GCVector<String*> blocks;
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
-        aString = aString->concat(token->m_value);
         if (token->isSymbol(';') && !blocks.size()) {
             break;
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
-                   token->isSymbol('[') ||
-                   token->m_type == CSSToken::FUNCTION_TYPE) {
+                   token->isSymbol('[') || token->isFunction()) {
             blocks.push_back(token->isFunction()
                                  ? String::createASCIIString("(")
-                                 : token->m_value);
+                                 : token->toStringValue());
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
             if (blocks.size()) {
@@ -2068,19 +2049,19 @@ static CSSParser::AllowedRulesType computeNewAllowedRules(
 bool CSSParser::parseCharsetRule(GCVector<CSSRule*>& rules)
 {
     CSSToken* token = getToken(false, false);
-    String* s = String::emptyString;
-    if (token->isAtRule(String::createASCIIString("@charset")) &&
-        token->m_value->equals("@charset")) { // lowercase check
-        s = token->m_value;
+    StringBuilder s;
+    if (token->isAtRule("@charset") &&
+        token->value()->equals("@charset")) { // lowercase check
+        s.appendString(token->value());
         token = getToken(false, false);
-        s = s->concat(token->m_value);
-        if (token->isWhiteSpace(String::createASCIIString(" "))) {
+        s.appendString(token->toStringValue());
+        if (token->isWhiteSpace(' ')) {
             token = getToken(false, false);
-            s = s->concat(token->m_value);
+            s.appendString(token->toStringValue());
             if (token->isString()) {
                 // String* encoding = token->m_value;
                 token = getToken(false, false);
-                s = s->concat(token->m_value);
+                s.appendString(token->toStringValue());
                 if (token->isSymbol(';')) {
                     // var rule = new jscsspCharsetRule();
                     // rule.encoding = encoding;
@@ -2099,7 +2080,7 @@ bool CSSParser::parseCharsetRule(GCVector<CSSRule*>& rules)
         }
     }
 
-    addUnknownAtRule(s);
+    addUnknownAtRule();
     return false;
 }
 
@@ -2180,8 +2161,7 @@ String* CSSParser::parseURLString()
         url = String::createASCIIString("url(");
         url = url->concat(str);
         url = url->concat(String::createASCIIString(")"));
-    } else if (token->isFunction() &&
-               token->value()->toLower()->equals("url(")) {
+    } else if (token->isFunction() && token->value()->equals("url(")) {
         url = token->value();
         url = url->concat(getToken(true, false)->value());
         url = url->concat(getToken(true, false)->value());
@@ -2203,7 +2183,7 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
     }
 
     GCVector<CSSRule*> rules;
-    if (token->isAtRule(String::createASCIIString("@charset"))) {
+    if (token->isAtRule("@charset")) {
         ungetToken();
         parseCharsetRule(rules);
         token = getToken(false, false);
@@ -2252,9 +2232,9 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
         } else if (token->isAtRule()) {
             CSSRule* rule = nullptr;
             if (allowedRules <= AllowImportRules &&
-                token->isAtRule(String::createASCIIString("@import"))) {
+                token->isAtRule("@import")) {
                 rule = parseImportRule();
-            } else if (token->isAtRule(String::createASCIIString("@media"))) {
+            } else if (token->isAtRule("@media")) {
                 rule = parseMediaRule();
             }
             /*
@@ -2270,7 +2250,7 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
                 allowedRules = computeNewAllowedRules(allowedRules, rule);
                 rootRule.push_back(rule);
             } else {
-                addUnknownAtRule(token->m_value);
+                addUnknownAtRule();
             }
         } else {
             // plain style rules
@@ -2380,7 +2360,7 @@ void CSSParser::readRestrictor(CSSToken* token)
 
 void CSSParser::readMediaNot(CSSToken* token)
 {
-    if (token->isIdent() && token->m_value->equalsWithoutCase("not"))
+    if (token->isIdent() && token->value()->equalsWithoutCase("not"))
         setStateAndRestrict(ReadFeatureStart, MediaQuery::Not);
     else
         readFeatureStart(token);
@@ -2388,7 +2368,8 @@ void CSSParser::readMediaNot(CSSToken* token)
 
 static bool isRestrictorOrLogicalOperator(CSSToken* token)
 {
-    String* val = token->m_value;
+    STARFISH_ASSERT(token->isIdent());
+    String* val = token->value();
     return val->equalsWithoutCase("not") || val->equalsWithoutCase("and") ||
            val->equalsWithoutCase("or") || val->equalsWithoutCase("only");
 }
@@ -2402,16 +2383,16 @@ void CSSParser::readMediaType(CSSToken* token)
             m_state = ReadFeature;
     } else if (token->isIdent()) {
         if (m_state == ReadRestrictor &&
-            token->m_value->equalsWithoutCase("not")) {
+            token->value()->equalsWithoutCase("not")) {
             setStateAndRestrict(ReadMediaType, MediaQuery::Not);
         } else if (m_state == ReadRestrictor &&
-                   token->m_value->equalsWithoutCase("only")) {
+                   token->value()->equalsWithoutCase("only")) {
             setStateAndRestrict(ReadMediaType, MediaQuery::Only);
         } else if (m_mediaQueryData.restrictor() != MediaQuery::None &&
                    isRestrictorOrLogicalOperator(token)) {
             m_state = SkipUntilComma;
         } else {
-            m_mediaQueryData.setMediaType(token->m_value);
+            m_mediaQueryData.setMediaType(token->value());
             m_state = ReadAnd;
         }
     } else if ((token->isSymbol('}') || token->isSymbol(';')) &&
@@ -2427,7 +2408,7 @@ void CSSParser::readMediaType(CSSToken* token)
 
 void CSSParser::readAnd(CSSToken* token)
 {
-    if (token->isIdent() && token->m_value->equalsWithoutCase("and")) {
+    if (token->isIdent() && token->value()->equalsWithoutCase("and")) {
         m_state = ReadFeatureStart;
     } else if (token->isSymbol(',') && m_parserType != MediaConditionParser) {
         m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
@@ -2450,7 +2431,7 @@ void CSSParser::readFeatureStart(CSSToken* token)
 void CSSParser::readFeature(CSSToken* token)
 {
     if (token->isIdent()) {
-        m_mediaQueryData.setMediaFeature(token->m_value);
+        m_mediaQueryData.setMediaFeature(token->value());
         m_state = ReadFeatureColon;
     } else {
         m_state = SkipUntilComma;
@@ -2731,7 +2712,7 @@ static inline bool featureWithValidDensity(const String* mediaFeature,
 static inline bool featureWithPositiveInteger(const String* mediaFeature,
                                               CSSToken* token)
 {
-    if (token->value()->contains(".") || token->numericValue() < 0) {
+    if (token->toStringValue()->contains(".") || token->numericValue() < 0) {
         return false;
     }
 
@@ -2853,11 +2834,11 @@ MediaQueryExp* MediaQueryExp::createIfValid(
             return nullptr;
         }
         if (!numerator->isNumber() || numerator->numericValue() <= 0 ||
-            numerator->value()->contains(".")) {
+            numerator->toStringValue()->contains(".")) {
             return nullptr;
         }
         if (!denominator->isNumber() || denominator->numericValue() <= 0 ||
-            denominator->value()->contains(".")) {
+            denominator->toStringValue()->contains(".")) {
             return nullptr;
         }
 

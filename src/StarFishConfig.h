@@ -225,6 +225,13 @@
         ::abort();                                                    \
     } while (0)
 
+#define STARFISH_RELEASE_ASSERT_UNIMPLEMENTED()                      \
+    do {                                                             \
+        STARFISH_LOG_ERROR(                                          \
+            "STARFISH_RELEASE_ASSERT_UNIMPLEMENTED at %s (%s:%d)\n", \
+            __PRETTY_FUNCTION__, __FILE__, __LINE__);                \
+    } while (0)
+
 #define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \
     inline void* operator new(size_t size, void* p) = delete;
@@ -236,6 +243,10 @@
 #if !defined(WARN_UNUSED_RETURN)
 #define WARN_UNUSED_RETURN
 #endif
+
+#define ALLOCA(bytes, typenameWithoutPointer)                     \
+    (typenameWithoutPointer*)(LIKELY(bytes < 512) ? alloca(bytes) \
+                                                  : GC_MALLOC(bytes))
 
 #define APP_NAME "StarFish"
 #define APP_CODE_NAME "StarFish"
@@ -250,6 +261,11 @@
 // typedef of GC-aware vector
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCVector = std::vector<T, Allocator>;
+
+// typedef of GC-aware vector with atomic contents
+template <typename T, typename Allocator =
+                          GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
+using GCAtomicVector = std::vector<T, Allocator>;
 
 // typedef of GC-aware deque
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
