@@ -677,7 +677,9 @@ unsigned CSSSelector::specificityForOneSelector() const
 
 bool CSSSelector::isSimple(GCDeque<CSSSelector*>* selectorList)
 {
-    if (pseudoSelectorList().size() || type() == CSSSelector::PseudoElement) {
+    if ((isPseudoSelector() &&
+         asCSSPseudoSelector()->pseudoSelectorList().size()) ||
+        type() == CSSSelector::PseudoElement) {
         return false;
     }
 
@@ -700,7 +702,7 @@ bool CSSSelector::isSimple(GCDeque<CSSSelector*>* selectorList)
     return false;
 }
 
-bool CSSSelector::matchNth(int count)
+bool CSSPseudoSelector::matchNth(int count)
 {
     if (!nthAValue()) {
         return count == nthBValue();
@@ -717,24 +719,12 @@ bool CSSSelector::matchNth(int count)
     return (nthBValue() - count) % (-nthAValue()) == 0;
 }
 
-String* CSSSelector::value()
+CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(StarFish* sf,
+                                                           AtomicString name,
+                                                           bool hasArguments)
 {
-    STARFISH_ASSERT(m_type != Tag);
-    return m_value;
-}
-
-void CSSSelector::setValue(String* value, bool matchLowerCase)
-{
-    STARFISH_ASSERT(m_type != Tag);
-    m_value = value;
-}
-
-CSSSelector::PseudoType CSSSelector::parsePseudoType(StarFish* sf,
-                                                     AtomicString name,
-                                                     bool hasArguments)
-{
-    // FIXME(ksh8281) check hasASCIIContent is not enough for checking ascii
-    if (name.isEmptyAtomicString() || !name.string()->hasASCIIContent()) {
+    if (name.isEmptyAtomicString() ||
+        !name.string()->containsOnlyASCIIChars()) {
         return CSSSelector::PseudoNone;
     }
     StaticStrings* sstrs = sf->staticStrings();
@@ -795,11 +785,11 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(StarFish* sf,
     }
 }
 
-void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
-                                   bool hasArguments)
+void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
+                                         bool hasArguments)
 {
-    setSelectorText(name);
-    setPseudoType(parsePseudoType(sf, name, hasArguments));
+    m_selectorText = name;
+    m_pseudotype = parsePseudoType(sf, name, hasArguments);
 
     switch (pseudoType()) {
     case PseudoAfter:
@@ -811,7 +801,7 @@ void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
         // PseudoClass,
         // but should be PseudoElement like double colon.
         if (type() == PseudoClass) {
-            setType(PseudoElement);
+            m_type = PseudoElement;
         }
     /*
     // fallthrough
@@ -833,7 +823,7 @@ void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
             case PseudoSlotted:
         */
         if (type() != PseudoElement) {
-            setPseudoType(PseudoNone);
+            m_pseudotype = PseudoNone;
         }
         break;
     /*
@@ -923,7 +913,7 @@ void CSSSelector::updatePseudoType(StarFish* sf, AtomicString name,
             case PseudoWindowInactive:
         */
         if (type() != PseudoClass) {
-            setPseudoType(PseudoNone);
+            m_pseudotype = PseudoNone;
         }
         break;
     }
@@ -1835,10 +1825,10 @@ static bool attributeValueMatches(
 
 bool StyleResolver::anyAttributeMatches(Element* element,
                                         CSSSelector::Type type,
-                                        CSSSelector* selector,
+                                        CSSAttributeSelector* selector,
                                         MatchResult& result)
 {
-    QualifiedName& selectorAttr = selector->attribute();
+    const QualifiedName& selectorAttr = selector->attribute();
     STARFISH_ASSERT(!(selectorAttr.localName()->equals(String::fromUTF8("*"))));
 
     String* selectorValue = selector->value();
@@ -4135,16 +4125,19 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector,
     case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
     case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
     case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
-        return anyAttributeMatches(element, selector->type(), selector, result);
+        return anyAttributeMatches(element, selector->type(),
+                                   selector->asCSSAttributeSelector(), result);
     case CSSSelector::Type::PseudoClass:
-        return checkPseudoClass(element, selector, result);
+        return checkPseudoClass(element, selector->asCSSPseudoSelector(),
+                                result);
     case CSSSelector::Type::PseudoElement:
         // while the use of pseudo-elements in selectors of querySelector is
         // permitted, they will not match any elements in the document, and thus
         // would not result in any elements being returned.
         return isQueryingSelector
                    ? false
-                   : checkPseudoElement(element, selector, result);
+                   : checkPseudoElement(
+                         element, selector->asCSSPseudoSelector(), result);
     default:
         return false;
     }
@@ -4272,7 +4265,8 @@ static unsigned nthLastOfTypeIndex(Element* element)
     return index;
 }
 
-bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector,
+bool StyleResolver::checkPseudoClass(Element* element,
+                                     CSSPseudoSelector* selector,
                                      MatchResult& result)
 {
     switch (selector->pseudoType()) {
@@ -4359,7 +4353,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector,
     return false;
 }
 
-bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector,
+bool StyleResolver::checkPseudoElement(Element* element,
+                                       CSSPseudoSelector* selector,
                                        MatchResult& result)
 {
     switch (selector->pseudoType()) {

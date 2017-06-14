@@ -124,10 +124,12 @@ static unsigned specificity(GCDeque<CSSSelector*>* selectorList)
         // The negation pseudo-class has another simple selector in own data
         // structure.
         if (selector->type() == CSSSelector::Type::PseudoClass &&
-            selector->pseudoType() == CSSSelector::PseudoType::PseudoNot) {
-            temp +=
-                total +
-                selector->pseudoSelectorList()[0]->specificityForOneSelector();
+            selector->asCSSPseudoSelector()->pseudoType() ==
+                CSSSelector::PseudoType::PseudoNot) {
+            temp += total +
+                    selector->asCSSPseudoSelector()
+                        ->pseudoSelectorList()[0]
+                        ->specificityForOneSelector();
         }
 
         // Clamp each component to its max in the case of overflow.
