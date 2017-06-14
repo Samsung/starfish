@@ -29,8 +29,20 @@ ImageDecoder::ImageDecoder(const char* filename)
     , m_width(0)
     , m_height(0)
     , m_imageData(nullptr)
+    , m_bufferedInput(false)
 {
     m_fp = fopen(filename, "rb");
+}
+
+ImageDecoder::ImageDecoder(const char* buf, size_t len)
+    : m_fp(nullptr)
+    , m_width(0)
+    , m_height(0)
+    , m_imageData(nullptr)
+    , m_bufferedInput(true)
+{
+    m_imageData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(len);
+    memcpy(m_imageData, buf, len);
 }
 
 ImageDecoder::~ImageDecoder()
@@ -69,7 +81,38 @@ int ImageDecoder::height()
     return m_height;
 }
 
-ImageDecoder::ImageFormat ImageDecoder::parseImageFormat()
+static bool isPNGFormat(const unsigned char* data)
+{
+    if (data[0] == 137 && data[1] == 80 && data[2] == 78 && data[3] == 71) {
+        return true;
+    }
+    return false;
+}
+
+static bool isJPGFormat(const unsigned char* data)
+{
+    if (data[0] == 255 && data[1] == 216 && data[2] == 255 && data[3] == 224) {
+        return true;
+    }
+    return false;
+}
+
+ImageDecoder::ImageFormat ImageDecoder::parseImageFormatFromBuffer()
+{
+    ImageFormat imageFormat = ImageFormat::ERROR;
+
+    if (isPNGFormat(m_imageData)) {
+        imageFormat = ImageFormat::PNG;
+    } else if (isJPGFormat(m_imageData)) {
+        imageFormat = ImageFormat::JPG;
+    } else {
+        // TODO ERROR
+    }
+
+    return imageFormat;
+}
+
+ImageDecoder::ImageFormat ImageDecoder::parseImageFormatFromFile()
 {
     ImageFormat imageFormat = ImageFormat::ERROR;
 
@@ -80,10 +123,9 @@ ImageDecoder::ImageFormat ImageDecoder::parseImageFormat()
     unsigned char* buf = new unsigned char[5];
     fgets((char*)buf, 5, m_fp);
 
-    if (buf[0] == 137 && buf[1] == 80 && buf[2] == 78 && buf[3] == 71) {
+    if (isPNGFormat(buf)) {
         imageFormat = ImageFormat::PNG;
-    } else if (buf[0] == 255 && buf[1] == 216 && buf[2] == 255 &&
-               buf[3] == 224) {
+    } else if (isJPGFormat(buf)) {
         imageFormat = ImageFormat::JPG;
     } else {
         // TODO ERROR
@@ -92,6 +134,15 @@ ImageDecoder::ImageFormat ImageDecoder::parseImageFormat()
     rewind(m_fp);
     delete buf;
     return imageFormat;
+}
+
+ImageDecoder::ImageFormat ImageDecoder::parseImageFormat()
+{
+    if (m_bufferedInput) {
+        return parseImageFormatFromBuffer();
+    } else {
+        return parseImageFormatFromFile();
+    }
 }
 
 void ImageDecoder::readPNGFile()
