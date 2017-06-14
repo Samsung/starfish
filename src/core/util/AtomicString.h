@@ -37,6 +37,7 @@ public:
     AtomicString();
 
     static AtomicString createAtomicString(StarFish* sf, String* str);
+    static AtomicString createAtomicString(StarFish* sf, StringView str);
     static AtomicString createAtomicString(StarFish* sf, const char* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str,
                                            size_t length);
@@ -44,6 +45,7 @@ public:
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str,
                                                size_t length);
+    static AtomicString createAttrAtomicString(StarFish* sf, char32_t str);
     static AtomicString emptyAtomicString();
 
     bool isEmptyAtomicString();

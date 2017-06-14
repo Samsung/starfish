@@ -159,20 +159,23 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         } else {
             m_id = AtomicString::createAtomicString(starFish(), value);
         }
-        // Style should be recalculated from root node because of combinators.
-        window()->setWholeDocumentNeedsStyleRecalc();
+
+        // Style should be recalculated from this node to decendants because of
+        // combinators.
+        setNeedsStyleRecalc();
 
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
-        GCVector<String*> tokens;
-        DOMTokenList::tokenize(&tokens, value);
+        GCVector<StringView> tokens = DOMTokenList::tokenize(value);
         m_classNames.clear();
         for (size_t i = 0; i < tokens.size(); i++) {
             m_classNames.push_back(
                 AtomicString::createAtomicString(starFish(), tokens[i]));
         }
-        // Style should be recalculated from root node because of combinators.
-        window()->setWholeDocumentNeedsStyleRecalc();
+
+        // Style should be recalculated from this node to decendants because of
+        // combinators.
+        setNeedsStyleRecalc();
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to
         // parent tree

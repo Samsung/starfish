@@ -736,14 +736,12 @@ protected:
     CSSSelector::AttributeMatchType getAttributeFlags();
     String* getStringWithoutQuotationMarks(String* str);
 
-    String* parseSimpleSelector(CSSToken* token, bool isFirstInChain,
-                                bool canNegate, bool& validSelector);
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
-    void addUnknownAtRule(String* aString);
+    void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<CSSRule*>& rules);
-    static String* combineAndTrimTokenValues(GCVector<CSSToken*>* list);
+    static String* combineAndTrimTokenValues(const GCVector<CSSToken*>& list);
     bool m_preserveWS;
     bool m_preserveComments;
     GCVector<CSSToken*> m_preservedTokens;

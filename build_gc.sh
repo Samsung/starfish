@@ -73,9 +73,9 @@ CFLAGS_shared=' -fPIC'
 function build_gc_for_linux() {
 
     for host in linux; do
-    for arch in x86 x64; do
+    for arch in x64; do
     for mode in debug release; do
-    for libtype in static shared; do
+    for libtype in shared; do
         echo =========================================================================
 
         if ([ "$ARCH" != "" ] && [ "$ARCH" != $arch ]) ||

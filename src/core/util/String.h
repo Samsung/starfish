@@ -286,6 +286,10 @@ public:
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
 
+    static int parseInt(String* s);
+    static float parseFloat(String* s);
+    static double parseDouble(String* s);
+
     virtual size_t length() const = 0;
     virtual char32_t charAt(const size_t& idx) const = 0;
     virtual StringBufferAccessData bufferAccessData() const = 0;
@@ -325,10 +329,15 @@ public:
         size_t start, size_t end, bool ignoreZeroWidthChar = false) const;
 
     UTF8StringDataNonGCStd toUTF8NonGCString() const;
-    // 1. this method always creates new buffer
+    // 1. this method not always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
     NullableUTF8String toNullableUTF8String();
 
+    // this is fastest version of view utf8 data of string
+    // const char* buffer ends with '\0'
+    size_t peekUTF8Buffer(size_t (*)(const char* buffer, size_t len,
+                                     void* data),
+                          void* data);
     const char* utf8Data();                    // TODO remove this method
     const char* utf8DataIgnoreZeroWidthChar(); // TODO remove this method
 
@@ -385,14 +394,6 @@ public:
 
     static String* fromFloat(float f);
     static String* fromInt(int i);
-    static int parseInt(String* s)
-    {
-        return atoi(s->toUTF8NonGCString().data());
-    }
-    static float parseFloat(String* s)
-    {
-        return atof(s->toUTF8NonGCString().data());
-    }
 
     String* substring(size_t pos, size_t len);
 
@@ -400,12 +401,10 @@ public:
     String* toLower();
     String* replaceAll(String* from, String* to);
 
+    String* concat(const char* str);
     String* concat(String* str);
     void split(char delim, GCVector<String*>& tokens);
     String* trim();
-
-    // token is only 1-byte char now.
-    GCVector<String*> tokenize(const char* tokens, size_t tokensLength);
 
     icu::UnicodeString toUnicodeString() const;
     icu::UnicodeString toUnicodeString(size_t start, size_t end) const;
@@ -663,6 +662,13 @@ protected:
 
 class StringView : public String {
 public:
+    StringView()
+        : m_string(String::emptyString)
+        , m_start(0)
+        , m_end(0)
+    {
+    }
+
     StringView(String* string, size_t start, size_t end)
         : m_string(string)
         , m_start(start)
@@ -675,6 +681,18 @@ public:
     StringView(String* string)
         : StringView(string, 0, string->length())
     {
+    }
+
+    StringView(const StringView& src)
+        : m_string(src.string())
+        , m_start(src.start())
+        , m_end(src.end())
+    {
+    }
+
+    String* string() const
+    {
+        return m_string;
     }
 
     String* substring() const
@@ -725,6 +743,89 @@ public:
 protected:
     String* m_string;
     size_t m_start, m_end;
+};
+
+class StringUtils {
+public:
+    // token is only 1-byte char now.
+    static GCVector<StringView> tokenize(String* src, const char* tokens,
+                                         size_t tokensLength);
+};
+
+#ifndef STRING_BUILDER_INLINE_STORAGE_MAX
+#define STRING_BUILDER_INLINE_STORAGE_MAX 24
+#endif
+
+class StringBuilder {
+    STARFISH_MAKE_STACK_ALLOCATED();
+    struct StringBuilderPiece {
+        enum Type {
+            ASCIIStringPiece,
+            UTF32StringStringPiece,
+            UTF32StringStringPieceButASCIIContentPiece,
+            ConstChar,
+            Char,
+        };
+        Type m_type;
+        union {
+            String* m_string;
+            const char* m_raw;
+            char32_t m_ch;
+        };
+        size_t m_start, m_end;
+    };
+
+    void appendPiece(char32_t ch);
+    void appendPiece(const char* str);
+    void appendPiece(String* str, size_t s, size_t e);
+
+public:
+    StringBuilder()
+    {
+        m_hasASCIIContent = true;
+        m_contentLength = 0;
+        m_piecesInlineStorageUsage = 0;
+    }
+
+    size_t contentLength()
+    {
+        return m_contentLength;
+    }
+    void appendString(const char* str)
+    {
+        appendPiece(str);
+    }
+
+    void appendChar(char32_t ch)
+    {
+        appendPiece(ch);
+    }
+
+    void appendChar(char ch)
+    {
+        appendPiece(ch);
+    }
+
+    void appendString(String* str)
+    {
+        appendPiece(str, 0, str->length());
+    }
+
+    void appendSubString(String* str, size_t s, size_t e)
+    {
+        appendPiece(str, s, e);
+    }
+
+    void takeBuilder(StringBuilder& src);
+    String* finalize();
+    char32_t finalizeChar();
+
+protected:
+    bool m_hasASCIIContent;
+    size_t m_piecesInlineStorageUsage;
+    size_t m_contentLength;
+    StringBuilderPiece m_piecesInlineStorage[STRING_BUILDER_INLINE_STORAGE_MAX];
+    GCVector<StringBuilderPiece> m_pieces;
 };
 
 class SegmentedString;

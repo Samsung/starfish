@@ -878,7 +878,6 @@ test_pr:
 	make vendor_test_gecko_layout
 	make vendor_test_webkit_fast_html
 	make vendor_test_webkit_fast_css
-	make vendor_test_webkit_fast_etc
 	make vendor_test_webkit_fast_dom
 	make web_platform_test_dom
 	make web_platform_test_html
@@ -890,7 +889,6 @@ test_pr:
 	make dom_conformance_test_webkit
 	make dom_conformance_test_blink
 	make dom_conformance_test_gecko
-	make csswg_test_all
 	make bidi_test
 	make internal_test_gitlab_prerequisite div=5
 	make internal_test_part1
@@ -899,6 +897,9 @@ test_pr:
 	make internal_test_part4
 	make internal_test_part5
 	make internal_test_manual
+	make vendor_test_webkit_fast_etc
+	make csswg_test_all
+
 
 reftest_emulator_2.3:
 	./tool/reftest/reftest_runner.sh emulator 2.3 all
