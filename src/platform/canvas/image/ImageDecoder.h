@@ -26,6 +26,7 @@ public:
     enum ImageFormat { PNG, JPG, GIF, ERROR };
 
     ImageDecoder(const char* filename);
+    ImageDecoder(const char* buf, size_t len);
     ~ImageDecoder();
 
     void* buffer();
@@ -37,8 +38,11 @@ private:
     int m_width;
     int m_height;
     unsigned char* m_imageData;
+    bool m_bufferedInput;
 
     ImageFormat parseImageFormat();
+    ImageFormat parseImageFormatFromBuffer();
+    ImageFormat parseImageFormatFromFile();
     void readPNGFile();
     void readJPGFile();
 
