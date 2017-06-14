@@ -107,7 +107,7 @@ public:
         int glyph_count;
         cairo_text_extents_t extents;
 
-        if (str.originalString()->hasASCIIContent()) {
+        if (str.originalString()->bufferAccessData().hasASCIIContent) {
             bool isShort = str.length() < 128;
             auto data = str.bufferAccessData();
             char* buf =
