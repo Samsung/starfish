@@ -56,7 +56,7 @@ void* ImageDecoder::buffer()
 {
     switch (parseImageFormat()) {
     case ImageFormat::PNG:
-        readPNGFile();
+        readPNGFileOrBufferedInput();
         break;
     case ImageFormat::JPG:
         // TODO
@@ -145,8 +145,25 @@ ImageDecoder::ImageFormat ImageDecoder::parseImageFormat()
     }
 }
 
-void ImageDecoder::readPNGFile()
+typedef struct {
+    unsigned char* mem;
+    unsigned long int size;
+} READ_DATA;
+
+static void readPNGFromBufferedInput(png_structp png, png_bytep data,
+                                     png_size_t size)
 {
+    READ_DATA* readData = (READ_DATA*)png_get_io_ptr(png);
+
+    if (readData->mem && size > 0) {
+        memcpy(data, readData->mem + readData->size, size);
+        readData->size += size;
+    }
+}
+
+void ImageDecoder::readPNGFileOrBufferedInput()
+{
+    READ_DATA readData;
     png_byte colorType;
     png_byte bitDepth;
     png_bytep* rowPointers;
@@ -167,7 +184,16 @@ void ImageDecoder::readPNGFile()
         abort();
     }
 
-    png_init_io(png, m_fp);
+    if (m_bufferedInput) {
+        readData.mem = m_imageData;
+        readData.size = 0;
+        png_set_read_fn(png, &readData, readPNGFromBufferedInput);
+    } else {
+        if (m_fp) {
+            png_init_io(png, m_fp);
+        }
+    }
+
     png_read_info(png, info);
 
     m_width = png_get_image_width(png, info);
