@@ -1,16 +1,19 @@
 // https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface
 
-[ObjectType=Exposable]
 interface CSSStyleDeclaration {
   [CEReactions] attribute DOMString cssText;
   readonly attribute unsigned long length;
   getter DOMString item(unsigned long index);
-  [STARFISH_ENABLE_TEST] DOMString getPropertyValue(DOMString property);
+  DOMString getPropertyValue(DOMString property);
   [Unimplemented] DOMString getPropertyPriority(DOMString property);
-  [STARFISH_ENABLE_TEST, CEReactions, RaisesException] void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
+  [CEReactions, RaisesException] void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
   [Unimplemented, CEReactions] void setPropertyValue(DOMString property, [TreatNullAs=EmptyString] DOMString value);
   [Unimplemented, CEReactions] void setPropertyPriority(DOMString property, [TreatNullAs=EmptyString] DOMString priority);
   [Unimplemented, CEReactions, RaisesException] DOMString removeProperty(DOMString property);
   [Unimplemented] readonly attribute CSSRule? parentRule;
   [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cssFloat;
+
+  // NOTE add getter&setter for named access
+  getter DOMString? (DOMString property);
+  setter void (DOMString property, DOMString? propertyValue);
 };

@@ -1,6 +1,6 @@
 // https://w3c.github.io/media-source/#sourcebufferlist
 
-[ObjectType=Exposable, STARFISH_ENABLE_MULTIMEDIA]
+[STARFISH_ENABLE_MULTIMEDIA]
 interface SourceBufferList : EventTarget {
   readonly attribute unsigned long length;
   [Unimplemented] attribute EventHandler onaddsourcebuffer;

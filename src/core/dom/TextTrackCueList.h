@@ -46,6 +46,11 @@ public:
     {
         return size();
     }
+
+    TextTrackCue* defaultIndexedGetter(uint32_t idx)
+    {
+        return (*this)[idx];
+    }
 };
 }
 

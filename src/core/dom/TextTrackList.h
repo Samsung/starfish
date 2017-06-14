@@ -49,6 +49,11 @@ public:
         }
         return nullptr;
     }
+
+    TextTrack* defaultIndexedGetter(uint32_t idx)
+    {
+        return (*this)[idx];
+    }
 };
 }
 

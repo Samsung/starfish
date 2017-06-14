@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/#texttracklist
 
-[ObjectType=Exposable, STARFISH_ENABLE_MULTIMEDIA]
+[STARFISH_ENABLE_MULTIMEDIA]
 interface TextTrackList : EventTarget {
   readonly attribute unsigned long length;
   getter TextTrack (unsigned long index);

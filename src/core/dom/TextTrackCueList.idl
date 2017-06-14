@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/#texttrackcuelist
 
-[ObjectType=Exposable, ConstructorCallWith=Document, STARFISH_ENABLE_MULTIMEDIA]
+[STARFISH_ENABLE_MULTIMEDIA]
 interface TextTrackCueList {
   readonly attribute unsigned long length;
   getter TextTrackCue (unsigned long index);
