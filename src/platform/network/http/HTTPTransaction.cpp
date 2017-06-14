@@ -114,7 +114,7 @@ HTTPTransaction::~HTTPTransaction()
 void HTTPTransaction::start()
 {
     m_curl = curl_easy_init();
-    m_httpResponse = HTTPResponse::create(m_curl);
+    m_httpResponse = HTTPResponse::create();
 
     struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     STARFISH_ASSERT(m_curl);
@@ -184,7 +184,8 @@ void HTTPTransaction::start()
     }
 #endif
     m_res = curl_easy_perform(m_curl);
-    m_httpResponse->updateResponseStatus();
+
+    updateTransactionStatus();
 
     // TODO : reuse curl for persistant conntection
     curl_easy_cleanup(m_curl);
@@ -204,5 +205,15 @@ void HTTPTransaction::didReceiveHeader(const std::string& header)
 
         m_httpResponse->headers().setHeader(key, value);
     }
+}
+
+void HTTPTransaction::updateTransactionStatus()
+{
+    if (m_curl) {
+        long responseCode;
+        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
+        m_httpResponse->setResponseCode(responseCode);
+    }
+    // TODO : Implement additional state management
 }
 }

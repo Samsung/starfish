@@ -323,7 +323,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
 
     Locker<Mutex> locker(*request->m_mutex);
 
-    workerData->httpTransaction->httpResponse().updateResponseStatus();
+    workerData->httpTransaction->updateTransactionStatus();
     size_t realSize = size * nmemb;
     std::string header(static_cast<const char*>(ptr), realSize);
 

@@ -21,9 +21,8 @@
 
 namespace StarFish {
 
-HTTPResponse::HTTPResponse(CURL* curl)
-    : m_curl(curl)
-    , m_responseCode(0)
+HTTPResponse::HTTPResponse()
+    : m_responseCode(0)
     , m_reasonPhrase()
     , m_headers()
     , m_entityBody()
@@ -34,17 +33,6 @@ HTTPResponse::~HTTPResponse()
 {
 }
 
-void HTTPResponse::updateResponseStatus()
-{
-    if (m_curl) {
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &m_responseCode);
-    }
-}
-long HTTPResponse::responseCode()
-{
-    updateResponseStatus();
-    return m_responseCode;
-}
 bool HTTPResponse::isSuccessfulResponseStatus()
 {
     if (HTTPStatusCode::HTTP_STATUS_OK <= m_responseCode &&
