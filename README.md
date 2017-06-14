@@ -2,6 +2,13 @@
 ## Abstract
 Starfish is a lightweight Web browser engine for mobile and wearable devices.
 
+## Setting up your environment
+
+```sh
+sudo apt-get install python-pip
+pip install Jinja2
+```
+
 ## How to Compile
 
 ```sh
@@ -153,4 +160,3 @@ cd /home/developer
 ```
 
 [Wiki](http://10.113.64.74/webtf/starfish2/wikis/home)
-
