@@ -159,4 +159,4 @@ cd /home/developer
 ./bidi_test_clean.sh
 ```
 
-[Wiki](http://10.113.64.74/webtf/starfish2/wikis/home)
+[Wiki](https://github.sec.samsung.net/RS7-webtf/starfish/wiki)
