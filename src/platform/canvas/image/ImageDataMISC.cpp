@@ -36,6 +36,10 @@ public:
 
     ImageDataMISC(const char* buf, size_t len)
     {
+        ImageDecoder* d = new ImageDecoder(buf, len);
+        m_image = (void*)d->buffer();
+        m_width = d->width();
+        m_height = d->height();
     }
 
     virtual size_t bufferSize()

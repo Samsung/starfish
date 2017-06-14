@@ -43,7 +43,7 @@ private:
     ImageFormat parseImageFormat();
     ImageFormat parseImageFormatFromBuffer();
     ImageFormat parseImageFormatFromFile();
-    void readPNGFile();
+    void readPNGFileOrBufferedInput();
     void readJPGFile();
 
 protected:
