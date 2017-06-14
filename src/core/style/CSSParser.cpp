@@ -381,8 +381,9 @@ public:
         case UnitType::Radians:
         case UnitType::Gradians:
             return true;
+        default:
+            return false;
         }
-        return false;
     }
 
     char type()
@@ -1094,10 +1095,11 @@ CSSSelector* CSSParser::getPseudoSelector()
         return nullptr;
     }
 
-    CSSSelector* selector = new CSSSelector();
-    selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass
-                                  : CSSSelector::Type::PseudoElement);
-    selector->setRelation(CSSSelector::RelationType::SubSelector);
+    auto type = colons == 1 ? CSSSelector::Type::PseudoClass
+                            : CSSSelector::Type::PseudoElement;
+    auto relType = CSSSelector::RelationType::SubSelector;
+    CSSPseudoSelector* selector = new CSSPseudoSelector(type, relType);
+
     selector->updatePseudoType(
         starFish(), token->toAttrAtomicString(starFish()), token->isFunction());
 
@@ -1125,7 +1127,10 @@ CSSSelector* CSSParser::getPseudoSelector()
         }
 
         CSSSelector* innerSelector = selectorList[0];
-        if (innerSelector->pseudoSelectorList().size() ||
+        if ((innerSelector->isPseudoSelector() &&
+             innerSelector->asCSSPseudoSelector()
+                 ->pseudoSelectorList()
+                 .size()) ||
             innerSelector->type() == CSSSelector::PseudoElement) {
             return nullptr;
         }
@@ -1373,33 +1378,24 @@ CSSSelector* CSSParser::getAttributeSelector()
         getToken(false, true);
     }
 
-    attributeName = attributeName->toLower();
     QualifiedName attrQualifiedName = QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(starFish(), attributeName));
+        AtomicString::createAttrAtomicString(starFish(), attributeName));
 
-    CSSSelector* selector = new CSSSelector();
     if (currentToken()->isSymbol(']')) {
-        selector->setAttribute(attrQualifiedName,
-                               CSSSelector::AttributeMatchType::CaseSensitive);
-        selector->setRelation(CSSSelector::RelationType::SubSelector);
-        selector->setType(CSSSelector::Type::AttributeSet);
-
         getToken(true, false);
-        return selector;
+        return new CSSAttributeSelector(
+            CSSSelector::Type::AttributeSet, attrQualifiedName,
+            String::emptyString, CSSSelector::AttributeMatchType::CaseSensitive,
+            CSSSelector::RelationType::SubSelector);
     }
 
-    selector->setType(getAttributeMatch(currentToken()));
+    auto type = getAttributeMatch(currentToken());
 
     CSSToken* attributeValue = getToken(true, true);
     if (!attributeValue->isIdent() && !attributeValue->isString()) {
         return nullptr;
     }
-
-    selector->setRelation(CSSSelector::RelationType::SubSelector);
-    selector->setValue(
-        getStringWithoutQuotationMarks(attributeValue->toStringValue()));
-    selector->setAttribute(attrQualifiedName, getAttributeFlags());
 
     token = getToken(true, false);
     getToken(false, false);
@@ -1408,7 +1404,10 @@ CSSSelector* CSSParser::getAttributeSelector()
         return nullptr;
     }
 
-    return selector;
+    return new CSSAttributeSelector(
+        type, attrQualifiedName,
+        getStringWithoutQuotationMarks(attributeValue->toStringValue()),
+        getAttributeFlags(), CSSSelector::RelationType::SubSelector);
 }
 
 CSSSelector* CSSParser::getClassSelector()
@@ -1418,7 +1417,7 @@ CSSSelector* CSSParser::getClassSelector()
         return nullptr;
     }
 
-    CSSSelector* selector = new CSSSelector(
+    CSSSelector* selector = new (PointerFreeGC) CSSSelector(
         CSSSelector::Type::Class, CSSSelector::SubSelector,
         AtomicString::createAtomicString(starFish(), token->value()));
     getToken(false, true);
@@ -1433,7 +1432,7 @@ CSSSelector* CSSParser::getIdSelector()
         return nullptr;
     }
 
-    CSSSelector* selector = new CSSSelector(
+    CSSSelector* selector = new (PointerFreeGC) CSSSelector(
         CSSSelector::Type::Id, CSSSelector::SubSelector,
         AtomicString::createAtomicString(starFish(), token->value()));
     getToken(false, true);
@@ -1509,7 +1508,8 @@ void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
             return;
         }
         if (compoundSelector->type() == CSSSelector::PseudoElement) {
-            compoundPseudoElement = compoundSelector->pseudoType();
+            compoundPseudoElement =
+                compoundSelector->asCSSPseudoSelector()->pseudoType();
         }
 
         selectorList->push_back(compoundSelector);
@@ -1522,32 +1522,30 @@ void CSSParser::parseCompoundSelector(GCDeque<CSSSelector*>* selectorList)
         }
 
         if (simpleSelector->type() == CSSSelector::PseudoElement) {
-            compoundPseudoElement = simpleSelector->pseudoType();
+            compoundPseudoElement =
+                simpleSelector->asCSSPseudoSelector()->pseudoType();
         }
 
         selectorList->push_back(simpleSelector);
     }
 
     if (selectorList->size() > 0) {
-        (*selectorList)[selectorList->size() - 1]->setRelation(
+        (*selectorList)[selectorList->size() - 1]->updateRelation(
             CSSSelector::None);
     }
 
     if (elementName) {
-        if (elementName->equals(String::fromUTF8("*")) &&
-            selectorList->size() > 0) {
+        bool isStar = elementName->equals("*");
+        if (isStar && selectorList->size() > 0) {
             return;
         }
 
         CSSSelector* selector = new CSSSelector(
-            CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector,
-            AtomicString::createAtomicString(starFish(),
-                                             elementName->toLower()));
-        if (elementName->equals(String::fromUTF8("*"))) {
-            selector->setType(CSSSelector::Type::Universal);
-        }
+            isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
+            CSSSelector::RelationType::SubSelector,
+            AtomicString::createAttrAtomicString(starFish(), elementName));
         if (selectorList->size() == 0) {
-            selector->setRelation(CSSSelector::None);
+            selector->updateRelation(CSSSelector::None);
         }
 
         selectorList->push_front(selector);
@@ -1619,7 +1617,7 @@ void CSSParser::parseComplexSelector(GCDeque<CSSSelector*>* selectorList)
             end = secondSelectorList[i];
             compoundFlags |= extractCompoundFlags(end);
         }
-        end->setRelation(combinator);
+        end->updateRelation(combinator);
 
         if (previousCompoundFlags & HasContentPseudoElement) {
             end->relationIsAffectedByPseudoContent();
@@ -1842,9 +1840,11 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
                         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                         else
                         {
+                            /*
                             STARFISH_LOG_ERROR(
                                 "unsupported property name(CSSParser) -> %s\n",
                                 buf);
+                                */
                         }
                         return 0;
                     },

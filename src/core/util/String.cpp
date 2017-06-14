@@ -418,11 +418,14 @@ bool String::containsOnlyWhitespace(size_t start, size_t end)
     return true;
 }
 
-// TODO use BufferAccessData for performance
 bool String::containsOnlyASCIIChars() const
 {
-    for (size_t i = 0; i < length(); i++) {
-        const char32_t c = charAt(i);
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent)
+        return true;
+
+    for (size_t i = 0; i < data.length; i++) {
+        const char32_t c = data.utf32Data()[i];
         if (c > 127) {
             return false;
         }

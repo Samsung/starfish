@@ -212,8 +212,8 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
 
 StringRef* createScriptString(String* str)
 {
-    if (str->hasASCIIContent()) {
-        auto data = str->bufferAccessData();
+    auto data = str->bufferAccessData();
+    if (data.hasASCIIContent) {
         return StringRef::fromASCII(data.asciiData(), data.length);
     } else {
         UTF16StringDataNonGCStd out;

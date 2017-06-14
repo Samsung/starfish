@@ -1415,6 +1415,9 @@ protected:
     Separator m_separator;
 };
 
+class CSSAttributeSelector;
+class CSSPseudoSelector;
+
 class CSSSelector : public gc {
 public:
     enum Type {
@@ -1479,31 +1482,13 @@ public:
         CaseSensitive,
     };
 
-    CSSSelector()
-        : m_type(UnKnown)
-        , m_relation(None)
-        , m_pseudotype(PseudoNone)
-        , m_selectorText(AtomicString::emptyAtomicString())
-        , m_attributeMatch(CaseInsensitive)
-        , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(String::emptyString)
-        , m_value(String::emptyString)
-        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
-                                    AtomicString::emptyAtomicString()))
-    {
-    }
-
     CSSSelector(Type type, RelationType relation, AtomicString text)
         : m_type(type)
         , m_relation(relation)
         , m_pseudotype(PseudoNone)
-        , m_selectorText(text)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(String::emptyString)
-        , m_value(String::emptyString)
-        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(),
-                                    AtomicString::emptyAtomicString()))
+        , m_selectorText(text)
     {
     }
 
@@ -1512,24 +1497,26 @@ public:
         return m_type >= FirstAttributeSelectorMatch;
     }
 
+    CSSAttributeSelector* asCSSAttributeSelector()
+    {
+        STARFISH_ASSERT(isAttributeSelector());
+        return (CSSAttributeSelector*)this;
+    }
+
+    bool isPseudoSelector() const
+    {
+        return m_type == PseudoClass || m_type == PseudoElement;
+    }
+
+    CSSPseudoSelector* asCSSPseudoSelector()
+    {
+        STARFISH_ASSERT(isPseudoSelector());
+        return (CSSPseudoSelector*)this;
+    }
+
     Type type() const
     {
         return m_type;
-    }
-
-    void setType(Type type)
-    {
-        m_type = type;
-    }
-
-    AttributeMatchType attributeMatch()
-    {
-        return m_attributeMatch;
-    }
-
-    void setAttributeMatch(AttributeMatchType attrMatch)
-    {
-        m_attributeMatch = attrMatch;
     }
 
     RelationType relation() const
@@ -1537,29 +1524,9 @@ public:
         return m_relation;
     }
 
-    void setRelation(RelationType relation)
+    void updateRelation(RelationType rel)
     {
-        m_relation = relation;
-    }
-
-    PseudoType pseudoType() const
-    {
-        return m_pseudotype;
-    }
-
-    void setPseudoType(PseudoType pseudoType)
-    {
-        m_pseudotype = pseudoType;
-    }
-
-    AtomicString& selectorText()
-    {
-        return m_selectorText;
-    }
-
-    void setSelectorText(AtomicString& selectorText)
-    {
-        m_selectorText = selectorText;
+        m_relation = rel;
     }
 
     bool relationIsAffectedByPseudoContent()
@@ -1570,6 +1537,79 @@ public:
     void setRelationIsAffectedByPseudoContent()
     {
         m_relationIsAffectedByPseudoContent = true;
+    }
+
+    AtomicString& selectorText()
+    {
+        return m_selectorText;
+    }
+
+    bool isSimple(GCDeque<CSSSelector*>* selectorList);
+
+    // http://www.w3.org/TR/css3-selectors/#specificity
+    unsigned specificityForOneSelector() const;
+
+    bool isLastInTagHistory() const
+    {
+        return relation() == RelationType::None;
+    }
+
+protected:
+    Type m_type : 4;
+    RelationType m_relation : 3;
+    PseudoType m_pseudotype : 5;
+    AttributeMatchType m_attributeMatch : 1;
+    bool m_relationIsAffectedByPseudoContent : 1;
+
+    AtomicString m_selectorText;
+};
+
+class CSSAttributeSelector : public CSSSelector {
+public:
+    CSSAttributeSelector(CSSSelector::Type type, const QualifiedName& attr,
+                         String* value,
+                         CSSSelector::AttributeMatchType matchType,
+                         CSSSelector::RelationType relType)
+        : CSSSelector(type, relType, AtomicString())
+        , m_value(value)
+        , m_attribute(attr)
+    {
+        m_attributeMatch = matchType;
+    }
+
+    AttributeMatchType attributeMatch() const
+    {
+        return m_attributeMatch;
+    }
+
+    const QualifiedName& attribute() const
+    {
+        STARFISH_ASSERT(isAttributeSelector());
+        return m_attribute;
+    }
+
+    String* value() const
+    {
+        return m_value;
+    }
+
+protected:
+    String* m_value;
+    QualifiedName m_attribute;
+};
+
+class CSSPseudoSelector : public CSSSelector {
+public:
+    CSSPseudoSelector(CSSSelector::Type type, CSSSelector::RelationType relType)
+        : CSSSelector(type, relType, AtomicString())
+        , m_argument(String::emptyString)
+    {
+        m_pseudotype = PseudoNone;
+    }
+
+    PseudoType pseudoType() const
+    {
+        return m_pseudotype;
     }
 
     GCDeque<CSSSelector*>& pseudoSelectorList()
@@ -1613,50 +1653,17 @@ public:
 
     bool matchNth(int count);
 
-    QualifiedName& attribute()
-    {
-        STARFISH_ASSERT(isAttributeSelector());
-        return m_attribute;
-    }
-
-    void setAttribute(QualifiedName& value, AttributeMatchType matchType)
-    {
-        STARFISH_ASSERT(m_type != Tag);
-        m_attribute = value;
-        m_attributeMatch = matchType;
-    }
-
-    String* value();
-    void setValue(String* value, bool matchLowerCase = false);
-
-    bool isSimple(GCDeque<CSSSelector*>* selectorList);
-
-    // http://www.w3.org/TR/css3-selectors/#specificity
-    unsigned specificityForOneSelector() const;
-
-    bool isLastInTagHistory() const
-    {
-        return relation() == RelationType::None;
-    }
     PseudoType parsePseudoType(StarFish* sf, AtomicString name,
                                bool hasArguments);
     void updatePseudoType(StarFish* sf, AtomicString name, bool hasArguments);
 
 protected:
-    Type m_type;
-    RelationType m_relation;
-    PseudoType m_pseudotype;
-    AtomicString m_selectorText;
-    AttributeMatchType m_attributeMatch;
-    unsigned m_relationIsAffectedByPseudoContent;
     GCDeque<CSSSelector*> m_pseudoSelectorList;
     String* m_argument;
     struct {
         int m_a; // Used for :nth-*
         int m_b; // Used for :nth-*
     } m_nth;
-    String* m_value;
-    QualifiedName m_attribute;
 };
 
 using Declarations = GCVector<CSSStyleDeclaration*>;
@@ -1748,12 +1755,13 @@ protected:
 
     bool checkOne(Element* element, CSSSelector* selector, MatchResult& result,
                   bool isQueryingSelector = false);
-    bool checkPseudoClass(Element* element, CSSSelector* selector,
+    bool checkPseudoClass(Element* element, CSSPseudoSelector* selector,
                           MatchResult& result);
-    bool checkPseudoElement(Element* element, CSSSelector* selector,
+    bool checkPseudoElement(Element* element, CSSPseudoSelector* selector,
                             MatchResult& result);
     bool anyAttributeMatches(Element* element, CSSSelector::Type type,
-                             CSSSelector* selector, MatchResult& result);
+                             CSSAttributeSelector* selector,
+                             MatchResult& result);
     bool tryAddSheet(Node* node, CSSStyleSheet* sheet);
     bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
                                 bool& originFound);

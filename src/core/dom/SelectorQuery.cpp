@@ -446,7 +446,9 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
 
     // Fast path for querySelector*('.foo'), and querySelector*('div').
     if (firstSelector->isLastInTagHistory() &&
-        firstSelector->pseudoType() == CSSSelector::PseudoNone) {
+        (!firstSelector->isPseudoSelector() ||
+         firstSelector->asCSSPseudoSelector()->pseudoType() ==
+             CSSSelector::PseudoNone)) {
         switch (firstSelector->type()) {
         case CSSSelector::Class:
             collectElementsByClassName(rootNode,

@@ -172,7 +172,7 @@ public:
             return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
-        if (str.originalString()->hasASCIIContent()) {
+        if (str.originalString()->bufferAccessData().hasASCIIContent) {
             bool isShort = str.length() < 128;
             auto data = str.bufferAccessData();
             char* buf =

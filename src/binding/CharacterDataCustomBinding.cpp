@@ -29,7 +29,7 @@ ValueRef* lengthCharacterDataGetterFunction(ExecutionStateRef* state,
 {
     GENERATE_THIS_AND_CHECK_TYPE(CharacterData);
     String* data = originalObj->data();
-    if (data->hasASCIIContent()) {
+    if (data->containsOnlyASCIIChars()) {
         return ValueRef::create(originalObj->length());
     } else {
         // TODO: measure length without converting

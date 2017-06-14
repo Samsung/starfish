@@ -305,12 +305,6 @@ public:
         return data.hasASCIIContent ? data.length : data.length * 4;
     }
 
-    bool hasASCIIContent() const
-    {
-        auto data = bufferAccessData();
-        return data.hasASCIIContent;
-    }
-
     bool equals(const String* src) const;
     bool equals(const char* src) const;
 
