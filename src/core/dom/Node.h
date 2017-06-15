@@ -286,7 +286,7 @@ public:
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
-    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& selectorListContainer,
+    void parseSelector(GCVector<CSSSelctorList*>& selectorListContainer,
                        String* selectors);
     Element* querySelector(String* selector);
     NodeList* querySelectorAll(String* selector);

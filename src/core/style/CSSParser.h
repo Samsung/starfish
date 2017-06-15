@@ -20,6 +20,7 @@
 #include "binding/DocumentHoldable.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/util/RefPtr.h"
 
 namespace StarFish {
 
@@ -616,7 +617,571 @@ public:
     String* m_parsedUrl;
 };
 
-class CSSToken;
+class CSSParser;
+
+#ifndef CSSTOKENSTRING_BUILTIN_BUFFER_SIZE
+#define CSSTOKENSTRING_BUILTIN_BUFFER_SIZE 24
+#endif
+
+class CSSTokenString : public gc {
+public:
+    CSSTokenString()
+    {
+        m_hasASCIIContent = true;
+        m_length = 0;
+    }
+
+    CSSTokenString(const CSSTokenString& src)
+    {
+        operator=(src);
+    }
+
+    void operator=(const CSSTokenString& src)
+    {
+        m_hasASCIIContent = src.m_hasASCIIContent;
+        m_length = src.m_length;
+        memcpy(
+            m_builtInBuffer, src.m_builtInBuffer,
+            sizeof(char32_t) *
+                std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
+        m_externalString = src.m_externalString;
+    }
+
+    CSSTokenString(CSSTokenString&& src)
+    {
+        m_hasASCIIContent = src.m_hasASCIIContent;
+        m_length = src.m_length;
+        memcpy(
+            m_builtInBuffer, src.m_builtInBuffer,
+            sizeof(char32_t) *
+                std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
+        m_externalString = std::move(src.m_externalString);
+
+        src.m_hasASCIIContent = true;
+        src.m_length = 0;
+    }
+
+    void clear()
+    {
+        m_length = 0;
+        m_hasASCIIContent = true;
+        m_externalString.clear();
+    }
+
+    void appendChar(char32_t ch)
+    {
+        if (ch > 127) {
+            m_hasASCIIContent = false;
+        }
+        if (m_length < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+            m_builtInBuffer[m_length++] = ch;
+        } else {
+            m_externalString.pushBack(ch);
+            m_length++;
+        }
+    }
+
+    bool equals(const char* src) const
+    {
+        size_t len = strlen(src);
+        if (len != m_length) {
+            return false;
+        }
+        for (size_t i = 0; i < len; i++) {
+            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+                if (m_builtInBuffer[i] != (char32_t)src[i])
+                    return false;
+            } else {
+                if (m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] !=
+                    (char32_t)src[i]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    bool equalsWithoutCase(const char* src) const
+    {
+        size_t len = strlen(src);
+
+#ifndef NDEBUG
+        for (size_t i = 0; i < len; i++) {
+            if ('A' <= src[i] && src[i] <= 'Z') {
+                STARFISH_ASSERT_NOT_REACHED();
+            }
+        }
+#endif
+
+        if (len != m_length) {
+            return false;
+        }
+
+        for (size_t i = 0; i < len; i++) {
+            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+                if (::tolower(m_builtInBuffer[i]) != src[i])
+                    return false;
+            } else {
+                if (::tolower(
+                        m_externalString[i -
+                                         CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]) !=
+                    src[i]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    size_t indexOf(const char32_t& ch)
+    {
+        for (size_t i = 0; i < length(); i++) {
+            if (ch == charAt(i)) {
+                return i;
+            }
+        }
+        return SIZE_MAX;
+    }
+
+    bool contains(const char32_t& ch)
+    {
+        return indexOf(ch) != SIZE_MAX;
+    }
+
+    size_t length() const
+    {
+        return m_length;
+    }
+
+    char32_t charAt(const size_t& i) const
+    {
+        if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+            return m_builtInBuffer[i];
+        } else {
+            return m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
+        }
+    }
+
+    void toLower()
+    {
+        size_t len = length();
+        for (size_t i = 0; i < len; i++) {
+            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+                m_builtInBuffer[i] = ::tolower(m_builtInBuffer[i]);
+            } else {
+                m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] =
+                    ::tolower(
+                        m_externalString[i -
+                                         CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]);
+            }
+        }
+    }
+
+    void appendOther(const CSSTokenString& src)
+    {
+        for (size_t i = 0; i < src.length(); i++) {
+            appendChar(src.charAt(i));
+        }
+    }
+
+    String* toString() const
+    {
+        if (m_hasASCIIContent) {
+            TightASCIIString newStringData;
+            newStringData.resize(length());
+
+            for (size_t i = 0; i < length(); i++) {
+                newStringData[i] = (char)charAt(i);
+            }
+
+            return new StringDataASCII(std::move(newStringData));
+        } else {
+            TightUTF32String newStringData;
+            newStringData.resize(length());
+
+            for (size_t i = 0; i < length(); i++) {
+                newStringData[i] = charAt(i);
+            }
+
+            return new StringDataUTF32(std::move(newStringData));
+        }
+    }
+
+    bool hasASCIIContent() const
+    {
+        return m_hasASCIIContent;
+    }
+
+    size_t peekASCIIBuffer(size_t (*cb)(const char* buffer, size_t len,
+                                        void* data),
+                           void* data) const
+    {
+        STARFISH_ASSERT(hasASCIIContent());
+        char* newStringData = ALLOCA(length() + 1, char);
+        for (size_t i = 0; i < length(); i++) {
+            newStringData[i] = (char)charAt(i);
+        }
+        newStringData[length()] = 0;
+
+        return cb(newStringData, length(), data);
+    }
+
+    size_t peekUTF32Buffer(size_t (*cb)(const char32_t* buffer, size_t len,
+                                        void* data),
+                           void* data) const
+    {
+        char32_t* newStringData =
+            ALLOCA((length() + 1) * sizeof(char32_t), char32_t);
+        for (size_t i = 0; i < length(); i++) {
+            newStringData[i] = charAt(i);
+        }
+        newStringData[length()] = 0;
+
+        return cb(newStringData, length(), data);
+    }
+
+    AtomicString toAtomicString(StarFish* sf);
+    AtomicString toAttrAtomicString(StarFish* sf);
+
+protected:
+    bool m_hasASCIIContent;
+    size_t m_length;
+    char32_t m_builtInBuffer[CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
+    UTF32String m_externalString;
+};
+
+class CSSToken : public RefCounted<CSSToken>, public gc {
+    friend class CSSParser;
+
+    CSSToken(CSSParser* parser, char type)
+    {
+        m_parser = parser;
+        m_type = type;
+        m_unitType = UnitType::UnknownType;
+        m_hasCharValue = false;
+        m_hasNumberValue = false;
+        m_hasStringValue = false;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(CSSParser* parser, char type, CSSTokenString&& value)
+        : m_stringValue(std::move(value))
+    {
+        m_parser = parser;
+        m_type = type;
+        m_unitType = UnitType::UnknownType;
+        m_hasCharValue = false;
+        m_hasNumberValue = false;
+        m_hasStringValue = true;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(CSSParser* parser, char type, char32_t value)
+    {
+        m_parser = parser;
+        m_type = type;
+        m_charValue = value;
+        m_unitType = UnitType::UnknownType;
+        m_stringValue.appendChar(value);
+        m_hasStringValue = true;
+        m_hasCharValue = true;
+        m_hasNumberValue = false;
+        m_hasAlphabetNInUnit = false;
+        m_hasSourceOfNumberValueDot = false;
+    }
+
+    CSSToken(CSSParser* parser, char type, float number, CSSTokenString&& value,
+             UnitType u, bool hasSourceOfNumberValueDot,
+             bool hasAlphabetNInUnit)
+        : m_stringValue(std::move(value))
+    {
+        m_parser = parser;
+        m_type = type;
+        m_numericValue = number;
+        m_unitType = u;
+        m_hasStringValue = true;
+        m_hasCharValue = false;
+        m_hasNumberValue = true;
+        m_hasAlphabetNInUnit = hasAlphabetNInUnit;
+        m_hasSourceOfNumberValueDot = hasSourceOfNumberValueDot;
+    }
+
+public:
+    void* operator new(size_t size, CSSParser* parser);
+    inline void operator delete(void* obj)
+    {
+    }
+    inline void operator delete(void*, void*)
+    {
+    }
+    ~CSSToken();
+
+    static RefPtr<CSSToken> createNullToken(CSSParser* parser)
+    {
+        return adoptRef(new (parser) CSSToken(parser, CSSToken::NULL_TYPE));
+    }
+
+    static RefPtr<CSSToken> createToken(CSSParser* parser, char type)
+    {
+        return adoptRef(new (parser) CSSToken(parser, type));
+    }
+
+    static RefPtr<CSSToken> createStringValueToken(CSSParser* parser, char type,
+                                                   CSSTokenString&& value)
+    {
+        return adoptRef(new (parser) CSSToken(parser, type, std::move(value)));
+    }
+
+    static RefPtr<CSSToken> createCharValueToken(CSSParser* parser, char type,
+                                                 char32_t ch)
+    {
+        return adoptRef(new (parser) CSSToken(parser, type, ch));
+    }
+
+    static RefPtr<CSSToken> createNumberValueToken(
+        CSSParser* parser, char type, float number, CSSTokenString&& source,
+        UnitType u, bool hasSourceOfNumberValueDot, bool hasAlphabetNInUnit)
+    {
+        return adoptRef(new (parser) CSSToken(
+            parser, type, number, std::move(source), u,
+            hasSourceOfNumberValueDot, hasAlphabetNInUnit));
+    }
+
+    bool isNotNull()
+    {
+        return m_type;
+    }
+
+    bool isOfType(char aType, char32_t aValue)
+    {
+        return (m_type == aType && (!aValue || charValue() == aValue));
+    }
+
+    bool isOfType(char aType, const char* aValue)
+    {
+        return (m_type == aType &&
+                (!aValue || value()->equalsWithoutCase(aValue)));
+    }
+
+    bool isOfType(char aType)
+    {
+        return m_type == aType;
+    }
+
+    bool isWhiteSpace(char32_t w = 0)
+    {
+        return isOfType(CSSToken::WHITESPACE_TYPE, w);
+    }
+
+    bool isString()
+    {
+        return isOfType(CSSToken::STRING_TYPE);
+    }
+
+    bool isComment()
+    {
+        return isOfType(CSSToken::COMMENT_TYPE);
+    }
+
+    bool isSGMLComment()
+    {
+        return isOfType(CSSToken::SGML_COMMENT_TYPE);
+    }
+
+    bool isNumber()
+    {
+        return isOfType(CSSToken::NUMBER_TYPE);
+    }
+
+    bool hasStringValue()
+    {
+        return m_hasStringValue;
+    }
+
+    bool hasSourceOfNumberValueDot()
+    {
+        return m_hasSourceOfNumberValueDot;
+    }
+
+    bool hasAlphabetNInUnit()
+    {
+        return m_hasAlphabetNInUnit;
+    }
+
+    bool isIdent()
+    {
+        return isOfType(CSSToken::IDENT_TYPE);
+    }
+
+    bool isIdent(char c)
+    {
+        char s[2] = { c, '\0' };
+        return isOfType(CSSToken::IDENT_TYPE) && value()->equals(s);
+    }
+
+    bool isIdent(const char* s)
+    {
+        return isOfType(CSSToken::IDENT_TYPE) && value()->equalsWithoutCase(s);
+    }
+
+    bool isFunction(const char* f = nullptr)
+    {
+        return isOfType(CSSToken::FUNCTION_TYPE, f);
+    }
+
+    bool isAtRule(const char* f = nullptr)
+    {
+        return isOfType(CSSToken::ATRULE_TYPE, f);
+    }
+
+    bool isIncludes()
+    {
+        return isOfType(CSSToken::INCLUDES_TYPE);
+    }
+
+    bool isDashmatch()
+    {
+        return isOfType(CSSToken::DASHMATCH_TYPE);
+    }
+
+    bool isBeginsmatch()
+    {
+        return isOfType(CSSToken::BEGINSMATCH_TYPE);
+    }
+
+    bool isEndsmatch()
+    {
+        return isOfType(CSSToken::ENDSMATCH_TYPE);
+    }
+
+    bool isContainsmatch()
+    {
+        return isOfType(CSSToken::CONTAINSMATCH_TYPE);
+    }
+
+    bool isSymbol(char32_t c = 0)
+    {
+        return isOfType(CSSToken::SYMBOL_TYPE, c);
+    }
+
+    bool isDimension()
+    {
+        return isOfType(CSSToken::DIMENSION_TYPE);
+    }
+
+    bool isPercentage()
+    {
+        return isOfType(CSSToken::PERCENTAGE_TYPE);
+    }
+
+    bool isHex()
+    {
+        return isOfType(CSSToken::HEX_TYPE);
+    }
+
+    bool isDimensionOfUnit(UnitType aUnit)
+    {
+        return (isDimension() && m_unitType == aUnit);
+    }
+
+    bool isLength()
+    {
+        STARFISH_ASSERT(m_hasNumberValue);
+        switch (m_unitType) {
+        case UnitType::Centimeters:
+        case UnitType::Millimeters:
+        case UnitType::Inches:
+        case UnitType::Picas:
+        case UnitType::Pixels:
+        case UnitType::Ems:
+        case UnitType::Exs:
+        case UnitType::Points:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isAngle()
+    {
+        STARFISH_ASSERT(m_hasNumberValue);
+        switch (m_unitType) {
+        case UnitType::Degrees:
+        case UnitType::Radians:
+        case UnitType::Gradians:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    char type()
+    {
+        return m_type;
+    }
+
+    CSSTokenString* value()
+    {
+        return &m_stringValue;
+    }
+
+    float numericValue()
+    {
+        STARFISH_ASSERT(m_hasNumberValue);
+        return m_numericValue;
+    }
+
+    char32_t charValue()
+    {
+        STARFISH_ASSERT(m_hasCharValue);
+        return m_charValue;
+    }
+
+    UnitType unitType()
+    {
+        STARFISH_ASSERT(m_hasNumberValue);
+        return m_unitType;
+    }
+
+    static const char NULL_TYPE = 0;
+    static const char WHITESPACE_TYPE = 1;
+    static const char STRING_TYPE = 2;
+    static const char COMMENT_TYPE = 3;
+    static const char NUMBER_TYPE = 4;
+    static const char IDENT_TYPE = 5;
+    static const char FUNCTION_TYPE = 6;
+    static const char ATRULE_TYPE = 7;
+    static const char INCLUDES_TYPE = 8;
+    static const char DASHMATCH_TYPE = 9;
+    static const char BEGINSMATCH_TYPE = 10;
+    static const char ENDSMATCH_TYPE = 11;
+    static const char CONTAINSMATCH_TYPE = 12;
+    static const char SYMBOL_TYPE = 13;
+    static const char DIMENSION_TYPE = 14;
+    static const char PERCENTAGE_TYPE = 15;
+    static const char HEX_TYPE = 16;
+    static const char SGML_COMMENT_TYPE = 17;
+
+protected:
+    char m_type : 8;
+    UnitType m_unitType : 8;
+    bool m_hasNumberValue : 1;
+    bool m_hasCharValue : 1;
+    bool m_hasStringValue : 1;
+    bool m_hasSourceOfNumberValueDot : 1;
+    bool m_hasAlphabetNInUnit : 1;
+
+    CSSParser* m_parser;
+    CSSTokenString m_stringValue;
+    union {
+        float m_numericValue;
+        char32_t m_charValue;
+    };
+};
+
 class CSSScanner;
 class MediaQueryExp;
 
@@ -626,14 +1191,14 @@ private:
     String* m_mediaType;
     GCVector<MediaQueryExp*> m_expressions;
     String* m_mediaFeature;
-    GCVector<CSSToken*> m_valueList;
+    GCVector<RefPtr<CSSToken>> m_valueList;
     bool m_mediaTypeSet;
 
 public:
     MediaQueryData();
     void clear();
     bool addExpression();
-    bool tryAddParserToken(CSSToken*);
+    bool tryAddParserToken(RefPtr<CSSToken>);
     void setMediaType(String*);
     MediaQuery* mediaQuery();
 
@@ -659,7 +1224,14 @@ public:
 
 class StyleRuleMedia;
 class StyleRuleImport;
+
+#ifndef CSSTOKEN_POOL_INITIAL_SIZE
+#define CSSTOKEN_POOL_INITIAL_SIZE 24
+#endif
+
 class CSSParser : public DocumentHoldable {
+    friend class CSSToken;
+
 public:
     enum NumericSign {
         NoSign,
@@ -684,43 +1256,43 @@ public:
 
     enum RuleListType { TopLevelRuleList, RegularRuleList, KeyframesRuleList };
 
-    CSSParser(Document* document)
-        : DocumentHoldable(document)
+    CSSParser(Document* document);
+    inline ~CSSParser()
     {
-        m_error = String::emptyString;
-        m_failedParsing = false;
+        m_isPoolEnabled = false;
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
-    void parseRules(CSSToken* token, GCVector<StyleRuleBase*>& rootRule,
+    void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    bool parseStyleRule(CSSToken* aToken, GCVector<StyleRuleBase*>& rules,
+    bool parseStyleRule(RefPtr<CSSToken> aToken,
+                        GCVector<StyleRuleBase*>& rules,
                         AllowedRulesType allowedRules,
-                        GCVector<GCDeque<CSSSelector*>*>* sList,
+                        GCVector<CSSSelctorList*>* sList,
                         bool isQueryingSelector = false);
-    CSSToken* makeToken(String* str);
+    RefPtr<CSSToken> makeToken(String* str);
     StyleRuleMedia* parseMediaRule();
     MediaQuerySet* parseMediaQuery();
     StyleRuleImport* parseImportRule();
     String* parseURLString();
 
 protected:
-    CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
-    CSSToken* currentToken();
+    RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
+                              bool isURL = false);
+    RefPtr<CSSToken> currentToken();
     void ungetToken();
     void preserveState();
     void restoreState();
     void forgetState();
-    CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
-    void parseSelector(GCVector<GCDeque<CSSSelector*>*>& list,
-                       bool& validSelector);
+    RefPtr<CSSToken> lookAhead(bool aSkipWS, bool aSkipComment);
+    void parseSelector(GCVector<CSSSelctorList*>& list, bool& validSelector);
 
-    bool parseComplexSelectorList(GCVector<GCDeque<CSSSelector*>*>& sList);
-    void parseComplexSelector(GCDeque<CSSSelector*>* selectorList);
-    void parseCompoundSelector(GCDeque<CSSSelector*>* selectorList);
+    bool parseComplexSelectorList(GCVector<CSSSelctorList*>& sList);
+    void parseComplexSelector(CSSSelctorList* selectorList);
+    void parseCompoundSelector(CSSSelctorList* selectorList);
     CSSSelector::RelationType parseCombinator();
-    bool parseName(String** name);
+    bool parseName(CSSTokenString& name);
     CSSSelector* getSimpleSelector();
     CSSSelector* getIdSelector();
     CSSSelector* getClassSelector();
@@ -732,22 +1304,24 @@ protected:
                                      CSSSelector* compoundSelector);
     unsigned extractCompoundFlags(CSSSelector* simpleSelector);
     bool getANPlusB(std::pair<int, int>& result);
-    CSSSelector::Type getAttributeMatch(CSSToken* token);
+    CSSSelector::Type getAttributeMatch(RefPtr<CSSToken> token);
     CSSSelector::AttributeMatchType getAttributeFlags();
-    String* getStringWithoutQuotationMarks(String* str);
+    String* getStringWithoutQuotationMarks(const CSSTokenString& value);
 
-    String* parseDefaultPropertyValue(CSSToken* token);
-    void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
+    String* parseDefaultPropertyValue(RefPtr<CSSToken> token);
+    void parseDeclaration(RefPtr<CSSToken> aToken,
+                          CSSStyleDeclaration* declaration);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
-    static String* combineAndTrimTokenValues(const GCVector<CSSToken*>& list);
+    static String* combineAndTrimTokenValues(
+        const GCVector<RefPtr<CSSToken>>& list);
     bool m_preserveWS;
     bool m_preserveComments;
-    GCVector<CSSToken*> m_preservedTokens;
+    GCVector<RefPtr<CSSToken>> m_preservedTokens;
     CSSScanner* m_scanner;
-    CSSToken* m_lookAhead;
-    CSSToken* m_token;
+    RefPtr<CSSToken> m_lookAhead;
+    RefPtr<CSSToken> m_token;
     String* m_error;
     bool m_failedParsing;
 
@@ -759,25 +1333,25 @@ protected:
 
     void initParseMediaQuery(MediaQueryParserType parserType);
 
-    void processToken(CSSToken* token);
+    void processToken(RefPtr<CSSToken> token);
 
-    void readRestrictor(CSSToken*);
-    void readMediaNot(CSSToken*);
-    void readMediaType(CSSToken*);
-    void readAnd(CSSToken*);
-    void readFeatureStart(CSSToken*);
-    void readFeature(CSSToken*);
-    void readFeatureColon(CSSToken*);
-    void readFeatureValue(CSSToken*);
-    void readFeatureEnd(CSSToken*);
-    void skipUntilComma(CSSToken*);
-    void skipUntilBlockEnd(CSSToken*);
-    void done(CSSToken*);
+    void readRestrictor(RefPtr<CSSToken>);
+    void readMediaNot(RefPtr<CSSToken>);
+    void readMediaType(RefPtr<CSSToken>);
+    void readAnd(RefPtr<CSSToken>);
+    void readFeatureStart(RefPtr<CSSToken>);
+    void readFeature(RefPtr<CSSToken>);
+    void readFeatureColon(RefPtr<CSSToken>);
+    void readFeatureValue(RefPtr<CSSToken>);
+    void readFeatureEnd(RefPtr<CSSToken>);
+    void skipUntilComma(RefPtr<CSSToken>);
+    void skipUntilBlockEnd(RefPtr<CSSToken>);
+    void done(RefPtr<CSSToken>);
 
-    using State = void (CSSParser::*)(CSSToken*);
+    using State = void (CSSParser::*)(RefPtr<CSSToken>);
 
     void setStateAndRestrict(State, MediaQuery::RestrictorType);
-    void handleBlocks(CSSToken*);
+    void handleBlocks(RefPtr<CSSToken>);
 
     State m_state;
     MediaQueryParserType m_parserType;
@@ -796,6 +1370,13 @@ protected:
     const static State SkipUntilComma;
     const static State SkipUntilBlockEnd;
     const static State Done;
+
+    // Token memory pool variables
+    bool m_isPoolEnabled;
+    CSSToken* m_initialTokenMemoryPool[CSSTOKEN_POOL_INITIAL_SIZE];
+    size_t m_initialTokenMemoryPoolSize;
+    GCVector<CSSToken*> m_tokenMemoryPool;
+    char m_tokenInnerPool[CSSTOKEN_POOL_INITIAL_SIZE * sizeof(CSSToken)];
 };
 
 struct MediaQueryExpValue {
@@ -845,7 +1426,7 @@ struct MediaQueryExpValue {
 class MediaQueryExp : public gc {
 public:
     static MediaQueryExp* createIfValid(String* mediaFeature,
-                                        const GCVector<CSSToken*>&);
+                                        const GCVector<RefPtr<CSSToken>>&);
     ~MediaQueryExp();
 
     String* mediaFeature()

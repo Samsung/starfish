@@ -1560,27 +1560,6 @@ void StringBuilder::takeBuilder(StringBuilder& src)
     }
 }
 
-char32_t StringBuilder::finalizeChar()
-{
-    STARFISH_ASSERT(contentLength() == 1);
-    const StringBuilderPiece& piece = m_piecesInlineStorage[0];
-    if (piece.m_type == StringBuilderPiece::Char) {
-        return piece.m_ch;
-    } else if (piece.m_type == StringBuilderPiece::ConstChar) {
-        const char* data = piece.m_raw;
-        return *data;
-    } else {
-        String* data = piece.m_string;
-        size_t s = piece.m_start;
-        auto accessData = data->bufferAccessData();
-        if (accessData.hasASCIIContent) {
-            return *(accessData.asciiData() + s);
-        } else {
-            return *(accessData.utf32Data() + s);
-        }
-    }
-}
-
 String* StringBuilder::finalize()
 {
     if (!m_contentLength) {

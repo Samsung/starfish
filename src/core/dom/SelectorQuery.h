@@ -31,7 +31,7 @@ public:
         MatchesTraverseRoots
     };
 
-    SelectorQuery(GCVector<GCDeque<CSSSelector*>*>& selector)
+    SelectorQuery(GCVector<CSSSelctorList*>& selector)
         : m_selectorListContainer(selector)
     {
     }
@@ -40,17 +40,15 @@ public:
 
 private:
     bool canUseFastQuery(const Node& rootNode);
-    void traverseDescendants(GCDeque<CSSSelector*>& selectors,
-                             Node* traverseRoot, Node& rootNode,
-                             GCVector<Element*>& collection,
+    void traverseDescendants(CSSSelctorList& selectors, Node* traverseRoot,
+                             Node& rootNode, GCVector<Element*>& collection,
                              bool shouldOnlyMatchFirstElement);
-    void executeForTraverseRoot(GCDeque<CSSSelector*>& selector,
-                                Node* traverseRoot,
+    void executeForTraverseRoot(CSSSelctorList& selector, Node* traverseRoot,
                                 MatchTraverseRootState matchTraverseRoot,
                                 Node& rootNode, GCVector<Element*>& output,
                                 bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
-    void executeForTraverseRoots(GCDeque<CSSSelector*>& selector,
+    void executeForTraverseRoots(CSSSelctorList& selector,
                                  SimpleElementListType& traverseRoots,
                                  MatchTraverseRootState matchTraverseRoots,
                                  Node& rootNode, GCVector<Element*>& output,
@@ -71,10 +69,10 @@ private:
     void collectElementsByTagName(Node& rootNode, const String* tagName,
                                   GCVector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(GCDeque<CSSSelector*>& selector, Element* element,
+    bool selectorMatches(CSSSelctorList& selector, Element* element,
                          Node& rootNode);
-    CSSSelector* selectorForIdLookup(GCDeque<CSSSelector*>& firstSelector);
-    GCVector<GCDeque<CSSSelector*>*>& m_selectorListContainer;
+    CSSSelector* selectorForIdLookup(CSSSelctorList& firstSelector);
+    GCVector<CSSSelctorList*>& m_selectorListContainer;
 };
 }
 #endif

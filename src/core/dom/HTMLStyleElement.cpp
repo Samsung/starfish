@@ -132,7 +132,7 @@ void HTMLStyleElement::generateStyleSheet()
         child = child->nextSibling();
     }
 
-    CSSToken* token = parser.makeToken(media());
+    RefPtr<CSSToken> token = parser.makeToken(media());
     MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
     const MediaQueryEvaluator& evaluator =
         document()->styleResolver().mediaQueryEvaluator();

@@ -675,7 +675,7 @@ unsigned CSSSelector::specificityForOneSelector() const
     return 0;
 }
 
-bool CSSSelector::isSimple(GCDeque<CSSSelector*>* selectorList)
+bool CSSSelector::isSimple(CSSSelctorList* selectorList)
 {
     if ((isPseudoSelector() &&
          asCSSPseudoSelector()->pseudoSelectorList().size()) ||
@@ -1829,7 +1829,7 @@ bool StyleResolver::anyAttributeMatches(Element* element,
                                         MatchResult& result)
 {
     const QualifiedName& selectorAttr = selector->attribute();
-    STARFISH_ASSERT(!(selectorAttr.localName()->equals(String::fromUTF8("*"))));
+    STARFISH_ASSERT(!(selectorAttr.localName()->equals("*")));
 
     String* selectorValue = selector->value();
 
@@ -1846,7 +1846,7 @@ bool StyleResolver::anyAttributeMatches(Element* element,
     }
 
     if (caseSensitivity == CSSSelector::CaseInsensitive) {
-        if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*"))) {
+        if (!selectorAttr.namespaceURI()->equals("*")) {
             return false;
         }
     }
@@ -1864,7 +1864,7 @@ bool StyleResolver::anyAttributeMatches(Element* element,
                               CSSSelector::CaseInsensitive)) {
         return true;
     }
-    if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*"))) {
+    if (!selectorAttr.namespaceURI()->equals("*")) {
         return false;
     }
 
@@ -3964,7 +3964,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
             StyleRule* rule = (StyleRule*)sheet->rules()[j];
-            GCDeque<CSSSelector*> selectorList = rule->selectorList();
+            CSSSelctorList selectorList = rule->selectorList();
             MatchResult result;
             if (matchSelector(element, selectorList, 0, result) ==
                 Match::SelectorMatches) {
@@ -3976,7 +3976,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     sheet = allRules();
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
         StyleRule* rule = (StyleRule*)sheet->rules()[j];
-        GCDeque<CSSSelector*> selectorList = rule->selectorList();
+        CSSSelctorList selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, selectorList, 0, result) ==
             Match::SelectorMatches) {
@@ -4024,9 +4024,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 }
 
-StyleResolver::Match StyleResolver::matchSelector(
-    Element* element, GCDeque<CSSSelector*>& selectorList, unsigned idx,
-    MatchResult& result, bool isQueryingSelector)
+StyleResolver::Match StyleResolver::matchSelector(Element* element,
+                                                  CSSSelctorList& selectorList,
+                                                  unsigned idx,
+                                                  MatchResult& result,
+                                                  bool isQueryingSelector)
 {
     STARFISH_ASSERT(idx < selectorList.size());
 
@@ -4051,7 +4053,7 @@ StyleResolver::Match StyleResolver::matchSelector(
 }
 
 StyleResolver::Match StyleResolver::matchForRelation(
-    Element* element, GCDeque<CSSSelector*>& selectorList,
+    Element* element, CSSSelctorList& selectorList,
     CSSSelector::RelationType relation, unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList.size());

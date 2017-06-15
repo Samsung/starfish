@@ -1105,8 +1105,8 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     return list;
 }
 
-void Node::parseSelector(
-    GCVector<GCDeque<CSSSelector*>*>& selectorListContainer, String* selectors)
+void Node::parseSelector(GCVector<CSSSelctorList*>& selectorListContainer,
+                         String* selectors)
 {
     if (selectors->equals(String::emptyString)) {
         throw new DOMException(document(), DOMException::SYNTAX_ERR,
@@ -1115,7 +1115,7 @@ void Node::parseSelector(
     }
 
     CSSParser parser(document());
-    CSSToken* token = parser.makeToken(selectors);
+    RefPtr<CSSToken> token = parser.makeToken(selectors);
 
     GCVector<StyleRuleBase*> nullVec;
     parser.parseStyleRule(token, nullVec,
@@ -1131,7 +1131,7 @@ void Node::parseSelector(
 
 Element* Node::querySelector(String* selectors)
 {
-    GCVector<GCDeque<CSSSelector*>*> selectorListContainer;
+    GCVector<CSSSelctorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);
@@ -1140,7 +1140,7 @@ Element* Node::querySelector(String* selectors)
 
 NodeList* Node::querySelectorAll(String* selectors)
 {
-    GCVector<GCDeque<CSSSelector*>*> selectorListContainer;
+    GCVector<CSSSelctorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);
