@@ -657,8 +657,8 @@ public:
     }
 };
 
-class CSSMediaRule;
-class CSSImportRule;
+class StyleRuleMedia;
+class StyleRuleImport;
 class CSSParser : public DocumentHoldable {
 public:
     enum NumericSign {
@@ -692,17 +692,17 @@ public:
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
-    void parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
+    void parseRules(CSSToken* token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    bool parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
+    bool parseStyleRule(CSSToken* aToken, GCVector<StyleRuleBase*>& rules,
                         AllowedRulesType allowedRules,
                         GCVector<GCDeque<CSSSelector*>*>* sList,
                         bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
-    CSSMediaRule* parseMediaRule();
+    StyleRuleMedia* parseMediaRule();
     MediaQuerySet* parseMediaQuery();
-    CSSImportRule* parseImportRule();
+    StyleRuleImport* parseImportRule();
     String* parseURLString();
 
 protected:
@@ -740,7 +740,7 @@ protected:
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
-    bool parseCharsetRule(GCVector<CSSRule*>& rules);
+    bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
     static String* combineAndTrimTokenValues(const GCVector<CSSToken*>& list);
     bool m_preserveWS;
     bool m_preserveComments;

@@ -18,9 +18,13 @@
 #define __StarFishCSSRuleList__
 
 #include "binding/ScriptWrappable.h"
-#include "core/style/CSSStyleRule.h"
+#include "core/dom/Node.h"
 
 namespace StarFish {
+
+class CSSRule;
+class CSSStyleSheet;
+class CSSGroupingRule;
 
 class CSSRuleList : public ScriptWrappable {
 public:
@@ -30,7 +34,6 @@ public:
 
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {
-        // TODO child classes must override this function
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 

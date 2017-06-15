@@ -1117,7 +1117,7 @@ void Node::parseSelector(
     CSSParser parser(document());
     CSSToken* token = parser.makeToken(selectors);
 
-    GCVector<CSSRule*> nullVec;
+    GCVector<StyleRuleBase*> nullVec;
     parser.parseStyleRule(token, nullVec,
                           CSSParser::AllowedRulesType::RegularRules,
                           &selectorListContainer, true);
