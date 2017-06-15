@@ -21,14 +21,12 @@
 
 namespace StarFish {
 
-class CSSStyleRule;
-class CSSMediaRule;
-class CSSImportRule;
 class CSSStyleSheet;
+class CSSRuleList;
 
 class CSSRule : public ScriptWrappable {
 public:
-    enum RuleType {
+    enum Type {
         STYLE_RULE = 1,
         CHARSET_RULE = 2,
         IMPORT_RULE = 3,
@@ -39,109 +37,60 @@ public:
         NAMESPACE_RULE = 10
     };
 
-    CSSRule(RuleType ruleType)
-        : ScriptWrappable(this)
-        , m_ruleType(ruleType)
-        , m_parentRule(nullptr)
-        , m_parentStyleSheet(nullptr)
-    {
-    }
-
-    CSSRule(CSSRule& o)
-        : ScriptWrappable(this)
-        , m_ruleType(o.type())
-        , m_parentRule(o.m_parentRule)
-        , m_parentStyleSheet(o.m_parentStyleSheet)
-    {
-    }
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSRule() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
+
+    virtual Type type() const = 0;
+    virtual String* cssText() = 0;
+    virtual CSSRuleList* cssRules()
     {
-        // TODO child classes must override this function
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return 0;
     }
 
-    RuleType type()
+    void setParentStyleSheet(CSSStyleSheet* styleSheet)
     {
-        return m_ruleType;
+        m_parentIsRule = false;
+        m_parentStyleSheet = styleSheet;
     }
 
-    bool isStyleRule()
+    void setParentRule(CSSRule* rule)
     {
-        return type() == RuleType::STYLE_RULE;
+        m_parentIsRule = true;
+        m_parentRule = rule;
     }
 
-    bool isMediaRule()
+    CSSStyleSheet* parentStyleSheet() const
     {
-        return type() == RuleType::MEDIA_RULE;
+        if (m_parentIsRule) {
+            return m_parentRule ? m_parentRule->parentStyleSheet() : nullptr;
+        }
+        return m_parentStyleSheet;
     }
 
-    bool isImportRule()
+    CSSRule* parentRule() const
     {
-        return type() == RuleType::IMPORT_RULE;
+        return m_parentIsRule ? m_parentRule : nullptr;
     }
 
-    bool isCharsetRule()
-    {
-        return type() == RuleType::CHARSET_RULE;
-    }
-
-    bool isNamespaceRule()
-    {
-        return type() == RuleType::NAMESPACE_RULE;
-    }
-
-    CSSStyleRule* asCSSStyleRule()
-    {
-        STARFISH_ASSERT(isStyleRule());
-        return (CSSStyleRule*)this;
-    }
-
-    CSSMediaRule* asCSSStyleRuleMedia()
-    {
-        STARFISH_ASSERT(isMediaRule());
-        return (CSSMediaRule*)this;
-    }
-
-    CSSImportRule* asCSSStyleRuleImport()
-    {
-        STARFISH_ASSERT(isImportRule());
-        return (CSSImportRule*)this;
-    }
-
-    virtual String* cssText() const = 0;
+    // The CSSOM spec states that "setting the cssText attribute must do
+    // nothing."
     void setCssText(String*)
     {
     }
 
-    void setParentStyleSheet(CSSStyleSheet* parentSheet = nullptr)
-    {
-        m_parentStyleSheet = parentSheet;
-    }
-
-    void setParentRule(CSSRule* parentRule = nullptr)
-    {
-        m_parentRule = parentRule;
-    }
-
-    CSSRule* parentRule()
-    {
-        return m_parentRule;
-    }
-
-    CSSStyleSheet* parentStyleSheet()
-    {
-        return m_parentStyleSheet;
-    }
-
 protected:
-    RuleType m_ruleType;
+    CSSRule(CSSStyleSheet* parent);
 
-    CSSRule* m_parentRule;
-    CSSStyleSheet* m_parentStyleSheet;
+private:
+    unsigned char m_parentIsRule : 1;
+
+    // These should be Members, but no Members in unions.
+    union {
+        CSSRule* m_parentRule;
+        CSSStyleSheet* m_parentStyleSheet;
+    };
 };
 }
 

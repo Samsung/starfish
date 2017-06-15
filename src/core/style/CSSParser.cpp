@@ -68,9 +68,8 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
-#include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
-#include "core/style/Style.h"
+#include "core/style/StyleRule.h"
 
 namespace StarFish {
 
@@ -1912,7 +1911,8 @@ void CSSParser::parseDeclaration(CSSToken* aToken,
     return;
 }
 
-bool CSSParser::parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
+bool CSSParser::parseStyleRule(CSSToken* aToken,
+                               GCVector<StyleRuleBase*>& rules,
                                AllowedRulesType allowedRules,
                                GCVector<GCDeque<CSSSelector*>*>* sList,
                                bool isQueryingSelector)
@@ -1983,7 +1983,7 @@ bool CSSParser::parseStyleRule(CSSToken* aToken, GCVector<CSSRule*>& rules,
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                rules.push_back(new CSSStyleRule(list[i], declarations));
+                rules.push_back(new StyleRule((*list[i]), declarations));
             }
         }
         return true;
@@ -2030,7 +2030,7 @@ void CSSParser::reportError(const char* aMsg)
 }
 
 static CSSParser::AllowedRulesType computeNewAllowedRules(
-    CSSParser::AllowedRulesType allowedRules, CSSRule* rule)
+    CSSParser::AllowedRulesType allowedRules, StyleRuleBase* rule)
 {
     if (!rule || allowedRules == CSSParser::KeyframeRules ||
         allowedRules == CSSParser::NoRules) {
@@ -2046,7 +2046,7 @@ static CSSParser::AllowedRulesType computeNewAllowedRules(
     return CSSParser::RegularRules;
 }
 
-bool CSSParser::parseCharsetRule(GCVector<CSSRule*>& rules)
+bool CSSParser::parseCharsetRule(GCVector<StyleRuleBase*>& rules)
 {
     CSSToken* token = getToken(false, false);
     StringBuilder s;
@@ -2095,7 +2095,7 @@ CSSToken* CSSParser::makeToken(String* str)
     return getToken(false, false);
 }
 
-CSSMediaRule* CSSParser::parseMediaRule()
+StyleRuleMedia* CSSParser::parseMediaRule()
 {
     preserveState();
 
@@ -2116,7 +2116,7 @@ CSSMediaRule* CSSParser::parseMediaRule()
     }
 
     bool valid = false;
-    GCVector<CSSRule*> rootRule;
+    GCVector<StyleRuleBase*> rootRule;
     if (token->isSymbol('{') && hasMediaRule) {
         token = getToken(true, false);
         if (token->isNotNull()) {
@@ -2129,13 +2129,13 @@ CSSMediaRule* CSSParser::parseMediaRule()
 
     if (valid) {
         forgetState();
-        return new CSSMediaRule(mediaQuerySet, rootRule);
+        return new StyleRuleMedia(mediaQuerySet, rootRule);
     }
     restoreState();
     return nullptr;
 }
 
-CSSImportRule* CSSParser::parseImportRule()
+StyleRuleImport* CSSParser::parseImportRule()
 {
     String* url = parseURLString();
     if (url->equals(String::emptyString)) {
@@ -2145,7 +2145,7 @@ CSSImportRule* CSSParser::parseImportRule()
     getToken(true, false);
     MediaQuerySet* mediaQuery = parseMediaQuery();
 
-    return new CSSImportRule(url, mediaQuery);
+    return new StyleRuleImport(url, mediaQuery);
 }
 
 String* CSSParser::parseURLString()
@@ -2182,7 +2182,7 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
         return;
     }
 
-    GCVector<CSSRule*> rules;
+    GCVector<StyleRuleBase*> rules;
     if (token->isAtRule("@charset")) {
         ungetToken();
         parseCharsetRule(rules);
@@ -2195,7 +2195,7 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
     }
 }
 
-void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
+void CSSParser::parseRules(CSSToken* token, GCVector<StyleRuleBase*>& rootRule,
                            RuleListType ruleListType)
 {
     AllowedRulesType allowedRules = AllowedRulesType::RegularRules;
@@ -2230,7 +2230,7 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
         if (token->isWhiteSpace()) {
         } else if (token->isComment()) {
         } else if (token->isAtRule()) {
-            CSSRule* rule = nullptr;
+            StyleRuleBase* rule = nullptr;
             if (allowedRules <= AllowImportRules &&
                 token->isAtRule("@import")) {
                 rule = parseImportRule();
@@ -2254,7 +2254,7 @@ void CSSParser::parseRules(CSSToken* token, GCVector<CSSRule*>& rootRule,
             }
         } else {
             // plain style rules
-            GCVector<CSSRule*> rules;
+            GCVector<StyleRuleBase*> rules;
             if (parseStyleRule(token, rules, allowedRules, nullptr, false)) {
                 allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());

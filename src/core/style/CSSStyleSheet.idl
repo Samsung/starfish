@@ -1,8 +1,8 @@
 // https://drafts.csswg.org/cssom/#the-cssstylesheet-interface
 
 interface CSSStyleSheet : StyleSheet {
-    readonly attribute CSSRule? ownerRule;
-    [SameObject] readonly attribute CSSRuleList cssRules;
+    [Unimplemented] readonly attribute CSSRule? ownerRule;
+    [Unimplemented, SameObject] readonly attribute CSSRuleList cssRules;
     [Unimplemented] unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     [Unimplemented] void deleteRule(unsigned long index);
 };

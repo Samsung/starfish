@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/style/CSSRule.h"
 #include "core/style/CSSRuleList.h"
 
 #include <EscargotPublic.h>

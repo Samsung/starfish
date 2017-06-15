@@ -29,11 +29,11 @@
 #include "core/modules/window/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSStyleDeclaration.h"
-#include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/NamedColors.h"
 #include "core/style/Style.h"
+#include "core/style/StyleRule.h"
 
 namespace StarFish {
 
@@ -3963,8 +3963,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            CSSStyleRule* rule = (CSSStyleRule*)sheet->rules()[j];
-            GCDeque<CSSSelector*>* selectorList = rule->selectorList();
+            StyleRule* rule = (StyleRule*)sheet->rules()[j];
+            GCDeque<CSSSelector*> selectorList = rule->selectorList();
             MatchResult result;
             if (matchSelector(element, selectorList, 0, result) ==
                 Match::SelectorMatches) {
@@ -3975,8 +3975,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 
     sheet = allRules();
     for (unsigned j = 0; j < sheet->rules().size(); j++) {
-        CSSStyleRule* rule = (CSSStyleRule*)sheet->rules()[j];
-        GCDeque<CSSSelector*>* selectorList = rule->selectorList();
+        StyleRule* rule = (StyleRule*)sheet->rules()[j];
+        GCDeque<CSSSelector*> selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, selectorList, 0, result) ==
             Match::SelectorMatches) {
@@ -4025,12 +4025,12 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 }
 
 StyleResolver::Match StyleResolver::matchSelector(
-    Element* element, GCDeque<CSSSelector*>* selectorList, unsigned idx,
+    Element* element, GCDeque<CSSSelector*>& selectorList, unsigned idx,
     MatchResult& result, bool isQueryingSelector)
 {
-    STARFISH_ASSERT(idx < selectorList->size());
+    STARFISH_ASSERT(idx < selectorList.size());
 
-    CSSSelector* selector = (*selectorList)[idx];
+    CSSSelector* selector = selectorList[idx];
     if (!checkOne(element, selector, result, isQueryingSelector)) {
         return Match::SelectorFailsLocally;
     }
@@ -4051,12 +4051,12 @@ StyleResolver::Match StyleResolver::matchSelector(
 }
 
 StyleResolver::Match StyleResolver::matchForRelation(
-    Element* element, GCDeque<CSSSelector*>* selectorList,
+    Element* element, GCDeque<CSSSelector*>& selectorList,
     CSSSelector::RelationType relation, unsigned idx, MatchResult& result)
 {
-    STARFISH_ASSERT(idx < selectorList->size());
+    STARFISH_ASSERT(idx < selectorList.size());
 
-    CSSSelector* selector = (*selectorList)[idx];
+    CSSSelector* selector = selectorList[idx];
     switch (relation) {
     case CSSSelector::RelationType::Descendant: {
         Element* parent = element->parentElement();

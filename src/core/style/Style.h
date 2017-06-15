@@ -23,9 +23,9 @@
 namespace StarFish {
 
 class ComputedStyle;
-class CSSStyleRule;
-class CSSImportRule;
-class CSSRule;
+class StyleRule;
+class StyleRuleImport;
+class StyleRuleBase;
 class Document;
 class Element;
 class MediaQuerySet;
@@ -1737,7 +1737,7 @@ public:
     void matchAllRules(
         Element* element, ComputedStyle* ret, ComputedStyle* parent,
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
-    Match matchSelector(Element* element, GCDeque<CSSSelector*>* selectorList,
+    Match matchSelector(Element* element, GCDeque<CSSSelector*>& selectorList,
                         unsigned idx, MatchResult& result,
                         bool isQueryingSelector = false);
 
@@ -1749,7 +1749,7 @@ protected:
                bool isImportant = false);
 
     Match matchForRelation(Element* element,
-                           GCDeque<CSSSelector*>* selectorList,
+                           GCDeque<CSSSelector*>& selectorList,
                            CSSSelector::RelationType relation, unsigned idx,
                            MatchResult& result);
 

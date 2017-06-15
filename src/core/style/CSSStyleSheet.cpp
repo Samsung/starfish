@@ -23,6 +23,7 @@
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
+#include "core/style/StyleRule.h"
 
 namespace StarFish {
 
@@ -41,12 +42,12 @@ public:
 private:
     unsigned length() const override
     {
-        return m_styleSheet->allRules().size();
+        return m_styleSheet->length();
     }
 
     CSSRule* item(unsigned index) const override
     {
-        return index < length() ? m_styleSheet->allRules()[index] : nullptr;
+        return m_styleSheet->item(index);
     }
 
     CSSStyleSheet* styleSheet() const override
@@ -62,17 +63,17 @@ ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
     return origin()->scriptBindingInstance();
 }
 
-void CSSStyleSheet::addRule(CSSStyleRule* rule)
+void CSSStyleSheet::addRule(StyleRule* rule)
 {
     m_rules.push_back(rule);
 }
 
-void CSSStyleSheet::addRule(CSSRule* rule)
+void CSSStyleSheet::addRule(StyleRuleBase* rule)
 {
     if (rule->isImportRule()) {
         STARFISH_ASSERT(m_allRules.size() == 0);
 
-        CSSImportRule* importRule = rule->asCSSStyleRuleImport();
+        StyleRuleImport* importRule = rule->asStyleRuleImport();
         m_importRules.push_back(importRule);
         m_importRules.back()->setParentStyleSheet(this);
         m_importRules.back()->requestStyleSheet();
@@ -102,7 +103,7 @@ void CSSStyleSheet::parseSheetIfneeds()
 
 // http://www.w3.org/TR/css3-selectors/#specificity
 // We use 256 as the base of the specificity number system.
-static unsigned specificity(GCDeque<CSSSelector*>* selectorList)
+static unsigned specificity(GCDeque<CSSSelector*>& selectorList)
 {
     // Make sure the result doesn't overflow
     static const unsigned idMask =
@@ -117,8 +118,8 @@ static unsigned specificity(GCDeque<CSSSelector*>* selectorList)
     unsigned total = 0;
     unsigned temp = 0;
 
-    for (unsigned i = 0; i < selectorList->size(); i++) {
-        CSSSelector* selector = (*selectorList)[i];
+    for (unsigned i = 0; i < selectorList.size(); i++) {
+        CSSSelector* selector = selectorList[i];
         temp = total + selector->specificityForOneSelector();
 
         // The negation pseudo-class has another simple selector in own data
@@ -147,7 +148,7 @@ static unsigned specificity(GCDeque<CSSSelector*>* selectorList)
     return total;
 }
 
-static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
+static bool compareSpecificity(StyleRule* r1, StyleRule* r2)
 {
     return specificity(r1->selectorList()) < specificity(r2->selectorList());
 }
@@ -174,7 +175,7 @@ bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
 
 void CSSStyleSheet::collectRulesForImportedSheet()
 {
-    CSSImportRule* importRule = ownerRule();
+    StyleRuleImport* importRule = ownerRule();
 
     if (matchesMediaQueries(
             origin()->document()->styleResolver().mediaQueryEvaluator(),
@@ -183,15 +184,15 @@ void CSSStyleSheet::collectRulesForImportedSheet()
     }
 }
 
-void CSSStyleSheet::collectRulesForSheet(GCVector<CSSRule*>& rules)
+void CSSStyleSheet::collectRulesForSheet(GCVector<StyleRuleBase*>& rules)
 {
     auto resolver = origin()->document()->styleResolver();
     auto iter = rules.begin();
     while (iter != rules.end()) {
-        if ((*iter)->isCSSStyleRule()) {
-            m_rules.push_back((CSSStyleRule*)(*iter));
+        if ((*iter)->isStyleRule()) {
+            m_rules.push_back((StyleRule*)(*iter));
         } else if ((*iter)->isMediaRule()) {
-            CSSMediaRule* media = (CSSMediaRule*)(*iter);
+            StyleRuleMedia* media = (StyleRuleMedia*)(*iter);
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
             if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
@@ -219,6 +220,18 @@ CSSRuleList* CSSStyleSheet::cssRules()
         m_ruleList = new StyleSheetCSSRuleList(this);
     }
     return m_ruleList;
+}
+
+unsigned CSSStyleSheet::length() const
+{
+    // TODO : implement
+    return 0;
+}
+
+CSSRule* CSSStyleSheet::item(unsigned index)
+{
+    // TODO : implement
+    return nullptr;
 }
 
 } /* namespace StarFish */

@@ -21,10 +21,14 @@
 
 namespace StarFish {
 
-class CSSRule;
+// class CSSRule;
 class CSSRuleList;
-class CSSStyleRule;
-class CSSStyleRuleImport;
+// class CSSStyleRule;
+// class CSSStyleRuleImport;
+class StyleRuleBase;
+class StyleRule;
+class StyleRuleImport;
+
 class MediaQueryEvaluator;
 class MediaQuerySet;
 class Node;
@@ -32,7 +36,8 @@ class URL;
 
 class CSSStyleSheet : public StyleSheet {
 public:
-    CSSStyleSheet(Node* origin, String* str, CSSImportRule* ownerRule = nullptr)
+    CSSStyleSheet(Node* origin, String* str,
+                  StyleRuleImport* ownerRule = nullptr)
         : StyleSheet()
         , m_sourceString(str)
         , m_origin(origin)
@@ -46,8 +51,8 @@ public:
     virtual bool isCSSStyleSheet() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    void addRule(CSSStyleRule* rule);
-    void addRule(CSSRule* rule);
+    void addRule(StyleRule* rule);
+    void addRule(StyleRuleBase* rule);
 
     ResourceURL* url();
     Node* origin()
@@ -57,19 +62,19 @@ public:
 
     void parseSheetIfneeds();
 
-    GCVector<CSSStyleRule*>& rules()
+    GCVector<StyleRule*>& rules()
     {
         STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_rules;
     }
 
-    GCVector<CSSRule*>& allRules()
+    GCVector<StyleRuleBase*>& allRules()
     {
         STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_allRules;
     }
 
-    CSSImportRule* ownerRule()
+    StyleRuleImport* ownerRule()
     {
         return m_ownerRule;
     }
@@ -86,7 +91,7 @@ public:
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres);
     void collectRulesForImportedSheet();
-    void collectRulesForSheet(GCVector<CSSRule*>& rules);
+    void collectRulesForSheet(GCVector<StyleRuleBase*>& rules);
 
     /* DOM APIs */
     String* type() const override
@@ -101,17 +106,20 @@ public:
         return m_origin;
     }
 
+    unsigned length() const;
+    CSSRule* item(unsigned index);
+
     CSSRuleList* cssRules();
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;
-    GCVector<CSSStyleRule*> m_rules;
-    GCVector<CSSRule*> m_allRules;
+    GCVector<StyleRule*> m_rules;
+    GCVector<StyleRuleBase*> m_allRules;
     Node* m_origin;
-    GCVector<CSSImportRule*> m_importRules;
-    CSSImportRule* m_ownerRule;
+    GCVector<StyleRuleImport*> m_importRules;
+    StyleRuleImport* m_ownerRule;
     CSSRuleList* m_ruleList;
 };
 

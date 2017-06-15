@@ -18,157 +18,120 @@
 #define __StarFishCSSStyleRule__
 
 #include "core/style/CSSRule.h"
-#include "core/style/Style.h"
 
 namespace StarFish {
 
 class CSSRuleList;
+class CSSStyleSheet;
 class CSSStyleDeclaration;
+class StyleRule;
+class StyleRuleGroup;
+class StyleRuleCondition;
+class StyleRuleMedia;
+class StyleRuleImport;
+class MediaQuerySet;
+
 class CSSStyleRule : public CSSRule {
-    friend class StyleResolver;
-
 public:
-    CSSStyleRule(CSSSelector::Type type, AtomicString selectorText);
-
-    CSSStyleRule(GCDeque<CSSSelector*>* selectorList,
-                 CSSStyleDeclaration* decl);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSStyleRule() const override;
 
-    GCDeque<CSSSelector*>* selectorList() const
-    {
-        return m_selectorList;
-    }
-
-    CSSStyleDeclaration* styleDeclaration()
-    {
-        return m_styleDeclaration;
-    }
-
+    CSSStyleRule(StyleRule* styleRule, CSSStyleSheet* parent);
+    String* cssText() override;
     String* selectorText() const;
-    void setSelectorText(String* selectorText)
+    void setSelectorText(String* selectorText);
+
+    CSSStyleDeclaration* style();
+
+private:
+    CSSRule::Type type() const override
     {
+        return CSSRule::Type::STYLE_RULE;
     }
+    String* generateSelectorText() const;
 
-    String* cssText() const override;
-    CSSStyleDeclaration* style() const;
-
-protected:
-    GCDeque<CSSSelector*>* m_selectorList;
-    CSSStyleDeclaration* m_styleDeclaration;
+    StyleRule* m_styleRule;
+    CSSStyleDeclaration* m_propertiesWrapper;
 };
 
 class CSSGroupingRule : public CSSRule {
-    friend class StyleResolver;
-
 public:
-    CSSGroupingRule(RuleType type, GCVector<CSSRule*>& rules);
-    CSSGroupingRule(CSSGroupingRule& o);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSGroupingRule() const override;
 
-    GCVector<CSSRule*>& childRules()
-    {
-        return m_childRules;
-    }
+    CSSGroupingRule(StyleRuleGroup* group_rule, CSSStyleSheet* parent);
 
-    CSSRuleList* cssRules();
+    CSSRuleList* cssRules() override;
+    unsigned insertRule(String* rule, unsigned index);
+    void deleteRule(unsigned index);
 
+    // For CSSRuleList
     unsigned length() const;
     CSSRule* item(unsigned index) const;
 
 protected:
-    GCVector<CSSRule*> m_childRules;
-    CSSRuleList* m_ruleList;
+    void appendCSSTextForItems(String*);
 
-    void appendCSSTextForItems(String* result) const;
+    StyleRuleGroup* m_groupRule;
+    GCVector<CSSRule*> m_childRuleWrappers;
+    CSSRuleList* m_ruleListWrapper;
 };
 
 class CSSConditionRule : public CSSGroupingRule {
 public:
-    CSSConditionRule(RuleType, String* condition_text,
-                     GCVector<CSSRule*>& rules);
-    CSSConditionRule(RuleType, GCVector<CSSRule*>& rules);
-    CSSConditionRule(CSSConditionRule&);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSConditionRule() const override;
 
-    String* ConditionText() const
-    {
-        return m_conditionText;
-    }
+    CSSConditionRule(StyleRuleCondition* condition_rule, CSSStyleSheet* parent);
 
-protected:
-    String* m_conditionText;
+    virtual String* conditionText() const;
 };
 
-class MediaQuerySet;
 class CSSMediaRule : public CSSConditionRule {
-    friend class StyleResolver;
-
 public:
-    CSSMediaRule(MediaQuerySet* media, GCVector<CSSRule*>& rules);
-    CSSMediaRule(CSSMediaRule& o);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSMediaRule() const override;
 
-    MediaQuerySet* mediaQuerySet() const
+    CSSMediaRule(StyleRuleMedia*, CSSStyleSheet*);
+
+    String* cssText() override;
+    String* conditionText() const override;
+    // MediaList* media() const;
+
+private:
+    CSSRule::Type type() const override
     {
-        return m_mediaQuerySet;
+        return CSSRule::Type::MEDIA_RULE;
     }
-
-    String* cssText() const override;
-
-protected:
-    MediaQuerySet* m_mediaQuerySet;
+    MediaQuerySet* mediaQuerySet() const;
+    // MediaList* m_mediaWrapper;
 };
 
-class CSSStyleSheet;
-class Document;
-class TextResource;
 class CSSImportRule : public CSSRule {
-    friend class StyleResolver;
-    friend class ImportedStyleSheetDownloadClient;
-
 public:
-    CSSImportRule(String* href, MediaQuerySet* media);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSImportRule() const override;
 
-    MediaQuerySet* mediaQuerySet() const
+    CSSImportRule(StyleRuleImport*, CSSStyleSheet*);
+
+    String* cssText() override;
+    String* href() const;
+    CSSStyleSheet* styleSheet() const;
+    // MediaList* media() const;
+
+private:
+    CSSRule::Type type() const override
     {
-        return m_mediaQuerySet;
+        return CSSRule::Type::IMPORT_RULE;
     }
-
-    CSSStyleSheet* parentStyleSheet()
-    {
-        return m_parentStyleSheet;
-    }
-
-    Document* document();
-    void requestStyleSheet();
-    void unloadStyleSheetIfExists();
-
-    String* cssText() const override;
-
-protected:
-    void willStyleSheetLoad();
-    void didStyleSheetLoadComplete();
-
-    String* m_strHref;
-    MediaQuerySet* m_mediaQuerySet;
-    CSSStyleSheet* m_generatedSheet;
-    TextResource* m_styleSheetTextResource;
+    StyleRuleImport* m_importRule;
+    CSSStyleSheet* m_styleSheetWrapper;
+    // MediaList* m_mediaWrapper;
 };
 }
 
