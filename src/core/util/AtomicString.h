@@ -28,6 +28,7 @@ typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
 
 class AtomicString {
     friend class StarFish;
+    friend class CSSTokenString;
     explicit AtomicString(String* str)
     {
         m_string = str;
@@ -41,9 +42,14 @@ public:
     static AtomicString createAtomicString(StarFish* sf, const char* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str,
                                            size_t length);
+    static AtomicString createAtomicString(StarFish* sf, const char32_t* str,
+                                           size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str,
+                                               size_t length);
+    static AtomicString createAttrAtomicString(StarFish* sf,
+                                               const char32_t* str,
                                                size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf, char32_t str);
     static AtomicString emptyAtomicString();

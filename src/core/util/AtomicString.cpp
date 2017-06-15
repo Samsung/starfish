@@ -67,6 +67,21 @@ AtomicString AtomicString::createAtomicString(StarFish* sf, const char* cStr,
     }
 }
 
+AtomicString AtomicString::createAtomicString(StarFish* sf,
+                                              const char32_t* cStr,
+                                              size_t length)
+{
+    StringDataOnStackUTF32 str(cStr, length);
+    auto iter = sf->m_atomicStringMap.find(&str);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataUTF32(cStr, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
+    }
+}
+
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 {
     auto data = str->bufferAccessData();
@@ -147,7 +162,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
                                                   size_t length)
 {
-    char* buf = (char*)alloca(length);
+    char* buf = (char*)alloca(length + 1);
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
         buf[i] = ::tolower(str[i]);
@@ -157,6 +172,27 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
     auto iter = sf->m_atomicStringMap.find(&newStr);
     if (sf->m_atomicStringMap.end() == iter) {
         String* string = new StringDataASCII(buf, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
+    }
+}
+
+AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
+                                                  const char32_t* str,
+                                                  size_t length)
+{
+    char32_t* buf = (char32_t*)alloca((length + 1) * sizeof(char32_t));
+    buf[length] = 0;
+    for (size_t i = 0; i < length; i++) {
+        buf[i] = ::tolower(str[i]);
+    }
+    StringDataOnStackUTF32 newStr(buf, length);
+
+    auto iter = sf->m_atomicStringMap.find(&newStr);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataUTF32(buf, length);
         sf->m_atomicStringMap.insert(string);
         return AtomicString(string);
     } else {

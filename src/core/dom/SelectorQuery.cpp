@@ -129,8 +129,7 @@ inline bool ancestorHasClassName(Node& rootNode, const String* className)
     return false;
 }
 
-CSSSelector* SelectorQuery::selectorForIdLookup(
-    GCDeque<CSSSelector*>& selectors)
+CSSSelector* SelectorQuery::selectorForIdLookup(CSSSelctorList& selectors)
 {
     int i = 0;
     for (auto it = selectors.begin(); it != selectors.end(); ++it) {
@@ -184,7 +183,7 @@ void SelectorQuery::collectElementsByTagName(Node& rootNode,
                                shouldOnlyMatchFirstElement);
 }
 
-void SelectorQuery::traverseDescendants(GCDeque<CSSSelector*>& selectors,
+void SelectorQuery::traverseDescendants(CSSSelctorList& selectors,
                                         Node* traverseRoot, Node& rootNode,
                                         GCVector<Element*>& collection,
                                         bool shouldOnlyMatchFirstElement)
@@ -197,8 +196,8 @@ void SelectorQuery::traverseDescendants(GCDeque<CSSSelector*>& selectors,
                                shouldOnlyMatchFirstElement);
 }
 
-bool SelectorQuery::selectorMatches(GCDeque<CSSSelector*>& selector,
-                                    Element* element, Node& rootNode)
+bool SelectorQuery::selectorMatches(CSSSelctorList& selector, Element* element,
+                                    Node& rootNode)
 {
     StyleResolver& resolver = element->document()->styleResolver();
     StyleResolver::MatchResult result;
@@ -207,7 +206,7 @@ bool SelectorQuery::selectorMatches(GCDeque<CSSSelector*>& selector,
 }
 
 void SelectorQuery::executeForTraverseRoot(
-    GCDeque<CSSSelector*>& selectors, Node* traverseRoot,
+    CSSSelctorList& selectors, Node* traverseRoot,
     MatchTraverseRootState matchTraverseRoot, Node& rootNode,
     GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
@@ -231,7 +230,7 @@ void SelectorQuery::executeForTraverseRoot(
 
 template <typename SimpleElementListType>
 void SelectorQuery::executeForTraverseRoots(
-    GCDeque<CSSSelector*>& selectors, SimpleElementListType& traverseRoots,
+    CSSSelctorList& selectors, SimpleElementListType& traverseRoots,
     MatchTraverseRootState matchTraverseRoots, Node& rootNode,
     GCVector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
@@ -271,7 +270,7 @@ void SelectorQuery::findTraverseRootsAndExecute(
     bool isRightmostSelector = true;
     bool startFromParent = false;
 
-    GCDeque<CSSSelector*> selectors = *m_selectorListContainer[0];
+    CSSSelctorList selectors = *m_selectorListContainer[0];
     for (auto it = selectors.begin(); it != selectors.end(); ++it) {
         GCVector<Element*> elements;
         collectElementsById(rootNode, (*it)->selectorText().string(), elements,
@@ -368,7 +367,7 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element)
 {
     return std::any_of(
         m_selectorListContainer.begin(), m_selectorListContainer.end(),
-        [this, &element, &rootNode](GCDeque<CSSSelector*>* selectors) {
+        [this, &element, &rootNode](CSSSelctorList* selectors) {
             return selectorMatches(*selectors, element, rootNode);
         });
 }
@@ -405,7 +404,7 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
 
     STARFISH_ASSERT(m_selectorListContainer.size() == 1);
 
-    GCDeque<CSSSelector*> selectors = *m_selectorListContainer[0];
+    CSSSelctorList selectors = *m_selectorListContainer[0];
     CSSSelector* firstSelector = selectors[0];
 
     // Fast path for querySelector*('#id'), querySelector*('tag#id').

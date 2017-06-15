@@ -579,6 +579,12 @@ public:
     {
     }
 
+    StringDataUTF32(const char32_t* str, size_t len)
+        : String()
+        , m_data(str, len)
+    {
+    }
+
     StringDataUTF32(UTF32String&& str)
         : String()
         , m_data()
@@ -751,7 +757,6 @@ public:
 #endif
 
 class StringBuilder {
-    STARFISH_MAKE_STACK_ALLOCATED();
     struct StringBuilderPiece {
         enum Type {
             ASCIIStringPiece,
@@ -812,7 +817,6 @@ public:
 
     void takeBuilder(StringBuilder& src);
     String* finalize();
-    char32_t finalizeChar();
 
 protected:
     bool m_hasASCIIContent;

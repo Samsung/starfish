@@ -81,7 +81,7 @@ void CSSStyleRule::setSelectorText(String* selectorText)
 String* CSSStyleRule::generateSelectorText() const
 {
     String* result = String::emptyString;
-    GCDeque<CSSSelector*> selectors = m_styleRule->selectorList();
+    CSSSelctorList selectors = m_styleRule->selectorList();
     for (size_t i = 0; i < selectors.size(); ++i) {
         if (i != 0) {
             result->concat(String::createASCIIString(", "));

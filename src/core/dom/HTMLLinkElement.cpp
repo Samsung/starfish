@@ -149,7 +149,7 @@ public:
         String* text = m_resource->asTextResource()->text();
 
         CSSParser parser(m_element->document());
-        CSSToken* token = parser.makeToken(m_element->media());
+        RefPtr<CSSToken> token = parser.makeToken(m_element->media());
         MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
         const MediaQueryEvaluator& evaluator =
             m_element->document()->styleResolver().mediaQueryEvaluator();

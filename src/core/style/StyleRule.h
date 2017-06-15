@@ -106,9 +106,9 @@ class StyleRule : public StyleRuleBase {
 public:
     StyleRule(CSSSelector::Type type, AtomicString selectorText);
 
-    StyleRule(GCDeque<CSSSelector*>& selectorList, CSSStyleDeclaration* decl);
+    StyleRule(CSSSelctorList& selectorList, CSSStyleDeclaration* decl);
 
-    GCDeque<CSSSelector*>& selectorList()
+    CSSSelctorList& selectorList()
     {
         return m_selectorList;
     }
@@ -119,7 +119,7 @@ public:
     }
 
 protected:
-    GCDeque<CSSSelector*> m_selectorList;
+    CSSSelctorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
 };
 
