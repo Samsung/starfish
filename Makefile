@@ -27,7 +27,8 @@ ifeq ($(OS),Darwin)
   NPROCS:=$(shell sysctl -n machdep.cpu.thread_count)
   SHELL:=/opt/local/bin/bash
 endif
-TEST_NPROCS?=$(NPROCS)
+T_NPROCS=$(shell echo `expr $(NPROCS) + 1`)
+TEST_NPROCS=$(shell echo `expr $(T_NPROCS) / 2`)
 
 # Set media flag (only works on x64)
 MEDIA_SUPPORT=false
