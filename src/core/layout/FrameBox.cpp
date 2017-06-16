@@ -21,7 +21,8 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/ImageData.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -283,7 +284,10 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
         }
 
         if (node() && node()->isHTMLBodyElement()) {
-            if (!node()->window()->hasRootElementBackground()) {
+            if (!node()
+                     ->window()
+                     ->browsingContext()
+                     ->hasRootElementBackground()) {
                 break;
             }
         }

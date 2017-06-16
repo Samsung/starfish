@@ -24,7 +24,7 @@
 #include "core/dom/TextTrack.h"
 #include "core/dom/TextTrackCue.h"
 #include "core/dom/TextTrackCueList.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

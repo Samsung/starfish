@@ -28,7 +28,7 @@
 #include "core/dom/XMLDocument.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/HTMLDocument.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #include <../third_party/rapidxml/rapidxml.hpp>
 

@@ -22,7 +22,7 @@
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

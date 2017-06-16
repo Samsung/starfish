@@ -64,7 +64,7 @@
 #include "StarFish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"

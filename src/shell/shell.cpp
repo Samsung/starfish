@@ -22,7 +22,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #include <pthread.h>
 

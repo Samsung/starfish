@@ -22,7 +22,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #include <Elementary.h>
 

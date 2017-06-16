@@ -27,7 +27,7 @@
 #include "core/page/Location.h"
 #include "core/page/Navigator.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #include <EscargotPublic.h>
 

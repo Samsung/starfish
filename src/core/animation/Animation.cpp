@@ -20,8 +20,9 @@
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/style/ComputedStyle.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 

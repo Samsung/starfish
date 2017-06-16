@@ -49,5 +49,10 @@ void MediaPlayer::appendToOperationQueueInContainer(
         m_container->appendToOperationQueue(data);
     }
 }
+
+Window* MediaPlayer::window()
+{
+    return m_container->window();
+}
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

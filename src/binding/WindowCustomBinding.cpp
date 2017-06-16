@@ -22,7 +22,8 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
@@ -292,7 +293,7 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
 {
     GENERATE_WINDOW();
 
-    window->renderingIfNeeds();
+    window->browsingContext()->renderingIfNeeds();
 
     ValueRef* arg0 = argv[0];
     Node* value0 = nullptr;

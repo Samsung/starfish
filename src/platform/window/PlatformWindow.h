@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#ifndef __StarFishPlatformWindow__
+#define __StarFishPlatformWindow__
+
+#include "StarFishConfig.h"
+
+#include "PlatformWindow.h"
+
+namespace StarFish {
+
+class AnimationExecutor;
+class Canvas;
+class Node;
+class WebView;
+
+class PlatformWindow : public gc {
+public:
+    enum TouchEventKind {
+        TouchEventStart,
+        TouchEventMove,
+        TouchEventEnd,
+        TouchEventCancel
+    };
+
+    enum KeyEventKind { KeyEventDown, KeyEventUp };
+
+    enum MouseEventKind {
+        MouseEventDown,
+        MouseEventMove,
+        MouseEventUp,
+        MouseEventEnter,
+        MouseEventOut
+    };
+
+    virtual ~PlatformWindow();
+
+    static PlatformWindow* create(StarFish* starFish, void* win, int width,
+                                  int height);
+
+    virtual int32_t width() = 0;
+    virtual int32_t height() = 0;
+    virtual void resizeTo(int w, int h) = 0;
+    virtual void* unwrap() = 0;
+    virtual void clearResources() = 0;
+    virtual Canvas* preparePainting(bool forPainting) = 0;
+
+    void dispatchTouchEvent(float x, float y, TouchEventKind kind,
+                            bool isMobile);
+    void dispatchMouseEvent(float x, float y, MouseEventKind kind);
+    void dispatchKeyEvent(String* key, KeyEventKind kind);
+
+    void rendering();
+    void pause();
+    void resume();
+    void close();
+
+    void paintWindowBackground(Canvas* canvas);
+
+    WebView* webView()
+    {
+        return m_webView;
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
+    }
+
+    void setWebView(WebView* webView);
+
+    void screenShot(std::string filePath);
+
+    AnimationExecutor* animationExecutor()
+    {
+        return m_animationExecutor;
+    }
+
+protected:
+    PlatformWindow(StarFish* starFish);
+
+    StarFish* m_starFish;
+    WebView* m_webView;
+
+    AnimationExecutor* m_animationExecutor;
+};
+}
+
+#endif

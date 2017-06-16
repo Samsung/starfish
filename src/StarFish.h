@@ -24,6 +24,7 @@ namespace StarFish {
 class MessageLoop;
 class TimerWrapper;
 class Window;
+class PlatformWindow;
 class ScriptEngineInstance;
 class ScriptBindingInstance;
 class ImageData;
@@ -400,9 +401,9 @@ public:
     ~StarFish();
     void run();
 
-    Window* window()
+    PlatformWindow* platformWindow()
     {
-        return m_window;
+        return m_platformWindow;
     }
 
     void loadHTMLDocument(String* filePath);
@@ -541,7 +542,7 @@ protected:
     MessageLoop* m_messageLoop;
     TimerWrapper* m_timer;
     void* m_nativeHandle;
-    Window* m_window;
+    PlatformWindow* m_platformWindow;
     FontSelector m_fontSelector;
     ThreadPool* m_threadPool;
     Console* m_console;

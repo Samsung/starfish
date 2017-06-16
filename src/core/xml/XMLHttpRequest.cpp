@@ -22,7 +22,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

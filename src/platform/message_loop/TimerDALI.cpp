@@ -19,7 +19,7 @@
 
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
 

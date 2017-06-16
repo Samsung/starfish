@@ -37,8 +37,10 @@
 #include "core/dom/Traverse.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/layout/FrameDocument.h"
+#include "platform/loader/ImageResource.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleSheetList.h"
@@ -68,7 +70,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_tizenWidgetTransparentBackground(0)
 #endif
 {
-    m_scriptBindingInstance = scriptBindingInstance;
     setStyle(m_styleResolver.resolveDocumentStyle(this));
     StaticStrings* sstrs = m_window->starFish()->staticStrings();
 
@@ -907,6 +908,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         NULL, NULL, NULL);
 }
 
+ScriptBindingInstance* Document::scriptBindingInstance()
+{
+    return window()->scriptBindingInstance();
+}
+
 Location* Document::location()
 {
     return window()->location();
@@ -1212,7 +1218,7 @@ void Document::invalidNamedAccessCacheIfNeeded()
 
 Element* Document::elementFromPoint(float x, float y)
 {
-    Node* node = window()->hitTest(x, y);
+    Node* node = window()->browsingContext()->hitTest(x, y);
     while (node) {
         if (node->isElement()) {
             return node->asElement();

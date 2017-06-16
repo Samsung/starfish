@@ -15,11 +15,14 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/HTMLAnchorElement.h"
+
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
-#include "core/dom/HTMLAnchorElement.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 String* HTMLAnchorElement::localName()
@@ -42,16 +45,17 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
-                    window()->navigateAsync(new ResourceURL(
+                    window()->browsingContext()->navigateAsync(new ResourceURL(
                         hrefStr,
                         document()->urlString()->substring(
                             0, document()->urlString()->indexOf('#'))));
                 } else {
-                    window()->navigateAsync(
+                    window()->browsingContext()->navigateAsync(
                         new ResourceURL(hrefStr, document()->urlString()));
                 }
             } else {
-                window()->navigateAsync(document()->documentURI());
+                window()->browsingContext()->navigateAsync(
+                    document()->documentURI());
             }
         }
     }

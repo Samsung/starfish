@@ -15,12 +15,16 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/layout/StackingContext.h"
+
+#include "StarFish.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameReplaced.h"
-#include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -125,8 +129,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             if (m_buffer) {
                 m_buffer->detachNativeBuffer();
             }
-            m_buffer = CanvasSurface::create(m_owner->node()->window(),
-                                             bufferWidth, bufferHeight);
+            m_buffer = CanvasSurface::create(
+                m_owner->node()->window()->starFish()->platformWindow(),
+                bufferWidth, bufferHeight);
         }
 
         m_buffer->clear();

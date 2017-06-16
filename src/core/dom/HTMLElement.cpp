@@ -15,12 +15,15 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/HTMLElement.h"
+
 #include "StarFish.h"
 #include "core/dom/Event.h"
-#include "core/dom/HTMLElement.h"
 #include "core/dom/Text.h"
 #include "core/layout/FrameBox.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -100,7 +103,7 @@ bool HTMLElement::supportsFocus()
 
 LayoutRect HTMLElement::offsetRect()
 {
-    window()->layoutIfNeeds();
+    window()->browsingContext()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();

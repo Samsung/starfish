@@ -19,8 +19,12 @@
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
+#include "core/page/BrowsingContext.h"
 #include "core/util/URL.h"
-#include "core/modules/window/Window.h"
+
+#include "../page/WebView.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -58,8 +62,12 @@ String* URL::createObjectURL(Blob* blob)
     } else {
         store = blob->starFish()->addBlobInBlobURLStore(blob);
     }
-    return StarFish::blobURLStoreToString(
-        store, blob->starFish()->window()->document()->urlString());
+    return StarFish::blobURLStoreToString(store, blob->starFish()
+                                                     ->platformWindow()
+                                                     ->webView()
+                                                     ->mainBrowsingContext()
+                                                     ->document()
+                                                     ->urlString());
 }
 
 void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)

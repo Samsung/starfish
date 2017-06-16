@@ -15,10 +15,13 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/HTMLMetaElement.h"
+
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/dom/HTMLMetaElement.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -69,7 +72,7 @@ void HTMLMetaElement::checkPlatformFlags()
             g_enablePixelTest = true;
             document()->setStyle(
                 document()->styleResolver().resolveDocumentStyle(document()));
-            window()->setWholeDocumentNeedsStyleRecalc();
+            window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif
 #ifdef STARFISH_TIZEN

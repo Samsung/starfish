@@ -24,7 +24,10 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "platform/window/PlatformWindow.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -60,10 +63,10 @@ struct IdlerData {
     void* m_data;
 };
 
-class WindowImplEFL : public Window {
+class WindowImplEFL : public PlatformWindow {
 public:
     WindowImplEFL(StarFish* sf)
-        : Window(sf)
+        : PlatformWindow(sf)
     {
         m_mainBox = nullptr;
         m_dummyBox = nullptr;
@@ -153,7 +156,7 @@ public:
 
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
-    CanvasSurfaceEFL(Window* wnd, size_t w, size_t h)
+    CanvasSurfaceEFL(PlatformWindow* wnd, size_t w, size_t h)
     {
         m_window = (WindowImplEFL*)wnd;
         m_image =
@@ -244,7 +247,7 @@ protected:
     size_t m_height;
 };
 
-CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 {
     return new CanvasSurfaceEFL(wnd, w, h);
 }
@@ -255,13 +258,14 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
     ecore_animator_add(
         [](void* user_data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-            wnd->setNeedsLayout();
+            wnd->webView()->mainBrowsingContext()->setNeedsLayout();
             return ECORE_CALLBACK_CANCEL;
         },
         user_data);
 }
 
-Window* Window::create(StarFish* sf, void* win, int width, int height)
+PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
+                                       int height)
 {
     auto wnd = new WindowImplEFL(sf);
     wnd->m_starFish = sf;
@@ -302,10 +306,10 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_BUTTON_DOWN,
         [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
+            PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventDown);
+            StarFishEnterer enter(sf->starFish());
+            sf->dispatchMouseEvent(d->x, d->y, PlatformWindow::MouseEventDown);
             return EINA_TRUE;
         },
         wnd);
@@ -313,10 +317,10 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_desktopMouseUpEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_BUTTON_UP,
         [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
+            PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventUp);
+            StarFishEnterer enter(sf->starFish());
+            sf->dispatchMouseEvent(d->x, d->y, PlatformWindow::MouseEventUp);
             return EINA_TRUE;
         },
         wnd);
@@ -324,10 +328,10 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_MOVE,
         [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
+            PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
             StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
+            sf->dispatchMouseEvent(d->x, d->y, PlatformWindow::MouseEventMove);
             return EINA_TRUE;
         },
         wnd);
@@ -335,11 +339,11 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_desktopKeyDownEventHandler = ecore_event_handler_add(
         ECORE_EVENT_KEY_DOWN,
         [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
+            PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(String::createASCIIString(d->keyname),
-                                 Window::KeyEventDown);
+                                 PlatformWindow::KeyEventDown);
             return EINA_TRUE;
         },
         wnd);
@@ -347,11 +351,11 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_desktopKeyUpEventHandler = ecore_event_handler_add(
         ECORE_EVENT_KEY_UP,
         [](void* data, int type, void* event) -> Eina_Bool {
-            Window* sf = (Window*)data;
+            PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(String::createASCIIString(d->keyname),
-                                 Window::KeyEventUp);
+                                 PlatformWindow::KeyEventUp);
             return EINA_TRUE;
         },
         wnd);
@@ -437,7 +441,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     return wnd;
 }
 
-Window::~Window()
+PlatformWindow::~PlatformWindow()
 {
     STARFISH_LOG_INFO("Window::~Window\n");
 
@@ -486,24 +490,24 @@ Window::~Window()
 #endif
 }
 
-void Window::setNeedsRenderingSlowCase()
+void BrowsingContext::setNeedsRenderingSlowCase()
 {
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
 
     IdlerData* id = new (NoGC) IdlerData;
     id->m_fn = [](void* data) -> void {
-        Window* wnd = (Window*)data;
+        PlatformWindow* wnd = (PlatformWindow*)data;
         wnd->rendering();
     };
-    id->m_data = this;
+    id->m_data = starFish()->platformWindow();
 
     ((WindowImplEFL*)this)->m_renderingIdlerData = id;
     ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
-            Window* wnd = (Window*)id->m_data;
-            StarFishEnterer enter(wnd->m_starFish);
+            PlatformWindow* wnd = (PlatformWindow*)id->m_data;
+            StarFishEnterer enter(wnd->starFish());
             id->m_fn(id->m_data);
             ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
             ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
@@ -577,7 +581,7 @@ void WindowImplEFL::clearResources()
         GC_FREE(m_renderingIdlerData);
     }
 
-    clearStackingContext(false);
+    webView()->mainBrowsingContext()->clearStackingContext(false);
 
     m_objectList.clear();
     m_objectList.shrink_to_fit();

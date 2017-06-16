@@ -32,7 +32,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/ThreadPool.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #define STARFISH_ENABLE_TIMER
 #define TRACE_MSE_GC

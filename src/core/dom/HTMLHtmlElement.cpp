@@ -19,7 +19,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/ComputedStyle.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 String* HTMLHtmlElement::localName()
@@ -38,9 +39,9 @@ void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (!newStyle->backgroundColor().isTransparent() ||
         !newStyle->backgroundImage()->equals(String::emptyString)) {
-        window()->m_hasRootElementBackground = true;
+        window()->browsingContext()->m_hasRootElementBackground = true;
     } else {
-        window()->m_hasRootElementBackground = false;
+        window()->browsingContext()->m_hasRootElementBackground = false;
     }
 
     if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {

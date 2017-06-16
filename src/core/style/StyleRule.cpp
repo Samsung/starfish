@@ -16,7 +16,8 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/CSSRule.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
@@ -168,12 +169,12 @@ Document* StyleRuleImport::document()
 
 void StyleRuleImport::willStyleSheetLoad()
 {
-    document()->window()->markHasPendingStyleSheet();
+    document()->window()->browsingContext()->markHasPendingStyleSheet();
 }
 
 void StyleRuleImport::didStyleSheetLoadComplete()
 {
-    document()->window()->unmarkHasPendingStyleSheet();
+    document()->window()->browsingContext()->unmarkHasPendingStyleSheet();
 }
 
 class ImportedStyleSheetDownloadClient : public ResourceClient {
@@ -206,7 +207,9 @@ public:
         if (sheet) {
             m_ownerRule->m_generatedSheet = sheet;
             doc->styleResolver().addSheet(sheet);
-            doc->window()->setWholeDocumentNeedsStyleRecalc();
+            doc->window()
+                ->browsingContext()
+                ->setWholeDocumentNeedsStyleRecalc();
         }
 
         m_ownerRule->m_styleSheetTextResource = nullptr;
@@ -226,7 +229,7 @@ void StyleRuleImport::unloadStyleSheetIfExists()
     if (m_generatedSheet) {
         Document* doc = document();
         doc->styleResolver().removeSheet(m_generatedSheet);
-        doc->window()->setWholeDocumentNeedsStyleRecalc();
+        doc->window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
 }

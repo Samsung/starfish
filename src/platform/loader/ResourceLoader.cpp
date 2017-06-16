@@ -15,16 +15,19 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "platform/loader/ResourceLoader.h"
+
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
-#include "platform/loader/ResourceLoader.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -386,19 +389,18 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
         m_isDocumentInOpenState = false;
         starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data) {
-                Window* wnd = (Window*)data;
+                Document* doc = (Document*)data;
                 String* eventType =
-                    wnd->starFish()->staticStrings()->m_load.localName();
-                Event* e = new Event(wnd->document(), eventType,
-                                     EventInit(false, false));
-                wnd->EventTarget::dispatchEvent(e);
+                    doc->starFish()->staticStrings()->m_load.localName();
+                Event* e = new Event(doc, eventType, EventInit(false, false));
+                doc->window()->EventTarget::dispatchEvent(e);
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;
-                wnd->setNeedsPainting();
-                wnd->testStart();
+                doc->window()->browsingContext()->setNeedsPainting();
+                doc->window()->testStart();
 #endif
             },
-            window());
+            document());
     }
 }
 

@@ -20,7 +20,10 @@
 #include "core/page/History.h"
 #include "core/page/HistoryEntry.h"
 #include "core/page/Location.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
+#include "WebView.h"
 
 namespace StarFish {
 
@@ -47,7 +50,11 @@ void History::go(int delta)
         // navigate according to history
         navigate(delta);
     } else {
-        starFish()->window()->navigateAsync(currentHistoryEntry()->url());
+        starFish()
+            ->platformWindow()
+            ->webView()
+            ->mainBrowsingContext()
+            ->navigateAsync(currentHistoryEntry()->url());
         // starFish()->window()->navigateAsyncWithoutSetHistory(
         //    currentHistoryEntry()->url());
     }
@@ -79,9 +86,18 @@ bool History::navigate(int delta)
     ResourceURL* url = currentHistoryEntry()->url();
     if (!isPushState()) {
         // starFish()->window()->navigateAsyncWithoutSetHistory(url);
-        starFish()->window()->navigateAsync(url);
+        starFish()
+            ->platformWindow()
+            ->webView()
+            ->mainBrowsingContext()
+            ->navigateAsync(url);
     } else {
-        starFish()->window()->document()->setDocumentURI(url);
+        starFish()
+            ->platformWindow()
+            ->webView()
+            ->mainBrowsingContext()
+            ->document()
+            ->setDocumentURI(url);
     }
 
     return true;
@@ -108,10 +124,19 @@ void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
     if (url.hasValue()) {
         urlValue = url.getValue();
     }
-    ResourceURL* newURL = new ResourceURL(
-        urlValue, starFish()->window()->document()->urlString());
+    ResourceURL* newURL = new ResourceURL(urlValue, starFish()
+                                                        ->platformWindow()
+                                                        ->webView()
+                                                        ->mainBrowsingContext()
+                                                        ->document()
+                                                        ->urlString());
     setHistory(state, title, newURL, true);
-    starFish()->window()->document()->setDocumentURI(newURL);
+    starFish()
+        ->platformWindow()
+        ->webView()
+        ->mainBrowsingContext()
+        ->document()
+        ->setDocumentURI(newURL);
 }
 
 void History::replaceState(ScriptValue state, String* title,
@@ -121,18 +146,36 @@ void History::replaceState(ScriptValue state, String* title,
     if (url.hasValue()) {
         urlValue = url.getValue();
     }
-    ResourceURL* newURL = new ResourceURL(
-        urlValue, starFish()->window()->document()->urlString());
+    ResourceURL* newURL = new ResourceURL(urlValue, starFish()
+                                                        ->platformWindow()
+                                                        ->webView()
+                                                        ->mainBrowsingContext()
+                                                        ->document()
+                                                        ->urlString());
     m_historyEntries[m_offset]->replaceState(state, title, newURL);
-    starFish()->window()->document()->setDocumentURI(newURL);
+    starFish()
+        ->platformWindow()
+        ->webView()
+        ->mainBrowsingContext()
+        ->document()
+        ->setDocumentURI(newURL);
 }
 
 void History::setHistory(ScriptValue state, String* title, ResourceURL* url,
                          bool isPushState)
 {
-    if (starFish()->window()->document() &&
-        starFish()->window()->document()->urlString()->equals(
-            url->urlString())) {
+    if (starFish()
+            ->platformWindow()
+            ->webView()
+            ->mainBrowsingContext()
+            ->document() &&
+        starFish()
+            ->platformWindow()
+            ->webView()
+            ->mainBrowsingContext()
+            ->document()
+            ->urlString()
+            ->equals(url->urlString())) {
         return;
     }
 
@@ -144,5 +187,4 @@ void History::setHistory(ScriptValue state, String* title, ResourceURL* url,
     m_historyEntries.push_back(
         new HistoryEntry(state, title, url, isPushState));
 }
-
 } /* namespace StarFish */

@@ -21,7 +21,6 @@
 
 namespace StarFish {
 
-class Window;
 class URL;
 
 class XMLDocument : public Document {

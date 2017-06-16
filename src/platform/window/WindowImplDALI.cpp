@@ -25,7 +25,7 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;

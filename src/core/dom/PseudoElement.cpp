@@ -19,7 +19,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/PseudoElement.h"
 #include "core/layout/FrameText.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #define NonBreakingSpace 0x00A0
 

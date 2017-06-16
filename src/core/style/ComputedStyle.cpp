@@ -22,8 +22,9 @@
 #include "core/dom/Element.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -311,7 +312,8 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 void applyTransition(Element* element, ComputedStyle* oldStyle,
                      ComputedStyle* newStyle)
 {
-    AnimationExecutor* executor = element->window()->animationExecutor();
+    AnimationExecutor* executor =
+        element->window()->starFish()->platformWindow()->animationExecutor();
     if (newStyle->transitionProperty() ==
         TransitionPropertyValue::TransitionPropertyWidthValue) {
         Length from = oldStyle->width();

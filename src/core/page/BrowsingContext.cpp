@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,71 +17,55 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
-#include "core/animation/Animation.h"
+#include "BrowsingContext.h"
+
 #include "binding/ScriptBindingInstance.h"
+#include "core/dom/Document.h"
 #include "core/dom/FocusEvent.h"
-#include "core/dom/Element.h"
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-#include "core/dom/HTMLAnchorElement.h"
-#endif
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
-#include "core/dom/Traverse.h"
-#include "core/page/History.h"
-#include "core/page/Navigator.h"
 #include "core/page/Location.h"
-#include "core/page/Screen.h"
-#include "core/page/SecurityOriginData.h"
-#include "core/storage/Storage.h"
-#include "core/storage/StorageNamespace.h"
+#include "core/page/Window.h"
 #include "core/style/CSSStyleSheet.h"
-#include "browser/storage/WebStorageNamespaceProvider.h"
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#include "core/extra/WebApis.h"
-#endif
 #include "core/layout/Frame.h"
-#include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/util/URL.h"
+#include "platform/window/PlatformWindow.h"
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
 #include <Elementary.h>
-Evas_Object* g_imgBufferForScreehShot;
+extern Evas_Object* g_imgBufferForScreehShot;
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
-#include <sys/ioctl.h>
-#include <net/if.h>
-
-bool g_fireOnloadEvent = false;
-bool g_forceRendering = false;
-StarFish::CanvasSurface* g_surfaceForScreehShot;
+extern bool g_fireOnloadEvent;
+extern bool g_forceRendering;
+extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
-
-// #define STARFISH_ENABLE_TIMER
 
 namespace StarFish {
 
-Window::Window(StarFish* starFish)
-    : EventTarget(nullptr)
-    , m_starFish(starFish)
-    , m_scriptBindingInstance(nullptr)
-    , m_history(nullptr)
-    , m_navigator(nullptr)
-    , m_location(nullptr)
-    , m_screen(nullptr)
-    , m_animationExecutor(nullptr)
-    , m_localStorageNamespace(nullptr)
+BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)
+{
+    STARFISH_ASSERT(webView);
+    return new BrowsingContext(starFish, webView);
+}
+
+BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
+    : StarFishHoldable(starFish)
+    , m_webView(webView)
+    , m_document(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -92,10 +76,11 @@ Window::Window(StarFish* starFish)
     , m_altKeyDown(0)
     , m_metaKeyDown(0)
 {
+    m_mainBrowsingContext = this;
     initFlags();
 }
 
-void Window::initFlags()
+void BrowsingContext::initFlags()
 {
     m_needsRendering = false;
     m_inRendering = false;
@@ -113,86 +98,43 @@ void Window::initFlags()
     m_lastRenderingTime = 0;
 }
 
-void Window::navigate(ResourceURL* url)
+void BrowsingContext::navigate(ResourceURL* url)
 {
     close();
     initFlags();
-    STARFISH_LOG_INFO("Window::navigate %s\n", url->urlString()->utf8Data());
+    STARFISH_LOG_INFO("BrowsingContext::navigate %s\n",
+                      url->urlString()->utf8Data());
 
     m_isActive = true;
 
     StarFishEnterer enter(m_starFish);
-    m_scriptBindingInstance =
-        new ScriptBindingInstance(m_starFish->scriptEngineInstance(), this);
 
-    initStorage(url);
-
-    m_document = new HTMLDocument(this, scriptBindingInstance(), url,
-                                  String::createASCIIString("UTF-8"), true);
-    m_scriptBindingInstance->initBinding(m_document);
-    m_history = new History(m_document);
-    m_navigator = new Navigator(m_document);
-    m_location = new Location(m_document);
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    m_webapis = new WebApis(m_document);
-#endif
-    m_history->setHistory(scriptNull(), String::emptyString, url);
+    // TODO: Use location to open a new document
+    Window* window = Window::create(m_starFish, this, url);
+    m_document = window->document();
     m_document->open();
 }
 
-void Window::initStorage(ResourceURL* url)
-{
-    if (!m_localStorageNamespace) {
-        // TODO: The name of disk storage file name should be auto-generated
-        StorageNamespaceProvider* storageProvider =
-            WebStorageNamespaceProvider::create(
-                this, String::createASCIIString("./cache/cache.db"));
-        m_localStorageNamespace =
-            storageProvider->createLocalStorageNamespace();
-        m_sessionStorageNamespace =
-            storageProvider->createSessionStorageNamespace();
-    }
-}
-
-Storage* Window::localStorage()
-{
-    ResourceURL* url = m_document->documentURI();
-    SecurityOriginData* origin = new SecurityOriginData(
-        url->protocol(), url->host(), String::parseInt(url->port()));
-    return m_localStorageNamespace->storage(origin);
-}
-
-Storage* Window::sessionStorage()
-{
-    ResourceURL* url = m_document->documentURI();
-    SecurityOriginData* origin = new SecurityOriginData(
-        url->protocol(), url->host(), String::parseInt(url->port()));
-    return m_sessionStorageNamespace->storage(origin);
-}
-
-Screen* Window::screen()
-{
-    if (!m_screen) {
-        m_screen = new Screen(m_document);
-    }
-    return m_screen;
-}
-
-float Window::devicePixelRatio()
-{
-    return m_screen->devicePixelRatio();
-}
-
-void Window::navigateAsync(ResourceURL* url)
+void BrowsingContext::navigateAsync(ResourceURL* url)
 {
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
         [](size_t a, void* data, void* data2) {
-            ((Window*)data2)->navigate((ResourceURL*)data);
+            ((BrowsingContext*)data)->navigate((ResourceURL*)data2);
         },
-        url, this);
+        this, url);
 }
 
-void Window::layoutIfNeeds()
+ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
+{
+    if (document()) {
+        STARFISH_ASSERT(document()->window());
+        return document()->window()->scriptBindingInstance();
+    } else {
+        return nullptr;
+    }
+}
+
+void BrowsingContext::layoutIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
@@ -234,7 +176,7 @@ void Window::layoutIfNeeds()
         Timer t("resolve style");
 #endif
         document()->styleResolver().resolveDOMStyle(
-            m_document, m_needsStyleRecalcForWholeDocument);
+            document(), m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
 
@@ -242,20 +184,20 @@ void Window::layoutIfNeeds()
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
-            document()->styleResolver().dumpDOMStyle(m_document);
+            document()->styleResolver().dumpDOMStyle(document());
         }
 #endif
     }
 
     if (m_needsFrameTreeBuild) {
-        if (m_document->frame()) {
+        if (document()->frame()) {
             clearStackingContext(true);
 
 // create frame tree
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("create frame tree");
 #endif
-            FrameTreeBuilder::buildFrameTree(m_document);
+            FrameTreeBuilder::buildFrameTree(document());
             m_needsFrameTreeBuild = false;
         }
     }
@@ -267,20 +209,22 @@ void Window::layoutIfNeeds()
 #endif
         clearStackingContext(true);
 
-        LayoutContext ctx(starFish(), m_document->frame()
+        LayoutContext ctx(starFish(), document()
+                                          ->frame()
                                           ->asFrameBox()
                                           ->asFrameBlockBox()
                                           ->asFrameDocument());
-        m_document->frame()->layout(ctx,
+        document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
 
 #ifndef NDEBUG
         {
-            LayoutContext ctx(starFish(), m_document->frame()
+            LayoutContext ctx(starFish(), document()
+                                              ->frame()
                                               ->asFrameBox()
                                               ->asFrameBlockBox()
                                               ->asFrameDocument());
-            m_document->frame()->layout(ctx,
+            document()->frame()->layout(ctx,
                                         Frame::LayoutWantToResolve::ResolveAll);
         }
 #endif
@@ -288,9 +232,10 @@ void Window::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TIMER
             Timer t("computeStackingContextProperties");
 #endif
-            m_document->frame()->establishesStackingContextIfNeeds();
-            if (m_document->frame()->firstChild()) {
-                m_rootStackingContext = m_document->frame()
+            document()->frame()->establishesStackingContextIfNeeds();
+            if (document()->frame()->firstChild()) {
+                m_rootStackingContext = document()
+                                            ->frame()
                                             ->firstChild()
                                             ->asFrameBox()
                                             ->stackingContext();
@@ -304,23 +249,26 @@ void Window::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(m_document);
+            FrameTreeBuilder::dumpFrameTree(document());
         }
 #endif
     }
 }
 
-void Window::rendering()
+void BrowsingContext::rendering()
 {
     if (m_pendingStyleSheetCount && document() &&
         document()->resourceLoader().isDocumentInOpenState() &&
         ((timestamp() - document()->resourceLoader().documentOpenTime()) <
          1000)) {
         m_needsRendering = false;
-        setTimeout([](Window* wnd, void* data) { wnd->setNeedsRendering(); },
-                   100, nullptr);
+        document()->window()->setTimeout(
+            [](Window* wnd, void* data) {
+                wnd->browsingContext()->setNeedsRendering();
+            },
+            100, nullptr);
 
-        Canvas* canvas = preparePainting(true);
+        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
 #ifndef STARFISH_TIZEN
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
@@ -354,22 +302,22 @@ void Window::rendering()
         Timer t("painting");
 #endif
         // painting
-        Canvas* canvas = preparePainting(true);
+        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
 
-        if (m_document->frame()->firstChild()) {
+        if (document()->frame()->firstChild()) {
             m_needsComposite = m_rootStackingContext->needsOwnBuffer();
         } else {
             m_needsComposite = false;
         }
 
         if (!m_needsComposite) {
-            paintWindowBackground(canvas);
+            starFish()->platformWindow()->paintWindowBackground(canvas);
         }
 
         {
             PaintingContext ctx(canvas);
             ctx.m_paintingStage = PaintingStageEnd;
-            m_document->frame()->paint(ctx);
+            document()->frame()->paint(ctx);
         }
         m_needsPainting = false;
 
@@ -381,12 +329,14 @@ void Window::rendering()
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableStackingContextDump) {
-            if (m_document->frame()->firstChild()) {
-                STARFISH_ASSERT(m_document->frame()
+            if (document()->frame()->firstChild()) {
+                STARFISH_ASSERT(document()
+                                    ->frame()
                                     ->firstChild()
                                     ->asFrameBox()
                                     ->isRootElement());
-                StackingContext* ctx = m_document->frame()
+                StackingContext* ctx = document()
+                                           ->frame()
                                            ->firstChild()
                                            ->asFrameBox()
                                            ->stackingContext();
@@ -455,11 +405,13 @@ void Window::rendering()
 #ifdef STARFISH_ENABLE_TIMER
         Timer t("composite");
 #endif
-        if (m_document->frame()->firstChild() &&
+        if (document()->frame()->firstChild() &&
             m_rootStackingContext->needsOwnBuffer()) {
-            Canvas* canvas = preparePainting(false);
-            paintWindowBackground(canvas);
-            m_document->frame()
+            Canvas* canvas =
+                starFish()->platformWindow()->preparePainting(false);
+            starFish()->platformWindow()->paintWindowBackground(canvas);
+            document()
+                ->frame()
                 ->firstChild()
                 ->asFrameBox()
                 ->stackingContext()
@@ -498,7 +450,7 @@ void Window::rendering()
 #endif
 }
 
-void Window::paintWindowBackground(Canvas* canvas)
+void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->m_tizenWidgetTransparentBackground) {
@@ -509,7 +461,8 @@ void Window::paintWindowBackground(Canvas* canvas)
 #endif
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-        LayoutRect colorRect(0, 0, width(), height());
+        LayoutRect colorRect(0, 0, document()->window()->width(),
+                             document()->window()->height());
         if (m_hasRootElementBackground) {
             FrameBox* rootRect =
                 document()->rootElement()->frame()->asFrameBox();
@@ -524,7 +477,8 @@ void Window::paintWindowBackground(Canvas* canvas)
                                       document()->rootElement()->style(),
                                       imgRect, colorRect, true);
         } else {
-            LayoutRect imgRect(0, 0, width(), height());
+            LayoutRect imgRect(0, 0, document()->window()->width(),
+                               document()->window()->height());
             if (document()->rootElement()->body()->frame()) {
                 FrameBox* bodyRect =
                     document()->rootElement()->body()->frame()->asFrameBox();
@@ -539,13 +493,13 @@ void Window::paintWindowBackground(Canvas* canvas)
     }
 }
 
-void Window::markHasPendingStyleSheet()
+void BrowsingContext::markHasPendingStyleSheet()
 {
     STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
     m_pendingStyleSheetCount++;
 }
 
-void Window::unmarkHasPendingStyleSheet()
+void BrowsingContext::unmarkHasPendingStyleSheet()
 {
     STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
     if (m_pendingStyleSheetCount > 0) {
@@ -554,7 +508,7 @@ void Window::unmarkHasPendingStyleSheet()
     }
 }
 
-void Window::clearStackingContext(bool backupBuffer)
+void BrowsingContext::clearStackingContext(bool backupBuffer)
 {
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
@@ -584,148 +538,52 @@ void Window::clearStackingContext(bool backupBuffer)
     }
 }
 
-#ifdef STARFISH_ENABLE_TEST
-void Window::setNetworkState(bool state)
+void BrowsingContext::close()
 {
-    int sockfd;
-    struct ifreq ifr;
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-
-    if (sockfd < 0) {
-        return;
-    }
-
-    memset(&ifr, 0, sizeof ifr);
-    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
-
-    if (state) {
-        ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
-    } else {
-        ifr.ifr_flags |= ~IFF_RUNNING;
-        // ifr.ifr_flags |= ~IFF_UP;
-    }
-
-    ioctl(sockfd, SIOCSIFFLAGS, &ifr);
-}
-
-void Window::forceDisableOnloadCapture()
-{
-    setenv("SCREEN_SHOT", "", 1);
-}
-
-void Window::simulateClick(float x, float y)
-{
-    dispatchTouchEvent(x, y, Window::TouchEventStart, true);
-    dispatchTouchEvent(x, y, Window::TouchEventEnd, true);
-}
-
-void Window::simulateVisibilitychange(bool show)
-{
-    if (show) {
-        m_starFish->resume();
-    } else {
-        m_starFish->pause();
-    }
-}
-
-void Window::testStart()
-{
-    invokeTestStartFunction(scriptBindingInstance());
-}
-#endif
-
-void Window::close()
-{
-    STARFISH_LOG_INFO("Window::close\n");
-    clearEventListeners();
-
-    if (m_navigator) {
-        m_navigator->close();
-    }
+    STARFISH_LOG_INFO("BrowsingContext::close\n");
 
     m_focusedNode = nullptr;
     m_relatedTarget = nullptr;
-    m_cssTarget = nullptr;
 
     m_activeNodes.clear();
     m_activeNodes.shrink_to_fit();
     m_hoveredNodes.clear();
     m_hoveredNodes.shrink_to_fit();
 
-    if (m_location) {
-        m_location->close();
-    }
-
-    if (m_document) {
+    if (document()) {
         StarFishEnterer enter(m_starFish);
-        m_document->close();
+        document()->window()->close();
+        document()->close();
+
+        if (scriptBindingInstance()) {
+            if (true) {
+                StarFishEnterer enter(m_starFish);
+                scriptBindingInstance()->close();
+            }
+            document()->window()->deleteScriptBindingInstance();
+        }
+
         delete m_document;
         m_document = nullptr;
-    }
-
-    if (m_scriptBindingInstance) {
-        if (true) {
-            StarFishEnterer enter(m_starFish);
-            m_scriptBindingInstance->close();
-        }
-        delete m_scriptBindingInstance;
-        m_scriptBindingInstance = nullptr;
     }
 
     m_isActive = false;
 
     m_starFish->timer()->clear();
-    clearResources();
+
+    m_starFish->platformWindow()->clearResources();
 
     m_starFish->messageLoop()->clearPendingIdlers();
     m_starFish->clearBlobURLStore();
 }
 
-void Window::setWholeDocumentNeedsStyleRecalc()
+void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
 {
     m_needsStyleRecalcForWholeDocument = true;
     setNeedsRendering();
 }
 
-uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
-                            void* data)
-{
-    STARFISH_RELEASE_ASSERT(m_isActive);
-    return m_starFish->timer()->addTimer(delay, handler, data, false);
-}
-
-void Window::clearTimeout(int32_t id)
-{
-    STARFISH_RELEASE_ASSERT(m_isActive);
-    m_starFish->timer()->removeTimer(id);
-}
-
-uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
-                             void* data)
-{
-    STARFISH_RELEASE_ASSERT(m_isActive);
-    return m_starFish->timer()->addTimer(delay, handler, data, true);
-}
-
-void Window::clearInterval(int32_t id)
-{
-    STARFISH_RELEASE_ASSERT(m_isActive);
-    m_starFish->timer()->removeTimer(id);
-}
-
-uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
-                                       void* data)
-{
-    STARFISH_RELEASE_ASSERT(m_isActive);
-    return m_starFish->timer()->addAnimator(handler, data);
-}
-
-void Window::cancelAnimationFrame(int32_t reqID)
-{
-    m_starFish->timer()->removeWindowAnimator(reqID);
-}
-
-Node* Window::hitTest(float x, float y)
+Node* BrowsingContext::hitTest(float x, float y)
 {
     layoutIfNeeds();
 
@@ -752,7 +610,7 @@ Node* Window::hitTest(float x, float y)
     return nullptr;
 }
 
-void Window::setFocusedNode(Node* n)
+void BrowsingContext::setFocusedNode(Node* n)
 {
     Node* m = n;
     while (!(m->isElement() && m->asElement()->isFocusable()) &&
@@ -781,12 +639,12 @@ void Window::setFocusedNode(Node* n)
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_blur.localName();
             e = new FocusEvent(document(), eventType, FocusEventInit());
-            EventTarget::dispatchEvent(t->asNode(), e);
+            document()->dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusout.localName();
             e = new FocusEvent(document(), eventType, FocusEventInit(true));
-            EventTarget::dispatchEvent(t->asNode(), e);
+            document()->dispatchEvent(t->asNode(), e);
         }
     }
     m_relatedTarget = t;
@@ -797,18 +655,18 @@ void Window::setFocusedNode(Node* n)
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_focus.localName();
             e = new FocusEvent(document(), eventType, FocusEventInit());
-            EventTarget::dispatchEvent(t->asNode(), e);
+            document()->dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusin.localName();
             e = new FocusEvent(document(), eventType, FocusEventInit(true));
-            EventTarget::dispatchEvent(t->asNode(), e);
+            document()->dispatchEvent(t->asNode(), e);
         }
     }
     m_focusedNode = t;
 }
 
-void Window::releaseFocusedNode()
+void BrowsingContext::releaseFocusedNode()
 {
     if (m_relatedTarget) {
         m_relatedTarget->setState(Node::NodeStateFocused,
@@ -817,7 +675,7 @@ void Window::releaseFocusedNode()
     }
 }
 
-void Window::setActiveNode(Node* n)
+void BrowsingContext::setActiveNode(Node* n)
 {
     Node* t = n->nearestParentElement();
     while (t) {
@@ -828,7 +686,7 @@ void Window::setActiveNode(Node* n)
     }
 }
 
-void Window::releaseActiveNode()
+void BrowsingContext::releaseActiveNode()
 {
     if (m_activeNodes.size() == 0) {
         return;
@@ -843,7 +701,7 @@ void Window::releaseActiveNode()
     m_activeNodes.shrink_to_fit();
 }
 
-void Window::setHoveredNode(Node* n)
+void BrowsingContext::setHoveredNode(Node* n)
 {
     Node* t = n->nearestParentElement();
     while (t) {
@@ -854,7 +712,7 @@ void Window::setHoveredNode(Node* n)
     }
 }
 
-void Window::releaseHoveredNode()
+void BrowsingContext::releaseHoveredNode()
 {
     if (m_hoveredNodes.size() == 0) {
         return;
@@ -869,84 +727,15 @@ void Window::releaseHoveredNode()
     m_hoveredNodes.shrink_to_fit();
 }
 
-void Window::processUrlFragment(String* name)
-{
-    Node* n = document()->getElementById(name);
-    if (n) {
-        setCSSTarget(n);
-        return;
-    }
-
-    Node* anchor = Traverse::findDescendant(document(), [&](Node* child) {
-        if (child->isHTMLAnchorElement() &&
-            child->asHTMLAnchorElement()->name().localName()->equals(name)) {
-            return true;
-        } else {
-            return false;
-        }
-    });
-
-    if (anchor) {
-        setCSSTarget(anchor);
-    }
-}
-
-void Window::setCSSTarget(Node* n)
-{
-    releaseCSSTarget();
-
-    m_cssTarget = n;
-    if (m_cssTarget) {
-        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, true);
-    }
-}
-
-void Window::releaseCSSTarget()
-{
-    if (m_cssTarget) {
-        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, false);
-    }
-}
-
-DEFINE_EVENT_LISTENER(Window, abort);
-DEFINE_EVENT_LISTENER(Window, canplay);
-DEFINE_EVENT_LISTENER(Window, canplaythrough);
-DEFINE_EVENT_LISTENER(Window, click);
-DEFINE_EVENT_LISTENER(Window, durationchange);
-DEFINE_EVENT_LISTENER(Window, emptied);
-DEFINE_EVENT_LISTENER(Window, ended);
-DEFINE_EVENT_LISTENER(Window, error);
-DEFINE_EVENT_LISTENER(Window, focus);
-DEFINE_EVENT_LISTENER(Window, keydown);
-DEFINE_EVENT_LISTENER(Window, keyup);
-DEFINE_EVENT_LISTENER(Window, load);
-DEFINE_EVENT_LISTENER(Window, loadeddata);
-DEFINE_EVENT_LISTENER(Window, loadedmetadata);
-DEFINE_EVENT_LISTENER(Window, loadstart);
-DEFINE_EVENT_LISTENER(Window, mouseover);
-DEFINE_EVENT_LISTENER(Window, pause);
-DEFINE_EVENT_LISTENER(Window, play);
-DEFINE_EVENT_LISTENER(Window, playing);
-DEFINE_EVENT_LISTENER(Window, progress);
-DEFINE_EVENT_LISTENER(Window, ratechange);
-DEFINE_EVENT_LISTENER(Window, seeked);
-DEFINE_EVENT_LISTENER(Window, seeking);
-DEFINE_EVENT_LISTENER(Window, stalled);
-DEFINE_EVENT_LISTENER(Window, suspend);
-DEFINE_EVENT_LISTENER(Window, timeupdate);
-DEFINE_EVENT_LISTENER(Window, volumechange);
-DEFINE_EVENT_LISTENER(Window, waiting);
-
-DEFINE_EVENT_LISTENER(Window, unload);
-
-void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
-                                bool isMobile)
+void BrowsingContext::dispatchTouchEvent(float x, float y,
+                                         PlatformWindow::TouchEventKind kind,
+                                         bool isMobile)
 {
     if (!m_isRunning) {
         return;
     }
 
-    if (kind == TouchEventStart) { // or MouseEventDown
+    if (kind == PlatformWindow::TouchEventStart) { // or MouseEventDown
         Node* node = hitTest(x, y);
         if (!node) {
             return;
@@ -967,12 +756,12 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         }
 
         if (m_activeNodes.size() > 0) {
-            EventTarget::dispatchEvent(m_activeNodes[0], e);
+            document()->window()->dispatchEvent(m_activeNodes[0], e);
         } else {
-            EventTarget::dispatchEvent(m_document, e);
+            document()->window()->dispatchEvent(document(), e);
         }
 
-    } else if (kind == TouchEventMove) { // or MouseEventMove
+    } else if (kind == PlatformWindow::TouchEventMove) { // or MouseEventMove
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) &&
             ((abs(m_touchDownPoint.x() - x) > 30) ||
              (abs(m_touchDownPoint.y() - y) > 30))) {
@@ -1000,9 +789,9 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
                                           MouseEventInit(true, true));
 
                 if (t) {
-                    EventTarget::dispatchEvent(t, e);
+                    document()->window()->dispatchEvent(t, e);
                 } else {
-                    EventTarget::dispatchEvent(m_document, e);
+                    document()->window()->dispatchEvent(document(), e);
                 }
             }
         }
@@ -1019,15 +808,16 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
         }
 
         if (t) {
-            EventTarget::dispatchEvent(t, e);
+            document()->window()->dispatchEvent(t, e);
         } else {
-            EventTarget::dispatchEvent(m_document, e);
+            document()->window()->dispatchEvent(document(), e);
         }
-    } else if (kind == TouchEventCancel) {
+    } else if (kind == PlatformWindow::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
     } else {
-        STARFISH_ASSERT(kind == TouchEventEnd); // or MouseEventUp
+        STARFISH_ASSERT(kind ==
+                        PlatformWindow::TouchEventEnd); // or MouseEventUp
 
         Node* node = hitTest(x, y);
         if (!node) {
@@ -1063,11 +853,11 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
             }
 
             if (t) {
-                EventTarget::dispatchEvent(t, e);
-                EventTarget::dispatchEvent(t, e2);
+                document()->window()->dispatchEvent(t, e);
+                document()->window()->dispatchEvent(t, e2);
             } else {
-                EventTarget::dispatchEvent(m_document, e);
-                EventTarget::dispatchEvent(m_document, e2);
+                document()->window()->dispatchEvent(document(), e);
+                document()->window()->dispatchEvent(document(), e2);
             }
         }
 
@@ -1075,20 +865,22 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind,
     }
 }
 
-void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
+void BrowsingContext::dispatchMouseEvent(float x, float y,
+                                         PlatformWindow::MouseEventKind kind)
 {
-    if (kind <= MouseEventUp) {
-        dispatchTouchEvent(x, y, (TouchEventKind)kind, false);
-    } else if (kind == MouseEventEnter) {
+    if (kind <= PlatformWindow::MouseEventUp) {
+        dispatchTouchEvent(x, y, (PlatformWindow::TouchEventKind)kind, false);
+    } else if (kind == PlatformWindow::MouseEventEnter) {
     } else {
-        STARFISH_ASSERT(kind == MouseEventOut);
+        STARFISH_ASSERT(kind == PlatformWindow::MouseEventOut);
     }
 }
 
-void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
+void BrowsingContext::dispatchKeyEvent(String* key,
+                                       PlatformWindow::KeyEventKind kind)
 {
     String* eventType = String::emptyString;
-    if (kind == KeyEventKind::KeyEventUp) {
+    if (kind == PlatformWindow::KeyEventKind::KeyEventUp) {
         eventType = starFish()->staticStrings()->m_keyup.localName();
     } else {
         // kind == KeyEventKind::KeyEventDown
@@ -1099,21 +891,24 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
     KeyboardEvent* e = new KeyboardEvent(document(), eventType, eventInit);
 
     if (e->ctrlKey()) {
-        m_ctrlKeyDown = kind == KeyEventKind::KeyEventDown ? m_ctrlKeyDown + 1
-                                                           : m_ctrlKeyDown - 1;
+        m_ctrlKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
+                            ? m_ctrlKeyDown + 1
+                            : m_ctrlKeyDown - 1;
         STARFISH_ASSERT(m_ctrlKeyDown >= 0);
     } else if (e->altKey()) {
-        m_altKeyDown = kind == KeyEventKind::KeyEventDown ? m_altKeyDown + 1
-                                                          : m_altKeyDown - 1;
+        m_altKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
+                           ? m_altKeyDown + 1
+                           : m_altKeyDown - 1;
         STARFISH_ASSERT(m_altKeyDown >= 0);
     } else if (e->shiftKey()) {
-        m_shiftKeyDown = kind == KeyEventKind::KeyEventDown
+        m_shiftKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
                              ? m_shiftKeyDown + 1
                              : m_shiftKeyDown - 1;
         STARFISH_ASSERT(m_shiftKeyDown >= 0);
     } else if (e->shiftKey()) {
-        m_metaKeyDown = kind == KeyEventKind::KeyEventDown ? m_metaKeyDown + 1
-                                                           : m_metaKeyDown - 1;
+        m_metaKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
+                            ? m_metaKeyDown + 1
+                            : m_metaKeyDown - 1;
         STARFISH_ASSERT(m_metaKeyDown >= 0);
     }
     if (m_ctrlKeyDown > 0) {
@@ -1134,38 +929,14 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
     // or 2) body element if possible
     // or 3) root element
     if (document()->rootElement()) {
-        EventTarget::dispatchEvent((document()->body()
-                                        ? document()->body()->asNode()
-                                        : document()->rootElement()->asNode()),
-                                   e);
+        document()->window()->dispatchEvent(
+            (document()->body() ? document()->body()->asNode()
+                                : document()->rootElement()->asNode()),
+            e);
     }
 }
 
-CSSStyleDeclaration* Window::getComputedStyle(Element* element)
-{
-    return element->getComputedStyle();
-}
-
-CSSStyleDeclaration* Window::getComputedStyle(Element* element,
-                                              String* pseudoElt)
-{
-    return element->getComputedStyle();
-}
-
-// https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
-HTMLCollection* Window::namedAccess(String* name)
-{
-    // TODO
-    // when child browser context(ex- iframe) implemented, we should
-    // re-implement this block
-    if (document()) {
-        return document()->namedAccess(name);
-    } else {
-        return nullptr;
-    }
-}
-
-void Window::pause()
+void BrowsingContext::pause()
 {
     STARFISH_LOG_INFO("Window::pause\n");
     if (!m_isRunning) {
@@ -1179,7 +950,7 @@ void Window::pause()
     document()->resourceLoader().cachePruning();
 }
 
-void Window::resume()
+void BrowsingContext::resume()
 {
     STARFISH_LOG_INFO("Window::resume\n");
     if (m_isRunning) {
@@ -1195,22 +966,5 @@ void Window::resume()
     rendering();
 
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
-}
-
-void Window::screenShot(std::string filePath)
-{
-    bool oldNeedsPainting = m_needsPainting;
-    bool oldOnLoad = g_fireOnloadEvent;
-    g_fireOnloadEvent = true;
-    g_forceRendering = true;
-    setNeedsPainting();
-    setenv("SCREEN_SHOT", filePath.data(), 1);
-    rendering();
-    setenv("SCREEN_SHOT", "", 1);
-    g_fireOnloadEvent = oldOnLoad;
-    g_forceRendering = false;
-
-    m_needsPainting = oldNeedsPainting;
-    setNeedsRendering();
 }
 }

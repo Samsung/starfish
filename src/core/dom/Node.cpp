@@ -15,6 +15,9 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/Node.h"
+
 #include "StarFish.h"
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
@@ -24,13 +27,13 @@
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
-#include "core/dom/Node.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -1198,7 +1201,7 @@ void Node::setNeedsFrameTreeBuild()
         }
     }
 
-    window()->setNeedsFrameTreeBuild();
+    window()->browsingContext()->setNeedsFrameTreeBuild();
 }
 
 void Node::setNeedsStyleRecalc()
@@ -1216,7 +1219,7 @@ void Node::setNeedsStyleRecalc()
             node = node->parentNode();
         }
     }
-    window()->setNeedsStyleRecalc();
+    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
 void Node::setChildrenNeedsStyleRecalc()
@@ -1252,7 +1255,7 @@ void Node::setNeedsLayout()
         return;
     }
 
-    window()->setNeedsLayout();
+    window()->browsingContext()->setNeedsLayout();
 }
 
 void Node::setNeedsPainting()
@@ -1261,7 +1264,7 @@ void Node::setNeedsPainting()
         return;
     }
 
-    window()->setNeedsPainting();
+    window()->browsingContext()->setNeedsPainting();
 }
 
 void Node::setNeedsComposite()
@@ -1270,7 +1273,7 @@ void Node::setNeedsComposite()
         return;
     }
 
-    window()->setNeedsComposite();
+    window()->browsingContext()->setNeedsComposite();
 }
 
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
@@ -1350,7 +1353,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     CSSStyleDeclaration* d = new CSSStyleDeclaration(e);
 
     // TODO: change below code to resolve DOM style
-    window()->layoutIfNeeds();
+    window()->browsingContext()->layoutIfNeeds();
 
     ComputedStyle* style = m_style;
     if (style == nullptr) {
