@@ -2566,12 +2566,13 @@ StyleResolver::StyleResolver(Document* document)
 {
 }
 
-CSSStyleSheet* StyleResolver::allRules()
+CSSStyleSheet* StyleResolver::styleSheetWithStyleRules()
 {
-    if (!m_allRules) {
-        m_allRules = new CSSStyleSheet(m_document, String::emptyString);
+    if (!m_styleSheetWithAllRules) {
+        m_styleSheetWithAllRules =
+            new CSSStyleSheet(m_document, String::emptyString);
     }
-    return m_allRules;
+    return m_styleSheetWithAllRules;
 }
 
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
@@ -2623,10 +2624,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 
 void StyleResolver::apply(Element* element,
                           GCVector<CSSStyleValuePair>& cssValues,
-                          ComputedStyle* style, ComputedStyle* parentStyle,
-                          bool isImportant)
+                          ResourceURL* origin, ComputedStyle* style,
+                          ComputedStyle* parentStyle, bool isImportant)
 {
-    ResourceURL* origin = element->document()->documentURI();
     for (unsigned k = 0; k < cssValues.size(); k++) {
         if (isImportant != cssValues[k].flagImportant()) {
             continue;
@@ -3983,7 +3983,7 @@ public:
         m_size = 0;
     }
 
-    void push_back(CSSStyleDeclaration* decl)
+    void push_back(std::pair<CSSStyleDeclaration*, ResourceURL*> decl)
     {
         if (m_size < InlineStorageSize) {
             m_inlineStorage[m_size++] = decl;
@@ -3993,7 +3993,7 @@ public:
         }
     }
 
-    CSSStyleDeclaration* operator[](const size_t& idx)
+    std::pair<CSSStyleDeclaration*, ResourceURL*>& operator[](const size_t& idx)
     {
         if (idx < InlineStorageSize) {
             return m_inlineStorage[idx];
@@ -4009,10 +4009,10 @@ public:
 
 protected:
     size_t m_size;
-    CSSStyleDeclaration* m_inlineStorage[InlineStorageSize];
+    std::pair<CSSStyleDeclaration*, ResourceURL*> m_inlineStorage[InlineStorageSize];
     // We can use std::allocator here.
     // CSSStyleDeclaration* has strong reference on CSSStyleSheet
-    std::vector<CSSStyleDeclaration*> m_externalStorage;
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_externalStorage;
 };
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
@@ -4031,22 +4031,25 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         size_t ruleCount = sheet->rules().size();
         auto ruleBuffer = sheet->rules().data();
         for (unsigned j = 0; j < ruleCount; j++) {
-            StyleRule* rule = ruleBuffer[j];
+            StyleRule* rule = ruleBuffer[j].first;
+            ResourceURL* url = ruleBuffer[j].second;
+
             const CSSSelctorList& selectorList = rule->selectorList();
             MatchResult result;
             if (matchSelector(element, elementName, elementId, elementClasses,
                               selectorList, 0,
                               result) == Match::SelectorMatches) {
-                userAgentDeclarations.push_back(rule->styleDeclaration());
+                userAgentDeclarations.push_back(std::make_pair(rule->styleDeclaration(), url));
             }
         }
     }
 
-    sheet = allRules();
+    sheet = styleSheetWithStyleRules();
     size_t ruleCount = sheet->rules().size();
     auto ruleBuffer = sheet->rules().data();
     for (unsigned j = 0; j < ruleCount; j++) {
-        StyleRule* rule = ruleBuffer[j];
+        StyleRule* rule = ruleBuffer[j].first;
+        ResourceURL* url = ruleBuffer[j].second;
         const CSSSelctorList& selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, elementName, elementId, elementClasses,
@@ -4055,43 +4058,47 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                 element->setPseudoElement(result.pseudoType);
                 if (result.pseudoType == pseudoElementType) {
                     ret->setPseudoType(pseudoElementType);
-                    authorDeclarations.push_back(rule->styleDeclaration());
+                    authorDeclarations.push_back(
+                        std::make_pair(rule->styleDeclaration(), url));
                 }
             } else if (pseudoElementType ==
                        PseudoElementType::PseudoElementNone) {
-                authorDeclarations.push_back(rule->styleDeclaration());
+                authorDeclarations.push_back(
+                    std::make_pair(rule->styleDeclaration(), url));
             }
         }
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(element, userAgentDeclarations[i]->m_cssValues, ret, parent,
-              false);
+        apply(element, userAgentDeclarations[i].first->m_cssValues,
+              userAgentDeclarations[i].second, ret, parent, false);
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(element, authorDeclarations[i]->m_cssValues, ret, parent, false);
+        apply(element, authorDeclarations[i].first->m_cssValues,
+              authorDeclarations[i].second, ret, parent, false);
     }
 
     // inline style
     if (element->inlineStyleWithoutCreation()) {
-        apply(element, element->inlineStyleWithoutCreation()->m_cssValues, ret,
-              parent, false);
+        apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
+              element->document()->documentURI(), ret, parent, false);
     }
 
     for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(element, authorDeclarations[i]->m_cssValues, ret, parent, true);
+        apply(element, authorDeclarations[i].first->m_cssValues,
+              authorDeclarations[i].second, ret, parent, true);
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
-        apply(element, userAgentDeclarations[i]->m_cssValues, ret, parent,
-              true);
+        apply(element, userAgentDeclarations[i].first->m_cssValues,
+              userAgentDeclarations[i].second, ret, parent, true);
     }
 
     // inline style
     if (element->inlineStyleWithoutCreation()) {
-        apply(element, element->inlineStyleWithoutCreation()->m_cssValues, ret,
-              parent, true);
+        apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
+              element->document()->documentURI(), ret, parent, true);
     }
 }
 

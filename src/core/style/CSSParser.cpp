@@ -2534,6 +2534,7 @@ bool MediaQueryData::addExpression()
     return isValid;
 }
 
+// TODO : change below Strings to AtomicStrings
 const String* devicePixelRatioMediaFeature =
     String::createASCIIStringWithNoGC("-webkit-device-pixel-ratio");
 const String* maxDevicePixelRatioMediaFeature =
@@ -2810,15 +2811,15 @@ MediaQueryExp* MediaQueryExp::createIfValid(
         RefPtr<CSSToken> numerator = tokenList[0];
         RefPtr<CSSToken> delimiter = tokenList[1];
         RefPtr<CSSToken> denominator = tokenList[2];
-        if (!delimiter->isSymbol() || !delimiter->isSymbol('/')) {
+        if (!delimiter->isSymbol('/')) {
             return nullptr;
         }
         if (!numerator->isNumber() || numerator->numericValue() <= 0 ||
-            numerator->value()->toString()->contains(".")) {
+            numerator->hasSourceOfNumberValueDot()) {
             return nullptr;
         }
         if (!denominator->isNumber() || denominator->numericValue() <= 0 ||
-            denominator->value()->toString()->contains(".")) {
+            denominator->hasSourceOfNumberValueDot()) {
             return nullptr;
         }
 
