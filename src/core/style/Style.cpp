@@ -1058,15 +1058,16 @@ static void addBorderCSSValuePairs(CSSStyleDeclaration* target,
     addBorderLeftCSSValuePairs(target, width, style, color);
 }
 
-void CSSStyleDeclaration::setBorder(String* value, bool isImportant)
+void CSSStyleDeclaration::setBorder(const char* value, size_t len,
+                                    bool isImportant)
 {
-    if (value->length() == 0) {
+    if (len == 0) {
         removeBorderCSSValuePairs(this);
         return;
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value);
+    tokenizeCSSValue(&tokens, value, len);
 
     CSSStyleValuePair v, width, style, color;
     if (v.updateValueCommon(&tokens)) {
@@ -1080,27 +1081,28 @@ void CSSStyleDeclaration::setBorder(String* value, bool isImportant)
     }
 }
 
-#define ADD_SET_BORDER(POS, ...)                                              \
-    void CSSStyleDeclaration::setBorder##POS(String* value, bool isImportant) \
-    {                                                                         \
-        if (value->length() == 0) {                                           \
-            removeBorder##POS##CSSValuePairs(this);                           \
-            return;                                                           \
-        }                                                                     \
-                                                                              \
-        GCVector<String*> tokens;                                             \
-        tokenizeCSSValue(&tokens, value);                                     \
-                                                                              \
-        CSSStyleValuePair v, width, style, color;                             \
-        if (v.updateValueCommon(&tokens)) {                                   \
-            v.setFlagImportant(isImportant);                                  \
-            addBorder##POS##CSSValuePairs(this, v, v, v);                     \
-        } else if (parseBorderShorthand(&tokens, &width, &style, &color)) {   \
-            width.setFlagImportant(isImportant);                              \
-            style.setFlagImportant(isImportant);                              \
-            color.setFlagImportant(isImportant);                              \
-            addBorder##POS##CSSValuePairs(this, width, style, color);         \
-        }                                                                     \
+#define ADD_SET_BORDER(POS, ...)                                            \
+    void CSSStyleDeclaration::setBorder##POS(const char* value, size_t len, \
+                                             bool isImportant)              \
+    {                                                                       \
+        if (len == 0) {                                                     \
+            removeBorder##POS##CSSValuePairs(this);                         \
+            return;                                                         \
+        }                                                                   \
+                                                                            \
+        GCVector<String*> tokens;                                           \
+        tokenizeCSSValue(&tokens, value, len);                              \
+                                                                            \
+        CSSStyleValuePair v, width, style, color;                           \
+        if (v.updateValueCommon(&tokens)) {                                 \
+            v.setFlagImportant(isImportant);                                \
+            addBorder##POS##CSSValuePairs(this, v, v, v);                   \
+        } else if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
+            width.setFlagImportant(isImportant);                            \
+            style.setFlagImportant(isImportant);                            \
+            color.setFlagImportant(isImportant);                            \
+            addBorder##POS##CSSValuePairs(this, width, style, color);       \
+        }                                                                   \
     }
 
 GEN_FOURSIDE(ADD_SET_BORDER)
@@ -1533,7 +1535,7 @@ String* CSSStyleValuePair::toString() const
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-void CSSStyleValuePair::setLengthValue(const char* value)
+void CSSStyleValuePair::setLengthValue(const char* value, size_t len)
 {
     updateValueLengthOrPercent(String::fromUTF8(value), true);
 }
@@ -1560,16 +1562,17 @@ String* CSSStyleDeclaration::BackgroundRepeat()
     return String::emptyString;
 }
 
-void CSSStyleDeclaration::setBackgroundRepeat(String* value, bool isImportant)
+void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
+                                              bool isImportant)
 {
-    if (value->length() == 0) {
+    if (value == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
         return;
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
+    tokenizeCSSValue(&tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
     if (c.updateValueCommon(&tokens)) {
@@ -1603,16 +1606,17 @@ String* CSSStyleDeclaration::BackgroundPosition()
     return positionX->concat(String::spaceString)->concat(positionY);
 }
 
-void CSSStyleDeclaration::setBackgroundPosition(String* value, bool isImportant)
+void CSSStyleDeclaration::setBackgroundPosition(const char* value,
+                                                size_t length, bool isImportant)
 {
-    if (value->length() == 0) {
+    if (value == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
         return;
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
+    tokenizeCSSValue(&tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
     if (c.updateValueCommon(&tokens)) {
@@ -2117,15 +2121,16 @@ static bool parseTransitionShorthand(GCVector<String*>* tokens,
     return true;
 }
 
-void CSSStyleDeclaration::setTransition(String* value, bool isImportant)
+void CSSStyleDeclaration::setTransition(const char* value, size_t length,
+                                        bool isImportant)
 {
-    if (value->length() == 0) {
+    if (length == 0) {
         removeTransitionCSSValuePairs(this);
         return;
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value);
+    tokenizeCSSValue(&tokens, value, length);
 
     // TODO comma separation
     CSSStyleValuePair v, property, duration, timingFunction, delay;
@@ -2171,15 +2176,16 @@ String* CSSStyleDeclaration::Transition()
     return createTransitionString(property, duration);
 }
 
-void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
+void CSSStyleDeclaration::setBackground(const char* value, size_t length,
+                                        bool isImportant)
 {
-    if (value->length() == 0) {
+    if (length == 0) {
         removeBackgroundCSSValuePairs(this);
         return;
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
+    tokenizeCSSValue(&tokens, value, length, ",/", 2);
     if (tokens.size() == 0) {
         return;
     }
@@ -2325,9 +2331,10 @@ String* CSSStyleDeclaration::Font()
     return result;
 }
 
-void CSSStyleDeclaration::setFont(String* value, bool isImportant)
+void CSSStyleDeclaration::setFont(const char* value, size_t length,
+                                  bool isImportant)
 {
-    if (value->length() == 0) {
+    if (length == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
@@ -2336,7 +2343,7 @@ void CSSStyleDeclaration::setFont(String* value, bool isImportant)
     }
 
     GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, String::fromUTF8("/"));
+    tokenizeCSSValue(&tokens, value, length, "/", 1);
     if (tokens.size() == 0) {
         return;
     }
@@ -2374,47 +2381,47 @@ void CSSStyleDeclaration::setFont(String* value, bool isImportant)
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__);  \
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__); \
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__);
-#define ATTRIBUTE_SETTER_FOURSIDE(PRE, ...)                           \
-    void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value,    \
-                                                    bool isImportant) \
-    {                                                                 \
-        if (value->length() == 0) {                                   \
-            RM_PAIRS(PRE, __VA_ARGS__);                               \
-            return;                                                   \
-        }                                                             \
-        GCVector<String*> tokens;                                     \
-        tokenizeCSSValue(&tokens, value);                             \
-                                                                      \
-        CSSStyleValuePair c, top, right, bottom, left;                \
-        if (c.updateValueCommon(&tokens)) {                           \
-            c.setFlagImportant(isImportant);                          \
-            top = right = bottom = left = c;                          \
-            ADD_PAIRS(PRE, __VA_ARGS__);                              \
-            return;                                                   \
-        }                                                             \
-        size_t len = tokens.size();                                   \
-        if (len < 1 || len > 4) {                                     \
-            return;                                                   \
-        }                                                             \
-                                                                      \
-        GCVector<CSSStyleValuePair> result;                           \
-        for (size_t i = 0; i < len; i++) {                            \
-            CSSStyleValuePair v;                                      \
-            v.setFlagImportant(isImportant);                          \
-            if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) {    \
-                return;                                               \
-            }                                                         \
-            result.push_back(v);                                      \
-        }                                                             \
-        top = result[0];                                              \
-        right = len < 2 ? top : result[1];                            \
-        bottom = len < 3 ? top : result[2];                           \
-        left = len < 4 ? right : result[3];                           \
-        top.setFlagImportant(isImportant);                            \
-        right.setFlagImportant(isImportant);                          \
-        bottom.setFlagImportant(isImportant);                         \
-        left.setFlagImportant(isImportant);                           \
-        ADD_PAIRS(PRE, __VA_ARGS__);                                  \
+#define ATTRIBUTE_SETTER_FOURSIDE(PRE, ...)                        \
+    void CSSStyleDeclaration::set##PRE##__VA_ARGS__(               \
+        const char* value, size_t length, bool isImportant)        \
+    {                                                              \
+        if (length == 0) {                                         \
+            RM_PAIRS(PRE, __VA_ARGS__);                            \
+            return;                                                \
+        }                                                          \
+        GCVector<String*> tokens;                                  \
+        tokenizeCSSValue(&tokens, value, length);                  \
+                                                                   \
+        CSSStyleValuePair c, top, right, bottom, left;             \
+        if (c.updateValueCommon(&tokens)) {                        \
+            c.setFlagImportant(isImportant);                       \
+            top = right = bottom = left = c;                       \
+            ADD_PAIRS(PRE, __VA_ARGS__);                           \
+            return;                                                \
+        }                                                          \
+        size_t len = tokens.size();                                \
+        if (len < 1 || len > 4) {                                  \
+            return;                                                \
+        }                                                          \
+                                                                   \
+        GCVector<CSSStyleValuePair> result;                        \
+        for (size_t i = 0; i < len; i++) {                         \
+            CSSStyleValuePair v;                                   \
+            v.setFlagImportant(isImportant);                       \
+            if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) { \
+                return;                                            \
+            }                                                      \
+            result.push_back(v);                                   \
+        }                                                          \
+        top = result[0];                                           \
+        right = len < 2 ? top : result[1];                         \
+        bottom = len < 3 ? top : result[2];                        \
+        left = len < 4 ? right : result[3];                        \
+        top.setFlagImportant(isImportant);                         \
+        right.setFlagImportant(isImportant);                       \
+        bottom.setFlagImportant(isImportant);                      \
+        left.setFlagImportant(isImportant);                        \
+        ADD_PAIRS(PRE, __VA_ARGS__);                               \
     }
 ATTRIBUTE_SETTER_FOURSIDE(Margin);
 ATTRIBUTE_SETTER_FOURSIDE(Padding);
@@ -2424,14 +2431,24 @@ ATTRIBUTE_SETTER_FOURSIDE(Border, Color);
 #undef ADD_PAIRS
 #undef RM_PAIRS
 
+static bool seperatorContains(const char* seperator, size_t seperatorCount,
+                              char ch)
+{
+    for (size_t i = 0; i < seperatorCount; i++) {
+        if (seperator[i] == ch) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
-                                           String* src, String* seperator,
+                                           const char* data, size_t length,
+                                           const char* seperator,
+                                           size_t seperatorCount,
                                            bool isCaseSensitive)
 {
     tokens->clear();
-
-    const char* data = src->utf8Data();
-    size_t length = strlen(data);
 
     std::string str;
     bool inParenthesis = false;
@@ -2457,8 +2474,8 @@ void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
             continue;
         }
         bool hasSepChar = false;
-        if (seperator->length() > 0 &&
-            seperator->indexOf(data[i]) != SIZE_MAX) {
+        if (seperatorCount > 0 &&
+            seperatorContains(seperator, seperatorCount, data[i])) {
             hasSepChar = true;
         }
 
@@ -3952,34 +3969,84 @@ void StyleResolver::apply(Element* element,
     }
 }
 
+template <unsigned int InlineStorageSize>
+class MatchedDeclarations {
+    STARFISH_MAKE_STACK_ALLOCATED();
+
+public:
+    MatchedDeclarations()
+    {
+        m_size = 0;
+    }
+
+    void push_back(CSSStyleDeclaration* decl)
+    {
+        if (m_size < InlineStorageSize) {
+            m_inlineStorage[m_size++] = decl;
+        } else {
+            m_size++;
+            m_externalStorage.push_back(decl);
+        }
+    }
+
+    CSSStyleDeclaration* operator[](const size_t& idx)
+    {
+        if (idx < InlineStorageSize) {
+            return m_inlineStorage[idx];
+        } else {
+            return m_externalStorage[idx - InlineStorageSize];
+        }
+    }
+
+    size_t size()
+    {
+        return m_size;
+    }
+
+protected:
+    size_t m_size;
+    CSSStyleDeclaration* m_inlineStorage[InlineStorageSize];
+    // We can use std::allocator here.
+    // CSSStyleDeclaration* has strong reference on CSSStyleSheet
+    std::vector<CSSStyleDeclaration*> m_externalStorage;
+};
+
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                                   ComputedStyle* parent,
                                   PseudoElementType pseudoElementType)
 {
-    Declarations userAgentDeclarations;
-    Declarations authorDeclarations;
+    MatchedDeclarations<6> userAgentDeclarations;
+    MatchedDeclarations<32> authorDeclarations;
+
+    AtomicString elementName = element->name().localNameAtomic();
+    AtomicString elementId = element->atomicId();
+    const GCVector<AtomicString>& elementClasses = element->classNames();
 
     CSSStyleSheet* sheet = m_sheets[0];
-
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            StyleRule* rule = (StyleRule*)sheet->rules()[j];
-            CSSSelctorList selectorList = rule->selectorList();
+        size_t ruleCount = sheet->rules().size();
+        auto ruleBuffer = sheet->rules().data();
+        for (unsigned j = 0; j < ruleCount; j++) {
+            StyleRule* rule = ruleBuffer[j];
+            const CSSSelctorList& selectorList = rule->selectorList();
             MatchResult result;
-            if (matchSelector(element, selectorList, 0, result) ==
-                Match::SelectorMatches) {
+            if (matchSelector(element, elementName, elementId, elementClasses,
+                              selectorList, 0,
+                              result) == Match::SelectorMatches) {
                 userAgentDeclarations.push_back(rule->styleDeclaration());
             }
         }
     }
 
     sheet = allRules();
-    for (unsigned j = 0; j < sheet->rules().size(); j++) {
-        StyleRule* rule = (StyleRule*)sheet->rules()[j];
-        CSSSelctorList selectorList = rule->selectorList();
+    size_t ruleCount = sheet->rules().size();
+    auto ruleBuffer = sheet->rules().data();
+    for (unsigned j = 0; j < ruleCount; j++) {
+        StyleRule* rule = ruleBuffer[j];
+        const CSSSelctorList& selectorList = rule->selectorList();
         MatchResult result;
-        if (matchSelector(element, selectorList, 0, result) ==
-            Match::SelectorMatches) {
+        if (matchSelector(element, elementName, elementId, elementClasses,
+                          selectorList, 0, result) == Match::SelectorMatches) {
             if (result.pseudoType != PseudoElementType::PseudoElementNone) {
                 element->setPseudoElement(result.pseudoType);
                 if (result.pseudoType == pseudoElementType) {
@@ -4024,16 +4091,17 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 }
 
-StyleResolver::Match StyleResolver::matchSelector(Element* element,
-                                                  CSSSelctorList& selectorList,
-                                                  unsigned idx,
-                                                  MatchResult& result,
-                                                  bool isQueryingSelector)
+StyleResolver::Match StyleResolver::matchSelector(
+    Element* element, AtomicString elementName, AtomicString elementId,
+    const GCVector<AtomicString>& elementClasses,
+    const CSSSelctorList& selectorList, unsigned idx, MatchResult& result,
+    bool isQueryingSelector)
 {
     STARFISH_ASSERT(idx < selectorList.size());
 
     CSSSelector* selector = selectorList[idx];
-    if (!checkOne(element, selector, result, isQueryingSelector)) {
+    if (!checkOne(element, elementName, elementId, elementClasses, selector,
+                  result, isQueryingSelector)) {
         return Match::SelectorFailsLocally;
     }
 
@@ -4043,18 +4111,21 @@ StyleResolver::Match StyleResolver::matchSelector(Element* element,
 
     Match match;
     if (selector->relation() == CSSSelector::RelationType::SubSelector) {
-        match = matchSelector(element, selectorList, ++idx, result,
-                              isQueryingSelector);
+        match = matchSelector(element, elementName, elementId, elementClasses,
+                              selectorList, ++idx, result, isQueryingSelector);
     } else {
-        match = matchForRelation(element, selectorList, selector->relation(),
-                                 ++idx, result);
+        match =
+            matchForRelation(element, elementName, elementId, elementClasses,
+                             selectorList, selector->relation(), ++idx, result);
     }
     return match;
 }
 
 StyleResolver::Match StyleResolver::matchForRelation(
-    Element* element, CSSSelctorList& selectorList,
-    CSSSelector::RelationType relation, unsigned idx, MatchResult& result)
+    Element* element, AtomicString elementName, AtomicString elementId,
+    const GCVector<AtomicString>& elementClasses,
+    const CSSSelctorList& selectorList, CSSSelector::RelationType relation,
+    unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList.size());
 
@@ -4063,8 +4134,12 @@ StyleResolver::Match StyleResolver::matchForRelation(
     case CSSSelector::RelationType::Descendant: {
         Element* parent = element->parentElement();
         while (parent) {
-            if (matchSelector(parent, selectorList, idx, result) ==
-                Match::SelectorMatches) {
+            AtomicString elementName = parent->name().localNameAtomic();
+            AtomicString elementId = parent->atomicId();
+            const GCVector<AtomicString>& elementClasses = parent->classNames();
+            if (matchSelector(parent, elementName, elementId, elementClasses,
+                              selectorList, idx,
+                              result) == Match::SelectorMatches) {
                 return Match::SelectorMatches;
             }
             parent = parent->parentElement();
@@ -4073,20 +4148,35 @@ StyleResolver::Match StyleResolver::matchForRelation(
     }
     case CSSSelector::RelationType::Child: {
         Element* parent = element->parentElement();
-        if (parent &&
-            matchSelector(parent, selectorList, idx, result) ==
-                Match::SelectorMatches) {
-            return Match::SelectorMatches;
+        if (parent) {
+            AtomicString elementName = parent->name().localNameAtomic();
+            AtomicString elementId = parent->atomicId();
+            const GCVector<AtomicString>& elementClasses = parent->classNames();
+            if (matchSelector(parent, elementName, elementId, elementClasses,
+                              selectorList, idx,
+                              result) == Match::SelectorMatches) {
+                return Match::SelectorMatches;
+            }
+            return Match::SelectorFailsCompletely;
         } else {
             return Match::SelectorFailsCompletely;
         }
     }
     case CSSSelector::RelationType::AdjacentSibling: {
         Element* previousSibling = element->previousElementSibling();
-        if (previousSibling &&
-            matchSelector(previousSibling, selectorList, idx, result) ==
-                Match::SelectorMatches) {
-            return Match::SelectorMatches;
+        if (previousSibling) {
+            AtomicString elementName =
+                previousSibling->name().localNameAtomic();
+            AtomicString elementId = previousSibling->atomicId();
+            const GCVector<AtomicString>& elementClasses =
+                previousSibling->classNames();
+            if (matchSelector(previousSibling, elementName, elementId,
+                              elementClasses, selectorList, idx,
+                              result) == Match::SelectorMatches) {
+                return Match::SelectorMatches;
+            } else {
+                return Match::SelectorFailsCompletely;
+            }
         } else {
             return Match::SelectorFailsCompletely;
         }
@@ -4094,8 +4184,14 @@ StyleResolver::Match StyleResolver::matchForRelation(
     case CSSSelector::RelationType::GeneralSibling: {
         Element* previousSibling = element->previousElementSibling();
         while (previousSibling) {
-            if (matchSelector(previousSibling, selectorList, idx, result) ==
-                Match::SelectorMatches) {
+            AtomicString elementName =
+                previousSibling->name().localNameAtomic();
+            AtomicString elementId = previousSibling->atomicId();
+            const GCVector<AtomicString>& elementClasses =
+                previousSibling->classNames();
+            if (matchSelector(previousSibling, elementName, elementId,
+                              elementClasses, selectorList, idx,
+                              result) == Match::SelectorMatches) {
                 return Match::SelectorMatches;
             }
             previousSibling = previousSibling->previousElementSibling();
@@ -4107,41 +4203,56 @@ StyleResolver::Match StyleResolver::matchForRelation(
     }
 }
 
-bool StyleResolver::checkOne(Element* element, CSSSelector* selector,
-                             MatchResult& result, bool isQueryingSelector)
+bool StyleResolver::checkOne(Element* element, AtomicString elementName,
+                             AtomicString elementId,
+                             const GCVector<AtomicString>& elementClasses,
+                             CSSSelector* selector, MatchResult& result,
+                             bool isQueryingSelector)
 {
-    switch (selector->type()) {
-    case CSSSelector::Type::Universal:
-        return true;
-    case CSSSelector::Type::Tag:
-        return (element->name() == selector->selectorText());
-    case CSSSelector::Type::Id:
-        return (element->hasId() &&
-                element->atomicId() == selector->selectorText());
-    case CSSSelector::Type::Class:
-        return element->hasClassName(selector->selectorText());
-    case CSSSelector::AttributeExact:   // Example: E[foo="bar"]
-    case CSSSelector::AttributeSet:     // Example: E[foo]
-    case CSSSelector::AttributeHyphen:  // Example: E[foo|="bar"]
-    case CSSSelector::AttributeList:    // Example: E[foo~="bar"]
-    case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
-    case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
-    case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
-        return anyAttributeMatches(element, selector->type(),
-                                   selector->asCSSAttributeSelector(), result);
-    case CSSSelector::Type::PseudoClass:
-        return checkPseudoClass(element, selector->asCSSPseudoSelector(),
-                                result);
-    case CSSSelector::Type::PseudoElement:
-        // while the use of pseudo-elements in selectors of querySelector is
-        // permitted, they will not match any elements in the document, and thus
-        // would not result in any elements being returned.
-        return isQueryingSelector
-                   ? false
-                   : checkPseudoElement(
-                         element, selector->asCSSPseudoSelector(), result);
-    default:
+    auto selectorType = selector->type();
+    if (selectorType == CSSSelector::Type::Class) {
+        auto txt = selector->selectorText();
+        size_t len = elementClasses.size();
+        for (unsigned i = 0; i < len; i++) {
+            if (txt == elementClasses[i]) {
+                return true;
+            }
+        }
         return false;
+    } else if (selectorType == CSSSelector::Type::Tag) {
+        return (elementName == selector->selectorText());
+    } else if (selectorType == CSSSelector::Type::Id) {
+        STARFISH_ASSERT(!selector->selectorText().isEmptyAtomicString());
+        return elementId == selector->selectorText();
+    } else {
+        switch (selectorType) {
+        case CSSSelector::Type::Universal:
+            return true;
+        case CSSSelector::AttributeExact:   // Example: E[foo="bar"]
+        case CSSSelector::AttributeSet:     // Example: E[foo]
+        case CSSSelector::AttributeHyphen:  // Example: E[foo|="bar"]
+        case CSSSelector::AttributeList:    // Example: E[foo~="bar"]
+        case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
+        case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
+        case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
+            return anyAttributeMatches(element, selector->type(),
+                                       selector->asCSSAttributeSelector(),
+                                       result);
+        case CSSSelector::Type::PseudoClass:
+            return checkPseudoClass(element, selector->asCSSPseudoSelector(),
+                                    result);
+        case CSSSelector::Type::PseudoElement:
+            // while the use of pseudo-elements in selectors of querySelector is
+            // permitted, they will not match any elements in the document, and
+            // thus
+            // would not result in any elements being returned.
+            return isQueryingSelector
+                       ? false
+                       : checkPseudoElement(
+                             element, selector->asCSSPseudoSelector(), result);
+        default:
+            return false;
+        }
     }
 }
 
@@ -4345,9 +4456,14 @@ bool StyleResolver::checkPseudoClass(Element* element,
 
         return true;
     }
-    case CSSSelector::PseudoType::PseudoNot:
+    case CSSSelector::PseudoType::PseudoNot: {
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
-        return !checkOne(element, selector->pseudoSelectorList()[0], result);
+        AtomicString elementName = element->name().localNameAtomic();
+        AtomicString elementId = element->atomicId();
+        const GCVector<AtomicString>& elementClasses = element->classNames();
+        return !checkOne(element, elementName, elementId, elementClasses,
+                         selector->pseudoSelectorList()[0], result);
+    }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;

@@ -201,7 +201,11 @@ bool SelectorQuery::selectorMatches(CSSSelctorList& selector, Element* element,
 {
     StyleResolver& resolver = element->document()->styleResolver();
     StyleResolver::MatchResult result;
-    return resolver.matchSelector(element, selector, 0, result, true) ==
+    AtomicString elementName = element->name().localNameAtomic();
+    AtomicString elementId = element->atomicId();
+    const GCVector<AtomicString>& elementClasses = element->classNames();
+    return resolver.matchSelector(element, elementName, elementId,
+                                  elementClasses, selector, 0, result, true) ==
            StyleResolver::Match::SelectorMatches;
 }
 

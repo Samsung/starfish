@@ -139,6 +139,148 @@ constexpr size_t kLexTableSize = sizeof kLexTable / sizeof(int);
 
 class CSSParser;
 
+bool CSSTokenString::equals(const char* src) const
+{
+    size_t len = strlen(src);
+    if (len != m_length) {
+        return false;
+    }
+    for (size_t i = 0; i < len; i++) {
+        if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+            if (m_builtInBuffer[i] != (char32_t)src[i])
+                return false;
+        } else {
+            if ((*m_externalString)[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] !=
+                (char32_t)src[i]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool CSSTokenString::equalsWithoutCase(const char* src) const
+{
+    size_t len = strlen(src);
+
+#ifndef NDEBUG
+    for (size_t i = 0; i < len; i++) {
+        if ('A' <= src[i] && src[i] <= 'Z') {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+#endif
+
+    if (len != m_length) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+            if (::tolower(m_builtInBuffer[i]) != src[i])
+                return false;
+        } else {
+            if (::tolower(
+                    (*m_externalString)[i -
+                                        CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]) !=
+                src[i]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void CSSTokenString::toLower()
+{
+    size_t len = length();
+    for (size_t i = 0; i < len; i++) {
+        if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
+            m_builtInBuffer[i] = ::tolower(m_builtInBuffer[i]);
+        } else {
+            (*m_externalString)[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] =
+                ::tolower((
+                    *m_externalString)[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]);
+        }
+    }
+}
+
+String* CSSTokenString::toString() const
+{
+    if (m_hasASCIIContent) {
+        TightASCIIString newStringData;
+        newStringData.resize(length());
+
+        for (size_t i = 0; i < length(); i++) {
+            newStringData[i] = (char)charAt(i);
+        }
+
+        return new StringDataASCII(std::move(newStringData));
+    } else {
+        TightUTF32String newStringData;
+        newStringData.resize(length());
+
+        for (size_t i = 0; i < length(); i++) {
+            newStringData[i] = charAt(i);
+        }
+
+        return new StringDataUTF32(std::move(newStringData));
+    }
+}
+
+size_t CSSTokenString::peekASCIIBuffer(size_t (*cb)(const char* buffer,
+                                                    size_t len, void* data),
+                                       void* data) const
+{
+    STARFISH_ASSERT(hasASCIIContent());
+    char* newStringData = ALLOCA(length() + 1, char);
+    for (size_t i = 0; i < length(); i++) {
+        newStringData[i] = (char)charAt(i);
+    }
+    newStringData[length()] = 0;
+
+    return cb(newStringData, length(), data);
+}
+
+size_t CSSTokenString::peekUTF32Buffer(size_t (*cb)(const char32_t* buffer,
+                                                    size_t len, void* data),
+                                       void* data) const
+{
+    char32_t* newStringData =
+        ALLOCA((length() + 1) * sizeof(char32_t), char32_t);
+    for (size_t i = 0; i < length(); i++) {
+        newStringData[i] = charAt(i);
+    }
+    newStringData[length()] = 0;
+
+    return cb(newStringData, length(), data);
+}
+
+size_t CSSTokenString::peekUTF8Buffer(size_t (*cb)(const char* buffer,
+                                                   size_t len, void* data),
+                                      void* data) const
+{
+    if (hasASCIIContent()) {
+        return peekASCIIBuffer(cb, data);
+    } else {
+        size_t utf8Len = 0;
+        for (size_t i = 0; i < length(); i++) {
+            char unused[8];
+            utf8Len += utf32ToUtf8(charAt(i), unused);
+        }
+
+        char* utf8Buffer = ALLOCA(utf8Len + 1, char);
+        size_t pos = 0;
+        for (size_t i = 0; i < length(); i++) {
+            pos += utf32ToUtf8(charAt(i), &utf8Buffer[pos]);
+        }
+        // We don't need to fill '\0' at end
+        // utf32ToUtf8 function already fills to end
+        return cb(utf8Buffer, utf8Len, data);
+    }
+}
+
 AtomicString CSSTokenString::toAtomicString(StarFish* sf)
 {
     if (hasASCIIContent()) {
@@ -847,7 +989,7 @@ String* CSSParser::determineNamespace(String* prefix)
         return String::emptyString; // No namespace. If an element/attribute has
                                     // a namespace, we won't match it.
     }
-    if (prefix->equals(String::fromUTF8("*"))) {
+    if (prefix->equals("*")) {
         return String::fromUTF8("*"); // We'll match any namespace.
     }
 
@@ -1481,12 +1623,11 @@ bool CSSParser::parseComplexSelectorList(
     return true;
 }
 
-String* CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
+CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
 {
     GCVector<RefPtr<CSSToken>> willBeConcat;
-    GCVector<String*> blocks;
+    GCVector<RefPtr<CSSToken>> blocks;
     // bool foundPriority = false;
-    GCVector<String*> values;
     bool isURLFunc = false;
     int urlTokens = 0;
     while (token->isNotNull()) {
@@ -1499,17 +1640,6 @@ String* CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
             break;
         }
         if (token->isIdent("inherit")) {
-            /*
-            if (values.size()) {
-                return;
-            } else {
-                valueText = String::createASCIIString("inherit");
-                // var value = new jscsspVariable(kJscsspINHERIT_VALUE, aSheet);
-                // values.push_back(value);
-                values.push_back(valueText);
-                token = getToken(true, true);
-                break;
-            }*/
             if (willBeConcat.size() > 0) {
                 return combineAndTrimTokenValues(willBeConcat);
             } else {
@@ -1521,34 +1651,37 @@ String* CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
                    token->isSymbol('[') || token->isFunction()) {
             if (token->isFunction() && token->value()->equals("url(")) {
-                blocks.push_back(token->value()->toString());
+                blocks.push_back(token);
                 isURLFunc = true;
             } else {
-                blocks.push_back(token->isFunction()
-                                     ? String::createASCIIString("(")
-                                     : token->value()->toString());
+                if (token->isFunction()) {
+                    blocks.push_back(CSSToken::createCharValueToken(
+                        this, CSSToken::SYMBOL_TYPE, '('));
+                } else {
+                    blocks.push_back(token);
+                }
             }
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
             if (blocks.size()) {
-                String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{")) ||
-                    (token->isSymbol(')') && ontop->equals("(")) ||
-                    (token->isSymbol(']') && ontop->equals("["))) {
+                RefPtr<CSSToken> ontop = blocks.back();
+                if ((token->isSymbol('}') && ontop->isSymbol('{')) ||
+                    (token->isSymbol(')') && ontop->isSymbol('(')) ||
+                    (token->isSymbol(']') && ontop->isSymbol('['))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') &&
-                           ontop->equalsWithoutCase("url(")) {
+                           ontop->value()->equalsWithoutCase("url(")) {
                     blocks.pop_back();
                     if (urlTokens > 2) {
-                        return String::emptyString;
+                        return CSSTokenString();
                     }
                     isURLFunc = false;
                     urlTokens = 0;
                 } else {
-                    return String::emptyString;
+                    return CSSTokenString();
                 }
             } else {
-                return String::emptyString;
+                return CSSTokenString();
             }
         }
 
@@ -1574,29 +1707,33 @@ String* CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
 }
 
 // Remove comments from both sides of a tokenList & Concat
-String* CSSParser::combineAndTrimTokenValues(
+CSSTokenString CSSParser::combineAndTrimTokenValues(
     const GCVector<RefPtr<CSSToken>>& list)
 {
-    StringBuilder result;
+    CSSTokenString result;
     for (RefPtr<CSSToken> item : list) {
-        result.appendString(item->value()->toString());
+        if (item->hasStringValue()) {
+            auto s = item->value();
+            for (size_t i = 0; i < s->length(); i++) {
+                result.appendChar(s->charAt(i));
+            }
+        }
     }
-    return result.finalize();
+    return result;
 }
 
 void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                                  CSSStyleDeclaration* declaration)
 {
     preserveState();
-    GCVector<String*> blocks;
+    GCVector<RefPtr<CSSToken>> blocks;
     if (aToken->isIdent()) {
         RefPtr<CSSToken> token = getToken(true, true);
         if (token->isSymbol(':')) {
             token = getToken(true, true);
-            String* value = String::emptyString;
-            value = parseDefaultPropertyValue(token);
+            CSSTokenString value = parseDefaultPropertyValue(token);
             token = currentToken();
-            if (value->length()) { // no error above
+            if (value.length()) { // no error above
                 bool priority = false;
                 if (token->isSymbol('!')) {
                     token = getToken(true, true);
@@ -1618,55 +1755,70 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                            !token->isSymbol('}')) {
                     return;
                 }
-                // use decls
-                /*
-                for (size_t i = 0; i < declarations.length; i++) {
-                  declarations[i].priority = priority;
-                  aDecl.push(declarations[i]);
-                }
-                return descriptor + ": " + value + ";";
-                */
 
-                String* descriptor = aToken->value()->toString();
-                struct Sender {
-                    bool priority;
-                    String* value;
-                    CSSStyleDeclaration* declaration;
-                } sender;
-                sender.value = value;
-                sender.priority = priority;
-                sender.declaration = declaration;
-                descriptor->peekUTF8Buffer(
-                    [](const char* buf, size_t len, void* data) -> size_t {
-                        String* value = ((Sender*)data)->value;
-                        bool priority = ((Sender*)data)->priority;
-                        CSSStyleDeclaration* declaration =
-                            ((Sender*)data)->declaration;
-                        char* name = ALLOCA(len, char);
-                        for (size_t i = 0; i < len; i++) {
-                            name[i] = tolower(buf[i]);
-                        }
-                        CSSStyleKind kind = lookupCSSStyle(name, len);
+                if (!aToken->value()->hasASCIIContent()) {
+                    STARFISH_LOG_ERROR(
+                        "unsupported property name(CSSParser) -> %s\n",
+                        aToken->value()
+                            ->toString()
+                            ->toUTF8NonGCString()
+                            .data());
+                } else {
+                    struct Sender {
+                        bool priority;
+                        CSSStyleKind kind;
+                        CSSTokenString* value;
+                        CSSStyleDeclaration* declaration;
+                    } sender;
+                    sender.value = &value;
+                    sender.priority = priority;
+                    sender.declaration = declaration;
+                    aToken->value()->peekASCIIBuffer(
+                        [](const char* buf, size_t len, void* data) -> size_t {
 
-                        if (false) {
-                        }
-#define SET_ATTR(name, nameLower, nameCSSCase)   \
-    else if (kind == CSSStyleKind::name)         \
-    {                                            \
-        declaration->set##name(value, priority); \
+                            // We can modify content of `buf`.
+                            // peekASCIIBuffer function allocates new buffer for
+                            // this function.
+                            char* name = (char*)buf;
+                            for (size_t i = 0; i < len; i++) {
+                                name[i] = tolower(name[i]);
+                            }
+                            ((Sender*)data)->kind = lookupCSSStyle(name, len);
+#ifndef NDEBUG
+                            if (((Sender*)data)->kind ==
+                                CSSStyleKind::Unknown) {
+                                STARFISH_LOG_ERROR(
+                                    "unsupported property name(CSSParser) -> "
+                                    "%s\n",
+                                    name);
+                            }
+#endif
+                            ((Sender*)data)
+                                ->value->peekUTF8Buffer(
+                                    [](const char* value, size_t len,
+                                       void* data) -> size_t {
+                                        bool priority =
+                                            ((Sender*)data)->priority;
+                                        CSSStyleDeclaration* declaration =
+                                            ((Sender*)data)->declaration;
+                                        CSSStyleKind kind =
+                                            ((Sender*)data)->kind;
+
+                                        if (false) {
+                                        }
+#define SET_ATTR(name, nameLower, nameCSSCase)        \
+    else if (kind == CSSStyleKind::name)              \
+    {                                                 \
+        declaration->set##name(value, len, priority); \
     }
-                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                        else
-                        {
-                            /*
-                            STARFISH_LOG_ERROR(
-                                "unsupported property name(CSSParser) -> %s\n",
-                                buf);
-                                */
-                        }
-                        return 0;
-                    },
-                    &sender);
+                                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                                        return 0;
+                                    },
+                                    data);
+                            return 0;
+                        },
+                        &sender);
+                }
                 return;
             }
         }
@@ -1699,23 +1851,26 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                    token->isSymbol('[') || token->isFunction()) {
             if (token->isFunction() &&
                 token->value()->equalsWithoutCase("url(")) {
-                blocks.push_back(token->value()->toString());
+                blocks.push_back(token);
                 isURLFunc = true;
             } else {
-                blocks.push_back(token->isFunction()
-                                     ? String::createASCIIString("(")
-                                     : token->value()->toString());
+                if (token->isFunction()) {
+                    blocks.push_back(CSSToken::createCharValueToken(
+                        this, CSSToken::SYMBOL_TYPE, '('));
+                } else {
+                    blocks.push_back(token);
+                }
             }
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
             if (blocks.size()) {
-                String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{")) ||
-                    (token->isSymbol(')') && ontop->equals("(")) ||
-                    (token->isSymbol(']') && ontop->equals("["))) {
+                RefPtr<CSSToken> ontop = blocks.back();
+                if ((token->isSymbol('}') && ontop->isSymbol('{')) ||
+                    (token->isSymbol(')') && ontop->isSymbol('(')) ||
+                    (token->isSymbol(']') && ontop->isSymbol('['))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') &&
-                           ontop->equalsWithoutCase("url(")) {
+                           ontop->value()->equalsWithoutCase("url(")) {
                     blocks.pop_back();
                     isURLFunc = false;
                 }
@@ -1819,23 +1974,26 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
 
 void CSSParser::addUnknownAtRule()
 {
-    GCVector<String*> blocks;
+    GCVector<RefPtr<CSSToken>> blocks;
     RefPtr<CSSToken> token = getToken(false, false);
     while (token->isNotNull()) {
         if (token->isSymbol(';') && !blocks.size()) {
             break;
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
                    token->isSymbol('[') || token->isFunction()) {
-            blocks.push_back(token->isFunction()
-                                 ? String::createASCIIString("(")
-                                 : token->value()->toString());
+            if (token->isFunction()) {
+                blocks.push_back(CSSToken::createCharValueToken(
+                    this, CSSToken::SYMBOL_TYPE, '('));
+            } else {
+                blocks.push_back(token);
+            }
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
             if (blocks.size()) {
-                String* ontop = blocks[blocks.size() - 1];
-                if ((token->isSymbol('}') && ontop->equals("{")) ||
-                    (token->isSymbol(')') && ontop->equals("(")) ||
-                    (token->isSymbol(']') && ontop->equals("["))) {
+                RefPtr<CSSToken> ontop = blocks.back();
+                if ((token->isSymbol('}') && ontop->isSymbol('{')) ||
+                    (token->isSymbol(')') && ontop->isSymbol('(')) ||
+                    (token->isSymbol(']') && ontop->isSymbol('['))) {
                     blocks.pop_back();
                     if (!blocks.size() && token->isSymbol('}')) {
                         break;
@@ -2677,13 +2835,13 @@ MediaQueryExp* MediaQueryExp::createIfValid(
 String* MediaQueryExp::serialize() const
 {
     String* result = String::emptyString;
-    result->concat(String::createASCIIString("("));
+    result->concat("(");
     result->concat(m_mediaFeature->toLower());
     if (m_expValue.isValid()) {
-        result->concat(String::createASCIIString(": "));
+        result->concat(": ");
         result->concat(m_expValue.cssText());
     }
-    result->concat(String::createASCIIString(")"));
+    result->concat(")");
 
     return result;
 }
@@ -2693,10 +2851,10 @@ String* MediaQueryExpValue::cssText() const
     String* output = String::emptyString;
     if (isValue) {
         output->concat(String::fromFloat(value));
-        output->concat(String::fromUTF8(unitTypeToString(unit)));
+        output->concat(unitTypeToString(unit));
     } else if (isRatio) {
         output->concat(String::fromFloat(numerator));
-        output->concat(String::createASCIIString("/"));
+        output->concat("/");
         output->concat(String::fromFloat(denominator));
     } else if (isID) {
         output->concat(id);

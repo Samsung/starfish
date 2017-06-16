@@ -848,8 +848,8 @@ public:
     CSSStyleValuePair()
         : m_keyKind(KeyKind::Empty)
         , m_valueKind(ValueKind::None)
-        , m_value(0.0f)
         , m_flagImportant(false)
+        , m_value(0.0f)
     {
     }
 
@@ -1283,8 +1283,8 @@ public:
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
         : m_valueKind(kind)
-        , m_value(value)
         , m_flagImportant(false)
+        , m_value(value)
     {
     }
 
@@ -1300,7 +1300,11 @@ public:
 
     String* toString() const;
 
-    void setLengthValue(const char* value);
+    void setLengthValue(const char* value)
+    {
+        setLengthValue(value, strlen(value));
+    }
+    void setLengthValue(const char* value, size_t len);
 
     void setLengthValue(CSSLength val)
     {
@@ -1320,7 +1324,7 @@ public:
         m_value.m_multiValue = val;
     }
 
-    void setValue(KeyKind kKind, const char* value)
+    void setValue(KeyKind kKind, const char* value, size_t len)
     {
         switch (kKind) {
         case Color: {
@@ -1332,7 +1336,7 @@ public:
         case MarginRight:
         case MarginBottom:
         case MarginLeft:
-            setLengthValue(value);
+            setLengthValue(value, len);
             break;
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1376,10 +1380,10 @@ public:
     bool updateValueUnitTransitionTime(String* value);
 
 protected:
-    KeyKind m_keyKind;
-    ValueKind m_valueKind;
+    KeyKind m_keyKind : 8;
+    ValueKind m_valueKind : 8;
+    bool m_flagImportant : 1;
     ValueData m_value;
-    bool m_flagImportant;
 };
 
 class ValueList : public GCVector<CSSStyleValuePair>, public gc {
@@ -1749,9 +1753,11 @@ public:
     void matchAllRules(
         Element* element, ComputedStyle* ret, ComputedStyle* parent,
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
-    Match matchSelector(Element* element, CSSSelctorList& selectorList,
-                        unsigned idx, MatchResult& result,
-                        bool isQueryingSelector = false);
+    Match matchSelector(Element* element, AtomicString elementName,
+                        AtomicString elementId,
+                        const GCVector<AtomicString>& elementClasses,
+                        const CSSSelctorList& selectorList, unsigned idx,
+                        MatchResult& result, bool isQueryingSelector = false);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
 
@@ -1760,12 +1766,18 @@ protected:
                ComputedStyle* style, ComputedStyle* parentStyle,
                bool isImportant = false);
 
-    Match matchForRelation(Element* element, CSSSelctorList& selectorList,
+    Match matchForRelation(Element* element, AtomicString elementName,
+                           AtomicString elementId,
+                           const GCVector<AtomicString>& elementClasses,
+                           const CSSSelctorList& selectorList,
                            CSSSelector::RelationType relation, unsigned idx,
                            MatchResult& result);
 
-    bool checkOne(Element* element, CSSSelector* selector, MatchResult& result,
-                  bool isQueryingSelector = false);
+    ALWAYS_INLINE bool checkOne(Element* element, AtomicString elementName,
+                                AtomicString elementId,
+                                const GCVector<AtomicString>& elementClasses,
+                                CSSSelector* selector, MatchResult& result,
+                                bool isQueryingSelector = false);
     bool checkPseudoClass(Element* element, CSSPseudoSelector* selector,
                           MatchResult& result);
     bool checkPseudoElement(Element* element, CSSPseudoSelector* selector,

@@ -629,6 +629,7 @@ public:
     {
         m_hasASCIIContent = true;
         m_length = 0;
+        m_externalString = nullptr;
     }
 
     CSSTokenString(const CSSTokenString& src)
@@ -644,7 +645,11 @@ public:
             m_builtInBuffer, src.m_builtInBuffer,
             sizeof(char32_t) *
                 std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
-        m_externalString = src.m_externalString;
+        if (src.m_externalString) {
+            m_externalString = new UTF32String(*src.m_externalString);
+        } else {
+            m_externalString = nullptr;
+        }
     }
 
     CSSTokenString(CSSTokenString&& src)
@@ -655,17 +660,18 @@ public:
             m_builtInBuffer, src.m_builtInBuffer,
             sizeof(char32_t) *
                 std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
-        m_externalString = std::move(src.m_externalString);
+        m_externalString = src.m_externalString;
 
         src.m_hasASCIIContent = true;
         src.m_length = 0;
+        src.m_externalString = nullptr;
     }
 
     void clear()
     {
         m_length = 0;
         m_hasASCIIContent = true;
-        m_externalString.clear();
+        m_externalString = nullptr;
     }
 
     void appendChar(char32_t ch)
@@ -676,62 +682,11 @@ public:
         if (m_length < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
             m_builtInBuffer[m_length++] = ch;
         } else {
-            m_externalString.pushBack(ch);
+            if (!m_externalString)
+                m_externalString = new UTF32String();
+            m_externalString->pushBack(ch);
             m_length++;
         }
-    }
-
-    bool equals(const char* src) const
-    {
-        size_t len = strlen(src);
-        if (len != m_length) {
-            return false;
-        }
-        for (size_t i = 0; i < len; i++) {
-            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
-                if (m_builtInBuffer[i] != (char32_t)src[i])
-                    return false;
-            } else {
-                if (m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] !=
-                    (char32_t)src[i]) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    bool equalsWithoutCase(const char* src) const
-    {
-        size_t len = strlen(src);
-
-#ifndef NDEBUG
-        for (size_t i = 0; i < len; i++) {
-            if ('A' <= src[i] && src[i] <= 'Z') {
-                STARFISH_ASSERT_NOT_REACHED();
-            }
-        }
-#endif
-
-        if (len != m_length) {
-            return false;
-        }
-
-        for (size_t i = 0; i < len; i++) {
-            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
-                if (::tolower(m_builtInBuffer[i]) != src[i])
-                    return false;
-            } else {
-                if (::tolower(
-                        m_externalString[i -
-                                         CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]) !=
-                    src[i]) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     size_t indexOf(const char32_t& ch)
@@ -759,23 +714,13 @@ public:
         if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
             return m_builtInBuffer[i];
         } else {
-            return m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
+            return (*m_externalString)[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
         }
     }
 
-    void toLower()
+    bool hasASCIIContent() const
     {
-        size_t len = length();
-        for (size_t i = 0; i < len; i++) {
-            if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
-                m_builtInBuffer[i] = ::tolower(m_builtInBuffer[i]);
-            } else {
-                m_externalString[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE] =
-                    ::tolower(
-                        m_externalString[i -
-                                         CSSTOKENSTRING_BUILTIN_BUFFER_SIZE]);
-            }
-        }
+        return m_hasASCIIContent;
     }
 
     void appendOther(const CSSTokenString& src)
@@ -785,62 +730,19 @@ public:
         }
     }
 
-    String* toString() const
-    {
-        if (m_hasASCIIContent) {
-            TightASCIIString newStringData;
-            newStringData.resize(length());
-
-            for (size_t i = 0; i < length(); i++) {
-                newStringData[i] = (char)charAt(i);
-            }
-
-            return new StringDataASCII(std::move(newStringData));
-        } else {
-            TightUTF32String newStringData;
-            newStringData.resize(length());
-
-            for (size_t i = 0; i < length(); i++) {
-                newStringData[i] = charAt(i);
-            }
-
-            return new StringDataUTF32(std::move(newStringData));
-        }
-    }
-
-    bool hasASCIIContent() const
-    {
-        return m_hasASCIIContent;
-    }
-
+    bool equals(const char* src) const;
+    bool equalsWithoutCase(const char* src) const;
+    void toLower();
+    String* toString() const;
     size_t peekASCIIBuffer(size_t (*cb)(const char* buffer, size_t len,
                                         void* data),
-                           void* data) const
-    {
-        STARFISH_ASSERT(hasASCIIContent());
-        char* newStringData = ALLOCA(length() + 1, char);
-        for (size_t i = 0; i < length(); i++) {
-            newStringData[i] = (char)charAt(i);
-        }
-        newStringData[length()] = 0;
-
-        return cb(newStringData, length(), data);
-    }
-
+                           void* data) const;
     size_t peekUTF32Buffer(size_t (*cb)(const char32_t* buffer, size_t len,
                                         void* data),
-                           void* data) const
-    {
-        char32_t* newStringData =
-            ALLOCA((length() + 1) * sizeof(char32_t), char32_t);
-        for (size_t i = 0; i < length(); i++) {
-            newStringData[i] = charAt(i);
-        }
-        newStringData[length()] = 0;
-
-        return cb(newStringData, length(), data);
-    }
-
+                           void* data) const;
+    size_t peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
+                                       void* data),
+                          void* data) const;
     AtomicString toAtomicString(StarFish* sf);
     AtomicString toAttrAtomicString(StarFish* sf);
 
@@ -848,7 +750,7 @@ protected:
     bool m_hasASCIIContent;
     size_t m_length;
     char32_t m_builtInBuffer[CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
-    UTF32String m_externalString;
+    UTF32String* m_externalString;
 };
 
 class CSSToken : public RefCounted<CSSToken>, public gc {
@@ -1308,13 +1210,13 @@ protected:
     CSSSelector::AttributeMatchType getAttributeFlags();
     String* getStringWithoutQuotationMarks(const CSSTokenString& value);
 
-    String* parseDefaultPropertyValue(RefPtr<CSSToken> token);
+    CSSTokenString parseDefaultPropertyValue(RefPtr<CSSToken> token);
     void parseDeclaration(RefPtr<CSSToken> aToken,
                           CSSStyleDeclaration* declaration);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
-    static String* combineAndTrimTokenValues(
+    static CSSTokenString combineAndTrimTokenValues(
         const GCVector<RefPtr<CSSToken>>& list);
     bool m_preserveWS;
     bool m_preserveComments;
