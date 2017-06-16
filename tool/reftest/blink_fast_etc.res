@@ -1,4 +1,4 @@
-http://52.79.162.207/xmlhttprequest-recursive-sync-event.html
+http://10.113.64.74:7000/xmlhttprequest-recursive-sync-event.html
 test/reftest/vendor/blink/fast/animation/request-animation-frame-callback-id.html
 test/reftest/vendor/blink/fast/backgrounds/obscured-background-child-style-change.html
 test/reftest/vendor/blink/fast/backgrounds/root-background-display-none-no-crash.html
