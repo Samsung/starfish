@@ -21,7 +21,7 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #include <locations.h>
 #include <Elementary.h>

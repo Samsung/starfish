@@ -174,10 +174,7 @@ public:
         return m_styleResolver;
     }
 
-    ScriptBindingInstance* scriptBindingInstance()
-    {
-        return m_scriptBindingInstance;
-    }
+    ScriptBindingInstance* scriptBindingInstance();
 
     HTMLHtmlElement* rootElement();
     HTMLHeadElement* head();

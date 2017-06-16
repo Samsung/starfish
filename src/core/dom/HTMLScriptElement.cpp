@@ -21,9 +21,9 @@
 #include "core/dom/Text.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/modules/window/Window.h"
 #include "platform/loader/ElementResourceClient.h"
 
 namespace StarFish {

@@ -20,7 +20,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/Event.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

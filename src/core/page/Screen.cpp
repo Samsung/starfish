@@ -17,7 +17,6 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/page/Screen.h"
-#include "core/modules/window/Window.h"
 #include "platform/public/ScreenInfo.h"
 
 namespace StarFish {

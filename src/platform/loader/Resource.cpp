@@ -21,7 +21,7 @@
 #include "platform/loader/ResourceLoader.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

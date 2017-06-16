@@ -24,14 +24,17 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/canvas/image/ImageData.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
+#include "platform/window/PlatformWindow.h"
 
 #include <malloc.h>
 #ifdef PORT_GRAPHIC_BACKEND_EFL
@@ -276,7 +279,7 @@ StarFish::~StarFish()
     delete m_inspector;
 #endif
     delete m_lineBreaker;
-    delete m_window;
+    delete m_platformWindow;
 }
 
 void StarFish::run()
@@ -289,7 +292,7 @@ void StarFish::enter()
     if (m_enterCount == 0) {
 #ifdef PORT_GRAPHIC_BACKEND_EFL
         g_internalCanvas =
-            evas_object_evas_get((Evas_Object*)m_window->unwrap());
+            evas_object_evas_get((Evas_Object*)m_platformWindow->unwrap());
 #endif
     }
     m_enterCount++;
@@ -354,23 +357,25 @@ void StarFish::loadHTMLDocument(String* filePath)
                              &height);
 #endif
 
-    m_window = Window::create(this, nativeHandle(), width, height);
+    m_platformWindow = PlatformWindow::create(this, nativeHandle(), width, height);
     ResourceURL* url =
         new ResourceURL(String::emptyString, String::fromUTF8(path.c_str()));
 
-    m_window->navigate(url);
+    WebView* webView = WebView::create(this);
+    m_platformWindow->setWebView(webView);
+    webView->mainBrowsingContext()->navigate(url);
 }
 
 void StarFish::resume()
 {
     StarFishEnterer enter(this);
-    m_window->resume();
+    m_platformWindow->resume();
 }
 
 void StarFish::pause()
 {
     StarFishEnterer enter(this);
-    m_window->pause();
+    m_platformWindow->pause();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
@@ -379,14 +384,14 @@ void StarFish::pause()
 
 void StarFish::close()
 {
-    m_window->close();
+    m_platformWindow->close();
 }
 
 String* StarFish::evaluate(String* s)
 {
     return toBrowserString(
-        m_window->scriptBindingInstance(),
-        evaluateString(m_window->scriptBindingInstance(), s));
+        m_platformWindow->webView()->mainBrowsingContext()->scriptBindingInstance(),
+        evaluateString(m_platformWindow->webView()->mainBrowsingContext()->scriptBindingInstance(), s));
 }
 
 void StarFish::addPointerInRootSet(void* ptr)

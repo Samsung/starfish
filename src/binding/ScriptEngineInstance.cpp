@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/ScriptEngineInstance.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include <EscargotPublic.h>

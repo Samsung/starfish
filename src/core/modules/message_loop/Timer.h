@@ -27,11 +27,13 @@ class TimerWrapper : public gc {
 
 public:
     TimerWrapper(StarFish* sf);
-    size_t addTimer(double delay, WindowSetTimeoutHandler handler, void* data,
+    size_t addTimer(double delay, Window* window,
+                    WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
     void removeTimer(size_t reqID);
 
-    size_t addAnimator(WindowSetTimeoutHandler handler, void* data);
+    size_t addAnimator(Window* window, WindowSetTimeoutHandler handler,
+                       void* data);
     size_t addAnimator(GenericAnimationHandler handler, void* data);
     void removeWindowAnimator(size_t reqID);
     void removeGenericAnimator(size_t reqID);

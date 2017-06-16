@@ -24,7 +24,7 @@
 
 namespace StarFish {
 class Node;
-class Window;
+class PlatformWindow;
 
 enum TransitionTimingFunction {
     Ease,      // cubic-bezier(0, 0, 1, 1)
@@ -191,7 +191,7 @@ public:
 
 class AnimationExecutor : public gc {
 public:
-    AnimationExecutor(Window* window)
+    AnimationExecutor(PlatformWindow* window)
         : m_isAlive(false)
         , m_platformAnimator(0)
     {
@@ -203,7 +203,7 @@ public:
         return m_isAlive;
     }
 
-    Window* window()
+    PlatformWindow* window()
     {
         return m_window;
     }
@@ -218,7 +218,7 @@ public:
     void step();
 
 private:
-    Window* m_window;
+    PlatformWindow* m_window;
     bool m_isAlive;
     size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;

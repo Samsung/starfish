@@ -15,6 +15,13 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/style/CSSRule.h"
+
+#include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"

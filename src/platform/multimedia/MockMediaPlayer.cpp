@@ -20,13 +20,17 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
+#include "core/page/BrowsingContext.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource//SourceBuffer.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/MockMediaPlayer.h"
-#include "core/modules/window/Window.h"
+#include "platform/window/PlatformWindow.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/util/URL.h"
 
 namespace StarFish {
@@ -102,7 +106,7 @@ void MockMediaPlayer::play()
     if (!m_inPlaying) {
         m_inPlaying = true;
         m_starFish->addPointerInRootSet(this);
-        m_currentTimeUpdateTimer = m_starFish->window()->setInterval(
+        m_currentTimeUpdateTimer = window()->setInterval(
             [](Window* window, void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
 
@@ -165,7 +169,7 @@ void MockMediaPlayer::pause()
     if (m_inPlaying) {
         m_inPlaying = false;
         m_starFish->removePointerFromRootSet(this);
-        m_starFish->window()->clearInterval(m_currentTimeUpdateTimer);
+        window()->clearInterval(m_currentTimeUpdateTimer);
         m_currentTimeUpdateTimer = SIZE_MAX;
     }
 }

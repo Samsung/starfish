@@ -20,7 +20,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

@@ -20,7 +20,7 @@
 namespace StarFish {
 
 class ImageData;
-class Window;
+class PlatformWindow;
 
 class CanvasSurface : public gc {
 protected:
@@ -29,7 +29,7 @@ protected:
     }
 
 public:
-    static CanvasSurface* create(Window* window, size_t w, size_t h);
+    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
     virtual void* unwrap() = 0;
     virtual void resize(size_t w, size_t h) = 0;
     virtual size_t width() = 0;

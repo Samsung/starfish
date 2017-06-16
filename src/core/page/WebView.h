@@ -14,28 +14,31 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishXMLDocument__
-#define __StarFishXMLDocument__
+#ifndef __StarFishPage__
+#define __StarFishPage__
 
-#include "core/dom/Document.h"
+#include "StarFishConfig.h"
 
 namespace StarFish {
 
-class URL;
+class Document;
+class BrowsingContext;
+class StorageNamespaceProvider;
 
-class XMLDocument : public Document {
+class WebView : public gc {
 public:
-    XMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance,
-                ResourceURL* uri, String* charSet,
-                bool doesParticipateInRendering)
-        : Document(window, scriptBindingInstance, uri, charSet,
-                   doesParticipateInRendering)
+    static WebView* create(StarFish* starFish);
+
+    BrowsingContext* mainBrowsingContext()
     {
+        return m_mainBrowsingContext;
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isXMLDocument() const override;
+private:
+    WebView(StarFish* starFish);
+
+    BrowsingContext* m_mainBrowsingContext;
+    StorageNamespaceProvider* m_storageNamespaceProvider;
 };
 }
 

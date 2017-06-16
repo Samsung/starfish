@@ -19,7 +19,10 @@
 #include "core/dom/Document.h"
 #include "core/page/Location.h"
 #include "core/util/URL.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
+#include "WebView.h"
 
 namespace StarFish {
 
@@ -113,7 +116,11 @@ void Location::setHash(String* search)
 
 void Location::setLocation(String* newURL)
 {
-    document()->window()->navigateAsync(
-        new ResourceURL(newURL, document()->documentURI()->urlString()));
+    starFish()
+        ->platformWindow()
+        ->webView()
+        ->mainBrowsingContext()
+        ->navigateAsync(
+            new ResourceURL(newURL, document()->documentURI()->urlString()));
 }
 }

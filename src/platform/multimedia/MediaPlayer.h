@@ -28,6 +28,7 @@ class Canvas;
 class MediaSource;
 class StarFish;
 class URL;
+class Window;
 
 class MediaPlayer : public gc {
 public:
@@ -105,6 +106,8 @@ public:
     }
 
     virtual void prepareMediaSource() = 0;
+
+    virtual Window* window();
 
 protected:
     MediaPlayer(HTMLMediaElement* element);

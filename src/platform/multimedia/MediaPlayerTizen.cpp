@@ -24,7 +24,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/threading/Thread.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 #define PLAYER_DEBUG
 #ifdef PLAYER_DEBUG

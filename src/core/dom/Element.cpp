@@ -33,7 +33,8 @@
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
@@ -225,7 +226,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 
 LayoutRect Element::clientRect()
 {
-    window()->layoutIfNeeds();
+    window()->browsingContext()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();

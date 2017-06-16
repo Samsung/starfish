@@ -15,13 +15,16 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/HTMLLinkElement.h"
+
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/dom/HTMLLinkElement.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
@@ -157,7 +160,9 @@ public:
             CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
             m_element->m_generatedSheet = sheet;
             m_element->document()->styleResolver().addSheet(sheet);
-            m_element->window()->setWholeDocumentNeedsStyleRecalc();
+            m_element->window()
+                ->browsingContext()
+                ->setWholeDocumentNeedsStyleRecalc();
         }
 
         m_element->m_styleSheetTextResource = nullptr;
@@ -196,7 +201,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        window()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
 }
@@ -225,11 +230,11 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
 void HTMLLinkElement::willStyleSheetLoad()
 {
     STARFISH_ASSERT(isInDocumentScopeAndDocumentParticipateInRendering());
-    window()->markHasPendingStyleSheet();
+    window()->browsingContext()->markHasPendingStyleSheet();
 }
 
 void HTMLLinkElement::didStyleSheetLoadComplete()
 {
-    window()->unmarkHasPendingStyleSheet();
+    window()->browsingContext()->unmarkHasPendingStyleSheet();
 }
 }

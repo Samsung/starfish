@@ -22,7 +22,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/style/CSSStyleLookupTrie.h"
 
 #include <EscargotPublic.h>

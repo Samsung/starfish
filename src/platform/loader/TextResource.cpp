@@ -18,7 +18,7 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "platform/loader/TextResource.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

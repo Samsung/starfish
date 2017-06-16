@@ -21,7 +21,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/NamedNodeMap.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

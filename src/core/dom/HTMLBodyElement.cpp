@@ -18,7 +18,8 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 
 namespace StarFish {
@@ -42,9 +43,9 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (!newStyle->backgroundColor().isTransparent() ||
         !newStyle->backgroundImage()->equals(String::emptyString)) {
-        window()->m_hasBodyElementBackground = true;
+        window()->browsingContext()->m_hasBodyElementBackground = true;
     } else {
-        window()->m_hasBodyElementBackground = false;
+        window()->browsingContext()->m_hasBodyElementBackground = false;
     }
 
     if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {

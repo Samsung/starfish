@@ -15,6 +15,9 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/style/Style.h"
+
 #include "StarFish.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
@@ -26,7 +29,7 @@
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
@@ -34,6 +37,7 @@
 #include "core/style/NamedColors.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -4536,7 +4540,11 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             applyTransition(element, element->style(), style);
         } else {
             // TODO: temporal code
-            element->window()->animationExecutor()->cancelAnimation(element);
+            element->window()
+                ->starFish()
+                ->platformWindow()
+                ->animationExecutor()
+                ->cancelAnimation(element);
         }
         element->setStyle(style);
         element->clearNeedsStyleRecalc();

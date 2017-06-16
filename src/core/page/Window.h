@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 #ifndef __StarFishWindow__
 #define __StarFishWindow__
 
@@ -21,21 +20,18 @@
 
 namespace StarFish {
 
-class AnimationExecutor;
-class Canvas;
-class CanvasSurface;
+class BrowsingContext;
 class Document;
 class History;
 class HTMLCollection;
 class Location;
 class Navigator;
+class WebView;
 class ScriptBindingInstance;
-class StarFish;
-class StackingContext;
 class StorageNamespace;
 class ResourceURL;
 class WebApis;
-class Window;
+class PlatformWindow;
 class Screen;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
@@ -43,82 +39,24 @@ typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 class Window : public EventTarget {
     friend class MessageLoop;
     friend class Timer;
-    friend class HTMLHtmlElement;
-    friend class HTMLBodyElement;
-    friend class HTMLLinkElement;
     friend class Node;
     friend class StyleRuleImport;
 
 public:
-    static Window* create(StarFish* sf, void* win, int width, int height);
-    ~Window();
-
-    void navigate(ResourceURL* url);
-    void navigateAsync(ResourceURL* url);
-    void initStorage(ResourceURL* url);
+    static Window* create(StarFish* starfish, BrowsingContext* browsingContext,
+                          ResourceURL* url);
+    virtual ~Window()
+    {
+    }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
     virtual bool isWindow() const;
+    void deleteScriptBindingInstance();
+    void close();
 
-    bool inRendering()
-    {
-        return m_inRendering;
-    }
-
-    void setNeedsStyleRecalc()
-    {
-        if (!m_needsStyleRecalc) {
-            m_needsStyleRecalc = true;
-            setNeedsRendering();
-        }
-    }
-
-    void setWholeDocumentNeedsStyleRecalc();
-
-    void setNeedsFrameTreeBuild()
-    {
-        if (!m_needsFrameTreeBuild) {
-            m_needsFrameTreeBuild = true;
-            setNeedsRendering();
-        }
-        setNeedsLayout();
-    }
-
-    void setNeedsLayout()
-    {
-        if (!m_needsLayout) {
-            m_needsLayout = true;
-            setNeedsRendering();
-        }
-        setNeedsPainting();
-    }
-
-    void setNeedsPainting()
-    {
-        if (!m_needsPainting) {
-            m_needsPainting = true;
-            setNeedsRendering();
-        }
-    }
-
-    void setNeedsComposite()
-    {
-        if (!m_needsComposite) {
-            m_needsComposite = true;
-            setNeedsRendering();
-        }
-    }
-
-    void renderingIfNeeds()
-    {
-        if (m_needsRendering) {
-            rendering();
-            m_needsRendering = false;
-        }
-    }
-
+    // IDL methods
     Document* document()
     {
 #ifdef STARFISH_TC_COVERAGE
@@ -144,13 +82,27 @@ public:
 
     Screen* screen();
 
-    AnimationExecutor* animationExecutor()
-    {
-        return m_animationExecutor;
-    }
-
     Storage* localStorage();
     Storage* sessionStorage();
+
+    uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
+    void cancelAnimationFrame(int32_t reqID);
+
+    uint32_t setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
+                        void* data);
+    void clearTimeout(int32_t id);
+    uint32_t setInterval(WindowSetTimeoutHandler handler, int32_t delay,
+                         void* data);
+    void clearInterval(int32_t id);
+
+    // Other methods
+
+    void initStorage(ResourceURL* url);
+
+    BrowsingContext* browsingContext()
+    {
+        return m_browsingContext;
+    }
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* Webapis()
@@ -169,87 +121,20 @@ public:
         return m_scriptBindingInstance;
     }
 
-    uint32_t setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
-                        void* data);
-    void clearTimeout(int32_t id);
-    uint32_t setInterval(WindowSetTimeoutHandler handler, int32_t delay,
-                         void* data);
-    void clearInterval(int32_t id);
-
-    uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
-    void cancelAnimationFrame(int32_t reqID);
-
-    enum TouchEventKind {
-        TouchEventStart,
-        TouchEventMove,
-        TouchEventEnd,
-        TouchEventCancel
-    };
-    void dispatchTouchEvent(float x, float y, TouchEventKind kind,
-                            bool isMobile);
-
-    enum KeyEventKind { KeyEventDown, KeyEventUp };
-    void dispatchKeyEvent(String* key, KeyEventKind kind);
-
-    Node* hitTest(float x, float y);
-
-    enum MouseEventKind {
-        MouseEventDown,
-        MouseEventMove,
-        MouseEventUp,
-        MouseEventEnter,
-        MouseEventOut
-    };
-    void dispatchMouseEvent(float x, float y, MouseEventKind kind);
-
-    void setActiveNode(Node* n);
-    void releaseActiveNode();
-
-    void setFocusedNode(Node* n);
-    void releaseFocusedNode();
-
-    void setHoveredNode(Node* n);
-    void releaseHoveredNode();
-
     void processUrlFragment(String* name);
     void setCSSTarget(Node* n);
     void releaseCSSTarget();
 
-    void pause();
-    void resume();
-    void close();
-
-    bool hasRootElementBackground()
-    {
-        return m_hasRootElementBackground;
-    }
-
-    bool hasBodyElementBackground()
-    {
-        return m_hasBodyElementBackground;
-    }
-
     CSSStyleDeclaration* getComputedStyle(Element* element);
     CSSStyleDeclaration* getComputedStyle(Element* element, String* pseudoElt);
 
-    virtual int32_t width() = 0;
-    virtual int32_t height() = 0;
-    virtual void resizeTo(int w, int h) = 0;
-    virtual void* unwrap() = 0;
-    virtual void clearResources() = 0;
-    virtual Canvas* preparePainting(bool forPainting) = 0;
-
     // The viewport width and height are same as the window size for wearable
     // widget.
-    int32_t innerWidth()
-    {
-        return width();
-    }
+    int32_t innerWidth();
+    int32_t innerHeight();
 
-    int32_t innerHeight()
-    {
-        return height();
-    }
+    int32_t width();
+    int32_t height();
 
     float devicePixelRatio();
 
@@ -268,8 +153,6 @@ public:
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
-
-    void layoutIfNeeds();
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
@@ -365,68 +248,27 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-protected:
-    void setNeedsRendering()
-    {
-        if (m_needsRendering) {
-            return;
-        }
-        setNeedsRenderingSlowCase();
-    }
+private:
     void initFlags();
-    void setNeedsRenderingSlowCase();
-    Window(StarFish* starFish);
-
-    void rendering();
-    void clearStackingContext(bool backupBuffer);
-    void paintWindowBackground(Canvas* canvas);
-
-    void markHasPendingStyleSheet();
-    void unmarkHasPendingStyleSheet();
-
-    bool m_inRendering;
-    bool m_needsRendering;
-    bool m_needsStyleRecalc;
-    bool m_needsStyleRecalcForWholeDocument;
-    bool m_needsFrameTreeBuild;
-    bool m_needsLayout;
-    bool m_needsPainting;
-    bool m_needsComposite;
-    bool m_hasRootElementBackground;
-    bool m_hasBodyElementBackground;
-    bool m_isRunning;
-    bool m_isActive;
-
-    size_t m_pendingStyleSheetCount;
-    size_t m_pendingRenderingCount;
-    uint64_t m_lastRenderingTime;
+    Window(StarFish* starFish, BrowsingContext* browsingContext,
+           ResourceURL* url);
+    Window();
 
     StarFish* m_starFish;
+    BrowsingContext* m_browsingContext;
     ScriptBindingInstance* m_scriptBindingInstance;
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;
     Screen* m_screen;
-    AnimationExecutor* m_animationExecutor;
+
     StorageNamespace* m_localStorageNamespace;
     StorageNamespace* m_sessionStorageNamespace;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;
 #endif
-    StackingContext* m_rootStackingContext;
-    GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
 
-    Node* m_focusedNode;
-    Node* m_relatedTarget;
     Node* m_cssTarget;
-    Unit::Location m_touchDownPoint;
-    int m_ctrlKeyDown;
-    int m_shiftKeyDown;
-    int m_altKeyDown;
-    int m_metaKeyDown;
-
-    GCVector<Node*> m_activeNodes;
-    GCVector<Node*> m_hoveredNodes;
 };
 }
 

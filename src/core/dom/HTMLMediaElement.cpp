@@ -34,7 +34,7 @@
 #include "core/util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 

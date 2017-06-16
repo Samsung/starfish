@@ -15,16 +15,19 @@
  */
 
 #include "StarFishConfig.h"
+
+#include "core/dom/HTMLStyleElement.h"
+
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
-#include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/window/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -140,7 +143,7 @@ void HTMLStyleElement::generateStyleSheet()
         CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
         m_generatedSheet = sheet;
         document()->styleResolver().addSheet(sheet);
-        window()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
     }
 }
 
@@ -148,7 +151,7 @@ void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        window()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
 }
