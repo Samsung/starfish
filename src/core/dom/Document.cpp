@@ -86,7 +86,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::BlockDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -99,7 +99,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::NoneDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -112,7 +112,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::NoneDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -125,7 +125,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::NoneDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -138,7 +138,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::NoneDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -173,7 +173,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("8px");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -186,7 +186,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::BlockDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -210,7 +210,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("1em");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -237,7 +237,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("1em");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -250,7 +250,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::InlineDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -263,7 +263,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::InlineDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -324,7 +324,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -344,7 +344,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -364,7 +364,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -384,7 +384,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -404,7 +404,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -455,7 +455,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("1px");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -494,7 +494,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("1px");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -513,7 +513,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -526,7 +526,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableColumnDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -539,7 +539,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableColumnGroupDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -584,7 +584,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -629,7 +629,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -674,7 +674,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -714,7 +714,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -759,7 +759,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -804,7 +804,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -843,7 +843,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("40px");
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -857,7 +857,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -877,7 +877,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     {
@@ -890,7 +890,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::NoneDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
+        userAgentStyleSheet->addStyleRule(std::make_pair(rule, m_documentURI));
     }
 
     m_styleResolver.addSheet(userAgentStyleSheet);

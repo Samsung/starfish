@@ -144,8 +144,8 @@ void BrowsingContext::layoutIfNeeds()
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
 
             uaSheet->parseSheetIfneeds();
-            uaSheet->collectRulesForSheet(uaSheet->allRules());
-            uaSheet->sortRulesBySpecificity();
+            uaSheet->collectStyleRules(uaSheet->allRules(), uaSheet->url());
+            uaSheet->sortStyleRulesBySpecificity();
 
             document()->styleResolver().removeAllRules();
 
@@ -159,16 +159,22 @@ void BrowsingContext::layoutIfNeeds()
                 if (authorSheet->ownerRule()) {
                     authorSheet->collectRulesForImportedSheet();
                 } else {
-                    authorSheet->collectRulesForSheet(authorSheet->allRules());
+                    authorSheet->collectStyleRules(authorSheet->allRules(),
+                                                   authorSheet->url());
                 }
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {
-                    document()->styleResolver().allRules()->addRule(
-                        authorSheet->rules()[j]);
+                    document()
+                        ->styleResolver()
+                        .styleSheetWithStyleRules()
+                        ->addStyleRule(authorSheet->rules()[j]);
                 }
             }
-            document()->styleResolver().allRules()->sortRulesBySpecificity();
+            document()
+                ->styleResolver()
+                .styleSheetWithStyleRules()
+                ->sortStyleRulesBySpecificity();
         }
 
 // resolve style

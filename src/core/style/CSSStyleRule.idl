@@ -7,7 +7,7 @@ interface CSSStyleRule : CSSRule {
 
 // https://drafts.csswg.org/cssom/#the-cssimportrule-interface
 interface CSSImportRule : CSSRule {
-  [Unimplemented] readonly attribute USVString href;
+  readonly attribute USVString href;
   [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
   [Unimplemented, SameObject] readonly attribute CSSStyleSheet styleSheet;
 };

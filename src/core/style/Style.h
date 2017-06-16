@@ -1682,7 +1682,7 @@ protected:
     } m_nth;
 };
 
-using Declarations = GCVector<CSSStyleDeclaration*>;
+using Declarations = GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>>;
 
 class CSSStyleSheet;
 class StyleResolver : public DocumentHoldable {
@@ -1728,13 +1728,13 @@ public:
         return m_sheets;
     }
 
-    CSSStyleSheet* allRules();
+    CSSStyleSheet* styleSheetWithStyleRules();
     void removeAllRules()
     {
-        if (!m_allRules) {
+        if (!m_styleSheetWithAllRules) {
             return;
         }
-        m_allRules = nullptr;
+        m_styleSheetWithAllRules = nullptr;
     }
 
     bool usesFirstLineRule()
@@ -1763,8 +1763,8 @@ public:
 
 protected:
     void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
-               ComputedStyle* style, ComputedStyle* parentStyle,
-               bool isImportant = false);
+               ResourceURL* origin, ComputedStyle* style,
+               ComputedStyle* parentStyle, bool isImportant = false);
 
     Match matchForRelation(Element* element, AtomicString elementName,
                            AtomicString elementId,
@@ -1791,7 +1791,7 @@ protected:
 
     float m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
-    CSSStyleSheet* m_allRules;
+    CSSStyleSheet* m_styleSheetWithAllRules;
     bool m_usesFirstLineRule;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
 };

@@ -51,7 +51,7 @@ public:
     virtual bool isCSSStyleSheet() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    void addRule(StyleRule* rule);
+    void addStyleRule(std::pair<StyleRule*, ResourceURL*> rule);
     void addRule(StyleRuleBase* rule);
 
     ResourceURL* url();
@@ -62,10 +62,10 @@ public:
 
     void parseSheetIfneeds();
 
-    GCVector<StyleRule*>& rules()
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& rules()
     {
         STARFISH_ASSERT(m_sourceString == String::emptyString);
-        return m_rules;
+        return m_styleRules;
     }
 
     GCVector<StyleRuleBase*>& allRules()
@@ -86,12 +86,12 @@ public:
 
     CSSStyleSheet* parentStyleSheet();
 
-    void sortRulesBySpecificity();
+    void sortStyleRulesBySpecificity();
 
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres);
     void collectRulesForImportedSheet();
-    void collectRulesForSheet(GCVector<StyleRuleBase*>& rules);
+    void collectStyleRules(GCVector<StyleRuleBase*>& rules, ResourceURL* url);
 
     /* DOM APIs */
     String* type() const override
@@ -115,7 +115,7 @@ protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;
-    GCVector<StyleRule*> m_rules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<StyleRuleBase*> m_allRules;
     Node* m_origin;
     GCVector<StyleRuleImport*> m_importRules;

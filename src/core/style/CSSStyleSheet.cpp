@@ -63,9 +63,9 @@ ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
     return origin()->scriptBindingInstance();
 }
 
-void CSSStyleSheet::addRule(StyleRule* rule)
+void CSSStyleSheet::addStyleRule(std::pair<StyleRule*, ResourceURL*> rule)
 {
-    m_rules.push_back(rule);
+    m_styleRules.push_back(rule);
 }
 
 void CSSStyleSheet::addRule(StyleRuleBase* rule)
@@ -148,9 +148,11 @@ static unsigned specificity(CSSSelctorList& selectorList)
     return total;
 }
 
-static bool compareSpecificity(StyleRule* r1, StyleRule* r2)
+static bool compareSpecificity(std::pair<StyleRule*, ResourceURL*> r1,
+                               std::pair<StyleRule*, ResourceURL*> r2)
 {
-    return specificity(r1->selectorList()) < specificity(r2->selectorList());
+    return specificity(r1.first->selectorList()) <
+           specificity(r2.first->selectorList());
 }
 
 CSSStyleSheet* CSSStyleSheet::parentStyleSheet()
@@ -158,9 +160,10 @@ CSSStyleSheet* CSSStyleSheet::parentStyleSheet()
     return m_ownerRule ? m_ownerRule->parentStyleSheet() : nullptr;
 }
 
-void CSSStyleSheet::sortRulesBySpecificity()
+void CSSStyleSheet::sortStyleRulesBySpecificity()
 {
-    std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
+    std::stable_sort(m_styleRules.begin(), m_styleRules.end(),
+                     compareSpecificity);
 }
 
 bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
@@ -180,23 +183,24 @@ void CSSStyleSheet::collectRulesForImportedSheet()
     if (matchesMediaQueries(
             origin()->document()->styleResolver().mediaQueryEvaluator(),
             importRule->mediaQuerySet())) {
-        collectRulesForSheet(allRules());
+        collectStyleRules(allRules(), importRule->styleSheet()->url());
     }
 }
 
-void CSSStyleSheet::collectRulesForSheet(GCVector<StyleRuleBase*>& rules)
+void CSSStyleSheet::collectStyleRules(GCVector<StyleRuleBase*>& rules,
+                                      ResourceURL* url)
 {
     auto resolver = origin()->document()->styleResolver();
     auto iter = rules.begin();
     while (iter != rules.end()) {
         if ((*iter)->isStyleRule()) {
-            m_rules.push_back((StyleRule*)(*iter));
+            m_styleRules.push_back(std::make_pair((StyleRule*)(*iter), url));
         } else if ((*iter)->isMediaRule()) {
             StyleRuleMedia* media = (StyleRuleMedia*)(*iter);
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
             if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
-                collectRulesForSheet(media->childRules());
+                collectStyleRules(media->childRules(), url);
             }
         }
         iter++;
