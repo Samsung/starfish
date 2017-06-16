@@ -56,11 +56,6 @@ public:
 
     bool isEmptyAtomicString();
 
-    bool operator==(const AtomicString& src) const
-    {
-        return m_string == src.m_string;
-    }
-
     String* string() const
     {
         return m_string;

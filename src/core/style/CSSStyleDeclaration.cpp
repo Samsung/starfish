@@ -65,26 +65,27 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
-#define DEFINE_ATTRIBUTE_SETTER(name, ...)                               \
-    void CSSStyleDeclaration::set##name(String* value, bool isImportant) \
-    {                                                                    \
-        if (value->length() == 0) {                                      \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);        \
-            return;                                                      \
-        }                                                                \
-        GCVector<String*> tokens;                                        \
-        if (CSSStyleValuePair::KeyKind::name ==                          \
-            CSSStyleValuePair::KeyKind::Content) {                       \
-            tokenizeCSSValue(&tokens, value, String::emptyString, true); \
-        } else {                                                         \
-            tokenizeCSSValue(&tokens, value, String::fromUTF8(","));     \
-        }                                                                \
-        CSSStyleValuePair ret;                                           \
-        if (ret.updateValueCommon(&tokens) ||                            \
-            ret.updateValue##name(&tokens)) {                            \
-            ret.setFlagImportant(isImportant);                           \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);      \
-        }                                                                \
+#define DEFINE_ATTRIBUTE_SETTER(name, ...)                             \
+    void CSSStyleDeclaration::set##name(const char* value, size_t len, \
+                                        bool isImportant)              \
+    {                                                                  \
+        if (len == 0) {                                                \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);      \
+            return;                                                    \
+        }                                                              \
+        GCVector<String*> tokens;                                      \
+        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==               \
+                     CSSStyleValuePair::KeyKind::Content)) {           \
+            tokenizeCSSValue(&tokens, value, len, "", 0, true);        \
+        } else {                                                       \
+            tokenizeCSSValue(&tokens, value, len, ",", 1);             \
+        }                                                              \
+        CSSStyleValuePair ret;                                         \
+        if (ret.updateValueCommon(&tokens) ||                          \
+            ret.updateValue##name(&tokens)) {                          \
+            ret.setFlagImportant(isImportant);                         \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);    \
+        }                                                              \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_SETTER)
@@ -168,8 +169,8 @@ String* CSSStyleDeclaration::item(uint32_t index)
 
 String* CSSStyleDeclaration::getPropertyValue(String* name)
 {
-    const char* c = name->utf8Data();
-    CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+    auto str = name->toNullableUTF8String();
+    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     String* val = String::emptyString;
     switch (kind) {
 #define MATCH_KEY(Name, ...) \
@@ -188,29 +189,45 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
                                       String* prior)
 {
     bool isImportant = false;
-    String* lower = prior->toLower();
-    if (lower->length() > 0) {
-        if (lower->equals(String::fromUTF8("important"))) {
+    if (prior->length() > 0) {
+        if (prior->equalsWithoutCase("important")) {
             isImportant = true;
         } else {
             return;
         }
     }
 
-    const char* c = name->utf8Data();
-    CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
-    if (kind == CSSStyleKind::Unknown) {
-    } else {
-        if (false) {
-        }
-#define SET_ATTR(name, nameLower, nameCSSCase) \
-    else if (kind == CSSStyleKind::name)       \
-    {                                          \
-        set##name(value, isImportant);         \
+    auto str = name->toNullableUTF8String();
+    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+
+    struct Sender {
+        CSSStyleDeclaration* self;
+        CSSStyleKind kind;
+        bool isImportant;
+    } sender;
+    sender.self = this;
+    sender.kind = kind;
+    sender.isImportant = isImportant;
+    value->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            CSSStyleKind kind = ((Sender*)data)->kind;
+            CSSStyleDeclaration* self = ((Sender*)data)->self;
+            bool isImportant = ((Sender*)data)->isImportant;
+            if (kind == CSSStyleKind::Unknown) {
+            } else {
+                if (false) {
+                }
+#define SET_ATTR(name, nameLower, nameCSSCase)  \
+    else if (kind == CSSStyleKind::name)        \
+    {                                           \
+        self->set##name(buf, len, isImportant); \
     }
-        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
-    }
+            }
+            return 0;
+        },
+        &sender);
 }
 
 String* CSSStyleDeclaration::cssText() const
@@ -220,17 +237,16 @@ String* CSSStyleDeclaration::cssText() const
 
 void CSSStyleDeclaration::setCssText(String* text)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
 {
-    const char* nameData = name->utf8Data();
-    size_t nameLength = name->contentLength();
+    auto str = name->toNullableUTF8String();
+    CSSStyleKind kind = lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
 
-    CSSStyleKind kind = lookupCSSStyleCamelCase(nameData, nameLength);
     if (kind == CSSStyleKind::Unknown) {
-        kind = lookupCSSStyle(nameData, nameLength);
+        kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     }
     if (kind == CSSStyleKind::Unknown) {
         return Nullable<String*>();
@@ -257,12 +273,11 @@ void CSSStyleDeclaration::defaultNamedEnumerator(
 
 void CSSStyleDeclaration::defaultSetter(String* name, Nullable<String*> value)
 {
-    const char* nameData = name->utf8Data();
-    size_t nameLength = name->contentLength();
+    auto str = name->toNullableUTF8String();
+    CSSStyleKind kind = lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
 
-    CSSStyleKind kind = lookupCSSStyleCamelCase(nameData, nameLength);
     if (kind == CSSStyleKind::Unknown) {
-        kind = lookupCSSStyle(nameData, nameLength);
+        kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     }
     if (kind == CSSStyleKind::Unknown) {
         return;
@@ -272,15 +287,29 @@ void CSSStyleDeclaration::defaultSetter(String* name, Nullable<String*> value)
     if (value.hasValue()) {
         valueTo = value.getValue();
     }
-    if (false) {
+
+    struct Sender {
+        CSSStyleDeclaration* self;
+        CSSStyleKind kind;
+    } sender;
+    sender.self = this;
+    sender.kind = kind;
+
+    valueTo->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            CSSStyleKind kind = ((Sender*)data)->kind;
+            CSSStyleDeclaration* self = ((Sender*)data)->self;
+            if (false) {
+            }
+#define SET_ATTR(name, ...)               \
+    else if (kind == CSSStyleKind::name)  \
+    {                                     \
+        self->set##name(buf, len, false); \
     }
-#define SET_ATTR(name, ...)              \
-    else if (kind == CSSStyleKind::name) \
-    {                                    \
-        set##name(valueTo, false);       \
-        return;                          \
-    }
-    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
+            return 0;
+        },
+        &sender);
 }
 }

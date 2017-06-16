@@ -65,8 +65,9 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(GCVector<String*>* tokens, String* src,
-                          String* seperator = String::emptyString,
+    void tokenizeCSSValue(GCVector<String*>* tokens, const char* src,
+                          size_t len, const char* seperator = "",
+                          size_t seperatorCount = 0,
                           bool isCaseSensitive = false);
 
     String* Border();
@@ -88,24 +89,24 @@ public:
 
     void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
 
-    void setBorder(String* value, bool isImportant);
-    void setBorderTop(String* value, bool isImportant);
-    void setBorderRight(String* value, bool isImportant);
-    void setBorderBottom(String* value, bool isImportant);
-    void setBorderLeft(String* value, bool isImportant);
-    void setBackground(String* value, bool isImportant);
-    void setBackgroundRepeat(String* value, bool isImportant);
-    void setBackgroundPosition(String* value, bool isImportant);
-    void setMargin(String* value, bool isImportant);
-    void setPadding(String* value, bool isImportant);
-    void setBorderWidth(String* value, bool isImportant);
-    void setBorderStyle(String* value, bool isImportant);
-    void setBorderColor(String* value, bool isImportant);
-    void setFont(String* value, bool isImportant);
-    void setTransition(String* value, bool isImportant);
+    void setBorder(const char* value, size_t len, bool isImportant);
+    void setBorderTop(const char* value, size_t len, bool isImportant);
+    void setBorderRight(const char* value, size_t len, bool isImportant);
+    void setBorderBottom(const char* value, size_t len, bool isImportant);
+    void setBorderLeft(const char* value, size_t len, bool isImportant);
+    void setBackground(const char* value, size_t len, bool isImportant);
+    void setBackgroundRepeat(const char* value, size_t len, bool isImportant);
+    void setBackgroundPosition(const char* value, size_t len, bool isImportant);
+    void setMargin(const char* value, size_t len, bool isImportant);
+    void setPadding(const char* value, size_t len, bool isImportant);
+    void setBorderWidth(const char* value, size_t len, bool isImportant);
+    void setBorderStyle(const char* value, size_t len, bool isImportant);
+    void setBorderColor(const char* value, size_t len, bool isImportant);
+    void setFont(const char* value, size_t len, bool isImportant);
+    void setTransition(const char* value, size_t len, bool isImportant);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
-    void set##name(String* value, bool isImportant);
+    void set##name(const char* value, size_t len, bool isImportant);
     FOR_EACH_STYLE_ATTRIBUTE(DECLARE_ATTRIBUTE_SETTER)
 #undef DECLARE_ATTRIBUTE_SETTER
 

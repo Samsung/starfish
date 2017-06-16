@@ -1354,6 +1354,8 @@ private:
     void (SegmentedString::*m_advanceFunc)();
     void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
 };
+
+size_t utf32ToUtf8(char32_t uc, char* UTF8);
 }
 
 namespace std {

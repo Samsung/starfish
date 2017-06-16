@@ -208,7 +208,8 @@ public:
 
     bool hasClassName(AtomicString className)
     {
-        for (unsigned i = 0; i < m_classNames.size(); i++) {
+        size_t len = m_classNames.size();
+        for (unsigned i = 0; i < len; i++) {
             if (className == m_classNames[i]) {
                 return true;
             }
