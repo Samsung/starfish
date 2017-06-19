@@ -28,6 +28,7 @@
 
 #if defined(PORT_GRAPHIC_BACKEND_DALI)
 #include <dali-toolkit/dali-toolkit.h>
+#include "platform/window/PlatformWindow.h"
 #endif
 
 #include <Elementary.h>
@@ -212,13 +213,14 @@ public:
             if (pointState == Dali::PointState::DOWN) {
                 StarFishEnterer enter(m_sf);
                 const Vector2& screen = data.GetScreenPosition(0);
-                m_sf->window()->dispatchMouseEvent(
-                    screen.x, screen.y, StarFish::Window::MouseEventDown);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    screen.x, screen.y,
+                    StarFish::PlatformWindow::MouseEventDown);
             } else if (pointState == Dali::PointState::UP) {
                 StarFishEnterer enter(m_sf);
                 const Vector2& screen = data.GetScreenPosition(0);
-                m_sf->window()->dispatchMouseEvent(
-                    screen.x, screen.y, StarFish::Window::MouseEventUp);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    screen.x, screen.y, StarFish::PlatformWindow::MouseEventUp);
             }
             // sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
         }

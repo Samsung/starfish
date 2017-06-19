@@ -20,6 +20,11 @@
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/page/Window.h"
+#include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
+#include "platform/window/PlatformWindow.h"
+
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
 
@@ -46,6 +51,7 @@ public:
     Dali::Timer m_native_timer;
     void* m_data;
     GenericAnimationHandler m_handler;
+    // Window* m_window;
 
     bool AnimationTick()
     {
@@ -74,13 +80,14 @@ public:
     Dali::Timer m_native_timer;
     void* m_data;
     WindowSetTimeoutHandler m_handler;
+    Window* m_window;
 
     bool OnceTick()
     {
         StarFishEnterer enter(m_timer->m_starFish);
         TimerWrapper* timer = m_timer;
         int32_t id = m_id;
-        m_handler(m_timer->m_starFish->window(), m_data);
+        m_handler(m_window, m_data);
         auto iter = m_timer->m_timeoutHandler.find(id);
         if (iter != m_timer->m_timeoutHandler.end()) {
             m_timer->m_timeoutHandler.erase(iter);
@@ -93,7 +100,7 @@ public:
     {
         StarFishEnterer enter(m_timer->m_starFish);
         auto a = m_timer->m_timeoutHandler.find(m_id);
-        m_handler(m_timer->m_starFish->window(), m_data);
+        m_handler(m_window, m_data);
         return true;
     }
 
@@ -101,7 +108,7 @@ public:
     {
         StarFishEnterer enter(m_timer->m_starFish);
         auto a = m_timer->m_requestAnimationFrameHandler.find(m_id);
-        m_handler(m_timer->m_starFish->window(), m_data);
+        m_handler(m_window, m_data);
         a = m_timer->m_requestAnimationFrameHandler.find(m_id);
         if (m_timer->m_requestAnimationFrameHandler.end() != a) {
             m_timer->m_requestAnimationFrameHandler.erase(a);
@@ -111,8 +118,9 @@ public:
     }
 };
 
-size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
-                              void* data, bool repetitive)
+size_t TimerWrapper::addTimer(double delay, Window* window,
+                              WindowSetTimeoutHandler handler, void* data,
+                              bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -122,6 +130,7 @@ size_t TimerWrapper::addTimer(double delay, WindowSetTimeoutHandler handler,
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
+    td->m_window = window;
     td->m_native_timer = Dali::Timer::New(delay / 1000.0);
     if (repetitive) {
         td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnTick);
@@ -145,13 +154,15 @@ void TimerWrapper::removeTimer(size_t reqID)
     }
 }
 
-size_t TimerWrapper::addAnimator(WindowSetTimeoutHandler handler, void* data)
+size_t TimerWrapper::addAnimator(Window* window,
+                                 WindowSetTimeoutHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     TimeoutData* td = new (NoGC) TimeoutData();
     td->m_timer = this;
     int32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
+    td->m_window = window;
     td->m_data = data;
     td->m_handler = handler;
     td->m_native_timer = Dali::Timer::New(0);
@@ -168,6 +179,7 @@ size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
     ad->m_timer = this;
     int32_t id = ++m_AnimationCounter;
     ad->m_data = data;
+    // ad->m_window = window;
     ad->m_handler = handler;
     ad->m_native_timer = Dali::Timer::New(0);
     ad->m_native_timer.TickSignal().Connect(ad,

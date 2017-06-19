@@ -25,7 +25,11 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
+
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "platform/window/PlatformWindow.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -41,10 +45,10 @@ struct IdlerData {
     void* m_data;
 };
 
-class WindowImplDALI : public Window {
+class WindowImplDALI : public PlatformWindow {
 public:
     WindowImplDALI(StarFish* sf)
-        : Window(sf)
+        : PlatformWindow(sf)
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
@@ -112,7 +116,7 @@ public:
 
 class CanvasSurfaceDALI : public CanvasSurface {
 public:
-    CanvasSurfaceDALI(Window* wnd, size_t w, size_t h)
+    CanvasSurfaceDALI(PlatformWindow* wnd, size_t w, size_t h)
     {
         m_width = w;
         m_height = h;
@@ -168,7 +172,7 @@ protected:
     size_t m_height;
 };
 
-CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 {
     return new CanvasSurfaceDALI(wnd, w, h);
 }
@@ -180,12 +184,14 @@ CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
 //         [](void* user_data) -> Eina_Bool {
 //             WindowImplDALI* wnd = (WindowImplDALI*)user_data;
 //             wnd->setNeedsLayout();
+//             wnd->webView()->mainBrowsingContext()->setNeedsLayout();
 //             return ECORE_CALLBACK_CANCEL;
 //         },
 //         user_data);
 // }
 
-Window* Window::create(StarFish* sf, void* win, int width, int height)
+PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
+                                       int height)
 {
     auto wnd = new WindowImplDALI(sf);
     wnd->m_starFish = sf;
@@ -206,33 +212,33 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     return wnd;
 }
 
-Window::~Window()
+PlatformWindow::~PlatformWindow()
 {
-    STARFISH_LOG_INFO("Window::~Window\n");
+    STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
     if (m_animationExecutor->isAlive()) {
         m_animationExecutor->stopIfNeeds();
     }
 }
 
-void Window::setNeedsRenderingSlowCase()
+void BrowsingContext::setNeedsRenderingSlowCase()
 {
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
 
     IdlerData* id = new (NoGC) IdlerData;
     id->m_fn = [](void* data) -> void {
-        Window* wnd = (Window*)data;
+        PlatformWindow* wnd = (PlatformWindow*)data;
         wnd->rendering();
     };
-    id->m_data = this;
+    id->m_data = starFish()->platformWindow();
 
-    ((WindowImplDALI*)this)->m_renderingIdlerData = id;
-    ((WindowImplDALI*)this)->m_renderingAnimator =
+    ((WindowImplDALI*)id->m_data)->m_renderingIdlerData = id;
+    ((WindowImplDALI*)id->m_data)->m_renderingAnimator =
         starFish()->messageLoop()->addIdler(
             [](size_t handle, void* data) {
                 IdlerData* id = (IdlerData*)data;
-                Window* wnd = (Window*)id->m_data;
-                StarFishEnterer enter(wnd->m_starFish);
+                PlatformWindow* wnd = (PlatformWindow*)id->m_data;
+                StarFishEnterer enter(wnd->starFish());
                 id->m_fn(id->m_data);
                 ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
                 ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
@@ -287,7 +293,8 @@ void WindowImplDALI::clearResources()
         GC_FREE(m_renderingIdlerData);
     }
 
-    clearStackingContext(false);
+    // clearStackingContext(false);
+    webView()->mainBrowsingContext()->clearStackingContext(false);
 }
 }
 #endif
