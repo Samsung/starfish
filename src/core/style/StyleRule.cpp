@@ -45,14 +45,14 @@ StyleRuleImport* StyleRuleBase::asStyleRuleImport()
     return (StyleRuleImport*)this;
 }
 
-CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parent_sheet) const
+CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet) const
 {
-    return createCSSOMWrapper(parent_sheet, 0);
+    return createCSSOMWrapper(parentSheet, 0);
 }
 
-CSSRule* StyleRuleBase::createCSSOMWrapper(CSSRule* parent_rule) const
+CSSRule* StyleRuleBase::createCSSOMWrapper(CSSRule* parentRule) const
 {
-    return createCSSOMWrapper(0, parent_rule);
+    return createCSSOMWrapper(0, parentRule);
 }
 
 CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
