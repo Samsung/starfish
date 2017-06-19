@@ -137,6 +137,78 @@ char kLexTable[] = {
 };
 constexpr size_t kLexTableSize = sizeof kLexTable / sizeof(int);
 
+const char* unitTypeToString(UnitType type)
+{
+    switch (type) {
+    case UnitType::Number:
+    case UnitType::Integer:
+    case UnitType::UserUnits:
+        return "";
+    case UnitType::Percentage:
+        return "%";
+    case UnitType::Ems:
+        return "em";
+    case UnitType::Exs:
+        return "ex";
+    case UnitType::Rems:
+        return "rem";
+    case UnitType::Chs:
+        return "ch";
+    case UnitType::Pixels:
+        return "px";
+    case UnitType::Centimeters:
+        return "cm";
+    case UnitType::DotsPerPixel:
+        return "dppx";
+    case UnitType::DotsPerInch:
+        return "dpi";
+    case UnitType::DotsPerCentimeter:
+        return "dpcm";
+    case UnitType::Millimeters:
+        return "mm";
+    case UnitType::Inches:
+        return "in";
+    case UnitType::Points:
+        return "pt";
+    case UnitType::Picas:
+        return "pc";
+    case UnitType::Degrees:
+        return "deg";
+    case UnitType::Radians:
+        return "rad";
+    case UnitType::Gradians:
+        return "grad";
+    case UnitType::Milliseconds:
+        return "ms";
+    case UnitType::Seconds:
+        return "s";
+    case UnitType::Hertz:
+        return "hz";
+    case UnitType::Kilohertz:
+        return "khz";
+    case UnitType::Turns:
+        return "turn";
+    case UnitType::Fraction:
+        return "fr";
+    case UnitType::ViewportWidth:
+        return "vw";
+    case UnitType::ViewportHeight:
+        return "vh";
+    case UnitType::ViewportMin:
+        return "vmin";
+    case UnitType::ViewportMax:
+        return "vmax";
+    case UnitType::UnknownType:
+    case UnitType::ValueID:
+    case UnitType::Calc:
+    case UnitType::CalcPercentageWithNumber:
+    case UnitType::CalcPercentageWithLength:
+        break;
+    };
+    STARFISH_ASSERT_NOT_REACHED();
+    return "";
+}
+
 class CSSParser;
 
 bool CSSTokenString::equals(const char* src) const
@@ -2136,25 +2208,34 @@ String* CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, false);
 
-    String* url = String::emptyString;
+    CSSTokenString urlSource;
     if (token->isString()) {
-        String* str = token->value()->toString();
-        if (str->charAt(0) != str->charAt(str->length() - 1)) {
+        if (token->value()->charAt(0) !=
+            token->value()->charAt(token->value()->length() - 1)) {
             return String::emptyString;
         }
-        url = String::createASCIIString("url(");
-        url = url->concat(str);
-        url = url->concat(String::createASCIIString(")"));
+        urlSource.appendChar('u');
+        urlSource.appendChar('r');
+        urlSource.appendChar('l');
+        urlSource.appendChar('(');
+        urlSource.appendOther(*token->value());
+        urlSource.appendChar(')');
     } else if (token->isFunction() && token->value()->equals("url(")) {
-        url = token->value()->toString();
-        url = url->concat(getToken(true, false)->value()->toString());
-        url = url->concat(getToken(true, false)->value()->toString());
+        urlSource = *token->value();
+        urlSource.appendOther(*getToken(true, false)->value());
+        urlSource.appendOther(*getToken(true, false)->value());
     } else {
         return String::emptyString;
     }
 
     String* ret = String::emptyString;
-    CSSPropertyParser::parseUrl(url, &(ret));
+    urlSource.peekUTF8Buffer(
+        [](const char* str, size_t len, void* data) -> size_t {
+            String* ret = (String*)data;
+            CSSPropertyParser::parseUrl(str, &(ret));
+            return 0;
+        },
+        ret);
     return ret;
 }
 

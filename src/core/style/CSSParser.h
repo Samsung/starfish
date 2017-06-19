@@ -60,85 +60,31 @@ inline bool isQuote(CharType c)
     return false;
 }
 
-static const char* unitTypeToString(UnitType type)
-{
-    switch (type) {
-    case UnitType::Number:
-    case UnitType::Integer:
-    case UnitType::UserUnits:
-        return "";
-    case UnitType::Percentage:
-        return "%";
-    case UnitType::Ems:
-        return "em";
-    case UnitType::Exs:
-        return "ex";
-    case UnitType::Rems:
-        return "rem";
-    case UnitType::Chs:
-        return "ch";
-    case UnitType::Pixels:
-        return "px";
-    case UnitType::Centimeters:
-        return "cm";
-    case UnitType::DotsPerPixel:
-        return "dppx";
-    case UnitType::DotsPerInch:
-        return "dpi";
-    case UnitType::DotsPerCentimeter:
-        return "dpcm";
-    case UnitType::Millimeters:
-        return "mm";
-    case UnitType::Inches:
-        return "in";
-    case UnitType::Points:
-        return "pt";
-    case UnitType::Picas:
-        return "pc";
-    case UnitType::Degrees:
-        return "deg";
-    case UnitType::Radians:
-        return "rad";
-    case UnitType::Gradians:
-        return "grad";
-    case UnitType::Milliseconds:
-        return "ms";
-    case UnitType::Seconds:
-        return "s";
-    case UnitType::Hertz:
-        return "hz";
-    case UnitType::Kilohertz:
-        return "khz";
-    case UnitType::Turns:
-        return "turn";
-    case UnitType::Fraction:
-        return "fr";
-    case UnitType::ViewportWidth:
-        return "vw";
-    case UnitType::ViewportHeight:
-        return "vh";
-    case UnitType::ViewportMin:
-        return "vmin";
-    case UnitType::ViewportMax:
-        return "vmax";
-    case UnitType::UnknownType:
-    case UnitType::ValueID:
-    case UnitType::Calc:
-    case UnitType::CalcPercentageWithNumber:
-    case UnitType::CalcPercentageWithLength:
-        break;
-    };
-    STARFISH_ASSERT_NOT_REACHED();
-    return "";
-}
+const char* unitTypeToString(UnitType type);
 
-class CSSPropertyParser : public gc {
+class CSSPropertyParser {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
     CSSPropertyParser(char* value)
         : m_startPos(value)
         , m_endPos(value + strlen(value))
         , m_curPos(value)
     {
+        m_parsedNumber = 0;
+        m_parsedInt32 = 0;
+        m_parsedString = String::emptyString;
+        m_parsedUrl = String::emptyString;
+    }
+
+    CSSPropertyParser(char* value, size_t len)
+        : m_startPos(value)
+        , m_endPos(value + len)
+        , m_curPos(value)
+    {
+        m_parsedNumber = 0;
+        m_parsedInt32 = 0;
+        m_parsedString = String::emptyString;
+        m_parsedUrl = String::emptyString;
     }
 
     static bool isLengthUnit(String* str)
@@ -347,15 +293,14 @@ public:
         return (m_curPos == m_endPos);
     }
 
-    static bool parseUrl(String* token, String** ret)
+    static bool parseUrl(const char* token, String** ret)
     {
-        CSSPropertyParser* parser =
-            new CSSPropertyParser((char*)token->utf8Data());
-        if (parser->consumeString()) {
-            String* name = parser->parsedString();
-            if (name->equals("url") && parser->consumeIfNext('(')) {
-                if (parser->consumeUrl() && parser->isEnd()) {
-                    *ret = parser->parsedUrl();
+        CSSPropertyParser parser((char*)token);
+        if (parser.consumeString()) {
+            String* name = parser.parsedString();
+            if (name->equals("url") && parser.consumeIfNext('(')) {
+                if (parser.consumeUrl() && parser.isEnd()) {
+                    *ret = parser.parsedUrl();
                     return true;
                 }
             }
@@ -365,47 +310,47 @@ public:
 
     static bool parseNumber(const char* token, bool allowNegative, float* val)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (parser->consumeNumber()) {
-            float t = parser->parsedNumber();
+        CSSPropertyParser parser((char*)token);
+        if (parser.consumeNumber()) {
+            float t = parser.parsedNumber();
             if (!allowNegative && t < 0) {
                 return false;
             }
             *val = t;
-            return parser->isEnd();
+            return parser.isEnd();
         }
         return false;
     }
 
     static bool parseInt32(const char* token, bool allowNegative, int32_t* val)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (parser->consumeInt32()) {
-            int32_t t = parser->parsedInt32();
+        CSSPropertyParser parser((char*)token);
+        if (parser.consumeInt32()) {
+            int32_t t = parser.parsedInt32();
             if (!allowNegative && t < 0) {
                 return false;
             }
             *val = t;
-            return parser->isEnd();
+            return parser.isEnd();
         }
         return false;
     }
     static bool parseLength(const char* token, bool allowNegative,
                             CSSLength* ret)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber()) {
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
             return false;
         }
-        float num = parser->parsedNumber();
+        float num = parser.parsedNumber();
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser->consumeString();
-        String* str = parser->parsedString();
+        parser.consumeString();
+        String* str = parser.parsedString();
         if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
             *ret = CSSLength(str, num);
-            return parser->isEnd();
+            return parser.isEnd();
         }
         return false;
     }
@@ -413,65 +358,65 @@ public:
     static bool parseLengthOrPercent(const char* token, bool allowNegative,
                                      CSSStyleValuePair* pair)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber()) {
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
             return false;
         }
-        float num = parser->parsedNumber();
+        float num = parser.parsedNumber();
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser->consumeString();
-        String* str = parser->parsedString();
+        parser.consumeString();
+        String* str = parser.parsedString();
         if (str->equals("%")) {
             pair->setPercentageValue(num / 100.f);
-            return parser->isEnd();
+            return parser.isEnd();
         } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
             pair->setLengthValue(CSSLength(str, num));
-            return parser->isEnd();
+            return parser.isEnd();
         }
         return false;
     }
 
     static bool parseTime(const char* token, bool allowNegative, CSSTime* ret)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber()) {
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
             return false;
         }
-        float num = parser->parsedNumber();
+        float num = parser.parsedNumber();
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser->consumeString();
-        String* str = parser->parsedString();
+        parser.consumeString();
+        String* str = parser.parsedString();
 
         if (str->equalsWithoutCase("s") ||
             str->equalsWithoutCase(String::emptyString)) {
             *ret = CSSTime(CSSTime::Kind::S, num);
-            return parser->isEnd();
+            return parser.isEnd();
         } else if (str->equalsWithoutCase("ms")) {
             *ret = CSSTime(CSSTime::Kind::MS, num);
-            return parser->isEnd();
+            return parser.isEnd();
         }
         return false;
     }
 
-    static bool parseColorFunctionPart(String* s, bool isAlpha,
+    static bool parseColorFunctionPart(const CSSTokenValue& s, bool isAlpha,
                                        unsigned char* ret, bool* isPercent)
     {
-        const char* piece = s->trim()->utf8Data();
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)piece);
+        auto ss = s.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
 
         bool hasPoint = false;
-        parser->consumeWhitespaces();
-        if (!parser->consumeNumber(&hasPoint)) {
+        parser.consumeWhitespaces();
+        if (!parser.consumeNumber(&hasPoint)) {
             return false;
         }
 
-        float number = parser->parsedNumber();
+        float number = parser.parsedNumber();
         bool percent = false;
-        if (parser->consumeIfNext('%')) {
+        if (parser.consumeIfNext('%')) {
             percent = true;
         }
 
@@ -480,8 +425,8 @@ public:
             return false;
         }
 
-        parser->consumeWhitespaces();
-        if (!parser->isEnd()) {
+        parser.consumeWhitespaces();
+        if (!parser.isEnd()) {
             return false;
         }
 
@@ -504,22 +449,22 @@ public:
         return true;
     }
 
-    static bool parseNonNamedColor(String* str, Unit::Color* ret)
+    static bool parseNonNamedColor(const CSSTokenValue& str, Unit::Color* ret)
     {
-        bool maybeRGBA = str->startsWith("rgba(");
-        bool maybeRGB = str->startsWith("rgb(");
-        bool maybeCode = str->startsWith("#");
+        bool maybeRGBA = str.startsWith("rgba(");
+        bool maybeRGB = str.startsWith("rgb(");
+        bool maybeCode = str.startsWith("#");
 
         if (maybeRGBA || maybeRGB) {
-            size_t s1 = str->indexOf('(');
-            size_t s2 = str->indexOf(')');
-            if (s1 == SIZE_MAX || s2 != str->length() - 1 || s1 >= s2) {
+            size_t s1 = str.indexOf('(');
+            size_t s2 = str.indexOf(')');
+            if (s1 == SIZE_MAX || s2 != str.length() - 1 || s1 >= s2) {
                 return false;
             }
 
-            String* sub = str->substring(s1 + 1, s2 - s1 - 1);
-            GCVector<String*> v;
-            sub->split(',', v);
+            CSSTokenValue sub = str.substring(s1 + 1, s2 - s1 - 1);
+            std::vector<CSSTokenValue> v;
+            sub.split(',', v);
             size_t size = v.size();
             if (!(maybeRGBA && size == 4) && !(maybeRGB && size == 3)) {
                 return false;
@@ -541,8 +486,8 @@ public:
             *ret = Unit::Color(parsed[0], parsed[1], parsed[2],
                                maybeRGBA ? parsed[3] : 255);
         } else if (maybeCode) {
-            const char* s = str->utf8Data();
-            const unsigned len = strlen(s);
+            const char* s = str.data();
+            const unsigned len = str.length();
             if (!(len == 7 || len == 4)) {
                 return false;
             }
@@ -562,7 +507,7 @@ public:
                 sscanf(s, "#%01x%01x%01x", &r, &g, &b);
                 *ret = Unit::Color(r * 17, g * 17, b * 17, 255);
             }
-        } else if (str->equals("transparent")) {
+        } else if (str.equals("transparent")) {
             *ret = Unit::Color(0, 0, 0, 0);
         } else {
             return false;
@@ -570,36 +515,34 @@ public:
         return true;
     }
 
-    static bool parseNamedColor(String* str, NamedColor::NamedColorValue* ret)
+    static bool parseNamedColor(const CSSTokenValue& str,
+                                NamedColor::NamedColorValue* ret)
     {
-        if (str->equals(String::fromUTF8("currentcolor"))) {
+        if (str.equals("currentcolor")) {
             *ret = NamedColor::NamedColorValue::currentColor;
             return true;
         }
-        return NamedColor::parseNamedColor(str->utf8Data(), str->length(),
-                                           *ret);
+        return NamedColor::parseNamedColor(str.data(), str.length(), *ret);
     }
 
-    static bool parseContentString(String* str, String** ret)
+    static bool parseContentString(const char* str, size_t len, String** ret)
     {
-        CSSPropertyParser* parser =
-            new CSSPropertyParser((char*)str->utf8Data());
-        if (parser->consumeContentString()) {
-            *ret = parser->parsedString();
+        CSSPropertyParser parser((char*)str, len);
+        if (parser.consumeContentString()) {
+            *ret = parser.parsedString();
             return true;
         }
         return false;
     }
 
-    static bool parseAttr(String* str, String** ret)
+    static bool parseAttr(const char* str, size_t len, String** ret)
     {
-        CSSPropertyParser* parser =
-            new CSSPropertyParser((char*)str->utf8Data());
-        if (parser->consumeString()) {
-            String* name = parser->parsedString();
-            if (name->equals("attr") && parser->consumeIfNext('(')) {
-                if (parser->consumeAttr() && parser->isEnd()) {
-                    *ret = parser->parsedString();
+        CSSPropertyParser parser((char*)str, len);
+        if (parser.consumeString()) {
+            String* name = parser.parsedString();
+            if (name->equals("attr") && parser.consumeIfNext('(')) {
+                if (parser.consumeAttr() && parser.isEnd()) {
+                    *ret = parser.parsedString();
                     return true;
                 }
             }

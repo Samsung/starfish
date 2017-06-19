@@ -50,7 +50,8 @@ bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
 
     if (color && (!color->equals(String::emptyString))) {
         CSSStyleValuePair pair;
-        if (pair.updateValueUnitColor(color)) {
+        auto utf8Str = color->toNullableUTF8String();
+        if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
             switch (pair.valueKind()) {
             case CSSStyleValuePair::ValueKind::ColorValueKind:
                 *ret = pair.colorValue();

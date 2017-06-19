@@ -54,6 +54,8 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
+// #define STARFISH_ENABLE_TIMER
+
 namespace StarFish {
 
 BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)

@@ -65,27 +65,26 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
-#define DEFINE_ATTRIBUTE_SETTER(name, ...)                             \
-    void CSSStyleDeclaration::set##name(const char* value, size_t len, \
-                                        bool isImportant)              \
-    {                                                                  \
-        if (len == 0) {                                                \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);      \
-            return;                                                    \
-        }                                                              \
-        GCVector<String*> tokens;                                      \
-        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==               \
-                     CSSStyleValuePair::KeyKind::Content)) {           \
-            tokenizeCSSValue(&tokens, value, len, "", 0, true);        \
-        } else {                                                       \
-            tokenizeCSSValue(&tokens, value, len, ",", 1);             \
-        }                                                              \
-        CSSStyleValuePair ret;                                         \
-        if (ret.updateValueCommon(&tokens) ||                          \
-            ret.updateValue##name(&tokens)) {                          \
-            ret.setFlagImportant(isImportant);                         \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);    \
-        }                                                              \
+#define DEFINE_ATTRIBUTE_SETTER(name, ...)                                    \
+    void CSSStyleDeclaration::set##name(const char* value, size_t len,        \
+                                        bool isImportant)                     \
+    {                                                                         \
+        if (len == 0) {                                                       \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);             \
+            return;                                                           \
+        }                                                                     \
+        CSSTokenVector tokens;                                                \
+        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==                      \
+                     CSSStyleValuePair::KeyKind::Content)) {                  \
+            tokenizeCSSValue(tokens, value, len, "", 0, true);                \
+        } else {                                                              \
+            tokenizeCSSValue(tokens, value, len, ",", 1);                     \
+        }                                                                     \
+        CSSStyleValuePair ret;                                                \
+        if (ret.updateValueCommon(tokens) || ret.updateValue##name(tokens)) { \
+            ret.setFlagImportant(isImportant);                                \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);           \
+        }                                                                     \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_SETTER)

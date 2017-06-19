@@ -55,7 +55,7 @@ namespace StarFish {
 
 #define VALUE_IS_AUTO() VALUE_IS_STRING("auto")
 
-#define STRING_VALUE_IS_STRING(str) (value->equals(str))
+#define STRING_VALUE_IS_STRING(str) (value.equals(str))
 
 #define STRING_VALUE_IS_INHERIT() STRING_VALUE_IS_STRING("inherit")
 
@@ -240,13 +240,13 @@ String* CSSStyleValuePair::keyName() const
     }
 }
 
-bool CSSStyleValuePair::updateValueCommon(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
 {
     // NOTE: set common value (e.g. initial, inherit, "")
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    const char* value = (*tokens)[0]->utf8Data();
+    const char* value = tokens[0].data();
     if (VALUE_IS_INHERIT()) {
         m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
     } else if (VALUE_IS_INITIAL()) {
@@ -303,19 +303,20 @@ static String* BorderString(String* width, bool isWidthCombined, String* style,
 }
 
 // Parse backgroundRepeat string in case it has single token
-static bool parseBackgroundRepeatShorhand(String* tok, CSSStyleValuePair* retx,
+static bool parseBackgroundRepeatShorhand(const CSSTokenValue& tok,
+                                          CSSStyleValuePair* retx,
                                           CSSStyleValuePair* rety)
 {
     if (retx->updateValueUnitBackgroundRepeat(tok)) {
         *rety = *retx;
-    } else if (tok->equals("repeat-x")) {
+    } else if (tok.equals("repeat-x")) {
         *retx = CSSStyleValuePair(
             CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
             RepeatRepeatValue);
         *rety = CSSStyleValuePair(
             CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
             NoRepeatRepeatValue);
-    } else if (tok->equals("repeat-y")) {
+    } else if (tok.equals("repeat-y")) {
         *retx = CSSStyleValuePair(
             CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
             NoRepeatRepeatValue);
@@ -328,7 +329,7 @@ static bool parseBackgroundRepeatShorhand(String* tok, CSSStyleValuePair* retx,
     return true;
 }
 
-static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
+static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
                                           CSSStyleValuePair* retx,
                                           CSSStyleValuePair* rety,
                                           bool allowComma = true)
@@ -338,13 +339,13 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
     size_t len = 0;
     retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
     rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
-        if (value->equals(",")) {
-            if (!allowComma || i == 0 || i == tokens->size() - 1) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1) {
                 return false;
             }
-        } else if (i == tokens->size() - 1) {
+        } else if (i == tokens.size() - 1) {
             len++;
             i++;
         } else {
@@ -353,7 +354,7 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
         }
         if (len == 1) {
             CSSStyleValuePair x, y;
-            if (parseBackgroundRepeatShorhand((*tokens)[i - 1], &x, &y)) {
+            if (parseBackgroundRepeatShorhand(tokens[i - 1], &x, &y)) {
                 retx->multiValue()->push_back(x);
                 rety->multiValue()->push_back(y);
             } else {
@@ -361,8 +362,8 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
             }
         } else if (len == 2) {
             CSSStyleValuePair x, y;
-            if (x.updateValueUnitBackgroundRepeat((*tokens)[i - 2]) &&
-                y.updateValueUnitBackgroundRepeat((*tokens)[i - 1])) {
+            if (x.updateValueUnitBackgroundRepeat(tokens[i - 2]) &&
+                y.updateValueUnitBackgroundRepeat(tokens[i - 1])) {
                 retx->multiValue()->push_back(x);
                 rety->multiValue()->push_back(y);
             } else {
@@ -376,7 +377,7 @@ static bool parseBackgroundRepeatShorhand(GCVector<String*>* tokens,
     return true;
 }
 
-static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
+static bool parseBackgroundPositionShorhand(const CSSTokenVector& tokens,
                                             CSSStyleValuePair* retx,
                                             CSSStyleValuePair* rety,
                                             bool allowComma = true)
@@ -390,13 +391,13 @@ static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
     retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
     rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
 
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
-        if (value->equals(",")) {
-            if (!allowComma || i == 0 || i == tokens->size() - 1) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1) {
                 return false;
             }
-        } else if (i == tokens->size() - 1) {
+        } else if (i == tokens.size() - 1) {
             len++;
             i++;
         } else {
@@ -407,7 +408,7 @@ static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
         CSSStyleValuePair ret;
         CSSStyleValuePair x, y;
         if (len == 1) {
-            String* tok = (*tokens)[i - 1];
+            const CSSTokenValue& tok = tokens[i - 1];
             if (x.updateValueUnitBackgroundPositionX(tok)) {
                 y = CSSStyleValuePair(
                     CSSStyleValuePair::ValueKind::SideValueKind,
@@ -429,8 +430,8 @@ static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
             // background-position: bottom 20px  <- (X) [enum-y length] !!!
             // background-position: 20px right   <- (X) [length enum-x] !!!
             bool checker = true;
-            String* tok1 = (*tokens)[i - 2];
-            String* tok2 = (*tokens)[i - 1];
+            const CSSTokenValue& tok1 = tokens[i - 2];
+            const CSSTokenValue& tok2 = tokens[i - 1];
             CSSStyleValuePair::ValueKind sideKind =
                 CSSStyleValuePair::ValueKind::SideValueKind;
             checker &= x.updateValueUnitBackgroundPositionX(tok1);
@@ -457,7 +458,7 @@ static bool parseBackgroundPositionShorhand(GCVector<String*>* tokens,
 }
 
 static bool parseBackgroundShorthand(
-    GCVector<String*>* tokens, CSSStyleValuePair* _Color,
+    const CSSTokenVector& tokens, CSSStyleValuePair* _Color,
     CSSStyleValuePair* _Image, CSSStyleValuePair* _RepeatX,
     CSSStyleValuePair* _RepeatY, CSSStyleValuePair* _PositionX,
     CSSStyleValuePair* _PositionY, CSSStyleValuePair* _Size, bool allowColor)
@@ -468,7 +469,7 @@ static bool parseBackgroundShorthand(
     // - ACCEPT only 1-word_ : bg-color, bg-image
     // - ACCEPT 1 to 2 words : bg-repeat, position, bg-size
 
-    size_t len = tokens->size();
+    size_t len = tokens.size();
     if (len < 1 || len > 9) {
         return false;
     }
@@ -485,8 +486,8 @@ static bool parseBackgroundShorthand(
     bool hasPosition = false, hasSize = false;
     bool hasPositionPrev = false, shouldSize = false;
     CSSStyleValuePair temp, tempX, tempY;
-    String* tok;
-    GCVector<String*> toks;
+    CSSTokenValue* tok;
+    CSSTokenVector toks;
 
 #define SET_SINGLE_PROP(PROP) \
     *_##PROP = temp;          \
@@ -503,7 +504,7 @@ static bool parseBackgroundShorthand(
     for (size_t i = 0; i < len; i++) {
         if (hasPositionPrev) {
             hasPositionPrev = false;
-            if ((*tokens)[i]->equals("/")) {
+            if (tokens[i].equals("/")) {
                 shouldSize = true;
                 continue;
             }
@@ -513,57 +514,57 @@ static bool parseBackgroundShorthand(
         // y:center)
         if (i + 1 < len) {
             toks.clear();
-            toks.push_back((*tokens)[i]);
-            toks.push_back((*tokens)[i + 1]);
+            toks.push_back(tokens[i]);
+            toks.push_back(tokens[i + 1]);
             // 1-1. BackgroundSize
             // 1-2. BackgroundRepeat, BackgroundPosition
             if (shouldSize) {
                 STARFISH_ASSERT(!hasSize);
-                if (temp.updateValueBackgroundSize(&toks, false)) {
+                if (temp.updateValueBackgroundSize(toks, false)) {
                     shouldSize = false;
                     SET_SINGLE_PROP(Size)
                     DOUBLE_CONTINUE()
                 }
             } else if (!hasRepeat && parseBackgroundRepeatShorhand(
-                                         &toks, &tempX, &tempY, false)) {
+                                         toks, &tempX, &tempY, false)) {
                 SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
             } else if (!hasPosition && parseBackgroundPositionShorhand(
-                                           &toks, &tempX, &tempY, false)) {
+                                           toks, &tempX, &tempY, false)) {
                 hasPositionPrev = true;
                 SET_DOUBLE_PROP(Position)
                 DOUBLE_CONTINUE()
             }
         }
         // 2. Verify single token
-        tok = (*tokens)[i];
+        tok = const_cast<CSSTokenValue*>(&tokens[i]);
         toks.clear();
-        toks.push_back(tok);
+        toks.push_back(*tok);
         // 2-1. BackgroundSize
         // 2-2. BackgroundColor, BackgroundImage, BackgroundRepeat,
         // BackgroundPosition
         if (shouldSize) {
             STARFISH_ASSERT(!hasSize);
-            if (temp.updateValueBackgroundSize(&toks, false)) {
+            if (temp.updateValueBackgroundSize(toks, false)) {
                 shouldSize = false;
                 SET_SINGLE_PROP(Size)
                 SINGLE_CONTINUE()
             }
-        } else if (!hasColor && temp.updateValueUnitColor(tok)) {
+        } else if (!hasColor && temp.updateValueUnitColor(*tok)) {
             if (!allowColor) {
                 return false;
             }
             SET_SINGLE_PROP(Color)
             SINGLE_CONTINUE()
-        } else if (!hasImage && temp.updateValueBackgroundImage(&toks, false)) {
+        } else if (!hasImage && temp.updateValueBackgroundImage(toks, false)) {
             SET_SINGLE_PROP(Image)
             SINGLE_CONTINUE()
-        } else if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX,
-                                                               &tempY, false)) {
+        } else if (!hasRepeat &&
+                   parseBackgroundRepeatShorhand(toks, &tempX, &tempY, false)) {
             SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
         } else if (!hasPosition && parseBackgroundPositionShorhand(
-                                       &toks, &tempX, &tempY, false)) {
+                                       toks, &tempX, &tempY, false)) {
             hasPositionPrev = true;
             SET_DOUBLE_PROP(Position)
             SINGLE_CONTINUE()
@@ -578,7 +579,7 @@ static bool parseBackgroundShorthand(
     return true;
 }
 
-static bool parseFontShorthand(GCVector<String*>* tokens,
+static bool parseFontShorthand(const CSSTokenVector& tokens,
                                CSSStyleValuePair* _Style,
                                // UNSUPPORTED CSSStyleValuePair* _Variant,
                                CSSStyleValuePair* _Weight,
@@ -589,7 +590,7 @@ static bool parseFontShorthand(GCVector<String*>* tokens,
                                )
 {
     // [font-style|font-weight] font-size[/line-height] font-family
-    size_t len = tokens->size();
+    size_t len = tokens.size();
     if (len < 1) {
         return false;
     }
@@ -607,10 +608,10 @@ static bool parseFontShorthand(GCVector<String*>* tokens,
     size_t pos = 0;
 
     while (pos < len) {
-        String* token = (*tokens)[pos++];
+        const CSSTokenValue& token = tokens[pos++];
         if (hasSizePrev) {
             hasSizePrev = false;
-            if (token->equals("/")) {
+            if (token.equals("/")) {
                 shouldLineHeight = true;
                 continue;
             }
@@ -979,12 +980,12 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, false, style, false, color, false);
 }
 
-static bool parseBorderShorthand(GCVector<String*>* tokens,
+static bool parseBorderShorthand(const CSSTokenVector& tokens,
                                  CSSStyleValuePair* width,
                                  CSSStyleValuePair* style,
                                  CSSStyleValuePair* color)
 {
-    size_t len = tokens->size();
+    size_t len = tokens.size();
     if (len < 1 || len > 3) {
         return false;
     }
@@ -996,7 +997,7 @@ static bool parseBorderShorthand(GCVector<String*>* tokens,
     bool hasWidth = false, hasStyle = false, hasColor = false;
     CSSStyleValuePair temp;
     for (size_t i = 0; i < len; i++) {
-        String* tok = (*tokens)[i];
+        const CSSTokenValue& tok = tokens[i];
         if (!hasWidth && temp.updateValueUnitBorderWidth(tok)) {
             *width = temp;
             hasWidth = true;
@@ -1070,14 +1071,14 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, len);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
 
     CSSStyleValuePair v, width, style, color;
-    if (v.updateValueCommon(&tokens)) {
+    if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addBorderCSSValuePairs(this, v, v, v);
-    } else if (parseBorderShorthand(&tokens, &width, &style, &color)) {
+    } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
@@ -1094,14 +1095,14 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
             return;                                                         \
         }                                                                   \
                                                                             \
-        GCVector<String*> tokens;                                           \
-        tokenizeCSSValue(&tokens, value, len);                              \
+        CSSTokenVector tokens;                                              \
+        tokenizeCSSValue(tokens, value, len);                               \
                                                                             \
         CSSStyleValuePair v, width, style, color;                           \
-        if (v.updateValueCommon(&tokens)) {                                 \
+        if (v.updateValueCommon(tokens)) {                                  \
             v.setFlagImportant(isImportant);                                \
             addBorder##POS##CSSValuePairs(this, v, v, v);                   \
-        } else if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
+        } else if (parseBorderShorthand(tokens, &width, &style, &color)) {  \
             width.setFlagImportant(isImportant);                            \
             style.setFlagImportant(isImportant);                            \
             color.setFlagImportant(isImportant);                            \
@@ -1541,7 +1542,7 @@ String* CSSStyleValuePair::toString() const
 
 void CSSStyleValuePair::setLengthValue(const char* value, size_t len)
 {
-    updateValueLengthOrPercent(String::fromUTF8(value), true);
+    updateValueLengthOrPercent(CSSTokenValue(value), true);
 }
 
 String* CSSStyleDeclaration::BackgroundRepeat()
@@ -1575,15 +1576,15 @@ void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, length, ",", 1);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
-    if (c.updateValueCommon(&tokens)) {
+    if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
-    } else if (parseBackgroundRepeatShorhand(&tokens, &x, &y)) {
+    } else if (parseBackgroundRepeatShorhand(tokens, &x, &y)) {
         x.setFlagImportant(isImportant);
         y.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
@@ -1619,15 +1620,15 @@ void CSSStyleDeclaration::setBackgroundPosition(const char* value,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, length, ",", 1);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
-    if (c.updateValueCommon(&tokens)) {
+    if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
-    } else if (parseBackgroundPositionShorhand(&tokens, &x, &y)) {
+    } else if (parseBackgroundPositionShorhand(tokens, &x, &y)) {
         x.setFlagImportant(isImportant);
         y.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, x);
@@ -1900,7 +1901,8 @@ static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay, delay);
 }
 
-bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
+bool CSSStyleValuePair::updateValueUnitTransitionProperty(
+    const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::TransitionPropertyValueKind;
     if (STRING_VALUE_IS_STRING("all")) {
@@ -2044,7 +2046,8 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(String* value)
+bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(
+    const CSSTokenValue& value)
 {
     m_valueKind =
         CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind;
@@ -2075,24 +2078,24 @@ bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitTransitionTime(String* value)
+bool CSSStyleValuePair::updateValueUnitTransitionTime(
+    const CSSTokenValue& value)
 {
-    if (value->length() < 1) {
+    if (value.length() < 1) {
         return false;
     }
     m_valueKind = CSSStyleValuePair::ValueKind::Time;
-    return CSSPropertyParser::parseTime(value->utf8Data(), false,
-                                        &(m_value.m_time));
+    return CSSPropertyParser::parseTime(value.data(), false, &(m_value.m_time));
 }
 
-static bool parseTransitionShorthand(GCVector<String*>* tokens,
+static bool parseTransitionShorthand(const CSSTokenVector& tokens,
                                      CSSStyleValuePair* property,
                                      CSSStyleValuePair* duration,
                                      CSSStyleValuePair* timingFunction,
                                      CSSStyleValuePair* delay)
 {
     // TODO other shorthands
-    size_t len = tokens->size();
+    size_t len = tokens.size();
     if (len < 1) {
         return false;
     }
@@ -2106,7 +2109,7 @@ static bool parseTransitionShorthand(GCVector<String*>* tokens,
     CSSStyleValuePair temp;
 
     for (size_t i = 0; i < len; i++) {
-        String* tok = (*tokens)[i];
+        const CSSTokenValue& tok = tokens[i];
         if (temp.updateValueUnitTransitionProperty(tok)) {
             *property = temp;
         } else if (isFirstTimeValue &&
@@ -2133,15 +2136,15 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, length);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
 
     // TODO comma separation
     CSSStyleValuePair v, property, duration, timingFunction, delay;
-    if (v.updateValueCommon(&tokens)) {
+    if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addTransitionCSSValuePairs(this, v, v, v, v);
-    } else if (parseTransitionShorthand(&tokens, &property, &duration,
+    } else if (parseTransitionShorthand(tokens, &property, &duration,
                                         &timingFunction, &delay)) {
         property.setFlagImportant(isImportant);
         duration.setFlagImportant(isImportant);
@@ -2188,8 +2191,8 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, length, ",/", 2);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",/", 2);
     if (tokens.size() == 0) {
         return;
     }
@@ -2197,7 +2200,7 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
     // TODO: should check comma-separated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY,
         size;
-    if (v.updateValueCommon(&tokens)) {
+    if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v);
     } else {
@@ -2214,11 +2217,11 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
         PROP.multiValue()->push_back(NEWPROP);                              \
     }
 
-        GCVector<String*> layer;
+        CSSTokenVector layer;
         unsigned int cntLayer = 0;
         for (unsigned int t = 0; t < tokens.size(); t++) {
-            String* val = tokens[t];
-            if (val->equals(",")) {
+            const CSSTokenValue& val = tokens[t];
+            if (val.equals(",")) {
                 if (t == 0 || t == tokens.size() - 1)
                     return;
             } else if (t == tokens.size() - 1) {
@@ -2235,7 +2238,7 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
                 layerPositionX, layerPositionY, layerSize;
             // NOTE: Color is allowed only for the last background layer (t ==
             // tokens->size() - 1)
-            if (!parseBackgroundShorthand(&layer, &color, &layerImage,
+            if (!parseBackgroundShorthand(layer, &color, &layerImage,
                                           &layerRepeatX, &layerRepeatY,
                                           &layerPositionX, &layerPositionY,
                                           &layerSize, t == tokens.size() - 1)) {
@@ -2346,21 +2349,21 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
         return;
     }
 
-    GCVector<String*> tokens;
-    tokenizeCSSValue(&tokens, value, length, "/", 1);
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, "/", 1);
     if (tokens.size() == 0) {
         return;
     }
 
     CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size,
         lineHeight /*, fontFamily*/;
-    if (v.updateValueCommon(&tokens)) {
+    if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
-    } else if (parseFontShorthand(&tokens, &style, &weight, &size,
+    } else if (parseFontShorthand(tokens, &style, &weight, &size,
                                   &lineHeight)) {
         style.setFlagImportant(isImportant);
         weight.setFlagImportant(isImportant);
@@ -2393,11 +2396,11 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
             RM_PAIRS(PRE, __VA_ARGS__);                            \
             return;                                                \
         }                                                          \
-        GCVector<String*> tokens;                                  \
-        tokenizeCSSValue(&tokens, value, length);                  \
+        CSSTokenVector tokens;                                     \
+        tokenizeCSSValue(tokens, value, length);                   \
                                                                    \
         CSSStyleValuePair c, top, right, bottom, left;             \
-        if (c.updateValueCommon(&tokens)) {                        \
+        if (c.updateValueCommon(tokens)) {                         \
             c.setFlagImportant(isImportant);                       \
             top = right = bottom = left = c;                       \
             ADD_PAIRS(PRE, __VA_ARGS__);                           \
@@ -2446,15 +2449,13 @@ static bool seperatorContains(const char* seperator, size_t seperatorCount,
     return false;
 }
 
-void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
+void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                                            const char* data, size_t length,
                                            const char* seperator,
                                            size_t seperatorCount,
                                            bool isCaseSensitive)
 {
-    tokens->clear();
-
-    std::string str;
+    CSSTokenValue str;
     bool inParenthesis = false;
     bool inQuotes = false;
     bool isWhiteSpaceState = false;
@@ -2485,32 +2486,38 @@ void CSSStyleDeclaration::tokenizeCSSValue(GCVector<String*>* tokens,
 
         if (!inParenthesis && !inQuotes &&
             (String::isSpaceOrNewline(data[i]) || hasSepChar)) {
-            String* newToken =
-                String::fromUTF8(str.data(), str.length() - 1)->toLower();
-            if (!newToken->containsOnlyWhitespace()) {
-                tokens->push_back(newToken);
+            str.pop_back();
+            bool onlyWhiteSpace = true;
+            for (size_t i = 0; i < str.length(); i++) {
+                str[i] = ::tolower(str[i]);
+                if (!String::isASCIISpace(str[i])) {
+                    onlyWhiteSpace = false;
+                }
+            }
+
+            if (!onlyWhiteSpace) {
+                tokens.push_back(CSSTokenValue(std::move(str)));
             }
             isWhiteSpaceState = true;
-            str.clear();
             if (hasSepChar) {
-                tokens->push_back(String::fromUTF8(data + i, 1));
+                tokens.push_back(CSSTokenValue(std::string(data + i, 1)));
             }
         } else if ((inParenthesis && data[i] == ')') || i == length - 1) {
             if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') &&
                 (str[1] == 'r' || str[1] == 'R') &&
                 (str[2] == 'l' || str[2] == 'L')) {
-                tokens->push_back(String::fromUTF8("url")->concat(
-                    String::fromUTF8(str.data() + 3, str.length() - 3)));
+                std::transform(str.begin(), str.begin() + 3, str.begin(),
+                               ::tolower);
+                tokens.push_back(std::move(str));
             } else if (str.length() != 0) {
-                String* newToken =
-                    isCaseSensitive
-                        ? String::fromUTF8(str.data(), str.length())
-                        : String::fromUTF8(str.data(), str.length())->toLower();
-                tokens->push_back(newToken);
+                if (!isCaseSensitive) {
+                    std::transform(str.begin(), str.end(), str.begin(),
+                                   ::tolower);
+                }
+                tokens.push_back(std::move(str));
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
-            str.clear();
         }
     }
 }
@@ -3973,49 +3980,12 @@ void StyleResolver::apply(Element* element,
     }
 }
 
+// We can use std::allocator here.
+// CSSStyleDeclaration* has strong reference on CSSStyleSheet already
 template <unsigned int InlineStorageSize>
-class MatchedDeclarations {
-    STARFISH_MAKE_STACK_ALLOCATED();
-
-public:
-    MatchedDeclarations()
-    {
-        m_size = 0;
-    }
-
-    void push_back(std::pair<CSSStyleDeclaration*, ResourceURL*> decl)
-    {
-        if (m_size < InlineStorageSize) {
-            m_inlineStorage[m_size++] = decl;
-        } else {
-            m_size++;
-            m_externalStorage.push_back(decl);
-        }
-    }
-
-    std::pair<CSSStyleDeclaration*, ResourceURL*>& operator[](const size_t& idx)
-    {
-        if (idx < InlineStorageSize) {
-            return m_inlineStorage[idx];
-        } else {
-            return m_externalStorage[idx - InlineStorageSize];
-        }
-    }
-
-    size_t size()
-    {
-        return m_size;
-    }
-
-protected:
-    size_t m_size;
-    std::pair<CSSStyleDeclaration*, ResourceURL*>
-        m_inlineStorage[InlineStorageSize];
-    // We can use std::allocator here.
-    // CSSStyleDeclaration* has strong reference on CSSStyleSheet
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>
-        m_externalStorage;
-};
+using MatchedDeclarations = VectorWithInlineStorage<
+    InlineStorageSize, std::pair<CSSStyleDeclaration*, ResourceURL*>,
+    std::allocator<std::pair<CSSStyleDeclaration*, ResourceURL*>>>;
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                                   ComputedStyle* parent,
@@ -4676,7 +4646,7 @@ const MediaQueryEvaluator& StyleResolver::mediaQueryEvaluator()
     return *m_mediaQueryEvaluator;
 }
 
-bool CSSStyleValuePair::updateValueUnitColor(String* token)
+bool CSSStyleValuePair::updateValueUnitColor(const CSSTokenValue& token)
 {
     if (CSSPropertyParser::parseNonNamedColor(token, &(m_value.m_color))) {
         m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
@@ -4689,45 +4659,45 @@ bool CSSStyleValuePair::updateValueUnitColor(String* token)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBorderColor(String* token)
+bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)
 {
     return updateValueUnitColor(token);
 }
 
-bool CSSStyleValuePair::updateValueUnitMargin(String* value)
+bool CSSStyleValuePair::updateValueUnitMargin(const CSSTokenValue& value)
 {
     return updateValueLengthOrPercentOrAuto(value, true);
 }
 
-bool CSSStyleValuePair::updateValueUnitPadding(String* value)
+bool CSSStyleValuePair::updateValueUnitPadding(const CSSTokenValue& value)
 {
     return updateValueLengthOrPercent(value, false);
 }
 
-bool CSSStyleValuePair::updateValueColor(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    return updateValueUnitColor((*tokens)[0]);
+    return updateValueUnitColor(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueBackgroundColor(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBackgroundColor(const CSSTokenVector& tokens)
 {
     return updateValueColor(tokens);
 }
 
 #define UPDATE_VALUE_BORDER_COLOR(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Color( \
-        GCVector<String*>* tokens)                         \
+        const CSSTokenVector& tokens)                      \
     {                                                      \
         return updateValueColor(tokens);                   \
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
 
-bool CSSStyleValuePair::updateValueUnitBorderStyle(String* value)
+bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
@@ -4742,23 +4712,23 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(String* value)
 
 #define UPDATE_VALUE_BORDER_STYLE(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Style( \
-        GCVector<String*>* tokens)                         \
+        const CSSTokenVector& tokens)                      \
     {                                                      \
-        if (tokens->size() != 1) {                         \
+        if (tokens.size() != 1) {                          \
             return false;                                  \
         }                                                  \
-        return updateValueUnitBorderStyle((*tokens)[0]);   \
+        return updateValueUnitBorderStyle(tokens[0]);      \
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
 
-bool CSSStyleValuePair::updateValueDirection(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueDirection(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::DirectionValueKind;
     if (STRING_VALUE_IS_STRING("ltr")) {
         m_value.m_direction = DirectionValue::LtrDirectionValue;
@@ -4770,13 +4740,13 @@ bool CSSStyleValuePair::updateValueDirection(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueWhiteSpace(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueWhiteSpace(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::WhiteSpaceValueKind;
     if (STRING_VALUE_IS_STRING("normal")) {
         m_value.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
@@ -4794,13 +4764,13 @@ bool CSSStyleValuePair::updateValueWhiteSpace(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueDisplay(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::DisplayValueKind;
     if (STRING_VALUE_IS_STRING("block")) {
         m_value.m_display = DisplayValue::BlockDisplayValue;
@@ -4836,13 +4806,13 @@ bool CSSStyleValuePair::updateValueDisplay(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFloat(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueFloat(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::FloatValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_float = FloatValue::NoneFloatValue;
@@ -4856,13 +4826,13 @@ bool CSSStyleValuePair::updateValueFloat(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueClear(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueClear(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ClearValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_clear = ClearValue::NoneClearValue;
@@ -4878,16 +4848,16 @@ bool CSSStyleValuePair::updateValueClear(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFontStyle(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueFontStyle(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    return updateValueUnitFontStyle((*tokens)[0]);
+    return updateValueUnitFontStyle(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueUnitFontStyle(String* value)
+bool CSSStyleValuePair::updateValueUnitFontStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
     if (STRING_VALUE_IS_STRING("normal")) {
@@ -4902,7 +4872,8 @@ bool CSSStyleValuePair::updateValueUnitFontStyle(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(String* value)
+bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(
+    const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
     if (STRING_VALUE_IS_STRING("no-repeat")) {
@@ -4915,27 +4886,30 @@ bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundRepeatX(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBackgroundRepeatX(
+    const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundRepeat((*tokens)[0]);
+    return updateValueUnitBackgroundRepeat(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueBackgroundRepeatY(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBackgroundRepeatY(
+    const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundRepeat((*tokens)[0]);
+    return updateValueUnitBackgroundRepeat(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
+bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
 {
     if (STRING_VALUE_IS_NONE()) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
-    } else if (CSSPropertyParser::parseUrl(value, &(m_value.m_stringValue))) {
+    } else if (CSSPropertyParser::parseUrl(value.data(),
+                                           &(m_value.m_stringValue))) {
         m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
     } else {
         return false;
@@ -4943,14 +4917,14 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundImage(GCVector<String*>* tokens,
+bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
                                                    bool allowComma)
 {
     bool shouldBeComma = false;
     ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
-        if (value->equals(",")) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
             if (!allowComma || !shouldBeComma) {
                 return false;
             }
@@ -4969,30 +4943,32 @@ bool CSSStyleValuePair::updateValueBackgroundImage(GCVector<String*>* tokens,
     return shouldBeComma;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundImage(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens)
 {
     return updateValueBackgroundImage(tokens, true);
 }
 
-bool CSSStyleValuePair::updateValueContent(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
 {
     ValueList* values = new ValueList();
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
         CSSStyleValuePair ret;
         if (!ret.updateValueUnitUrlOrNone(value)) {
-            CSSPropertyParser* parser =
-                new CSSPropertyParser((char*)(*tokens)[i]->utf8Data());
-            if (value->equals("normal")) {
+            CSSPropertyParser parser((char*)tokens[i].data());
+            if (value.equals("normal")) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Normal;
-            } else if (parser->parseContentString(
-                           value, &(ret.m_value.m_stringValue))) {
+            } else if (parser.parseContentString(
+                           value.data(), value.length(),
+                           &(ret.m_value.m_stringValue))) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-            } else if (parser->parseAttr(value, &(ret.m_value.m_stringValue))) {
+            } else if (parser.parseAttr(value.data(), value.length(),
+                                        &(ret.m_value.m_stringValue))) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Attr;
             } else {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 return false;
             }
         }
@@ -5003,13 +4979,14 @@ bool CSSStyleValuePair::updateValueContent(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderImageSource(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBorderImageSource(
+    const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     if (updateValueUnitUrlOrNone(value)) {
         return true;
     }
@@ -5017,7 +4994,7 @@ bool CSSStyleValuePair::updateValueBorderImageSource(GCVector<String*>* tokens)
     return false;
 }
 
-bool CSSStyleValuePair::updateValueUnitBorderWidth(String* value)
+bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
     if (STRING_VALUE_IS_STRING("thick")) {
@@ -5028,7 +5005,7 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(String* value)
     } else if (STRING_VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
         m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
-    } else if (CSSPropertyParser::parseLength(value->utf8Data(), false,
+    } else if (CSSPropertyParser::parseLength(value.c_str(), false,
                                               &(m_value.m_length))) {
         m_valueKind = CSSStyleValuePair::ValueKind::Length;
     } else {
@@ -5039,39 +5016,39 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(String* value)
 
 #define UPDATE_VALUE_BORDER_WIDTH(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Width( \
-        GCVector<String*>* tokens)                         \
+        const CSSTokenVector& tokens)                      \
     {                                                      \
-        if (tokens->size() != 1) {                         \
+        if (tokens.size() != 1) {                          \
             return false;                                  \
         }                                                  \
-        return updateValueUnitBorderWidth((*tokens)[0]);   \
+        return updateValueUnitBorderWidth(tokens[0]);      \
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
 
-bool CSSStyleValuePair::updateValueLengthOrPercent(String* token,
+bool CSSStyleValuePair::updateValueLengthOrPercent(const CSSTokenValue& token,
                                                    bool allowNegative)
 {
-    if (!CSSPropertyParser::parseLengthOrPercent(token->utf8Data(),
-                                                 allowNegative, this)) {
+    if (!CSSPropertyParser::parseLengthOrPercent(token.data(), allowNegative,
+                                                 this)) {
         return false;
     }
     return true;
 }
 
-bool CSSStyleValuePair::updateValueLengthOrPercent(GCVector<String*>* tokens,
+bool CSSStyleValuePair::updateValueLengthOrPercent(const CSSTokenVector& tokens,
                                                    bool allowNegative)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueLengthOrPercent((*tokens)[0], allowNegative);
+    return updateValueLengthOrPercent(tokens[0], allowNegative);
 }
 
-bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(String* token,
-                                                         bool allowNegative)
+bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(
+    const CSSTokenValue& token, bool allowNegative)
 {
-    if (token->equals("auto")) {
+    if (token.equals("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
@@ -5079,9 +5056,9 @@ bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(String* token,
 }
 
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
-    String* token, bool allowNegative)
+    const CSSTokenValue& token, bool allowNegative)
 {
-    if (token->equals("none")) {
+    if (token.equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
         return true;
     }
@@ -5089,31 +5066,32 @@ bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
 }
 
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(
-    GCVector<String*>* tokens, bool allowNegative)
+    const CSSTokenVector& tokens, bool allowNegative)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueLengthOrPercentOrAuto((*tokens)[0], allowNegative);
+    return updateValueLengthOrPercentOrAuto(tokens[0], allowNegative);
 }
 
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
-    GCVector<String*>* tokens, bool allowNegative)
+    const CSSTokenVector& tokens, bool allowNegative)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueLengthOrPercentOrAutoOrNone((*tokens)[0], allowNegative);
+    return updateValueLengthOrPercentOrAutoOrNone(tokens[0], allowNegative);
 }
 
-bool CSSStyleValuePair::updateValueBorderImageWidth(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBorderImageWidth(
+    const CSSTokenVector& tokens)
 {
     // [length | number]
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    const char* value = (*tokens)[0]->utf8Data();
+    const char* value = tokens[0].data();
     if (CSSPropertyParser::parseNumber(value, false, &(m_value.m_floatValue))) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
     } else if (CSSPropertyParser::parseLength(value, false,
@@ -5125,7 +5103,8 @@ bool CSSStyleValuePair::updateValueBorderImageWidth(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(String* value)
+bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(
+    const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
     if (STRING_VALUE_IS_STRING("left")) {
@@ -5141,7 +5120,8 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(String* value)
+bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
+    const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
     if (STRING_VALUE_IS_STRING("top")) {
@@ -5158,29 +5138,29 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(String* value)
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionX(
-    GCVector<String*>* tokens)
+    const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundPositionX((*tokens)[0]);
+    return updateValueUnitBackgroundPositionX(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionY(
-    GCVector<String*>* tokens)
+    const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundPositionY((*tokens)[0]);
+    return updateValueUnitBackgroundPositionY(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens)
 {
     return updateValueBackgroundSize(tokens, true);
 }
 
-bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
+bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                                                   bool allowComma)
 {
     // [length | percentage | auto]{1, 2} | cover | contain // initial value ->
@@ -5189,12 +5169,12 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     setValueList(new ValueList(ValueList::Separator::CommaSeparator));
 
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
-        if (value->equals(",")) {
-            if (!allowComma || i == 0 || i == tokens->size() - 1)
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1)
                 return false;
-        } else if (i == tokens->size() - 1) {
+        } else if (i == tokens.size() - 1) {
             len++;
             i++;
         } else {
@@ -5204,16 +5184,15 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
 
         CSSStyleValuePair ret;
         if (len == 1) {
-            if (value->equals("cover")) {
+            if (value.equals("cover")) {
                 ret.setValueKind(CSSStyleValuePair::ValueKind::Cover);
-            } else if (value->equals("contain")) {
+            } else if (value.equals("contain")) {
                 ret.setValueKind(CSSStyleValuePair::ValueKind::Contain);
             } else {
                 ret.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));
                 CSSStyleValuePair r;
-                if (!r.updateValueLengthOrPercentOrAuto((*tokens)[i - 1],
-                                                        false)) {
+                if (!r.updateValueLengthOrPercentOrAuto(tokens[i - 1], false)) {
                     return false;
                 }
                 ret.multiValue()->push_back(r);
@@ -5222,8 +5201,8 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
             ret.setValueList(
                 new ValueList(ValueList::Separator::SpaceSeparator));
             CSSStyleValuePair r1, r2;
-            if (!r1.updateValueLengthOrPercentOrAuto((*tokens)[i - 2], false) ||
-                !r2.updateValueLengthOrPercentOrAuto((*tokens)[i - 1], false)) {
+            if (!r1.updateValueLengthOrPercentOrAuto(tokens[i - 2], false) ||
+                !r2.updateValueLengthOrPercentOrAuto(tokens[i - 1], false)) {
                 return false;
             }
             ret.multiValue()->push_back(r1);
@@ -5237,10 +5216,11 @@ bool CSSStyleValuePair::updateValueBackgroundSize(GCVector<String*>* tokens,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderImageSlice(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBorderImageSlice(
+    const CSSTokenVector& tokens)
 {
     // number && fill?
-    if (tokens->size() != 1 && tokens->size() != 2) {
+    if (tokens.size() != 1 && tokens.size() != 2) {
         return false;
     }
 
@@ -5248,8 +5228,8 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(GCVector<String*>* tokens)
     m_value.m_multiValue = new ValueList(ValueList::Separator::SpaceSeparator);
     bool isNum = false, isFill = false;
     float result = 0.f;
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        if ((*tokens)[i]->equals("fill")) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        if (tokens[i].equals("fill")) {
             if (!isFill) {
                 isFill = true;
             } else {
@@ -5258,8 +5238,8 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(GCVector<String*>* tokens)
             m_value.m_multiValue->emplace_back(
                 CSSStyleValuePair::ValueKind::StringValueKind,
                 String::fromUTF8("fill"));
-        } else if (CSSPropertyParser::parseNumber((*tokens)[i]->utf8Data(),
-                                                  false, &result)) {
+        } else if (CSSPropertyParser::parseNumber(tokens[i].data(), false,
+                                                  &result)) {
             isNum = true;
             m_value.m_multiValue->emplace_back(
                 CSSStyleValuePair::ValueKind::Number, (float)result);
@@ -5271,15 +5251,15 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(GCVector<String*>* tokens)
     return isNum;
 }
 
-bool CSSStyleValuePair::updateValueFontSize(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueFontSize(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitFontSize((*tokens)[0]);
+    return updateValueUnitFontSize(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueUnitFontSize(String* value)
+bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
 {
     // absolute-size | relative-size | length | percentage | inherit // initial
     // value -> medium
@@ -5309,23 +5289,22 @@ bool CSSStyleValuePair::updateValueUnitFontSize(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueLineHeight(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueLineHeight(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitLineHeight((*tokens)[0]);
+    return updateValueUnitLineHeight(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueUnitLineHeight(String* value)
+bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
 {
     // <normal> | number | length | percentage | inherit
     float result = 0.f;
     if (STRING_VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
-    } else if (CSSPropertyParser::parseNumber(value->utf8Data(), false,
-                                              &result)) {
+    } else if (CSSPropertyParser::parseNumber(value.data(), false, &result)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
         m_value.m_floatValue = result;
         return true;
@@ -5334,67 +5313,69 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(String* value)
     }
 }
 
-#define UPDATE_VALUE_PADDING(POS, ...)                                         \
-    bool CSSStyleValuePair::updateValuePadding##POS(GCVector<String*>* tokens) \
-    {                                                                          \
-        return updateValueLengthOrPercent(tokens, false);                      \
+#define UPDATE_VALUE_PADDING(POS, ...)                    \
+    bool CSSStyleValuePair::updateValuePadding##POS(      \
+        const CSSTokenVector& tokens)                     \
+    {                                                     \
+        return updateValueLengthOrPercent(tokens, false); \
     }
 GEN_FOURSIDE(UPDATE_VALUE_PADDING)
 #undef UPDATE_VALUE_PADDING
 
-#define UPDATE_VALUE_SIDE(POS, ...)                                     \
-    bool CSSStyleValuePair::updateValue##POS(GCVector<String*>* tokens) \
-    {                                                                   \
-        return updateValueLengthOrPercentOrAuto(tokens, true);          \
+#define UPDATE_VALUE_SIDE(POS, ...)                                        \
+    bool CSSStyleValuePair::updateValue##POS(const CSSTokenVector& tokens) \
+    {                                                                      \
+        return updateValueLengthOrPercentOrAuto(tokens, true);             \
     }
 GEN_FOURSIDE(UPDATE_VALUE_SIDE)
 #undef UPDATE_VALUE_SIDE
 
-#define UPDATE_VALUE_MARGIN(POS, ...)                                         \
-    bool CSSStyleValuePair::updateValueMargin##POS(GCVector<String*>* tokens) \
-    {                                                                         \
-        return updateValueLengthOrPercentOrAuto(tokens, true);                \
+#define UPDATE_VALUE_MARGIN(POS, ...)                          \
+    bool CSSStyleValuePair::updateValueMargin##POS(            \
+        const CSSTokenVector& tokens)                          \
+    {                                                          \
+        return updateValueLengthOrPercentOrAuto(tokens, true); \
     }
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
 
-bool CSSStyleValuePair::updateValueWidth(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueWidth(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAuto(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueMaxWidth(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueMaxWidth(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueMinWidth(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueMinWidth(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueHeight(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueHeight(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAuto(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueMaxHeight(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueMaxHeight(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueMinHeight(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueMinHeight(const CSSTokenVector& tokens)
 {
     return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueVerticalAlign(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     if (STRING_VALUE_IS_STRING("baseline")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
@@ -5425,24 +5406,24 @@ bool CSSStyleValuePair::updateValueVerticalAlign(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransformOrigin(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
 {
     //  [ left | center | right | top | bottom | <percentage> | <length> ] |
     //  [ left | center | right | <percentage> | <length> ]
     //  [ top | center | bottom | <percentage> | <length> ] <length>? |
     //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
 
-    if (tokens->size() != 1 && tokens->size() != 2) {
+    if (tokens.size() != 1 && tokens.size() != 2) {
         return false;
     }
 
-    if (tokens->size() == 2) {
-        String* f = (*tokens)[0];
-        String* s = (*tokens)[1];
-        if ((f->equals("left") && s->equals("right")) ||
-            (f->equals("right") && s->equals("left")) ||
-            (f->equals("top") && s->equals("bottom")) ||
-            (f->equals("bottom") && s->equals("top")))
+    if (tokens.size() == 2) {
+        const CSSTokenValue& f = tokens[0];
+        const CSSTokenValue& s = tokens[1];
+        if ((f.equals("left") && s.equals("right")) ||
+            (f.equals("right") && s.equals("left")) ||
+            (f.equals("top") && s.equals("bottom")) ||
+            (f.equals("bottom") && s.equals("top")))
             return false;
     }
 
@@ -5454,8 +5435,8 @@ bool CSSStyleValuePair::updateValueTransformOrigin(GCVector<String*>* tokens)
     CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind,
                             SideValue::CenterSideValue);
 
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = (*tokens)[i];
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
         if (STRING_VALUE_IS_STRING("left")) {
             xPair.setValue(SideValue::LeftSideValue);
         } else if (STRING_VALUE_IS_STRING("right")) {
@@ -5472,15 +5453,13 @@ bool CSSStyleValuePair::updateValueTransformOrigin(GCVector<String*>* tokens)
                 yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
             }
 
-            if (tokens->size() == 2) {
+            if (tokens.size() == 2) {
                 if (i == 0) {
-                    if ((*tokens)[1]->equals("left") ||
-                        (*tokens)[1]->equals("right")) {
+                    if (tokens[1].equals("left") || tokens[1].equals("right")) {
                         return false;
                     }
                 } else {
-                    if ((*tokens)[0]->equals("top") ||
-                        (*tokens)[0]->equals("bottom")) {
+                    if (tokens[0].equals("top") || tokens[0].equals("bottom")) {
                         return false;
                     }
                 }
@@ -5505,9 +5484,9 @@ bool CSSStyleValuePair::updateValueTransformOrigin(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens)
 {
-    if (tokens->size() == 1 && (*tokens)[0]->equals("none")) {
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
         return true;
     } else {
@@ -5515,14 +5494,14 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
         CSSTransformFunction::Kind fkind;
         m_value.m_transforms = new CSSTransformFunctions();
 
-        for (unsigned i = 0; i < tokens->size(); i++) {
-            CSSPropertyParser* parser =
-                new CSSPropertyParser((char*)(*tokens)[i]->utf8Data());
-            bool res = parser->consumeString() && parser->consumeIfNext('(');
+        for (unsigned i = 0; i < tokens.size(); i++) {
+            CSSPropertyParser parser((char*)tokens[i].data(),
+                                     tokens[i].length());
+            bool res = parser.consumeString() && parser.consumeIfNext('(');
             if (!res) {
                 return false;
             }
-            String* name = parser->parsedString();
+            String* name = parser.parsedString();
             enum {
                 Number,          // <number>
                 Angle,           // <angle>
@@ -5572,19 +5551,19 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                 new ValueList(ValueList::Separator::CommaSeparator);
             int idx = -1;
             for (idx = 0; idx < maxArgCnt; idx++) {
-                parser->consumeWhitespaces();
-                if (!parser->consumeNumber()) {
+                parser.consumeWhitespaces();
+                if (!parser.consumeNumber()) {
                     return false;
                 }
-                float num = parser->parsedNumber();
+                float num = parser.parsedNumber();
 
                 if (unit == Number) {
                     values->emplace_back(CSSStyleValuePair::ValueKind::Number,
                                          num);
                 } else if (unit == Angle) {
                     String* str = String::emptyString;
-                    if (parser->consumeString()) {
-                        str = parser->parsedString();
+                    if (parser.consumeString()) {
+                        str = parser.parsedString();
                         if (!((str->length() == 0 && num == 0) ||
                               str->equals("deg") || str->equals("grad") ||
                               str->equals("rad") || str->equals("turn"))) {
@@ -5598,8 +5577,8 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                     values->emplace_back(CSSStyleValuePair::ValueKind::Angle,
                                          data);
                 } else { // TranslationValue
-                    if (parser->consumeString()) {
-                        String* str = parser->parsedString();
+                    if (parser.consumeString()) {
+                        String* str = parser.parsedString();
                         if (str->equals("%")) {
                             ValueData data = { num / 100.f };
                             values->emplace_back(
@@ -5618,12 +5597,12 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
                         return false;
                     }
                 }
-                parser->consumeWhitespaces();
-                if (!parser->consumeIfNext(',')) {
+                parser.consumeWhitespaces();
+                if (!parser.consumeIfNext(',')) {
                     break;
                 }
             }
-            if (!(parser->consumeIfNext(')') && parser->isEnd()) ||
+            if (!(parser.consumeIfNext(')') && parser.isEnd()) ||
                 idx + 1 < minArgCnt) {
                 return false;
             }
@@ -5633,30 +5612,30 @@ bool CSSStyleValuePair::updateValueTransform(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueOpacity(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueOpacity(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
     float f;
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    if (CSSPropertyParser::parseNumber((*tokens)[0]->utf8Data(), true, &f)) {
+    if (CSSPropertyParser::parseNumber(tokens[0].data(), true, &f)) {
         m_value.m_floatValue = f;
         return true;
     }
     return false;
 }
 
-bool CSSStyleValuePair::updateValueFontWeight(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueFontWeight(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitFontWeight((*tokens)[0]);
+    return updateValueUnitFontWeight(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueUnitFontWeight(String* value)
+bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FontWeightValueKind;
 
@@ -5694,13 +5673,13 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueOverflow(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueOverflow(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (STRING_VALUE_IS_STRING("visible")) {
@@ -5713,13 +5692,13 @@ bool CSSStyleValuePair::updateValueOverflow(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValuePosition(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     // <static> | relative | absolute | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::PositionValueKind;
 
@@ -5735,13 +5714,13 @@ bool CSSStyleValuePair::updateValuePosition(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTextDecoration(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     // none | [ underline || line-through ] | inherit // Initial value -> none
     m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
 
@@ -5760,13 +5739,13 @@ bool CSSStyleValuePair::updateValueTextDecoration(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTextAlign(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     if (STRING_VALUE_IS_STRING("left")) {
         m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
         m_value.m_side = SideValue::LeftSideValue;
@@ -5782,13 +5761,13 @@ bool CSSStyleValuePair::updateValueTextAlign(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnicodeBidi(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueUnicodeBidi(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     if (STRING_VALUE_IS_STRING("normal")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
@@ -5804,14 +5783,14 @@ bool CSSStyleValuePair::updateValueUnicodeBidi(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueVisibility(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueVisibility(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::VisibilityValueKind;
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     if (STRING_VALUE_IS_STRING("visible")) {
         m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
@@ -5822,13 +5801,13 @@ bool CSSStyleValuePair::updateValueVisibility(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueZIndex(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueZIndex(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    const char* token = (*tokens)[0]->utf8Data();
+    const char* token = tokens[0].data();
     int32_t val = 0;
     if (TOKEN_IS_STRING("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
@@ -5841,13 +5820,13 @@ bool CSSStyleValuePair::updateValueZIndex(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderCollapse(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBorderCollapse(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BorderCollapseValueKind;
     if (STRING_VALUE_IS_STRING("separate")) {
         m_value.m_borderCollapse =
@@ -5861,26 +5840,26 @@ bool CSSStyleValuePair::updateValueBorderCollapse(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueBorderSpacing(const CSSTokenVector& tokens)
 {
     // <length> <length>? | inherit,
     // Initial : 0, Percentages: N/A, lengths may not be negative.
-    if (tokens->size() == 1) {
-        String* first = (*tokens)[0];
+    if (tokens.size() == 1) {
+        const CSSTokenValue& first = tokens[0];
         ValueData data = { 0 };
-        if (CSSPropertyParser::parseLength(first->utf8Data(), false,
+        if (CSSPropertyParser::parseLength(first.data(), false,
                                            &(data.m_length))) {
             setLengthValue(data.m_length);
             return true;
         }
-    } else if (tokens->size() == 2) {
-        String* first = (*tokens)[0];
-        String* second = (*tokens)[1];
+    } else if (tokens.size() == 2) {
+        const CSSTokenValue& first = tokens[0];
+        const CSSTokenValue& second = tokens[1];
         ValueData firstData = { 0 };
         ValueData secondData = { 0 };
-        if (CSSPropertyParser::parseLength(first->utf8Data(), false,
+        if (CSSPropertyParser::parseLength(first.data(), false,
                                            &(firstData.m_length)) &&
-            CSSPropertyParser::parseLength(second->utf8Data(), false,
+            CSSPropertyParser::parseLength(second.data(), false,
                                            &(secondData.m_length))) {
             m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
             m_value.m_multiValue =
@@ -5895,13 +5874,13 @@ bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
     return false;
 }
 
-bool CSSStyleValuePair::updateValueCaptionSide(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueCaptionSide(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::CaptionSideValueKind;
     if (STRING_VALUE_IS_STRING("top")) {
         m_value.m_captionSide = CaptionSideValue::TopCaptionSideValue;
@@ -5913,13 +5892,13 @@ bool CSSStyleValuePair::updateValueCaptionSide(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTableLayout(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTableLayout(const CSSTokenVector& tokens)
 {
-    if (tokens->size() != 1) {
+    if (tokens.size() != 1) {
         return false;
     }
 
-    String* value = (*tokens)[0];
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::TableLayoutValueKind;
     if (STRING_VALUE_IS_STRING("auto")) {
         m_value.m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
@@ -5931,28 +5910,30 @@ bool CSSStyleValuePair::updateValueTableLayout(GCVector<String*>* tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransitionProperty(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTransitionProperty(
+    const CSSTokenVector& tokens)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransitionDuration(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTransitionDuration(
+    const CSSTokenVector& tokens)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
 
 bool CSSStyleValuePair::updateValueTransitionTimingFunction(
-    GCVector<String*>* tokens)
+    const CSSTokenVector& tokens)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransitionDelay(GCVector<String*>* tokens)
+bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
 
