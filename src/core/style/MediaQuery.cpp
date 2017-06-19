@@ -78,35 +78,36 @@ MediaQuery::MediaQuery(const MediaQuery& o)
 
 String* MediaQuery::serialize() const
 {
-    String* result = String::emptyString;
+    StringBuilder result;
+    ;
     switch (m_restrictor) {
     case MediaQuery::Only:
-        result->concat(String::createASCIIString("only "));
+        result.appendString("only ");
         break;
     case MediaQuery::Not:
-        result->concat(String::createASCIIString("not "));
+        result.appendString("not ");
         break;
     case MediaQuery::None:
         break;
     }
 
     if (m_expressions.empty()) {
-        result->concat(m_mediaType);
-        return result;
+        result.appendString(m_mediaType);
+        return result.finalize();
     }
 
     if (!m_mediaType->equals(String::createASCIIString("all")) ||
         m_restrictor != None) {
-        result->concat(m_mediaType);
-        result->concat(String::createASCIIString(" and "));
+        result.appendString(m_mediaType);
+        result.appendString(" and ");
     }
 
-    result->concat(m_expressions.at(0)->serialize());
+    result.appendString(m_expressions.at(0)->serialize());
     for (size_t i = 1; i < m_expressions.size(); ++i) {
-        result->concat(String::createASCIIString(" and "));
-        result->concat(m_expressions.at(i)->serialize());
+        result.appendString(String::createASCIIString(" and "));
+        result.appendString(m_expressions.at(i)->serialize());
     }
-    return result;
+    return result.finalize();
 }
 
 String* MediaQuery::cssText() const

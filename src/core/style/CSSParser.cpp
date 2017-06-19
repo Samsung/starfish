@@ -2730,32 +2730,32 @@ MediaQueryExp* MediaQueryExp::createIfValid(
 
 String* MediaQueryExp::serialize() const
 {
-    String* result = String::emptyString;
-    result->concat("(");
-    result->concat(m_mediaFeature->toLower());
+    StringBuilder result;
+    result.appendChar('(');
+    result.appendString(m_mediaFeature->toLower());
     if (m_expValue.isValid()) {
-        result->concat(": ");
-        result->concat(m_expValue.cssText());
+        result.appendString(": ");
+        result.appendString(m_expValue.cssText());
     }
-    result->concat(")");
+    result.appendChar(')');
 
-    return result;
+    return result.finalize();
 }
 
 String* MediaQueryExpValue::cssText() const
 {
-    String* output = String::emptyString;
+    StringBuilder output;
     if (isValue) {
-        output->concat(String::fromFloat(value));
-        output->concat(unitTypeToString(unit));
+        output.appendString(String::fromFloat(value));
+        output.appendString(unitTypeToString(unit));
     } else if (isRatio) {
-        output->concat(String::fromFloat(numerator));
-        output->concat("/");
-        output->concat(String::fromFloat(denominator));
+        output.appendString(String::fromFloat(numerator));
+        output.appendChar('/');
+        output.appendString(String::fromFloat(denominator));
     } else if (isID) {
-        output->concat(id);
+        output.appendString(id);
     }
 
-    return output;
+    return output.finalize();
 }
 }

@@ -12,5 +12,5 @@ interface CSSRule {
   readonly attribute unsigned short type;
   attribute CSSOMString cssText;
   readonly attribute CSSRule? parentRule;
-  [Unimplemented] readonly attribute CSSStyleSheet? parentStyleSheet;
+  readonly attribute CSSStyleSheet? parentStyleSheet;
 };

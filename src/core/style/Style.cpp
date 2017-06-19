@@ -926,14 +926,15 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
 
 String* CSSStyleDeclaration::generateCSSText() const
 {
-    String* txt = String::emptyString;
+    StringBuilder txt;
+    ;
     for (size_t i = 0; i < m_cssValues.size(); i++) {
-        txt = txt->concat(m_cssValues[i].keyName());
-        txt = txt->concat(String::createASCIIString(":"));
-        txt = txt->concat(m_cssValues[i].toString());
-        txt = txt->concat(String::createASCIIString(";"));
+        txt.appendString(m_cssValues[i].keyName());
+        txt.appendString(": ");
+        txt.appendString(m_cssValues[i].toString());
+        txt.appendChar(';');
     }
-    return txt;
+    return txt.finalize();
 }
 
 String* CSSStyleDeclaration::Border()
