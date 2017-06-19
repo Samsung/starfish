@@ -36,12 +36,12 @@ public:
                       void* domObjectPointer) override;
     virtual bool isStorageImpl() const override;
 
-    unsigned long length();
-    String* key(unsigned long index);
-    String* getItem(String* key);
-    void setItem(String* key, String* value);
-    void removeItem(String* key);
-    void clear();
+    unsigned long length() override;
+    Nullable<String*> key(unsigned long index) override;
+    Nullable<String*> getItem(String* key) override;
+    void setItem(String* key, String* value) override;
+    void removeItem(String* key) override;
+    void clear() override;
 
 private:
     StorageImpl(Window* window);
