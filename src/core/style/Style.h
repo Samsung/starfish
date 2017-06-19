@@ -19,6 +19,7 @@
 
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
+#include "core/util/VectorWithInlineStorage.h"
 
 namespace StarFish {
 
@@ -31,6 +32,115 @@ class Element;
 class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
+
+class CSSTokenValue : public std::string {
+public:
+    CSSTokenValue()
+        : std::string()
+    {
+    }
+
+    CSSTokenValue(const char* str)
+        : std::string(str)
+    {
+    }
+
+    CSSTokenValue(const char* str, size_t len)
+        : std::string(str, len)
+    {
+    }
+
+    CSSTokenValue(std::string&& str)
+        : std::string(std::move(str))
+    {
+    }
+
+    bool startsWith(const char* str) const
+    {
+        if (std::string::find(str) == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    size_t indexOf(char ch) const
+    {
+        return std::string::find(ch);
+    }
+
+    bool equals(const char* str) const
+    {
+        size_t srcLen = strlen(str);
+        if (length() != srcLen) {
+            return false;
+        }
+        for (size_t i = 0; i < length(); i++) {
+            char c = str[i];
+            if (c != std::string::operator[](i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    CSSTokenValue substring(size_t pos, size_t len) const
+    {
+        return std::string::substr(pos, len);
+    }
+
+    void split(const char delim, std::vector<CSSTokenValue>& tokens) const
+    {
+        size_t prev_pos = 0, pos = 0;
+        while ((pos = find(delim, pos)) != SIZE_MAX) {
+            tokens.push_back(
+                CSSTokenValue(&std::string::data()[prev_pos], pos - prev_pos));
+            prev_pos = ++pos;
+        }
+
+        if (pos == SIZE_MAX)
+            pos = length();
+
+        tokens.push_back(CSSTokenValue(&std::string::data()[prev_pos],
+                                       pos - prev_pos)); // Last word
+    }
+
+    char charAt(size_t i) const
+    {
+        return std::string::operator[](i);
+    }
+
+    CSSTokenValue trim() const
+    {
+        size_t first = 0;
+        size_t last = 0;
+        if (length()) {
+            last = length() - 1;
+
+            for (size_t i = 0; i < length(); i++) {
+                if (!String::isSpaceOrNewline(charAt(i))) {
+                    first = i;
+                    break;
+                }
+            }
+
+            do {
+                if (!String::isSpaceOrNewline(charAt(last))) {
+                    break;
+                }
+            } while (last--);
+        } else {
+            return *this;
+        }
+
+        if (first == 0 && ((last + 1) == length())) {
+            return *this;
+        }
+
+        return substring(first, (last - first + 1));
+    }
+};
+typedef VectorWithInlineStorage<4, CSSTokenValue, std::allocator<CSSTokenValue>>
+    CSSTokenVector;
 
 enum UnitType {
     UnknownType,
@@ -885,7 +995,7 @@ public:
         m_flagImportant = isImportant;
     }
 
-    bool updateValueCommon(GCVector<String*>* tokens);
+    bool updateValueCommon(const CSSTokenVector& tokens);
 
     bool isAuto()
     {
@@ -1344,40 +1454,44 @@ public:
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
-    bool updateValue##name(GCVector<String*>* tokens);
+    bool updateValue##name(const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
-    bool updateValueLengthOrPercent(GCVector<String*>* tokens,
+    bool updateValueLengthOrPercent(const CSSTokenVector& tokens,
                                     bool allowNegative);
-    bool updateValueLengthOrPercent(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(GCVector<String*>* tokens,
+    bool updateValueLengthOrPercent(const CSSTokenValue& token,
+                                    bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(const CSSTokenVector& tokens,
                                           bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(GCVector<String*>* tokens,
+    bool updateValueLengthOrPercentOrAutoOrNone(const CSSTokenVector& tokens,
                                                 bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(String* token,
+    bool updateValueLengthOrPercentOrAuto(const CSSTokenValue& token,
+                                          bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(const CSSTokenValue& token,
                                                 bool allowNegative);
 
-    bool updateValueBackgroundImage(GCVector<String*>* tokens, bool allowComma);
-    bool updateValueBackgroundSize(GCVector<String*>* tokens, bool allowComma);
-    bool updateValueUnitBackgroundRepeat(String* token);
-    bool updateValueUnitBackgroundPositionX(String* token);
-    bool updateValueUnitBackgroundPositionY(String* token);
-    bool updateValueUnitBorderStyle(String* token);
-    bool updateValueUnitBorderWidth(String* token);
-    bool updateValueUnitBorderColor(String* token);
-    bool updateValueUnitColor(String* token);
-    bool updateValueUnitUrlOrNone(String* token);
-    bool updateValueUnitMargin(String* token);
-    bool updateValueUnitPadding(String* token);
-    bool updateValueUnitFontSize(String* token);
-    bool updateValueUnitFontStyle(String* token);
-    bool updateValueUnitFontWeight(String* token);
-    bool updateValueUnitLineHeight(String* token);
-    bool updateValueUnitTransitionProperty(String* value);
-    bool updateValueUnitTransitionTimingFunction(String* value);
-    bool updateValueUnitTransitionTime(String* value);
+    bool updateValueBackgroundImage(const CSSTokenVector& tokens,
+                                    bool allowComma);
+    bool updateValueBackgroundSize(const CSSTokenVector& tokens,
+                                   bool allowComma);
+    bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
+    bool updateValueUnitBackgroundPositionX(const CSSTokenValue& token);
+    bool updateValueUnitBackgroundPositionY(const CSSTokenValue& token);
+    bool updateValueUnitBorderStyle(const CSSTokenValue& token);
+    bool updateValueUnitBorderWidth(const CSSTokenValue& token);
+    bool updateValueUnitBorderColor(const CSSTokenValue& token);
+    bool updateValueUnitColor(const CSSTokenValue& token);
+    bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
+    bool updateValueUnitMargin(const CSSTokenValue& token);
+    bool updateValueUnitPadding(const CSSTokenValue& token);
+    bool updateValueUnitFontSize(const CSSTokenValue& token);
+    bool updateValueUnitFontStyle(const CSSTokenValue& token);
+    bool updateValueUnitFontWeight(const CSSTokenValue& token);
+    bool updateValueUnitLineHeight(const CSSTokenValue& token);
+    bool updateValueUnitTransitionProperty(const CSSTokenValue& value);
+    bool updateValueUnitTransitionTimingFunction(const CSSTokenValue& value);
+    bool updateValueUnitTransitionTime(const CSSTokenValue& value);
 
 protected:
     KeyKind m_keyKind : 8;

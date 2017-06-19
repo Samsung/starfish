@@ -49,8 +49,6 @@
 #include <net/if.h>
 #endif
 
-// #define STARFISH_ENABLE_TIMER
-
 namespace StarFish {
 
 Window* Window::create(StarFish* starFish, BrowsingContext* browsingContext,
