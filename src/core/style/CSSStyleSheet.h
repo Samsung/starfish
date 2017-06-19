@@ -64,13 +64,11 @@ public:
 
     GCVector<std::pair<StyleRule*, ResourceURL*>>& rules()
     {
-        STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_styleRules;
     }
 
     GCVector<StyleRuleBase*>& allRules()
     {
-        STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_allRules;
     }
 
@@ -108,6 +106,7 @@ public:
 
     unsigned length() const;
     CSSRule* item(unsigned index);
+    StyleRuleBase* ruleAt(unsigned index) const;
 
     CSSRuleList* cssRules();
 
@@ -121,6 +120,8 @@ protected:
     GCVector<StyleRuleImport*> m_importRules;
     StyleRuleImport* m_ownerRule;
     CSSRuleList* m_ruleList;
+
+    GCVector<CSSRule*> m_childRuleWrappers;
 };
 
 } /* namespace StarFish */

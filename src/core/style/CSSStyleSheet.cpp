@@ -42,17 +42,12 @@ public:
 private:
     unsigned length() const override
     {
-        return m_styleSheet->allRules().size();
+        return m_styleSheet->length();
     }
 
     CSSRule* item(unsigned index) const override
     {
-        if (index < length()) {
-            CSSRule* rule = m_styleSheet->allRules()[index]->createCSSOMWrapper(
-                const_cast<CSSStyleSheet*>(m_styleSheet));
-            return rule;
-        }
-        return nullptr;
+        return m_styleSheet->item(index);
     }
 
     CSSStyleSheet* styleSheet() const override
@@ -229,6 +224,42 @@ CSSRuleList* CSSStyleSheet::cssRules()
         m_ruleList = new StyleSheetCSSRuleList(this);
     }
     return m_ruleList;
+}
+
+unsigned CSSStyleSheet::length() const
+{
+    return m_importRules.size() + m_allRules.size();
+}
+
+StyleRuleBase* CSSStyleSheet::ruleAt(unsigned index) const
+{
+    STARFISH_ASSERT(index < length());
+
+    if (index < m_importRules.size()) {
+        return m_importRules[index];
+    }
+
+    index -= m_importRules.size();
+    return m_allRules[index];
+}
+
+CSSRule* CSSStyleSheet::item(unsigned index)
+{
+    unsigned ruleCount = length();
+    if (index >= ruleCount) {
+        return nullptr;
+    }
+
+    if (m_childRuleWrappers.size() == 0) {
+        m_childRuleWrappers.resize(ruleCount);
+    }
+
+    if (!m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index] =
+            ruleAt(index)->createCSSOMWrapper(const_cast<CSSStyleSheet*>(this));
+    }
+
+    return m_childRuleWrappers[index];
 }
 
 } /* namespace StarFish */

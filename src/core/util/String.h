@@ -295,6 +295,10 @@ public:
     virtual size_t length() const = 0;
     virtual char32_t charAt(const size_t& idx) const = 0;
     virtual StringBufferAccessData bufferAccessData() const = 0;
+    bool isEmpty() const
+    {
+        return length() == 0;
+    }
 
     char32_t operator[](const size_t& idx) const
     {

@@ -62,16 +62,17 @@ CSSStyleDeclaration* CSSStyleRule::style()
 
 String* CSSStyleRule::cssText()
 {
-    String* result = selectorText();
-    result->concat(String::createASCIIString(" { "));
+    StringBuilder result;
+    result.appendString(selectorText());
+    result.appendString(" { ");
 
     String* decls = m_styleRule->styleDeclaration()->generateCSSText();
-    result->concat(decls);
-    if (!decls->equals(String::emptyString)) {
-        result->concat(String::createASCIIString(" "));
+    result.appendString(decls);
+    if (!decls->isEmpty()) {
+        result.appendChar(' ');
     }
-    result->concat(String::createASCIIString("}"));
-    return result;
+    result.appendChar('}');
+    return result.finalize();
 }
 
 String* CSSStyleRule::selectorText() const
@@ -87,16 +88,16 @@ void CSSStyleRule::setSelectorText(String* selectorText)
 
 String* CSSStyleRule::generateSelectorText() const
 {
-    String* result = String::emptyString;
+    StringBuilder result;
     CSSSelctorList selectors = m_styleRule->selectorList();
     for (size_t i = 0; i < selectors.size(); ++i) {
         if (i != 0) {
-            result->concat(String::createASCIIString(", "));
+            result.appendString(", ");
         }
-        result->concat(selectors[i]->selectorText().string());
+        result.appendString(selectors[i]->selectorText().string());
     }
 
-    return result;
+    return result.finalize();
 }
 
 CSSGroupingRule::CSSGroupingRule(StyleRuleGroup* groupRule,
@@ -105,7 +106,7 @@ CSSGroupingRule::CSSGroupingRule(StyleRuleGroup* groupRule,
     , m_groupRule(groupRule)
     , m_ruleListWrapper(nullptr)
 {
-    m_childRuleWrappers.reserve(groupRule->childRules().size());
+    m_childRuleWrappers.resize(groupRule->childRules().size());
 }
 
 CSSRuleList* CSSGroupingRule::cssRules()
@@ -131,10 +132,10 @@ void CSSGroupingRule::deleteRule(unsigned index)
 
 unsigned CSSGroupingRule::length() const
 {
-    return m_childRuleWrappers.size();
+    return m_groupRule->childRules().size();
 }
 
-CSSRule* CSSGroupingRule::item(unsigned index) const
+CSSRule* CSSGroupingRule::item(unsigned index)
 {
     if (index >= length()) {
         return nullptr;
@@ -142,22 +143,23 @@ CSSRule* CSSGroupingRule::item(unsigned index) const
 
     STARFISH_ASSERT(m_childRuleWrappers.size() ==
                     m_groupRule->childRules().size());
-    CSSRule* rule = m_childRuleWrappers[index];
-    if (!rule) {
-        rule = m_groupRule->childRules()[index]->createCSSOMWrapper(
-            const_cast<CSSGroupingRule*>(this));
+
+    if (!m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index] =
+            m_groupRule->childRules()[index]->createCSSOMWrapper(
+                const_cast<CSSGroupingRule*>(this));
     }
 
-    return rule;
+    return m_childRuleWrappers[index];
 }
 
-void CSSGroupingRule::appendCSSTextForItems(String* result)
+void CSSGroupingRule::appendCSSTextForItems(StringBuilder& result)
 {
     unsigned size = length();
     for (unsigned i = 0; i < size; ++i) {
-        result->concat(String::createASCIIString("  "));
-        result->concat(item(i)->cssText());
-        result->concat(String::createASCIIString("\n"));
+        result.appendString("  ");
+        result.appendString(item(i)->cssText());
+        result.appendChar('\n');
     }
 }
 
@@ -179,16 +181,16 @@ CSSMediaRule::CSSMediaRule(StyleRuleMedia* mediaRule, CSSStyleSheet* parent)
 
 String* CSSMediaRule::cssText()
 {
-    String* result = String::emptyString;
-    result->concat(String::createASCIIString("@media "));
+    StringBuilder result;
+    result.appendString("@media ");
     if (mediaQuerySet()) {
-        result->concat(mediaQuerySet()->mediaText());
-        result->concat(String::createASCIIString(" "));
+        result.appendString(mediaQuerySet()->mediaText());
+        result.appendChar(' ');
     }
-    result->concat(String::createASCIIString("{ \n"));
+    result.appendString("{ \n");
     appendCSSTextForItems(result);
-    result->concat(String::createASCIIString("}"));
-    return result;
+    result.appendChar('}');
+    return result.finalize();
 }
 
 String* CSSMediaRule::conditionText() const
@@ -217,21 +219,21 @@ CSSImportRule::CSSImportRule(StyleRuleImport* importRule, CSSStyleSheet* parent)
 
 String* CSSImportRule::cssText()
 {
-    String* result = String::emptyString;
-    result->concat(String::createASCIIString("@import url(\""));
-    result->concat(m_importRule->href());
-    result->concat(String::createASCIIString("\")"));
+    StringBuilder result;
+    result.appendString("@import url(\"");
+    result.appendString(m_importRule->href());
+    result.appendString("\")");
 
     if (m_importRule->mediaQuerySet()) {
         String* mediaText = m_importRule->mediaQuerySet()->mediaText();
-        if (!mediaText->equals(String::emptyString)) {
-            result->concat(String::createASCIIString(" "));
-            result->concat(mediaText);
+        if (!mediaText->isEmpty()) {
+            result.appendChar(' ');
+            result.appendString(mediaText);
         }
     }
-    result->concat(String::createASCIIString(";"));
+    result.appendChar(';');
 
-    return result;
+    return result.finalize();
 }
 
 String* CSSImportRule::href() const

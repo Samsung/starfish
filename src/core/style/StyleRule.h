@@ -205,7 +205,7 @@ public:
 
     CSSStyleSheet* styleSheet()
     {
-        return m_styleSheet;
+        return m_generatedSheet;
     }
 
     void setStyleSheet(String* href, ResourceURL* baseURL, String* charset,
@@ -224,7 +224,6 @@ protected:
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
     CSSStyleSheet* m_parentStyleSheet;
-    CSSStyleSheet* m_styleSheet;
 };
 }
 

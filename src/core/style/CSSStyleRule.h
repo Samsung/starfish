@@ -69,10 +69,10 @@ public:
 
     // For CSSRuleList
     unsigned length() const;
-    CSSRule* item(unsigned index) const;
+    CSSRule* item(unsigned index);
 
 protected:
-    void appendCSSTextForItems(String*);
+    void appendCSSTextForItems(StringBuilder& result);
 
     StyleRuleGroup* m_groupRule;
     GCVector<CSSRule*> m_childRuleWrappers;
