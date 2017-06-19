@@ -46,7 +46,7 @@ unsigned long StorageImpl::length()
     return m_map.size();
 }
 
-String* StorageImpl::key(unsigned long index)
+Nullable<String*> StorageImpl::key(unsigned long index)
 {
     if (index >= m_map.size()) {
         return nullptr;
@@ -55,7 +55,7 @@ String* StorageImpl::key(unsigned long index)
     return itr->first;
 }
 
-String* StorageImpl::getItem(String* key)
+Nullable<String*> StorageImpl::getItem(String* key)
 {
     auto itr = m_map.find(key);
     if (itr == m_map.end()) {
@@ -67,14 +67,14 @@ String* StorageImpl::getItem(String* key)
 
 void StorageImpl::setItem(String* key, String* value)
 {
-    String* val = getItem(key);
-    if (val == nullptr) {
-        m_map.insert(std::pair<String*, String*>(key, value));
-    } else {
+    Nullable<String*> val = getItem(key);
+    if (val.hasValue()) {
         // Update only if the existing value is different
-        if (!(val->equals(value))) {
+        if (!(val.getValue()->equals(value))) {
             m_map.insert(std::pair<String*, String*>(key, value));
         }
+    } else {
+        m_map.insert(std::pair<String*, String*>(key, value));
     }
 }
 

@@ -34,8 +34,8 @@ public:
 
     // 4.1 Storage interface in IDL
     virtual unsigned long length() = 0;
-    virtual String* key(unsigned long index) = 0;
-    virtual String* getItem(String* key) = 0;
+    virtual Nullable<String*> key(unsigned long index) = 0;
+    virtual Nullable<String*> getItem(String* key) = 0;
     virtual void setItem(String* key, String* value) = 0;
     virtual void removeItem(String* key) = 0;
     virtual void clear() = 0;
