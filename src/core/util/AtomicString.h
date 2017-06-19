@@ -28,7 +28,8 @@ typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
 
 class AtomicString {
     friend class StarFish;
-    friend class CSSTokenString;
+    template <unsigned int>
+    friend class GatherableString;
     explicit AtomicString(String* str)
     {
         m_string = str;

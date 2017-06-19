@@ -141,8 +141,7 @@ public:
             STARFISH_ASSERT_NOT_REACHED();
             break;
         case HTMLToken::DOCTYPE:
-            m_name = AtomicString::createAttrAtomicString(
-                m_starFish, new StringDataUTF32(token.name()));
+            m_name = token.name().toAttrAtomicString(m_starFish);
             m_doctypeData = token.releaseDoctypeData();
             break;
         case HTMLToken::EndOfFile:
@@ -150,13 +149,28 @@ public:
         case HTMLToken::StartTag:
         case HTMLToken::EndTag: {
             m_selfClosing = token.selfClosing();
-            QualifiedName tagName = lookupHTMLTag(
-                *sf->staticStrings(), token.name().data(), token.name().size());
-            if (tagName.localName()->length()) {
+            QualifiedName tagName(AtomicString::emptyAtomicString(),
+                                  AtomicString::emptyAtomicString());
+            if (LIKELY(token.name().hasASCIIContent())) {
+                struct Sender {
+                    StaticStrings* staticStrings;
+                    QualifiedName* tagName;
+                } sender;
+                sender.staticStrings = sf->staticStrings();
+                sender.tagName = &tagName;
+                token.name().peekASCIIBuffer(
+                    [](const char* buf, size_t len, void* data) -> size_t {
+                        Sender* s = (Sender*)data;
+                        *s->tagName =
+                            lookupHTMLTag(*s->staticStrings, buf, len);
+                        return 0;
+                    },
+                    &sender);
+            }
+            if (LIKELY(tagName.localName()->length())) {
                 m_name = tagName.localNameAtomic();
             } else {
-                m_name = AtomicString::createAttrAtomicString(
-                    m_starFish, new StringDataUTF32(token.name()));
+                m_name = token.name().toAttrAtomicString(m_starFish);
             }
             initializeAttributes(token.attributes());
             break;
@@ -164,10 +178,9 @@ public:
         case HTMLToken::Character:
         case HTMLToken::Comment:
             if (token.isAll7BitData()) {
-                m_data = String::createASCIIStringFromUTF32Source(token.data());
+                m_data = token.data().toString();
             } else {
-                m_data = String::createASCIIStringFromUTF32SourceIfPossible(
-                    token.data());
+                m_data = token.data().toString();
             }
             break;
         }

@@ -42,6 +42,7 @@
 #define _StarFishHTMLToken_
 
 #include "core/util/String.h"
+#include "core/util/GatherableString.h"
 
 namespace StarFish {
 
@@ -62,6 +63,11 @@ public:
     String* m_systemIdentifier;
     bool m_forceQuirks;
 };
+
+// By using an inline capacity of 256, we avoid spilling over into an
+// malloced buffer approximately 99% of the time based on a non-scientific
+// browse around a number of popular web sites on 23 May 2013.
+typedef GatherableString<256> HTMLTokenString;
 
 class HTMLToken : public gc {
 public:
@@ -112,6 +118,7 @@ public:
     {
         return m_type == Uninitialized;
     }
+
     Type type() const
     {
         return m_type;
@@ -144,7 +151,7 @@ public:
         m_range.end = endOffset - m_baseOffset;
     }
 
-    const UTF32String& data() const
+    const HTMLTokenString& data() const
     {
         STARFISH_ASSERT(m_type == Character || m_type == Comment ||
                         m_type == StartTag || m_type == EndTag);
@@ -156,7 +163,7 @@ public:
         return (m_orAllData < 128);
     }
 
-    const UTF32String& name() const
+    const HTMLTokenString& name() const
     {
         STARFISH_ASSERT(m_type == StartTag || m_type == EndTag ||
                         m_type == DOCTYPE);
@@ -168,7 +175,7 @@ public:
         STARFISH_ASSERT(m_type == StartTag || m_type == EndTag ||
                         m_type == DOCTYPE);
         STARFISH_ASSERT(character);
-        m_data.push_back(character);
+        m_data.appendChar(character);
         m_orAllData |= character;
     }
 
@@ -197,7 +204,7 @@ public:
     {
         STARFISH_ASSERT(character);
         beginDOCTYPE();
-        m_data.push_back(character);
+        m_data.appendChar(character);
         m_orAllData |= character;
     }
 
@@ -277,7 +284,7 @@ public:
         m_currentAttribute = 0;
         m_attributes.clear();
 
-        m_data.push_back(character);
+        m_data.appendChar(character);
         m_orAllData |= character;
     }
 
@@ -289,7 +296,7 @@ public:
         m_currentAttribute = 0;
         m_attributes.clear();
 
-        m_data.push_back(character);
+        m_data.appendChar(character);
     }
 
     void beginEndTag(const GCVector<char>& characters)
@@ -301,7 +308,7 @@ public:
         m_attributes.clear();
 
         for (size_t i = 0; i < characters.size(); i++) {
-            m_data.push_back(characters[i]);
+            m_data.appendChar(characters[i]);
         }
     }
 
@@ -401,7 +408,7 @@ public:
         m_type = Character;
     }
 
-    const UTF32String& characters() const
+    const HTMLTokenString& characters() const
     {
         STARFISH_ASSERT(m_type == Character);
         return m_data;
@@ -410,13 +417,13 @@ public:
     void appendToCharacter(char character)
     {
         STARFISH_ASSERT(m_type == Character);
-        m_data.push_back(character);
+        m_data.appendChar(character);
     }
 
     void appendToCharacter(char32_t character)
     {
         STARFISH_ASSERT(m_type == Character);
-        m_data.push_back(character);
+        m_data.appendChar(character);
         m_orAllData |= character;
     }
 
@@ -425,13 +432,13 @@ public:
         STARFISH_ASSERT(m_type == Character);
 
         for (size_t i = 0; i < characters.size(); i++) {
-            m_data.push_back(characters[i]);
+            m_data.appendChar(characters[i]);
         }
     }
 
     /* Comment Tokens */
 
-    const UTF32String& comment() const
+    const HTMLTokenString& comment() const
     {
         STARFISH_ASSERT(m_type == Comment);
         return m_data;
@@ -447,7 +454,7 @@ public:
     {
         STARFISH_ASSERT(character);
         STARFISH_ASSERT(m_type == Comment);
-        m_data.push_back(character);
+        m_data.appendChar(character);
         m_orAllData |= character;
     }
 
@@ -462,10 +469,7 @@ private:
     Type m_type;
     Attribute::Range m_range; // Always starts at zero.
     int m_baseOffset;
-    // By using an inline capacity of 256, we avoid spilling over into an
-    // malloced buffer approximately 99% of the time based on a non-scientific
-    // browse around a number of popular web sites on 23 May 2013.
-    UTF32String m_data;
+    HTMLTokenString m_data;
     char32_t m_orAllData;
 
     // For StartTag and EndTag

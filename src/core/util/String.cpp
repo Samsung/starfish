@@ -57,6 +57,61 @@ String* const String::inheritString =
 String* const String::initialString =
     String::createASCIIStringWithNoGC("initial");
 
+static size_t utf8ContentLength(const char* UTF8, size_t len)
+{
+    size_t contentLength = 0;
+    const char* bufferEnd = &UTF8[len];
+    for (size_t i = 0; i < len;) {
+        // ASCII byte
+        if (0 == (UTF8[i] & 0x80)) {
+            i += 1;
+            contentLength++;
+        } else {
+            // Start byte for 2byte
+            if (0xC0 == (UTF8[i] & 0xE0) && &UTF8[i + 1] < bufferEnd &&
+                0x80 == (UTF8[i + 1] & 0xC0)) {
+                i += 2;
+                contentLength++;
+            } else // Start byte for 3byte
+                if (0xE0 == (UTF8[i] & 0xF0) && &UTF8[i + 2] < bufferEnd &&
+                    0x80 == (UTF8[i + 1] & 0xC0) &&
+                    0x80 == (UTF8[i + 2] & 0xC0)) {
+                i += 3;
+                contentLength++;
+            } else // Start byte for 4byte
+                if (0xF0 == (UTF8[i] & 0xF8) && &UTF8[i + 3] < bufferEnd &&
+                    0x80 == (UTF8[i + 1] & 0xC0) &&
+                    0x80 == (UTF8[i + 2] & 0xC0) &&
+                    0x80 == (UTF8[i + 3] & 0xC0)) {
+                i += 4;
+                contentLength++;
+            } else // Start byte for 5byte
+                if (0xF8 == (UTF8[i] & 0xFC) && &UTF8[i + 4] < bufferEnd &&
+                    0x80 == (UTF8[i + 1] & 0xC0) &&
+                    0x80 == (UTF8[i + 2] & 0xC0) &&
+                    0x80 == (UTF8[i + 3] & 0xC0) &&
+                    0x80 == (UTF8[i + 4] & 0xC0)) {
+                i += 5;
+                contentLength++;
+            } else // Start byte for 6byte
+                if (0xFC == (UTF8[i] & 0xFE) && &UTF8[i + 5] < bufferEnd &&
+                    0x80 == (UTF8[i + 1] & 0xC0) &&
+                    0x80 == (UTF8[i + 2] & 0xC0) &&
+                    0x80 == (UTF8[i + 3] & 0xC0) &&
+                    0x80 == (UTF8[i + 4] & 0xC0) &&
+                    0x80 == (UTF8[i + 5] & 0xC0)) {
+                i += 6;
+                contentLength++;
+            } else {
+                i += 1;
+                contentLength++;
+            }
+        }
+    }
+
+    return contentLength;
+}
+
 size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 {
     size_t tRequiredSize = 0;
@@ -285,12 +340,15 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
     : String()
 {
+    size_t utf32Length = utf8ContentLength(src, len);
     UTF32String data;
+    data.resize(utf32Length);
     const char* end = src + len;
+    size_t i = 0;
     while (end != src) {
         char32_t c;
-        src += utf8ToUtf32(src, &src[len], c);
-        data += c;
+        src += utf8ToUtf32(src, end, c);
+        data[i++] = c;
     }
     m_data = data.toBasicStringAndMakeEmpty();
 }

@@ -177,6 +177,8 @@ inline CharType toASCIILower(CharType c)
 #endif
 }
 
+size_t utf32ToUtf8(char32_t uc, char* UTF8);
+
 struct NullableUTF8String : public gc {
     NullableUTF8String(const char* buffer, const size_t& bufferSize)
     {
@@ -1354,8 +1356,6 @@ private:
     void (SegmentedString::*m_advanceFunc)();
     void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
 };
-
-size_t utf32ToUtf8(char32_t uc, char* UTF8);
 }
 
 namespace std {

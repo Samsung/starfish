@@ -21,6 +21,7 @@
 #include "core/style/Style.h"
 #include "core/style/MediaQuerySet.h"
 #include "core/util/RefPtr.h"
+#include "core/util/GatherableString.h"
 
 namespace StarFish {
 
@@ -566,135 +567,7 @@ class CSSParser;
 #define CSSTOKENSTRING_BUILTIN_BUFFER_SIZE 24
 #endif
 
-class CSSTokenString : public gc {
-public:
-    CSSTokenString()
-    {
-        m_hasASCIIContent = true;
-        m_length = 0;
-        m_externalString = nullptr;
-    }
-
-    CSSTokenString(const CSSTokenString& src)
-    {
-        operator=(src);
-    }
-
-    void operator=(const CSSTokenString& src)
-    {
-        m_hasASCIIContent = src.m_hasASCIIContent;
-        m_length = src.m_length;
-        memcpy(
-            m_builtInBuffer, src.m_builtInBuffer,
-            sizeof(char32_t) *
-                std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
-        if (src.m_externalString) {
-            m_externalString = new UTF32String(*src.m_externalString);
-        } else {
-            m_externalString = nullptr;
-        }
-    }
-
-    CSSTokenString(CSSTokenString&& src)
-    {
-        m_hasASCIIContent = src.m_hasASCIIContent;
-        m_length = src.m_length;
-        memcpy(
-            m_builtInBuffer, src.m_builtInBuffer,
-            sizeof(char32_t) *
-                std::min((size_t)CSSTOKENSTRING_BUILTIN_BUFFER_SIZE, m_length));
-        m_externalString = src.m_externalString;
-
-        src.m_hasASCIIContent = true;
-        src.m_length = 0;
-        src.m_externalString = nullptr;
-    }
-
-    void clear()
-    {
-        m_length = 0;
-        m_hasASCIIContent = true;
-        m_externalString = nullptr;
-    }
-
-    void appendChar(char32_t ch)
-    {
-        if (ch > 127) {
-            m_hasASCIIContent = false;
-        }
-        if (m_length < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
-            m_builtInBuffer[m_length++] = ch;
-        } else {
-            if (!m_externalString)
-                m_externalString = new UTF32String();
-            m_externalString->pushBack(ch);
-            m_length++;
-        }
-    }
-
-    size_t indexOf(const char32_t& ch)
-    {
-        for (size_t i = 0; i < length(); i++) {
-            if (ch == charAt(i)) {
-                return i;
-            }
-        }
-        return SIZE_MAX;
-    }
-
-    bool contains(const char32_t& ch)
-    {
-        return indexOf(ch) != SIZE_MAX;
-    }
-
-    size_t length() const
-    {
-        return m_length;
-    }
-
-    char32_t charAt(const size_t& i) const
-    {
-        if (i < CSSTOKENSTRING_BUILTIN_BUFFER_SIZE) {
-            return m_builtInBuffer[i];
-        } else {
-            return (*m_externalString)[i - CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
-        }
-    }
-
-    bool hasASCIIContent() const
-    {
-        return m_hasASCIIContent;
-    }
-
-    void appendOther(const CSSTokenString& src)
-    {
-        for (size_t i = 0; i < src.length(); i++) {
-            appendChar(src.charAt(i));
-        }
-    }
-
-    bool equals(const char* src) const;
-    bool equalsWithoutCase(const char* src) const;
-    void toLower();
-    String* toString() const;
-    size_t peekASCIIBuffer(size_t (*cb)(const char* buffer, size_t len,
-                                        void* data),
-                           void* data) const;
-    size_t peekUTF32Buffer(size_t (*cb)(const char32_t* buffer, size_t len,
-                                        void* data),
-                           void* data) const;
-    size_t peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
-                                       void* data),
-                          void* data) const;
-    AtomicString toAtomicString(StarFish* sf);
-    AtomicString toAttrAtomicString(StarFish* sf);
-
-protected:
-    bool m_hasASCIIContent;
-    size_t m_length;
-    char32_t m_builtInBuffer[CSSTOKENSTRING_BUILTIN_BUFFER_SIZE];
-    UTF32String* m_externalString;
-};
+typedef GatherableString<CSSTOKENSTRING_BUILTIN_BUFFER_SIZE> CSSTokenString;
 
 class CSSToken : public RefCounted<CSSToken>, public gc {
     friend class CSSParser;
