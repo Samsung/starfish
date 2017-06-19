@@ -301,7 +301,7 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/#preprocessing-the-input-stream
     InputStreamPreprocessor<HTMLTokenizer> m_inputStreamPreprocessor;
 
-    UTF32String m_appropriateEndTagName;
+    HTMLTokenString m_appropriateEndTagName;
 
     // http://www.whatwg.org/specs/web-apps/current-work/#temporary-buffer
     ASCIIString m_temporaryBuffer;

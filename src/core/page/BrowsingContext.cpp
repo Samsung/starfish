@@ -292,7 +292,7 @@ void BrowsingContext::rendering()
     m_inRendering = true;
     STARFISH_RELEASE_ASSERT(m_isActive);
 #ifdef STARFISH_ENABLE_TIMER
-    Timer renderingTimer("Window::rendering");
+    Timer renderingTimer("BrowsingContext::rendering");
 #endif
     layoutIfNeeds();
 
@@ -467,6 +467,10 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 #else
     canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
+
+    if (!document()->rootElement()) {
+        return;
+    }
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
         LayoutRect colorRect(0, 0, document()->window()->width(),
