@@ -357,7 +357,8 @@ void StarFish::loadHTMLDocument(String* filePath)
                              &height);
 #endif
 
-    m_platformWindow = PlatformWindow::create(this, nativeHandle(), width, height);
+    m_platformWindow =
+        PlatformWindow::create(this, nativeHandle(), width, height);
     ResourceURL* url =
         new ResourceURL(String::emptyString, String::fromUTF8(path.c_str()));
 
@@ -389,9 +390,13 @@ void StarFish::close()
 
 String* StarFish::evaluate(String* s)
 {
-    return toBrowserString(
-        m_platformWindow->webView()->mainBrowsingContext()->scriptBindingInstance(),
-        evaluateString(m_platformWindow->webView()->mainBrowsingContext()->scriptBindingInstance(), s));
+    return toBrowserString(m_platformWindow->webView()
+                               ->mainBrowsingContext()
+                               ->scriptBindingInstance(),
+                           evaluateString(m_platformWindow->webView()
+                                              ->mainBrowsingContext()
+                                              ->scriptBindingInstance(),
+                                          s));
 }
 
 void StarFish::addPointerInRootSet(void* ptr)

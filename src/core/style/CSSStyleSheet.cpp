@@ -42,12 +42,17 @@ public:
 private:
     unsigned length() const override
     {
-        return m_styleSheet->length();
+        return m_styleSheet->allRules().size();
     }
 
     CSSRule* item(unsigned index) const override
     {
-        return m_styleSheet->item(index);
+        if (index < length()) {
+            CSSRule* rule = m_styleSheet->allRules()[index]->createCSSOMWrapper(
+                const_cast<CSSStyleSheet*>(m_styleSheet));
+            return rule;
+        }
+        return nullptr;
     }
 
     CSSStyleSheet* styleSheet() const override
@@ -224,18 +229,6 @@ CSSRuleList* CSSStyleSheet::cssRules()
         m_ruleList = new StyleSheetCSSRuleList(this);
     }
     return m_ruleList;
-}
-
-unsigned CSSStyleSheet::length() const
-{
-    // TODO : implement
-    return 0;
-}
-
-CSSRule* CSSStyleSheet::item(unsigned index)
-{
-    // TODO : implement
-    return nullptr;
 }
 
 } /* namespace StarFish */

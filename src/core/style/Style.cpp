@@ -4009,10 +4009,12 @@ public:
 
 protected:
     size_t m_size;
-    std::pair<CSSStyleDeclaration*, ResourceURL*> m_inlineStorage[InlineStorageSize];
+    std::pair<CSSStyleDeclaration*, ResourceURL*>
+        m_inlineStorage[InlineStorageSize];
     // We can use std::allocator here.
     // CSSStyleDeclaration* has strong reference on CSSStyleSheet
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_externalStorage;
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>
+        m_externalStorage;
 };
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
@@ -4039,7 +4041,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
             if (matchSelector(element, elementName, elementId, elementClasses,
                               selectorList, 0,
                               result) == Match::SelectorMatches) {
-                userAgentDeclarations.push_back(std::make_pair(rule->styleDeclaration(), url));
+                userAgentDeclarations.push_back(
+                    std::make_pair(rule->styleDeclaration(), url));
             }
         }
     }
