@@ -38,6 +38,7 @@ private:
     int m_width;
     int m_height;
     unsigned char* m_imageData;
+    unsigned char* m_bufferedInputData;
     bool m_bufferedInput;
 
     ImageFormat parseImageFormat();

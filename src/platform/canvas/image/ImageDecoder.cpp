@@ -31,6 +31,7 @@ ImageDecoder::ImageDecoder(const char* filename)
     , m_width(0)
     , m_height(0)
     , m_imageData(nullptr)
+    , m_bufferedInputData(nullptr)
     , m_bufferedInput(false)
 {
     m_fp = fopen(filename, "rb");
@@ -41,10 +42,11 @@ ImageDecoder::ImageDecoder(const char* buf, size_t len)
     , m_width(0)
     , m_height(0)
     , m_imageData(nullptr)
+    , m_bufferedInputData(nullptr)
     , m_bufferedInput(true)
 {
-    m_imageData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(len);
-    memcpy(m_imageData, buf, len);
+    m_bufferedInputData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(len);
+    memcpy(m_bufferedInputData, buf, len);
 }
 
 ImageDecoder::~ImageDecoder()
@@ -103,9 +105,9 @@ ImageDecoder::ImageFormat ImageDecoder::parseImageFormatFromBuffer()
 {
     ImageFormat imageFormat = ImageFormat::ERROR;
 
-    if (isPNGFormat(m_imageData)) {
+    if (isPNGFormat(m_bufferedInputData)) {
         imageFormat = ImageFormat::PNG;
-    } else if (isJPGFormat(m_imageData)) {
+    } else if (isJPGFormat(m_bufferedInputData)) {
         imageFormat = ImageFormat::JPG;
     } else {
         // TODO ERROR
@@ -187,7 +189,7 @@ void ImageDecoder::readPNGFileOrBufferedInput()
     }
 
     if (m_bufferedInput) {
-        readData.mem = m_imageData;
+        readData.mem = m_bufferedInputData;
         readData.size = 0;
         png_set_read_fn(png, &readData, readPNGFromBufferedInput);
     } else {
