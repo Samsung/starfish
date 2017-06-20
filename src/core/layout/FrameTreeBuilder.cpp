@@ -127,9 +127,10 @@ void FrameTreeBuilderContext::setIsInFrameInlineFlow(bool b)
 
 void FrameTreeBuilder::clearTree(Node* current)
 {
+    current->markNeedsFrameTreeBuild();
+    if (!current->frame())
+        return;
     current->setFrame(nullptr);
-    current->setNeedsFrameTreeBuild(true);
-
     Node* n = current->firstChild();
     while (n) {
         clearTree(n);
@@ -715,6 +716,11 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
         FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
         buildTree(n, ctx);
     }
+    n->clearNeedsFrameTreeBuild();
+    n->clearChildNeedsFrameTreeBuild();
+
+    document->clearNeedsFrameTreeBuild();
+    document->clearChildNeedsFrameTreeBuild();
 }
 #ifdef STARFISH_ENABLE_TEST
 void dump(Frame* frm, unsigned depth)

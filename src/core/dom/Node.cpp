@@ -1156,6 +1156,8 @@ void Node::setNeedsFrameTreeBuild()
         return;
     }
 
+    window()->browsingContext()->setNeedsFrameTreeBuild();
+
     Frame* old = frame();
     if (old) {
         Frame* parent = old->parent();
@@ -1181,13 +1183,12 @@ void Node::setNeedsFrameTreeBuild()
         Node* node = parent->node()->firstChild();
         while (node) {
             FrameTreeBuilder::clearTree(node);
-            node->m_needsFrameTreeBuild = true;
             node = node->nextSibling();
         }
 
         node = parent->node();
         while (node) {
-            node->setChildNeedsFrameTreeBuild();
+            node->markChildNeedsFrameTreeBuild();
             node = node->parentNode();
         }
     } else {
@@ -1200,8 +1201,6 @@ void Node::setNeedsFrameTreeBuild()
             node = node->parentNode();
         }
     }
-
-    window()->browsingContext()->setNeedsFrameTreeBuild();
 }
 
 void Node::setNeedsStyleRecalc()

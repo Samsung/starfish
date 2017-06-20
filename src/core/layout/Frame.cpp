@@ -610,7 +610,7 @@ bool Frame::isOverflowPropagatedToViewPort()
 {
     if (m_node && m_node->isHTMLHtmlElement()) {
         HTMLElement* bodyElement = m_node->document()->body();
-        if (bodyElement) {
+        if (bodyElement && bodyElement->style()) {
             return bodyElement->style()->overflow() != style()->overflow();
         }
         return style()->overflow() != OverflowValue::VisibleOverflow;

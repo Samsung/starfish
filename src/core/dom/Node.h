@@ -412,9 +412,9 @@ public:
 
     void setNeedsFrameTreeBuild();
 
-    void setNeedsFrameTreeBuild(bool value)
+    void markNeedsFrameTreeBuild()
     {
-        m_needsFrameTreeBuild = value;
+        m_needsFrameTreeBuild = true;
     }
 
     bool needsFrameTreeBuild()
@@ -427,7 +427,7 @@ public:
         m_needsFrameTreeBuild = false;
     }
 
-    void setChildNeedsFrameTreeBuild()
+    void markChildNeedsFrameTreeBuild()
     {
         m_childNeedsFrameTreeBuild = true;
     }
