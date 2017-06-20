@@ -3,7 +3,6 @@
 1026:test/internal-test/css/display/block-inline-basic.html
 495:test/internal-test/css/preferred-width/preferred-width-2.html
 433:test/internal-test/css/style/style-tag-modify.html
-5187:test/internal-test/xhr/xhr_sync_with_async.html
 44629:test/internal-test/click/click-internal-test-6.html
 22274:test/internal-test/css/display/display-internal-test-with-image-element-10.html
 23402:test/internal-test/css/display/display-internal-test-with-image-element-4.html
