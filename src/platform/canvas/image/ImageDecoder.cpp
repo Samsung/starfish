@@ -18,6 +18,8 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
+#define PNG_SKIP_SETJMP_CHECK
+
 #include <png.h>
 #include <turbojpeg.h>
 #include "ImageDecoder.h"
