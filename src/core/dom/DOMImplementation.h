@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 
 #ifndef __StarFishDOMImplementation__
 #define __StarFishDOMImplementation__
@@ -34,6 +34,10 @@ public:
         , m_instance(instance)
     {
     }
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isDOMImplementation() const override;
 
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);

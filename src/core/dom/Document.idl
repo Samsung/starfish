@@ -22,7 +22,7 @@ enum VisibilityState { "hidden", "visible", "prerender", "unloaded" };
  Exposed=Window]
 interface Document : Node {
   // [REF1]--------------------------------------------------------------
-  [STARFISH_EXP, SameObject] readonly attribute DOMImplementation implementation;
+  [STARFISH_ENABLE_EXP, SameObject] readonly attribute DOMImplementation implementation;
   [Rename=urlString] readonly attribute DOMString URL;
   [Rename=urlString] readonly attribute DOMString documentURI;
   [Unimplemented] readonly attribute DOMString origin;

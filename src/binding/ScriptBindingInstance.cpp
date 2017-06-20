@@ -19,7 +19,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 #include "core/dom/DOMImplementation.h"
 #endif
 #include "core/extra/Console.h"

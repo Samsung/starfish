@@ -41,7 +41,7 @@ class Text;
 class ResourceURL;
 class Window;
 
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 class DOMImplementation;
 #endif
 
@@ -54,7 +54,7 @@ enum VisibilityState {
 };
 
 class Document : public Node {
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
     friend class DOMImplementation;
 #endif
     friend class Window;
@@ -136,7 +136,7 @@ public:
     Attr* createAttribute(String* name);
     QualifiedName createAttributeName(String* name);
 
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
     DOMImplementation* implementation()
     {
         return m_implementation;
@@ -368,7 +368,7 @@ protected:
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 private:
     DOMImplementation* m_implementation;
 #endif

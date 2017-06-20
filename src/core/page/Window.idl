@@ -9,7 +9,7 @@ interface Window : EventTarget {
   [Unimplemented, Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
   [Unimplemented] attribute DOMString name;
-  [STARFISH_ENABLE_MULTI_PAGE, PutForwards=href, Unforgeable] readonly attribute Location location;
+  [STARFISH_ENABLE_MULTIPAGE, PutForwards=href, Unforgeable] readonly attribute Location location;
   readonly attribute History history;
   [Unimplemented] readonly attribute CustomElementRegistry customElements;
   [Unimplemented, Replaceable] readonly attribute BarProp locationbar;
