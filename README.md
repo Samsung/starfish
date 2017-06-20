@@ -2,14 +2,20 @@
 ## Abstract
 Starfish is a lightweight Web browser engine for mobile and wearable devices.
 
-## Setting up your environment
+## How to Compile
+
+### Install required packages
 
 ```sh
+sudo add-apt-repository ppa:enlightenment-git/ppa
+sudo apt-get update
+sudo apt-get install libefl-dev
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev
 sudo apt-get install python-pip
 pip install Jinja2
 ```
 
-## How to Compile
+### Download and compile StarFish
 
 ```sh
 git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
