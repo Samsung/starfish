@@ -141,14 +141,9 @@ void BrowsingContext::layoutIfNeeds()
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
 #ifdef STARFISH_ENABLE_TIMER
-            Timer t("parse sheet");
+            Timer t("parse sheet & collect rules");
 #endif
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
-
-            uaSheet->parseSheetIfneeds();
-            uaSheet->collectStyleRules(uaSheet->allRules(), uaSheet->url());
-            uaSheet->sortStyleRulesBySpecificity();
-
             document()->styleResolver().removeAllRules();
 
             size_t sheets = document()->styleResolver().sheets().size();
