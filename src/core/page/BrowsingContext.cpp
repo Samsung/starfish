@@ -456,7 +456,7 @@ void BrowsingContext::rendering()
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
-    if (!document()->m_tizenWidgetTransparentBackground) {
+    if (!document()->tizenWidgetTransparentBackground()) {
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
     }
 #else

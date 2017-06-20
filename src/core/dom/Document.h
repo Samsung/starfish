@@ -266,6 +266,12 @@ public:
     {
         return String::createASCIIString("text/html");
     }
+#ifdef STARFISH_TIZEN
+    size_t tizenWidgetTransparentBackground()
+    {
+        return m_tizenWidgetTransparentBackground;
+    }
+#endif
 
     /* Document-level focus APIs */
     Element* activeElement();
