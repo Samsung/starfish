@@ -51,33 +51,23 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
     size_t argCount = argc;
-    if (argCount < 2) {
+    if (argCount < 1) {
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
-        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setTimeout", "Window", reason);
         THROW_EXCEPTION(msg);
     }
-    // Declare native value (empty when type is void)
-    int32_t result;
-    ValueRef* arg0 = argv[0];
-    ValueRef* arg1 = argv[1];
-    ValueRef* arg2 = argv[2];
-
-    // Handle argument arg2
-    ScriptValue value2;
-    value2 = arg2;
-    // Handle argument arg1
     int32_t value1 = 0;
-    if (!arg1->isUndefinedOrNull()) {
-        value1 = arg1->toInt32(state);
+    if (argc > 1) {
+        value1 = argv[1]->toInt32(state);
     }
 
-    if (arg0->isFunction()) {
+    if (argv[0]->isFunction()) {
         return ValueRef::create(
-            window->setTimeout(timeoutHandler, value1, arg0->asObject()));
+            window->setTimeout(timeoutHandler, value1, argv[0]->asObject()));
     } else {
-        String* bodyStr = toBrowserString(state, arg0);
+        String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
         ScriptValue m_listener = createScriptFunction(
