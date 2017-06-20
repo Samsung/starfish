@@ -994,6 +994,7 @@ public:
     MediaQuerySet* parseMediaQuery();
     StyleRuleImport* parseImportRule();
     String* parseURLString();
+    void consumeComponentValue(RefPtr<CSSToken>& token);
 
 protected:
     RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
