@@ -143,6 +143,7 @@ void HTMLStyleElement::generateStyleSheet()
         CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
         m_generatedSheet = sheet;
         document()->styleResolver().addSheet(sheet);
+        sheet->parseSheetIfneeds();
         window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
     }
 }

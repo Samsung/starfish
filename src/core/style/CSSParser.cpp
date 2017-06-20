@@ -1984,25 +1984,19 @@ StyleRuleMedia* CSSParser::parseMediaRule()
         return nullptr;
     }
 
-    bool valid = false;
     GCVector<StyleRuleBase*> rootRule;
     if (token->isSymbol('{') && hasMediaRule) {
         token = getToken(true, false);
         if (token->isNotNull()) {
             parseRules(token, rootRule, RuleListType::RegularRuleList);
-            valid = rootRule.size() > 0;
         } else {
             forgetState();
             return nullptr;
         }
     }
 
-    if (valid) {
-        forgetState();
-        return new StyleRuleMedia(mediaQuerySet, rootRule);
-    }
-    restoreState();
-    return nullptr;
+    forgetState();
+    return new StyleRuleMedia(mediaQuerySet, rootRule);
 }
 
 StyleRuleImport* CSSParser::parseImportRule()
@@ -2045,11 +2039,11 @@ String* CSSParser::parseURLString()
     String* ret = String::emptyString;
     urlSource.peekUTF8Buffer(
         [](const char* str, size_t len, void* data) -> size_t {
-            String* ret = (String*)data;
-            CSSPropertyParser::parseUrl(str, &(ret));
+            String** ret = (String**)data;
+            CSSPropertyParser::parseUrl(str, ret);
             return 0;
         },
-        ret);
+        &ret);
     return ret;
 }
 
