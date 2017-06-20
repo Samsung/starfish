@@ -1962,17 +1962,47 @@ RefPtr<CSSToken> CSSParser::makeToken(String* str)
     return getToken(false, false);
 }
 
+void CSSParser::consumeComponentValue(RefPtr<CSSToken>& token)
+{
+    unsigned nestingLevel = 0;
+
+    do {
+        if (token->isSymbol('{') || token->isSymbol('(') ||
+            token->isSymbol('[')) {
+            nestingLevel++;
+        } else if (token->isSymbol('}') || token->isSymbol(')') ||
+                   token->isSymbol(']')) {
+            nestingLevel--;
+        }
+        token = getToken(false, true);
+    } while (nestingLevel && token->isNotNull());
+}
+
 StyleRuleMedia* CSSParser::parseMediaRule()
 {
     preserveState();
-
     RefPtr<CSSToken> token = getToken(true, true);
+
+    while (token->isNotNull() && !token->isSymbol('{') &&
+           !token->isSymbol(';')) {
+        consumeComponentValue(token);
+    }
+
+    if (token->isSymbol(';')) {
+        ungetToken();
+        forgetState();
+        return nullptr;
+    }
+    restoreState();
+
+    preserveState();
+    token = getToken(true, true);
 
     bool hasMediaRule = false;
     MediaQuerySet* mediaQuerySet;
     if (token->isNotNull()) {
         mediaQuerySet = parseMediaQuery();
-        hasMediaRule = true;
+        hasMediaRule = mediaQuerySet->queryVector().size() > 0;
     } else {
         forgetState();
         return nullptr;
@@ -1989,14 +2019,14 @@ StyleRuleMedia* CSSParser::parseMediaRule()
         token = getToken(true, false);
         if (token->isNotNull()) {
             parseRules(token, rootRule, RuleListType::RegularRuleList);
-        } else {
+
             forgetState();
-            return nullptr;
+            return new StyleRuleMedia(mediaQuerySet, rootRule);
         }
     }
 
     forgetState();
-    return new StyleRuleMedia(mediaQuerySet, rootRule);
+    return nullptr;
 }
 
 StyleRuleImport* CSSParser::parseImportRule()
@@ -2211,10 +2241,11 @@ MediaQuerySet* CSSParser::parseMediaQuery()
     }
 
     if (m_state != ReadAnd && m_state != ReadRestrictor && m_state != Done &&
-        m_state != ReadMediaNot)
+        m_state != ReadMediaNot) {
         m_querySet->addMediaQuery(MediaQuery::createNotAll());
-    else if (m_mediaQueryData.currentMediaQueryChanged())
+    } else if (m_mediaQueryData.currentMediaQueryChanged()) {
         m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
+    }
 
     return m_querySet;
 }
