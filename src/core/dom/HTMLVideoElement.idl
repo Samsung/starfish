@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/#htmlvideoelement
 
-[HTMLConstructor]
+[STARFISH_ENABLE_MULTIMEDIA, HTMLConstructor]
 interface HTMLVideoElement : HTMLMediaElement {
   [CEReactions] attribute unsigned long width;
   [CEReactions] attribute unsigned long height;
