@@ -7,7 +7,7 @@
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_INSPECTOR',
-            'STARFISH_ENABLE_MULTI_PAGE',
+            'STARFISH_ENABLE_MULTIPAGE',
             'STARFISH_ENABLE_DOMPARSER',
         ],
         'defines_extra': [

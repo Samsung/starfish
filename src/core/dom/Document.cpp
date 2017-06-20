@@ -23,7 +23,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DOMException.h"
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 #include "core/dom/DOMImplementation.h"
 #endif
 #include "core/dom/Event.h"
@@ -88,7 +88,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     auto df = new FrameDocument(this);
     setFrame(df);
 
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
     m_implementation = new DOMImplementation(m_window, m_scriptBindingInstance);
 #endif
 

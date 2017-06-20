@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/DOMException.h"
-#ifdef STARFISH_ENABLE_MULTI_PAGE
+#ifdef STARFISH_ENABLE_MULTIPAGE
 #include "core/dom/HTMLAnchorElement.h"
 #endif
 #include "core/dom/HTMLBodyElement.h"
@@ -137,7 +137,7 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLSourceElement(document);
     }
 #endif
-#ifdef STARFISH_ENABLE_MULTI_PAGE
+#ifdef STARFISH_ENABLE_MULTIPAGE
     else if (name == str->m_aTagName.localNameAtomic()) {
         return new HTMLAnchorElement(document);
     }

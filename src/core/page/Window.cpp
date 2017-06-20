@@ -20,7 +20,7 @@
 #include "core/page/Window.h"
 
 #include "binding/ScriptBindingInstance.h"
-#ifdef STARFISH_ENABLE_MULTI_PAGE
+#ifdef STARFISH_ENABLE_MULTIPAGE
 #include "core/dom/HTMLAnchorElement.h"
 #endif
 #include "core/dom/HTMLDocument.h"

@@ -1,7 +1,7 @@
 // https://html.spec.whatwg.org/multipage/semantics.html#the-a-element
 // NOTE Using DOMString instead of USVString
 
-[STARFISH_ENABLE_MULTI_PAGE, HTMLConstructor]
+[STARFISH_ENABLE_MULTIPAGE, HTMLConstructor]
 interface HTMLAnchorElement : HTMLElement {
   [Unimplemented, CEReactions] attribute DOMString target;
   [Unimplemented, CEReactions] attribute DOMString download;

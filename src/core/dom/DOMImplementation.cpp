@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_EXP
+#ifdef STARFISH_ENABLE_EXP
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"

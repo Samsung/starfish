@@ -38,7 +38,7 @@ count_empty_lines = 0
 interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
 clang_format_exts = ['.cpp', '.h']
 skip_dirs = ['./deps', './build', './third_party', './out', './tool', '.git', './test', './packaging']
-skip_files = []
+skip_files = ['Interfaces.h']
 
 
 def report_error_name_line(name, line, msg):
