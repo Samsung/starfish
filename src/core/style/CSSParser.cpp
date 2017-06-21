@@ -1967,8 +1967,8 @@ void CSSParser::consumeComponentValue(RefPtr<CSSToken>& token)
     unsigned nestingLevel = 0;
 
     do {
-        if (token->isSymbol('{') || token->isSymbol('(') ||
-            token->isSymbol('[')) {
+        if (token->isFunction() || token->isSymbol('{') ||
+            token->isSymbol('(') || token->isSymbol('[')) {
             nestingLevel++;
         } else if (token->isSymbol('}') || token->isSymbol(')') ||
                    token->isSymbol(']')) {
@@ -2002,7 +2002,7 @@ StyleRuleMedia* CSSParser::parseMediaRule()
     MediaQuerySet* mediaQuerySet;
     if (token->isNotNull()) {
         mediaQuerySet = parseMediaQuery();
-        hasMediaRule = mediaQuerySet->queryVector().size() > 0;
+        hasMediaRule = true;
     } else {
         forgetState();
         return nullptr;
@@ -2031,6 +2031,23 @@ StyleRuleMedia* CSSParser::parseMediaRule()
 
 StyleRuleImport* CSSParser::parseImportRule()
 {
+    preserveState();
+
+    RefPtr<CSSToken> token = getToken(true, true);
+
+    while (token->isNotNull() && !token->isSymbol('{') &&
+           !token->isSymbol(';')) {
+        consumeComponentValue(token);
+    }
+
+    if (!token->isSymbol(';')) {
+        ungetToken();
+        forgetState();
+        return nullptr;
+    }
+
+    restoreState();
+
     String* url = parseURLString();
     if (url->equals(String::emptyString)) {
         return nullptr;
