@@ -23,17 +23,17 @@ namespace StarFish {
 
 class SecurityOriginData;
 class Storage;
+class Window;
 
-class StorageNamespace : public WindowHoldable, public gc {
+class StorageNamespace : public gc {
 public:
-    virtual Storage* storage(SecurityOriginData* origin) = 0;
+    virtual Storage* storage(Window* window, SecurityOriginData* origin) = 0;
     virtual ~StorageNamespace()
     {
     }
 
 protected:
-    StorageNamespace(Window* window)
-        : WindowHoldable(window)
+    StorageNamespace()
     {
     }
 };

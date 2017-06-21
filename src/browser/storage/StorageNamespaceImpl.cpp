@@ -23,11 +23,9 @@
 
 namespace StarFish {
 
-StorageNamespaceImpl::StorageNamespaceImpl(Window* window,
-                                           StorageType storageType,
+StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
                                            String* localStoragePath)
-    : StorageNamespace(window)
-    , m_storageType(storageType)
+    : m_storageType(storageType)
     , m_storageManager(nullptr)
 {
     if (storageType == StorageType::Local) {
@@ -39,16 +37,28 @@ StorageNamespaceImpl::~StorageNamespaceImpl()
 {
 }
 
-Storage* StorageNamespaceImpl::storage(SecurityOriginData* securityOriginData)
+Storage* StorageNamespaceImpl::storage(Window* window,
+                                       SecurityOriginData* securityOriginData)
 {
     auto itr = m_originToStorage.find(securityOriginData);
     if (itr == m_originToStorage.end()) {
         StorageImpl* storage = new StorageImpl(
-            window(), m_storageType, securityOriginData, m_storageManager);
+            window, m_storageType, securityOriginData, m_storageManager);
         m_originToStorage.insert(std::make_pair(securityOriginData, storage));
         return storage;
+    } else {
+        StorageImpl* storage = itr->second;
+        if (storage->window() == window) {
+            return storage;
+        } else {
+            StorageImpl* newStorage = new StorageImpl(
+                window, m_storageType, securityOriginData, m_storageManager);
+            newStorage->copyDataFrom(storage);
+            m_originToStorage.erase(itr);
+            m_originToStorage.insert(
+                std::make_pair(securityOriginData, newStorage));
+            return newStorage;
+        }
     }
-
-    return itr->second;
 }
 }

@@ -56,6 +56,11 @@ public:
         return m_document;
     }
 
+    WebView* webView()
+    {
+        return m_webView;
+    }
+
     void navigate(ResourceURL* url);
     void navigateAsync(ResourceURL* url);
 

@@ -25,14 +25,14 @@ namespace StarFish {
 
 class StorageImpl;
 class StorageManager;
+class Window;
 
 class StorageNamespaceImpl : public StorageNamespace {
 public:
-    StorageNamespaceImpl(Window* window, StorageType storageType,
-                         String* localStoragePath);
+    StorageNamespaceImpl(StorageType storageType, String* localStoragePath);
     virtual ~StorageNamespaceImpl();
 
-    Storage* storage(SecurityOriginData* origin);
+    Storage* storage(Window* window, SecurityOriginData* origin);
 
 private:
     StorageType m_storageType;

@@ -14,9 +14,15 @@
  *    limitations under the License.
  */
 
+#include "StarFishConfig.h"
+
+#include "WebView.h"
+
 #include "BrowsingContext.h"
 #include "core/dom/Document.h"
-#include "WebView.h"
+#include "core/storage/Storage.h"
+#include "core/storage/StorageNamespace.h"
+#include "browser/storage/WebStorageNamespaceProvider.h"
 
 namespace StarFish {
 
@@ -28,6 +34,20 @@ WebView* WebView::create(StarFish* starFish)
 WebView::WebView(StarFish* starFish)
     : m_mainBrowsingContext(BrowsingContext::create(starFish, this))
     , m_storageNamespaceProvider(nullptr)
+    , m_localStorageNamespace(nullptr)
+    , m_sessionStorageNamespace(nullptr)
 {
+    initStorage();
+}
+
+void WebView::initStorage()
+{
+    // TODO: The name of disk storage file name should be auto-generated
+    m_storageNamespaceProvider = WebStorageNamespaceProvider::create(
+        String::createASCIIString("./cache/cache.db"));
+    m_localStorageNamespace =
+        m_storageNamespaceProvider->createLocalStorageNamespace();
+    m_sessionStorageNamespace =
+        m_storageNamespaceProvider->createSessionStorageNamespace();
 }
 }

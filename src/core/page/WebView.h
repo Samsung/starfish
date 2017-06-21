@@ -24,6 +24,7 @@ namespace StarFish {
 class Document;
 class BrowsingContext;
 class StorageNamespaceProvider;
+class StorageNamespace;
 
 class WebView : public gc {
 public:
@@ -34,11 +35,26 @@ public:
         return m_mainBrowsingContext;
     }
 
+    StorageNamespace* localStorageNamespace()
+    {
+        return m_localStorageNamespace;
+    }
+
+    StorageNamespace* sessionStorageNamespace()
+    {
+        return m_sessionStorageNamespace;
+    }
+
 private:
     WebView(StarFish* starFish);
 
+    void initStorage();
+
     BrowsingContext* m_mainBrowsingContext;
     StorageNamespaceProvider* m_storageNamespaceProvider;
+
+    StorageNamespace* m_localStorageNamespace;
+    StorageNamespace* m_sessionStorageNamespace;
 };
 }
 

@@ -31,8 +31,8 @@
 #include "core/page/Navigator.h"
 #include "core/page/Location.h"
 #include "core/page/Screen.h"
+#include "core/page/WebView.h"
 
-#include "browser/storage/WebStorageNamespaceProvider.h"
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
@@ -66,7 +66,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_screen(nullptr)
-    , m_localStorageNamespace(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -82,8 +81,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     m_history = new History(m_document);
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
-    initStorage(url);
-
     m_scriptBindingInstance->initBinding(m_document);
 }
 
@@ -104,26 +101,13 @@ void Window::close()
     m_navigator->close();
 }
 
-void Window::initStorage(ResourceURL* url)
-{
-    if (!m_localStorageNamespace) {
-        // TODO: The name of disk storage file name should be auto-generated
-        StorageNamespaceProvider* storageProvider =
-            WebStorageNamespaceProvider::create(
-                this, String::createASCIIString("./cache/cache.db"));
-        m_localStorageNamespace =
-            storageProvider->createLocalStorageNamespace();
-        m_sessionStorageNamespace =
-            storageProvider->createSessionStorageNamespace();
-    }
-}
-
 Storage* Window::localStorage()
 {
     ResourceURL* url = m_document->documentURI();
     SecurityOriginData* origin = new SecurityOriginData(
         url->protocol(), url->host(), String::parseInt(url->port()));
-    return m_localStorageNamespace->storage(origin);
+    return browsingContext()->webView()->localStorageNamespace()->storage(
+        this, origin);
 }
 
 Storage* Window::sessionStorage()
@@ -131,7 +115,8 @@ Storage* Window::sessionStorage()
     ResourceURL* url = m_document->documentURI();
     SecurityOriginData* origin = new SecurityOriginData(
         url->protocol(), url->host(), String::parseInt(url->port()));
-    return m_sessionStorageNamespace->storage(origin);
+    return browsingContext()->webView()->sessionStorageNamespace()->storage(
+        this, origin);
 }
 
 Screen* Window::screen()

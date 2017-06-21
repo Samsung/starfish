@@ -25,8 +25,7 @@ class StorageNamespaceImpl;
 
 class WebStorageNamespaceProvider : public StorageNamespaceProvider {
 public:
-    static WebStorageNamespaceProvider* create(Window* window,
-                                               String* localStoragePath);
+    static WebStorageNamespaceProvider* create(String* localStoragePath);
 
     virtual ~WebStorageNamespaceProvider();
 
@@ -34,7 +33,7 @@ public:
     StorageNamespace* createSessionStorageNamespace();
 
 private:
-    WebStorageNamespaceProvider(Window* windoe, String* localStoragePath);
+    WebStorageNamespaceProvider(String* localStoragePath);
 
     String* m_localStoragePath;
     GCUnorderedMap<String*, StorageNamespaceImpl*>

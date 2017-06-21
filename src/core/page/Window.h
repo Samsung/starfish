@@ -96,9 +96,6 @@ public:
     void clearInterval(int32_t id);
 
     // Other methods
-
-    void initStorage(ResourceURL* url);
-
     BrowsingContext* browsingContext()
     {
         return m_browsingContext;
@@ -262,8 +259,6 @@ private:
     Location* m_location;
     Screen* m_screen;
 
-    StorageNamespace* m_localStorageNamespace;
-    StorageNamespace* m_sessionStorageNamespace;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;
 #endif
