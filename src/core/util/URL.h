@@ -24,7 +24,7 @@ namespace StarFish {
 class Blob;
 class MediaSource;
 
-class URL : public ScriptWrappable, public ResourceURL {
+class URL : public ScriptWrappable {
 public:
     URL(Window* window, String* url);
     URL(Window* window, String* url, String* baseURL);
@@ -41,8 +41,31 @@ public:
     virtual bool isURL() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
+    String* origin();
+    String* href();
+    void setHref(String* newHref);
+    String* protocol();
+    void setProtocol(String* newProtocol);
+    String* username();
+    void setUsername(String* newPath);
+    String* password();
+    void setPassword(String* newPath);
+    String* host();
+    void setHost(String* newHost);
+    String* hostname();
+    void setHostname(String* newHostname);
+    String* port();
+    void setPort(String* newPort);
+    String* pathname();
+    void setPathname(String* newPath, bool needRemovingDots = true);
+    String* search();
+    void setSearch(String* newPath);
+    String* hash();
+    void setHash(String* newPath);
+
 protected:
     ScriptBindingInstance* m_scriptBindingInstance;
+    ResourceURL* m_resourceURL;
 };
 }
 

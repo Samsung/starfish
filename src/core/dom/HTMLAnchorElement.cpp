@@ -45,10 +45,7 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
-                    window()->browsingContext()->navigateAsync(new ResourceURL(
-                        hrefStr,
-                        document()->urlString()->substring(
-                            0, document()->urlString()->indexOf('#'))));
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 } else {
                     window()->browsingContext()->navigateAsync(
                         new ResourceURL(hrefStr, document()->urlString()));

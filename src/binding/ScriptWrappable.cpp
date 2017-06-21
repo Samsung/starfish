@@ -264,7 +264,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
 
         for (size_t i = 0; i < result.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
-                "-> %s(%d:%d)\n",
+                "at %s(%d:%d)\n",
                 toBrowserString(
                     instance,
                     ValueRef::create(result.stackTraceData[i].fileName))
@@ -312,7 +312,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                     ->utf8Data());
             for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
                 STARFISH_LOG_ERROR(
-                    "-> %s(%d:%d)\n",
+                    "at %s(%d:%d)\n",
                     toBrowserString(
                         instance,
                         ValueRef::create(sbresult.stackTraceData[i].fileName))
@@ -353,7 +353,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             toBrowserString(instance, sbresult.error)->utf8Data());
         for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
-                "-> %s(%d:%d)\n",
+                "at %s(%d:%d)\n",
                 toBrowserString(
                     instance,
                     ValueRef::create(sbresult.stackTraceData[i].fileName))

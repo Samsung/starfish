@@ -30,22 +30,22 @@ namespace StarFish {
 
 URL::URL(Window* window, String* url)
     : ScriptWrappable(this)
-    , ResourceURL(url)
     , m_scriptBindingInstance(window->scriptBindingInstance())
+    , m_resourceURL(new ResourceURL(url))
 {
 }
 
 URL::URL(Window* window, String* url, String* baseURL)
     : ScriptWrappable(this)
-    , ResourceURL(url, baseURL)
     , m_scriptBindingInstance(window->scriptBindingInstance())
+    , m_resourceURL(new ResourceURL(url, baseURL))
 {
 }
 
 URL::URL(ScriptBindingInstance* ins, String* url, String* baseURL)
     : ScriptWrappable(this)
-    , ResourceURL(url, baseURL)
     , m_scriptBindingInstance(ins)
+    , m_resourceURL(new ResourceURL(url, baseURL))
 {
 }
 
@@ -99,4 +99,109 @@ String* URL::createObjectURL(MediaSource* mediaSource)
                                           mediaSource->document()->urlString());
 }
 #endif
+
+String* URL::origin()
+{
+    return m_resourceURL->origin();
+}
+
+String* URL::href()
+{
+    return m_resourceURL->href();
+}
+
+void URL::setHref(String* newHref)
+{
+    m_resourceURL = m_resourceURL->setHref(newHref);
+}
+
+String* URL::protocol()
+{
+    return m_resourceURL->protocol();
+}
+
+void URL::setProtocol(String* newProtocol)
+{
+    m_resourceURL = m_resourceURL->setProtocol(newProtocol);
+}
+
+String* URL::username()
+{
+    return m_resourceURL->username();
+}
+
+void URL::setUsername(String* newPath)
+{
+    m_resourceURL = m_resourceURL->setUsername(newPath);
+}
+
+String* URL::password()
+{
+    return m_resourceURL->password();
+}
+
+void URL::setPassword(String* newPath)
+{
+    m_resourceURL = m_resourceURL->setPassword(newPath);
+}
+
+String* URL::host()
+{
+    return m_resourceURL->host();
+}
+
+void URL::setHost(String* newHost)
+{
+    m_resourceURL = m_resourceURL->setHost(newHost);
+}
+
+String* URL::hostname()
+{
+    return m_resourceURL->hostname();
+}
+
+void URL::setHostname(String* newHostname)
+{
+    m_resourceURL = m_resourceURL->setHostname(newHostname);
+}
+
+String* URL::port()
+{
+    return m_resourceURL->port();
+}
+
+void URL::setPort(String* newPort)
+{
+    m_resourceURL = m_resourceURL->setPort(newPort);
+}
+
+String* URL::pathname()
+{
+    return m_resourceURL->pathname();
+}
+
+void URL::setPathname(String* newPath, bool needRemovingDots)
+{
+    m_resourceURL = m_resourceURL->setPathname(newPath, needRemovingDots);
+}
+
+String* URL::search()
+{
+    return m_resourceURL->search();
+}
+
+void URL::setSearch(String* newPath)
+{
+    m_resourceURL = m_resourceURL->setSearch(newPath);
+}
+
+String* URL::hash()
+{
+    return m_resourceURL->hash();
+}
+
+void URL::setHash(String* newPath)
+{
+    m_resourceURL = m_resourceURL->setHash(newPath);
+}
 }

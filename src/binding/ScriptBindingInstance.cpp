@@ -75,13 +75,27 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
 }
 #endif
 
+static String* toBrowserStringForConsole(ExecutionStateRef* state,
+                                         ValueRef* value)
+{
+    if (value->isObject() && value->asObject()->isErrorObject()) {
+        ObjectRef* o = value->asObject();
+        ValueRef* stack = o->getOwnProperty(
+            state, ValueRef::create(StringRef::fromASCII("stack")));
+        if (stack->isString()) {
+            return toBrowserString(state, stack);
+        }
+    }
+    return toBrowserString(state, value);
+}
+
 static ValueRef* logFunction(ExecutionStateRef* state, ValueRef* thisValue,
                              size_t argc, ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
         ->console()
-        ->log(toBrowserString(state, val));
+        ->log(toBrowserStringForConsole(state, val));
     return ValueRef::createUndefined();
 }
 
@@ -92,7 +106,7 @@ static ValueRef* infoFunction(ExecutionStateRef* state, ValueRef* thisValue,
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
         ->console()
-        ->info(toBrowserString(state, val));
+        ->info(toBrowserStringForConsole(state, val));
     return ValueRef::createUndefined();
 }
 
@@ -103,7 +117,7 @@ static ValueRef* errorFunction(ExecutionStateRef* state, ValueRef* thisValue,
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
         ->console()
-        ->error(toBrowserString(state, val));
+        ->error(toBrowserStringForConsole(state, val));
     return ValueRef::createUndefined();
 }
 
@@ -114,7 +128,7 @@ static ValueRef* warnFunction(ExecutionStateRef* state, ValueRef* thisValue,
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
         ->console()
-        ->warn(toBrowserString(state, val));
+        ->warn(toBrowserStringForConsole(state, val));
     return ValueRef::createUndefined();
 }
 

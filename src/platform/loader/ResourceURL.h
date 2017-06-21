@@ -37,6 +37,24 @@ public:
     ResourceURL(String* url);
     ResourceURL(String* url, String* baseURL);
 
+    ResourceURL(const ResourceURL& src)
+    {
+        m_string = src.m_string;
+        m_urlString = src.m_urlString;
+
+        m_protocolEnd = src.m_protocolEnd;
+        m_userStart = src.m_userStart;
+        m_userEnd = src.m_userEnd;
+        m_passwordEnd = src.m_passwordEnd;
+        m_hostEnd = src.m_hostEnd;
+        m_portEnd = src.m_portEnd;
+        m_pathEnd = src.m_pathEnd;
+        m_queryEnd = src.m_queryEnd;
+        m_fragmentEnd = src.m_fragmentEnd;
+
+        m_protocol = src.m_protocol;
+    }
+
     static String* mergeDocumentURIWithURIString(Document* document,
                                                  String* url);
     static String* mergeDocumentURIWithURIString(String* documentURI,
@@ -90,25 +108,25 @@ public:
 
     String* origin();
     String* href();
-    void setHref(String* newHref);
+    ResourceURL* setHref(String* newHref);
     String* protocol();
-    void setProtocol(String* newProtocol);
+    ResourceURL* setProtocol(String* newProtocol);
     String* username();
-    void setUsername(String* newPath);
+    ResourceURL* setUsername(String* newPath);
     String* password();
-    void setPassword(String* newPath);
+    ResourceURL* setPassword(String* newPath);
     String* host();
-    void setHost(String* newHost);
+    ResourceURL* setHost(String* newHost);
     String* hostname();
-    void setHostname(String* newHostname);
+    ResourceURL* setHostname(String* newHostname);
     String* port();
-    void setPort(String* newPost);
+    ResourceURL* setPort(String* newPost);
     String* pathname();
-    void setPathname(String* newPath, bool needRemovingDots = true);
+    ResourceURL* setPathname(String* newPath, bool needRemovingDots = true);
     String* search();
-    void setSearch(String* newPath);
+    ResourceURL* setSearch(String* newPath);
     String* hash();
-    void setHash(String* newPath);
+    ResourceURL* setHash(String* newPath);
 
 protected:
     void resolvePositions();

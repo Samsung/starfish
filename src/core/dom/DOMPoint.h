@@ -49,7 +49,7 @@ class DOMPoint : public DOMPointReadOnly {
 public:
     DOMPoint(Document* document, double x = 0, double y = 0, double z = 0,
              double w = 1);
-    DOMPoint(const DOMPointInit&);
+    DOMPoint(Document* document, const DOMPointInit&);
 
     void setX(double x)
     {

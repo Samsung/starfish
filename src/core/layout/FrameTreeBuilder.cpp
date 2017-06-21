@@ -611,8 +611,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             if (ctx.currentBlockContainer()->hasBlockFlow()) {
                 Frame* last = ctx.currentBlockContainer()->lastChild();
                 if (last) {
-                    STARFISH_ASSERT(last->isFrameBlockBox());
-                    if (last->isAnonymous() &&
+                    if (last->isAnonymous() && last->isFrameBlockBox() &&
                         !last->asFrameBlockBox()->hasBlockFlow()) {
                         originalFrameBlockBox = ctx.currentBlockContainer();
                         ctx.setCurrentBlockContainer(last->asFrameBlockBox());

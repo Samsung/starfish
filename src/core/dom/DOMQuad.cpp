@@ -65,10 +65,10 @@ DOMQuad::DOMQuad(Document* document, const DOMPointInit& p1,
                  const DOMPointInit& p4)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_p1(new DOMPoint(p1))
-    , m_p2(new DOMPoint(p2))
-    , m_p3(new DOMPoint(p3))
-    , m_p4(new DOMPoint(p4))
+    , m_p1(new DOMPoint(document, p1))
+    , m_p2(new DOMPoint(document, p2))
+    , m_p3(new DOMPoint(document, p3))
+    , m_p4(new DOMPoint(document, p4))
 {
     m_bounds = nullptr;
 }
