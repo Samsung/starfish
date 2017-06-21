@@ -43,6 +43,8 @@ public:
                                                  String* url);
     String* baseURI() const;
 
+    static bool isValidURL(String* url);
+
     bool url()
     {
         return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;

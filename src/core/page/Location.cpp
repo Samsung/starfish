@@ -122,8 +122,10 @@ void Location::setHash(String* search)
 
 bool Location::isValidURL(String* url)
 {
-    if (url->startsWith("http://")) {
-        return true;
+    // Supports three protocols
+    if (url->startsWith("http://") || url->startsWith("https://") ||
+        url->startsWith("file://")) {
+        return ResourceURL::isValidURL(url);
     } else {
         return false;
     }
