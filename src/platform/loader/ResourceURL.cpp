@@ -33,6 +33,56 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
     parseURLString(baseURL, url);
 }
 
+bool ResourceURL::isValidURL(String* url)
+{
+    // TODO: checking for the validity of a url requires a regexp check.
+    // For the time being, we check for valid characters only.
+    if (!(url->startsWith("http://") || url->startsWith("https://") ||
+          url->startsWith("file://") || url->startsWith("blob://") ||
+          url->startsWith("data://"))) {
+        return false;
+    }
+
+    for (size_t i = 0; i < url->length(); i++) {
+        if ('A' <= url->charAt(i) && url->charAt(i) <= 'Z') {
+            continue;
+        } else if ('a' <= url->charAt(i) && url->charAt(i) <= 'z') {
+            continue;
+        } else if ('0' <= url->charAt(i) && url->charAt(i) <= '9') {
+            continue;
+        }
+        switch (url->charAt(i)) {
+        case '-':
+        case '.':
+        case '_':
+        case '~':
+        case ':':
+        case '/':
+        case '?':
+        case '#':
+        case '[':
+        case ']':
+        case '@':
+        case '!':
+        case '$':
+        case '&':
+        case '\'':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case ';':
+        case '=':
+        case '`':
+            continue;
+        default:
+            return false;
+        }
+    }
+    return true;
+}
+
 static String* removingDots(String* origPath)
 {
     UTF16String str = origPath->toUTF16String();
