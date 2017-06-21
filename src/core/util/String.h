@@ -48,35 +48,21 @@
 #define __StarFishString__
 
 #include "core/util/BasicString.h"
-#include "core/util/VariableBasicString.h"
 
 namespace StarFish {
 
-typedef VariableBasicString<
-    char, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
+typedef BasicString<char,
+                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
     ASCIIString;
-typedef VariableBasicString<
-    char, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
+typedef BasicString<char,
+                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
     UTF8String;
-typedef VariableBasicString<
+typedef BasicString<
     char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
     UTF16String;
-typedef VariableBasicString<
+typedef BasicString<
     char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
     UTF32String;
-
-typedef BasicString<char,
-                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
-    TightASCIIString;
-typedef BasicString<char,
-                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
-    TightUTF8String;
-typedef BasicString<
-    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
-    TightUTF16String;
-typedef BasicString<
-    char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
-    TightUTF32String;
 
 typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;
 typedef std::basic_string<char, std::char_traits<char>> UTF8StringDataNonGCStd;
@@ -451,17 +437,11 @@ protected:
 
 class StringDataASCII : public String {
 public:
-    StringDataASCII(TightASCIIString&& str)
+    StringDataASCII(ASCIIString&& str)
         : String()
         , m_data(str)
     {
-    }
-
-    StringDataASCII(ASCIIString&& str)
-        : String()
-    {
-        ASCIIString r(str);
-        m_data = r.toBasicStringAndMakeEmpty();
+        str.clear();
     }
 
     StringDataASCII(const char* str)
@@ -497,7 +477,7 @@ public:
     }
 
 protected:
-    TightASCIIString m_data;
+    ASCIIString m_data;
 };
 
 // WARNING: this class does not copy buffer
@@ -574,29 +554,23 @@ protected:
 
 class StringDataUTF32 : public String {
 public:
-    StringDataUTF32(const TightUTF32String& str)
-        : String()
-        , m_data(str)
-    {
-    }
-    StringDataUTF32(TightUTF32String&& str)
-        : String()
-        , m_data(str)
-    {
-    }
-
     StringDataUTF32(const char32_t* str, size_t len)
         : String()
         , m_data(str, len)
     {
     }
 
+    StringDataUTF32(const UTF32String& str)
+        : String()
+        , m_data(str)
+    {
+    }
+
     StringDataUTF32(UTF32String&& str)
         : String()
-        , m_data()
+        , m_data(str)
     {
-        UTF32String r(str);
-        m_data = r.toBasicStringAndMakeEmpty();
+        str.clear();
     }
 
     StringDataUTF32(const char* src, size_t len);
@@ -627,7 +601,7 @@ public:
     }
 
 protected:
-    TightUTF32String m_data;
+    UTF32String m_data;
 };
 
 // WARNING: this class does not copy buffer

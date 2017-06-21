@@ -350,7 +350,7 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
         src += utf8ToUtf32(src, end, c);
         data[i++] = c;
     }
-    m_data = data.toBasicStringAndMakeEmpty();
+    m_data = data;
 }
 
 // TODO use BufferAccessData for performance
@@ -697,11 +697,11 @@ String* String::toUpper()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        TightASCIIString str(data.asciiData(), data.length);
+        ASCIIString str(data.asciiData(), data.length);
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataASCII(std::move(str));
     } else {
-        TightUTF32String str(data.utf32Data(), data.length);
+        UTF32String str(data.utf32Data(), data.length);
         // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataUTF32(std::move(str));
@@ -712,11 +712,11 @@ String* String::toLower()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        TightASCIIString str(data.asciiData(), data.length);
+        ASCIIString str(data.asciiData(), data.length);
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataASCII(std::move(str));
     } else {
-        TightUTF32String str(data.utf32Data(), data.length);
+        UTF32String str(data.utf32Data(), data.length);
         // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataUTF32(std::move(str));
@@ -1625,7 +1625,7 @@ String* StringBuilder::finalize()
     }
 
     if (m_hasASCIIContent) {
-        TightASCIIString ret;
+        ASCIIString ret;
         ret.resize(m_contentLength);
 
         size_t currentLength = 0;
@@ -1686,7 +1686,7 @@ String* StringBuilder::finalize()
 
         return new StringDataASCII(std::move(ret));
     } else {
-        TightUTF32String ret;
+        UTF32String ret;
         ret.resize(m_contentLength);
 
         size_t currentLength = 0;
