@@ -71,9 +71,8 @@ DOMPoint::DOMPoint(Document* document, double x, double y, double z, double w)
 {
 }
 
-DOMPoint::DOMPoint(const DOMPointInit& pi)
-    : DOMPointReadOnly(scriptBindingInstance()->ownerDocument(), pi.x(), pi.y(),
-                       pi.z(), pi.w())
+DOMPoint::DOMPoint(Document* document, const DOMPointInit& pi)
+    : DOMPointReadOnly(document, pi.x(), pi.y(), pi.z(), pi.w())
 {
 }
 }

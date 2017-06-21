@@ -423,10 +423,9 @@ String* ResourceURL::href()
     return m_urlString;
 }
 
-void ResourceURL::setHref(String* newHref)
+ResourceURL* ResourceURL::setHref(String* newHref)
 {
-    m_urlString = newHref;
-    resolvePositions();
+    return new ResourceURL(newHref);
 }
 
 String* ResourceURL::protocol()
@@ -434,27 +433,11 @@ String* ResourceURL::protocol()
     return m_urlString->substring(0, m_protocolEnd)->toLower();
 }
 
-void ResourceURL::setProtocol(String* newProtocol)
+ResourceURL* ResourceURL::setProtocol(String* newProtocol)
 {
-    if (newProtocol->length()) {
-        m_urlString = newProtocol->concat(m_urlString->substring(
-            m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1));
-    }
-
-    if (m_urlString->startsWith("file", false)) {
-        m_protocol = FILE_PROTOCOL;
-    } else if (m_urlString->startsWith("https", false)) {
-        m_protocol = HTTPS_PROTOCOL;
-    } else if (m_urlString->startsWith("http", false)) {
-        m_protocol = HTTP_PROTOCOL;
-    } else if (m_urlString->startsWith("blob", false)) {
-        m_protocol = BLOB_PROTOCOL;
-    } else if (m_urlString->startsWith("data", false)) {
-        m_protocol = DATA_PROTOCOL;
-    } else {
-        m_protocol = UNKNOWN;
-    }
-    resolvePositions();
+    STARFISH_ASSERT(newProtocol->length());
+    return new ResourceURL(newProtocol->concat(m_urlString->substring(
+        m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1)));
 }
 
 String* ResourceURL::username()
@@ -462,26 +445,26 @@ String* ResourceURL::username()
     return m_urlString->substring(m_userStart, m_userEnd - m_userStart);
 }
 
-void ResourceURL::setUsername(String* newUser)
+ResourceURL* ResourceURL::setUsername(String* newUser)
 {
-    if (m_protocol >= HTTP_PROTOCOL) {
+    if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         // user or password exists
         if (m_passwordEnd != m_userEnd || m_userStart != m_userEnd) {
-            m_urlString =
+            return new ResourceURL(
                 m_urlString->substring(0, m_userStart)
                     ->concat(newUser)
                     ->concat(m_urlString->substring(
-                        m_userEnd, m_urlString->length() - m_userEnd));
+                        m_userEnd, m_urlString->length() - m_userEnd)));
         } else {
-            m_urlString =
+            return new ResourceURL(
                 m_urlString->substring(0, m_userStart)
                     ->concat(newUser)
                     ->concat(String::createASCIIString("@"))
                     ->concat(m_urlString->substring(
-                        m_userEnd, m_urlString->length() - m_userEnd));
+                        m_userEnd, m_urlString->length() - m_userEnd)));
         }
-        resolvePositions();
     }
+    return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::password()
@@ -494,37 +477,39 @@ String* ResourceURL::password()
     }
 }
 
-void ResourceURL::setPassword(String* newPass)
+ResourceURL* ResourceURL::setPassword(String* newPass)
 {
-    if (m_protocol >= HTTP_PROTOCOL) {
+    if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         // password exists
         if (m_passwordEnd != m_userEnd) {
-            m_urlString =
+            return new ResourceURL(
                 m_urlString->substring(0, m_userEnd + 1)
                     ->concat(newPass)
                     ->concat(m_urlString->substring(
-                        m_passwordEnd, m_urlString->length() - m_passwordEnd));
+                        m_passwordEnd, m_urlString->length() - m_passwordEnd)));
         } else {
             // user exists
             if (m_userStart != m_userEnd) {
-                m_urlString = m_urlString->substring(0, m_userEnd)
-                                  ->concat(String::createASCIIString(":"))
-                                  ->concat(newPass)
-                                  ->concat(m_urlString->substring(
-                                      m_passwordEnd,
-                                      m_urlString->length() - m_passwordEnd));
+                return new ResourceURL(
+                    m_urlString->substring(0, m_userEnd)
+                        ->concat(String::createASCIIString(":"))
+                        ->concat(newPass)
+                        ->concat(m_urlString->substring(m_passwordEnd,
+                                                        m_urlString->length() -
+                                                            m_passwordEnd)));
             } else {
-                m_urlString = m_urlString->substring(0, m_userEnd)
-                                  ->concat(String::createASCIIString(":"))
-                                  ->concat(newPass)
-                                  ->concat(String::createASCIIString("@"))
-                                  ->concat(m_urlString->substring(
-                                      m_passwordEnd,
-                                      m_urlString->length() - m_passwordEnd));
+                return new ResourceURL(
+                    m_urlString->substring(0, m_userEnd)
+                        ->concat(String::createASCIIString(":"))
+                        ->concat(newPass)
+                        ->concat(String::createASCIIString("@"))
+                        ->concat(m_urlString->substring(m_passwordEnd,
+                                                        m_urlString->length() -
+                                                            m_passwordEnd)));
             }
         }
     }
-    resolvePositions();
+    return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::host()
@@ -534,9 +519,10 @@ String* ResourceURL::host()
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
-void ResourceURL::setHost(String* newHost)
+ResourceURL* ResourceURL::setHost(String* newHost)
 {
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::hostname()
@@ -546,9 +532,10 @@ String* ResourceURL::hostname()
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
-void ResourceURL::setHostname(String* newHostname)
+ResourceURL* ResourceURL::setHostname(String* newHostname)
 {
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::port()
@@ -560,9 +547,10 @@ String* ResourceURL::port()
     }
 }
 
-void ResourceURL::setPort(String* newPort)
+ResourceURL* ResourceURL::setPort(String* newPort)
 {
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::pathname()
@@ -574,7 +562,7 @@ String* ResourceURL::pathname()
     }
 }
 
-void ResourceURL::setPathname(String* newPath, bool needRemovingDots)
+ResourceURL* ResourceURL::setPathname(String* newPath, bool needRemovingDots)
 {
     if (!newPath->length() || newPath->charAt(0) != '/') {
         newPath = String::createASCIIString("/")->concat(newPath);
@@ -585,8 +573,8 @@ void ResourceURL::setPathname(String* newPath, bool needRemovingDots)
             newPath = tmp;
         }
     }
-    m_urlString = m_urlString->substring(0, m_portEnd)->concat(newPath);
-    resolvePositions();
+    return new ResourceURL(
+        m_urlString->substring(0, m_portEnd)->concat(newPath));
 }
 
 String* ResourceURL::search()
@@ -598,16 +586,16 @@ String* ResourceURL::search()
     }
 }
 
-void ResourceURL::setSearch(String* newPath)
+ResourceURL* ResourceURL::setSearch(String* newPath)
 {
     if (newPath->length() && newPath->charAt(0) != '?') {
         newPath = String::createASCIIString("?")->concat(newPath);
     }
-    m_urlString = m_urlString->substring(0, m_pathEnd)
-                      ->concat(newPath)
-                      ->concat(m_urlString->substring(
-                          m_queryEnd, m_urlString->length() - m_queryEnd));
-    resolvePositions();
+    return new ResourceURL(
+        m_urlString->substring(0, m_pathEnd)
+            ->concat(newPath)
+            ->concat(m_urlString->substring(m_queryEnd, m_urlString->length() -
+                                                            m_queryEnd)));
 }
 
 String* ResourceURL::hash()
@@ -619,12 +607,12 @@ String* ResourceURL::hash()
     }
 }
 
-void ResourceURL::setHash(String* newPath)
+ResourceURL* ResourceURL::setHash(String* newPath)
 {
     if (newPath->length() && newPath->charAt(0) != '#') {
         newPath = String::createASCIIString("#")->concat(newPath);
     }
-    m_urlString = m_urlString->substring(0, m_queryEnd)->concat(newPath);
-    resolvePositions();
+    return new ResourceURL(
+        m_urlString->substring(0, m_queryEnd)->concat(newPath));
 }
 }

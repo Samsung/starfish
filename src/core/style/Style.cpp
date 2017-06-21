@@ -4450,7 +4450,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
                          selector->pseudoSelectorList()[0], result);
     }
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         break;
     }
     return false;
