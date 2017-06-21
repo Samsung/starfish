@@ -362,12 +362,12 @@ void StarFish::loadHTMLDocument(String* filePath)
 
     m_platformWindow =
         PlatformWindow::create(this, nativeHandle(), width, height);
-    ResourceURL* url =
-        new ResourceURL(String::emptyString, String::fromUTF8(path.c_str()));
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);
-    webView->mainBrowsingContext()->navigate(url);
+
+    ResourceURL* url = new ResourceURL(String::fromUTF8(path.c_str()));
+    webView->navigate(url);
 }
 
 void StarFish::resume()

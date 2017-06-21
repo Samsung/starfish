@@ -460,6 +460,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  pathname  |  Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/"  |
 |    |  attribute  |  search  |  Return "?", followed by this Location object's url's query  |
 |    |  attribute  |  hash  |  Return "#", followed by this Location object's url's fragment  |
+|    |  method  |  assign(DOMString url)  |  Loads the resource at the URL provided in parameter.  |
+|    |  method  |  reload()  |  Reloads the resource from the current URL.  |
 | [MediaSource](https://w3c.github.io/media-source/#mediasource) | enum | ReadyState | "closed", "open", "ended" |
 |  | enum | EndOfStreamError  | "network", "decode" |
 |  | interface | MediaSource | The MediaSource object represents a source of media data for an HTMLMediaElement. |

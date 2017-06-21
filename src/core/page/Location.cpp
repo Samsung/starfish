@@ -80,47 +80,86 @@ void Location::setHref(String* newURL)
 
 void Location::setHost(String* newHost)
 {
-    url()->setHost(newHost);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setHost(newHost);
+    assign(newUrl);
 }
 
 void Location::setHostname(String* newHostname)
 {
-    url()->setHostname(newHostname);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setHostname(newHostname);
+    assign(newUrl);
 }
 
 void Location::setProtocol(String* newProtocol)
 {
-    url()->setProtocol(newProtocol);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setProtocol(newProtocol);
+    assign(newUrl);
 }
 
 void Location::setPathname(String* newPath, bool needRemovingDots)
 {
-    url()->setPathname(newPath, needRemovingDots);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setPathname(newPath, needRemovingDots);
+    assign(newUrl);
 }
 
 void Location::setSearch(String* search)
 {
-    url()->setSearch(search);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setSearch(search);
+    assign(newUrl);
 }
 
 void Location::setHash(String* search)
 {
-    url()->setHash(search);
-    setLocation(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setHash(search);
+    assign(newUrl);
 }
 
-void Location::setLocation(String* newURL)
+bool Location::isValidURL(String* url)
 {
-    starFish()
-        ->platformWindow()
-        ->webView()
-        ->mainBrowsingContext()
-        ->navigateAsync(
-            new ResourceURL(newURL, document()->documentURI()->urlString()));
+    if (url->startsWith("http://")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void Location::setLocation(String* url)
+{
+    if (isValidURL(url)) {
+        assign(new ResourceURL(url));
+    }
+}
+
+void Location::assign(String* url)
+{
+    if (isValidURL(url)) {
+        assign(new ResourceURL(url));
+    }
+}
+
+void Location::assign(ResourceURL* url)
+{
+    starFish()->platformWindow()->webView()->navigate(url);
+}
+
+void Location::replace(String* url)
+{
+    // TODO: Since history is not implemnted yet, replace() is the same as
+    // assign for now
+    if (isValidURL(url)) {
+        assign(url);
+    }
+}
+
+void Location::reload()
+{
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    assign(newUrl);
 }
 }

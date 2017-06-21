@@ -32,7 +32,8 @@ WebView* WebView::create(StarFish* starFish)
 }
 
 WebView::WebView(StarFish* starFish)
-    : m_mainBrowsingContext(BrowsingContext::create(starFish, this))
+    : StarFishHoldable(starFish)
+    , m_mainBrowsingContext(nullptr)
     , m_storageNamespaceProvider(nullptr)
     , m_localStorageNamespace(nullptr)
     , m_sessionStorageNamespace(nullptr)
@@ -49,5 +50,11 @@ void WebView::initStorage()
         m_storageNamespaceProvider->createLocalStorageNamespace();
     m_sessionStorageNamespace =
         m_storageNamespaceProvider->createSessionStorageNamespace();
+}
+
+void WebView::navigate(ResourceURL* url)
+{
+    m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
+    m_mainBrowsingContext->navigate(url);
 }
 }
