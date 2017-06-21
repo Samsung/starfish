@@ -43,9 +43,14 @@
 #include "core/util/URL.h"
 #include "platform/window/PlatformWindow.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Elementary.h>
 extern Evas_Object* g_imgBufferForScreehShot;
+#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+#include <cairo.h>
+extern unsigned char* g_imgBufferForScreehShot;
+#endif
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
@@ -431,11 +436,26 @@ void BrowsingContext::rendering()
     m_needsRendering = false;
     m_inRendering = false;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
+#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+            cairo_surface_t* png_buffer;
+            png_buffer = cairo_image_surface_create_for_data(
+                g_imgBufferForScreehShot, CAIRO_FORMAT_ARGB32,
+                starFish()->platformWindow()->width(),
+                starFish()->platformWindow()->height(),
+                cairo_format_stride_for_width(
+                    CAIRO_FORMAT_ARGB32,
+                    starFish()->platformWindow()->width()));
+
+            cairo_surface_write_to_png(png_buffer, path);
+            cairo_surface_destroy(png_buffer);
+
+#endif
             // int writeImage(char* filename, int width, int height, void
             // *buffer)
             // writeImage(path, width(), height(),
@@ -443,6 +463,7 @@ void BrowsingContext::rendering()
             // EINA_FALSE));
             if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                 strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
+                // std::quick_exit(0);
                 exit(0);
             }
 

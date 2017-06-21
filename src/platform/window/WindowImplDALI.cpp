@@ -33,7 +33,7 @@
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
-// extern Evas_Object* g_imgBufferForScreehShot;
+extern unsigned char* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
@@ -54,9 +54,9 @@ public:
         m_renderingIdlerData = nullptr;
 
         Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-        m_image = Dali::BufferImage::New(size.width, size.height,
-                                         Dali::Pixel::BGRA8888);
-        m_mainView = Dali::Toolkit::ImageView::New(m_image);
+        m_daliBuffer = Dali::BufferImage::New(size.width, size.height,
+                                              Dali::Pixel::BGRA8888);
+        m_mainView = Dali::Toolkit::ImageView::New(m_daliBuffer);
         m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
         m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
         m_mainView.SetPosition(0, 0);
@@ -110,7 +110,7 @@ public:
     size_t m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
     float m_lastMouseX, m_lastMouseY;
-    Dali::BufferImage m_image;
+    Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
 };
 
@@ -122,7 +122,8 @@ public:
         m_height = h;
         m_window = (WindowImplDALI*)wnd;
 
-        m_image = (char*)malloc(w * h * sizeof(uint32_t));
+        buffer = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
+            w * h * sizeof(uint32_t));
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceDALI* s =
@@ -136,17 +137,16 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        // free(m_image);
+        GC_FREE(buffer);
     }
 
     virtual void resize(size_t w, size_t h)
     {
-        // m_image_view.SetSize(w, h);
     }
 
     virtual void* unwrap()
     {
-        return m_image;
+        return (void*)buffer;
     }
 
     virtual size_t width()
@@ -162,12 +162,12 @@ public:
     virtual void clear()
     {
         size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(m_image, 0xff, end);
+        memset(buffer, 0xff, end);
     }
 
 protected:
     WindowImplDALI* m_window;
-    char* m_image;
+    unsigned char* buffer;
     size_t m_width;
     size_t m_height;
 };
@@ -201,9 +201,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         const char* path = getenv("SCREEN_SHOT");
         const char* hide = getenv("HIDE_WINDOW");
         if ((path && strlen(path)) || (hide && strlen(hide))) {
-            // evas_object_hide(wnd->m_window);
+            wnd->m_mainView.SetVisible(false);
         } else {
-            // evas_object_show(wnd->m_window);
+            wnd->m_mainView.SetVisible(true);
         }
     }
 #endif
@@ -242,7 +242,7 @@ void BrowsingContext::setNeedsRenderingSlowCase()
                 id->m_fn(id->m_data);
                 ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
                 ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
-                ((WindowImplDALI*)wnd)->m_image.Update();
+                ((WindowImplDALI*)wnd)->m_daliBuffer.Update();
                 GC_FREE(id);
             },
             id);
@@ -252,14 +252,14 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
 {
 #ifdef STARFISH_ENABLE_TEST
     {
-        // const char* path = getenv("SCREEN_SHOT");
-        // if (path && strlen(path) && g_fireOnloadEvent) {
-        //     g_surfaceForScreehShot =
-        //         CanvasSurface::create(this, width(), height());
-        //     g_imgBufferForScreehShot =
-        //         (Evas_Object*)g_surfaceForScreehShot->unwrap();
-        //     return Canvas::create(g_surfaceForScreehShot);
-        // }
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path) && g_fireOnloadEvent) {
+            g_surfaceForScreehShot =
+                CanvasSurface::create(this, width(), height());
+            g_imgBufferForScreehShot =
+                (unsigned char*)g_surfaceForScreehShot->unwrap();
+            return Canvas::create(g_surfaceForScreehShot);
+        }
     }
 #endif
 
@@ -277,7 +277,7 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     dummy* d = new dummy;
     d->w = width;
     d->h = height;
-    d->image = m_image;
+    d->image = m_daliBuffer;
     m_mainView.SetSize(width, height);
 
     Canvas* canvas = Canvas::createDirect(d);
@@ -293,7 +293,6 @@ void WindowImplDALI::clearResources()
         GC_FREE(m_renderingIdlerData);
     }
 
-    // clearStackingContext(false);
     webView()->mainBrowsingContext()->clearStackingContext(false);
 }
 }
