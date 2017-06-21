@@ -33,9 +33,13 @@ bool g_fireOnloadEvent = false;
 bool g_forceRendering = false;
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) && defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Elementary.h>
 Evas_Object* g_imgBufferForScreehShot;
+#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+unsigned char* g_imgBufferForScreehShot;
+#endif
 #endif
 
 namespace StarFish {

@@ -236,18 +236,7 @@ private:
     StarFish::StarFish* m_sf;
     Application& mApplication;
 };
-
-int main(int argc, char* argv[])
-{
-    url = argv[1];
-    Application application = Application::New(&argc, &argv);
-    DaliShellController shell(application);
-    application.MainLoop();
-
-    return 0;
-}
-
-#elif defined(PORT_GRAPHIC_BACKEND_EFL)
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -316,6 +305,15 @@ int main(int argc, char* argv[])
         setenv("SCREEN_SHOT", screenShot.data(), 1);
         setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
     }
+
+#if defined(PORT_GRAPHIC_BACKEND_DALI)
+
+    url = argv[1];
+    Application application = Application::New(&argc, &argv);
+    DaliShellController shell(application);
+    application.MainLoop();
+
+#elif defined(PORT_GRAPHIC_BACKEND_EFL)
 
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
@@ -409,9 +407,7 @@ int main(int argc, char* argv[])
 
     // sf->messageLoop()->addIdler(test, sf);
     sf->run();
-    // delete sf;
-
+// delete sf;
+#endif
     return 0;
 }
-
-#endif
