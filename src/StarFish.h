@@ -558,6 +558,9 @@ protected:
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
+
+private:
+    void initCookieSession();
 };
 
 class StarFishEnterer {
