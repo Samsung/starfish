@@ -19,6 +19,7 @@
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
 #include "HTTPTransaction.h"
+#include "platform/network/NetworkSharedResourceManager.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <net_connection.h>
@@ -113,15 +114,33 @@ HTTPTransaction::~HTTPTransaction()
 
 void HTTPTransaction::start()
 {
+    CURLSH* curlsh =
+        NetworkSharedResourceManager::getInstance()->curlShareHandle();
     m_curl = curl_easy_init();
     m_httpResponse = HTTPResponse::create();
 
-    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     STARFISH_ASSERT(m_curl);
+    STARFISH_ASSERT(curlsh);
+    STARFISH_ASSERT(m_httpResponse);
 
+    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
-    STARFISH_LOG_INFO("sending network request to %s\n",
-                      m_httpRequest->url().data());
+    curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
+
+    if (NetworkSharedResourceManager::getInstance()->storeCookieFile()) {
+        curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE,
+                         NetworkSharedResourceManager::getInstance()
+                             ->cookieJarFileName()
+                             .data());
+        curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
+                         NetworkSharedResourceManager::getInstance()
+                             ->cookieJarFileName()
+                             .data());
+    }
+
+#ifdef STARFISH_ENABLE_NETWORK_TEST
+    curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
+#endif
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
@@ -152,11 +171,10 @@ void HTTPTransaction::start()
     }
 
     if (m_writeData) {
-        // curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_orgProxy);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
     }
 
-#ifdef STARFISH_ENABLE_TEST
+#ifdef STARFISH_ENABLE_NETWORK_TEST
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
     if (m_httpRequest->method().compare("POST") == 0) {
@@ -182,6 +200,11 @@ void HTTPTransaction::start()
     } else {
         STARFISH_LOG_INFO("got error while opening tizen network connection\n");
     }
+#endif
+
+#ifdef STARFISH_ENABLE_NETWORK_TEST
+    STARFISH_LOG_INFO("sending network request to %s\n",
+                      m_httpRequest->url().data());
 #endif
     m_res = curl_easy_perform(m_curl);
 

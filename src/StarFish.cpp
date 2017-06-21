@@ -34,6 +34,7 @@
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
+#include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
 
 #include <malloc.h>
@@ -265,6 +266,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
 
     m_scriptEngineInstance = new ScriptEngineInstance(this);
+    initCookieSession();
 }
 
 StarFish::~StarFish()
@@ -280,6 +282,7 @@ StarFish::~StarFish()
 #endif
     delete m_lineBreaker;
     delete m_platformWindow;
+    NetworkSharedResourceManager::destroy();
 }
 
 void StarFish::run()
@@ -753,6 +756,15 @@ void StarFish::setupInspector(uint32_t portNumber)
     m_inspector = new Inspector(this, portNumber);
 }
 #endif
+
+void StarFish::initCookieSession()
+{
+    // NetworkSharedResourceManager is singleton, So do not hold the instance.
+    NetworkSharedResourceManager::getInstance()
+        ->enableToStoreCookiesJarAsFile();
+    NetworkSharedResourceManager::getInstance()->initCookieSession();
+}
+
 StaticStrings::StaticStrings(StarFish* sf)
     : m_starFish(sf)
     , m_xhtmlNamespaceURI(

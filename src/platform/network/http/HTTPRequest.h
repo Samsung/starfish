@@ -57,7 +57,7 @@ public:
 private:
     HTTPRequest(const std::string& url, const std::string& method,
                 const HTTPHeaderMap& headers, const std::string& entityBody);
-
+    // Use std::string because it does not inherit gc
     std::string m_url;
     std::string m_method;
     HTTPHeaderMap m_headers;
