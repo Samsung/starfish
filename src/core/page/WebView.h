@@ -19,6 +19,8 @@
 
 #include "StarFishConfig.h"
 
+#include "binding/StarFishHoldable.h"
+
 namespace StarFish {
 
 class Document;
@@ -26,7 +28,7 @@ class BrowsingContext;
 class StorageNamespaceProvider;
 class StorageNamespace;
 
-class WebView : public gc {
+class WebView : public StarFishHoldable, public gc {
 public:
     static WebView* create(StarFish* starFish);
 
@@ -44,6 +46,8 @@ public:
     {
         return m_sessionStorageNamespace;
     }
+
+    void navigate(ResourceURL* url);
 
 private:
     WebView(StarFish* starFish);

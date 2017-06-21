@@ -50,6 +50,10 @@ public:
     String* search();
     String* hash();
 
+    void assign(String* url);
+    void replace(String* url);
+    void reload();
+
     void setHref(String* newURL);
     void setHost(String* newHost);
     void setHostname(String* newHostname);
@@ -63,6 +67,10 @@ public:
     }
 
     void setLocation(String* newURL);
+
+private:
+    void assign(ResourceURL* url);
+    bool isValidURL(String* url);
 };
 }
 
