@@ -111,8 +111,8 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 
         auto iter = sf->m_atomicStringMap.find(&str);
         if (sf->m_atomicStringMap.end() == iter) {
-            String* string = new StringDataUTF32(
-                std::move(TightUTF32String(buf, data.length)));
+            String* string =
+                new StringDataUTF32(std::move(UTF32String(buf, data.length)));
             sf->m_atomicStringMap.insert(string);
             return AtomicString(string);
         } else {

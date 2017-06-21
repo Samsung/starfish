@@ -83,7 +83,7 @@ public:
         } else {
             if (!m_externalString)
                 m_externalString = new UTF32String();
-            m_externalString->pushBack(ch);
+            m_externalString->push_back(ch);
             m_length++;
         }
     }
@@ -235,7 +235,7 @@ template <unsigned int InlineStorageSize>
 String* GatherableString<InlineStorageSize>::toString() const
 {
     if (m_hasASCIIContent) {
-        TightASCIIString newStringData;
+        ASCIIString newStringData;
         newStringData.resize(length());
 
         for (size_t i = 0; i < length(); i++) {
@@ -244,7 +244,7 @@ String* GatherableString<InlineStorageSize>::toString() const
 
         return new StringDataASCII(std::move(newStringData));
     } else {
-        TightUTF32String newStringData;
+        UTF32String newStringData;
         newStringData.resize(length());
 
         for (size_t i = 0; i < length(); i++) {

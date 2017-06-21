@@ -36,7 +36,7 @@ count_lines = 0
 count_empty_lines = 0
 
 interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
-clang_format_exts = ['.cpp', '.h']
+clang_format_exts = ['.cpp', '.h', '.hpp']
 skip_dirs = ['./deps', './build', './third_party', './out', './tool', '.git', './test', './packaging']
 skip_files = ['Interfaces.h']
 
