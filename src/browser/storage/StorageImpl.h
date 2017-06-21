@@ -43,6 +43,8 @@ public:
     void removeItem(String* key) override;
     void clear() override;
 
+    void copyDataFrom(StorageImpl* storage);
+
 private:
     StorageImpl(Window* window);
 
@@ -50,7 +52,7 @@ private:
     SecurityOriginData* m_securityOriginData;
     StorageManager* m_storageManager;
 
-    GCUnorderedMap<String*, String*> m_map;
+    GCUnorderedMap<String*, String*>* m_map;
 };
 }
 

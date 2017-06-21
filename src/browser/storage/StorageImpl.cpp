@@ -38,27 +38,33 @@ StorageImpl::StorageImpl(Window* window, StorageType storageType,
     , m_storageType(storageType)
     , m_securityOriginData(securityOriginData)
     , m_storageManager(storageManager)
+    , m_map(new GCUnorderedMap<String*, String*>())
 {
+}
+
+void StorageImpl::copyDataFrom(StorageImpl* storage)
+{
+    m_map = storage->m_map;
 }
 
 unsigned long StorageImpl::length()
 {
-    return m_map.size();
+    return m_map->size();
 }
 
 Nullable<String*> StorageImpl::key(unsigned long index)
 {
-    if (index >= m_map.size()) {
+    if (index >= m_map->size()) {
         return nullptr;
     }
-    auto itr = std::next(m_map.begin(), index);
+    auto itr = std::next(m_map->begin(), index);
     return itr->first;
 }
 
 Nullable<String*> StorageImpl::getItem(String* key)
 {
-    auto itr = m_map.find(key);
-    if (itr == m_map.end()) {
+    auto itr = m_map->find(key);
+    if (itr == m_map->end()) {
         return nullptr;
     }
 
@@ -71,20 +77,20 @@ void StorageImpl::setItem(String* key, String* value)
     if (val.hasValue()) {
         // Update only if the existing value is different
         if (!(val.getValue()->equals(value))) {
-            m_map.insert(std::pair<String*, String*>(key, value));
+            m_map->insert(std::pair<String*, String*>(key, value));
         }
     } else {
-        m_map.insert(std::pair<String*, String*>(key, value));
+        m_map->insert(std::pair<String*, String*>(key, value));
     }
 }
 
 void StorageImpl::removeItem(String* key)
 {
-    m_map.erase(key);
+    m_map->erase(key);
 }
 
 void StorageImpl::clear()
 {
-    m_map.clear();
+    m_map->clear();
 }
 }

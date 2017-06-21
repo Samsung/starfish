@@ -23,7 +23,7 @@ namespace StarFish {
 
 class StorageNamespace;
 
-class StorageNamespaceProvider : public WindowHoldable, public gc {
+class StorageNamespaceProvider : public gc {
 public:
     virtual ~StorageNamespaceProvider()
     {
@@ -33,8 +33,7 @@ public:
     virtual StorageNamespace* createSessionStorageNamespace() = 0;
 
 protected:
-    StorageNamespaceProvider(Window* window)
-        : WindowHoldable(window)
+    StorageNamespaceProvider()
     {
     }
 };
