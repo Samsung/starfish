@@ -46,19 +46,6 @@ bool hasEnding(std::string const& fullString, std::string const& ending)
     }
 }
 
-void test(size_t, void* data)
-{
-    StarFish::StarFish* sf2 = (StarFish::StarFish*)data;
-    STARFISH_LOG_INFO("asdf\n");
-    ecore_timer_add(0.0001,
-                    [](void* data) -> Eina_Bool {
-                        StarFish::StarFish* sf2 = (StarFish::StarFish*)data;
-                        sf2->messageLoop()->addIdler(test, sf2);
-                        return ECORE_CALLBACK_CANCEL;
-                    },
-                    sf2);
-}
-
 // #define STARFISH_ENABLE_TV_MEMPS
 
 #ifdef STARFISH_ENABLE_TV_MEMPS

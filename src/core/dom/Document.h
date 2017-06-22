@@ -40,6 +40,8 @@ class StyleSheetList;
 class Text;
 class ResourceURL;
 class Window;
+class BrowsingContext;
+class AnimationExecutor;
 
 #ifdef STARFISH_ENABLE_EXP
 class DOMImplementation;
@@ -164,6 +166,8 @@ public:
         return m_window;
     }
 
+    BrowsingContext* browsingContext();
+
     ResourceLoader& resourceLoader()
     {
         return m_resourceLoader;
@@ -258,6 +262,10 @@ public:
     StyleSheetList* styleSheets();
 
     ImageData* brokenImage();
+    AnimationExecutor* animationExecutor()
+    {
+        return m_animationExecutor;
+    }
     String* characterSet()
     {
         return m_characterSet;
@@ -366,6 +374,7 @@ protected:
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;
     ImageData* m_brokenImage;
+    AnimationExecutor* m_animationExecutor;
     ScriptBindingInstance* m_scriptBindingInstance;
     VisibilityState m_pageVisibilityState;
     size_t m_domVersion;

@@ -41,6 +41,7 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
         requestData->request->starFish()
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
+                requestData->request->document()->browsingContext(),
                 [](size_t, void* data) {
                     NetworkURLWorkerData* requestData =
                         (NetworkURLWorkerData*)data;
@@ -132,8 +133,9 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(
     requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
         requestData->request->starFish()
             ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(this->responseHandler,
-                                                   requestData);
+            ->addIdlerWithNoGCRootingInOtherThread(
+                requestData->request->document()->browsingContext(),
+                this->responseHandler, requestData);
 }
 
 NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
@@ -194,6 +196,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     } else {
         data->networkWorker = new AsyncNetworkWorkHelper();
         m_orgProxy->starFish()->threadPool()->addWork(
+            m_orgProxy->document()->browsingContext(),
             NetworkURLResourceRequestJobDelegate::worker, data);
     }
 }
@@ -292,6 +295,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                 request->starFish()
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
+                        request->document()->browsingContext(),
                         [](size_t handle, void* data) {
                             ResourceRequest* request = (ResourceRequest*)data;
                             Locker<Mutex> locker(*request->m_mutex);
@@ -345,6 +349,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                         request->starFish()
                             ->messageLoop()
                             ->addIdlerWithNoGCRootingInOtherThread(
+                                request->document()->browsingContext(),
                                 [](size_t handle, void* data) {
                                     ResourceRequest* request =
                                         (ResourceRequest*)data;

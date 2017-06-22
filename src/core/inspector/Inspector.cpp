@@ -96,6 +96,7 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
                             } else {
                                 self->m_starFish->messageLoop()
                                     ->addIdlerWithNoGCRootingInOtherThread(
+                                        nullptr,
                                         [](size_t, void* data) {
                                             Request* r = (Request*)data;
                                             if (std::string(

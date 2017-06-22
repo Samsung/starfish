@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Element.h"
+#include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -37,7 +38,8 @@ void ElementResourceClient::didLoadFinished()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->starFish()->messageLoop()->addIdler(fn, m_element);
+        m_element->starFish()->messageLoop()->addIdler(
+            m_element->document()->browsingContext(), fn, m_element);
     }
 }
 
@@ -55,7 +57,8 @@ void ElementResourceClient::didLoadFailed()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->starFish()->messageLoop()->addIdler(fn, m_element);
+        m_element->starFish()->messageLoop()->addIdler(
+            m_element->document()->browsingContext(), fn, m_element);
     }
 }
 }

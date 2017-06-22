@@ -1035,6 +1035,7 @@ void HTMLMediaElement::processNextOperationQueue()
         m_operationQueue.pop_front();
 
         m_currentPendingOperationHandle = starFish()->messageLoop()->addIdler(
+            document()->browsingContext(),
             [](size_t, void* data) {
                 MediaOperationQueueData* queueData =
                     (MediaOperationQueueData*)data;

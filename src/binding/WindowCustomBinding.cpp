@@ -184,6 +184,7 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
     GENERATE_WINDOW();
 
     window->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+        window->browsingContext(),
         [](size_t, void* data, void*) {
             StarFish* sf = (StarFish*)data;
             sf->pause();
@@ -199,6 +200,7 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
     GENERATE_WINDOW();
 
     window->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+        window->browsingContext(),
         [](size_t, void* data, void*) {
             StarFish* sf = (StarFish*)data;
             sf->resume();

@@ -193,6 +193,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 
     if (m_readyState == ReadyState::DONE) {
         starFish()->messageLoop()->addIdler(
+            document()->browsingContext(),
             [](size_t, void* data, void* data2) {
                 ResourceRequest* self = (ResourceRequest*)data2;
                 ((StarFish*)data)->removePointerFromRootSet(data2);

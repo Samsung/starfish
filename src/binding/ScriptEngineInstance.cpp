@@ -34,6 +34,7 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
     m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state) {
         Window* window = (Window*)state->context()->globalObject()->extraData();
         window->starFish()->messageLoop()->addIdler(
+            window->browsingContext(),
             [](size_t, void* data) {
                 Window* window = (Window*)data;
                 ExecutionStateRef* state = ExecutionStateRef::create(

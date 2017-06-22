@@ -19,7 +19,6 @@
 #ifdef PORT_GRAPHIC_BACKEND_EFL
 #include "StarFish.h"
 
-#include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
@@ -437,7 +436,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
 #endif
-    wnd->m_animationExecutor = new AnimationExecutor(wnd);
     return wnd;
 }
 
@@ -484,9 +482,6 @@ PlatformWindow::~PlatformWindow()
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
                                    eflWindow->m_mobileClickEventHandler);
 
-    if (m_animationExecutor->isAlive()) {
-        m_animationExecutor->stopIfNeeds();
-    }
 #endif
 }
 

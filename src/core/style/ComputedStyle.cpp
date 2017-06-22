@@ -312,8 +312,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 void applyTransition(Element* element, ComputedStyle* oldStyle,
                      ComputedStyle* newStyle)
 {
-    AnimationExecutor* executor =
-        element->window()->starFish()->platformWindow()->animationExecutor();
+    AnimationExecutor* executor = element->document()->animationExecutor();
     if (newStyle->transitionProperty() ==
         TransitionPropertyValue::TransitionPropertyWidthValue) {
         Length from = oldStyle->width();

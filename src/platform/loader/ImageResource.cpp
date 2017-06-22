@@ -67,6 +67,7 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
                 doLoadFile(this);
             } else {
                 pushIdlerHandle(m_loader->starFish()->messageLoop()->addIdler(
+                    loader()->document()->browsingContext(),
                     [](size_t handle, void* data) {
                         Resource* res = (Resource*)data;
                         res->removeIdlerHandle(handle);

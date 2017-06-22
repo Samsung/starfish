@@ -51,7 +51,6 @@ public:
 
 private:
     WebView(StarFish* starFish);
-
     void initStorage();
 
     BrowsingContext* m_mainBrowsingContext;

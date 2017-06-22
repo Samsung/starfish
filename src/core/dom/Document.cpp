@@ -46,6 +46,7 @@
 #include "core/style/StyleSheetList.h"
 #include "core/style/StyleRule.h"
 #include "platform/loader/ImageResource.h"
+#include "core/animation/Animation.h"
 
 namespace StarFish {
 
@@ -64,6 +65,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_styleResolver(this)
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
+    , m_brokenImage(nullptr)
+    , m_animationExecutor(new AnimationExecutor(window))
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
 #ifdef STARFISH_TIZEN
@@ -98,6 +101,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         NULL, NULL, NULL);
 }
 
+BrowsingContext* Document::browsingContext()
+{
+    return window()->browsingContext();
+}
+
 ScriptBindingInstance* Document::scriptBindingInstance()
 {
     return window()->scriptBindingInstance();
@@ -119,6 +127,7 @@ void Document::open()
 void Document::resumeDocumentParsing()
 {
     window()->starFish()->messageLoop()->addIdler(
+        browsingContext(),
         [](size_t handle, void* data) {
             Document* document = (Document*)data;
             STARFISH_ASSERT(document->m_documentBuilder);

@@ -29,15 +29,18 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     }
 }
 
-void ThreadPool::addWork(ThreadWorker fn, void* data)
+struct DataRooter {
+    void* data;
+    BrowsingContext* ctx;
+};
+
+void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     m_workerQueueMutex->lock();
-    struct DataRooter {
-        void* data;
-    };
     DataRooter* r = new (NoGC) DataRooter;
     r->data = data;
+    r->ctx = ctx;
     m_workerQueue.push_back(std::make_pair(fn, r));
     m_workerQueueMutex->unlock();
 
@@ -67,12 +70,14 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
                     first.first(r->data);
                     rooter->pool->m_messageLoop
                         ->addIdlerWithNoGCRootingInOtherThread(
+                            nullptr,
                             [](size_t handle, void* data) { GC_FREE(data); },
                             r);
                 }
                 // STARFISH_LOG_INFO("threadPool worker end\n");
                 rooter->pool->m_messageLoop
                     ->addIdlerWithNoGCRootingInOtherThread(
+                        nullptr,
                         [](size_t handle, void* data) { GC_FREE(data); },
                         rooter);
                 return NULL;
@@ -82,5 +87,21 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
             break;
         }
     }
+}
+
+void ThreadPool::clearWork(BrowsingContext* ctx)
+{
+    m_workerQueueMutex->lock();
+
+    auto iter = m_workerQueue.begin();
+    while (iter != m_workerQueue.end()) {
+        if (((DataRooter*)iter->second)->ctx == ctx || ctx == nullptr) {
+            m_workerQueue.erase(iter++);
+        } else {
+            iter++;
+        }
+    }
+
+    m_workerQueueMutex->unlock();
 }
 }

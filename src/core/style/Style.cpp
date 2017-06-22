@@ -4521,11 +4521,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             applyTransition(element, element->style(), style);
         } else {
             // TODO: temporal code
-            element->window()
-                ->starFish()
-                ->platformWindow()
-                ->animationExecutor()
-                ->cancelAnimation(element);
+            element->document()->animationExecutor()->cancelAnimation(element);
         }
         element->setStyle(style);
         element->clearNeedsStyleRecalc();

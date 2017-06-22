@@ -42,6 +42,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/util/URL.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/animation/Animation.h"
 
 #if defined(STARFISH_ENABLE_TEST)
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
@@ -84,7 +85,7 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
     , m_altKeyDown(0)
     , m_metaKeyDown(0)
 {
-    m_mainBrowsingContext = this;
+    m_parentBrowsingContext = nullptr;
     initFlags();
 }
 
@@ -110,8 +111,6 @@ void BrowsingContext::navigate(ResourceURL* url)
 {
     close();
     initFlags();
-    STARFISH_LOG_INFO("BrowsingContext::navigate %s\n",
-                      url->urlString()->utf8Data());
 
     m_isActive = true;
 
@@ -126,6 +125,7 @@ void BrowsingContext::navigate(ResourceURL* url)
 void BrowsingContext::navigateAsync(ResourceURL* url)
 {
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+        this,
         [](size_t a, void* data, void* data2) {
             ((BrowsingContext*)data)->navigate((ResourceURL*)data2);
         },
@@ -147,7 +147,7 @@ void BrowsingContext::layoutIfNeeds()
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
 #ifdef STARFISH_ENABLE_TIMER
-            Timer t("parse sheet & collect rules");
+            ProfilerTimer t("parse sheet & collect rules");
 #endif
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
             document()->styleResolver().removeAllRules();
@@ -182,7 +182,7 @@ void BrowsingContext::layoutIfNeeds()
 
 // resolve style
 #ifdef STARFISH_ENABLE_TIMER
-        Timer t("resolve style");
+        ProfilerTimer t("resolve style");
 #endif
         document()->styleResolver().resolveDOMStyle(
             document(), m_needsStyleRecalcForWholeDocument);
@@ -204,7 +204,7 @@ void BrowsingContext::layoutIfNeeds()
 
 // create frame tree
 #ifdef STARFISH_ENABLE_TIMER
-            Timer t("create frame tree");
+            ProfilerTimer t("create frame tree");
 #endif
             FrameTreeBuilder::buildFrameTree(document());
             m_needsFrameTreeBuild = false;
@@ -214,7 +214,7 @@ void BrowsingContext::layoutIfNeeds()
     if (m_needsLayout) {
 // lay out frame tree
 #ifdef STARFISH_ENABLE_TIMER
-        Timer t("lay out frame tree");
+        ProfilerTimer t("lay out frame tree");
 #endif
         clearStackingContext(true);
 
@@ -239,7 +239,7 @@ void BrowsingContext::layoutIfNeeds()
 #endif
         {
 #ifdef STARFISH_ENABLE_TIMER
-            Timer t("computeStackingContextProperties");
+            ProfilerTimer t("computeStackingContextProperties");
 #endif
             document()->frame()->establishesStackingContextIfNeeds();
             if (document()->frame()->firstChild()) {
@@ -580,8 +580,6 @@ void BrowsingContext::clearStackingContext(bool backupBuffer)
 
 void BrowsingContext::close()
 {
-    STARFISH_LOG_INFO("BrowsingContext::close\n");
-
     m_focusedNode = nullptr;
     m_relatedTarget = nullptr;
 
@@ -596,25 +594,28 @@ void BrowsingContext::close()
         document()->close();
 
         if (scriptBindingInstance()) {
-            if (true) {
+            {
                 StarFishEnterer enter(m_starFish);
                 scriptBindingInstance()->close();
             }
             document()->window()->deleteScriptBindingInstance();
         }
 
-        delete m_document;
+        if (document()->animationExecutor()->isAlive()) {
+            document()->animationExecutor()->stopIfNeeds();
+        }
+
         m_document = nullptr;
     }
 
     m_isActive = false;
 
-    m_starFish->timer()->clear();
-
+    m_starFish->timer()->clear(this);
     m_starFish->platformWindow()->clearResources();
+    m_starFish->messageLoop()->clearPendingIdlers(this);
 
-    m_starFish->messageLoop()->clearPendingIdlers();
-    m_starFish->clearBlobURLStore();
+    if (m_parentBrowsingContext == nullptr)
+        m_starFish->clearBlobURLStore();
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -978,7 +979,7 @@ void BrowsingContext::dispatchKeyEvent(String* key,
 
 void BrowsingContext::pause()
 {
-    STARFISH_LOG_INFO("Window::pause\n");
+    STARFISH_LOG_INFO("BrowsingContext::pause\n");
     if (!m_isRunning) {
         return;
     }
@@ -992,7 +993,7 @@ void BrowsingContext::pause()
 
 void BrowsingContext::resume()
 {
-    STARFISH_LOG_INFO("Window::resume\n");
+    STARFISH_LOG_INFO("BrowsingContext::resume\n");
     if (m_isRunning) {
         m_needsRendering = true;
         m_needsPainting = true;

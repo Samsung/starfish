@@ -47,7 +47,6 @@ namespace StarFish {
 PlatformWindow::PlatformWindow(StarFish* starFish)
     : m_starFish(starFish)
     , m_webView(nullptr)
-    , m_animationExecutor(nullptr)
 {
 }
 

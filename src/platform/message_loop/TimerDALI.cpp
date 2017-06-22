@@ -32,7 +32,7 @@
 
 namespace StarFish {
 
-TimerWrapper::TimerWrapper(StarFish* sf)
+Timer::Timer(StarFish* sf)
     : m_starFish(sf)
 {
     m_timeoutCounter = 0;
@@ -46,7 +46,7 @@ public:
     {
     }
 
-    TimerWrapper* m_timer;
+    Timer* m_timer;
     int32_t m_id;
     Dali::Timer m_native_timer;
     void* m_data;
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    TimerWrapper* m_timer;
+    Timer* m_timer;
     int32_t m_id;
     Dali::Timer m_native_timer;
     void* m_data;
@@ -85,7 +85,7 @@ public:
     bool OnceTick()
     {
         StarFishEnterer enter(m_timer->m_starFish);
-        TimerWrapper* timer = m_timer;
+        Timer* timer = m_timer;
         int32_t id = m_id;
         m_handler(m_window, m_data);
         auto iter = m_timer->m_timeoutHandler.find(id);
@@ -118,9 +118,9 @@ public:
     }
 };
 
-size_t TimerWrapper::addTimer(double delay, Window* window,
-                              WindowSetTimeoutHandler handler, void* data,
-                              bool repetitive)
+size_t Timer::addTimer(double delay, Window* window,
+                       WindowSetTimeoutHandler handler, void* data,
+                       bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -142,7 +142,7 @@ size_t TimerWrapper::addTimer(double delay, Window* window,
     return id;
 }
 
-void TimerWrapper::removeTimer(size_t reqID)
+void Timer::removeTimer(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
     auto handlerData = m_timeoutHandler.find(reqID);
@@ -154,8 +154,8 @@ void TimerWrapper::removeTimer(size_t reqID)
     }
 }
 
-size_t TimerWrapper::addAnimator(Window* window,
-                                 WindowSetTimeoutHandler handler, void* data)
+size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
+                          void* data)
 {
     STARFISH_ASSERT(isMainThread());
     TimeoutData* td = new (NoGC) TimeoutData();
@@ -172,7 +172,7 @@ size_t TimerWrapper::addAnimator(Window* window,
     return id;
 }
 
-size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
+size_t Timer::addAnimator(GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData();
@@ -189,7 +189,7 @@ size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
     return id;
 }
 
-void TimerWrapper::removeWindowAnimator(size_t reqID)
+void Timer::removeWindowAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -203,7 +203,7 @@ void TimerWrapper::removeWindowAnimator(size_t reqID)
     }
 }
 
-void TimerWrapper::removeGenericAnimator(size_t reqID)
+void Timer::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -216,7 +216,7 @@ void TimerWrapper::removeGenericAnimator(size_t reqID)
     }
 }
 
-void TimerWrapper::clear()
+void Timer::clear()
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {

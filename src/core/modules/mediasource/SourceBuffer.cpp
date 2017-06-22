@@ -866,6 +866,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
 void SourceBuffer::codedFrameEviction()
 {
     // TODO 3.5.14 Coded Frame Eviction Algorithm
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
@@ -873,10 +874,12 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     STARFISH_ASSERT(inputBuffer->m_isProcessed == false);
 
     m_starFish->threadPool()->addWork(
+        document()->browsingContext(),
         [](void* data) -> void* {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
 #ifdef STARFISH_ENABLE_TIMER
-            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
+            ProfilerTimer timer(
+                "[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
 #endif
             STARFISH_LOG_INFO("SourceBuffer::bufferAppend start (size %d)\n",
                               (int)inputBuffer->m_length);
@@ -887,7 +890,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
             {
 #ifdef STARFISH_ENABLE_TIMER
-                Timer timer(
+                ProfilerTimer timer(
                     "[TRACE_MSE_PROFILE] "
                     "SourceBuffer::bufferAppend::findSteramInfo");
 #endif
@@ -912,7 +915,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
             {
 #ifdef STARFISH_ENABLE_TIMER
-                Timer timer(
+                ProfilerTimer timer(
                     "[TRACE_MSE_PROFILE] "
                     "SourceBuffer::bufferAppend::findStreamPacket");
 #endif
@@ -932,13 +935,14 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
             inputBuffer->m_sourceBuffer->m_starFish->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
+                    inputBuffer->m_sourceBuffer->document()->browsingContext(),
                     [](size_t, void* data, void* data2) {
                         SourceBufferData* inputBuffer = (SourceBufferData*)data;
                         DemuxerClientSourceBuffer* cl =
                             (DemuxerClientSourceBuffer*)inputBuffer
                                 ->m_sourceBuffer->m_demuxer->client(0);
 #ifdef STARFISH_ENABLE_TIMER
-                        Timer timer(
+                        ProfilerTimer timer(
                             "[TRACE_MSE_PROFILE] "
                             "SourceBuffer::bufferAppend::deliverResult");
 #endif

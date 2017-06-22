@@ -64,6 +64,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                        auto ret = d->fn(d->data);
                        d->thread->m_alive = false;
                        d->messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                           nullptr,
                            [](size_t handle, void* data) {
                                ThreadData* d = (ThreadData*)data;
                                void* ret;

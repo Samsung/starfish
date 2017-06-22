@@ -191,7 +191,7 @@ public:
 
 class AnimationExecutor : public gc {
 public:
-    AnimationExecutor(PlatformWindow* window)
+    AnimationExecutor(Window* window)
         : m_isAlive(false)
         , m_platformAnimator(0)
     {
@@ -203,7 +203,7 @@ public:
         return m_isAlive;
     }
 
-    PlatformWindow* window()
+    Window* window()
     {
         return m_window;
     }
@@ -218,7 +218,7 @@ public:
     void step();
 
 private:
-    PlatformWindow* m_window;
+    Window* m_window;
     bool m_isAlive;
     size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;

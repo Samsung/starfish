@@ -44,6 +44,7 @@ bool Geolocation::getCurrentPositionPreprocessing(
 {
     if (timeout == 0) {
         m_document->starFish()->messageLoop()->addIdler(
+            m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* sf = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
@@ -65,6 +66,7 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
         m_document->starFish()->messageLoop()->addIdler(
+            m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* sf = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
