@@ -42,8 +42,16 @@ sfmatchLocation_cb matchLocation_cb = nullptr;
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     void* window, int windowWidth, int windowHeight, const char* locale,
-    const char* timezoneID, float defaultFontSizeMultiplier, ScreenInfo& info)
+    const char* timezoneID, float defaultFontSizeMultiplier)
 {
+    // TODO: Need to get screen info from X11.
+    // Temporally, rect's width and height are set to window size.
+    ScreenInfo info;
+    info.rect.setWidth(windowWidth);
+    info.rect.setHeight(windowHeight);
+    info.availableRect.setWidth(windowWidth);
+    info.availableRect.setHeight(windowHeight);
+
     StarFishInstance* instance = new (NoGC) StarFishInstance;
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
