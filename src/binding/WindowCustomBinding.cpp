@@ -25,10 +25,29 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
+#if defined(PORT_GRAPHIC_BACKEND_DALI)
+#include <dali-toolkit/dali-toolkit.h>
+#endif
+
 #include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace StarFish {
+
+void customExit(int returnCode, Window* window)
+{
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    exit(returnCode);
+#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+    Dali::Application* app =
+        (Dali::Application*)window->starFish()->nativeHandle();
+    if (app) {
+        app->Quit();
+    } else {
+        exit(returnCode);
+    }
+#endif
+}
 
 ValueRef* windowWindowGetterFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
@@ -362,13 +381,13 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
         }
         std::string errString = "[FAIL]assertion fail";
         STARFISH_LOG_ERROR("%s\n", errString.data());
-        exit(-1);
+        customExit(-1, window);
     } else {
         if (argv[0]->toBoolean(state)) {
         } else {
             std::string errString = "[FAIL]assertion fail";
             STARFISH_LOG_ERROR("%s\n", errString.data());
-            exit(-1);
+            customExit(-1, window);
         }
     }
     return scriptUndefined();
@@ -385,7 +404,9 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
-    exit(0);
+    GENERATE_WINDOW();
+    customExit(0, window);
+
     return scriptUndefined();
 }
 #endif
@@ -449,7 +470,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
         }
 
         STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
-        exit(-1);
+        customExit(-1, window);
     }
 
     pclose(fp);

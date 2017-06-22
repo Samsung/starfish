@@ -151,10 +151,10 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
     FcConfig* config = FcInitLoadConfigAndFonts();
 
-    // FcPattern* pattern = FcNameParse((const
-    // FcChar8*)(familyName->utf8Data()));
+    FcPattern* pattern = FcNameParse((const FcChar8*)(familyName->utf8Data()));
+
     // TODO : need to fallback font
-    FcPattern* pattern = FcNameParse((const FcChar8*)("NanumGothic"));
+    // FcPattern* pattern = FcNameParse((const FcChar8*)("NanumGothic"));
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);

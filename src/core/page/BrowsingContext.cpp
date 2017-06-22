@@ -49,6 +49,7 @@
 extern Evas_Object* g_imgBufferForScreehShot;
 #elif defined(PORT_GRAPHIC_BACKEND_DALI)
 #include <cairo.h>
+#include <dali-toolkit/dali-toolkit.h>
 extern unsigned char* g_imgBufferForScreehShot;
 #endif
 #endif
@@ -442,6 +443,17 @@ void BrowsingContext::rendering()
         if (path && strlen(path) && g_fireOnloadEvent) {
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
+
+            // int writeImage(char* filename, int width, int height, void
+            // *buffer)
+            // writeImage(path, width(), height(),
+            // evas_object_image_data_get(g_imgBufferForScreehShot,
+            // EINA_FALSE));
+            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
+                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
+                exit(0);
+            }
+
 #elif defined(PORT_GRAPHIC_BACKEND_DALI)
             cairo_surface_t* png_buffer;
             png_buffer = cairo_image_surface_create_for_data(
@@ -455,18 +467,18 @@ void BrowsingContext::rendering()
             cairo_surface_write_to_png(png_buffer, path);
             cairo_surface_destroy(png_buffer);
 
-#endif
-            // int writeImage(char* filename, int width, int height, void
-            // *buffer)
-            // writeImage(path, width(), height(),
-            // evas_object_image_data_get(g_imgBufferForScreehShot,
-            // EINA_FALSE));
             if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                 strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                // std::quick_exit(0);
-                exit(0);
+                Dali::Application* app =
+                    (Dali::Application*)starFish()->nativeHandle();
+                if (app) {
+                    app->Quit();
+                } else {
+                    exit(0);
+                }
             }
 
+#endif
             g_surfaceForScreehShot->detachNativeBuffer();
             g_surfaceForScreehShot = nullptr;
         }

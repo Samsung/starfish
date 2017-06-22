@@ -19,6 +19,7 @@
 
 #include "StarFish.h"
 #include <dali-toolkit/dali-toolkit.h>
+// #include <dali/devel-api/adaptor-framework/window-devel.h>
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
@@ -203,11 +204,23 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     {
         const char* path = getenv("SCREEN_SHOT");
         const char* hide = getenv("HIDE_WINDOW");
-        if ((path && strlen(path)) || (hide && strlen(hide))) {
-            wnd->m_mainView.SetVisible(false);
-        } else {
-            wnd->m_mainView.SetVisible(true);
+
+        // AFAIK ,There is no way to hide the window in DALi@linux.(mh.byun)
+        /*
+        {
+            Dali::Application* app = (Dali::Application*)sf->nativeHandle();
+            if(app){
+                Dali::Window dali_win  = app->GetWindow();
+                if ((path && strlen(path)) || (hide && strlen(hide))) {
+                    Dali::DevelWindow::Hide(dali_win);
+                    // wnd->m_mainView.SetVisible(false);
+                } else {
+                    Dali::DevelWindow::Show(dali_win);
+                    // wnd->m_mainView.SetVisible(true);
+                }
+            }
         }
+        */
     }
 #endif
 
