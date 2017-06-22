@@ -143,8 +143,8 @@ public:
         info.availableRect.setHeight(height);
 
         m_sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag,
-                                      "ko-KR", "Asia/Seoul", nullptr, width,
-                                      height, 1, info);
+                                      "ko-KR", "Asia/Seoul", &application,
+                                      width, height, 1, info);
         m_sf->loadHTMLDocument(String::createASCIIString(url));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::OnStageTouched);
