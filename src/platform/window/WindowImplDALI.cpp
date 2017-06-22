@@ -224,16 +224,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     }
 #endif
 
-    wnd->m_animationExecutor = new AnimationExecutor(wnd);
     return wnd;
 }
 
 PlatformWindow::~PlatformWindow()
 {
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
-    if (m_animationExecutor->isAlive()) {
-        m_animationExecutor->stopIfNeeds();
-    }
 }
 
 void BrowsingContext::setNeedsRenderingSlowCase()

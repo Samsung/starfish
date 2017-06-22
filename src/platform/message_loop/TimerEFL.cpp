@@ -32,7 +32,7 @@
 
 namespace StarFish {
 
-TimerWrapper::TimerWrapper(StarFish* sf)
+Timer::Timer(StarFish* sf)
     : m_starFish(sf)
 {
     m_timeoutCounter = 0;
@@ -40,15 +40,16 @@ TimerWrapper::TimerWrapper(StarFish* sf)
 }
 
 struct AnimationTickData {
-    TimerWrapper* m_timer;
+    Timer* m_timer;
     int32_t m_id;
     Ecore_Animator* m_timerID;
     void* m_data;
     GenericAnimationHandler m_handler;
+    Window* m_window;
 };
 
 struct TimeoutData {
-    TimerWrapper* m_timer;
+    Timer* m_timer;
     int32_t m_id;
     Ecore_Timer* m_timerID;
     Window* m_window;
@@ -56,9 +57,9 @@ struct TimeoutData {
     WindowSetTimeoutHandler m_handler;
 };
 
-size_t TimerWrapper::addTimer(double delay, Window* window,
-                              WindowSetTimeoutHandler handler, void* data,
-                              bool repetitive)
+size_t Timer::addTimer(double delay, Window* window,
+                       WindowSetTimeoutHandler handler, void* data,
+                       bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -88,7 +89,7 @@ size_t TimerWrapper::addTimer(double delay, Window* window,
                             [](void* data) -> Eina_Bool {
                                 TimeoutData* td = (TimeoutData*)data;
                                 StarFishEnterer enter(td->m_timer->m_starFish);
-                                TimerWrapper* timer = td->m_timer;
+                                Timer* timer = td->m_timer;
                                 int32_t id = td->m_id;
                                 td->m_handler(td->m_window, td->m_data);
                                 auto iter = timer->m_timeoutHandler.find(id);
@@ -105,7 +106,7 @@ size_t TimerWrapper::addTimer(double delay, Window* window,
     return id;
 }
 
-void TimerWrapper::removeTimer(size_t reqID)
+void Timer::removeTimer(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
     auto handlerData = m_timeoutHandler.find(reqID);
@@ -117,8 +118,8 @@ void TimerWrapper::removeTimer(size_t reqID)
     }
 }
 
-size_t TimerWrapper::addAnimator(Window* window,
-                                 WindowSetTimeoutHandler handler, void* data)
+size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
+                          void* data)
 {
     STARFISH_ASSERT(isMainThread());
     TimeoutData* td = new (NoGC) TimeoutData;
@@ -148,7 +149,8 @@ size_t TimerWrapper::addAnimator(Window* window,
     return id;
 }
 
-size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
+size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
+                          void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData;
@@ -157,6 +159,7 @@ size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
     ad->m_id = id;
     ad->m_data = data;
     ad->m_handler = handler;
+    ad->m_window = window;
     ad->m_timerID = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             AnimationTickData* ad = (AnimationTickData*)data;
@@ -177,7 +180,7 @@ size_t TimerWrapper::addAnimator(GenericAnimationHandler handler, void* data)
     return id;
 }
 
-void TimerWrapper::removeWindowAnimator(size_t reqID)
+void Timer::removeWindowAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -191,7 +194,7 @@ void TimerWrapper::removeWindowAnimator(size_t reqID)
     }
 }
 
-void TimerWrapper::removeGenericAnimator(size_t reqID)
+void Timer::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -205,34 +208,43 @@ void TimerWrapper::removeGenericAnimator(size_t reqID)
     }
 }
 
-void TimerWrapper::clear()
+void Timer::clear(BrowsingContext* ctx)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        ecore_timer_del(td->m_timerID);
-        GC_FREE(td);
-        timerIter++;
+        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+            ecore_timer_del(td->m_timerID);
+            GC_FREE(td);
+            m_timeoutHandler.erase(timerIter++);
+        } else {
+            timerIter++;
+        }
     }
-    m_timeoutHandler.clear();
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
-        aniIter++;
+        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+            ecore_animator_del((Ecore_Animator*)td->m_timerID);
+            GC_FREE(td);
+            m_requestAnimationFrameHandler.erase(aniIter++);
+        } else {
+            aniIter++;
+        }
     }
-    m_requestAnimationFrameHandler.clear();
 
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        ecore_animator_del((Ecore_Animator*)ad->m_timerID);
-        GC_FREE(ad);
-        aniIter2++;
+        if (ad->m_window->browsingContext() == ctx || ctx == nullptr) {
+            ecore_animator_del((Ecore_Animator*)ad->m_timerID);
+            GC_FREE(ad);
+            m_animationHandler.erase(aniIter2++);
+        } else {
+            aniIter2++;
+        }
     }
-    m_animationHandler.clear();
 }
 }
 #endif

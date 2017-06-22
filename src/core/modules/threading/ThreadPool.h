@@ -23,14 +23,16 @@
 
 namespace StarFish {
 
+class BrowsingContext;
+
 class ThreadPool : public gc {
 public:
     ThreadPool(size_t maxThreadCount, MessageLoop* ml);
     ~ThreadPool()
     {
     }
-    void addWork(ThreadWorker fn, void* data);
-
+    void addWork(BrowsingContext* ctx, ThreadWorker fn, void* data);
+    void clearWork(BrowsingContext* ctx); // give nullptr to clear every idlers
 protected:
     MessageLoop* m_messageLoop;
     GCVector<Thread*> m_threads;

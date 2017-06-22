@@ -86,7 +86,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
 
 void Window::deleteScriptBindingInstance()
 {
-    delete m_scriptBindingInstance;
     m_scriptBindingInstance = nullptr;
 }
 

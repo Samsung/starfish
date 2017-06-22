@@ -19,14 +19,16 @@
 
 namespace StarFish {
 
+class BrowsingContext;
+
 typedef bool (*GenericAnimationHandler)(void* data);
 
-class TimerWrapper : public gc {
+class Timer : public gc {
     friend class StarFish;
     friend class Window;
 
 public:
-    TimerWrapper(StarFish* sf);
+    Timer(StarFish* sf);
     size_t addTimer(double delay, Window* window,
                     WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
@@ -34,11 +36,12 @@ public:
 
     size_t addAnimator(Window* window, WindowSetTimeoutHandler handler,
                        void* data);
-    size_t addAnimator(GenericAnimationHandler handler, void* data);
+    size_t addAnimator(Window* window, GenericAnimationHandler handler,
+                       void* data);
     void removeWindowAnimator(size_t reqID);
     void removeGenericAnimator(size_t reqID);
 
-    void clear();
+    void clear(BrowsingContext* ctx); // give nullptr to clear every tiemr
 
     StarFish* m_starFish;
 

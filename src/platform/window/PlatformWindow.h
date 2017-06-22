@@ -85,18 +85,11 @@ public:
 
     void screenShot(std::string filePath);
 
-    AnimationExecutor* animationExecutor()
-    {
-        return m_animationExecutor;
-    }
-
 protected:
     PlatformWindow(StarFish* starFish);
 
     StarFish* m_starFish;
     WebView* m_webView;
-
-    AnimationExecutor* m_animationExecutor;
 };
 }
 

@@ -178,7 +178,7 @@ private:
 
     WebView* m_webView;
     Document* m_document;
-    BrowsingContext* m_mainBrowsingContext;
+    BrowsingContext* m_parentBrowsingContext;
 
     bool m_inRendering;
     bool m_needsRendering;

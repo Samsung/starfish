@@ -205,6 +205,7 @@ void AnimationExecutor::startIfNeeds()
     }
     m_isAlive = true;
     m_platformAnimator = window()->starFish()->timer()->addAnimator(
+        window(),
         [](void* data) -> bool {
             AnimationExecutor* executor = (AnimationExecutor*)data;
             if (executor->isAlive()) {

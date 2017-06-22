@@ -160,6 +160,7 @@ void HTMLStyleElement::removeStyleSheet()
 void HTMLStyleElement::dispatchLoadEvent()
 {
     starFish()->messageLoop()->addIdler(
+        document()->browsingContext(),
         [](size_t handle, void* data) {
             HTMLStyleElement* element = (HTMLStyleElement*)data;
             if (!element->hasLoaded()) {

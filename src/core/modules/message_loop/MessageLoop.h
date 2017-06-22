@@ -21,24 +21,30 @@
 
 namespace StarFish {
 
+class BrowsingContext;
+
 class MessageLoop : public gc {
     friend class StarFish;
     friend class Window;
 
 public:
     MessageLoop(StarFish* sf);
-    size_t addIdler(void (*fn)(size_t handle, void*), void* data);
-    size_t addIdler(void (*fn)(size_t handle, void*, void*), void* data,
+    size_t addIdler(BrowsingContext* ctx, void (*fn)(size_t handle, void*),
+                    void* data);
+    size_t addIdler(BrowsingContext* ctx,
+                    void (*fn)(size_t handle, void*, void*), void* data,
                     void* data1);
-    size_t addIdler(void (*fn)(size_t handle, void*, void*, void*), void* data,
+    size_t addIdler(BrowsingContext* ctx,
+                    void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
-    size_t addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t handle,
-                                                           void*),
-                                                void* data);
-    size_t addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t handle, void*,
+    size_t addIdlerWithNoGCRootingInOtherThread(
+        BrowsingContext* ctx, void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(BrowsingContext* ctx,
+                                                void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
-    size_t addIdlerWithNoScriptInstanceEntering(void (*fn)(size_t handle, void*,
+    size_t addIdlerWithNoScriptInstanceEntering(BrowsingContext* ctx,
+                                                void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
 
@@ -50,7 +56,8 @@ public:
         return m_idlers.size();
     }
 
-    void clearPendingIdlers();
+    void clearPendingIdlers(
+        BrowsingContext* ctx); // give nullptr to clear every idlers
     void run();
 
 protected:

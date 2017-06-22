@@ -51,6 +51,7 @@
 #include "core/dom/HTMLTHElement.h"
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/HTMLUListElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLAudioElement.h"
@@ -125,6 +126,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTBodyElement(document);
     } else if (name == str->m_tfootTagName.localNameAtomic()) {
         return new HTMLTFootElement(document);
+    } else if (name == str->m_iframeTagName.localNameAtomic()) {
+        return new HTMLIFrameElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
