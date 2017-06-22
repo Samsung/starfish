@@ -38,7 +38,7 @@ StorageImpl::StorageImpl(Window* window, StorageType storageType,
     , m_storageType(storageType)
     , m_securityOriginData(securityOriginData)
     , m_storageManager(storageManager)
-    , m_map(new GCUnorderedMap<String*, String*>())
+    , m_map(new (GC) GCUnorderedMap<String*, String*>())
 {
 }
 
