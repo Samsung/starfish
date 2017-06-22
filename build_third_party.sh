@@ -310,13 +310,14 @@ function build_gc_for_tizen_obs() {
     done
 }
 
-
+#build zeromq + tizen
 if [[ $1 == tizen_obs_arm ]]; then
     build_gc_for_tizen_obs arm $2
 elif [[ $1 == tizen_obs_i386 ]]; then
     build_gc_for_tizen_obs i386 $2
 else # full build
 
+#build zeromq
 build_gc_for_linux
 
 if [ -z "$TIZEN_SDK_HOME" ]; then
@@ -336,13 +337,13 @@ fi
 cd $CU
 cd third_party/libav/
 rm -rf ./out
-build_av_for_linux
+#build_av_for_linux
 
 if [ -z "$TIZEN_SDK_HOME" ]; then
     echo "Do not build for Tizen"
 else
     echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
-    build_av_for_tizen
+#    build_av_for_tizen
 fi
 
 cd $CU
@@ -353,7 +354,6 @@ cd $CU
 cd third_party/escargot/
 git submodule init
 git submodule update third_party/GCutil
-#./build_third_party.sh
 make clean
 make x64.interpreter.release.static -j8
 make x64.interpreter.debug.static -j8

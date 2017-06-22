@@ -16,14 +16,20 @@
         ],
         'deps_extra': [
         ],
+        'deps_debug_extra': [
+        ],
+        'deps_release_extra': [
+        ],
         'main_file' : 'src/shell/shell.cpp',
         'variables': {
             'component%': 'static_library',
             'backend%': 'efl',
+            'enable_ffmpeg_demuxer%': 'false',
         },
         'component%':'<(component)',
         'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
         'backend%': '<(backend)',
+        'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
         'conditions': [
             ['backend=="efl"', {
                 'defines_extra': [
@@ -43,7 +49,18 @@
                 'deps_extra': [
                     './build.dep.gyp:dali.x64',
                 ],
-            }]
+            }],
+            ['enable_ffmpeg_demuxer=="true"', {
+                'defines_extra': [
+                    'STARFISH_ENABLE_FFMPEG_DEMUXER',
+                ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:av.x64.debug',
+                ],
+                'deps_release_extra': [
+                    './build.dep.gyp:av.x64.release',
+                ],
+            }],
         ],
     },
     'make_global_settings': [
@@ -184,9 +201,9 @@
             'product_name': 'StarFish.x64.debug',
             'dependencies': [
                 './build.dep.gyp:escargot.x64.debug',
-                './build.dep.gyp:av.x64.debug',
                 './build.dep.gyp:gc.x64.debug',
                 './build.dep.gyp:zmq.x64.debug',
+                '<@(deps_debug_extra)',
             ],
             'defines': [
                 '<@(defines_x64)',
@@ -198,9 +215,9 @@
             'product_name': 'StarFish.x64.release',
             'dependencies': [
                 './build.dep.gyp:escargot.x64.release',
-                './build.dep.gyp:av.x64.release',
                 './build.dep.gyp:gc.x64.release',
                 './build.dep.gyp:zmq.x64.release',
+                '<@(deps_release_extra)',
             ],
             'defines': [
                 '<@(defines_x64)',

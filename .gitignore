@@ -6,6 +6,7 @@ StarFish
 
 # Binding Generator generated
 src/binding/*Binding.cpp
+src/binding/Interfaces.h
 !src/binding/*CustomBinding.cpp
 
 # Node releated

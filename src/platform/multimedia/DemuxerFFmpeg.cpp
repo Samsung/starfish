@@ -15,6 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#ifdef STARFISH_ENABLE_FFMPEG_DEMUXER
 #include "StarFishConfig.h"
 #include "Demuxer.h"
 
@@ -287,5 +288,5 @@ Demuxer* Demuxer::createFFmpegDemuxer()
     return new DemuxerFFmpeg();
 }
 }
-
+#endif /* STARFISH_ENABLE_FFMPEG_DEMUXER */
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
