@@ -22,28 +22,28 @@
 
 namespace StarFish {
 
+const char* FileIOTypeList[] = { "r", "w", "r+" };
+
 class FileIOPosix : public FileIO {
 public:
     FileIOPosix()
-        : m_fp(NULL)
+        : m_fp(nullptr)
     {
     }
     ~FileIOPosix()
     {
         close();
     }
-    bool open(const char* filePath)
+    bool open(const char* filePath, FileIOType filemode)
     {
         close();
-
         struct stat s;
         stat(filePath, &s);
-
         if ((s.st_mode & S_IFMT) == S_IFDIR) {
             return false;
         }
 
-        m_fp = fopen(filePath, "r");
+        m_fp = fopen(filePath, FileIOTypeCheck(filemode));
         if (m_fp) {
             return true;
         }
@@ -60,14 +60,44 @@ public:
     {
         return fread(buf, size, count, m_fp);
     }
+    size_t write(void* buf, size_t size, size_t count)
+    {
+        return fwrite(buf, size, count, m_fp);
+    }
+    String* readLine()
+    {
+        std::string buf;
+        while (!feof(m_fp)) {
+            char temp;
+            read(&temp, 1, 1);
+            if (temp != '\n') {
+                buf += temp;
+            } else {
+                break;
+            }
+        }
+        return String::fromUTF8((char*)(&buf[0]));
+    }
+    size_t writeLine(String* buf)
+    {
+        return fprintf(m_fp, "%s", buf->utf8Data());
+    }
+    size_t writeLine(const char* buf)
+    {
+        return fprintf(m_fp, "%s", buf);
+    }
     int close()
     {
         int ret = -1;
         if (m_fp) {
             ret = fclose(m_fp);
-            m_fp = NULL;
+            m_fp = nullptr;
         }
         return ret;
+    }
+    int flush()
+    {
+        return fflush(m_fp);
     }
 
 private:
@@ -99,7 +129,7 @@ class FileIOTizen : public FileIO {
 public:
     FileIOTizen()
     {
-        m_fp = NULL;
+        m_fp = nullptr;
     }
 
     ~FileIOTizen()
@@ -107,7 +137,7 @@ public:
         close();
     }
 
-    bool open(const char* fileName)
+    bool open(const char* filePath, FileIOType filemode)
     {
         close();
 
@@ -121,7 +151,7 @@ public:
         if (open_cb) {
             m_fp = open_cb(newName->utf8Data());
         } else {
-            m_fp = fopen(newName->utf8Data(), "r");
+            m_fp = fopen(filePath, FileIOTypeCheck(filemode));
         }
         if (m_fp) {
             return true;
@@ -147,7 +177,36 @@ public:
         }
         return fread(buf, size, count, m_fp);
     }
-
+    size_t write(void* buf, size_t size, size_t count)
+    {
+        // TODO : It will connect to the Tizen file I/O interface.
+        return fwrite(buf, size, count, m_fp);
+    }
+    String* readLine()
+    {
+        // TODO : I will connect to the Tizen file I/O interface.
+        std::string buf;
+        while (!feof(m_fp)) {
+            char temp;
+            read(&temp, 1, 1);
+            if (temp != '\n') {
+                buf += temp;
+            } else {
+                break;
+            }
+        }
+        return String::fromUTF8((char*)(&buf[0]));
+    }
+    size_t writeLine(String* buf)
+    {
+        // TODO : It will connect to the Tizen file I/O interface.
+        return fprintf(m_fp, "%s", buf->utf8Data());
+    }
+    size_t writeLine(const char* buf)
+    {
+        // TODO : It will connect to the Tizen file I/O interface.
+        return fprintf(m_fp, "%s", buf);
+    }
     int close()
     {
         int res = -1;
@@ -157,9 +216,14 @@ public:
             } else {
                 res = fclose(m_fp);
             }
-            m_fp = NULL;
+            m_fp = nullptr;
         }
         return res;
+    }
+    int flush()
+    {
+        // TODO : It will connect to the Tizen file I/O interface.
+        return fflush(m_fp);
     }
 
 private:

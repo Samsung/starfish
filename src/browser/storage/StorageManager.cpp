@@ -16,11 +16,17 @@
 
 #include "StarFishConfig.h"
 #include "StorageManager.h"
+#include "platform/file/FileIO.h"
 
 namespace StarFish {
 
 StorageManager::StorageManager(String* localStoragePath)
     : m_localStoragePath(localStoragePath)
 {
+    m_fileIO = FileIO::create();
+    bool canLoad = m_fileIO->open(localStoragePath, Read);
+    if (canLoad) {
+        m_fileIO->close();
+    }
 }
 }

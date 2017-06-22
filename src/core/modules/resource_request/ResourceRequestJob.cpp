@@ -76,7 +76,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                String* filePath)
 {
     FileIO* fio = FileIO::create();
-    if (fio->open(filePath)) {
+    if (fio->open(filePath, Read)) {
         res->m_status = 200;
         res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
         res->changeReadyState(ResourceRequest::LOADING, true);

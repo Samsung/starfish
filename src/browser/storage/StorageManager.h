@@ -19,12 +19,15 @@
 
 namespace StarFish {
 
+class FileIO;
+
 class StorageManager : public gc {
 public:
     StorageManager(String* localStoragePath);
 
 private:
     String* m_localStoragePath;
+    FileIO* m_fileIO;
 };
 }
 

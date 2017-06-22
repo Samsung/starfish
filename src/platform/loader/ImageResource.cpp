@@ -38,7 +38,7 @@ void ImageResource::doLoadFile(void* data)
         // we can pass src of image to platform layer in efl
         String* path = res->url()->urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
-        bool canLoad = fio->open(filePath);
+        bool canLoad = fio->open(filePath, Read);
         delete fio;
         if (!canLoad) {
             res->didLoadFailed();
