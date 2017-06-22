@@ -14,19 +14,20 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "StorageManager.h"
-#include "platform/file/FileIO.h"
+#ifndef __StarFishFileIOType__
+#define __StarFishFileIOType__
 
 namespace StarFish {
-
-StorageManager::StorageManager(String* localStoragePath)
-    : m_localStoragePath(localStoragePath)
+enum FileIOType {
+    Read,
+    Write,
+    ReadWrite,
+};
+extern const char* FileIOTypeList[];
+inline const char* FileIOTypeCheck(const FileIOType var)
 {
-    m_fileIO = FileIO::create();
-    bool canLoad = m_fileIO->open(localStoragePath, Read);
-    if (canLoad) {
-        m_fileIO->close();
-    }
+    STARFISH_ASSERT(Read <= var && var <= ReadWrite);
+    return FileIOTypeList[var];
 }
 }
+#endif
