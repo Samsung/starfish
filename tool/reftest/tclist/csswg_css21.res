@@ -1164,6 +1164,7 @@ test/reftest/csswg-test/css21_converted/syntax/declarations-009.htm
 test/reftest/csswg-test/css21_converted/syntax/declaration-whitespace-001.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-001.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-002.htm
+test/reftest/csswg-test/css21_original/syntax/eof-004.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-005.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-007.htm
 test/reftest/csswg-test/css21_converted/syntax/escaped-ident-001.htm
