@@ -18,7 +18,6 @@
 #define __StarFishPublic__
 
 #include "StarFishExport.h"
-#include "platform/public/ScreenInfo.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +29,7 @@ typedef struct StarFishInstance {
 
 STARFISH_EXPORT StarFishInstance* starfishCreate(
     void* window, int windowWidth, int windowHeight, const char* locale,
-    const char* timezoneID, float defaultFontSizeMultiplier,
-    StarFish::ScreenInfo& info);
+    const char* timezoneID, float defaultFontSizeMultiplier);
 STARFISH_EXPORT void starfishRemove(StarFishInstance* instance);
 
 STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance,
