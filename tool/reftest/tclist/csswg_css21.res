@@ -841,8 +841,8 @@ test/reftest/csswg-test/css21_converted/box-display/block-in-inline-005.htm
 test/reftest/csswg-test/css21_converted/box-display/block-in-inline-006.htm
 test/reftest/csswg-test/css21_converted/box-display/containing-block-030.htm
 test/reftest/csswg-test/css21_converted/box-display/viewport-002.htm
-test/reftest/csswg-test/css21_converted/cascade/at-import-001.htm
-test/reftest/csswg-test/css21_converted/cascade/at-import-009.htm
+test/reftest/csswg-test/css21_original/cascade/at-import-001.htm
+test/reftest/csswg-test/css21_original/cascade/at-import-009.htm
 test/reftest/csswg-test/css21_converted/cascade/cascade-005.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-004.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-018.htm

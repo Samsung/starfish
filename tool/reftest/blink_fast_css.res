@@ -50,6 +50,7 @@ test/reftest/vendor/blink/fast/media/mq-grid-02.html
 test/reftest/vendor/blink/fast/media/mq-invalid-media-feature-04.html
 test/reftest/vendor/blink/fast/media/mq-invalid-media-type.html
 test/reftest/vendor/blink/fast/media/mq-invalid-syntax-04.html
+test/reftest/vendor/blink/fast/media/mq-orientation.html
 test/reftest/vendor/blink/fast/media/mq-relative-constraints-05.html
 test/reftest/vendor/blink/fast/media/mq-relative-constraints-06.html
 test/reftest/vendor/blink/fast/media/mq-relative-constraints-07.html
