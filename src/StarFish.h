@@ -33,7 +33,6 @@ class Blob;
 class MediaSource;
 class Console;
 class Inspector;
-class HistoryEntry;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
     F(a)                                \

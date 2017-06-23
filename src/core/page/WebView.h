@@ -27,6 +27,7 @@ class Document;
 class BrowsingContext;
 class StorageNamespaceProvider;
 class StorageNamespace;
+class HistoryManager;
 
 class WebView : public StarFishHoldable, public gc {
 public:
@@ -47,7 +48,12 @@ public:
         return m_sessionStorageNamespace;
     }
 
-    void navigate(ResourceURL* url);
+    HistoryManager* historyManager()
+    {
+        return m_historyManager;
+    }
+
+    void navigate(ResourceURL* url, bool addToHistory = true);
 
 private:
     WebView(StarFish* starFish);
@@ -58,6 +64,8 @@ private:
 
     StorageNamespace* m_localStorageNamespace;
     StorageNamespace* m_sessionStorageNamespace;
+
+    HistoryManager* m_historyManager;
 };
 }
 

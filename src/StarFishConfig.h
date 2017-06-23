@@ -267,6 +267,10 @@ template <typename T, typename Allocator =
                           GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
 using GCAtomicVector = std::vector<T, Allocator>;
 
+// typedef of GC-aware list
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+using GCList = std::list<T, Allocator>;
+
 // typedef of GC-aware deque
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCDeque = std::deque<T, Allocator>;

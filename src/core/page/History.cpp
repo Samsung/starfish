@@ -15,23 +15,27 @@
  */
 
 #include "StarFishConfig.h"
-#include "StarFish.h"
-#include "core/dom/Document.h"
+
 #include "core/page/History.h"
-#include "core/page/HistoryEntry.h"
+
+#include "browser/history/HistoryManager.h"
+#include "core/dom/Document.h"
 #include "core/page/Location.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/window/PlatformWindow.h"
-#include "WebView.h"
 
 namespace StarFish {
 
 History::History(Document* doc)
     : ScriptWrappable(this)
     , DocumentHoldable(doc)
-    , m_offset(std::numeric_limits<uint32_t>::max())
 {
+}
+
+HistoryManager* History::historyManager()
+{
+    return document()->window()->browsingContext()->webView()->historyManager();
 }
 
 void History::back()
@@ -46,145 +50,31 @@ void History::forward()
 
 void History::go(int delta)
 {
-    if (delta != 0) {
-        // navigate according to history
-        navigate(delta);
+    if (delta == 0) {
+        document()->window()->location()->reload();
     } else {
-        starFish()
-            ->platformWindow()
-            ->webView()
-            ->mainBrowsingContext()
-            ->navigateAsync(currentHistoryEntry()->url());
-        // starFish()->window()->navigateAsyncWithoutSetHistory(
-        //    currentHistoryEntry()->url());
+        historyManager()->go(delta);
     }
-}
-
-ResourceURL* History::getURL()
-{
-    return m_historyEntries[m_offset]->url();
-}
-
-bool History::navigate(int delta)
-{
-    STARFISH_ASSERT(delta != 0);
-
-    if (delta > 0) {
-        STARFISH_ASSERT(length() - 1 >= m_offset);
-        if (static_cast<uint32_t>(delta) > length() - m_offset - 1) {
-            return false;
-        }
-    } else {
-        // delta < 0
-        if (m_offset < static_cast<uint32_t>(-delta)) {
-            return false;
-        }
-    }
-
-    m_offset += delta;
-
-    ResourceURL* url = currentHistoryEntry()->url();
-    if (!isPushState()) {
-        // starFish()->window()->navigateAsyncWithoutSetHistory(url);
-        starFish()
-            ->platformWindow()
-            ->webView()
-            ->mainBrowsingContext()
-            ->navigateAsync(url);
-    } else {
-        starFish()
-            ->platformWindow()
-            ->webView()
-            ->mainBrowsingContext()
-            ->document()
-            ->setDocumentURI(url);
-    }
-
-    return true;
 }
 
 uint32_t History::length()
 {
-    return m_historyEntries.size();
+    return historyManager()->length();
 }
 
 ScriptValue History::state()
 {
-    return currentHistoryEntry()->state();
-}
-
-bool History::isPushState()
-{
-    return currentHistoryEntry()->isPushState();
+    return historyManager()->state();
 }
 
 void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
 {
-    String* urlValue = String::emptyString;
-    if (url.hasValue()) {
-        urlValue = url.getValue();
-    }
-    ResourceURL* newURL = new ResourceURL(urlValue, starFish()
-                                                        ->platformWindow()
-                                                        ->webView()
-                                                        ->mainBrowsingContext()
-                                                        ->document()
-                                                        ->urlString());
-    setHistory(state, title, newURL, true);
-    starFish()
-        ->platformWindow()
-        ->webView()
-        ->mainBrowsingContext()
-        ->document()
-        ->setDocumentURI(newURL);
+    historyManager()->pushState(state, title, url);
 }
 
 void History::replaceState(ScriptValue state, String* title,
                            Nullable<String*> url)
 {
-    String* urlValue = String::emptyString;
-    if (url.hasValue()) {
-        urlValue = url.getValue();
-    }
-    ResourceURL* newURL = new ResourceURL(urlValue, starFish()
-                                                        ->platformWindow()
-                                                        ->webView()
-                                                        ->mainBrowsingContext()
-                                                        ->document()
-                                                        ->urlString());
-    m_historyEntries[m_offset]->replaceState(state, title, newURL);
-    starFish()
-        ->platformWindow()
-        ->webView()
-        ->mainBrowsingContext()
-        ->document()
-        ->setDocumentURI(newURL);
+    historyManager()->replaceState(state, title, url);
 }
-
-void History::setHistory(ScriptValue state, String* title, ResourceURL* url,
-                         bool isPushState)
-{
-    if (starFish()
-            ->platformWindow()
-            ->webView()
-            ->mainBrowsingContext()
-            ->document() &&
-        starFish()
-            ->platformWindow()
-            ->webView()
-            ->mainBrowsingContext()
-            ->document()
-            ->urlString()
-            ->equals(url->urlString())) {
-        return;
-    }
-
-    STARFISH_ASSERT(m_offset <= length() - 1);
-    m_offset++;
-    m_historyEntries.erase(m_historyEntries.begin() + m_offset,
-                           m_historyEntries.end());
-
-    m_historyEntries.push_back(
-        new HistoryEntry(state, title, url, isPushState));
 }
-} /* namespace StarFish */
