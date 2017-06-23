@@ -987,7 +987,7 @@ public:
     bool parseStyleRule(RefPtr<CSSToken> aToken,
                         GCVector<StyleRuleBase*>& rules,
                         AllowedRulesType allowedRules,
-                        GCVector<CSSSelctorList*>* sList,
+                        GCVector<CSSSelectorList*>* sList,
                         bool isQueryingSelector = false);
     RefPtr<CSSToken> makeToken(String* str);
     StyleRuleMedia* parseMediaRule();
@@ -1005,11 +1005,11 @@ protected:
     void restoreState();
     void forgetState();
     RefPtr<CSSToken> lookAhead(bool aSkipWS, bool aSkipComment);
-    void parseSelector(GCVector<CSSSelctorList*>& list, bool& validSelector);
+    void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
-    bool parseComplexSelectorList(GCVector<CSSSelctorList*>& sList);
-    void parseComplexSelector(CSSSelctorList* selectorList);
-    void parseCompoundSelector(CSSSelctorList* selectorList);
+    bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList);
+    void parseComplexSelector(CSSSelectorList* selectorList);
+    void parseCompoundSelector(CSSSelectorList* selectorList);
     CSSSelector::RelationType parseCombinator();
     bool parseName(CSSTokenString& name);
     CSSSelector* getSimpleSelector();

@@ -1108,7 +1108,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     return list;
 }
 
-void Node::parseSelector(GCVector<CSSSelctorList*>& selectorListContainer,
+void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
                          String* selectors)
 {
     if (selectors->equals(String::emptyString)) {
@@ -1134,7 +1134,7 @@ void Node::parseSelector(GCVector<CSSSelctorList*>& selectorListContainer,
 
 Element* Node::querySelector(String* selectors)
 {
-    GCVector<CSSSelctorList*> selectorListContainer;
+    GCVector<CSSSelectorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);
@@ -1143,7 +1143,7 @@ Element* Node::querySelector(String* selectors)
 
 NodeList* Node::querySelectorAll(String* selectors)
 {
-    GCVector<CSSSelctorList*> selectorListContainer;
+    GCVector<CSSSelectorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
 
     SelectorQuery selectorQuery(selectorListContainer);

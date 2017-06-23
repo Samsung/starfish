@@ -94,15 +94,30 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | MARGIN_RULE = 9 |  |
 |  | constant | NAMESPACE_RULE = 10 |  |
 |  | attribute | type | One of the Type constants indicating the type of CSS rule. |
+|  | attribute | cssText | Returns a serialization of the CSS rule. |
+|  | attribute | parentRule | Returns the parent CSS rule. |
+|  | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | [CSSStyleDeclaration](https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface) | interface | CSSStyleDeclaration | The CSSStyleDeclaration interface represents a CSS declaration block, including its underlying state, where this underlying state depends upon the source of the CSSStyleDeclaration instance. |
 |  | attribute | length | Returns the number of CSS declarations in the declarations. |
 |  | method | getter DOMString item(unsigned long index) | Returns the property name of the CSS declaration at position index. |
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
-| [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | The CSSStyleRule interface represents a style rule. |
-| [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | The CSSStyleSheet interface represents a CSS style sheet. |
+|  | attribute | cssText | Returns the result of serializing the declarations, or sets cssText attribute if after parsing the given value, the return value is not null. |
+| [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | Represents a style rule. |
+|  | attribute | selectorText | Returns the result of serializing the associated group of selectors. (Note: We won't support result separated by ',' for a while.)|
+|  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
+| [CSSImportRule](https://drafts.csswg.org/cssom/#the-cssimportrule-interface) | interface | CSSImportRule | Represents an @import at-rule. |
+|  | attribute | href | Returns the URL specified by the @import at-rule. |
+| [CSSGroupingRule](https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface) | interface | CSSGroupingRule | Represents an at-rule that contains other rules nested inside itself. |
+|  | attribute | cssRules | Returns a CSSRuleList object for the child CSS rules. |
+| [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
+| [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
+| [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | CSSRule? ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | CSSRuleList cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
+| [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
+| | method | getter CSSRule? item(unsigned long index) | Returns the indexth CSSRule object in the collection. |
+| | attribute | length | Returns the number of CSSRule objects represented by the collection. |
 | [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |

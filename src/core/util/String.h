@@ -797,6 +797,13 @@ public:
 
     void takeBuilder(StringBuilder& src);
     String* finalize();
+    void clear()
+    {
+        m_hasASCIIContent = true;
+        m_piecesInlineStorageUsage = 0;
+        m_contentLength = 0;
+        m_pieces.clear();
+    }
 
 protected:
     bool m_hasASCIIContent;

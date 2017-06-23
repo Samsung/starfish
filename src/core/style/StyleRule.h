@@ -106,9 +106,9 @@ class StyleRule : public StyleRuleBase {
 public:
     StyleRule(CSSSelector::Type type, AtomicString selectorText);
 
-    StyleRule(CSSSelctorList& selectorList, CSSStyleDeclaration* decl);
+    StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl);
 
-    CSSSelctorList& selectorList()
+    CSSSelectorList& selectorList()
     {
         return m_selectorList;
     }
@@ -119,7 +119,7 @@ public:
     }
 
 protected:
-    CSSSelctorList m_selectorList;
+    CSSSelectorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
 };
 

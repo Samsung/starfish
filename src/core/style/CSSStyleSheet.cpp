@@ -103,7 +103,7 @@ void CSSStyleSheet::parseSheetIfneeds()
 
 // http://www.w3.org/TR/css3-selectors/#specificity
 // We use 256 as the base of the specificity number system.
-static unsigned specificity(CSSSelctorList& selectorList)
+static unsigned specificity(CSSSelectorList& selectorList)
 {
     // Make sure the result doesn't overflow
     static const unsigned idMask =
