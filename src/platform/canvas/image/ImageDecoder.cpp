@@ -32,6 +32,7 @@ ImageDecoder::ImageDecoder(const char* filename)
     , m_height(0)
     , m_imageData(nullptr)
     , m_bufferedInputData(nullptr)
+    , m_bufferedInputSize(0)
     , m_bufferedInput(false)
 {
     m_fp = fopen(filename, "rb");
@@ -43,6 +44,7 @@ ImageDecoder::ImageDecoder(const char* buf, size_t len)
     , m_height(0)
     , m_imageData(nullptr)
     , m_bufferedInputData(nullptr)
+    , m_bufferedInputSize(len)
     , m_bufferedInput(true)
 {
     m_bufferedInputData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(len);
@@ -63,7 +65,11 @@ void* ImageDecoder::buffer()
         readPNGFileOrBufferedInput();
         break;
     case ImageFormat::JPG:
-        // TODO
+        if (m_bufferedInput) {
+            readJPGBufferedInput();
+        } else {
+            readJPGFile();
+        }
         break;
     case ImageFormat::GIF:
         // TODO
@@ -325,6 +331,53 @@ void ImageDecoder::readJPGFile()
     }
     if (srcBuf) {
         tjFree(srcBuf);
+    }
+}
+
+void ImageDecoder::readJPGBufferedInput()
+{
+    tjhandle dHandle = nullptr;
+    int TD_BU = 0;
+
+    if ((dHandle = tjInitDecompress()) == nullptr) {
+        STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__, __LINE__);
+        return;
+    }
+
+    int hdrw = 0;
+    int hdrh = 0;
+    int hdrsubsamp = -1;
+    int scaledWidth = 0;
+    int scaledHeight = 0;
+    unsigned long dstSize = 0;
+    int n = 0;
+
+    tjscalingfactor sf1 = { 1, 1 };
+    tjscalingfactor* sf = tjGetScalingFactors(&n);
+
+    tjDecompressHeader2(dHandle, m_bufferedInputData, m_bufferedInputSize,
+                        &hdrw, &hdrh, &hdrsubsamp);
+
+    if (!sf || !n) {
+        STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
+                           __LINE__);
+        return;
+    }
+
+    scaledWidth = TJSCALED(hdrw, sf1);
+    scaledHeight = TJSCALED(hdrh, sf1);
+    dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
+
+    m_imageData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(dstSize);
+
+    tjDecompress2(dHandle, m_bufferedInputData, m_bufferedInputSize,
+                  m_imageData, scaledWidth, 0, scaledHeight, TJPF_BGRA, TD_BU);
+
+    m_width = scaledWidth;
+    m_height = scaledHeight;
+
+    if (dHandle) {
+        tjDestroy(dHandle);
     }
 }
 }
