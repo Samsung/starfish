@@ -46,6 +46,46 @@ struct IdlerData {
     void* m_data;
 };
 
+class EventController : public Dali::ConnectionTracker, public gc {
+public:
+    EventController(StarFish* sf)
+    {
+        m_sf = sf;
+    }
+    bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
+    {
+        size_t pointCount = data.GetPointCount();
+        if (pointCount == 1) {
+            // Single touch event
+
+            Dali::PointState::Type pointState = data.GetState(0);
+            if (pointState == Dali::PointState::DOWN) {
+                StarFishEnterer enter(m_sf);
+                const Dali::Vector2& screen = data.GetScreenPosition(0);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    screen.x, screen.y, PlatformWindow::MouseEventDown);
+            } else if (pointState == Dali::PointState::UP) {
+                StarFishEnterer enter(m_sf);
+                const Dali::Vector2& screen = data.GetScreenPosition(0);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    screen.x, screen.y, PlatformWindow::MouseEventUp);
+            }
+        }
+        return true;
+    }
+    bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
+    {
+        const Dali::Vector2& point = event.GetPoint(0).screen;
+        StarFishEnterer enter(m_sf);
+        m_sf->platformWindow()->dispatchMouseEvent(
+            point.x, point.y, PlatformWindow::MouseEventMove);
+        return true;
+    }
+
+protected:
+    StarFish* m_sf;
+};
+
 class WindowImplDALI : public PlatformWindow {
 public:
     WindowImplDALI(StarFish* sf)
@@ -62,6 +102,12 @@ public:
         m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
         m_mainView.SetPosition(0, 0);
         Dali::Stage::GetCurrent().Add(m_mainView);
+        m_eventController = new EventController(sf);
+        Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
+            m_eventController, &EventController::TouchEventHandler);
+
+        Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
+            m_eventController, &EventController::HoverEventHandler);
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -113,6 +159,7 @@ public:
     float m_lastMouseX, m_lastMouseY;
     Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
+    EventController* m_eventController;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -247,6 +294,7 @@ void BrowsingContext::setNeedsRenderingSlowCase()
     ((WindowImplDALI*)id->m_data)->m_renderingIdlerData = id;
     ((WindowImplDALI*)id->m_data)->m_renderingAnimator =
         starFish()->messageLoop()->addIdler(
+            this,
             [](size_t handle, void* data) {
                 IdlerData* id = (IdlerData*)data;
                 PlatformWindow* wnd = (PlatformWindow*)id->m_data;

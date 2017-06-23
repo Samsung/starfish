@@ -133,8 +133,6 @@ public:
                                       "ko-KR", "Asia/Seoul", &application,
                                       width, height, 1, info);
         m_sf->loadHTMLDocument(String::createASCIIString(url));
-        Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
-            this, &DaliShellController::OnStageTouched);
 
         pthread_t t;
         pthread_attr_t attr;
@@ -188,30 +186,6 @@ public:
         m_sf->run();
         // mApplication.AddIdle(MakeCallback(this,
         // &DaliShellController::OnIdle));
-    }
-    bool OnStageTouched(Dali::Actor actor, const Dali::TouchData& data)
-    {
-        size_t pointCount = data.GetPointCount();
-        if (pointCount == 1) {
-            // Single touch event
-
-            // Get touch state of the primary point
-            Dali::PointState::Type pointState = data.GetState(0);
-            if (pointState == Dali::PointState::DOWN) {
-                StarFishEnterer enter(m_sf);
-                const Vector2& screen = data.GetScreenPosition(0);
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    screen.x, screen.y,
-                    StarFish::PlatformWindow::MouseEventDown);
-            } else if (pointState == Dali::PointState::UP) {
-                StarFishEnterer enter(m_sf);
-                const Vector2& screen = data.GetScreenPosition(0);
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    screen.x, screen.y, StarFish::PlatformWindow::MouseEventUp);
-            }
-            // sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
-        }
-        return true;
     }
     void OnIdle()
     {
