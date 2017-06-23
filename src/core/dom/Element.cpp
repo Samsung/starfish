@@ -186,17 +186,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             parent = parent->parentNode();
         }
     } else if (name == ss->m_style) {
-        if (old->equals(String::emptyString)) {
-            attributeData(name).registerGetterCallback(
-                this,
-                [](Element* element, const Attribute* const attr) -> String* {
-                    if (element->m_didInlineStyleModifiedAfterAttributeSet) {
-                        return element->inlineStyle()->generateCSSText();
-                    } else {
-                        return attr->valueWithoutCheckGetter();
-                    }
-                    return String::emptyString;
-                });
+        if (attributeCreated) {
+            registerInlineStyleCallback();
         }
         inlineStyle()->clear();
         CSSParser parser(document());
@@ -362,7 +353,6 @@ Node* Element::clone()
     for (const Attribute& attr : m_attributes) {
         newNode->setAttribute(attr.name(), attr.value());
     }
-    newNode->m_inlineStyle = inlineStyle()->clone(newNode);
 
     return newNode;
 }
@@ -477,6 +467,31 @@ void Element::setClassName(String* className)
 void Element::setStyleAttr(String* style)
 {
     setAttribute(starFish()->staticStrings()->m_style, style);
+}
+
+void Element::registerInlineStyleCallback()
+{
+    attributeData(starFish()->staticStrings()->m_style)
+        .registerGetterCallback(
+            this, [](Element* element, const Attribute* const attr) -> String* {
+                if (element->m_didInlineStyleModifiedAfterAttributeSet) {
+                    return element->inlineStyle()->generateCSSText();
+                } else {
+                    return attr->valueWithoutCheckGetter();
+                }
+                return String::emptyString;
+            });
+}
+
+void Element::notifyInlineStyleChanged()
+{
+    setNeedsStyleRecalc();
+    m_didInlineStyleModifiedAfterAttributeSet = true;
+    if (hasAttribute(starFish()->staticStrings()->m_style) == SIZE_MAX) {
+        m_attributes.push_back(Attribute(starFish()->staticStrings()->m_style,
+                                         String::emptyString));
+        registerInlineStyleCallback();
+    }
 }
 
 CSSStyleDeclaration* Element::inlineStyle()

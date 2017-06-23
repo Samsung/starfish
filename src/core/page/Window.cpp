@@ -148,7 +148,7 @@ int32_t Window::height()
 
 float Window::devicePixelRatio()
 {
-    return m_screen->devicePixelRatio();
+    return screen()->devicePixelRatio();
 }
 
 #ifdef STARFISH_ENABLE_TEST
