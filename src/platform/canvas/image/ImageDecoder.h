@@ -39,6 +39,7 @@ private:
     int m_height;
     unsigned char* m_imageData;
     unsigned char* m_bufferedInputData;
+    size_t m_bufferedInputSize;
     bool m_bufferedInput;
 
     ImageFormat parseImageFormat();
@@ -46,6 +47,7 @@ private:
     ImageFormat parseImageFormatFromFile();
     void readPNGFileOrBufferedInput();
     void readJPGFile();
+    void readJPGBufferedInput();
 
 protected:
     ImageDecoder()
