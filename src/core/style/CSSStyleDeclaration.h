@@ -127,7 +127,7 @@ public:
     String* item(uint32_t index);
 
     String* cssText() const;
-    void setCssText(String* text);
+    virtual void setCssText(String* text);
 
     String* getPropertyValue(String* name);
     void setProperty(String* name, String* value, String* priority);
@@ -138,10 +138,62 @@ public:
     void defaultSetter(String* name, Nullable<String*> value);
     void defaultNamedEnumerator(std::vector<const char*>& enums);
 
+    GCVector<CSSStyleValuePair>& cssValues()
+    {
+        return m_cssValues;
+    }
+
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
     Element* m_element;
     StyleType m_styleType;
+};
+
+class CSSRule;
+class CSSStyleRule;
+class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
+public:
+    StyleRuleCSSStyleDeclaration(GCVector<CSSStyleValuePair>& cssValues,
+                                 CSSRule* parentRule)
+        : CSSStyleDeclaration()
+    {
+        m_cssValues = cssValues;
+        m_parentRule = parentRule;
+    }
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
+
+    CSSRule* parentRule() const
+    {
+        return m_parentRule;
+    }
+
+    CSSStyleSheet* parentStyleSheet() const;
+    virtual void setCssText(String* text);
+
+protected:
+    CSSRule* m_parentRule;
+};
+
+class InlineCSSStyleDeclaration : public CSSStyleDeclaration {
+public:
+    InlineCSSStyleDeclaration(Element* element = nullptr,
+                              StyleType styleType = InternalStyle)
+        : CSSStyleDeclaration(element, styleType)
+    {
+    }
+
+    virtual void setCssText(String* text);
+};
+
+class ComputedStyleCSSStyleDeclaration : public CSSStyleDeclaration {
+public:
+    ComputedStyleCSSStyleDeclaration(Element* element = nullptr,
+                                     StyleType styleType = InternalStyle)
+        : CSSStyleDeclaration(element, styleType)
+    {
+    }
+
+    virtual void setCssText(String* text);
 };
 }
 
