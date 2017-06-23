@@ -350,8 +350,7 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
 
 void InlineCSSStyleDeclaration::setCssText(String* text)
 {
-    CSSParser parser(m_element->document());
-    parser.parseStyleDeclaration(text, this);
+    m_element->setStyleAttr(text);
 }
 
 void ComputedStyleCSSStyleDeclaration::setCssText(String* text)

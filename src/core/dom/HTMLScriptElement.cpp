@@ -81,7 +81,11 @@ public:
             m_resource->resourceRequest()
                 ->responseMimeType()
                 ->toLower()
-                ->equals("application/json")) {
+                ->equals("application/json") ||
+            m_resource->resourceRequest()
+                ->responseMimeType()
+                ->toLower()
+                ->contains("javascript")) {
             String* text = m_resource->asTextResource()->text();
             evaluateString(m_element->window()->scriptBindingInstance(), text,
                            ResourceClient::resource()->url()->urlString());

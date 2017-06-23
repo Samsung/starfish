@@ -225,12 +225,8 @@ public:
     }
 
     CSSStyleDeclaration* inlineStyle();
-
-    void notifyInlineStyleChanged()
-    {
-        setNeedsStyleRecalc();
-        m_didInlineStyleModifiedAfterAttributeSet = true;
-    }
+    void notifyInlineStyleChanged();
+    void registerInlineStyleCallback();
 
     // FIXME: Use NodeState instead of this flag.
     bool focused() const
