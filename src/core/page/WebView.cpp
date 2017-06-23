@@ -23,6 +23,7 @@
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "browser/storage/WebStorageNamespaceProvider.h"
+#include "browser/history/HistoryManager.h"
 
 namespace StarFish {
 
@@ -37,6 +38,7 @@ WebView::WebView(StarFish* starFish)
     , m_storageNamespaceProvider(nullptr)
     , m_localStorageNamespace(nullptr)
     , m_sessionStorageNamespace(nullptr)
+    , m_historyManager(HistoryManager::create(this))
 {
     initStorage();
 }
@@ -52,9 +54,12 @@ void WebView::initStorage()
         m_storageNamespaceProvider->createSessionStorageNamespace();
 }
 
-void WebView::navigate(ResourceURL* url)
+void WebView::navigate(ResourceURL* url, bool addToHistory)
 {
     m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
+    if (addToHistory) {
+        m_historyManager->push(url);
+    }
     m_mainBrowsingContext->navigate(url);
 }
 }

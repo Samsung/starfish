@@ -22,7 +22,7 @@
 
 namespace StarFish {
 
-class HistoryEntry;
+class HistoryManager;
 class StarFish;
 class URL;
 
@@ -48,29 +48,8 @@ public:
     void pushState(ScriptValue state, String* title, Nullable<String*> url);
     void replaceState(ScriptValue state, String* title, Nullable<String*> url);
 
-    void setHistory(ScriptValue state, String* title, ResourceURL* url,
-                    bool isPushState = false);
-
-    HistoryEntry* currentHistoryEntry()
-    {
-        return m_historyEntries[m_offset];
-    }
-
-    /*
-    // TODO: implement functions below
-    void setScrollRestoration(const String& value);
-    String scrollRestoration();
-    bool stateChanged() const;
-    bool isSameAsCurrentState(StateObject*) const;
-    */
-protected:
-    GCVector<HistoryEntry*> m_historyEntries;
-    uint32_t m_offset;
-    ResourceURL* getURL();
-
-    bool navigate(int offset);
-    GCVector<HistoryEntry*>& history();
-    bool isPushState();
+private:
+    HistoryManager* historyManager();
 };
 }
 #endif
