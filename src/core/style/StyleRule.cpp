@@ -92,7 +92,7 @@ StyleRule::StyleRule(CSSSelector::Type type, AtomicString selectorText)
     m_selectorList.push_back(selector);
 }
 
-StyleRule::StyleRule(CSSSelctorList& selectorList, CSSStyleDeclaration* decl)
+StyleRule::StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl)
     : StyleRuleBase(StyleRuleBase::STYLE_RULE)
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)

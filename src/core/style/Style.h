@@ -1537,12 +1537,16 @@ class CSSSelector;
 class CSSAttributeSelector;
 class CSSPseudoSelector;
 
-class CSSSelctorList : public GCVector<CSSSelector*>, public gc {
+class CSSSelectorList : public GCVector<CSSSelector*>, public gc {
 public:
     void push_front(CSSSelector* s)
     {
         GCVector<CSSSelector*>::insert(begin(), s);
     }
+
+    String* selectorText();
+    static String* selectorText(CSSSelectorList* list, unsigned idx,
+                                String* rightSide);
 };
 
 class CSSSelector : public gc {
@@ -1553,8 +1557,8 @@ public:
         Tag,
         Id,
         Class,
-        PseudoClass,
         PseudoElement,
+        PseudoClass,
         AttributeExact,   // Example: E[foo="bar"]
         AttributeSet,     // Example: E[foo]
         AttributeHyphen,  // Example: E[foo|="bar"]
@@ -1671,7 +1675,7 @@ public:
         return m_selectorText;
     }
 
-    bool isSimple(CSSSelctorList* selectorList);
+    bool isSimple(CSSSelectorList* selectorList);
 
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
@@ -1742,7 +1746,7 @@ public:
         return m_pseudotype;
     }
 
-    CSSSelctorList& pseudoSelectorList()
+    CSSSelectorList& pseudoSelectorList()
     {
         return m_pseudoSelectorList;
     }
@@ -1788,7 +1792,7 @@ public:
     void updatePseudoType(StarFish* sf, AtomicString name, bool hasArguments);
 
 protected:
-    CSSSelctorList m_pseudoSelectorList;
+    CSSSelectorList m_pseudoSelectorList;
     String* m_argument;
     struct {
         int m_a; // Used for :nth-*
@@ -1870,7 +1874,7 @@ public:
     Match matchSelector(Element* element, AtomicString elementName,
                         AtomicString elementId,
                         const GCVector<AtomicString>& elementClasses,
-                        const CSSSelctorList& selectorList, unsigned idx,
+                        const CSSSelectorList& selectorList, unsigned idx,
                         MatchResult& result, bool isQueryingSelector = false);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
@@ -1883,7 +1887,7 @@ protected:
     Match matchForRelation(Element* element, AtomicString elementName,
                            AtomicString elementId,
                            const GCVector<AtomicString>& elementClasses,
-                           const CSSSelctorList& selectorList,
+                           const CSSSelectorList& selectorList,
                            CSSSelector::RelationType relation, unsigned idx,
                            MatchResult& result);
 

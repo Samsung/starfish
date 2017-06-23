@@ -243,7 +243,6 @@ String* CSSStyleDeclaration::cssText() const
 
 void CSSStyleDeclaration::setCssText(String* text)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)

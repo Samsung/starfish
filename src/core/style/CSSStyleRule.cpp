@@ -90,16 +90,8 @@ void CSSStyleRule::setSelectorText(String* selectorText)
 
 String* CSSStyleRule::generateSelectorText() const
 {
-    StringBuilder result;
-    CSSSelctorList selectors = m_styleRule->selectorList();
-    for (size_t i = 0; i < selectors.size(); ++i) {
-        if (i != 0) {
-            result.appendString(", ");
-        }
-        result.appendString(selectors[i]->selectorText().string());
-    }
-
-    return result.finalize();
+    CSSSelectorList selectorList = m_styleRule->selectorList();
+    return selectorList.selectorText();
 }
 
 CSSGroupingRule::CSSGroupingRule(StyleRuleGroup* groupRule,

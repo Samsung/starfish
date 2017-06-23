@@ -168,7 +168,7 @@ public:
     }
 
     CSSStyleSheet* parentStyleSheet() const;
-    virtual void setCssText(String* text);
+    void setCssText(String* text);
 
 protected:
     CSSRule* m_parentRule;
@@ -182,7 +182,7 @@ public:
     {
     }
 
-    virtual void setCssText(String* text);
+    void setCssText(String* text);
 };
 
 class ComputedStyleCSSStyleDeclaration : public CSSStyleDeclaration {
@@ -193,7 +193,7 @@ public:
     {
     }
 
-    virtual void setCssText(String* text);
+    void setCssText(String* text);
 };
 }
 

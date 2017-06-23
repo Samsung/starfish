@@ -31,7 +31,7 @@ public:
         MatchesTraverseRoots
     };
 
-    SelectorQuery(GCVector<CSSSelctorList*>& selector)
+    SelectorQuery(GCVector<CSSSelectorList*>& selector)
         : m_selectorListContainer(selector)
     {
     }
@@ -40,15 +40,15 @@ public:
 
 private:
     bool canUseFastQuery(const Node& rootNode);
-    void traverseDescendants(CSSSelctorList& selectors, Node* traverseRoot,
+    void traverseDescendants(CSSSelectorList& selectors, Node* traverseRoot,
                              Node& rootNode, GCVector<Element*>& collection,
                              bool shouldOnlyMatchFirstElement);
-    void executeForTraverseRoot(CSSSelctorList& selector, Node* traverseRoot,
+    void executeForTraverseRoot(CSSSelectorList& selector, Node* traverseRoot,
                                 MatchTraverseRootState matchTraverseRoot,
                                 Node& rootNode, GCVector<Element*>& output,
                                 bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
-    void executeForTraverseRoots(CSSSelctorList& selector,
+    void executeForTraverseRoots(CSSSelectorList& selector,
                                  SimpleElementListType& traverseRoots,
                                  MatchTraverseRootState matchTraverseRoots,
                                  Node& rootNode, GCVector<Element*>& output,
@@ -69,10 +69,10 @@ private:
     void collectElementsByTagName(Node& rootNode, const String* tagName,
                                   GCVector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(CSSSelctorList& selector, Element* element,
+    bool selectorMatches(CSSSelectorList& selector, Element* element,
                          Node& rootNode);
-    CSSSelector* selectorForIdLookup(CSSSelctorList& firstSelector);
-    GCVector<CSSSelctorList*>& m_selectorListContainer;
+    CSSSelector* selectorForIdLookup(CSSSelectorList& firstSelector);
+    GCVector<CSSSelectorList*>& m_selectorListContainer;
 };
 }
 #endif

@@ -680,7 +680,160 @@ unsigned CSSSelector::specificityForOneSelector() const
     return 0;
 }
 
-bool CSSSelector::isSimple(CSSSelctorList* selectorList)
+String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
+                                      String* rightSide)
+{
+    StringBuilder str;
+    CSSSelector* cs = list->at(idx);
+
+    if (cs->type() == CSSSelector::Tag) {
+        str.appendString(cs->selectorText().string());
+    }
+
+    while (true) {
+        if (cs->type() == CSSSelector::Id) {
+            str.appendChar('#');
+            str.appendString(cs->selectorText().string());
+        } else if (cs->type() == CSSSelector::Class) {
+            str.appendChar('.');
+            str.appendString(cs->selectorText().string());
+        } else if (cs->type() == CSSSelector::PseudoClass) {
+            str.appendChar(':');
+            str.appendString(cs->selectorText().string());
+
+            CSSPseudoSelector* pcs = cs->asCSSPseudoSelector();
+
+            switch (pcs->pseudoType()) {
+            case CSSSelector::PseudoNthChild:
+            case CSSSelector::PseudoNthLastChild:
+            case CSSSelector::PseudoNthOfType:
+            case CSSSelector::PseudoNthLastOfType: {
+                str.appendChar('(');
+
+                // http://dev.w3.org/csswg/css-syntax/#serializing-anb
+                int a = pcs->nthAValue();
+                int b = pcs->nthBValue();
+                if (a == 0 && b == 0) {
+                    str.appendChar('0');
+                } else if (a == 0) {
+                    str.appendString(String::fromInt(b));
+                } else if (b == 0) {
+                    str.appendString(String::fromInt(a));
+                    str.appendChar('n');
+                } else if (b < 0) {
+                    str.appendString(String::fromInt(a));
+                    str.appendChar('n');
+                    str.appendString(String::fromInt(b));
+                } else {
+                    str.appendString(String::fromInt(a));
+                    str.appendString("n+");
+                    str.appendString(String::fromInt(b));
+                }
+
+                str.appendChar(')');
+                break;
+            }
+            case CSSSelector::PseudoLang:
+                str.appendChar('(');
+                str.appendString(pcs->argument());
+                str.appendChar(')');
+                break;
+            case CSSSelector::PseudoNot:
+                STARFISH_ASSERT(pcs->pseudoSelectorList().size() > 0);
+                break;
+            default:
+                break;
+            }
+        } else if (cs->type() == CSSSelector::PseudoElement) {
+            str.appendString("::");
+            str.appendString(cs->selectorText().string());
+        } else if (cs->isAttributeSelector()) {
+            CSSAttributeSelector* acs = cs->asCSSAttributeSelector();
+            str.appendChar('[');
+            str.appendString(acs->attribute().localName());
+            switch (cs->type()) {
+            case CSSSelector::AttributeExact:
+                str.appendChar('=');
+                break;
+            case CSSSelector::AttributeSet:
+                // set has no operator or value, just the attrName
+                str.appendChar(']');
+                break;
+            case CSSSelector::AttributeList:
+                str.appendString("~=");
+                break;
+            case CSSSelector::AttributeHyphen:
+                str.appendString("|=");
+                break;
+            case CSSSelector::AttributeBegin:
+                str.appendString("^=");
+                break;
+            case CSSSelector::AttributeEnd:
+                str.appendString("$=");
+                break;
+            case CSSSelector::AttributeContain:
+                str.appendString("*=");
+                break;
+            default:
+                break;
+            }
+            if (acs->type() != CSSSelector::AttributeSet) {
+                str.appendChar('\"');
+                str.appendString(acs->selectorText().string());
+                str.appendChar('\"');
+
+                if (acs->attributeMatch() == CSSSelector::CaseInsensitive) {
+                    str.appendString(" i");
+                }
+                str.appendChar(']');
+            }
+        }
+
+        if (cs->relation() != CSSSelector::SubSelector ||
+            list->size() == (idx + 1)) {
+            break;
+        }
+        cs = list->at(++idx);
+    }
+
+    if (list->size() > (idx + 1)) {
+        StringBuilder desc;
+        switch (cs->relation()) {
+        case CSSSelector::Descendant:
+            desc.appendString(" ");
+            break;
+        case CSSSelector::Child:
+            desc.appendString(" > ");
+            break;
+        case CSSSelector::AdjacentSibling:
+            desc.appendString(" + ");
+            break;
+        case CSSSelector::GeneralSibling:
+            desc.appendString(" ~ ");
+            break;
+        case CSSSelector::SubSelector:
+            STARFISH_ASSERT_NOT_REACHED();
+            break;
+        default:
+            str.appendString(rightSide);
+            return str.finalize();
+        }
+
+        desc.appendString(str.finalize());
+        desc.appendString(rightSide);
+        return selectorText(list, ++idx, desc.finalize());
+    }
+
+    str.appendString(rightSide);
+    return str.finalize();
+}
+
+String* CSSSelectorList::selectorText()
+{
+    return selectorText(this, 0, String::emptyString);
+}
+
+bool CSSSelector::isSimple(CSSSelectorList* selectorList)
 {
     if ((isPseudoSelector() &&
          asCSSPseudoSelector()->pseudoSelectorList().size()) ||
@@ -4006,7 +4159,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
             StyleRule* rule = ruleBuffer[j].first;
             ResourceURL* url = ruleBuffer[j].second;
 
-            const CSSSelctorList& selectorList = rule->selectorList();
+            const CSSSelectorList& selectorList = rule->selectorList();
             MatchResult result;
             if (matchSelector(element, elementName, elementId, elementClasses,
                               selectorList, 0,
@@ -4023,7 +4176,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     for (unsigned j = 0; j < ruleCount; j++) {
         StyleRule* rule = ruleBuffer[j].first;
         ResourceURL* url = ruleBuffer[j].second;
-        const CSSSelctorList& selectorList = rule->selectorList();
+        const CSSSelectorList& selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, elementName, elementId, elementClasses,
                           selectorList, 0, result) == Match::SelectorMatches) {
@@ -4078,7 +4231,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 StyleResolver::Match StyleResolver::matchSelector(
     Element* element, AtomicString elementName, AtomicString elementId,
     const GCVector<AtomicString>& elementClasses,
-    const CSSSelctorList& selectorList, unsigned idx, MatchResult& result,
+    const CSSSelectorList& selectorList, unsigned idx, MatchResult& result,
     bool isQueryingSelector)
 {
     STARFISH_ASSERT(idx < selectorList.size());
@@ -4108,7 +4261,7 @@ StyleResolver::Match StyleResolver::matchSelector(
 StyleResolver::Match StyleResolver::matchForRelation(
     Element* element, AtomicString elementName, AtomicString elementId,
     const GCVector<AtomicString>& elementClasses,
-    const CSSSelctorList& selectorList, CSSSelector::RelationType relation,
+    const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
     unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList.size());

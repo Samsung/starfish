@@ -831,7 +831,7 @@ void CSSParser::forgetState()
     }
 }
 
-void CSSParser::parseSelector(GCVector<CSSSelctorList*>& list,
+void CSSParser::parseSelector(GCVector<CSSSelectorList*>& list,
                               bool& validSelector)
 {
     m_failedParsing = false;
@@ -938,7 +938,7 @@ CSSSelector* CSSParser::getPseudoSelector()
 
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot: {
-        CSSSelctorList selectorList;
+        CSSSelectorList selectorList;
         parseCompoundSelector(&selectorList);
 
         if (selectorList.size() != 1) {
@@ -1342,7 +1342,7 @@ bool CSSParser::parseName(CSSTokenString& name)
     return true;
 }
 
-void CSSParser::parseCompoundSelector(CSSSelctorList* selectorList)
+void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
 {
     CSSSelector* compoundSelector;
 
@@ -1412,7 +1412,7 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
     return HasPseudoElementForRightmostCompound;
 }
 
-void CSSParser::parseComplexSelector(CSSSelctorList* selectorList)
+void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
 {
     RefPtr<CSSToken> token = currentToken();
     while (token->isSGMLComment() || token->isWhiteSpace()) {
@@ -1439,7 +1439,7 @@ void CSSParser::parseComplexSelector(CSSSelctorList* selectorList)
     }
 
     while (CSSSelector::RelationType combinator = parseCombinator()) {
-        CSSSelctorList secondSelectorList;
+        CSSSelectorList secondSelectorList;
 
         parseCompoundSelector(&secondSelectorList);
 
@@ -1475,9 +1475,9 @@ void CSSParser::parseComplexSelector(CSSSelctorList* selectorList)
 }
 
 bool CSSParser::parseComplexSelectorList(
-    GCVector<CSSSelctorList*>& listOfSelectorList)
+    GCVector<CSSSelectorList*>& listOfSelectorList)
 {
-    CSSSelctorList* selectorList = new (GC) CSSSelctorList();
+    CSSSelectorList* selectorList = new (GC) CSSSelectorList();
     parseComplexSelector(selectorList);
 
     if (selectorList->size() == 0) {
@@ -1492,7 +1492,7 @@ bool CSSParser::parseComplexSelectorList(
             token = getToken(false, true);
         } while (token->isSGMLComment() || token->isWhiteSpace());
 
-        CSSSelctorList* nextSelectorList = new (GC) CSSSelctorList();
+        CSSSelectorList* nextSelectorList = new (GC) CSSSelectorList();
         parseComplexSelector(nextSelectorList);
         if (nextSelectorList->size() == 0) {
             return false;
@@ -1774,7 +1774,7 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
 bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
                                GCVector<StyleRuleBase*>& rules,
                                AllowedRulesType allowedRules,
-                               GCVector<CSSSelctorList*>* sList,
+                               GCVector<CSSSelectorList*>* sList,
                                bool isQueryingSelector)
 {
     if (allowedRules > RegularRules) {
@@ -1786,7 +1786,7 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
     // first let's see if we have a selector here...
     bool validSelector = true;
 
-    GCVector<CSSSelctorList*> list;
+    GCVector<CSSSelectorList*> list;
     parseSelector(list, validSelector);
 
     bool valid = false;
