@@ -51,7 +51,7 @@ public:
     Dali::Timer m_native_timer;
     void* m_data;
     GenericAnimationHandler m_handler;
-    // Window* m_window;
+    Window* m_window;
 
     bool AnimationTick()
     {
@@ -88,9 +88,9 @@ public:
         Timer* timer = m_timer;
         int32_t id = m_id;
         m_handler(m_window, m_data);
-        auto iter = m_timer->m_timeoutHandler.find(id);
-        if (iter != m_timer->m_timeoutHandler.end()) {
-            m_timer->m_timeoutHandler.erase(iter);
+        auto iter = timer->m_timeoutHandler.find(id);
+        if (iter != timer->m_timeoutHandler.end()) {
+            timer->m_timeoutHandler.erase(iter);
             GC_FREE(this);
         }
         return false;
@@ -99,7 +99,8 @@ public:
     bool OnTick()
     {
         StarFishEnterer enter(m_timer->m_starFish);
-        auto a = m_timer->m_timeoutHandler.find(m_id);
+        Timer* timer = m_timer;
+        auto a = timer->m_timeoutHandler.find(m_id);
         m_handler(m_window, m_data);
         return true;
     }
@@ -107,11 +108,12 @@ public:
     bool AnimationTick()
     {
         StarFishEnterer enter(m_timer->m_starFish);
-        auto a = m_timer->m_requestAnimationFrameHandler.find(m_id);
+        Timer* timer = m_timer;
+        auto a = timer->m_requestAnimationFrameHandler.find(m_id);
         m_handler(m_window, m_data);
-        a = m_timer->m_requestAnimationFrameHandler.find(m_id);
-        if (m_timer->m_requestAnimationFrameHandler.end() != a) {
-            m_timer->m_requestAnimationFrameHandler.erase(a);
+        a = timer->m_requestAnimationFrameHandler.find(m_id);
+        if (timer->m_requestAnimationFrameHandler.end() != a) {
+            timer->m_requestAnimationFrameHandler.erase(a);
         }
         GC_FREE(this);
         return false;
@@ -172,14 +174,15 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
     return id;
 }
 
-size_t Timer::addAnimator(GenericAnimationHandler handler, void* data)
+size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
+                          void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData();
     ad->m_timer = this;
     int32_t id = ++m_AnimationCounter;
     ad->m_data = data;
-    // ad->m_window = window;
+    ad->m_window = window;
     ad->m_handler = handler;
     ad->m_native_timer = Dali::Timer::New(0);
     ad->m_native_timer.TickSignal().Connect(ad,
@@ -216,34 +219,43 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear()
+void Timer::clear(BrowsingContext* ctx)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        td->m_native_timer.Stop();
-        GC_FREE(td);
-        timerIter++;
+        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+            td->m_native_timer.Stop();
+            GC_FREE(td);
+            m_timeoutHandler.erase(timerIter++);
+        } else {
+            timerIter++;
+        }
     }
-    m_timeoutHandler.clear();
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        td->m_native_timer.Stop();
-        GC_FREE(td);
-        aniIter++;
+        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+            td->m_native_timer.Stop();
+            GC_FREE(td);
+            m_requestAnimationFrameHandler.erase(aniIter++);
+        } else {
+            aniIter++;
+        }
     }
-    m_requestAnimationFrameHandler.clear();
 
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
-        AnimationTickData* td = (AnimationTickData*)aniIter2->second;
-        td->m_native_timer.Stop();
-        GC_FREE(td);
-        aniIter2++;
+        AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
+        if (ad->m_window->browsingContext() == ctx || ctx == nullptr) {
+            ad->m_native_timer.Stop();
+            GC_FREE(ad);
+            m_animationHandler.erase(aniIter2++);
+        } else {
+            aniIter2++;
+        }
     }
-    m_animationHandler.clear();
 }
 }
 #endif

@@ -78,17 +78,20 @@ struct IdlerData {
     void* m_data2;
     uv_idle_t m_idler_uv;
     MessageLoop* m_ml;
+    BrowsingContext* m_ctx;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
 
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
+size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
+                             void* data)
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
+    id->m_ctx = ctx;
     uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
@@ -103,7 +106,8 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data,
+size_t MessageLoop::addIdler(BrowsingContext* ctx,
+                             void (*fn)(size_t, void*, void*), void* data,
                              void* data1)
 {
     STARFISH_ASSERT(isMainThread());
@@ -114,6 +118,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data,
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
+    id->m_ctx = ctx;
     uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
@@ -128,7 +133,8 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*),
+size_t MessageLoop::addIdler(BrowsingContext* ctx,
+                             void (*fn)(size_t, void*, void*, void*),
                              void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
@@ -140,6 +146,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*),
     id->m_data1 = data1;
     id->m_data2 = data2;
     id->m_ml = this;
+    id->m_ctx = ctx;
     uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
@@ -155,9 +162,8 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*),
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t,
-                                                                    void*),
-                                                         void* data)
+size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -165,6 +171,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t,
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
+    id->m_ctx = ctx;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -191,7 +198,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t,
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    void (*fn)(size_t, void*, void*), void* data, void* data1)
+    BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
+    void* data1)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -200,6 +208,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
+    id->m_ctx = ctx;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -226,7 +235,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 }
 
 size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
-    void (*fn)(size_t handle, void*, void*), void* data, void* data1)
+    BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*), void* data,
+    void* data1)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -236,6 +246,7 @@ size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
+    id->m_ctx = ctx;
     uv_idle_init(uv_default_loop(), &id->m_idler_uv);
     id->m_idler_uv.data = id;
     uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
@@ -264,14 +275,18 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers()
+void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 {
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
-        uv_idle_stop(&id->m_idler_uv);
-        GC_FREE(id);
-        iter++;
+        if (id->m_ctx == ctx || ctx == nullptr) {
+            uv_idle_stop(&id->m_idler_uv);
+            GC_FREE(id);
+            m_idlers.erase(iter++);
+        } else {
+            iter++;
+        }
     }
     m_idlers.clear();
 
@@ -279,7 +294,9 @@ void MessageLoop::clearPendingIdlers()
     auto iter2 = m_idlersFromOtherThread.begin();
     while (iter2 != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iter2;
-        id->m_shouldExecute = false;
+        if (id->m_ctx == ctx || ctx == nullptr) {
+            id->m_shouldExecute = false;
+        }
         iter2++;
     }
 }
