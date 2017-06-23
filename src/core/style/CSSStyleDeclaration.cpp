@@ -15,10 +15,17 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
-#include "core/dom/Document.h"
-#include "core/dom/Element.h"
 #include "core/style/CSSStyleLookupTrie.h"
+#include "core/style/CSSStyleRule.h"
+#include "core/style/CSSStyleSheet.h"
+#include "core/style/StyleRule.h"
+#include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/Element.h"
+#include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
@@ -310,5 +317,48 @@ void CSSStyleDeclaration::defaultSetter(String* name, Nullable<String*> value)
             return 0;
         },
         &sender);
+}
+
+CSSStyleSheet* StyleRuleCSSStyleDeclaration::parentStyleSheet() const
+{
+    STARFISH_ASSERT(m_parentRule);
+    return m_parentRule->parentStyleSheet();
+}
+
+ScriptBindingInstance* StyleRuleCSSStyleDeclaration::scriptBindingInstance()
+{
+    STARFISH_ASSERT(m_parentRule);
+    STARFISH_ASSERT(m_parentRule->parentStyleSheet());
+    return m_parentRule->parentStyleSheet()->scriptBindingInstance();
+}
+
+void StyleRuleCSSStyleDeclaration::setCssText(String* text)
+{
+    STARFISH_ASSERT(m_parentRule);
+    CSSStyleDeclaration* decl =
+        ((CSSStyleRule*)m_parentRule)->styleRule()->styleDeclaration();
+    decl->clear();
+
+    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    parser.parseStyleDeclaration(text, decl);
+    m_cssValues = decl->cssValues();
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
+}
+
+void InlineCSSStyleDeclaration::setCssText(String* text)
+{
+    CSSParser parser(m_element->document());
+    parser.parseStyleDeclaration(text, this);
+}
+
+void ComputedStyleCSSStyleDeclaration::setCssText(String* text)
+{
+    throw new DOMException(
+        m_element->document(), DOMException::NO_MODIFICATION_ALLOWED_ERR,
+        "These styles are computed, and therefore read-only.");
 }
 }

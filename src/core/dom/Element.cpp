@@ -482,8 +482,8 @@ void Element::setStyleAttr(String* style)
 CSSStyleDeclaration* Element::inlineStyle()
 {
     if (m_inlineStyle == nullptr) {
-        m_inlineStyle =
-            new CSSStyleDeclaration(this, CSSStyleDeclaration::InlineStyle);
+        m_inlineStyle = new InlineCSSStyleDeclaration(
+            this, CSSStyleDeclaration::InlineStyle);
     }
     return m_inlineStyle;
 }

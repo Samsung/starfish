@@ -1349,7 +1349,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     if (isElement()) {
         e = asElement();
     }
-    CSSStyleDeclaration* d = new CSSStyleDeclaration(e);
+    CSSStyleDeclaration* d = new ComputedStyleCSSStyleDeclaration(e);
 
     // TODO: change below code to resolve DOM style
     window()->browsingContext()->layoutIfNeeds();

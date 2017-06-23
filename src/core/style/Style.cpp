@@ -927,7 +927,6 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
 String* CSSStyleDeclaration::generateCSSText() const
 {
     StringBuilder txt;
-    ;
     for (size_t i = 0; i < m_cssValues.size(); i++) {
         txt.appendString(m_cssValues[i].keyName());
         txt.appendString(": ");

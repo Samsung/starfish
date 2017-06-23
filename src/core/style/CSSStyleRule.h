@@ -41,6 +41,10 @@ public:
     String* cssText() override;
     String* selectorText() const;
     void setSelectorText(String* selectorText);
+    StyleRule* styleRule() const
+    {
+        return m_styleRule;
+    }
 
     CSSStyleDeclaration* style();
 
