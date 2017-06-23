@@ -48,10 +48,12 @@ ScriptBindingInstance::ScriptBindingInstance(
 
 #define FOR_EACH_SCRIPTVALUE_FN(exportName) m_value##exportName = nullptr;
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
+    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_SCRIPTVALUE_FN)
 #undef FOR_EACH_SCRIPTVALUE_FN
 
 #define FOR_EACH_SCRIPT_FN(exportName) m_fn##exportName = nullptr;
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
+    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_SCRIPT_FN)
 #undef FOR_EACH_SCRIPT_FN
 }
 void ScriptBindingInstance::close()
@@ -166,6 +168,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
         state, ValueRef::create(StringRef::fromASCII(#exportName)),            \
         newData##exportName);
     STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
     fnEventTarget();
