@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-class ImageDecoder : public gc {
+class ImageDecoder {
 public:
     enum ImageFormat { PNG, JPG, GIF, ERROR };
 

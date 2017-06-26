@@ -32,6 +32,7 @@ public:
         m_image = (void*)d->buffer();
         m_width = d->width();
         m_height = d->height();
+        delete d;
     }
 
     ImageDataMISC(const char* buf, size_t len)
@@ -40,6 +41,7 @@ public:
         m_image = (void*)d->buffer();
         m_width = d->width();
         m_height = d->height();
+        delete d;
     }
 
     virtual size_t bufferSize()
