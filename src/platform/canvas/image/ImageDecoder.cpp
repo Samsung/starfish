@@ -316,7 +316,7 @@ void ImageDecoder::readJPGFile()
 
     scaledWidth = TJSCALED(hdrw, sf1);
     scaledHeight = TJSCALED(hdrh, sf1);
-    dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_RGB];
+    dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
 
     m_imageData = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(dstSize);
 
