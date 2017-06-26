@@ -170,8 +170,7 @@ public:
         m_height = h;
         m_window = (WindowImplDALI*)wnd;
 
-        buffer = (unsigned char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-            w * h * sizeof(uint32_t));
+        buffer = (unsigned char*)malloc(w * h * sizeof(uint32_t));
         size_t end = m_width * m_height * sizeof(uint32_t);
         memset(buffer, 0x00, end);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -187,7 +186,7 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        GC_FREE(buffer);
+        free(buffer);
         buffer = nullptr;
     }
 
