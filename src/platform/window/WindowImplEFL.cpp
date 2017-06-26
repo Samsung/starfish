@@ -387,13 +387,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_mobileMouseDownEventHandler =
         [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
+        PlatformWindow* sf = (PlatformWindow*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
-        sf->m_lastMouseX = ev->canvas.x;
-        sf->m_lastMouseY = ev->canvas.y;
+        ((WindowImplEFL*)sf)->m_lastMouseX = ev->canvas.x;
+        ((WindowImplEFL*)sf)->m_lastMouseY = ev->canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y,
-                               Window::TouchEventStart, true);
+                               PlatformWindow::TouchEventStart, true);
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
@@ -401,13 +401,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_mobileMouseMoveEventHandler =
         [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
+        PlatformWindow* sf = (PlatformWindow*)data;
         Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
-        sf->m_lastMouseX = ev->cur.canvas.x;
-        sf->m_lastMouseY = ev->cur.canvas.y;
+        ((WindowImplEFL*)sf)->m_lastMouseX = ev->cur.canvas.x;
+        ((WindowImplEFL*)sf)->m_lastMouseY = ev->cur.canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y,
-                               Window::TouchEventMove, true);
+                               PlatformWindow::TouchEventMove, true);
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
@@ -415,11 +415,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_mobileMouseUpEventHandler =
         [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
+        PlatformWindow* sf = (PlatformWindow*)data;
         sf->starFish()->messageLoop()->addIdler(
+            sf->webView()->mainBrowsingContext(),
             [](size_t a, void* data) {
-                ((Window*)data)
-                    ->dispatchTouchEvent(0, 0, Window::TouchEventCancel, true);
+                ((PlatformWindow*)data)
+                    ->dispatchTouchEvent(0, 0, PlatformWindow::TouchEventCancel,
+                                         true);
             },
             sf);
         return;
@@ -429,10 +431,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj,
                                         void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
+        PlatformWindow* sf = (PlatformWindow*)data;
         StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY,
-                               Window::TouchEventEnd, true);
+        sf->dispatchTouchEvent(((WindowImplEFL*)sf)->m_lastMouseX,
+                               ((WindowImplEFL*)sf)->m_lastMouseY,
+                               PlatformWindow::TouchEventEnd, true);
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
