@@ -208,6 +208,7 @@ public:
     FrameBox* lastInlineBox();
     void removeDanglingSpace(LineFormattingContext* ctx);
     bool containOnlyEmptyInlineNonReplacedBoxes();
+    bool isAbsolutePositionedBoxLayoutParent();
 
     void insertInlineBox(FrameBox* box)
     {
