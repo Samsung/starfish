@@ -18,6 +18,7 @@
 #define __StarFishWebView__
 
 #include "binding/StarFishHoldable.h"
+#include "browser/history/HistoryManager.h"
 
 namespace StarFish {
 struct BlobURLStore {
@@ -93,7 +94,7 @@ public:
         return m_historyManager;
     }
 
-    void navigate(ResourceURL* url, bool addToHistory = true);
+    void navigate(ResourceURL* url, HistoryManager::Action type);
     ScriptEngineInstance* scriptEngineInstance()
     {
         return m_scriptEngineInstance;

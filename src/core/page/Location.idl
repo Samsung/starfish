@@ -14,7 +14,7 @@ interface Location {
   [Unforgeable] attribute DOMString hash;
 
   [Unforgeable] void assign(DOMString url);
-  [Unimplemented, Unforgeable] void replace(DOMString url);
+  [Unforgeable] void replace(DOMString url);
   [Unforgeable] void reload();
 
   [Unimplemented, Unforgeable, SameObject] readonly attribute DOMStringList ancestorOrigins;

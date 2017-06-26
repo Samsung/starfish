@@ -41,7 +41,15 @@ void HistoryManager::push(ResourceURL* url)
         m_historyEntries.erase(std::next(m_curEntry, 1),
                                m_historyEntries.end());
     }
-    addHistoryEntry(new HistoryEntry(state, nullptr, url));
+    addHistoryEntry(new HistoryEntry(state, String::emptyString, url));
+}
+
+void HistoryManager::replace(ResourceURL* url)
+{
+    HistoryEntry* entry = currentEntry();
+    if (entry) {
+        entry->init(scriptNull(), String::emptyString, url);
+    }
 }
 
 void HistoryManager::go(int delta)
@@ -81,7 +89,7 @@ void HistoryManager::go(int delta)
     }
 
     m_curEntry = itr;
-    m_webView->navigate(currentEntry()->url(), false);
+    m_webView->navigate(currentEntry()->url(), Intact);
 }
 
 uint32_t HistoryManager::length()

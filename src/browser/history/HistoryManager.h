@@ -27,6 +27,7 @@ class WebView;
 class HistoryManager : public gc {
 public:
     const uint32_t MAX_ENTRY_SIZE = 256;
+    enum Action { Add, Replace, Intact };
     class HistoryEntry : public gc {
     public:
         HistoryEntry(ScriptValue state, String* title, ResourceURL* url)
@@ -73,6 +74,7 @@ public:
     ScriptValue state();
 
     void push(ResourceURL* url);
+    void replace(ResourceURL* url);
 
 private:
     HistoryManager(WebView* webView);

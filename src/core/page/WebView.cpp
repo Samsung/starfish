@@ -97,15 +97,25 @@ void WebView::initStorage()
         m_storageNamespaceProvider->createSessionStorageNamespace();
 }
 
-void WebView::navigate(ResourceURL* url, bool addToHistory)
+void WebView::navigate(ResourceURL* url, HistoryManager::Action type)
 {
     clearBlobURLStore();
     initRenderingFlags();
 
     m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
-    if (addToHistory) {
+
+    switch (type) {
+    case HistoryManager::Action::Add:
         m_historyManager->push(url);
+        break;
+    case HistoryManager::Action::Replace:
+        m_historyManager->replace(url);
+        break;
+    case HistoryManager::Action::Intact:
+    default:
+        break;
     }
+
     m_mainBrowsingContext->navigate(url);
 }
 
