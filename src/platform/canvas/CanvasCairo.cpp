@@ -842,6 +842,7 @@ public:
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_restore(m_canvas);
+        cairo_pattern_destroy(resizePattern);
     }
 
     void drawDebugLine(double xx, double yy, double ww, double hh)
