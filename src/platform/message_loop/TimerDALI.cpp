@@ -133,7 +133,7 @@ size_t Timer::addTimer(double delay, Window* window,
     td->m_data = data;
     td->m_handler = handler;
     td->m_window = window;
-    td->m_native_timer = Dali::Timer::New(delay / 1000.0);
+    td->m_native_timer = Dali::Timer::New((unsigned)delay);
     if (repetitive) {
         td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnTick);
     } else {
