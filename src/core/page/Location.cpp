@@ -147,15 +147,15 @@ void Location::assign(String* url)
 
 void Location::assign(ResourceURL* url)
 {
-    starFish()->platformWindow()->webView()->navigate(url);
+    starFish()->platformWindow()->webView()->navigate(
+        url, HistoryManager::Action::Add);
 }
 
 void Location::replace(String* url)
 {
-    // TODO: Since history is not implemnted yet, replace() is the same as
-    // assign for now
     if (isValidURL(url)) {
-        assign(url);
+        starFish()->platformWindow()->webView()->navigate(
+            new ResourceURL(url), HistoryManager::Action::Replace);
     }
 }
 
