@@ -128,6 +128,12 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     }
 
     setHeight(std::max(maxHeightSoFar, specifiedHeight));
+
+    // layout absolute positioned blocks
+    ctx.layoutRegisteredAbsolutePositionedBoxes(this);
+
+    // layout relative positioned blocks
+    ctx.layoutRegisteredRelativePositionedBoxes(this);
 }
 
 void FrameTableRowBox::increaseCellHeightBy(LayoutUnit cellHeightOffset)
