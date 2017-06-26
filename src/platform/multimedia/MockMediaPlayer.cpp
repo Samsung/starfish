@@ -105,7 +105,7 @@ void MockMediaPlayer::play()
 {
     if (!m_inPlaying) {
         m_inPlaying = true;
-        m_starFish->addPointerInRootSet(this);
+        m_container->starFish()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = window()->setInterval(
             [](Window* window, void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
@@ -168,7 +168,7 @@ void MockMediaPlayer::pause()
 {
     if (m_inPlaying) {
         m_inPlaying = false;
-        m_starFish->removePointerFromRootSet(this);
+        m_container->starFish()->removePointerFromRootSet(this);
         window()->clearInterval(m_currentTimeUpdateTimer);
         m_currentTimeUpdateTimer = SIZE_MAX;
     }
@@ -178,10 +178,10 @@ void MockMediaPlayer::prepare(ResourceURL* url)
 {
     if (url->isBlobURL()) {
         BlobURLStore store;
-        if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
+        if (!WebView::stringToBlobURLString(url->urlString(), store)) {
             return;
         }
-        if (m_starFish->isValidMediaSourceBlobURL(store)) {
+        if (m_container->webView()->isValidMediaSourceBlobURL(store)) {
             m_activeMediaSource = ((MediaSource*)store.m_blob);
             m_activeMediaSource->addClient(
                 new MediaPlayerMediaSourceClient(this));

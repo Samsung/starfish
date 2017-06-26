@@ -18,6 +18,7 @@
 #include "StarFish.h"
 
 #include "BrowsingContext.h"
+#include "WebView.h"
 
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
@@ -43,23 +44,8 @@
 #include "core/util/URL.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/animation/Animation.h"
-
-#if defined(STARFISH_ENABLE_TEST)
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-#include <Elementary.h>
-extern Evas_Object* g_imgBufferForScreehShot;
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
-#include <cairo.h>
-#include <dali-toolkit/dali-toolkit.h>
-extern unsigned char* g_imgBufferForScreehShot;
-#endif
-#endif
-
-#ifdef STARFISH_ENABLE_TEST
-extern bool g_fireOnloadEvent;
-extern bool g_forceRendering;
-extern StarFish::CanvasSurface* g_surfaceForScreehShot;
-#endif
+#include "core/dom/Traverse.h"
+#include "core/dom/HTMLIFrameElement.h"
 
 // #define STARFISH_ENABLE_TIMER
 
@@ -74,11 +60,10 @@ BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)
 BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
     : StarFishHoldable(starFish)
     , m_webView(webView)
-    , m_document(nullptr)
+    , m_window(nullptr)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
-    , m_rootStackingContext(nullptr)
     , m_touchDownPoint(0, 0)
     , m_ctrlKeyDown(0)
     , m_shiftKeyDown(0)
@@ -91,20 +76,15 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
 
 void BrowsingContext::initFlags()
 {
-    m_needsRendering = false;
-    m_inRendering = false;
     m_needsStyleRecalc = false;
     m_needsStyleRecalcForWholeDocument = false;
     m_needsFrameTreeBuild = false;
     m_needsLayout = false;
-    m_needsPainting = false;
-    m_needsComposite = false;
 
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_pendingStyleSheetCount = 0;
-    m_lastRenderingTime = 0;
 }
 
 void BrowsingContext::navigate(ResourceURL* url)
@@ -117,9 +97,8 @@ void BrowsingContext::navigate(ResourceURL* url)
     StarFishEnterer enter(m_starFish);
 
     // TODO: Use location to open a new document
-    Window* window = Window::create(m_starFish, this, url);
-    m_document = window->document();
-    m_document->open();
+    m_window = Window::create(m_starFish, this, url);
+    m_window->document()->open();
 }
 
 void BrowsingContext::navigateAsync(ResourceURL* url)
@@ -132,14 +111,14 @@ void BrowsingContext::navigateAsync(ResourceURL* url)
         this, url);
 }
 
+Document* BrowsingContext::document()
+{
+    return window()->document();
+}
+
 ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
 {
-    if (document()) {
-        STARFISH_ASSERT(document()->window());
-        return document()->window()->scriptBindingInstance();
-    } else {
-        return nullptr;
-    }
+    return window()->scriptBindingInstance();
 }
 
 void BrowsingContext::layoutIfNeeds()
@@ -243,12 +222,13 @@ void BrowsingContext::layoutIfNeeds()
 #endif
             document()->frame()->establishesStackingContextIfNeeds();
             if (document()->frame()->firstChild()) {
-                m_rootStackingContext = document()
-                                            ->frame()
-                                            ->firstChild()
-                                            ->asFrameBox()
-                                            ->stackingContext();
-                m_rootStackingContext->computeStackingContextProperties();
+                webView()->m_rootStackingContext = document()
+                                                       ->frame()
+                                                       ->firstChild()
+                                                       ->asFrameBox()
+                                                       ->stackingContext();
+                webView()
+                    ->m_rootStackingContext->computeStackingContextProperties();
             }
 
             // STARFISH_LOG_INFO("computeStackingContextProperties end composite
@@ -262,228 +242,6 @@ void BrowsingContext::layoutIfNeeds()
         }
 #endif
     }
-}
-
-void BrowsingContext::rendering()
-{
-    if (m_pendingStyleSheetCount && document() &&
-        document()->resourceLoader().isDocumentInOpenState() &&
-        ((timestamp() - document()->resourceLoader().documentOpenTime()) <
-         1000)) {
-        m_needsRendering = false;
-        document()->window()->setTimeout(
-            [](Window* wnd, void* data) {
-                wnd->browsingContext()->setNeedsRendering();
-            },
-            100, nullptr);
-
-        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
-#ifndef STARFISH_TIZEN
-        canvas->clearColor(Unit::Color(255, 255, 255, 255));
-#endif
-        return;
-    }
-
-    if (!m_needsRendering) {
-        return;
-    }
-
-    uint64_t currentTick = tickCount();
-    m_lastRenderingTime = currentTick;
-    m_inRendering = true;
-    STARFISH_RELEASE_ASSERT(m_isActive);
-#ifdef STARFISH_ENABLE_TIMER
-    Timer renderingTimer("BrowsingContext::rendering");
-#endif
-    layoutIfNeeds();
-
-    {
-        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
-        for (size_t i = 0; i < bufSiz; i++) {
-            m_backStackingContextBufferUpWhileReCompsite[i]
-                ->detachNativeBuffer();
-        }
-        m_backStackingContextBufferUpWhileReCompsite.clear();
-    }
-
-    if (m_needsPainting) {
-#ifdef STARFISH_ENABLE_TIMER
-        Timer t("painting");
-#endif
-        // painting
-        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
-
-        if (document()->frame()->firstChild()) {
-            m_needsComposite = m_rootStackingContext->needsOwnBuffer();
-        } else {
-            m_needsComposite = false;
-        }
-
-        if (!m_needsComposite) {
-            starFish()->platformWindow()->paintWindowBackground(canvas);
-        }
-
-        {
-            PaintingContext ctx(canvas);
-            ctx.m_paintingStage = PaintingStageEnd;
-            document()->frame()->paint(ctx);
-        }
-        m_needsPainting = false;
-
-        delete canvas;
-#ifdef STARFISH_TIZEN_WEARABLE
-        evas_object_raise(eflWindow->m_dummyBox);
-#endif
-
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableStackingContextDump) {
-            if (document()->frame()->firstChild()) {
-                STARFISH_ASSERT(document()
-                                    ->frame()
-                                    ->firstChild()
-                                    ->asFrameBox()
-                                    ->isRootElement());
-                StackingContext* ctx = document()
-                                           ->frame()
-                                           ->firstChild()
-                                           ->asFrameBox()
-                                           ->stackingContext();
-
-                std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](
-                    StackingContext* ctx, int depth) {
-                    for (int i = 0; i < depth; i++) {
-                        printf("  ");
-                    }
-
-                    auto fr = ctx->visibleRect();
-
-                    std::string className;
-                    for (unsigned i = 0; i < ctx->owner()
-                                                 ->node()
-                                                 ->asHTMLElement()
-                                                 ->classNames()
-                                                 .size();
-                         i++) {
-                        className += ctx->owner()
-                                         ->node()
-                                         ->asHTMLElement()
-                                         ->classNames()[i]
-                                         .string()
-                                         ->utf8Data();
-                        className += " ";
-                    }
-
-                    printf(
-                        "StackingContext[%p, node %p %s id:%s className:%s "
-                        ", frame %p, buf %p %d %d %d %d]\n",
-                        ctx, ctx->owner()->node(),
-                        ctx->owner()->node()->localName()->utf8Data(),
-                        ctx->owner()->node()->asHTMLElement()->id()->utf8Data(),
-                        className.data(), ctx->owner(), ctx->buffer(),
-                        (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                        (int)fr.height());
-
-                    auto iter = ctx->childContexts().begin();
-                    while (iter != ctx->childContexts().end()) {
-                        int32_t num = iter->first;
-
-                        for (int i = 0; i < depth + 1; i++) {
-                            printf("  ");
-                        }
-
-                        printf("z-index: %d\n", (int)num);
-
-                        auto iter2 = iter->second->begin();
-                        while (iter2 != iter->second->end()) {
-                            dumpSC(*iter2, depth + 2);
-                            iter2++;
-                        }
-
-                        iter++;
-                    }
-                };
-
-                dumpSC(ctx, 0);
-            }
-        }
-#endif
-    }
-
-    if (m_needsComposite) {
-#ifdef STARFISH_ENABLE_TIMER
-        Timer t("composite");
-#endif
-        if (document()->frame()->firstChild() &&
-            m_rootStackingContext->needsOwnBuffer()) {
-            Canvas* canvas =
-                starFish()->platformWindow()->preparePainting(false);
-            starFish()->platformWindow()->paintWindowBackground(canvas);
-            document()
-                ->frame()
-                ->firstChild()
-                ->asFrameBox()
-                ->stackingContext()
-                ->compositeStackingContext(canvas);
-
-            delete canvas;
-#ifdef STARFISH_TIZEN_WEARABLE
-            evas_object_raise(eflWindow->m_dummyBox);
-#endif
-        }
-        m_needsComposite = false;
-    }
-
-    m_needsRendering = false;
-    m_inRendering = false;
-
-#if defined(STARFISH_ENABLE_TEST)
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-            evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
-
-            // int writeImage(char* filename, int width, int height, void
-            // *buffer)
-            // writeImage(path, width(), height(),
-            // evas_object_image_data_get(g_imgBufferForScreehShot,
-            // EINA_FALSE));
-            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
-                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                exit(0);
-            }
-
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
-            cairo_surface_t* png_buffer;
-            png_buffer = cairo_image_surface_create_for_data(
-                g_imgBufferForScreehShot, CAIRO_FORMAT_ARGB32,
-                starFish()->platformWindow()->width(),
-                starFish()->platformWindow()->height(),
-                cairo_format_stride_for_width(
-                    CAIRO_FORMAT_ARGB32,
-                    starFish()->platformWindow()->width()));
-
-            cairo_surface_write_to_png(png_buffer, path);
-            cairo_surface_destroy(png_buffer);
-
-            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
-                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                Dali::Application* app =
-                    (Dali::Application*)starFish()->nativeHandle();
-                if (app) {
-                    app->Quit();
-                } else {
-                    exit(0);
-                }
-            }
-
-#endif
-            g_surfaceForScreehShot->detachNativeBuffer();
-            g_surfaceForScreehShot = nullptr;
-        }
-    }
-#endif
 }
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
@@ -548,16 +306,37 @@ void BrowsingContext::unmarkHasPendingStyleSheet()
     }
 }
 
+void BrowsingContext::iterateChildContext(
+    const std::function<void(BrowsingContext*)>& fn)
+{
+    GCVector<Element*> col;
+    Traverse::getherDescendant(col, document(),
+                               [](Node* nd) -> bool {
+                                   if (nd->isHTMLIFrameElement()) {
+                                       return true;
+                                   }
+                                   return false;
+                               },
+                               false);
+
+    for (size_t i = 0; i < col.size(); i++) {
+        if (col[i]->asHTMLIFrameElement()->browsingContenxt()) {
+            fn(col[i]->asHTMLIFrameElement()->browsingContenxt());
+        }
+    }
+}
+
 void BrowsingContext::clearStackingContext(bool backupBuffer)
 {
-    if (m_rootStackingContext) {
-        StackingContext* ctx = m_rootStackingContext;
+    if (webView()->m_rootStackingContext) {
+        StackingContext* ctx = webView()->m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
                 if (backupBuffer) {
                     if (ctx->needsOwnBuffer() && ctx->buffer()) {
-                        m_backStackingContextBufferUpWhileReCompsite.push_back(
-                            ctx->buffer());
+                        webView()
+                            ->m_backStackingContextBufferUpWhileReCompsite
+                            .push_back(ctx->buffer());
                     }
                     ctx->owner()->clearStackingContextIfNeeds(false);
                 } else {
@@ -574,7 +353,7 @@ void BrowsingContext::clearStackingContext(bool backupBuffer)
                 }
             };
         clearSC(ctx);
-        m_rootStackingContext = nullptr;
+        webView()->m_rootStackingContext = nullptr;
     }
 }
 
@@ -588,7 +367,7 @@ void BrowsingContext::close()
     m_hoveredNodes.clear();
     m_hoveredNodes.shrink_to_fit();
 
-    if (document()) {
+    if (m_window) {
         StarFishEnterer enter(m_starFish);
         document()->window()->close();
         document()->close();
@@ -604,8 +383,6 @@ void BrowsingContext::close()
         if (document()->animationExecutor()->isAlive()) {
             document()->animationExecutor()->stopIfNeeds();
         }
-
-        m_document = nullptr;
     }
 
     m_isActive = false;
@@ -613,9 +390,6 @@ void BrowsingContext::close()
     m_starFish->timer()->clear(this);
     m_starFish->platformWindow()->clearResources();
     m_starFish->messageLoop()->clearPendingIdlers(this);
-
-    if (m_parentBrowsingContext == nullptr)
-        m_starFish->clearBlobURLStore();
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -989,23 +763,38 @@ void BrowsingContext::pause()
     document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
     document()->resourceLoader().cachePruning();
+
+    iterateChildContext([](BrowsingContext* ctx) { ctx->pause(); });
 }
 
 void BrowsingContext::resume()
 {
     STARFISH_LOG_INFO("BrowsingContext::resume\n");
     if (m_isRunning) {
-        m_needsRendering = true;
-        m_needsPainting = true;
-        rendering();
+        setNeedsPainting();
         return;
     }
 
     m_isRunning = true;
-    m_needsRendering = true;
-    m_needsPainting = true;
-    rendering();
+    setNeedsPainting();
 
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
+
+    iterateChildContext([](BrowsingContext* ctx) { ctx->resume(); });
+}
+
+void BrowsingContext::setNeedsPainting()
+{
+    m_webView->setNeedsPainting();
+}
+
+void BrowsingContext::setNeedsComposite()
+{
+    m_webView->setNeedsComposite();
+}
+
+void BrowsingContext::setNeedsRendering()
+{
+    m_webView->setNeedsRendering();
 }
 }

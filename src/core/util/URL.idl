@@ -24,5 +24,5 @@ interface URL {
   // https://w3c.github.io/FileAPI/#creating-revoking
   static DOMString createObjectURL(Blob blob);
   [STARFISH_ENABLE_MULTIMEDIA] static DOMString createObjectURL(MediaSource mediaSource);
-  [CallWith=Starfish] static void revokeObjectURL(DOMString url);
+  [CallWith=Document] static void revokeObjectURL(DOMString url);
 };

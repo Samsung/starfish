@@ -23,6 +23,7 @@ class Document;
 class StarFish;
 class Window;
 class ScriptBindingInstance;
+class WebView;
 
 class DocumentHoldable {
 public:
@@ -31,14 +32,15 @@ public:
     {
     }
 
-    Document* document()
+    Document* document() const
     {
         return m_document;
     }
 
     Window* window() const;
     StarFish* starFish() const;
-    ScriptBindingInstance* scriptBindingInstance();
+    ScriptBindingInstance* scriptBindingInstance() const;
+    WebView* webView() const;
 
 protected:
     Document* m_document;

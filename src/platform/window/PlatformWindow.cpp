@@ -88,7 +88,7 @@ void PlatformWindow::dispatchKeyEvent(String* key, KeyEventKind kind)
 
 void PlatformWindow::rendering()
 {
-    webView()->mainBrowsingContext()->rendering();
+    webView()->rendering();
 }
 
 void PlatformWindow::paintWindowBackground(Canvas* canvas)
@@ -98,18 +98,18 @@ void PlatformWindow::paintWindowBackground(Canvas* canvas)
 
 void PlatformWindow::screenShot(std::string filePath)
 {
-    bool oldNeedsPainting = webView()->mainBrowsingContext()->m_needsPainting;
+    bool oldNeedsPainting = webView()->m_needsPainting;
     bool oldOnLoad = g_fireOnloadEvent;
     g_fireOnloadEvent = true;
     g_forceRendering = true;
-    webView()->mainBrowsingContext()->setNeedsPainting();
+    webView()->setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
     setenv("SCREEN_SHOT", "", 1);
     g_fireOnloadEvent = oldOnLoad;
     g_forceRendering = false;
 
-    webView()->mainBrowsingContext()->m_needsPainting = oldNeedsPainting;
-    webView()->mainBrowsingContext()->setNeedsRendering();
+    webView()->m_needsPainting = oldNeedsPainting;
+    webView()->setNeedsRendering();
 }
 }

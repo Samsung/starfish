@@ -51,10 +51,12 @@ public:
     void initFlags();
     ScriptBindingInstance* scriptBindingInstance();
 
-    Document* document()
+    Window* window()
     {
-        return m_document;
+        return m_window;
     }
+
+    Document* document();
 
     WebView* webView()
     {
@@ -70,14 +72,7 @@ public:
     void resume();
     void close();
 
-    void rendering();
-
     void layoutIfNeeds();
-
-    bool inRendering()
-    {
-        return m_inRendering;
-    }
 
     void setNeedsStyleRecalc()
     {
@@ -107,29 +102,8 @@ public:
         setNeedsPainting();
     }
 
-    void setNeedsPainting()
-    {
-        if (!m_needsPainting) {
-            m_needsPainting = true;
-            setNeedsRendering();
-        }
-    }
-
-    void setNeedsComposite()
-    {
-        if (!m_needsComposite) {
-            m_needsComposite = true;
-            setNeedsRendering();
-        }
-    }
-
-    void renderingIfNeeds()
-    {
-        if (m_needsRendering) {
-            rendering();
-            m_needsRendering = false;
-        }
-    }
+    void setNeedsPainting();
+    void setNeedsComposite();
 
     bool hasRootElementBackground()
     {
@@ -143,6 +117,10 @@ public:
 
     Node* hitTest(float x, float y);
 
+    bool hasPendingStyleSheet()
+    {
+        return m_pendingStyleSheetCount;
+    }
     void markHasPendingStyleSheet();
     void unmarkHasPendingStyleSheet();
 
@@ -163,37 +141,30 @@ public:
 
     void paintWindowBackground(Canvas* canvas);
 
-private:
-    BrowsingContext(StarFish* starFish, WebView* webView);
-
-    void setNeedsRenderingSlowCase();
-
-    void setNeedsRendering()
+    bool isMainBrowsingContext()
     {
-        if (m_needsRendering) {
-            return;
-        }
-        setNeedsRenderingSlowCase();
+        return m_parentBrowsingContext == nullptr;
     }
 
+private:
+    void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
+
+    BrowsingContext(StarFish* starFish, WebView* webView);
+
+    void setNeedsRendering();
+
     WebView* m_webView;
-    Document* m_document;
+    Window* m_window;
+
     BrowsingContext* m_parentBrowsingContext;
 
-    bool m_inRendering;
-    bool m_needsRendering;
     bool m_needsStyleRecalc;
     bool m_needsStyleRecalcForWholeDocument;
     bool m_needsFrameTreeBuild;
     bool m_needsLayout;
-    bool m_needsPainting;
-    bool m_needsComposite;
 
     size_t m_pendingStyleSheetCount;
     size_t m_pendingRenderingCount;
-
-    StackingContext* m_rootStackingContext;
-    GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
 
     bool m_isRunning;
     bool m_isActive;
@@ -207,8 +178,6 @@ private:
     int m_shiftKeyDown;
     int m_altKeyDown;
     int m_metaKeyDown;
-
-    uint64_t m_lastRenderingTime;
 
     Node* m_focusedNode;
     Node* m_relatedTarget;

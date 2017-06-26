@@ -106,7 +106,7 @@ BrowsingContext* Document::browsingContext()
     return window()->browsingContext();
 }
 
-ScriptBindingInstance* Document::scriptBindingInstance()
+ScriptBindingInstance* Document::scriptBindingInstance() const
 {
     return window()->scriptBindingInstance();
 }

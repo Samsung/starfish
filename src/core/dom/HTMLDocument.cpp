@@ -17,9 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/DOMException.h"
-#ifdef STARFISH_ENABLE_MULTIPAGE
 #include "core/dom/HTMLAnchorElement.h"
-#endif
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLDivElement.h"
@@ -128,6 +126,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTFootElement(document);
     } else if (name == str->m_iframeTagName.localNameAtomic()) {
         return new HTMLIFrameElement(document);
+    } else if (name == str->m_aTagName.localNameAtomic()) {
+        return new HTMLAnchorElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
@@ -138,11 +138,6 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTrackElement(document);
     } else if (name == str->m_sourceTagName.localNameAtomic()) {
         return new HTMLSourceElement(document);
-    }
-#endif
-#ifdef STARFISH_ENABLE_MULTIPAGE
-    else if (name == str->m_aTagName.localNameAtomic()) {
-        return new HTMLAnchorElement(document);
     }
 #endif
 

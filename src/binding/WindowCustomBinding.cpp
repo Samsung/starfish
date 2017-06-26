@@ -304,7 +304,7 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
 {
     GENERATE_WINDOW();
 
-    window->browsingContext()->renderingIfNeeds();
+    window->browsingContext()->layoutIfNeeds();
 
     ValueRef* arg0 = argv[0];
     Node* value0 = nullptr;
@@ -411,6 +411,17 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
 
     return scriptUndefined();
 }
+
+static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
+{
+    const char* hide = getenv("HIDE_WINDOW");
+    if ((hide && strlen(hide))) {
+        ::exit(0);
+    }
+    return ValueRef::createUndefined();
+}
 #endif
 
 static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
@@ -516,6 +527,10 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
         }
     }
 
+    if (name->equals("self")) {
+        return self->scriptValue();
+    }
+
     return ValueRef::createEmpty();
 }
 
@@ -550,7 +565,9 @@ void Window::postInit(ScriptBindingInstance* instance)
     DEFINE_TEST_FUNCTION(testAssert, 1);
     DEFINE_TEST_FUNCTION(testEnd, 0);
     DEFINE_TEST_FUNCTION(testImgDiff, 2);
+    DEFINE_TEST_FUNCTION(wptTestEnd, 0);
 
+    state->destroy();
 #endif
 }
 }

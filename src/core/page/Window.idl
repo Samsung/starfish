@@ -6,7 +6,7 @@
 interface Window : EventTarget {
   // the current browsing context
   [Custom, Unforgeable] readonly attribute WindowProxy window;
-  [Unimplemented, Replaceable] readonly attribute WindowProxy self;
+  // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
   [Unimplemented] attribute DOMString name;
   [STARFISH_ENABLE_MULTIPAGE, PutForwards=href, Unforgeable] readonly attribute Location location;
