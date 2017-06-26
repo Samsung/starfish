@@ -98,11 +98,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | parentRule | Returns the parent CSS rule. |
 |  | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | [CSSStyleDeclaration](https://dev.w3.org/csswg/cssom/#the-cssstyledeclaration-interface) | interface | CSSStyleDeclaration | The CSSStyleDeclaration interface represents a CSS declaration block, including its underlying state, where this underlying state depends upon the source of the CSSStyleDeclaration instance. |
+|  | attribute | cssText | Returns the result of serializing the declarations, or sets cssText attribute if after parsing the given value, the return value is not null. |
 |  | attribute | length | Returns the number of CSS declarations in the declarations. |
 |  | method | getter DOMString item(unsigned long index) | Returns the property name of the CSS declaration at position index. |
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
-|  | attribute | cssText | Returns the result of serializing the declarations, or sets cssText attribute if after parsing the given value, the return value is not null. |
+|  | attribute | parentRule | Returns the parent CSS rule. |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | Represents a style rule. |
 |  | attribute | selectorText | Returns the result of serializing the associated group of selectors. (Note: We won't support result separated by ',' for a while.)|
 |  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
@@ -110,6 +111,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | href | Returns the URL specified by the @import at-rule. |
 | [CSSGroupingRule](https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface) | interface | CSSGroupingRule | Represents an at-rule that contains other rules nested inside itself. |
 |  | attribute | cssRules | Returns a CSSRuleList object for the child CSS rules. |
+|  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns a CSSRuleList object for the child CSS rules. |
+|  | method | void deleteRule(unsigned long index) | Returns a CSSRuleList object for the child CSS rules. |
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
@@ -510,7 +513,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
 | [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | Interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
-| | method | item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
+| | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
 | | attribute | length | Return the number of CSS style sheets represented by the collection. |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
 |  | attribute | length | Returns the number of ranges in the object. |

@@ -112,6 +112,16 @@ StyleRuleGroup::StyleRuleGroup(StyleRuleGroup& o)
     m_childRules.assign(o.childRules().begin(), o.childRules().end());
 }
 
+void StyleRuleGroup::wrapperInsertRule(unsigned index, StyleRuleBase* rule)
+{
+    m_childRules.insert(m_childRules.begin() + index, rule);
+}
+
+void StyleRuleGroup::wrapperRemoveRule(unsigned index)
+{
+    m_childRules.erase(m_childRules.begin() + index);
+}
+
 StyleRuleCondition::StyleRuleCondition(RuleType type, String* conditionText,
                                        GCVector<StyleRuleBase*>& rules)
     : StyleRuleGroup(type, rules)

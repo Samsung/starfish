@@ -10,7 +10,7 @@ interface CSSStyleDeclaration {
   [Unimplemented, CEReactions] void setPropertyValue(DOMString property, [TreatNullAs=EmptyString] DOMString value);
   [Unimplemented, CEReactions] void setPropertyPriority(DOMString property, [TreatNullAs=EmptyString] DOMString priority);
   [Unimplemented, CEReactions, RaisesException] DOMString removeProperty(DOMString property);
-  [Unimplemented] readonly attribute CSSRule? parentRule;
+  readonly attribute CSSRule? parentRule;
   [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cssFloat;
 
   // NOTE add getter&setter for named access

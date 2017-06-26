@@ -135,6 +135,9 @@ public:
         return m_childRules;
     }
 
+    void wrapperInsertRule(unsigned index, StyleRuleBase* rule);
+    void wrapperRemoveRule(unsigned index);
+
 protected:
     GCVector<StyleRuleBase*> m_childRules;
 };
