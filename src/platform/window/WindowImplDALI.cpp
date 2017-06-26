@@ -279,7 +279,7 @@ PlatformWindow::~PlatformWindow()
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 }
 
-void BrowsingContext::setNeedsRenderingSlowCase()
+void WebView::setNeedsRenderingSlowCase()
 {
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
@@ -294,7 +294,7 @@ void BrowsingContext::setNeedsRenderingSlowCase()
     ((WindowImplDALI*)id->m_data)->m_renderingIdlerData = id;
     ((WindowImplDALI*)id->m_data)->m_renderingAnimator =
         starFish()->messageLoop()->addIdler(
-            this,
+            mainBrowsingContext(),
             [](size_t handle, void* data) {
                 IdlerData* id = (IdlerData*)data;
                 PlatformWindow* wnd = (PlatformWindow*)id->m_data;
