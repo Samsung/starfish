@@ -22,6 +22,7 @@
 
 namespace StarFish {
 
+class CSSRule;
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 
@@ -143,14 +144,17 @@ public:
         return m_cssValues;
     }
 
+    virtual CSSRule* parentRule() const
+    {
+        return nullptr;
+    }
+
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
     Element* m_element;
     StyleType m_styleType;
 };
 
-class CSSRule;
-class CSSStyleRule;
 class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
     StyleRuleCSSStyleDeclaration(GCVector<CSSStyleValuePair>& cssValues,

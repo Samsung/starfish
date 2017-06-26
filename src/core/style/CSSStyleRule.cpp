@@ -19,14 +19,16 @@
 #include "core/style/CSSRule.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSRule.h"
+#include "core/style/CSSRuleList.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
-#include "core/style/CSSRule.h"
-#include "core/style/CSSRuleList.h"
 #include "core/style/StyleRule.h"
 #include "core/style/MediaQuerySet.h"
 
@@ -114,14 +116,79 @@ CSSRuleList* CSSGroupingRule::cssRules()
 
 unsigned CSSGroupingRule::insertRule(String* rule, unsigned index)
 {
-    // TODO : implement
-    return 0; // or throw Exception
+    STARFISH_ASSERT(m_childRuleWrappers.size() ==
+                    m_groupRule->childRules().size());
+
+    if (index > m_groupRule->childRules().size()) {
+        StringBuilder msg;
+        msg.appendString("the index ");
+        msg.appendString(String::fromInt(index));
+        msg.appendString(
+            " must be less than or equal to the length of the rule list.");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INDEX_SIZE_ERR,
+                               msg.finalize()->utf8Data());
+        return 0;
+    }
+
+    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    RefPtr<CSSToken> token = parser.makeToken(rule);
+
+    GCVector<StyleRuleBase*> styleRules;
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parser.parseStyleRule(token, styleRules,
+                          CSSParser::AllowedRulesType::RegularRules,
+                          &selectorListContainer);
+
+    if (styleRules.size() == 0) {
+        StringBuilder msg;
+        msg.appendString("the rule '");
+        msg.appendString(rule);
+        msg.appendString("' is invalid and cannot be parsed.");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::SYNTAX_ERR,
+                               msg.finalize()->utf8Data());
+        return 0;
+    }
+
+    if (styleRules[0]->isImportRule()) {
+        throw new DOMException(
+            scriptBindingInstance()->ownerDocument(),
+            DOMException::HIERARCHY_REQUEST_ERR,
+            "'@import' rules cannot be inserted inside a group rule.");
+        return 0;
+    }
+
+    // TODO: throw exception for @namespace at-rule.
+
+    m_groupRule->wrapperInsertRule(index, styleRules[0]);
+    m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index,
+                               (CSSRule*)(nullptr));
+    return index;
 }
 
 void CSSGroupingRule::deleteRule(unsigned index)
 {
-    // TODO : implement
-    // or throw Exception
+    STARFISH_ASSERT(m_childRuleWrappers.size() ==
+                    m_groupRule->childRules().size());
+
+    if (index >= m_groupRule->childRules().size()) {
+        StringBuilder msg;
+        msg.appendString("the index ");
+        msg.appendString(String::fromInt(index));
+        msg.appendString(" is greater than the length of the rule list.");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INDEX_SIZE_ERR,
+                               msg.finalize()->utf8Data());
+        return;
+    }
+
+    m_groupRule->wrapperRemoveRule(index);
+
+    if (m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index]->setParentRule(nullptr);
+    }
+    m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
 }
 
 unsigned CSSGroupingRule::length() const

@@ -1084,6 +1084,9 @@ String* CSSStyleDeclaration::generateCSSText() const
         txt.appendString(m_cssValues[i].keyName());
         txt.appendString(": ");
         txt.appendString(m_cssValues[i].toString());
+        if (m_cssValues[i].flagImportant()) {
+            txt.appendString(" !important");
+        }
         txt.appendChar(';');
     }
     return txt.finalize();

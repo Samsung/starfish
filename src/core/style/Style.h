@@ -985,7 +985,7 @@ public:
         m_valueKind = kind;
     }
 
-    bool flagImportant()
+    bool flagImportant() const
     {
         return m_flagImportant;
     }
