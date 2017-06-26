@@ -1090,13 +1090,34 @@ void InlineBoxLayoutParentBox::removeDanglingSpace(LineFormattingContext* ctx)
     }
 }
 
+bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent()
+{
+    if (absolutePositionedBoxLayoutParentCnt() == 0) {
+        auto iter = m_boxes.begin();
+
+        while (iter != m_boxes.end()) {
+            FrameBox* box = *iter;
+            if (box->isInlineNonReplacedBox()) {
+                if (!box->asInlineNonReplacedBox()
+                         ->isAbsolutePositionedBoxLayoutParent()) {
+                    return false;
+                }
+            }
+
+            iter++;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes()
 {
     if (m_boxes.size() == 0) {
         return false;
     }
-
-    bool ret = true;
 
     auto iter = m_boxes.rbegin();
 
@@ -1106,17 +1127,16 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes()
             InlineNonReplacedBox* inrb = last->asInlineNonReplacedBox();
             if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
                 inrb->marginRight() == 0 &&
-                inrb->absolutePositionedBoxLayoutParentCnt() == 0) {
+                inrb->isAbsolutePositionedBoxLayoutParent()) {
                 iter++;
                 continue;
             }
         }
 
-        ret = false;
-        break;
+        return false;
     }
 
-    return ret;
+    return true;
 }
 
 LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(LayoutUnit start)
