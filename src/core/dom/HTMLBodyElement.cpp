@@ -43,9 +43,9 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (!newStyle->backgroundColor().isTransparent() ||
         !newStyle->backgroundImage()->equals(String::emptyString)) {
-        window()->browsingContext()->m_hasBodyElementBackground = true;
+        document()->browsingContext()->m_hasBodyElementBackground = true;
     } else {
-        window()->browsingContext()->m_hasBodyElementBackground = false;
+        document()->browsingContext()->m_hasBodyElementBackground = false;
     }
 
     if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {

@@ -518,6 +518,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | double end(unsigned long index) | Returns the time for the end of the range with the given index. |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
+|  | attribute | self | Returns window. |
 |  | attribute | document | Returns the document associated with window. |
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |

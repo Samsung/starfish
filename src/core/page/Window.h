@@ -62,7 +62,12 @@ public:
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("&&&document\n");
 #endif
-        return m_document;
+        return DocumentHoldable::document();
+    }
+
+    Window* self()
+    {
+        return this;
     }
 
     History* history()
@@ -113,7 +118,7 @@ public:
         return m_starFish;
     }
 
-    ScriptBindingInstance* scriptBindingInstance()
+    ScriptBindingInstance* scriptBindingInstance() const
     {
         return m_scriptBindingInstance;
     }

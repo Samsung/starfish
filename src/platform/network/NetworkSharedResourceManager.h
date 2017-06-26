@@ -28,7 +28,7 @@ class String;
 class NetworkSharedResourceManager {
 public:
     static NetworkSharedResourceManager* getInstance();
-    static void destroy();
+    static void close();
 
     CURLSH* curlShareHandle() const; // Do not free
     std::string cookieJarFileName() const;

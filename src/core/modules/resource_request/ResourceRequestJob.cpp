@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
 #include "platform/file/FileIO.h"
@@ -190,12 +191,12 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     res->m_status = 200;
 
     BlobURLStore store;
-    if (!StarFish::stringToBlobURLString(url, store)) {
+    if (!WebView::stringToBlobURLString(url, store)) {
         res->handleError(ResourceRequest::ERROR);
         return;
     }
 
-    if (!res->starFish()->isValidBlobURL(store)) {
+    if (!res->document()->webView()->isValidBlobURL(store)) {
         res->handleError(ResourceRequest::ERROR);
         return;
     }

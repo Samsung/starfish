@@ -121,7 +121,6 @@ protected:
     PlaybackState m_playbackState;
     HTMLMediaElement* m_container;
     MediaSource* m_activeMediaSource;
-    StarFish* m_starFish;
     unsigned long m_videoWidth, m_videoHeight;
     size_t m_currentTimeUpdateTimer;
 };

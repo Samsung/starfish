@@ -16,13 +16,14 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/page/BrowsingContext.h"
 #include "core/util/URL.h"
 
-#include "../page/WebView.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -57,29 +58,29 @@ ScriptBindingInstance* URL::scriptBindingInstance()
 String* URL::createObjectURL(Blob* blob)
 {
     BlobURLStore store;
-    if (blob->starFish()->isValidBlobURL(blob)) {
-        store = blob->starFish()->findBlobURL(blob);
+    if (blob->webView()->isValidBlobURL(blob)) {
+        store = blob->webView()->findBlobURL(blob);
     } else {
-        store = blob->starFish()->addBlobInBlobURLStore(blob);
+        store = blob->webView()->addBlobInBlobURLStore(blob);
     }
-    return StarFish::blobURLStoreToString(store, blob->starFish()
-                                                     ->platformWindow()
-                                                     ->webView()
-                                                     ->mainBrowsingContext()
-                                                     ->document()
-                                                     ->urlString());
+    return WebView::blobURLStoreToString(store, blob->scriptBindingInstance()
+                                                    ->ownerDocument()
+                                                    ->documentURI()
+                                                    ->urlString());
 }
 
-void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)
+void URL::revokeObjectURL(Document* document, String* blobURLRef)
 {
     BlobURLStore store;
-    if (StarFish::stringToBlobURLString(blobURLRef, store)) {
-        if (sf->isValidBlobURL(store)) {
-            sf->removeBlobFromBlobURLStore((Blob*)store.m_blob);
+    if (WebView::stringToBlobURLString(blobURLRef, store)) {
+        if (document->webView()->isValidBlobURL(store)) {
+            document->webView()->removeBlobFromBlobURLStore(
+                (Blob*)store.m_blob);
         }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        else if (sf->isValidMediaSourceBlobURL(store)) {
-            sf->removeMediaSourceFromBlobURLStore((MediaSource*)store.m_blob);
+        else if (document->webView()->isValidMediaSourceBlobURL(store)) {
+            document->webView()->removeMediaSourceFromBlobURLStore(
+                (MediaSource*)store.m_blob);
         }
 #endif
     }
@@ -89,14 +90,14 @@ void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)
 String* URL::createObjectURL(MediaSource* mediaSource)
 {
     BlobURLStore store;
-    if (mediaSource->starFish()->isValidMediaSourceBlobURL(mediaSource)) {
-        store = mediaSource->starFish()->findMediaSourceBlobURL(mediaSource);
+    if (mediaSource->webView()->isValidMediaSourceBlobURL(mediaSource)) {
+        store = mediaSource->webView()->findMediaSourceBlobURL(mediaSource);
     } else {
         store =
-            mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
+            mediaSource->webView()->addMediaSourceInBlobURLStore(mediaSource);
     }
-    return StarFish::blobURLStoreToString(store,
-                                          mediaSource->document()->urlString());
+    return WebView::blobURLStoreToString(store,
+                                         mediaSource->document()->urlString());
 }
 #endif
 

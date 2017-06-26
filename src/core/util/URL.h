@@ -30,7 +30,7 @@ public:
     URL(Window* window, String* url, String* baseURL);
     URL(ScriptBindingInstance* ins, String* url, String* baseURL);
 
-    static void revokeObjectURL(StarFish* sf, String* blobURLRef);
+    static void revokeObjectURL(Document* document, String* blobURLRef);
     static String* createObjectURL(Blob* blob);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     static String* createObjectURL(MediaSource* mediaSource);

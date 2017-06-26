@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/fileapi/Blob.h"
+#include "core/page/WebView.h"
 #include "core/dom/Document.h"
 
 namespace StarFish {
@@ -30,14 +31,14 @@ void Blob::addBlobToBlobURLStore()
 {
     STARFISH_ASSERT(!m_isEntryOfBlobURLStore);
     m_isEntryOfBlobURLStore = true;
-    STARFISH_ASSERT(!document()->starFish()->isValidBlobURL(this));
-    document()->starFish()->addBlobInBlobURLStore(this);
+    STARFISH_ASSERT(!document()->webView()->isValidBlobURL(this));
+    document()->webView()->addBlobInBlobURLStore(this);
 }
 
 void Blob::removeBlobFromBlobURLStore()
 {
-    STARFISH_ASSERT(document()->starFish()->isValidBlobURL(this));
-    document()->starFish()->removeBlobFromBlobURLStore(this);
+    STARFISH_ASSERT(document()->webView()->isValidBlobURL(this));
+    document()->webView()->removeBlobFromBlobURLStore(this);
 }
 
 Blob* Blob::slice(int64_t start)

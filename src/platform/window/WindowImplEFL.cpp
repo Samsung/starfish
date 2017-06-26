@@ -24,6 +24,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
@@ -485,7 +486,7 @@ PlatformWindow::~PlatformWindow()
 #endif
 }
 
-void BrowsingContext::setNeedsRenderingSlowCase()
+void WebView::setNeedsRenderingSlowCase()
 {
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
@@ -497,19 +498,20 @@ void BrowsingContext::setNeedsRenderingSlowCase()
     };
     id->m_data = starFish()->platformWindow();
 
-    ((WindowImplEFL*)this)->m_renderingIdlerData = id;
-    ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            IdlerData* id = (IdlerData*)data;
-            PlatformWindow* wnd = (PlatformWindow*)id->m_data;
-            StarFishEnterer enter(wnd->starFish());
-            id->m_fn(id->m_data);
-            ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
-            ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
-            GC_FREE(id);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        id);
+    ((WindowImplEFL*)starFish()->platformWindow())->m_renderingIdlerData = id;
+    ((WindowImplEFL*)starFish()->platformWindow())->m_renderingAnimator =
+        ecore_animator_add(
+            [](void* data) -> Eina_Bool {
+                IdlerData* id = (IdlerData*)data;
+                PlatformWindow* wnd = (PlatformWindow*)id->m_data;
+                StarFishEnterer enter(wnd->starFish());
+                id->m_fn(id->m_data);
+                ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
+                ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
+                GC_FREE(id);
+                return ECORE_CALLBACK_CANCEL;
+            },
+            id);
 }
 
 Canvas* WindowImplEFL::preparePainting(bool forPainting)

@@ -1161,7 +1161,7 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
     size_t curPos = 0;
     size_t endPos = curPos + value.length();
 
-    while (String::isSpaceOrNewline(value.charAt(curPos)) && curPos < endPos) {
+    while (curPos < endPos && String::isSpaceOrNewline(value.charAt(curPos))) {
         curPos++;
     }
 
@@ -1175,7 +1175,7 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
         curPos++;
     }
     size_t start = curPos;
-    while (value.charAt(curPos) != mark && curPos < endPos) {
+    while (curPos < endPos && value.charAt(curPos) != mark) {
         curPos++;
         len++;
     }
@@ -1184,8 +1184,8 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
             len--;
         }
         curPos++;
-        while (String::isSpaceOrNewline(value.charAt(curPos)) &&
-               curPos < endPos) {
+        while (curPos < endPos &&
+               String::isSpaceOrNewline(value.charAt(curPos))) {
             curPos++;
         }
     }

@@ -64,19 +64,6 @@ void ScriptBindingInstance::close()
 #endif
 }
 
-#if defined(STARFISH_ENABLE_TEST)
-static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
-                                    ValueRef* thisValue, size_t argc,
-                                    ValueRef** argv, bool isNewExpression)
-{
-    const char* hide = getenv("HIDE_WINDOW");
-    if ((hide && strlen(hide))) {
-        ::exit(0);
-    }
-    return ValueRef::createUndefined();
-}
-#endif
-
 static String* toBrowserStringForConsole(ExecutionStateRef* state,
                                          ValueRef* value)
 {
@@ -175,16 +162,6 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
     fnWindow();
 
     ownerWindow()->init(this, ownerWindow());
-
-#if defined(STARFISH_ENABLE_TEST)
-    globalObject->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("wptTestEnd")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "wptTestEnd"),
-                       wptTestEndFunction, 0, nullptr, true, false))),
-        false, false, true);
-#endif
 
     ObjectRef* console = ObjectRef::create(state);
 

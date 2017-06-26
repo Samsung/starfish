@@ -33,8 +33,13 @@ StarFish* DocumentHoldable::starFish() const
     return window()->starFish();
 }
 
-ScriptBindingInstance* DocumentHoldable::scriptBindingInstance()
+ScriptBindingInstance* DocumentHoldable::scriptBindingInstance() const
 {
     return document()->scriptBindingInstance();
+}
+
+WebView* DocumentHoldable::webView() const
+{
+    return window()->webView();
 }
 }

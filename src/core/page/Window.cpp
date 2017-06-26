@@ -20,9 +20,7 @@
 #include "core/page/Window.h"
 
 #include "binding/ScriptBindingInstance.h"
-#ifdef STARFISH_ENABLE_MULTIPAGE
 #include "core/dom/HTMLAnchorElement.h"
-#endif
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/Traverse.h"
@@ -70,8 +68,8 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_webapis(nullptr)
 #endif
 {
-    m_scriptBindingInstance =
-        new ScriptBindingInstance(starFish->scriptEngineInstance(), this);
+    m_scriptBindingInstance = new ScriptBindingInstance(
+        browsingContext->webView()->scriptEngineInstance(), this);
     initFlags();
 
     // TODO: use location to open a new document

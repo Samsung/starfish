@@ -59,6 +59,11 @@ public:
                                      bool attributeRemoved);
     virtual void didNodeAdopted();
 
+    BrowsingContext* browsingContenxt()
+    {
+        return m_browsingContenxt;
+    }
+
 private:
     BrowsingContext* m_browsingContenxt;
     void loadSrc();
