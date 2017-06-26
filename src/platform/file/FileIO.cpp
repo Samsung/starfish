@@ -142,7 +142,7 @@ public:
         close();
 
         String* newName =
-            PathResolver::matchLocation(String::fromUTF8(fileName));
+            PathResolver::matchLocation(String::fromUTF8(filePath));
 
         if (!newName) {
             return false;
