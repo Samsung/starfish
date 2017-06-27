@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/Node.h"
 #include "core/style/CSSParser.h"
@@ -71,7 +72,7 @@ void CSSStyleSheet::addStyleRule(std::pair<StyleRule*, ResourceURL*> rule)
 void CSSStyleSheet::addRule(StyleRuleBase* rule)
 {
     if (rule->isImportRule()) {
-        STARFISH_ASSERT(m_allRules.size() == 0);
+        STARFISH_ASSERT(m_childRules.size() == 0);
 
         StyleRuleImport* importRule = rule->asStyleRuleImport();
         m_importRules.push_back(importRule);
@@ -80,7 +81,7 @@ void CSSStyleSheet::addRule(StyleRuleBase* rule)
         return;
     }
 
-    m_allRules.push_back(rule);
+    m_childRules.push_back(rule);
 }
 
 ResourceURL* CSSStyleSheet::url()
@@ -226,9 +227,141 @@ CSSRuleList* CSSStyleSheet::cssRules()
     return m_ruleList;
 }
 
+bool CSSStyleSheet::wrapperInsertRule(StyleRuleBase* rule, unsigned index)
+{
+    // TODO: We need to check security issues.
+    STARFISH_ASSERT(index <= length());
+
+    if (index < m_importRules.size() ||
+        (index == m_importRules.size() && rule->isImportRule())) {
+        if (!rule->isImportRule()) {
+            return false;
+        }
+
+        StyleRuleImport* importRule = rule->asStyleRuleImport();
+        m_importRules.insert(m_importRules.begin() + index, importRule);
+        m_importRules[index]->setParentStyleSheet(this);
+        m_importRules[index]->requestStyleSheet();
+
+        return true;
+    }
+
+    if (rule->isImportRule()) {
+        return false;
+    }
+
+    index -= m_importRules.size();
+
+    {
+        // TODO: need to handle @namespace at-rule
+    }
+
+    m_childRules.insert(m_childRules.begin() + index, rule);
+    return true;
+}
+
+unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
+{
+    STARFISH_ASSERT(m_childRuleWrappers.empty() ||
+                    m_childRuleWrappers.size() == length());
+
+    if (index > length()) {
+        StringBuilder msg;
+        msg.appendString("The index provided (");
+        msg.appendString(String::fromInt(index));
+        msg.appendString(") is larger than the maximum index (");
+        msg.appendString(String::fromInt(length()));
+        msg.appendString(").");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INDEX_SIZE_ERR,
+                               msg.finalize()->utf8Data());
+    }
+
+    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    RefPtr<CSSToken> token = parser.makeToken(ruleString);
+
+    GCVector<StyleRuleBase*> rules;
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parser.parseStyleRule(token, rules,
+                          CSSParser::AllowedRulesType::AllowImportRules,
+                          &selectorListContainer);
+
+    if (rules.size() == 0) {
+        StringBuilder msg;
+        msg.appendString("Failed to parse the rule '");
+        msg.appendString(ruleString);
+        msg.appendString("'.");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::SYNTAX_ERR,
+                               msg.finalize()->utf8Data());
+    }
+
+    bool success = wrapperInsertRule(rules[0], index);
+    if (!success) {
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
+                               "Failed to insert the rule.");
+    }
+
+    m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index, nullptr);
+    return index;
+}
+
+bool CSSStyleSheet::wrapperDeleteRule(unsigned index)
+{
+    // TODO: We need to check security issues.
+    STARFISH_ASSERT(index < length());
+
+    if (index < m_importRules.size()) {
+        m_importRules[index]->clearParentStyleSheet();
+        m_importRules.erase(m_importRules.begin() + index);
+        return true;
+    }
+    index -= m_importRules.size();
+
+    {
+        // TODO: need to handle @namespace at-rule
+    }
+
+    m_childRules.erase(m_childRules.begin() + index);
+    return true;
+}
+
+void CSSStyleSheet::deleteRule(unsigned index)
+{
+    STARFISH_ASSERT(m_childRuleWrappers.empty() ||
+                    m_childRuleWrappers.size() == length());
+
+    if (index >= length()) {
+        StringBuilder msg;
+        msg.appendString("The index provided (");
+        msg.appendString(String::fromInt(index));
+        msg.appendString(") is larger than the maximum index (");
+        msg.appendString(String::fromInt(length() - 1));
+        msg.appendString(").");
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INDEX_SIZE_ERR,
+                               msg.finalize()->utf8Data());
+    }
+
+    bool success = wrapperDeleteRule(index);
+    if (!success) {
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_STATE_ERR,
+                               "Failed to delete rule");
+    }
+
+    if (!m_childRuleWrappers.empty()) {
+        if (m_childRuleWrappers[index]) {
+            m_childRuleWrappers[index]->setParentStyleSheet(nullptr);
+        }
+        m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
+    }
+}
+
 unsigned CSSStyleSheet::length() const
 {
-    return m_importRules.size() + m_allRules.size();
+    return m_importRules.size() + m_childRules.size();
 }
 
 StyleRuleBase* CSSStyleSheet::ruleAt(unsigned index) const
@@ -240,7 +373,7 @@ StyleRuleBase* CSSStyleSheet::ruleAt(unsigned index) const
     }
 
     index -= m_importRules.size();
-    return m_allRules[index];
+    return m_childRules[index];
 }
 
 CSSRule* CSSStyleSheet::item(unsigned index)

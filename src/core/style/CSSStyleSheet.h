@@ -69,7 +69,7 @@ public:
 
     GCVector<StyleRuleBase*>& allRules()
     {
-        return m_allRules;
+        return m_childRules;
     }
 
     StyleRuleImport* ownerRule()
@@ -108,14 +108,19 @@ public:
     CSSRule* item(unsigned index);
     StyleRuleBase* ruleAt(unsigned index) const;
 
+    bool wrapperInsertRule(StyleRuleBase* rule, unsigned index);
+    bool wrapperDeleteRule(unsigned index);
+
     CSSRuleList* cssRules();
+    unsigned insertRule(String* ruleString, unsigned index);
+    void deleteRule(unsigned index);
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
-    GCVector<StyleRuleBase*> m_allRules;
+    GCVector<StyleRuleBase*> m_childRules;
     Node* m_origin;
     GCVector<StyleRuleImport*> m_importRules;
     StyleRuleImport* m_ownerRule;
