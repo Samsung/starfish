@@ -133,6 +133,9 @@ public:
         cairo_scaled_font_glyph_extents(scaled_face, glyphs, glyph_count,
                                         &extents);
 
+        cairo_font_face_destroy(fontFace);
+        cairo_surface_destroy(surface);
+        cairo_destroy(cr);
         return extents.x_advance;
     }
 
