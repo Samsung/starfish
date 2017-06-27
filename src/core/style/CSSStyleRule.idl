@@ -21,7 +21,7 @@ interface CSSGroupingRule : CSSRule {
 
 // https://drafts.csswg.org/css-conditional-3/#cssconditionrule
 interface CSSConditionRule : CSSGroupingRule {
-    [Unimplemented] attribute CSSOMString conditionText;
+    attribute CSSOMString conditionText;
 };
 
 // https://drafts.csswg.org/css-conditional-3/#cssmediarule

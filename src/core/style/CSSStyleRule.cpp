@@ -254,8 +254,11 @@ String* CSSMediaRule::cssText()
 
 String* CSSMediaRule::conditionText() const
 {
-    // TODO : implement
-    return String::emptyString;
+    if (!mediaQuerySet()) {
+        return String::emptyString;
+    }
+
+    return mediaQuerySet()->mediaText();
 }
 
 // MediaList* CSSMediaRule::media()

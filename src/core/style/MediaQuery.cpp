@@ -79,7 +79,6 @@ MediaQuery::MediaQuery(const MediaQuery& o)
 String* MediaQuery::serialize() const
 {
     StringBuilder result;
-    ;
     switch (m_restrictor) {
     case MediaQuery::Only:
         result.appendString("only ");
@@ -96,12 +95,8 @@ String* MediaQuery::serialize() const
         return result.finalize();
     }
 
-    if (!m_mediaType->equals(String::createASCIIString("all")) ||
-        m_restrictor != None) {
-        result.appendString(m_mediaType);
-        result.appendString(" and ");
-    }
-
+    result.appendString(m_mediaType);
+    result.appendString(" and ");
     result.appendString(m_expressions.at(0)->serialize());
     for (size_t i = 1; i < m_expressions.size(); ++i) {
         result.appendString(String::createASCIIString(" and "));
