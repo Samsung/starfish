@@ -1,0 +1,9 @@
+// https://drafts.csswg.org/cssom-view/#mediaquerylist
+
+interface MediaQueryList : EventTarget {
+    readonly attribute CSSOMString media;
+    readonly attribute boolean matches;
+    [Unimplemented] void addListener(EventListener? listener);
+    [Unimplemented] void removeListener(EventListener? listener);
+    [Unimplemented] attribute EventHandler onchange;
+};

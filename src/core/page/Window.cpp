@@ -34,6 +34,8 @@
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
+#include "core/style/CSSParser.h"
+#include "core/style/MediaQueryList.h"
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/WebApis.h"
@@ -306,6 +308,21 @@ CSSStyleDeclaration* Window::getComputedStyle(Element* element,
                                               String* pseudoElt)
 {
     return element->getComputedStyle();
+}
+
+MediaQueryList* Window::matchMedia(String* query)
+{
+    if (!document()) {
+        return nullptr;
+    }
+
+    CSSParser parser(document());
+    RefPtr<CSSToken> token = parser.makeToken(query);
+    MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
+    MediaQueryEvaluator* mediaQueryEvaluator = const_cast<MediaQueryEvaluator*>(
+        &document()->styleResolver().mediaQueryEvaluator());
+    return new MediaQueryList(scriptBindingInstance(), mediaQuerySet,
+                              mediaQueryEvaluator);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object

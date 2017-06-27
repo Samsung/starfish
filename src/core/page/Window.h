@@ -25,14 +25,15 @@ class Document;
 class History;
 class HTMLCollection;
 class Location;
+class MediaQueryList;
 class Navigator;
-class WebView;
+class PlatformWindow;
+class ResourceURL;
+class Screen;
 class ScriptBindingInstance;
 class StorageNamespace;
-class ResourceURL;
 class WebApis;
-class PlatformWindow;
-class Screen;
+class WebView;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -129,6 +130,8 @@ public:
 
     CSSStyleDeclaration* getComputedStyle(Element* element);
     CSSStyleDeclaration* getComputedStyle(Element* element, String* pseudoElt);
+
+    MediaQueryList* matchMedia(String* query);
 
     // The viewport width and height are same as the window size for wearable
     // widget.
