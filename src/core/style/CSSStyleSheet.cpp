@@ -59,6 +59,15 @@ private:
     CSSStyleSheet* m_styleSheet;
 };
 
+CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
+    : StyleSheet()
+    , m_sourceString(str)
+    , m_origin(origin)
+    , m_ownerRule(nullptr)
+    , m_ruleList(nullptr)
+{
+}
+
 ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
 {
     return origin()->scriptBindingInstance();
@@ -82,6 +91,11 @@ void CSSStyleSheet::addRule(StyleRuleBase* rule)
     }
 
     m_childRules.push_back(rule);
+}
+
+void CSSStyleSheet::setOwnerRule(CSSRule* ownerRule)
+{
+    m_ownerRule = ownerRule;
 }
 
 ResourceURL* CSSStyleSheet::url()
@@ -156,7 +170,7 @@ static bool compareSpecificity(std::pair<StyleRule*, ResourceURL*> r1,
            specificity(r2.first->selectorList());
 }
 
-CSSStyleSheet* CSSStyleSheet::parentStyleSheet()
+CSSStyleSheet* CSSStyleSheet::parentStyleSheet() const
 {
     return m_ownerRule ? m_ownerRule->parentStyleSheet() : nullptr;
 }
@@ -177,27 +191,40 @@ bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
     return evaluator.eval(mediaQueries);
 }
 
-void CSSStyleSheet::collectRulesForImportedSheet()
+void CSSStyleSheet::collectRulesFromImportedSheet(
+    GCVector<StyleRuleImport*>& rules)
 {
-    StyleRuleImport* importRule = ownerRule();
-
-    if (matchesMediaQueries(
-            origin()->document()->styleResolver().mediaQueryEvaluator(),
-            importRule->mediaQuerySet())) {
-        collectStyleRules(allRules(), importRule->styleSheet()->url());
+    for (unsigned i = 0; i < rules.size(); i++) {
+        if (rules[i]->isLoading()) {
+            continue;
+        }
+        if (matchesMediaQueries(
+                origin()->document()->styleResolver().mediaQueryEvaluator(),
+                rules[i]->mediaQuerySet())) {
+            if (rules[i]->styleSheet()->importRules().size() > 0) {
+                collectRulesFromImportedSheet(
+                    rules[i]->styleSheet()->importRules());
+            }
+            if (rules[i]->styleSheet()->childRules().size() > 0) {
+                ResourceURL* url = new ResourceURL(
+                    rules[i]->href(),
+                    rules[i]->parentStyleSheet()->url()->urlString());
+                collectStyleRules(rules[i]->styleSheet()->childRules(), url);
+            }
+        }
     }
 }
 
 void CSSStyleSheet::collectStyleRules(GCVector<StyleRuleBase*>& rules,
                                       ResourceURL* url)
 {
-    auto resolver = origin()->document()->styleResolver();
     auto iter = rules.begin();
     while (iter != rules.end()) {
         if ((*iter)->isStyleRule()) {
             m_styleRules.push_back(std::make_pair((StyleRule*)(*iter), url));
         } else if ((*iter)->isMediaRule()) {
             StyleRuleMedia* media = (StyleRuleMedia*)(*iter);
+            auto resolver = origin()->document()->styleResolver();
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
             if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
@@ -213,6 +240,11 @@ String* CSSStyleSheet::href() const
     if (m_origin->isHTMLLinkElement()) {
         STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
         return m_origin->asHTMLLinkElement()->href();
+    } else if (m_ownerRule) {
+        CSSImportRule* rule = m_ownerRule->asCSSImportRule();
+        ResourceURL* url = new ResourceURL(
+            rule->href(), rule->parentStyleSheet()->url()->urlString());
+        return url->urlString();
     }
     return String::emptyString;
 }

@@ -306,9 +306,17 @@ String* CSSImportRule::href() const
 //    return nullptr;
 // }
 
-CSSStyleSheet* CSSImportRule::styleSheet() const
+CSSStyleSheet* CSSImportRule::styleSheet()
 {
-    // TODO : implement
-    return nullptr;
+    if (!m_importRule->styleSheet()) {
+        return nullptr;
+    }
+
+    if (!m_styleSheetWrapper) {
+        m_styleSheetWrapper = m_importRule->styleSheet();
+        m_styleSheetWrapper->setOwnerRule(this);
+    }
+
+    return m_styleSheetWrapper;
 }
 }

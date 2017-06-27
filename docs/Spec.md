@@ -109,6 +109,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
 | [CSSImportRule](https://drafts.csswg.org/cssom/#the-cssimportrule-interface) | interface | CSSImportRule | Represents an @import at-rule. |
 |  | attribute | href | Returns the URL specified by the @import at-rule. |
+|  | attribute | styleSheet | Returns a CSS style sheet downloaded by @import at-rule. |
 | [CSSGroupingRule](https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface) | interface | CSSGroupingRule | Represents an at-rule that contains other rules nested inside itself. |
 |  | attribute | cssRules | Returns a CSSRuleList object for the child CSS rules. |
 |  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns the result of invoking insert a CSS rule rule into the child CSS rules at index. |
@@ -116,7 +117,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
-| | attribute | CSSRuleList cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
+| | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
+| | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
 | | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
 | | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
 | [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
@@ -513,6 +515,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | Interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
 | | attribute | type | Specifies the style sheet language for this style sheet. |
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
+| | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
 | [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | Interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
 | | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |

@@ -18,13 +18,11 @@
 #define __StarFishCSSStyleSheet__
 
 #include "core/style/StyleSheet.h"
-
 namespace StarFish {
 
-// class CSSRule;
+class CSSImportRule;
+class CSSRule;
 class CSSRuleList;
-// class CSSStyleRule;
-// class CSSStyleRuleImport;
 class StyleRuleBase;
 class StyleRule;
 class StyleRuleImport;
@@ -36,16 +34,7 @@ class URL;
 
 class CSSStyleSheet : public StyleSheet {
 public:
-    CSSStyleSheet(Node* origin, String* str,
-                  StyleRuleImport* ownerRule = nullptr)
-        : StyleSheet()
-        , m_sourceString(str)
-        , m_origin(origin)
-        , m_ownerRule(ownerRule)
-        , m_ruleList(nullptr)
-    {
-    }
-
+    CSSStyleSheet(Node* origin, String* str);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSStyleSheet() const override;
@@ -67,12 +56,17 @@ public:
         return m_styleRules;
     }
 
-    GCVector<StyleRuleBase*>& allRules()
+    GCVector<StyleRuleImport*>& importRules()
+    {
+        return m_importRules;
+    }
+
+    GCVector<StyleRuleBase*>& childRules()
     {
         return m_childRules;
     }
 
-    StyleRuleImport* ownerRule()
+    CSSRule* ownerRule()
     {
         return m_ownerRule;
     }
@@ -82,13 +76,12 @@ public:
         m_ownerRule = nullptr;
     }
 
-    CSSStyleSheet* parentStyleSheet();
-
+    void setOwnerRule(CSSRule* ownerRule);
+    CSSStyleSheet* parentStyleSheet() const;
     void sortStyleRulesBySpecificity();
-
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres);
-    void collectRulesForImportedSheet();
+    void collectRulesFromImportedSheet(GCVector<StyleRuleImport*>& rules);
     void collectStyleRules(GCVector<StyleRuleBase*>& rules, ResourceURL* url);
 
     /* DOM APIs */
@@ -119,13 +112,13 @@ protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
-    GCVector<StyleRuleBase*> m_childRules;
     Node* m_origin;
-    GCVector<StyleRuleImport*> m_importRules;
-    StyleRuleImport* m_ownerRule;
+    CSSRule* m_ownerRule;
     CSSRuleList* m_ruleList;
 
+    GCVector<StyleRuleBase*> m_childRules;
+    GCVector<StyleRuleImport*> m_importRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<CSSRule*> m_childRuleWrappers;
 };
 
