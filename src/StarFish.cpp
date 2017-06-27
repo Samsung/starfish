@@ -320,6 +320,8 @@ void StarFish::loadHTMLDocument(String* filePath)
     std::string path;
     if (filePath->startsWith("http")) {
         path = filePath->utf8Data();
+    } else if (filePath->startsWith("about")) {
+        path = filePath->utf8Data();
     } else {
         std::string d = filePath->utf8Data();
         if (d.length() && d[0] == '/') {

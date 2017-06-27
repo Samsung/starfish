@@ -71,6 +71,17 @@ public:
 private:
     ResourceRequest* m_orgProxy;
 };
+
+class AboutURLResourceRequestJobDelegate : public gc,
+                                           public ResourceRequestJobInterface {
+public:
+    static void worker(ResourceRequest* res, String* filePath);
+    AboutURLResourceRequestJobDelegate(ResourceRequest* proxy);
+    virtual void send(String* body = String::emptyString);
+
+private:
+    ResourceRequest* m_orgProxy;
+};
 }
 
 #endif

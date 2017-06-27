@@ -42,6 +42,24 @@ String* HTMLIFrameElement::src()
     return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
 }
 
+uint32_t HTMLIFrameElement::frameWidth()
+{
+    String* v = width();
+    if (v->length()) {
+        return String::parseInt(v);
+    }
+    return STARFISH_DEFAULT_IFRAME_WIDTH;
+}
+
+uint32_t HTMLIFrameElement::frameHeight()
+{
+    String* v = height();
+    if (v->length()) {
+        return String::parseInt(v);
+    }
+    return STARFISH_DEFAULT_IFRAME_HEIGHT;
+}
+
 String* HTMLIFrameElement::width()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_width);
@@ -95,13 +113,22 @@ void HTMLIFrameElement::didNodeAdopted()
 void HTMLIFrameElement::loadSrc()
 {
     unloadSrc();
+    m_browsingContext = BrowsingContext::create(this);
+    String* s = src();
+    if (s->length()) {
+        m_browsingContext->navigateAsync(
+            new ResourceURL(s, document()->documentURI()->baseURI()));
+    } else {
+        m_browsingContext->navigateAsync(
+            new ResourceURL(String::createASCIIString("about:blank")));
+    }
 }
 
 void HTMLIFrameElement::unloadSrc()
 {
-    if (m_browsingContenxt) {
-        m_browsingContenxt->close();
-        m_browsingContenxt = nullptr;
+    if (m_browsingContext) {
+        m_browsingContext->close();
+        m_browsingContext = nullptr;
     }
 }
 }

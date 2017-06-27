@@ -273,6 +273,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
+| [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
+|  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
+|  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
+|  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |

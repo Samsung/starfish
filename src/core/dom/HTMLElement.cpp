@@ -24,6 +24,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -103,7 +104,7 @@ bool HTMLElement::supportsFocus()
 
 LayoutRect HTMLElement::offsetRect()
 {
-    window()->browsingContext()->layoutIfNeeds();
+    window()->browsingContext()->webView()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();

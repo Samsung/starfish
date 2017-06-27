@@ -27,6 +27,7 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 {
     IntrinsicSize siz = intrinsicSize();
     IntrinsicSizeUsedInLayout result;
+    result.m_hasAspectRatio = siz.m_hasAspectRatio;
     String* widthString = node()->asElement()->getAttributeOrEmpty(
         node()->starFish()->staticStrings()->m_width);
     String* heightString = node()->asElement()->getAttributeOrEmpty(
@@ -142,7 +143,6 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 void FrameReplaced::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
     Length width = style()->width();
     Length height = style()->height();
     Length left = style()->left();
@@ -155,6 +155,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
         LayoutUnit parentContentWidth =
             ctx.containingFrameBlockBox(this)->contentWidth();
         LayoutUnit intrinsicWidth, intrinsicHeight;
+        bool hasAspectRatio;
         computeBorderMarginPadding(parentContentWidth);
 
         if (style()->position() == AbsolutePositionValue) {
@@ -163,7 +164,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
             Length parentContentHeight = Length(Length::Fixed, parentHeight);
             computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
-                                 parentContentWidth, parentContentHeight);
+                                 hasAspectRatio, parentContentWidth,
+                                 parentContentHeight);
 
             computeBorderMarginPadding(cb->contentWidth());
 
@@ -197,11 +199,22 @@ void FrameReplaced::layout(LayoutContext& ctx,
                                         parentContentWidth, parentHeight);
             } else if (width.isSpecified() && height.isAuto()) {
                 LayoutUnit w = width.specifiedValue(cb->contentWidth());
-                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
+                LayoutUnit h;
+                if (hasAspectRatio) {
+                    h = w * (intrinsicHeight / intrinsicWidth);
+                } else {
+                    h = intrinsicHeight;
+                }
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
             } else if (width.isAuto() && height.isSpecified()) {
                 LayoutUnit h = height.specifiedValue(cb->contentHeight());
-                LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                LayoutUnit w;
+
+                if (hasAspectRatio) {
+                    w = h * (intrinsicWidth / intrinsicHeight);
+                } else {
+                    w = intrinsicWidth;
+                }
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
             } else {
                 STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
@@ -290,7 +303,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 parentContentHeight = Length(Length::Auto);
             }
             computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
-                                 parentContentWidth, parentContentHeight);
+                                 hasAspectRatio, parentContentWidth,
+                                 parentContentHeight);
 
             if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
                 (width.isAuto() || height.isAuto())) {
@@ -304,14 +318,26 @@ void FrameReplaced::layout(LayoutContext& ctx,
                        style()->height().isAuto()) {
                 LayoutUnit w = style()->width().specifiedValue(
                     ctx.parentContentWidth(this));
-                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
+                LayoutUnit h;
+                if (hasAspectRatio) {
+                    h = w * (intrinsicHeight / intrinsicWidth);
+                } else {
+                    h = intrinsicHeight;
+                }
+
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight,
                                         true, parentHasFixedHeight);
             } else if (style()->width().isAuto() &&
                        style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
                     LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                    LayoutUnit w;
+                    if (hasAspectRatio) {
+                        w = h * (intrinsicWidth / intrinsicHeight);
+                    } else {
+                        w = intrinsicWidth;
+                    }
+
                     applyMinMaxValueIfNeeds(w, h, parentContentWidth,
                                             parentHeight, true,
                                             parentHasFixedHeight);
@@ -320,7 +346,12 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     if (ctx.parentHasFixedHeight(this)) {
                         LayoutUnit h = style()->height().percent() *
                                        ctx.parentFixedHeight(this);
-                        LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                        LayoutUnit w;
+                        if (hasAspectRatio) {
+                            w = h * (intrinsicWidth / intrinsicHeight);
+                        } else {
+                            w = intrinsicWidth;
+                        }
                         applyMinMaxValueIfNeeds(w, h, parentContentWidth,
                                                 parentHeight);
                     } else {
@@ -343,7 +374,13 @@ void FrameReplaced::layout(LayoutContext& ctx,
                             w, height.percent() * ctx.parentFixedHeight(this),
                             parentContentWidth, parentHeight);
                     } else {
-                        LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
+                        LayoutUnit h;
+                        if (hasAspectRatio) {
+                            h = w * (intrinsicHeight / intrinsicWidth);
+                        } else {
+                            h = intrinsicHeight;
+                        }
+
                         applyMinMaxValueIfNeeds(w, h, parentContentWidth,
                                                 parentHeight, true, false);
                     }
@@ -393,10 +430,12 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
 void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
                                          LayoutUnit& intrinsicHeight,
+                                         bool& hasAspectRatio,
                                          LayoutUnit parentContentWidth,
                                          Length parentContentHeight)
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
+    hasAspectRatio = s.m_hasAspectRatio;
     auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
     auto b = s.m_intrinsicContentSize;
     if (a.first.isAuto() && a.second.isAuto()) {
@@ -404,7 +443,11 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
         intrinsicHeight = s.m_intrinsicContentSize.height();
     } else if (a.first.isSpecified() && a.second.isAuto()) {
         intrinsicWidth = a.first.specifiedValue(parentContentWidth);
-        intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+        if (s.m_hasAspectRatio) {
+            intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+        } else {
+            intrinsicHeight = b.height();
+        }
     } else if (a.first.isSpecified() && a.second.isFixed()) {
         intrinsicWidth = a.first.specifiedValue(parentContentWidth);
         intrinsicHeight = a.second.fixed();
@@ -415,23 +458,35 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
                 a.second.specifiedValue(parentContentHeight.fixed());
         } else {
             intrinsicWidth = a.first.specifiedValue(parentContentWidth);
-            intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+            if (s.m_hasAspectRatio) {
+                intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+            } else {
+                intrinsicHeight = b.height();
+            }
         }
     } else if (a.first.isAuto() && a.second.isFixed()) {
         intrinsicHeight = a.second.fixed();
-        intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+        if (s.m_hasAspectRatio) {
+            intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+        } else {
+            intrinsicWidth = b.width();
+        }
     } else {
         STARFISH_ASSERT(a.first.isAuto() && a.second.isPercent());
         if (parentContentHeight.isFixed()) {
             intrinsicHeight =
                 a.second.specifiedValue(parentContentHeight.fixed());
-            intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+            if (s.m_hasAspectRatio) {
+                intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+            } else {
+                intrinsicWidth = b.width();
+            }
         } else {
             intrinsicWidth = s.m_intrinsicContentSize.width();
             intrinsicHeight = s.m_intrinsicContentSize.height();
         }
-        intrinsicHeight = a.second.fixed();
-        intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+        // intrinsicHeight = a.second.fixed();
+        // intrinsicWidth = intrinsicHeight * (b.width() / b.height());
     }
 }
 

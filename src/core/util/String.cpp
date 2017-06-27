@@ -1499,6 +1499,7 @@ int String::parseInt(String* s)
         &ret);
     return ret;
 }
+
 float String::parseFloat(String* s)
 {
     float ret;

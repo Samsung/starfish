@@ -258,7 +258,8 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
     ecore_animator_add(
         [](void* user_data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-            wnd->webView()->mainBrowsingContext()->setNeedsLayout();
+            wnd->webView()->mainBrowsingContext()->window()->resize(
+                wnd->width(), wnd->height());
             return ECORE_CALLBACK_CANCEL;
         },
         user_data);
@@ -581,7 +582,7 @@ void WindowImplEFL::clearResources()
         GC_FREE(m_renderingIdlerData);
     }
 
-    webView()->mainBrowsingContext()->clearStackingContext(false);
+    webView()->clearStackingContext(false);
 
     m_objectList.clear();
     m_objectList.shrink_to_fit();

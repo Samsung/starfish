@@ -34,6 +34,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -1351,8 +1352,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     }
     CSSStyleDeclaration* d = new ComputedStyleCSSStyleDeclaration(e);
 
-    // TODO: change below code to resolve DOM style
-    window()->browsingContext()->layoutIfNeeds();
+    window()->browsingContext()->webView()->layoutIfNeeds();
 
     ComputedStyle* style = m_style;
     if (style == nullptr) {

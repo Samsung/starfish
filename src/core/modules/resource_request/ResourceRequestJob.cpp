@@ -37,11 +37,12 @@ ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
         return new DataURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isBlobURL()) {
         return new BlobURLResourceRequestJobDelegate(proxy);
-    } else if (proxy->url()->isNetworkURL()) {
+    } else if (proxy->url()->isAboutURL()) {
+        return new AboutURLResourceRequestJobDelegate(proxy);
+    } else {
+        STARFISH_ASSERT(proxy->url()->isNetworkURL());
         return new NetworkURLResourceRequestJobDelegate(proxy);
     }
-    STARFISH_ASSERT_NOT_REACHED();
-    return nullptr;
 }
 
 FileURLResourceRequestJobDelegate::FileURLResourceRequestJobDelegate(
@@ -155,6 +156,46 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         res->m_response.push_back(utf8Data[i]);
     }
 
+    res->handleResponseEOF();
+}
+
+AboutURLResourceRequestJobDelegate::AboutURLResourceRequestJobDelegate(
+    ResourceRequest* proxy)
+    : m_orgProxy(proxy)
+{
+}
+
+void AboutURLResourceRequestJobDelegate::send(String* body)
+{
+    STARFISH_ASSERT(m_orgProxy->m_url->isAboutURL());
+    // this area doesn't require lock.
+    if (m_orgProxy->m_isSync) {
+        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+    } else {
+        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+            m_orgProxy->document()->browsingContext(),
+            [](size_t handle, void* data, void* data1) {
+                ResourceRequest* request = (ResourceRequest*)data;
+                request->removeIdlerHandle(handle);
+                AboutURLResourceRequestJobDelegate::worker(
+                    (ResourceRequest*)data, (String*)data1);
+            },
+            m_orgProxy, m_orgProxy->m_url->urlString());
+        m_orgProxy->pushIdlerHandle(handle);
+    }
+}
+
+void AboutURLResourceRequestJobDelegate::worker(ResourceRequest* res,
+                                                String* url)
+{
+    if (res->url()->pathname()->equalsWithoutCase("blank")) {
+        res->m_status = 200;
+    } else {
+        res->m_status = 404;
+    }
+
+    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ResourceRequest::LOADING, true);
     res->handleResponseEOF();
 }
 

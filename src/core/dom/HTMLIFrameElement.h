@@ -30,7 +30,7 @@ class HTMLIFrameElement : public HTMLElement {
 public:
     HTMLIFrameElement(Document* document)
         : HTMLElement(document)
-        , m_browsingContenxt(nullptr)
+        , m_browsingContext(nullptr)
     {
     }
 
@@ -46,6 +46,9 @@ public:
     void setSrc(String* src);
     String* src();
 
+    uint32_t frameWidth();
+    uint32_t frameHeight();
+
     String* width();
     void setWidth(String* width);
 
@@ -59,13 +62,13 @@ public:
                                      bool attributeRemoved);
     virtual void didNodeAdopted();
 
-    BrowsingContext* browsingContenxt()
+    BrowsingContext* browsingContext()
     {
-        return m_browsingContenxt;
+        return m_browsingContext;
     }
 
 private:
-    BrowsingContext* m_browsingContenxt;
+    BrowsingContext* m_browsingContext;
     void loadSrc();
     void unloadSrc();
 };

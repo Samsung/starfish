@@ -87,15 +87,13 @@ void HTMLVideoElement::setHeight(uint32_t height)
 
 String* HTMLVideoElement::poster()
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return String::emptyString;
 }
 
 void HTMLVideoElement::setPoster(String* poster)
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 }
 

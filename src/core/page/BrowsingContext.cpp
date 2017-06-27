@@ -57,10 +57,21 @@ BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)
     return new BrowsingContext(starFish, webView);
 }
 
-BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
+BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
+{
+    return new BrowsingContext(
+        sourceElement->starFish(),
+        sourceElement->document()->browsingContext()->webView(), sourceElement);
+}
+
+BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
+                                 HTMLIFrameElement* source)
     : StarFishHoldable(starFish)
     , m_webView(webView)
     , m_window(nullptr)
+    , m_parentBrowsingContext(source ? source->document()->browsingContext()
+                                     : nullptr)
+    , m_sourceElement(source)
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -70,7 +81,6 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView)
     , m_altKeyDown(0)
     , m_metaKeyDown(0)
 {
-    m_parentBrowsingContext = nullptr;
     initFlags();
 }
 
@@ -97,7 +107,26 @@ void BrowsingContext::navigate(ResourceURL* url)
     StarFishEnterer enter(m_starFish);
 
     // TODO: Use location to open a new document
-    m_window = Window::create(m_starFish, this, url);
+    if (isMainBrowsingContext()) {
+        m_window = Window::create(m_starFish, this, url,
+                                  starFish()->platformWindow()->width(),
+                                  starFish()->platformWindow()->height());
+    } else {
+        if (m_sourceElement->frame()) {
+            m_window = Window::create(m_starFish, this, url,
+                                      (uint32_t)m_sourceElement->frame()
+                                          ->asFrameBox()
+                                          ->contentWidth(),
+                                      (uint32_t)m_sourceElement->frame()
+                                          ->asFrameBox()
+                                          ->contentHeight());
+        } else {
+            m_window = Window::create(m_starFish, this, url,
+                                      STARFISH_DEFAULT_IFRAME_WIDTH,
+                                      STARFISH_DEFAULT_IFRAME_HEIGHT);
+        }
+    }
+
     m_window->document()->open();
 }
 
@@ -121,7 +150,7 @@ ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
     return window()->scriptBindingInstance();
 }
 
-void BrowsingContext::layoutIfNeeds()
+bool BrowsingContext::layoutIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
@@ -177,23 +206,27 @@ void BrowsingContext::layoutIfNeeds()
 
     if (m_needsFrameTreeBuild) {
         if (document()->frame()) {
-            clearStackingContext(true);
-
+            webView()->clearStackingContext(true);
 // create frame tree
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("create frame tree");
 #endif
             FrameTreeBuilder::buildFrameTree(document());
+            m_needsLayout = true;
             m_needsFrameTreeBuild = false;
+
+            if (!isMainBrowsingContext()) {
+                document()->frame()->setLayoutParent(m_sourceElement->frame());
+            }
         }
     }
 
     if (m_needsLayout) {
+        webView()->clearStackingContext(true);
 // lay out frame tree
 #ifdef STARFISH_ENABLE_TIMER
         ProfilerTimer t("lay out frame tree");
 #endif
-        clearStackingContext(true);
 
         LayoutContext ctx(starFish(), document()
                                           ->frame()
@@ -214,32 +247,10 @@ void BrowsingContext::layoutIfNeeds()
                                         Frame::LayoutWantToResolve::ResolveAll);
         }
 #endif
-        {
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer t("computeStackingContextProperties");
-#endif
-            document()->frame()->establishesStackingContextIfNeeds();
-            if (document()->frame()->firstChild()) {
-                webView()->m_rootStackingContext = document()
-                                                       ->frame()
-                                                       ->firstChild()
-                                                       ->asFrameBox()
-                                                       ->stackingContext();
-                webView()
-                    ->m_rootStackingContext->computeStackingContextProperties();
-            }
-
-            // STARFISH_LOG_INFO("computeStackingContextProperties end composite
-            // %d\n", (int)m_rootStackingContext->needsOwnBuffer());
-        }
         m_needsLayout = false;
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(document());
-        }
-#endif
+        return true;
     }
+    return false;
 }
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
@@ -318,40 +329,9 @@ void BrowsingContext::iterateChildContext(
                                false);
 
     for (size_t i = 0; i < col.size(); i++) {
-        if (col[i]->asHTMLIFrameElement()->browsingContenxt()) {
-            fn(col[i]->asHTMLIFrameElement()->browsingContenxt());
+        if (col[i]->asHTMLIFrameElement()->browsingContext()) {
+            fn(col[i]->asHTMLIFrameElement()->browsingContext());
         }
-    }
-}
-
-void BrowsingContext::clearStackingContext(bool backupBuffer)
-{
-    if (webView()->m_rootStackingContext) {
-        StackingContext* ctx = webView()->m_rootStackingContext;
-        std::function<void(StackingContext*)> clearSC =
-            [&](StackingContext* ctx) {
-                if (backupBuffer) {
-                    if (ctx->needsOwnBuffer() && ctx->buffer()) {
-                        webView()
-                            ->m_backStackingContextBufferUpWhileReCompsite
-                            .push_back(ctx->buffer());
-                    }
-                    ctx->owner()->clearStackingContextIfNeeds(false);
-                } else {
-                    ctx->owner()->clearStackingContextIfNeeds();
-                }
-                auto iter = ctx->childContexts().begin();
-                while (iter != ctx->childContexts().end()) {
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        clearSC(*iter2);
-                        iter2++;
-                    }
-                    iter++;
-                }
-            };
-        clearSC(ctx);
-        webView()->m_rootStackingContext = nullptr;
     }
 }
 
@@ -385,20 +365,28 @@ void BrowsingContext::close()
 
     m_isActive = false;
 
-    m_starFish->timer()->clear(this);
-    m_starFish->platformWindow()->clearResources();
-    m_starFish->messageLoop()->clearPendingIdlers(this);
+    if (isMainBrowsingContext()) {
+        m_starFish->timer()->clear(nullptr);
+        m_starFish->platformWindow()->clearResources();
+        m_starFish->messageLoop()->clearPendingIdlers(nullptr);
+
+        m_webView->initRenderingFlags();
+    } else {
+        m_starFish->timer()->clear(this);
+        m_starFish->messageLoop()->clearPendingIdlers(this);
+    }
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
 {
     m_needsStyleRecalcForWholeDocument = true;
     setNeedsRendering();
+    registerNeedsLayoutInWebView();
 }
 
 Node* BrowsingContext::hitTest(float x, float y)
 {
-    layoutIfNeeds();
+    webView()->layoutIfNeeds();
 
     if (document() && document()->frame()) {
         Frame* frame = document()->frame()->hitTest(x, y, HitTestStageEnd);
@@ -548,11 +536,27 @@ void BrowsingContext::dispatchTouchEvent(float x, float y,
         return;
     }
 
-    if (kind == PlatformWindow::TouchEventStart) { // or MouseEventDown
-        Node* node = hitTest(x, y);
-        if (!node) {
+    Node* node = hitTest(x, y);
+    if (!node) {
+        return;
+    }
+
+    if (node->isHTMLIFrameElement()) {
+        auto iframe = node->asHTMLIFrameElement();
+        if (iframe->browsingContext() && iframe->frame()) {
+            auto absPoint = iframe->frame()->asFrameBox()->absolutePoint(
+                document()->frame()->asFrameBox());
+
+            x -= absPoint.x();
+            y -= absPoint.y();
+
+            iframe->browsingContext()->dispatchTouchEvent(x, y, kind, isMobile);
+
             return;
         }
+    }
+
+    if (kind == PlatformWindow::TouchEventStart) { // or MouseEventDown
         m_touchDownPoint = Unit::Location(x, y);
         setActiveNode(node);
         setFocusedNode(node);
@@ -579,10 +583,6 @@ void BrowsingContext::dispatchTouchEvent(float x, float y,
             ((abs(m_touchDownPoint.x() - x) > 30) ||
              (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
-        }
-        Node* node = hitTest(x, y);
-        if (!node) {
-            return;
         }
 
         Node* t = node->nearestParentElement();
@@ -631,11 +631,6 @@ void BrowsingContext::dispatchTouchEvent(float x, float y,
     } else {
         STARFISH_ASSERT(kind ==
                         PlatformWindow::TouchEventEnd); // or MouseEventUp
-
-        Node* node = hitTest(x, y);
-        if (!node) {
-            return;
-        }
 
         Node* t = node->nearestParentElement();
         bool check = false;
@@ -794,5 +789,15 @@ void BrowsingContext::setNeedsComposite()
 void BrowsingContext::setNeedsRendering()
 {
     m_webView->setNeedsRendering();
+}
+
+void BrowsingContext::registerNeedsLayoutInWebView()
+{
+    if (isMainBrowsingContext())
+        return;
+    auto& v = m_webView->m_browsingContextsNeedsLayout;
+    if (v.end() == std::find(v.begin(), v.end(), this)) {
+        v.push_back(this);
+    }
 }
 }

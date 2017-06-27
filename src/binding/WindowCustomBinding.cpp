@@ -24,6 +24,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 #if defined(PORT_GRAPHIC_BACKEND_DALI)
 #include <dali-toolkit/dali-toolkit.h>
@@ -304,7 +305,7 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
 {
     GENERATE_WINDOW();
 
-    window->browsingContext()->layoutIfNeeds();
+    window->browsingContext()->webView()->layoutIfNeeds();
 
     ValueRef* arg0 = argv[0];
     Node* value0 = nullptr;

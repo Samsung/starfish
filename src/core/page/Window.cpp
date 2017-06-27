@@ -52,13 +52,15 @@
 namespace StarFish {
 
 Window* Window::create(StarFish* starFish, BrowsingContext* browsingContext,
-                       ResourceURL* url)
+                       ResourceURL* url, uint32_t initialWidth,
+                       uint32_t initialHeight)
 {
-    return new Window(starFish, browsingContext, url);
+    return new Window(starFish, browsingContext, url, initialWidth,
+                      initialHeight);
 }
 
 Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
-               ResourceURL* url)
+               ResourceURL* url, uint32_t initialWidth, uint32_t initialHeight)
     : EventTarget(nullptr)
     , m_starFish(starFish)
     , m_browsingContext(browsingContext)
@@ -69,6 +71,8 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
+    , m_width(initialWidth)
+    , m_height(initialHeight)
 {
     m_scriptBindingInstance = new ScriptBindingInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
@@ -138,12 +142,24 @@ int32_t Window::innerHeight()
 
 int32_t Window::width()
 {
-    return m_starFish->platformWindow()->width();
+    return m_width;
 }
 
 int32_t Window::height()
 {
-    return m_starFish->platformWindow()->height();
+    return m_height;
+}
+
+void Window::resize(uint32_t w, uint32_t h)
+{
+    if (m_width != w) {
+        m_width = w;
+        browsingContext()->setNeedsLayout();
+    }
+    if (m_height != h) {
+        m_height = h;
+        browsingContext()->setNeedsLayout();
+    }
 }
 
 float Window::devicePixelRatio()
