@@ -367,6 +367,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
 |  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
 | [KeyboardEventInit](https://w3c.github.io/uievents/#dictdef-keyboardeventinit) | dictionary | KeyboardEventInit | `{ DOMString key = ""; DOMString code = ""; unsigned long location = 0; boolean repeat = false; boolean isComposing = false; }` |
+| [MediaQueryList](https://drafts.csswg.org/cssom-view/#mediaquerylist) | interface | MediaQueryList | A MediaQueryList object stores information on a media query applied to a document, and handles sending notifications to listeners when the media query state change (i.e. when the media query test starts or stops evaluating to true). |
+|  | attribute | media | Return the associated media. |
+|  | attribute | matches | Return the associated matches state. |
 | [NamedNodeMap](https://dom.spec.whatwg.org/#interface-namednodemap) | interface | NamedNodeMap |  |
 |  | attribute | length | Return the attribute list’s size. |
 |  | method | Attr? item(unsigned long index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
@@ -513,12 +516,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
 |  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
 |    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
-| [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | Interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
+| [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
 | | attribute | type | Specifies the style sheet language for this style sheet. |
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
-| [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | Interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
+| [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
 | | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
 | | attribute | length | Return the number of CSS style sheets represented by the collection. |
 | [TimeRanges](https://html.spec.whatwg.org/multipage/embedded-content.html#time-ranges) | interface | TimeRanges | The TimeRanges interface represent a list of ranges (periods) of time. |
@@ -537,7 +540,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | unsigned long requestAnimationFrame(FrameRequestCallback callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
 | | method | void cancelAnimationFrame(unsigned long handle) | Used to cancel a previously made request to schedule an animation frame update. |
 | | callback | FrameRequestCallback = void (DOMHighResTimeStamp time) | |
-| [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | |
+| [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | Gives the values of all the CSS properties of an element after applying the active stylesheets and resolving any basic computation those values may contain. |
+| [Window](https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface) | method | MediaQueryList matchMedia(CSSOMString query) | Returns a new MediaQueryList object representing the parsed results of the specified media query string. |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
 | [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
 | | constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
