@@ -125,7 +125,7 @@ public:
 
     String* cssText() override;
     String* href() const;
-    CSSStyleSheet* styleSheet() const;
+    CSSStyleSheet* styleSheet();
     // MediaList* media() const;
 
 private:

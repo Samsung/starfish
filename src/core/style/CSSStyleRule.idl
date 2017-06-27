@@ -9,7 +9,7 @@ interface CSSStyleRule : CSSRule {
 interface CSSImportRule : CSSRule {
   readonly attribute USVString href;
   [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
-  [Unimplemented, SameObject] readonly attribute CSSStyleSheet styleSheet;
+  [SameObject] readonly attribute CSSStyleSheet styleSheet;
 };
 
 // https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface

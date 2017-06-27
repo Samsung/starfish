@@ -6,7 +6,7 @@ interface StyleSheet {
     // [REF1]--------------------------------------------------------------
     readonly attribute CSSOMString type;
     readonly attribute USVString? href;
-    [Unimplemented] readonly attribute StyleSheet? parentStyleSheet;
+    readonly attribute StyleSheet? parentStyleSheet;
     [Unimplemented] readonly attribute DOMString? title;
     [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
     [Unimplemented] attribute boolean disabled;

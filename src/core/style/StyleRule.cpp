@@ -167,6 +167,8 @@ StyleRuleImport::StyleRuleImport(String* href, MediaQuerySet* media)
     , m_mediaQuerySet(media)
     , m_generatedSheet(nullptr)
     , m_styleSheetTextResource(nullptr)
+    , m_parentStyleSheet(nullptr)
+    , m_loading(false)
 {
 }
 
@@ -200,23 +202,29 @@ public:
         ResourceClient::didLoadFailed();
         m_ownerRule->m_styleSheetTextResource = nullptr;
         m_ownerRule->didStyleSheetLoadComplete();
+        m_ownerRule->m_loading = false;
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        String* text = m_resource->asTextResource()->text();
 
+        if (m_ownerRule->m_generatedSheet) {
+            m_ownerRule->m_generatedSheet->clearOwnerRule();
+        }
+
+        String* text = m_resource->asTextResource()->text();
         Document* doc = m_ownerRule->document();
         if (!doc) {
             return;
         }
 
-        CSSStyleSheet* sheet = new CSSStyleSheet(
-            m_ownerRule->parentStyleSheet()->origin(), text, m_ownerRule);
+        CSSStyleSheet* sheet =
+            new CSSStyleSheet(m_ownerRule->parentStyleSheet()->origin(), text);
         if (sheet) {
             m_ownerRule->m_generatedSheet = sheet;
-            doc->styleResolver().addSheet(sheet);
+            m_ownerRule->m_generatedSheet->parseSheetIfneeds();
+            m_ownerRule->m_loading = false;
             doc->window()
                 ->browsingContext()
                 ->setWholeDocumentNeedsStyleRecalc();
@@ -229,6 +237,11 @@ public:
 protected:
     StyleRuleImport* m_ownerRule;
 };
+
+bool StyleRuleImport::isLoading() const
+{
+    return m_loading || !m_generatedSheet;
+}
 
 void StyleRuleImport::unloadStyleSheetIfExists()
 {
@@ -256,10 +269,8 @@ void StyleRuleImport::requestStyleSheet()
     }
 
     unloadStyleSheetIfExists();
-
     ResourceURL* absURL =
-        new ResourceURL(m_strHref, doc->documentURI()->baseURI());
-
+        new ResourceURL(m_strHref, m_parentStyleSheet->url()->string());
     CSSStyleSheet* rootSheet = m_parentStyleSheet;
     for (CSSStyleSheet* sheet = m_parentStyleSheet; sheet;
          sheet = sheet->parentStyleSheet()) {
@@ -278,5 +289,6 @@ void StyleRuleImport::requestStyleSheet()
         new ImportedStyleSheetDownloadClient(this, m_styleSheetTextResource));
 
     m_styleSheetTextResource->request();
+    m_loading = true;
 }
 }

@@ -82,7 +82,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::createASCIIString(ua));
     userAgentStyleSheet->parseSheetIfneeds();
-    userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->allRules(),
+    userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
                                            userAgentStyleSheet->url());
     userAgentStyleSheet->sortStyleRulesBySpecificity();
 

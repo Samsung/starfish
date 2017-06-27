@@ -138,12 +138,10 @@ void BrowsingContext::layoutIfNeeds()
 
                 authorSheet->parseSheetIfneeds();
 
-                if (authorSheet->ownerRule()) {
-                    authorSheet->collectRulesForImportedSheet();
-                } else {
-                    authorSheet->collectStyleRules(authorSheet->allRules(),
-                                                   authorSheet->url());
-                }
+                authorSheet->collectRulesFromImportedSheet(
+                    authorSheet->importRules());
+                authorSheet->collectStyleRules(authorSheet->childRules(),
+                                               authorSheet->url());
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {

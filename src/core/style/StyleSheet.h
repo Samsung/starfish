@@ -36,6 +36,10 @@ public:
     virtual String* type() const = 0;
     virtual String* href() const = 0;
     virtual Node* ownerNode() const = 0;
+    virtual StyleSheet* parentStyleSheet() const
+    {
+        return nullptr;
+    }
 };
 
 } /* namespace StarFish */

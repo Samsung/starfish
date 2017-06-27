@@ -216,6 +216,7 @@ public:
 
     Document* document();
     void requestStyleSheet();
+    bool isLoading() const;
     void unloadStyleSheetIfExists();
 
 protected:
@@ -227,6 +228,7 @@ protected:
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
     CSSStyleSheet* m_parentStyleSheet;
+    bool m_loading;
 };
 }
 
