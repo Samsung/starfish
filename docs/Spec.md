@@ -111,13 +111,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | href | Returns the URL specified by the @import at-rule. |
 | [CSSGroupingRule](https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface) | interface | CSSGroupingRule | Represents an at-rule that contains other rules nested inside itself. |
 |  | attribute | cssRules | Returns a CSSRuleList object for the child CSS rules. |
-|  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns a CSSRuleList object for the child CSS rules. |
-|  | method | void deleteRule(unsigned long index) | Returns a CSSRuleList object for the child CSS rules. |
+|  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns the result of invoking insert a CSS rule rule into the child CSS rules at index. |
+|  | method | void deleteRule(unsigned long index) | Removes a CSS rule from the child CSS rules at index. |
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
-| | attribute | CSSRule? ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | CSSRuleList cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
+| | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
+| | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
 | [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
 | | method | getter CSSRule? item(unsigned long index) | Returns the indexth CSSRule object in the collection. |
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |

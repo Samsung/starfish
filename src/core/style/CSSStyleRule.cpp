@@ -114,7 +114,7 @@ CSSRuleList* CSSGroupingRule::cssRules()
     return m_ruleListWrapper;
 }
 
-unsigned CSSGroupingRule::insertRule(String* rule, unsigned index)
+unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
 {
     STARFISH_ASSERT(m_childRuleWrappers.size() ==
                     m_groupRule->childRules().size());
@@ -128,40 +128,39 @@ unsigned CSSGroupingRule::insertRule(String* rule, unsigned index)
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR,
                                msg.finalize()->utf8Data());
-        return 0;
     }
 
     CSSParser parser(scriptBindingInstance()->ownerDocument());
-    RefPtr<CSSToken> token = parser.makeToken(rule);
+    RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
-    GCVector<StyleRuleBase*> styleRules;
+    GCVector<StyleRuleBase*> rules;
     GCVector<CSSSelectorList*> selectorListContainer;
-    parser.parseStyleRule(token, styleRules,
+    parser.parseStyleRule(token, rules,
                           CSSParser::AllowedRulesType::RegularRules,
                           &selectorListContainer);
 
-    if (styleRules.size() == 0) {
+    if (rules.size() == 0) {
         StringBuilder msg;
         msg.appendString("the rule '");
-        msg.appendString(rule);
+        msg.appendString(ruleString);
         msg.appendString("' is invalid and cannot be parsed.");
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR,
                                msg.finalize()->utf8Data());
-        return 0;
     }
 
-    if (styleRules[0]->isImportRule()) {
+    if (rules[0]->isImportRule()) {
         throw new DOMException(
             scriptBindingInstance()->ownerDocument(),
             DOMException::HIERARCHY_REQUEST_ERR,
             "'@import' rules cannot be inserted inside a group rule.");
-        return 0;
     }
 
-    // TODO: throw exception for @namespace at-rule.
+    {
+        // TODO: throw exception for @namespace at-rule.
+    }
 
-    m_groupRule->wrapperInsertRule(index, styleRules[0]);
+    m_groupRule->wrapperInsertRule(index, rules[0]);
     m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index,
                                (CSSRule*)(nullptr));
     return index;
@@ -180,7 +179,6 @@ void CSSGroupingRule::deleteRule(unsigned index)
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR,
                                msg.finalize()->utf8Data());
-        return;
     }
 
     m_groupRule->wrapperRemoveRule(index);
