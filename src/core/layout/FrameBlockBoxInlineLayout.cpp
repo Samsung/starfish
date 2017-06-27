@@ -3069,6 +3069,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit parentContentWidth =
         ctx.layoutContext().blockContainer(this)->contentWidth();
     LayoutUnit intrinsicWidth, intrinsicHeight;
+    bool hasAspectRatio;
     Length parentContentHeight;
     if (ctx.layoutContext().parentHasFixedHeight(this)) {
         parentContentHeight =
@@ -3076,8 +3077,8 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     } else {
         parentContentHeight = Length(Length::Auto);
     }
-    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth,
-                         parentContentHeight);
+    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, hasAspectRatio,
+                         parentContentWidth, parentContentHeight);
     LayoutUnit w;
 
     if (style()->width().isAuto() && style()->height().isAuto()) {
@@ -3091,7 +3092,11 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     } else if (style()->height().isSpecified()) {
         if (style()->height().isFixed()) {
             LayoutUnit h = style()->height().fixed();
-            w = h * (intrinsicWidth / intrinsicHeight);
+            if (hasAspectRatio) {
+                w = h * (intrinsicWidth / intrinsicHeight);
+            } else {
+                w = intrinsicWidth;
+            }
         } else {
             w = intrinsicWidth;
         }

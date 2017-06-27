@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Node.h"
+#include "core/dom/Document.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
@@ -468,8 +470,21 @@ void FrameBox::establishesStackingContextIfNeeds()
 {
     if (isEstablishesStackingContext()) {
         STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
-        if (!isRootElement()) {
-            FrameBox* p = layoutParent()->asFrameBox();
+        if (!isRootElement() ||
+            (isRootElement() &&
+             !node()->document()->browsingContext()->isMainBrowsingContext())) {
+            FrameBox* p;
+            if (!isRootElement()) {
+                p = layoutParent()->asFrameBox();
+            } else {
+                p = node()
+                        ->document()
+                        ->browsingContext()
+                        ->sourceElement()
+                        ->frame()
+                        ->layoutParent()
+                        ->asFrameBox();
+            }
             while (true) {
                 if (p->isEstablishesStackingContext()) {
                     if (p->isRootElement()) {

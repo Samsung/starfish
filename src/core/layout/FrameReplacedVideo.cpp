@@ -27,6 +27,7 @@ IntrinsicSize FrameReplacedVideo::intrinsicSize()
 {
     IntrinsicSize result;
     result.m_isContentExists = true;
+    result.m_hasAspectRatio = true;
     auto v = node()->asHTMLVideoElement();
     unsigned long videoWidth = v->videoWidth();
     unsigned long videoHeight = v->videoHeight();

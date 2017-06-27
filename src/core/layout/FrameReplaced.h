@@ -26,15 +26,18 @@ class FrameReplacedVideo;
 
 struct IntrinsicSize {
     bool m_isContentExists;
+    bool m_hasAspectRatio;
     LayoutSize m_intrinsicContentSize;
 };
 
 struct IntrinsicSizeUsedInLayout {
+    bool m_hasAspectRatio;
     LayoutSize m_intrinsicContentSize;
     std::pair<Length, Length> m_intrinsicSizeIsSpecifiedByAttributeOfElement;
 
     IntrinsicSizeUsedInLayout()
-        : m_intrinsicContentSize(0, 0)
+        : m_hasAspectRatio(false)
+        , m_intrinsicContentSize(0, 0)
     {
     }
 };
@@ -107,10 +110,10 @@ public:
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
-    virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth,
-                                      LayoutUnit& intrinsicHeight,
-                                      LayoutUnit parentContentWidth,
-                                      Length parentContentHeight);
+    void computeIntrinsicSize(LayoutUnit& intrinsicWidth,
+                              LayoutUnit& intrinsicHeight, bool& hasAspectRatio,
+                              LayoutUnit parentContentWidth,
+                              Length parentContentHeight);
 
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();

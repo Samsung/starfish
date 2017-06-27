@@ -45,7 +45,8 @@ class Window : public EventTarget {
 
 public:
     static Window* create(StarFish* starfish, BrowsingContext* browsingContext,
-                          ResourceURL* url);
+                          ResourceURL* url, uint32_t initialWidth,
+                          uint32_t initialHeight);
     virtual ~Window()
     {
     }
@@ -155,6 +156,8 @@ public:
         return 0;
     }
 
+    void resize(uint32_t w, uint32_t h);
+
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
@@ -256,7 +259,7 @@ public:
 private:
     void initFlags();
     Window(StarFish* starFish, BrowsingContext* browsingContext,
-           ResourceURL* url);
+           ResourceURL* url, uint32_t initialWidth, uint32_t initialHeight);
     Window();
 
     StarFish* m_starFish;
@@ -266,6 +269,9 @@ private:
     Navigator* m_navigator;
     Location* m_location;
     Screen* m_screen;
+
+    uint32_t m_width;
+    uint32_t m_height;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     WebApis* m_webapis;

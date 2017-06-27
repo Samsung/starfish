@@ -270,7 +270,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     bool isAbsolute = false;
 
     if (url->startsWith("data:", false) || url->startsWith("blob:", false) ||
-        url->contains("://")) {
+        url->startsWith("about:", false) || url->contains("://")) {
         isAbsolute = true;
     }
 
@@ -340,6 +340,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_protocol = BLOB_PROTOCOL;
     } else if (m_urlString->startsWith("data", false)) {
         m_protocol = DATA_PROTOCOL;
+    } else if (m_urlString->startsWith("about", false)) {
+        m_protocol = ABOUT_PROTOCOL;
     } else {
         m_protocol = UNKNOWN;
     }
@@ -373,7 +375,8 @@ String* ResourceURL::mergeDocumentURIWithURIString(String* documentURI,
 
 String* ResourceURL::baseURI() const
 {
-    if (m_protocol == Protocol::DATA_PROTOCOL) {
+    if (m_protocol == Protocol::DATA_PROTOCOL ||
+        m_protocol == Protocol::ABOUT_PROTOCOL) {
         return String::emptyString;
     }
 

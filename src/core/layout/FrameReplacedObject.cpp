@@ -28,9 +28,11 @@ IntrinsicSize FrameReplacedObject::intrinsicSize()
     result.m_isContentExists = true;
     auto v = node()->asHTMLObjectElement();
     if (v->content()) {
+        result.m_hasAspectRatio = true;
         result.m_intrinsicContentSize =
             LayoutSize(v->content()->width(), v->content()->height());
     } else {
+        result.m_hasAspectRatio = false;
         result.m_intrinsicContentSize = LayoutSize(1, 1);
     }
     return result;

@@ -116,6 +116,9 @@ public:
     BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
     void clearBlobURLStore();
 
+    void layoutIfNeeds();
+    void clearStackingContext(bool backupBuffer);
+
 private:
     WebView(StarFish* starFish);
 
@@ -175,6 +178,7 @@ private:
     bool m_needsPainting;
     bool m_needsComposite;
 
+    GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
 };

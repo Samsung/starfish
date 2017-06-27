@@ -352,7 +352,7 @@ void WindowImplDALI::clearResources()
         GC_FREE(m_renderingIdlerData);
     }
 
-    webView()->mainBrowsingContext()->clearStackingContext(false);
+    webView()->clearStackingContext(false);
 }
 }
 #endif

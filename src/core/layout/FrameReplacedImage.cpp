@@ -39,10 +39,13 @@ IntrinsicSize FrameReplacedImage::intrinsicSize()
     IntrinsicSize result;
     ImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
+        result.m_hasAspectRatio = true;
         result.m_isContentExists = true;
         result.m_intrinsicContentSize = LayoutSize(id->width(), id->height());
     } else {
+        result.m_hasAspectRatio = false;
         result.m_isContentExists = false;
+        result.m_intrinsicContentSize = LayoutSize(15, 15);
     }
     return result;
 }

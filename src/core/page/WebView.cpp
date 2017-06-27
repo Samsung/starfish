@@ -432,6 +432,54 @@ void WebView::clearBlobURLStore()
     m_urlBlobStore.clear();
 }
 
+void WebView::layoutIfNeeds()
+{
+    bool didLayout = m_mainBrowsingContext->layoutIfNeeds();
+
+    for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
+        didLayout =
+            m_browsingContextsNeedsLayout[i]->layoutIfNeeds() || didLayout;
+    }
+    m_browsingContextsNeedsLayout.clear();
+
+    if (didLayout) {
+        {
+#ifdef STARFISH_ENABLE_TIMER
+            ProfilerTimer t("computeStackingContextProperties");
+#endif
+            m_mainBrowsingContext->document()
+                ->frame()
+                ->establishesStackingContextIfNeeds();
+            if (m_mainBrowsingContext->document()->frame()->firstChild()) {
+                m_rootStackingContext = m_mainBrowsingContext->document()
+                                            ->frame()
+                                            ->firstChild()
+                                            ->asFrameBox()
+                                            ->stackingContext();
+                m_rootStackingContext->computeStackingContextProperties();
+            }
+
+            // STARFISH_LOG_INFO("computeStackingContextProperties end composite
+            // %d\n", (int)m_rootStackingContext->needsOwnBuffer());
+        }
+#ifdef STARFISH_ENABLE_TEST
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableFrameTreeDump) {
+            FrameTreeBuilder::dumpFrameTree(m_mainBrowsingContext->document());
+        }
+#endif
+    }
+
+    {
+        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
+        for (size_t i = 0; i < bufSiz; i++) {
+            m_backStackingContextBufferUpWhileReCompsite[i]
+                ->detachNativeBuffer();
+        }
+        m_backStackingContextBufferUpWhileReCompsite.clear();
+    }
+}
+
 void WebView::rendering()
 {
     if (!m_needsRendering) {
@@ -451,7 +499,7 @@ void WebView::rendering()
               .documentOpenTime()) < 1000)) {
         m_needsRendering = false;
         starFish()->timer()->addTimer(
-            0.1, mainBrowsingContext()->window(),
+            0.01, mainBrowsingContext()->window(),
             [](Window* wnd, void* data) {
                 wnd->browsingContext()->webView()->setNeedsRendering();
             },
@@ -471,16 +519,7 @@ void WebView::rendering()
     Timer renderingTimer("BrowsingContext::rendering");
 #endif
 
-    mainBrowsingContext()->layoutIfNeeds();
-
-    {
-        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
-        for (size_t i = 0; i < bufSiz; i++) {
-            m_backStackingContextBufferUpWhileReCompsite[i]
-                ->detachNativeBuffer();
-        }
-        m_backStackingContextBufferUpWhileReCompsite.clear();
-    }
+    layoutIfNeeds();
 
     if (m_needsPainting) {
 #ifdef STARFISH_ENABLE_TIMER
@@ -663,6 +702,36 @@ void WebView::rendering()
         }
     }
 #endif
+}
+
+void WebView::clearStackingContext(bool backupBuffer)
+{
+    if (m_rootStackingContext) {
+        StackingContext* ctx = m_rootStackingContext;
+        std::function<void(StackingContext*)> clearSC =
+            [&](StackingContext* ctx) {
+                if (backupBuffer) {
+                    if (ctx->needsOwnBuffer() && ctx->buffer()) {
+                        m_backStackingContextBufferUpWhileReCompsite.push_back(
+                            ctx->buffer());
+                    }
+                    ctx->owner()->clearStackingContextIfNeeds(false);
+                } else {
+                    ctx->owner()->clearStackingContextIfNeeds();
+                }
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    auto iter2 = iter->second->begin();
+                    while (iter2 != iter->second->end()) {
+                        clearSC(*iter2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+            };
+        clearSC(ctx);
+        m_rootStackingContext = nullptr;
+    }
 }
 
 void WebView::initRenderingFlags()

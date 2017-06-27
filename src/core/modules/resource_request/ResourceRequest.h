@@ -58,6 +58,7 @@ class ResourceRequest : public gc,
     friend class FileURLResourceRequestJobDelegate;
     friend class DataURLResourceRequestJobDelegate;
     friend class BlobURLResourceRequestJobDelegate;
+    friend class AboutURLResourceRequestJobDelegate;
     friend class NetworkURLResourceRequestJobDelegate;
 
 public:

@@ -34,6 +34,7 @@ class StackingContext;
 class CanvasSurface;
 class PlatformWindow;
 class Window;
+class HTMLIFrameElement;
 
 class BrowsingContext : public gc, public StarFishHoldable {
     friend class PlatformWindow;
@@ -41,9 +42,12 @@ class BrowsingContext : public gc, public StarFishHoldable {
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
+    friend class WebView;
+    friend class FrameReplacedIFrame;
 
 public:
     static BrowsingContext* create(StarFish* starFish, WebView* webView);
+    static BrowsingContext* create(HTMLIFrameElement* sourceElement);
     virtual ~BrowsingContext()
     {
     }
@@ -63,22 +67,25 @@ public:
         return m_webView;
     }
 
+    HTMLIFrameElement* sourceElement()
+    {
+        STARFISH_ASSERT(!isMainBrowsingContext());
+        return m_sourceElement;
+    }
+
     void navigate(ResourceURL* url);
     void navigateAsync(ResourceURL* url);
-
-    void clearStackingContext(bool backupBuffer);
 
     void pause();
     void resume();
     void close();
-
-    void layoutIfNeeds();
 
     void setNeedsStyleRecalc()
     {
         if (!m_needsStyleRecalc) {
             m_needsStyleRecalc = true;
             setNeedsRendering();
+            registerNeedsLayoutInWebView();
         }
     }
 
@@ -89,6 +96,7 @@ public:
         if (!m_needsFrameTreeBuild) {
             m_needsFrameTreeBuild = true;
             setNeedsRendering();
+            registerNeedsLayoutInWebView();
         }
         setNeedsLayout();
     }
@@ -98,12 +106,23 @@ public:
         if (!m_needsLayout) {
             m_needsLayout = true;
             setNeedsRendering();
+            registerNeedsLayoutInWebView();
         }
         setNeedsPainting();
     }
 
     void setNeedsPainting();
     void setNeedsComposite();
+
+    bool needsFrameTreeBuild()
+    {
+        return m_needsFrameTreeBuild;
+    }
+
+    bool needsLayout()
+    {
+        return m_needsLayout;
+    }
 
     bool hasRootElementBackground()
     {
@@ -147,16 +166,22 @@ public:
     }
 
 private:
+    // return did layout
+    bool layoutIfNeeds();
+
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
 
-    BrowsingContext(StarFish* starFish, WebView* webView);
+    BrowsingContext(StarFish* starFish, WebView* webView,
+                    HTMLIFrameElement* source = nullptr);
 
     void setNeedsRendering();
+    void registerNeedsLayoutInWebView();
 
     WebView* m_webView;
     Window* m_window;
 
     BrowsingContext* m_parentBrowsingContext;
+    HTMLIFrameElement* m_sourceElement;
 
     bool m_needsStyleRecalc;
     bool m_needsStyleRecalcForWholeDocument;

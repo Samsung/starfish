@@ -26,6 +26,7 @@ class ResourceURL : public gc {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
         DATA_PROTOCOL,
+        ABOUT_PROTOCOL,
         // FILE, BLOB, DATA should be smaller than HTTP
         // (there's code which assumes this)
         HTTP_PROTOCOL,
@@ -81,6 +82,11 @@ public:
     bool isBlobURL() const
     {
         return m_protocol == BLOB_PROTOCOL;
+    }
+
+    bool isAboutURL() const
+    {
+        return m_protocol == ABOUT_PROTOCOL;
     }
 
     bool isNetworkURL()
