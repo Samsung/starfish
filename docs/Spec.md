@@ -116,6 +116,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | void deleteRule(unsigned long index) | Removes a CSS rule from the child CSS rules at index. |
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
+|  | attribute | conditionText | Returns the value of media.mediaText on the rule. (CSSMediaRule-specific definition for attribute on CSSConditionRule) Note: Currently, widget engine supports only getter.|
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |

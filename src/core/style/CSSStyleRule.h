@@ -92,6 +92,10 @@ public:
     CSSConditionRule(StyleRuleCondition* condition_rule, CSSStyleSheet* parent);
 
     virtual String* conditionText() const;
+    virtual void setConditionText(String* text)
+    {
+        return;
+    }
 };
 
 class CSSMediaRule : public CSSConditionRule {
