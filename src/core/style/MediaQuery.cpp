@@ -76,6 +76,7 @@ MediaQuery::MediaQuery(const MediaQuery& o)
     m_expressions.assign(o.m_expressions.begin(), o.m_expressions.end());
 }
 
+// https://drafts.csswg.org/cssom/#serializing-media-queries
 String* MediaQuery::serialize() const
 {
     StringBuilder result;
@@ -95,8 +96,11 @@ String* MediaQuery::serialize() const
         return result.finalize();
     }
 
-    result.appendString(m_mediaType);
-    result.appendString(" and ");
+    if (!m_mediaType->equals("all") || m_restrictor != None) {
+        result.appendString(m_mediaType);
+        result.appendString(" and ");
+    }
+
     result.appendString(m_expressions.at(0)->serialize());
     for (size_t i = 1; i < m_expressions.size(); ++i) {
         result.appendString(String::createASCIIString(" and "));
