@@ -3,7 +3,7 @@
 SORTED_LIST_PATH=_internal_sorted.res
 
 rm tool/reftest/internal_part* &> /dev/null 2>&1
-cat tool/reftest/internal_unsorted.res | sort -nr | cut -d":" -f2 > $SORTED_LIST_PATH
+cat tool/reftest/internal_unsorted.res | sort -nr | cut -d";" -f2 > $SORTED_LIST_PATH
 
 DIV=$1
 IDX=1

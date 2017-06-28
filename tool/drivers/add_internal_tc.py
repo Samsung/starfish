@@ -24,7 +24,7 @@ if __name__ == "__main__":
         elapsed_time = int((datetime.now() - start_time).total_seconds() * 1000)
         print "Elaped time : " + str(elapsed_time) + " ms"
         with open(INTERAL_TC_LIST, "a") as to_list:
-            to_list.write(str(elapsed_time) + ":" + args.tc)
+            to_list.write(str(elapsed_time) + ";" + args.tc)
         print "Add internal TC successfully"
     except IOError:
         print "ERROR : Crash - " + args.tc
