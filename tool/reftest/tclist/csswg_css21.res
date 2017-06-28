@@ -2155,7 +2155,7 @@ test/reftest/csswg-test/css21_original/generated-content/content-072.htm
 test/reftest/csswg-test/css21_original/generated-content/content-073.htm
 test/reftest/csswg-test/css21_original/generated-content/content-075.htm
 test/reftest/csswg-test/css21_original/generated-content/content-076.htm
-test/reftest/csswg-test/css21_original/generated-content/content-077.htm
+#test/reftest/csswg-test/css21_original/generated-content/content-077.htm
 test/reftest/csswg-test/css21_original/generated-content/content-078.htm
 test/reftest/csswg-test/css21_original/generated-content/content-080.htm
 test/reftest/csswg-test/css21_original/generated-content/content-081.htm

@@ -44,7 +44,7 @@
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLElement.h"
-// #include "core/dom/HTMLFormElement.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/dom/parser/AtomicHTMLToken.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
@@ -144,7 +144,7 @@ static HTMLFormElement* closestFormAncestor(StaticStrings* s, Element* element)
 {
     while (element) {
         if (element->name() == s->m_formTagName) {
-            return element->asHTMLElement();
+            return element->asHTMLFormElement();
         }
         Node* parent = element->parentNode();
         if (!parent || !parent->isElement()) {

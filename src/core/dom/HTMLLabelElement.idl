@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/#forms
+
+[HTMLConstructor]
+interface HTMLLabelElement : HTMLElement {
+    [Unimplemented] readonly attribute HTMLFormElement? form;
+    [Unimplemented, CEReactions] attribute DOMString htmlFor;
+    [Unimplemented] readonly attribute HTMLElement? control;
+};
+
