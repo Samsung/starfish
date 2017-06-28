@@ -125,7 +125,7 @@ static String* transformetoNetscapeCookieFormat(Document* document,
                     parseDate(document->scriptBindingInstance(), value);
                 // RFC6265 say : If the attribute-value failed to parse as a
                 //               cookie date, ignore it
-                if (!isnan(parsedDate)) {
+                if (!std::isnan(parsedDate)) {
                     expires = parsedDate / 1000.0;
                 }
             } else if (key->equals("max-age")) {
