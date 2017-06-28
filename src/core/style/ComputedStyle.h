@@ -1065,7 +1065,7 @@ protected:
     bool m_zIndexSpecifiedByUser : 1;
 
     TableLayoutValue m_tableLayout : 1; // table
-    StyleResolver::PseudoElementType m_pseudoId : 4;
+    StyleResolver::PseudoElementType m_pseudoId : 5;
 
     Length m_width;
     Length m_minWidth;

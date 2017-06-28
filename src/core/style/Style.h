@@ -1806,12 +1806,12 @@ class CSSStyleSheet;
 class StyleResolver : public DocumentHoldable {
 public:
     enum PseudoElementType {
-        PseudoElementNone,
-        PseudoElementFirstLine,
-        PseudoElementFirstLetter,
-        PseudoElementBefore,
-        PseudoElementAfter,
-        PseudoElementFirstLineInherited
+        PseudoElementNone = 0,
+        PseudoElementFirstLine = 1,
+        PseudoElementFirstLetter = 1 << 1,
+        PseudoElementBefore = 1 << 2,
+        PseudoElementAfter = 1 << 3,
+        PseudoElementFirstLineInherited = 1 << 4
     };
 
     enum Match {

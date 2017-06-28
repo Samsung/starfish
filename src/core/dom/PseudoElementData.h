@@ -21,77 +21,98 @@
 
 namespace StarFish {
 
+class PseudoElement;
+
 class PseudoElementData : public gc {
 public:
     PseudoElementData()
-        : m_hasFirstLine(false)
-        , m_hasFirstLetter(false)
-        , m_hasBefore(false)
-        , m_hasAfter(false)
-        , m_hasFirstLineInherited(false)
+        : m_pseudoElementType(
+              StyleResolver::PseudoElementType::PseudoElementNone)
+        , m_firstLine(nullptr)
+        , m_firstLetter(nullptr)
+        , m_before(nullptr)
+        , m_after(nullptr)
+        , m_firstLineInherited(nullptr)
     {
     }
 
     bool hasPseudoElements() const
     {
-        return m_hasFirstLine || m_hasFirstLetter || m_hasBefore ||
-               m_hasAfter || m_hasFirstLineInherited;
+        return m_pseudoElementType !=
+               StyleResolver::PseudoElementType::PseudoElementNone;
     }
 
     bool hasPseudoElement(StyleResolver::PseudoElementType type) const
     {
-        switch (type) {
-        case StyleResolver::PseudoElementType::PseudoElementFirstLine:
-            return m_hasFirstLine;
-        case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
-            return m_hasFirstLetter;
-        case StyleResolver::PseudoElementType::PseudoElementBefore:
-            return m_hasBefore;
-        case StyleResolver::PseudoElementType::PseudoElementAfter:
-            return m_hasAfter;
-        case StyleResolver::PseudoElementType::PseudoElementFirstLineInherited:
-            return m_hasFirstLineInherited;
-        default:
-            return false;
-        }
+        return m_pseudoElementType & type;
     }
 
-    void setPseudoElement(StyleResolver::PseudoElementType type)
+    PseudoElement* pseudoElement(StyleResolver::PseudoElementType type) const
     {
         switch (type) {
         case StyleResolver::PseudoElementType::PseudoElementFirstLine:
-            m_hasFirstLine = true;
+            return m_firstLine;
+        case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
+            return m_firstLetter;
+        case StyleResolver::PseudoElementType::PseudoElementBefore:
+            return m_before;
+        case StyleResolver::PseudoElementType::PseudoElementAfter:
+            return m_after;
+        case StyleResolver::PseudoElementType::PseudoElementFirstLineInherited:
+            return m_firstLineInherited;
+        default:
+            return nullptr;
+        }
+    }
+
+    void setPseudoElement(StyleResolver::PseudoElementType type,
+                          PseudoElement* pseudoElement)
+    {
+        m_pseudoElementType |= type;
+
+        if (!pseudoElement) {
+            return;
+        }
+
+        switch (type) {
+        case StyleResolver::PseudoElementType::PseudoElementFirstLine:
+            m_firstLine = pseudoElement;
             break;
         case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
-            m_hasFirstLetter = true;
+            m_firstLetter = pseudoElement;
             break;
         case StyleResolver::PseudoElementType::PseudoElementBefore:
-            m_hasBefore = true;
+            m_before = pseudoElement;
             break;
         case StyleResolver::PseudoElementType::PseudoElementAfter:
-            m_hasAfter = true;
+            m_after = pseudoElement;
             break;
         case StyleResolver::PseudoElementType::PseudoElementFirstLineInherited:
-            m_hasFirstLineInherited = true;
-            break;
-        case StyleResolver::PseudoElementType::PseudoElementNone:
-            m_hasFirstLine = false;
-            m_hasFirstLetter = false;
-            m_hasBefore = false;
-            m_hasAfter = false;
-            m_hasFirstLineInherited = false;
+            m_firstLineInherited = pseudoElement;
             break;
         default:
             break;
         }
     }
 
+    void clearPseudoElements()
+    {
+        m_pseudoElementType =
+            StyleResolver::PseudoElementType::PseudoElementNone;
+        m_firstLine = nullptr;
+        m_firstLetter = nullptr;
+        m_before = nullptr;
+        m_after = nullptr;
+        m_firstLineInherited = nullptr;
+    }
+
 private:
-    bool m_hasFirstLine;
-    bool m_hasFirstLetter;
-    bool m_hasBefore;
-    bool m_hasAfter;
-    bool m_hasFirstLineInherited;
+    int m_pseudoElementType;
+    PseudoElement* m_firstLine;
+    PseudoElement* m_firstLetter;
+    PseudoElement* m_before;
+    PseudoElement* m_after;
+    PseudoElement* m_firstLineInherited;
 };
 }
 

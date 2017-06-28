@@ -27,6 +27,7 @@ class Attr;
 class NamedNodeMap;
 class HTMLElement;
 class CSSStyleDeclaration;
+class PseudoElement;
 class PseudoElementData;
 
 class RareElementMembers : public RareNodeMembers {
@@ -173,7 +174,10 @@ public:
 
     bool hasPseudoElements();
     bool hasPseudoElement(StyleResolver::PseudoElementType type);
-    void setPseudoElement(StyleResolver::PseudoElementType type);
+    PseudoElement* pseudoElement(StyleResolver::PseudoElementType type);
+    void setPseudoElement(StyleResolver::PseudoElementType type,
+                          PseudoElement* pseudoElement = nullptr);
+    void clearPseudoElements();
 
     AtomicString& atomicId()
     {
