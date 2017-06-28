@@ -22,26 +22,23 @@
 #include "ImageDecoder.h"
 #include "platform/file/FileIO.h"
 
+#include <png.h>
+#include <turbojpeg.h>
+
 namespace StarFish {
 
 class ImageDataMISC : public ImageData {
 public:
     ImageDataMISC(String* localImageSrc)
     {
-        ImageDecoder* d = new ImageDecoder(localImageSrc->utf8Data());
-        m_image = (void*)d->buffer();
-        m_width = d->width();
-        m_height = d->height();
-        delete d;
+        FILE* fp = fopen(localImageSrc->utf8Data(), "rb");
+        decodeImage(fp, nullptr, 0);
+        fclose(fp);
     }
 
     ImageDataMISC(const char* buf, size_t len)
     {
-        ImageDecoder* d = new ImageDecoder(buf, len);
-        m_image = (void*)d->buffer();
-        m_width = d->width();
-        m_height = d->height();
-        delete d;
+        decodeImage(nullptr, buf, len);
     }
 
     virtual size_t bufferSize()
@@ -75,6 +72,326 @@ public:
     virtual size_t height()
     {
         return m_height;
+    }
+
+private:
+    enum ImageFormat { PNG, JPG, GIF, ERROR };
+
+    static bool isPNGFormat(const unsigned char* data)
+    {
+        if (data[0] == 137 && data[1] == 80 && data[2] == 78 && data[3] == 71) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool isJPGFormat(const unsigned char* data)
+    {
+        if (data[0] == 255 && data[1] == 216 && data[2] == 255 &&
+            data[3] == 224) {
+            return true;
+        }
+        return false;
+    }
+
+    static ImageFormat parseImageFormatFromBuffer(const char* buf)
+    {
+        ImageFormat imageFormat = ImageFormat::ERROR;
+
+        if (isPNGFormat((unsigned char*)buf)) {
+            imageFormat = ImageFormat::PNG;
+        } else if (isJPGFormat((unsigned char*)buf)) {
+            imageFormat = ImageFormat::JPG;
+        } else {
+            // TODO ERROR
+        }
+
+        return imageFormat;
+    }
+
+    static ImageFormat parseImageFormatFromFile(FILE* fp)
+    {
+        ImageFormat imageFormat = ImageFormat::ERROR;
+
+        if (!fp) {
+            return imageFormat;
+        }
+
+        unsigned char* buf = new unsigned char[5];
+        fgets((char*)buf, 5, fp);
+
+        if (isPNGFormat(buf)) {
+            imageFormat = ImageFormat::PNG;
+        } else if (isJPGFormat(buf)) {
+            imageFormat = ImageFormat::JPG;
+        } else {
+            // TODO ERROR
+        }
+
+        rewind(fp);
+        delete buf;
+        return imageFormat;
+    }
+
+    typedef struct {
+        const unsigned char* mem;
+        unsigned long int size;
+    } READ_DATA;
+
+    static void readPNGFromBufferedInput(png_structp png, png_bytep data,
+                                         png_size_t size)
+    {
+        READ_DATA* readData = (READ_DATA*)png_get_io_ptr(png);
+
+        if (readData->mem && size > 0) {
+            memcpy(data, readData->mem + readData->size, size);
+            readData->size += size;
+        }
+    }
+
+    void readPNGFileOrBufferedInput(FILE* fp, const char* bufferedInput,
+                                    size_t len)
+    {
+        READ_DATA readData;
+        png_byte colorType;
+        png_byte bitDepth;
+        png_bytep* rowPointers;
+
+        png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr,
+                                                 nullptr, nullptr);
+
+        if (!png) {
+            abort();
+        }
+
+        png_infop info = png_create_info_struct(png);
+        if (!info) {
+            abort();
+        }
+
+        if (setjmp(png_jmpbuf(png))) {
+            abort();
+        }
+
+        if (!fp) {
+            readData.mem = (unsigned char*)bufferedInput;
+            readData.size = 0;
+            png_set_read_fn(png, &readData, readPNGFromBufferedInput);
+        } else {
+            if (fp) {
+                png_init_io(png, fp);
+            }
+        }
+
+        png_read_info(png, info);
+
+        m_width = png_get_image_width(png, info);
+        m_height = png_get_image_height(png, info);
+        colorType = png_get_color_type(png, info);
+        bitDepth = png_get_bit_depth(png, info);
+
+        if (bitDepth == 16) {
+            png_set_strip_16(png);
+        }
+
+        if (colorType == PNG_COLOR_TYPE_PALETTE) {
+            png_set_palette_to_rgb(png);
+        }
+
+        if (colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8) {
+            png_set_expand_gray_1_2_4_to_8(png);
+        }
+
+        if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+            png_set_tRNS_to_alpha(png);
+        }
+
+        if (colorType == PNG_COLOR_TYPE_RGB ||
+            colorType == PNG_COLOR_TYPE_GRAY ||
+            colorType == PNG_COLOR_TYPE_PALETTE) {
+            png_set_filler(png, 0xff, PNG_FILLER_AFTER);
+        }
+
+        if (colorType == PNG_COLOR_TYPE_GRAY ||
+            colorType == PNG_COLOR_TYPE_GRAY_ALPHA) {
+            png_set_gray_to_rgb(png);
+        }
+        png_set_bgr(png);
+        png_read_update_info(png, info);
+
+        rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * m_height);
+
+        png_uint_32 rowbytes = png_get_rowbytes(png, info);
+
+        if ((m_image = (unsigned char*)malloc(rowbytes * m_height)) ==
+            nullptr) {
+            png_destroy_read_struct(&png, &info, nullptr);
+            return;
+        }
+
+        for (png_uint_32 i = 0; i < (unsigned int)m_height; ++i) {
+            rowPointers[i] = (png_bytep)m_image + i * rowbytes;
+        }
+
+        png_read_image(png, rowPointers);
+        png_read_end(png, nullptr);
+        png_destroy_read_struct(&png, &info, nullptr);
+        free(rowPointers);
+    }
+
+    void readJPGFile(FILE* fp)
+    {
+        tjhandle dHandle = nullptr;
+        unsigned char* srcBuf = nullptr;
+        int jpegSize = 0;
+        int TD_BU = 0;
+        size_t readSize = 0;
+
+        fseek(fp, 0, SEEK_END);
+        jpegSize = ftell(fp);
+        rewind(fp);
+
+        if ((dHandle = tjInitDecompress()) == nullptr) {
+            fclose(fp);
+            STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        srcBuf = (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
+        if (srcBuf == nullptr) {
+            fclose(fp);
+            tjDestroy(dHandle);
+            STARFISH_LOG_ERROR("%s %d\n : srcBuf is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        readSize = fread(srcBuf, 1, jpegSize, fp);
+        if (readSize <= 0) {
+            fclose(fp);
+            tjDestroy(dHandle);
+            tjFree(srcBuf);
+            STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        int hdrw = 0;
+        int hdrh = 0;
+        int hdrsubsamp = -1;
+        int scaledWidth = 0;
+        int scaledHeight = 0;
+        unsigned long dstSize = 0;
+        int n = 0;
+
+        tjscalingfactor sf1 = { 1, 1 };
+        tjscalingfactor* sf = tjGetScalingFactors(&n);
+
+        tjDecompressHeader2(dHandle, srcBuf, jpegSize, &hdrw, &hdrh,
+                            &hdrsubsamp);
+
+        if (!sf || !n) {
+            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        scaledWidth = TJSCALED(hdrw, sf1);
+        scaledHeight = TJSCALED(hdrh, sf1);
+        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
+
+        m_image = (unsigned char*)malloc(dstSize);
+
+        tjDecompress2(dHandle, srcBuf, jpegSize, (unsigned char*)m_image,
+                      scaledWidth, 0, scaledHeight, TJPF_BGRA, TD_BU);
+
+        m_width = scaledWidth;
+        m_height = scaledHeight;
+
+        if (dHandle) {
+            tjDestroy(dHandle);
+        }
+        if (srcBuf) {
+            tjFree(srcBuf);
+        }
+    }
+
+    void readJPGBufferedInput(const char* buf, size_t len)
+    {
+        tjhandle dHandle = nullptr;
+        int TD_BU = 0;
+
+        if ((dHandle = tjInitDecompress()) == nullptr) {
+            STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        int hdrw = 0;
+        int hdrh = 0;
+        int hdrsubsamp = -1;
+        int scaledWidth = 0;
+        int scaledHeight = 0;
+        unsigned long dstSize = 0;
+        int n = 0;
+
+        tjscalingfactor sf1 = { 1, 1 };
+        tjscalingfactor* sf = tjGetScalingFactors(&n);
+
+        tjDecompressHeader2(dHandle, (unsigned char*)buf, len, &hdrw, &hdrh,
+                            &hdrsubsamp);
+
+        if (!sf || !n) {
+            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        scaledWidth = TJSCALED(hdrw, sf1);
+        scaledHeight = TJSCALED(hdrh, sf1);
+        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
+
+        m_image = (unsigned char*)malloc(dstSize);
+
+        tjDecompress2(dHandle, (unsigned char*)buf, len,
+                      (unsigned char*)m_image, scaledWidth, 0, scaledHeight,
+                      TJPF_BGRA, TD_BU);
+
+        m_width = scaledWidth;
+        m_height = scaledHeight;
+
+        if (dHandle) {
+            tjDestroy(dHandle);
+        }
+    }
+
+    void decodeImage(FILE* fp, const char* buf, size_t len)
+    {
+        ImageFormat imageFormat;
+        if (fp) {
+            imageFormat = parseImageFormatFromFile(fp);
+        } else {
+            imageFormat = parseImageFormatFromBuffer(buf);
+        }
+        switch (imageFormat) {
+        case ImageFormat::PNG:
+            readPNGFileOrBufferedInput(fp, buf, len);
+            break;
+        case ImageFormat::JPG:
+            if (fp) {
+                readJPGFile(fp);
+            } else {
+                readJPGBufferedInput(buf, len);
+            }
+            break;
+        case ImageFormat::GIF:
+            // TODO
+            break;
+        default:
+            // TODO ERROR
+            break;
+        }
     }
 
 protected:
