@@ -1,0 +1,26 @@
+// https://html.spec.whatwg.org/#the-button-element
+
+[HTMLConstructor]
+interface HTMLButtonElement : HTMLElement {
+    [Unimplemented, CEReactions] attribute boolean autofocus;
+    [Unimplemented, CEReactions] attribute boolean disabled;
+    [Unimplemented] readonly attribute HTMLFormElement? form;
+    [Unimplemented, CEReactions] attribute USVString formAction;
+    [Unimplemented, CEReactions] attribute DOMString formEnctype;
+    [Unimplemented, CEReactions] attribute DOMString formMethod;
+    [Unimplemented, CEReactions] attribute boolean formNoValidate;
+    [Unimplemented, CEReactions] attribute DOMString formTarget;
+    [CEReactions, Rename=domName] attribute DOMString name;
+    [CEReactions] attribute DOMString type;
+    [CEReactions] attribute DOMString value;
+
+    [Unimplemented] readonly attribute boolean willValidate;
+    [Unimplemented] readonly attribute ValidityState validity;
+    [Unimplemented] readonly attribute DOMString validationMessage;
+    [Unimplemented] boolean checkValidity();
+    [Unimplemented] boolean reportValidity();
+    [Unimplemented] void setCustomValidity(DOMString error);
+
+    [Unimplemented] readonly attribute NodeList labels;
+};
+

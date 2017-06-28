@@ -93,7 +93,7 @@ enum WhitespaceMode {
 class AtomicHTMLToken;
 class Document;
 class Element;
-typedef HTMLElement HTMLFormElement;
+class HTMLFormElement;
 
 class HTMLConstructionSite : public gc, public DocumentHoldable {
 public:

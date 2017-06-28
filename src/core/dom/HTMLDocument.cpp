@@ -22,10 +22,13 @@
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLHeadElement.h"
 #include "core/dom/HTMLHeadingElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLLabelElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLLIElement.h"
 #include "core/dom/HTMLMetaElement.h"
@@ -128,6 +131,12 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLIFrameElement(document);
     } else if (name == str->m_aTagName.localNameAtomic()) {
         return new HTMLAnchorElement(document);
+    } else if (name == str->m_formTagName.localNameAtomic()) {
+        return new HTMLFormElement(document);
+    } else if (name == str->m_inputTagName.localNameAtomic()) {
+        return new HTMLInputElement(document);
+    } else if (name == str->m_labelTagName.localNameAtomic()) {
+        return new HTMLLabelElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {

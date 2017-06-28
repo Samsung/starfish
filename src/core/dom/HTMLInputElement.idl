@@ -1,0 +1,65 @@
+// https://html.spec.whatwg.org/#forms
+
+[HTMLConstructor]
+interface HTMLInputElement : HTMLElement {
+    [Unimplemented, CEReactions] attribute DOMString accept;
+    [Unimplemented, CEReactions] attribute DOMString alt;
+    [Unimplemented, CEReactions] attribute DOMString autocomplete;
+    [Unimplemented, CEReactions] attribute boolean autofocus;
+    [Unimplemented, CEReactions] attribute boolean defaultChecked;
+    [Unimplemented] attribute boolean checked;
+    [Unimplemented, CEReactions] attribute DOMString dirName;
+    [Unimplemented, CEReactions] attribute boolean disabled;
+    [Unimplemented] readonly attribute HTMLFormElement? form;
+    [Unimplemented] readonly attribute FileList? files;
+    [Unimplemented, CEReactions] attribute USVString formAction;
+    [Unimplemented, CEReactions] attribute DOMString formEnctype;
+    [Unimplemented, CEReactions] attribute DOMString formMethod;
+    [Unimplemented, CEReactions] attribute boolean formNoValidate;
+    [Unimplemented, CEReactions] attribute DOMString formTarget;
+    [Unimplemented, CEReactions] attribute unsigned long height;
+    [Unimplemented] attribute boolean indeterminate;
+    [Unimplemented, CEReactions] attribute DOMString inputMode;
+    [Unimplemented] readonly attribute HTMLElement? list;
+    [Unimplemented, CEReactions] attribute DOMString max;
+    [Unimplemented, CEReactions] attribute long maxLength;
+    [Unimplemented, CEReactions] attribute DOMString min;
+    [Unimplemented, CEReactions] attribute long minLength;
+    [Unimplemented, CEReactions] attribute boolean multiple;
+    [CEReactions, Rename=domName] attribute DOMString name;
+    [Unimplemented, CEReactions] attribute DOMString pattern;
+    [Unimplemented, CEReactions] attribute DOMString placeholder;
+    [Unimplemented, CEReactions] attribute boolean readOnly;
+    [Unimplemented, CEReactions] attribute boolean required;
+    [Unimplemented, CEReactions] attribute unsigned long size;
+    [Unimplemented, CEReactions] attribute USVString src;
+    [Unimplemented, CEReactions] attribute DOMString step;
+    [CEReactions] attribute DOMString type;
+    [Unimplemented, CEReactions] attribute DOMString defaultValue;
+    [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;
+    [Unimplemented] attribute object? valueAsDate;
+    [Unimplemented] attribute unrestricted double valueAsNumber;
+    [Unimplemented, CEReactions] attribute unsigned long width;
+
+    [Unimplemented] void stepUp(optional long n = 1);
+    [Unimplemented] void stepDown(optional long n = 1);
+
+    [Unimplemented] readonly attribute boolean willValidate;
+    [Unimplemented] readonly attribute ValidityState validity;
+    [Unimplemented] readonly attribute DOMString validationMessage;
+    [Unimplemented] boolean checkValidity();
+    [Unimplemented] boolean reportValidity();
+    [Unimplemented] void setCustomValidity(DOMString error);
+
+    [Unimplemented] readonly attribute NodeList? labels;
+
+    [Unimplemented] void select();
+    [Unimplemented] attribute unsigned long? selectionStart;
+    [Unimplemented] attribute unsigned long? selectionEnd;
+    [Unimplemented] attribute DOMString? selectionDirection;
+    [Unimplemented] void setRangeText(DOMString replacement);
+    [Unimplemented] void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    [Unimplemented] void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+
+    // also has obsolete members
+};

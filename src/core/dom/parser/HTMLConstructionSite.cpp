@@ -49,6 +49,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/parser/AtomicHTMLToken.h"
@@ -745,7 +746,7 @@ void HTMLConstructionSite::insertHTMLFormElement(AtomicHTMLToken* token,
     Element* element = createHTMLElement(token);
     // STARFISH_ASSERT(element->hasTagName(formTag));
     // m_form = static_pointer_cast<HTMLFormElement>(element.release());
-    m_form = element->asHTMLElement();
+    m_form = element->asHTMLFormElement();
     // m_form->setDemoted(isDemoted);
     attachLater(currentNode(), m_form);
     m_openElements.push(new HTMLStackItem(

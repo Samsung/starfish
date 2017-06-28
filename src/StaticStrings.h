@@ -228,6 +228,7 @@ public:
     QualifiedName m_scope;
     QualifiedName m_disabled;
     QualifiedName m_media;
+    QualifiedName m_value;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
