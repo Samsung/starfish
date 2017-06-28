@@ -248,6 +248,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | clientLeft | Return the width of the left border of an element in pixels. |
 |  | attribute | clientWidth | Return zero for elements with no CSS or inline layout boxes, otherwise the inner width of an element in pixels. |
 |  | attribute | clientHeight | Return zero for elements with no CSS or inline layout boxes, otherwise the inner height of an element in pixels. |
+| [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
+| | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
+| | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
+| | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
+| [EventListener](https://dom.spec.whatwg.org/#callbackdef-eventlistener) | callback | EventListener = void () | An event listener can be used to observe a specific event. |
 | [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
@@ -359,18 +364,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Returns the dimensions of the visual content of the video. |
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
-| [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
-|| constructor | KeyboardEvent(DOMString type, optional KeyboardEventInit eventInitDict) | Creates a new KeyboardEvent. |
-|  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
-|  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
-|  | constant | DOM_KEY_LOCATION_RIGHT = 0x02 |  |
-|  | constant | DOM_KEY_LOCATION_NUMPAD = 0x03 |  |
-|  | attribute | ctrlKey | Returns a Boolean that is true if the Ctrl key was active when the key event was generated. |
-|  | attribute | shiftKey | Returns a Boolean that is true if the Shift key was active when the key event was generated. |
-|  | attribute | altKey | Returns a Boolean that is true if the Alt key was active when the key event was generated. |
-|  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
-|  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
-| [KeyboardEventInit](https://w3c.github.io/uievents/#dictdef-keyboardeventinit) | dictionary | KeyboardEventInit | `{ DOMString key = ""; DOMString code = ""; unsigned long location = 0; boolean repeat = false; boolean isComposing = false; }` |
 | [MediaQueryList](https://drafts.csswg.org/cssom-view/#mediaquerylist) | interface | MediaQueryList | A MediaQueryList object stores information on a media query applied to a document, and handles sending notifications to listeners when the media query state change (i.e. when the media query test starts or stops evaluating to true). |
 |  | attribute | media | Return the associated media. |
 |  | attribute | matches | Return the associated matches state. |
@@ -532,6 +525,20 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | length | Returns the number of ranges in the object. |
 |  | method | double start(unsigned long index) | Returns the time for the start of the range with the given index. |
 |  | method | double end(unsigned long index) | Returns the time for the end of the range with the given index. |
+| [Touch](https://w3c.github.io/touch-events/#idl-def-touch) | interface | Touch | Describes an individual touch point for a touch event. |
+| | attribute | target | The EventTarget on which the touch point started when it was first placed on the surface. |
+| | attribute | screenX | The horizontal coordinate of point relative to the screen in pixels. |
+| | attribute | screenY | The vertical coordinate of point relative to the screen in pixels. |
+| | attribute | clientX | The horizontal coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
+| | attribute | clientY | The vertical coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
+| [TouchInit](https://w3c.github.io/touch-events/#idl-def-touchinit) | dictionary | TouchInit | Dictionary that is used to create TouchInit. |
+| | attrbitue | target | Initializes the target attribute of the Touch object |
+| | attrbitue | screenX | Initializes the screenX attribute of the Touch object |
+| | attrbitue | screenY | Initializes the screenY attribute of the Touch object |
+| | attrbitue | clientX | Initializes the clientX attribute of the Touch object |
+| | attrbitue | clientY | Initializes the clientY attribute of the Touch object |
+| [TouchList](https://w3c.github.io/touch-events/#idl-def-touchlist) | interface | TouchList | Defines a list of individual points of contact for a touch event. |
+| | attribute | length | Returns the number of Touch objects in the list |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
 |  | attribute | self | Returns window. |
@@ -592,21 +599,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | | method | void preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
 | | dictionary | EventInit::bubles = false | Initializes an Event object with bubbles. |
 | | dictionary | EventInit::cancelable = false | Initializes an Event object with cancelable. |
-| [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
-| | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
-| | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
-| | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
-| | callback | EventListener = void () | An event listener can be used to observe a specific event. |
-| | callback | EventHandlerNonNull = any (Event event)| |
-| | callback | OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source = "", optional unsigned long lineno = 0, optional unsigned long colno = 0, optional any error) | |
-| | callback | OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event) | |
-| | typedef | (EventHandlerNonNull?) EventHandler | |
-| | typedef | (OnErrorEventHandlerNonNull?) OnErrorEventHandler | |
-| | typedef | (OnBeforeUnloadEventHandlerNonNull?) OnBeforeUnloadEventHandler | |
 | [FocusEvent](https://w3c.github.io/uievents/#interface-focusevent) | interface | FocusEvent | The FocusEvent interface represents focus-related events like focus, blur, focusin, or focusout. |
 | | constructor | FocusEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new FocusEvent |
 | | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |
-| [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
+| [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | partial<br>interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
 | | attribute | onabort | Fired at the Window when the download was aborted by the user |
 | | attribute | oncanplay | Fired when the user agent can resume playback of the media data, but estimates that if playback were to be started now, the media resource could not be rendered at the current playback rate up to its end without having to stop for further buffering of content. |
 | | attribute | oncanplaythrough | Fired when the user agent estimates that if playback were to be started now, the media resource could be rendered at the current playback rate all the way to its end without having to stop for further buffering. |
@@ -628,15 +624,43 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onplaying | Fired when playback is ready to start after having been paused or delayed due to lack of media data. |
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
+| [MouseEvent](https://w3c.github.io/uievents/#idl-mouseevent) | interface | MouseEvent |  |
+| | attribute | screenX | The horizontal coordinate at which the event occurred relative to the origin of the screen |
+| | attribute | screenY | The vertical coordinate at which the event occurred relative to the origin of the screen |
+| | attribute | clientX | The horizontal coordinate at which the event occurred relative to the viewport |
+| | attribute | clientY | The vertical coordinate at which the event occurred relative to the viewport |
+| [MouseEventInit](https://w3c.github.io/uievents/#idl-mouseeventinit) | dictionary | MouseEventInit |  |
+| | attribute | screenX | Initializes the screenX attribute of the MouseEvent object |
+| | attribute | screenY | Initializes the screenY attribute of the MouseEvent object |
+| | attribute | clientX | Initializes the clientX attribute of the MouseEvent object |
+| | attribute | clientY | Initializes the clientY attribute of the MouseEvent object |
+| [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
+|  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
+|  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
+|  | constant | DOM_KEY_LOCATION_RIGHT = 0x02 |  |
+|  | constant | DOM_KEY_LOCATION_NUMPAD = 0x03 |  |
+|  | attribute | ctrlKey | Returns a Boolean that is true if the Ctrl key was active when the key event was generated. |
+|  | attribute | shiftKey | Returns a Boolean that is true if the Shift key was active when the key event was generated. |
+|  | attribute | altKey | Returns a Boolean that is true if the Alt key was active when the key event was generated. |
+|  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
+|  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
 | [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent) | interface | ProgressEvent | The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an \<img\>, \<audio\>, \<video\>, \<style\> or \<link\>). |
 | | constructor | ProgressEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new ProgressEvent |
 | | attribute | lengthComputable | Is a Boolean flag indicating if the total work to be done, and the amount of work already done, by the underlying process is calculable. In other words, it tells if the progress is measurable or not. |
 | | attribute | loaded | Is an unsigned long long representing the amount of work already performed by the underlying process. The ratio of work done can be calculated with the property and ProgressEvent.total. When downloading a resource using HTTP, this only represent the part of the content itself, not headers and other overhead. |
 | | attribute | total | Is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing. When downloading a resource using HTTP, this only represent the content itself, not headers and other overhead. |
-| [UIEvent](https://w3c.github.io/uievents/#interface-UIEvent) | interface | UIEvent | |
-| | dictionary | EventModifierInit | ctrlKey, shiftKey, altKey, metaKey, modifierAltGraph, modifierCapsLock, modifierFn, modifierFnLock, modifierHyper, modifierNumLock, modifierScrollLock, modifierSuper, modifierSymbol, modifierSymbolLock |
-| | dictionary | UIEventInit | view, detail |
-| [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
+| [UIEvent](https://w3c.github.io/uievents/#interface-UIEvent) | interface | UIEvent | The UIEvent interface provides specific contextual information associated with User Interface events. |
+| | attribute | view | The view attribute identifies the Window from which the event was generated |
+| [UIEventInit](https://w3c.github.io/uievents/#dictdef-uieventinit) | dictionary | UIEventInit | Dictionary that is used to create UIEvent. |
+| | attrbitue | view | Should be initialized to the Window object of the global environment in which this event will be dispatched |
+| [EventModifierInit](https://w3c.github.io/uievents/#dictdef-eventmodifierinit) | dictionary | EventModifierInit | The MouseEvent and KeyboardEvent interfaces share a set of keyboard modifier attributes. EventModifierInit enables authors to initialize keyboard modifier attributes of the MouseEvent and KeyboardEvent interfaces. |
+| | attrribute | ctrlKey | true if the Control key modifier is to be considered active, false otherwise |
+| | attrribute | shiftKey | true if the Shift key modifier is to be considered active, false otherwise. |
+| | attrribute | altKey | true if the Alt (alternative) (or Option) key modifier is to be considered active, false otherwise. |
+| | attrribute | metaKey | true if the Meta key modifier is to be considered active, false otherwise. |
+| [TouchEvent](https://w3c.github.io/touch-events/#touchevent-interface) | interface | TouchEvent | Defines the touchstart, touchend, touchmove, and touchcancel event types. |
+| | attribute | touches | A list of Touch objects for every point of contact currently touching the surface. |
+| [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onunload | Represents the code to be called when the unload event is raised. |
 
 ## CSS

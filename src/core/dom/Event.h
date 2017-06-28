@@ -23,6 +23,7 @@ namespace StarFish {
 
 struct EventInit {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED()
     EventInit();
 
     // Constructor for internal use
@@ -54,9 +55,8 @@ public:
         BUBBLING_PHASE = 3
     };
 
-    Event(Document* document);
-    Event(Document* document, String* eventType,
-          const EventInit& init = EventInit());
+    Event(Document* document, String* eventType);
+    Event(Document* document, String* eventType, const EventInit& init);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -119,9 +119,30 @@ public:
     {
         return m_bubbles;
     }
+
+    void setBubbles(bool bubbles)
+    {
+        m_bubbles = bubbles;
+    }
+
     bool cancelable() const
     {
         return m_cancelable;
+    }
+
+    void setCancelable(bool cancelable)
+    {
+        m_cancelable = cancelable;
+    }
+
+    bool composed() const
+    {
+        return m_composed;
+    }
+
+    void setComposed(bool composed)
+    {
+        m_composed = composed;
     }
 
     void preventDefault()
@@ -177,6 +198,7 @@ private:
     bool m_bubbles;
     bool m_cancelable;
     bool m_defaultPrevented; // canceled flag
+    bool m_composed;
 
     DOMTimeStamp m_timeStamp;
 

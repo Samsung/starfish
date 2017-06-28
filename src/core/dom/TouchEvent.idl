@@ -8,7 +8,7 @@ dictionary TouchEventInit : EventModifierInit {
 
 [UnimplementedConstructor(DOMString type, optional TouchEventInit eventInitDict), ConstructorCallWith=Document]
 interface TouchEvent : UIEvent {
-    [Unimplemented] readonly attribute TouchList touches;
+    readonly attribute TouchList touches;
     [Unimplemented] readonly attribute TouchList targetTouches;
     [Unimplemented] readonly attribute TouchList changedTouches;
     [Unimplemented] readonly attribute boolean   altKey;

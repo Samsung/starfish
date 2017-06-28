@@ -62,13 +62,15 @@ public:
             if (pointState == Dali::PointState::DOWN) {
                 StarFishEnterer enter(m_sf);
                 const Dali::Vector2& screen = data.GetScreenPosition(0);
+                MouseEventInit init(screen.x, screen.y);
                 m_sf->platformWindow()->dispatchMouseEvent(
-                    screen.x, screen.y, PlatformWindow::MouseEventDown);
+                    PlatformWindow::MouseEventDown, init);
             } else if (pointState == Dali::PointState::UP) {
                 StarFishEnterer enter(m_sf);
                 const Dali::Vector2& screen = data.GetScreenPosition(0);
+                MouseEventInit init(screen.x, screen.y);
                 m_sf->platformWindow()->dispatchMouseEvent(
-                    screen.x, screen.y, PlatformWindow::MouseEventUp);
+                    PlatformWindow::MouseEventUp, init);
             }
         }
         return true;
@@ -77,8 +79,9 @@ public:
     {
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFishEnterer enter(m_sf);
+        MouseEventInit init(point.x, point.y);
         m_sf->platformWindow()->dispatchMouseEvent(
-            point.x, point.y, PlatformWindow::MouseEventMove);
+            PlatformWindow::MouseEventMove, init);
         return true;
     }
 

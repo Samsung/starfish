@@ -68,12 +68,7 @@ void EventInit::setComposed(bool composed)
     m_composed = composed;
 }
 
-Event::Event(Document* document)
-    : Event(document, String::emptyString)
-{
-}
-
-Event::Event(Document* document, String* eventType, const EventInit& init)
+Event::Event(Document* document, String* eventType)
     : ScriptWrappable(this)
     , m_isInitialized(true)
     , m_scriptBindingInstance(document->scriptBindingInstance())
@@ -83,12 +78,21 @@ Event::Event(Document* document, String* eventType, const EventInit& init)
     , m_eventPhase(0)
     , m_propagationStopped(false)
     , m_immediatePropagationStopped(false)
-    , m_bubbles(init.bubbles())
-    , m_cancelable(init.cancelable())
+    , m_bubbles(false)
+    , m_cancelable(false)
     , m_defaultPrevented(false)
+    , m_composed(false)
+    , m_timeStamp(timestamp())
     , m_isDispatched(false)
 {
-    m_timeStamp = timestamp();
+}
+
+Event::Event(Document* document, String* eventType, const EventInit& init)
+    : Event(document, eventType)
+{
+    m_bubbles = init.bubbles();
+    m_cancelable = init.cancelable();
+    m_composed = init.composed();
 }
 
 ScriptBindingInstance* Event::scriptBindingInstance()

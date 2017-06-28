@@ -17,22 +17,51 @@
 #ifndef __StarFishTouchEvent__
 #define __StarFishTouchEvent__
 
-#include "binding/ScriptWrappable.h"
-#include "UIEvent.h"
+#include "core/dom/UIEvent.h"
+#include "core/dom/Touch.h"
 
 namespace StarFish {
 
-class TouchEvent : public UIEvent {
+class TouchList;
+struct TouchEventInit : public EventModifierInit {
 public:
-    TouchEvent(Document* document, String* eventType,
-               const UIEventInit& init = UIEventInit())
-        : UIEvent(document, eventType, init)
+    TouchEventInit()
+        : EventModifierInit()
     {
     }
+
+    // TODO Implement JS binding interfaces
+    // such as,
+    // Vector touches();
+    // void setTouches(Vector touches);
+
+    GCVector<TouchInit>& touchInits()
+    {
+        return m_touchInits;
+    }
+
+private:
+    GCVector<TouchInit> m_touchInits;
+};
+
+class TouchEvent : public UIEvent {
+    friend TouchEventInit;
+
+public:
+    TouchEvent(Document* document, String* eventType);
+    TouchEvent(Document* document, String* eventType, TouchEventInit& init);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isTouchEvent() const override;
+
+    TouchList* touches()
+    {
+        return m_touches;
+    }
+
+private:
+    TouchList* m_touches;
 };
 }
 

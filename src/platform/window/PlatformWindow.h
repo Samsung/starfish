@@ -28,6 +28,9 @@ class Canvas;
 class Node;
 class WebView;
 
+struct MouseEventInit;
+struct TouchEventInit;
+
 class PlatformWindow : public gc {
 public:
     enum TouchEventKind {
@@ -59,9 +62,10 @@ public:
     virtual void clearResources() = 0;
     virtual Canvas* preparePainting(bool forPainting) = 0;
 
-    void dispatchTouchEvent(float x, float y, TouchEventKind kind,
-                            bool isMobile);
-    void dispatchMouseEvent(float x, float y, MouseEventKind kind);
+    void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+                            TouchEventInit& init);
+    void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
+                            MouseEventInit& init);
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
     void rendering();

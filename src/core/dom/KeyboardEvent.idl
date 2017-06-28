@@ -2,7 +2,7 @@
 // REF2. https://w3c.github.io/uievents/#idl-interface-KeyboardEvent-initializers
 // REF3. https://w3c.github.io/uievents/#legacy-interface-KeyboardEvent
 
-[Constructor(DOMString type, optional KeyboardEventInit eventInitDict), ConstructorCallWith=Document]
+[UnimplementedConstructor(DOMString type, optional KeyboardEventInit eventInitDict), ConstructorCallWith=Document]
 interface KeyboardEvent : UIEvent {
   // [REF1]----------------------------------------------------
   // KeyLocationCode
@@ -39,6 +39,7 @@ interface KeyboardEvent : UIEvent {
 };
 
 // https://w3c.github.io/uievents/#idl-keyboardeventinit
+[Unimplemented]
 dictionary KeyboardEventInit : EventModifierInit {
   DOMString key = "";
   DOMString code = "";

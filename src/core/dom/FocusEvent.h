@@ -22,15 +22,22 @@
 namespace StarFish {
 
 struct FocusEventInit : UIEventInit {
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    FocusEventInit();
+    FocusEventInit()
+        : UIEventInit()
+        , m_relatedTarget(nullptr)
+    {
+    }
 
-    // Constructor for internal use
-    FocusEventInit(bool bubbles);
-    FocusEventInit(bool bubbles, bool cancelable);
-
-    EventTarget* relatedTarget() const;
-    void setRelatedTarget(EventTarget* relatedTarget);
+    EventTarget* relatedTarget() const
+    {
+        return m_relatedTarget;
+    }
+    void setRelatedTarget(EventTarget* relatedTarget)
+    {
+        m_relatedTarget = relatedTarget;
+    }
 
 private:
     EventTarget* m_relatedTarget;
@@ -38,21 +45,32 @@ private:
 
 class FocusEvent : public UIEvent {
 public:
+    FocusEvent(Document* document, String* eventType)
+        : UIEvent(document, eventType)
+        , m_relatedTarget(nullptr)
+    {
+    }
     FocusEvent(Document* document, String* eventType,
-               const FocusEventInit& init = FocusEventInit())
+               const FocusEventInit& init)
         : UIEvent(document, eventType, init)
+        , m_relatedTarget(init.relatedTarget())
     {
     }
 
+    EventTarget* relatedTarget() const
+    {
+        return m_relatedTarget;
+    }
+    void setRelatedTarget(EventTarget* relatedTarget)
+    {
+        m_relatedTarget = relatedTarget;
+    }
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isFocusEvent() const override;
 
-    EventTarget* relatedTarget()
-    {
-        STARFISH_ASSERT_NOT_REACHED();
-        return nullptr;
-    }
+private:
+    EventTarget* m_relatedTarget;
 };
 }
 

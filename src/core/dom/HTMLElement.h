@@ -105,13 +105,13 @@ public:
     DECLARE_EVENT_LISTENER(loadedmetadata);
     // DECLARE_EVENT_LISTENER(loadend);
     DECLARE_EVENT_LISTENER(loadstart);
-    // DECLARE_EVENT_LISTENER(mousedown);
+    DECLARE_EVENT_LISTENER(mousedown);
     // DECLARE_EVENT_LISTENER(mouseenter);
     // DECLARE_EVENT_LISTENER(mouseleave);
-    // DECLARE_EVENT_LISTENER(mousemove);
+    DECLARE_EVENT_LISTENER(mousemove);
     // DECLARE_EVENT_LISTENER(mouseout);
     DECLARE_EVENT_LISTENER(mouseover);
-    // DECLARE_EVENT_LISTENER(mouseup);
+    DECLARE_EVENT_LISTENER(mouseup);
     // DECLARE_EVENT_LISTENER(wheel);
     DECLARE_EVENT_LISTENER(pause);
     DECLARE_EVENT_LISTENER(play);

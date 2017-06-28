@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,33 +15,12 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/FocusEvent.h"
+#include "core/dom/Touch.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
-
-FocusEventInit::FocusEventInit()
-    : FocusEventInit(false)
+ScriptBindingInstance* Touch::scriptBindingInstance()
 {
-}
-
-FocusEventInit::FocusEventInit(bool bubbles)
-    : FocusEventInit(bubbles, false)
-{
-}
-
-FocusEventInit::FocusEventInit(bool bubbles, bool cancelable)
-    : UIEventInit(bubbles, cancelable)
-    , m_relatedTarget(nullptr)
-{
-}
-
-EventTarget* FocusEventInit::relatedTarget() const
-{
-    return m_relatedTarget;
-}
-
-void FocusEventInit::setRelatedTarget(EventTarget* relatedTarget)
-{
-    m_relatedTarget = relatedTarget;
+    return document()->scriptBindingInstance();
 }
 }

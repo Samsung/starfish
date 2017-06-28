@@ -70,15 +70,16 @@ void PlatformWindow::close()
     webView()->mainBrowsingContext()->close();
 }
 
-void PlatformWindow::dispatchTouchEvent(float x, float y, TouchEventKind kind,
-                                        bool isMobile)
+void PlatformWindow::dispatchTouchEvent(TouchEventKind kind,
+                                        TouchEventInit& init)
 {
-    webView()->mainBrowsingContext()->dispatchTouchEvent(x, y, kind, isMobile);
+    webView()->mainBrowsingContext()->dispatchTouchEvent(kind, init);
 }
 
-void PlatformWindow::dispatchMouseEvent(float x, float y, MouseEventKind kind)
+void PlatformWindow::dispatchMouseEvent(MouseEventKind kind,
+                                        MouseEventInit& init)
 {
-    webView()->mainBrowsingContext()->dispatchMouseEvent(x, y, kind);
+    webView()->mainBrowsingContext()->dispatchMouseEvent(kind, init);
 }
 
 void PlatformWindow::dispatchKeyEvent(String* key, KeyEventKind kind)

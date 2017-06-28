@@ -21,55 +21,144 @@
 
 namespace StarFish {
 struct MouseEventInit : EventModifierInit {
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    MouseEventInit();
+    MouseEventInit()
+        : MouseEventInit(0, 0, 0, 0)
+    {
+    }
 
-    // Constructor for internal use
-    MouseEventInit(bool bubbles);
-    MouseEventInit(bool bubbles, bool cancelable);
+    MouseEventInit(double clientX, double clientY)
+        : MouseEventInit(clientX, clientY, clientX, clientY)
+    {
+    }
 
-    int32_t screenX() const;
-    void setScreenX(int32_t screenX);
+    MouseEventInit(double clientX, double clientY, double screenX,
+                   double screenY)
+        : EventModifierInit()
+        , m_clientX(clientX)
+        , m_clientY(clientY)
+        , m_screenX(screenX)
+        , m_screenY(screenY)
+    {
+    }
 
-    int32_t screenY() const;
-    void setScreenY(int32_t screenY);
+    double clientX() const
+    {
+        return m_clientX;
+    }
 
-    int32_t clientX() const;
-    void setClientX(int32_t clientX);
+    void setClientX(double clientX)
+    {
+        m_clientX = clientX;
+    }
 
-    int32_t clientY() const;
-    void setClientY(int32_t clientY);
+    double clientY() const
+    {
+        return m_clientY;
+    }
 
-    short button() const;
-    void setButton(short button);
+    void setClientY(double clientY)
+    {
+        m_clientY = clientY;
+    }
 
-    unsigned short buttons() const;
-    void setButtons(unsigned short buttons);
+    double screenX() const
+    {
+        return m_screenX;
+    }
 
-    EventTarget* relatedTarget() const;
-    void setRelatedTarget(EventTarget* relatedTarget);
+    void setScreenX(double screenX)
+    {
+        m_screenX = screenX;
+    }
+
+    double screenY() const
+    {
+        return m_screenY;
+    }
+
+    void setScreenY(double screenY)
+    {
+        m_screenY = screenY;
+    }
 
 private:
-    int32_t m_screenX;
-    int32_t m_screenY;
-    int32_t m_clientX;
-    int32_t m_clientY;
-    short m_button;
-    unsigned short m_buttons;
-    EventTarget* m_relatedTarget;
+    double m_clientX;
+    double m_clientY;
+    double m_screenX;
+    double m_screenY;
 };
 
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(Document* document, String* eventType,
-               const MouseEventInit& init = MouseEventInit())
+    MouseEvent(Document* document, String* eventType)
+        : UIEvent(document, eventType)
+        , m_clientX(0)
+        , m_clientY(0)
+        , m_screenX(0)
+        , m_screenY(0)
+    {
+    }
+
+    MouseEvent(Document* document, String* eventType, MouseEventInit& init)
         : UIEvent(document, eventType, init)
+        , m_clientX(init.clientX())
+        , m_clientY(init.clientY())
+        , m_screenX(init.screenX())
+        , m_screenY(init.screenY())
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
+
+    double clientX() const
+    {
+        return m_clientX;
+    }
+
+    void setClientX(double clientX)
+    {
+        m_clientX = clientX;
+    }
+
+    double clientY() const
+    {
+        return m_clientY;
+    }
+
+    void setClientY(double clientY)
+    {
+        m_clientY = clientY;
+    }
+
+    double screenX() const
+    {
+        return m_screenX;
+    }
+
+    void setScreenX(double screenX)
+    {
+        m_screenX = screenX;
+    }
+
+    double screenY() const
+    {
+        return m_screenY;
+    }
+
+    void setScreenY(double screenY)
+    {
+        m_screenY = screenY;
+    }
+
+private:
+    double m_clientX;
+    double m_clientY;
+    double m_screenX;
+    double m_screenY;
 };
 }
 

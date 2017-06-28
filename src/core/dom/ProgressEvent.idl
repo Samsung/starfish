@@ -8,7 +8,7 @@ interface ProgressEvent : Event {
 };
 
 dictionary ProgressEventInit : EventInit {
-  boolean lengthComputable;
-  unsigned long long loaded;
-  unsigned long long total;
+  boolean lengthComputable = false;
+  unsigned long long loaded = 0;
+  unsigned long long total = 0;
 };
