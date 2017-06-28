@@ -47,6 +47,7 @@
 #include "core/style/StyleRule.h"
 #include "platform/loader/ImageResource.h"
 #include "core/animation/Animation.h"
+#include "platform/network/NetworkSharedResourceManager.h"
 
 namespace StarFish {
 
@@ -60,6 +61,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)
     , m_documentURI(uri)
+    , m_cookieURI(uri)
     , m_characterSet(charSet)
     , m_resourceLoader(this)
     , m_styleResolver(this)
@@ -114,6 +116,23 @@ ScriptBindingInstance* Document::scriptBindingInstance() const
 Location* Document::location()
 {
     return window()->location();
+}
+
+String* Document::cookie()
+{
+    // TODO : Throw a "SecurityError" DOMException on getting and setting.
+    // * if the Document's origin is an opaque origin
+    // * If the contents are sandboxed into a unique origin (e.g. in an iframe
+    //   with the sandbox attribute)
+    String* ret =
+        NetworkSharedResourceManager::getInstance()->cookeis(m_cookieURI);
+    return ret;
+}
+
+void Document::setCookie(String* cookie)
+{
+    NetworkSharedResourceManager::getInstance()->setCookies(this, m_cookieURI,
+                                                            cookie);
 }
 
 void Document::open()

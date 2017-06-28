@@ -852,6 +852,11 @@ String* String::fromInt(int i)
     return String::fromUTF8(std::to_string(i).c_str());
 }
 
+String* String::fromInt64(int64_t i)
+{
+    return String::fromUTF8(std::to_string(i).c_str());
+}
+
 void String::split(char delim, GCVector<String*>& tokens)
 {
     size_t prev_pos = 0, pos = 0;
@@ -1494,6 +1499,18 @@ int String::parseInt(String* s)
     s->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             *((int*)data) = atoi(buf);
+            return 0;
+        },
+        &ret);
+    return ret;
+}
+
+int64_t String::parseInt64(String* s)
+{
+    int64_t ret;
+    s->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            *((int64_t*)data) = atoll(buf);
             return 0;
         },
         &ret);

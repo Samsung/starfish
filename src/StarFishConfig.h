@@ -254,6 +254,7 @@
 #define APP_VERSION(APP_NAME, VERSION) APP_NAME "/" VERSION
 #define USER_AGENT(APP_CODE_NAME, VERSION) \
     "Mozilla/5.0 " APP_CODE_NAME "/" VERSION
+#define USER_AGENT_MAXIMUM_DATE_VALUE 8.64e15
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
 
 #include "StarFishExport.h"

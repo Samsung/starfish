@@ -78,6 +78,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
+double parseDate(ScriptBindingInstance* instance, String* date);
 
 void throwScriptTypeError(String* message);
 

@@ -391,6 +391,17 @@ ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
                               1, ValueRef::create(ctx->globalObject()->json()));
 }
 
+double parseDate(ScriptBindingInstance* instance, String* date)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    DateObjectRef* obj = DateObjectRef::create(state);
+    obj->setTimeValue(state, ValueRef::create(createScriptString(date)));
+    double ret = obj->primitiveValue();
+    state->destroy();
+    return ret;
+}
+
 bool isCallableScriptValue(ScriptValue v)
 {
     if (v->isFunction()) {
