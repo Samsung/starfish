@@ -113,4 +113,9 @@ String* MediaQuery::cssText() const
 {
     return serialize();
 }
+
+bool MediaQuery::operator==(const MediaQuery& other) const
+{
+    return cssText()->equals(other.cssText());
+}
 }

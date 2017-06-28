@@ -129,3 +129,4 @@ test/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html
 test/reftest/vendor/blink/fast/dom/Window/window-remove-event-listener.html
 # Media queries
 test/reftest/vendor/blink/fast/media/viewport-media-query-synchronous.html
+test/reftest/vendor/blink/fast/media/mq-append-delete.html

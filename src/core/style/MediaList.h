@@ -19,42 +19,38 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __StarFishMediaQuerySet__
-#define __StarFishMediaQuerySet__
+#ifndef __StarFishMediaList__
+#define __StarFishMediaList__
 
-#include "MediaQuery.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class Document;
-class MediaQuerySet : public gc {
+class MediaQuerySet;
+class MediaList : public ScriptWrappable {
 public:
-    static MediaQuerySet* create(Document* document)
-    {
-        return new MediaQuerySet(document);
-    }
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isMediaList() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    void addMediaQuery(MediaQuery* mediaQuery);
-
-    GCVector<MediaQuery*>& queryVector()
-    {
-        return m_queries;
-    }
+    MediaList(MediaQuerySet* mediaQuerySet);
 
     String* mediaText() const;
+    void setMediaText(String* text);
 
-    MediaQuerySet* create(String* mediaString);
-    bool set(String* mediaString);
-    void add(String* mediaString);
-    bool remove(String* mediaString);
+    unsigned length() const;
+    String* item(unsigned index) const;
+    void appendMedium(String* newMedium);
+    void deleteMedium(String* oldMedium);
 
-    Document* document() const;
+    const MediaQuerySet* querySet() const
+    {
+        return m_mediaQuerySet;
+    }
 
 protected:
-    MediaQuerySet(Document* document);
-    MediaQuerySet(MediaQuerySet& o);
-    Document* m_document;
-    GCVector<MediaQuery*> m_queries;
+    MediaQuerySet* m_mediaQuerySet;
 };
 }
 

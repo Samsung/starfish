@@ -8,7 +8,7 @@ interface CSSStyleRule : CSSRule {
 // https://drafts.csswg.org/cssom/#the-cssimportrule-interface
 interface CSSImportRule : CSSRule {
   readonly attribute USVString href;
-  [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+  [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
   [SameObject] readonly attribute CSSStyleSheet styleSheet;
 };
 
@@ -26,5 +26,5 @@ interface CSSConditionRule : CSSGroupingRule {
 
 // https://drafts.csswg.org/css-conditional-3/#cssmediarule
 interface CSSMediaRule : CSSConditionRule {
-    [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+    [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
 };

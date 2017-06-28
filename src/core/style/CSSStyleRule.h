@@ -30,6 +30,7 @@ class StyleRuleCondition;
 class StyleRuleMedia;
 class StyleRuleImport;
 class MediaQuerySet;
+class MediaList;
 
 class CSSStyleRule : public CSSRule {
 public:
@@ -107,8 +108,8 @@ public:
     CSSMediaRule(StyleRuleMedia*, CSSStyleSheet*);
 
     String* cssText() override;
-    String* conditionText() const override;
-    // MediaList* media() const;
+    String* conditionText() const;
+    MediaList* media();
 
 private:
     CSSRule::Type type() const override
@@ -116,7 +117,7 @@ private:
         return CSSRule::Type::MEDIA_RULE;
     }
     MediaQuerySet* mediaQuerySet() const;
-    // MediaList* m_mediaWrapper;
+    MediaList* m_mediaWrapper;
 };
 
 class CSSImportRule : public CSSRule {
@@ -130,7 +131,7 @@ public:
     String* cssText() override;
     String* href() const;
     CSSStyleSheet* styleSheet();
-    // MediaList* media() const;
+    MediaList* media();
 
 private:
     CSSRule::Type type() const override
@@ -139,7 +140,7 @@ private:
     }
     StyleRuleImport* m_importRule;
     CSSStyleSheet* m_styleSheetWrapper;
-    // MediaList* m_mediaWrapper;
+    MediaList* m_mediaWrapper;
 };
 }
 
