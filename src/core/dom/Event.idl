@@ -23,7 +23,7 @@ interface Event {
   readonly attribute boolean cancelable;
   void preventDefault();
   readonly attribute boolean defaultPrevented;
-  [Unimplemented] readonly attribute boolean composed;
+  readonly attribute boolean composed;
 
   [Unimplemented, Unforgeable] readonly attribute boolean isTrusted;
   readonly attribute DOMTimeStamp timeStamp;

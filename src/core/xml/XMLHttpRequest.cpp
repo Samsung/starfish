@@ -324,10 +324,11 @@ void XMLHttpRequest::onProgressEvent(ResourceRequest* request,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    ProgressEvent* pe = new ProgressEvent(
-        scriptBindingInstance()->ownerDocument(), eventName,
-        ProgressEventInit(false, false, request->total() > 0, request->loaded(),
-                          request->total()));
+    ProgressEvent* pe =
+        new ProgressEvent(scriptBindingInstance()->ownerDocument(), eventName);
+    pe->setLengthComputable(request->total() > 0);
+    pe->setLoaded(request->loaded());
+    pe->setTotal(request->total());
     EventTarget::dispatchEvent(this, pe);
 }
 

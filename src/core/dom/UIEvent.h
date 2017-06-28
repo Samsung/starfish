@@ -24,18 +24,34 @@ namespace StarFish {
 // https://w3c.github.io/uievents/#dictdef-uieventinit
 class Window;
 struct UIEventInit : EventInit {
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    UIEventInit();
+    UIEventInit()
+        : EventInit()
+        , m_view(nullptr)
+        , m_detail(false)
+    {
+    }
 
-    // Constructor for internal use
-    UIEventInit(bool bubbles);
-    UIEventInit(bool bubbles, bool cancelable);
+    Window* view() const
+    {
+        return m_view;
+    }
 
-    Window* view() const;
-    void setView(Window*);
+    void setView(Window* view)
+    {
+        m_view = view;
+    }
 
-    int32_t detail() const;
-    void setDetail(int32_t);
+    int32_t detail() const
+    {
+        return m_detail;
+    }
+
+    void setDetail(int32_t detail)
+    {
+        m_detail = detail;
+    }
 
 private:
     Window* m_view;
@@ -44,12 +60,9 @@ private:
 
 // https://w3c.github.io/uievents/#dictdef-eventmodifierinit
 struct EventModifierInit : UIEventInit {
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
     EventModifierInit();
-
-    // Constructor for internal use
-    EventModifierInit(bool bubbles);
-    EventModifierInit(bool bubbles, bool cancelable);
 
     bool ctrlKey() const;
     void setCtrlKey(bool ctrlKey);
@@ -63,64 +76,55 @@ public:
     bool metaKey() const;
     void setMetaKey(bool metaKey);
 
-    bool modifierAltGraph() const;
-    void setModifierAltGraph(bool modifierAltGraph);
-
-    bool modifierCapsLock() const;
-    void setModifierCapsLock(bool modifierCapsLock);
-
-    bool modifierFn() const;
-    void setModifierFn(bool modifierFn);
-
-    bool modifierFnLock() const;
-    void setModifierFnLock(bool modifierFnLock);
-
-    bool modifierHyper() const;
-    void setModifierHyper(bool modifierHyper);
-
-    bool modifierNumLock() const;
-    void setModifierNumLock(bool modifierNumLock);
-
-    bool modifierScrollLock() const;
-    void setModifierScrollLock(bool modifierScrollLock);
-
-    bool modifierSuper() const;
-    void setModifierSuper(bool modifierSuper);
-
-    bool modifierSymbol() const;
-    void setModifierSymbol(bool modifierSymbol);
-
-    bool modifierSymbolLock() const;
-    void setModifierSymbolLock(bool modifierSymbolLock);
-
 private:
     bool m_ctrlKey;
     bool m_shiftKey;
     bool m_altKey;
     bool m_metaKey;
-    bool m_modifierAltGraph;
-    bool m_modifierCapsLock;
-    bool m_modifierFn;
-    bool m_modifierFnLock;
-    bool m_modifierHyper;
-    bool m_modifierNumLock;
-    bool m_modifierScrollLock;
-    bool m_modifierSuper;
-    bool m_modifierSymbol;
-    bool m_modifierSymbolLock;
+
+    // TODO Implement
+    // bool m_modifierAltGraph;
+    // bool m_modifierCapsLock;
+    // bool m_modifierFn;
+    // bool m_modifierFnLock;
+    // bool m_modifierHyper;
+    // bool m_modifierNumLock;
+    // bool m_modifierScrollLock;
+    // bool m_modifierSuper;
+    // bool m_modifierSymbol;
+    // bool m_modifierSymbolLock;
 };
 
 class UIEvent : public Event {
 public:
-    UIEvent(Document* document, String* eventType,
-            const UIEventInit& init = UIEventInit())
+    UIEvent(Document* document, String* eventType)
+        : Event(document, eventType)
+        , m_view(nullptr)
+    {
+    }
+
+    UIEvent(Document* document, String* eventType, const UIEventInit& init)
         : Event(document, eventType, init)
+        , m_view(init.view())
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isUIEvent() const override;
+
+    Window* view() const
+    {
+        return m_view;
+    }
+
+    void setView(Window* view)
+    {
+        m_view = view;
+    }
+
+private:
+    Window* m_view;
 };
 }
 

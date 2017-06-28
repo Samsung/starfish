@@ -184,7 +184,7 @@ void Document::close()
     if (body) {
         String* eventType =
             window()->starFish()->staticStrings()->m_unload.localName();
-        Event* e = new Event(this, eventType, EventInit(false, false));
+        Event* e = new Event(this, eventType);
         EventTarget::dispatchEvent(body, e);
     }
 
@@ -359,7 +359,7 @@ void Document::setVisibilityState(VisibilityState visibilityState)
         m_pageVisibilityState = visibilityState;
         String* eventType =
             starFish()->staticStrings()->m_visibilitychange.localName();
-        Event* e = new Event(this, eventType, EventInit(true, false));
+        Event* e = new Event(this, eventType, EventInit(true));
         EventTarget::dispatchEvent(this->asNode(), e);
     }
 }
@@ -498,7 +498,10 @@ DEFINE_EVENT_LISTENER(Document, load);
 DEFINE_EVENT_LISTENER(Document, loadeddata);
 DEFINE_EVENT_LISTENER(Document, loadedmetadata);
 DEFINE_EVENT_LISTENER(Document, loadstart);
+DEFINE_EVENT_LISTENER(Document, mousedown);
+DEFINE_EVENT_LISTENER(Document, mousemove);
 DEFINE_EVENT_LISTENER(Document, mouseover);
+DEFINE_EVENT_LISTENER(Document, mouseup);
 DEFINE_EVENT_LISTENER(Document, pause);
 DEFINE_EVENT_LISTENER(Document, play);
 DEFINE_EVENT_LISTENER(Document, playing);

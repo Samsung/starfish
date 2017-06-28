@@ -24,6 +24,7 @@
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/Traverse.h"
+#include "core/dom/TouchEvent.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
 #include "core/page/Navigator.h"
@@ -198,10 +199,12 @@ void Window::forceDisableOnloadCapture()
 
 void Window::simulateClick(float x, float y)
 {
+    TouchEventInit init;
+    init.touchInits().emplace_back(x, y);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        x, y, PlatformWindow::TouchEventStart, true);
+        PlatformWindow::TouchEventStart, init);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        x, y, PlatformWindow::TouchEventEnd, true);
+        PlatformWindow::TouchEventEnd, init);
 }
 
 void Window::simulateVisibilitychange(bool show)
@@ -299,7 +302,10 @@ DEFINE_EVENT_LISTENER(Window, load);
 DEFINE_EVENT_LISTENER(Window, loadeddata);
 DEFINE_EVENT_LISTENER(Window, loadedmetadata);
 DEFINE_EVENT_LISTENER(Window, loadstart);
+DEFINE_EVENT_LISTENER(Window, mousedown);
+DEFINE_EVENT_LISTENER(Window, mousemove);
 DEFINE_EVENT_LISTENER(Window, mouseover);
+DEFINE_EVENT_LISTENER(Window, mouseup);
 DEFINE_EVENT_LISTENER(Window, pause);
 DEFINE_EVENT_LISTENER(Window, play);
 DEFINE_EVENT_LISTENER(Window, playing);

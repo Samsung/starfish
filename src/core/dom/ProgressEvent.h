@@ -22,21 +22,45 @@
 namespace StarFish {
 
 struct ProgressEventInit : public EventInit {
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    ProgressEventInit();
+    ProgressEventInit()
+        : EventInit()
+        , m_lengthComputable(false)
+        , m_loaded(0)
+        , m_total(0)
+    {
+    }
 
-    // For internal use
-    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable,
-                      uint64_t loaded, uint64_t total);
+    bool lengthComputable() const
+    {
+        return m_lengthComputable;
+    }
 
-    bool lengthComputable() const;
-    void setLengthComputable(bool lengthComputable);
+    void setLengthComputable(bool lengthComputable)
+    {
+        m_lengthComputable = lengthComputable;
+    }
 
-    uint64_t loaded() const;
-    void setLoaded(uint64_t loaded);
+    uint64_t loaded() const
+    {
+        return m_loaded;
+    }
 
-    uint64_t total() const;
-    void setTotal(uint64_t total);
+    void setLoaded(uint64_t loaded)
+    {
+        m_loaded = loaded;
+    }
+
+    uint64_t total() const
+    {
+        return m_total;
+    }
+
+    void setTotal(uint64_t total)
+    {
+        m_total = total;
+    }
 
 private:
     bool m_lengthComputable;
@@ -46,20 +70,51 @@ private:
 
 class ProgressEvent : public Event {
 public:
+    ProgressEvent(Document* document, String* eventType)
+        : Event(document, eventType)
+        , m_lengthComputable(false)
+        , m_loaded(0)
+        , m_total(0)
+    {
+    }
+
     ProgressEvent(Document* document, String* eventType,
-                  const ProgressEventInit& init = ProgressEventInit());
+                  ProgressEventInit& init)
+        : Event(document, eventType, init)
+        , m_lengthComputable(init.lengthComputable())
+        , m_loaded(init.loaded())
+        , m_total(init.total())
+    {
+    }
 
     bool lengthComputable() const
     {
         return m_lengthComputable;
     }
-    unsigned long long loaded() const
+
+    void setLengthComputable(bool lengthComputable)
+    {
+        m_lengthComputable = lengthComputable;
+    }
+
+    uint64_t loaded() const
     {
         return m_loaded;
     }
-    unsigned long long total() const
+
+    void setLoaded(uint64_t loaded)
+    {
+        m_loaded = loaded;
+    }
+
+    uint64_t total() const
     {
         return m_total;
+    }
+
+    void setTotal(uint64_t total)
+    {
+        m_total = total;
     }
 
     /* Other methods (not in ProgressEvent interface) */
@@ -70,8 +125,8 @@ public:
 
 private:
     bool m_lengthComputable;
-    unsigned long long m_loaded;
-    unsigned long long m_total;
+    uint64_t m_loaded;
+    uint64_t m_total;
 };
 }
 

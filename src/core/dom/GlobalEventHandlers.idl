@@ -38,13 +38,13 @@ interface GlobalEventHandlers {
   attribute EventHandler onloadedmetadata;
   [Unimplemented] attribute EventHandler onloadend;
   attribute EventHandler onloadstart;
-  [Unimplemented] attribute EventHandler onmousedown;
+  attribute EventHandler onmousedown;
   [Unimplemented, LenientThis] attribute EventHandler onmouseenter;
   [Unimplemented, LenientThis] attribute EventHandler onmouseleave;
-  [Unimplemented] attribute EventHandler onmousemove;
+  attribute EventHandler onmousemove;
   [Unimplemented] attribute EventHandler onmouseout;
   attribute EventHandler onmouseover;
-  [Unimplemented] attribute EventHandler onmouseup;
+  attribute EventHandler onmouseup;
   [Unimplemented] attribute EventHandler onwheel;
   attribute EventHandler onpause;
   attribute EventHandler onplay;

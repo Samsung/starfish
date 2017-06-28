@@ -1,0 +1,44 @@
+// https://w3c.github.io/touch-events/#idl-def-touch
+
+enum TouchType {
+    "direct",
+    "stylus"
+};
+
+dictionary TouchInit {
+    [Unimplemented] required long identifier;
+    required EventTarget target;
+    double clientX = 0;
+    double clientY = 0;
+    double screenX = 0;
+    double screenY = 0;
+    [Unimplemented] double pageX = 0;
+    [Unimplemented] double pageY = 0;
+    [Unimplemented] float radiusX = 0;
+    [Unimplemented] float radiusY = 0;
+    [Unimplemented] float rotationAngle = 0;
+    [Unimplemented] float force = 0;
+    [Unimplemented] double altitudeAngle = 0;
+    [Unimplemented] double azimuthAngle = 0;
+    [Unimplemented] TouchType touchType = "direct";
+};
+
+[Constructor(TouchInit touchInitDict),
+ ConstructorCallWith=Document]
+interface Touch {
+    [Unimplemented] readonly attribute long identifier;
+    readonly attribute EventTarget target;
+    readonly attribute double screenX;
+    readonly attribute double screenY;
+    readonly attribute double clientX;
+    readonly attribute double clientY;
+    [Unimplemented] readonly attribute double pageX;
+    [Unimplemented] readonly attribute double pageY;
+    [Unimplemented] readonly attribute float radiusX;
+    [Unimplemented] readonly attribute float radiusY;
+    [Unimplemented] readonly attribute float rotationAngle;
+    [Unimplemented] readonly attribute float force;
+    [Unimplemented] readonly attribute float altitudeAngle;
+    [Unimplemented] readonly attribute float azimuthAngle;
+    [Unimplemented] readonly attribute TouchType touchType;
+};

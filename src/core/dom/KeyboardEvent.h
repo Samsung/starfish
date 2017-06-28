@@ -38,56 +38,31 @@ namespace StarFish {
 #define KEYBOARD_KEYCODE_0 48
 #define KEYBOARD_KEYCODE_a 65
 
-struct KeyboardEventInit : EventModifierInit {
-public:
-    KeyboardEventInit();
-
-    // Constructor for internal use
-    KeyboardEventInit(bool bubbles);
-    KeyboardEventInit(bool bubbles, bool cancelable);
-
-    String* key() const;
-    void setKey(String* key);
-
-    String* code() const;
-    void setCode(String* code);
-
-    uint32_t location() const;
-    void setLocation(uint32_t location);
-
-    bool repeat() const;
-    void setRepeat(bool repeat);
-
-    bool isComposing() const;
-    void setIsComposing(bool isComposing);
-
-private:
-    String* m_key;
-    String* m_code;
-    uint32_t m_location;
-    bool m_repeat;
-    bool m_isComposing;
-};
-
 class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(Document* document, String* eventType,
-                  const KeyboardEventInit& init = KeyboardEventInit())
-        : UIEvent(document, eventType, init)
+    KeyboardEvent(Document* document, String* eventType)
+        : UIEvent(document, eventType)
+        , m_keyCode(0)
+        , m_ctrlKey(false)
+        , m_shiftKey(false)
+        , m_altKey(false)
         , m_metaKey(false)
     {
-        m_keyCode = convertKeyCodeFromEcore(init.key());
-        m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||
-                     (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
-        m_shiftKey = (m_keyCode == KEYBOARD_KEYCODE_SHIFT);
-        m_altKey = ((m_keyCode == KEYBOARD_KEYCODE_ALT_L) ||
-                    (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isKeyboardEvent() const override;
 
+    void setKey(String* key)
+    {
+        m_keyCode = convertKeyCodeFromEcore(key);
+        m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||
+                     (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
+        m_shiftKey = (m_keyCode == KEYBOARD_KEYCODE_SHIFT);
+        m_altKey = ((m_keyCode == KEYBOARD_KEYCODE_ALT_L) ||
+                    (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
+    }
     unsigned long keyCode()
     {
         return (unsigned)m_keyCode;

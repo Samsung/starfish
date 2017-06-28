@@ -35,6 +35,9 @@ class CanvasSurface;
 class PlatformWindow;
 class Window;
 class HTMLIFrameElement;
+class MouseEventInit;
+struct TouchEventInit;
+struct MouseEventInit;
 
 class BrowsingContext : public gc, public StarFishHoldable {
     friend class PlatformWindow;
@@ -143,10 +146,10 @@ public:
     void markHasPendingStyleSheet();
     void unmarkHasPendingStyleSheet();
 
-    void dispatchTouchEvent(float x, float y,
-                            PlatformWindow::TouchEventKind kind, bool isMobile);
-    void dispatchMouseEvent(float x, float y,
-                            PlatformWindow::MouseEventKind kind);
+    void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+                            TouchEventInit& init);
+    void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
+                            MouseEventInit& init);
     void dispatchKeyEvent(String* key, PlatformWindow::KeyEventKind kind);
 
     void setActiveNode(Node* n);

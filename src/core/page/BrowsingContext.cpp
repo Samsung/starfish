@@ -439,12 +439,14 @@ void BrowsingContext::setFocusedNode(Node* n)
     if (t) {
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_blur.localName();
-            e = new FocusEvent(document(), eventType, FocusEventInit());
+            e = new FocusEvent(document(), eventType);
             document()->dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusout.localName();
-            e = new FocusEvent(document(), eventType, FocusEventInit(true));
+            FocusEventInit init;
+            init.setBubbles(true);
+            e = new FocusEvent(document(), eventType, init);
             document()->dispatchEvent(t->asNode(), e);
         }
     }
@@ -455,12 +457,14 @@ void BrowsingContext::setFocusedNode(Node* n)
     if (t) {
         if (t->isHTMLElement()) {
             eventType = starFish()->staticStrings()->m_focus.localName();
-            e = new FocusEvent(document(), eventType, FocusEventInit());
+            e = new FocusEvent(document(), eventType);
             document()->dispatchEvent(t->asNode(), e);
         }
         if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
             eventType = starFish()->staticStrings()->m_focusin.localName();
-            e = new FocusEvent(document(), eventType, FocusEventInit(true));
+            FocusEventInit init;
+            init.setBubbles(true);
+            e = new FocusEvent(document(), eventType, init);
             document()->dispatchEvent(t->asNode(), e);
         }
     }
@@ -528,159 +532,230 @@ void BrowsingContext::releaseHoveredNode()
     m_hoveredNodes.shrink_to_fit();
 }
 
-void BrowsingContext::dispatchTouchEvent(float x, float y,
-                                         PlatformWindow::TouchEventKind kind,
-                                         bool isMobile)
+static TouchEvent* createTouchEvent(Document* document, String* eventName,
+                                    TouchEventInit& init)
+{
+    TouchEvent* event = new TouchEvent(document, eventName, init);
+    event->setBubbles(true);
+    event->setCancelable(true);
+    event->setView(document->window());
+    return event;
+}
+
+static MouseEvent* createMouseEvent(Document* document, String* eventName,
+                                    MouseEventInit& init)
+{
+    MouseEvent* event = new MouseEvent(document, eventName, init);
+    event->setBubbles(true);
+    event->setCancelable(true);
+    event->setView(document->window());
+    return event;
+}
+
+static bool isIFrameEvent(Node* targetNode)
+{
+    if (targetNode->isHTMLIFrameElement() &&
+        targetNode->asHTMLIFrameElement()->browsingContext() &&
+        targetNode->asHTMLIFrameElement()->frame()) {
+        return true;
+    }
+    return false;
+}
+
+void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+                                         TouchEventInit& init)
 {
     if (!m_isRunning) {
         return;
     }
-
-    Node* node = hitTest(x, y);
-    if (!node) {
-        return;
-    }
-
-    if (node->isHTMLIFrameElement()) {
-        auto iframe = node->asHTMLIFrameElement();
-        if (iframe->browsingContext() && iframe->frame()) {
-            auto absPoint = iframe->frame()->asFrameBox()->absolutePoint(
-                document()->frame()->asFrameBox());
-
-            x -= absPoint.x();
-            y -= absPoint.y();
-
-            iframe->browsingContext()->dispatchTouchEvent(x, y, kind, isMobile);
-
-            return;
-        }
-    }
-
-    if (kind == PlatformWindow::TouchEventStart) { // or MouseEventDown
-        m_touchDownPoint = Unit::Location(x, y);
-        setActiveNode(node);
-        setFocusedNode(node);
-
-        String* eventType;
-        Event* e;
-        if (isMobile) {
-            eventType = starFish()->staticStrings()->m_touchstart.localName();
-            e = new TouchEvent(document(), eventType, UIEventInit(true, true));
-        } else {
-            eventType = starFish()->staticStrings()->m_mousedown.localName();
-            e = new MouseEvent(document(), eventType,
-                               MouseEventInit(true, true));
-        }
-
-        if (m_activeNodes.size() > 0) {
-            document()->window()->dispatchEvent(m_activeNodes[0], e);
-        } else {
-            document()->window()->dispatchEvent(document(), e);
-        }
-
-    } else if (kind == PlatformWindow::TouchEventMove) { // or MouseEventMove
-        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) &&
-            ((abs(m_touchDownPoint.x() - x) > 30) ||
-             (abs(m_touchDownPoint.y() - y) > 30))) {
-            releaseActiveNode();
-        }
-
-        Node* t = node->nearestParentElement();
-        if (!isMobile) {
-            bool check = true;
-            if (m_hoveredNodes.size() > 0) {
-                check = (t != m_hoveredNodes[0]);
-            }
-
-            if (check) {
-                releaseHoveredNode();
-                setHoveredNode(node);
-
-                String* eventType =
-                    starFish()->staticStrings()->m_mouseover.localName();
-                Event* e = new MouseEvent(document(), eventType,
-                                          MouseEventInit(true, true));
-
-                if (t) {
-                    document()->window()->dispatchEvent(t, e);
-                } else {
-                    document()->window()->dispatchEvent(document(), e);
-                }
-            }
-        }
-
-        String* eventType;
-        Event* e;
-        if (isMobile) {
-            eventType = starFish()->staticStrings()->m_touchmove.localName();
-            e = new TouchEvent(document(), eventType, UIEventInit(true, true));
-        } else {
-            eventType = starFish()->staticStrings()->m_mousemove.localName();
-            e = new MouseEvent(document(), eventType,
-                               MouseEventInit(true, true));
-        }
-
-        if (t) {
-            document()->window()->dispatchEvent(t, e);
-        } else {
-            document()->window()->dispatchEvent(document(), e);
-        }
-    } else if (kind == PlatformWindow::TouchEventCancel) {
+    if (kind == PlatformWindow::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
-    } else {
-        STARFISH_ASSERT(kind ==
-                        PlatformWindow::TouchEventEnd); // or MouseEventUp
-
-        Node* t = node->nearestParentElement();
+        return;
+    }
+    // If there is no `Touch` information, return.
+    if (init.touchInits().size() == 0) {
+        return;
+    }
+    // Handle touch informations
+    // - Do the hitTest for all `Touch` informations and set target for each.
+    // - Decide representative target (= first non-empty target).
+    // - Check whether touch position moved away from original position
+    //   to release active nodes.
+    bool checkRelease = kind == PlatformWindow::TouchEventMove &&
+                        (starFish()->deviceKind() & deviceKindUseTouchScreen);
+    Node* targetNode = nullptr;
+    double targetX = 0;
+    double targetY = 0;
+    size_t len = init.touchInits().size();
+    for (size_t i = 0; i < len; i++) {
+        TouchInit& touchInit = init.touchInits()[i];
+        Node* node = hitTest(touchInit.clientX(), touchInit.clientY());
+        touchInit.setTarget(node);
+        if (!targetNode) {
+            targetNode = node;
+            targetX = touchInit.clientX();
+            targetY = touchInit.clientY();
+        }
+        if (checkRelease &&
+            ((abs(m_touchDownPoint.x() - touchInit.clientX()) > 30) ||
+             (abs(m_touchDownPoint.y() - touchInit.clientY()) > 30))) {
+            releaseActiveNode();
+            checkRelease = false;
+        }
+    }
+    if (!targetNode) {
+        return;
+    }
+    // Handle event inside iframe
+    if (isIFrameEvent(targetNode)) {
+        auto iframe = targetNode->asHTMLIFrameElement();
+        auto absPoint = iframe->frame()->asFrameBox()->absolutePoint(
+            document()->frame()->asFrameBox());
+        // NOTE Pass only targetX/Y information to iframe.
+        //      discard rest informations.
+        TouchEventInit newInit;
+        newInit.touchInits().emplace_back(targetX - (double)absPoint.x(),
+                                          targetY - (double)absPoint.y());
+        iframe->browsingContext()->dispatchTouchEvent(kind, newInit);
+        return;
+    }
+    // Dispatch events
+    String* eventName = String::emptyString;
+    switch (kind) {
+    case PlatformWindow::TouchEventStart: {
+        m_touchDownPoint = Unit::Location(targetX, targetY);
+        setActiveNode(targetNode);
+        setFocusedNode(targetNode);
+        // Dispatch touchstart event
+        eventName = starFish()->staticStrings()->m_touchstart.localName();
+        Event* e = createTouchEvent(document(), eventName, init);
+        Node* t = m_activeNodes.size() > 0 ? m_activeNodes[0] : document();
+        document()->window()->dispatchEvent(t, e);
+        break;
+    }
+    case PlatformWindow::TouchEventMove: {
+        // Dispatch touchmove event
+        eventName = starFish()->staticStrings()->m_touchmove.localName();
+        Event* e = createTouchEvent(document(), eventName, init);
+        Node* t = targetNode->nearestParentElement();
+        t = t ? t : document();
+        document()->window()->dispatchEvent(t, e);
+        break;
+    }
+    case PlatformWindow::TouchEventEnd: {
+        Node* t = targetNode->nearestParentElement();
         bool check = false;
         if (m_activeNodes.size() > 0) {
             check = (t == m_activeNodes[0]);
         }
-
         if (check) {
-            String* eventType =
-                starFish()->staticStrings()->m_click.localName();
-            Event* e;
+            // Dispatch click event
+            t = t ? t : document();
+            eventName = starFish()->staticStrings()->m_click.localName();
+            MouseEventInit clickInit(targetX, targetY);
+            Event* click = createMouseEvent(document(), eventName, clickInit);
+            document()->window()->dispatchEvent(t, click);
 
-            String* eventType2;
-            Event* e2;
-            if (isMobile) {
-                e = new TouchEvent(document(), eventType,
-                                   UIEventInit(true, true));
-                eventType2 =
-                    starFish()->staticStrings()->m_touchend.localName();
-                e2 = new TouchEvent(document(), eventType2,
-                                    UIEventInit(true, true));
-            } else {
-                e = new MouseEvent(document(), eventType,
-                                   MouseEventInit(true, true));
-                eventType2 = starFish()->staticStrings()->m_mouseup.localName();
-                e2 = new MouseEvent(document(), eventType2,
-                                    MouseEventInit(true, true));
-            }
-
-            if (t) {
-                document()->window()->dispatchEvent(t, e);
-                document()->window()->dispatchEvent(t, e2);
-            } else {
-                document()->window()->dispatchEvent(document(), e);
-                document()->window()->dispatchEvent(document(), e2);
-            }
+            // Dispatch touchend event
+            eventName = starFish()->staticStrings()->m_touchend.localName();
+            Event* touchend = createTouchEvent(document(), eventName, init);
+            document()->window()->dispatchEvent(t, touchend);
         }
-
         releaseActiveNode();
+        break;
+    }
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 
-void BrowsingContext::dispatchMouseEvent(float x, float y,
-                                         PlatformWindow::MouseEventKind kind)
+void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
+                                         MouseEventInit& init)
 {
-    if (kind <= PlatformWindow::MouseEventUp) {
-        dispatchTouchEvent(x, y, (PlatformWindow::TouchEventKind)kind, false);
-    } else if (kind == PlatformWindow::MouseEventEnter) {
-    } else {
-        STARFISH_ASSERT(kind == PlatformWindow::MouseEventOut);
+    if (!m_isRunning) {
+        return;
+    }
+    // MouseEventEnter/MouseEventOut are not supported yet
+    if (kind >= PlatformWindow::MouseEventEnter) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return;
+    }
+    // Hit test to validate event position
+    Node* targetNode = hitTest(init.clientX(), init.clientY());
+    if (!targetNode) {
+        return;
+    }
+    // Handle event inside iframe
+    if (isIFrameEvent(targetNode)) {
+        auto iframe = targetNode->asHTMLIFrameElement();
+        auto absPoint = iframe->frame()->asFrameBox()->absolutePoint(
+            document()->frame()->asFrameBox());
+        MouseEventInit newInit(init.clientX() - (double)absPoint.x(),
+                               init.clientY() - (double)absPoint.y());
+        iframe->browsingContext()->dispatchMouseEvent(kind, newInit);
+        return;
+    }
+    // Dispatch events
+    String* eventName = String::emptyString;
+    switch (kind) {
+    case PlatformWindow::MouseEventDown: {
+        m_touchDownPoint = Unit::Location(init.clientX(), init.clientY());
+        setActiveNode(targetNode);
+        setFocusedNode(targetNode);
+        // Dispatch mousedown event
+        eventName = starFish()->staticStrings()->m_mousedown.localName();
+        Event* e = createMouseEvent(document(), eventName, init);
+        Node* t = m_activeNodes.size() > 0 ? m_activeNodes[0] : document();
+        document()->window()->dispatchEvent(t, e);
+        break;
+    }
+    case PlatformWindow::MouseEventMove: {
+        Node* t = targetNode->nearestParentElement();
+        // Dispatch mouseover event if necessary
+        bool check = true;
+        if (m_hoveredNodes.size() > 0) {
+            check = (t != m_hoveredNodes[0]);
+        }
+        t = t ? t : document();
+        if (check) {
+            releaseHoveredNode();
+            setHoveredNode(targetNode);
+
+            eventName = starFish()->staticStrings()->m_mouseover.localName();
+            Event* e = createMouseEvent(document(), eventName, init);
+            document()->window()->dispatchEvent(t, e);
+        }
+        // Dispatch mousemove event
+        eventName = starFish()->staticStrings()->m_mousemove.localName();
+        Event* e = createMouseEvent(document(), eventName, init);
+        document()->window()->dispatchEvent(t, e);
+        break;
+    }
+    case PlatformWindow::MouseEventUp: {
+        // Check whether it is skippable or not
+        Node* t = targetNode->nearestParentElement();
+        bool check = false;
+        if (m_activeNodes.size() > 0) {
+            check = (t == m_activeNodes[0]);
+        }
+        if (check) {
+            // Dispatch click event
+            t = t ? t : document();
+            eventName = starFish()->staticStrings()->m_click.localName();
+            Event* click = createMouseEvent(document(), eventName, init);
+            document()->window()->dispatchEvent(t, click);
+
+            // Dispatch mouseup event
+            eventName = starFish()->staticStrings()->m_mouseup.localName();
+            Event* mouseup = createMouseEvent(document(), eventName, init);
+            document()->window()->dispatchEvent(t, mouseup);
+        }
+        releaseActiveNode();
+        break;
+    }
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 
@@ -694,9 +769,10 @@ void BrowsingContext::dispatchKeyEvent(String* key,
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
-    KeyboardEventInit eventInit(true, true);
-    eventInit.setKey(key);
-    KeyboardEvent* e = new KeyboardEvent(document(), eventType, eventInit);
+    KeyboardEvent* e = new KeyboardEvent(document(), eventType);
+    e->setBubbles(true);
+    e->setCancelable(true);
+    e->setKey(key);
 
     if (e->ctrlKey()) {
         m_ctrlKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
