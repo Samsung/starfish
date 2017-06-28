@@ -12,6 +12,7 @@ test/reftest/web-platform-tests/html/dom/documents/dom-tree-accessors/document.h
 test/reftest/web-platform-tests/html/dom/documents/dom-tree-accessors/Element.getElementsByClassName-null-undef.html
 test/reftest/web-platform-tests/html/dom/documents/resource-metadata-management/document-compatmode-01.html
 test/reftest/web-platform-tests/html/dom/documents/resource-metadata-management/document-compatmode-02.html
+test/reftest/web-platform-tests/html/dom/documents/resource-metadata-management/document-cookie.html
 test/reftest/web-platform-tests/html/dom/elements/elements-in-the-dom/unknown-element.html
 test/reftest/web-platform-tests/html/dom/elements/global-attributes/classlist-nonstring.html
 test/reftest/web-platform-tests/html/dom/elements/global-attributes/id-attribute.html

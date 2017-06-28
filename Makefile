@@ -757,7 +757,7 @@ csswg_test_all:
 	make csswg_test_manual
 
 internal_test:
-	cat tool/reftest/internal_unsorted.res | sort -nr | cut -d":" -f2 > tool/reftest/internal.res
+	cat tool/reftest/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/internal.res
 	./tool/drivers/run_test.py internal tool/reftest/internal.res -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep -p$(TEST_NPROCS)
 	rm tool/reftest/internal.res
