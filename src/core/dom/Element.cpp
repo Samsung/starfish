@@ -441,13 +441,30 @@ bool Element::hasPseudoElement(StyleResolver::PseudoElementType type)
             rareMembers->m_pseudoElementData->hasPseudoElement(type));
 }
 
-void Element::setPseudoElement(StyleResolver::PseudoElementType type)
+PseudoElement* Element::pseudoElement(StyleResolver::PseudoElementType type)
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    return rareMembers->m_pseudoElementData
+               ? rareMembers->m_pseudoElementData->pseudoElement(type)
+               : nullptr;
+}
+
+void Element::setPseudoElement(StyleResolver::PseudoElementType type,
+                               PseudoElement* pseudoElement)
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
     if (!rareMembers->m_pseudoElementData) {
         rareMembers->m_pseudoElementData = new PseudoElementData();
     }
-    rareMembers->m_pseudoElementData->setPseudoElement(type);
+    rareMembers->m_pseudoElementData->setPseudoElement(type, pseudoElement);
+}
+
+void Element::clearPseudoElements()
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    if (rareMembers->m_pseudoElementData) {
+        rareMembers->m_pseudoElementData->clearPseudoElements();
+    }
 }
 
 void Element::setId(String* id)

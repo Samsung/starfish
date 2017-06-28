@@ -107,14 +107,14 @@ public:
 
     TextContentData* text() const
     {
-        STARFISH_ASSERT(type() == ContentType::Text);
+        STARFISH_ASSERT(m_type == Text);
         return m_value.m_text;
     }
 
     void setText(String* text)
     {
         STARFISH_ASSERT(m_type == Text);
-        if (m_value.m_text == nullptr) {
+        if (!m_value.m_text) {
             m_value.m_text = new TextContentData(text);
         } else {
             m_value.m_text->setText(text);
@@ -123,14 +123,14 @@ public:
 
     ImageContentData* image() const
     {
-        STARFISH_ASSERT(type() == ContentType::Image);
+        STARFISH_ASSERT(m_type == Image);
         return m_value.m_image;
     }
 
     void setImage(String* image)
     {
         STARFISH_ASSERT(m_type == Image);
-        if (m_value.m_image == nullptr) {
+        if (!m_value.m_image) {
             m_value.m_image = new ImageContentData(image);
         } else {
             m_value.m_image->setImage(image);

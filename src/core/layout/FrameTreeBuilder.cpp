@@ -463,6 +463,9 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
 
         ctx.setCurrentBlockContainer(pre);
     }
+
+    STARFISH_ASSERT(parent->isElement());
+    parent->asElement()->setPseudoElement(pseudoId, pseudoElement);
 }
 
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
