@@ -1,0 +1,10 @@
+// https://drafts.csswg.org/cssom/#the-medialist-interface
+
+[ObjectType=Exposable]
+interface MediaList {
+  [TreatNullAs=EmptyString] stringifier attribute CSSOMString mediaText;
+  readonly attribute unsigned long length;
+  getter CSSOMString? item(unsigned long index);
+  void appendMedium(CSSOMString medium);
+  [RaisesException] void deleteMedium(CSSOMString medium);
+};

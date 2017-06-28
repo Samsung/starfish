@@ -689,6 +689,11 @@ public:
         return m_type == aType;
     }
 
+    bool isNull()
+    {
+        return isOfType(CSSToken::NULL_TYPE);
+    }
+
     bool isWhiteSpace(char32_t w = 0)
     {
         return isOfType(CSSToken::WHITESPACE_TYPE, w);

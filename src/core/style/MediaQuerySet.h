@@ -26,11 +26,12 @@
 
 namespace StarFish {
 
+class Document;
 class MediaQuerySet : public gc {
 public:
-    static MediaQuerySet* create()
+    static MediaQuerySet* create(Document* document)
     {
-        return new MediaQuerySet();
+        return new MediaQuerySet(document);
     }
 
     void addMediaQuery(MediaQuery* mediaQuery);
@@ -42,9 +43,17 @@ public:
 
     String* mediaText() const;
 
+    MediaQuerySet* create(String* mediaString);
+    bool set(String* mediaString);
+    void add(String* mediaString);
+    bool remove(String* mediaString);
+
+    Document* document() const;
+
 protected:
-    MediaQuerySet();
+    MediaQuerySet(Document* document);
     MediaQuerySet(MediaQuerySet& o);
+    Document* m_document;
     GCVector<MediaQuery*> m_queries;
 };
 }

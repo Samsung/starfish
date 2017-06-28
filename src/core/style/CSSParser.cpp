@@ -2226,7 +2226,7 @@ const CSSParser::State CSSParser::Done = &CSSParser::done;
 void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
 {
     m_parserType = parserType;
-    m_querySet = MediaQuerySet::create();
+    m_querySet = MediaQuerySet::create(m_document);
     if (parserType == MediaQuerySetParser)
         m_state = &CSSParser::readRestrictor;
     else // MediaConditionParser
@@ -2256,6 +2256,7 @@ MediaQuerySet* CSSParser::parseMediaQuery()
         processToken(token);
         token = getToken(false, true);
     }
+    processToken(CSSToken::createNullToken(this));
 
     if (m_state != ReadAnd && m_state != ReadRestrictor && m_state != Done &&
         m_state != ReadMediaNot) {
@@ -2317,7 +2318,8 @@ void CSSParser::readMediaType(RefPtr<CSSToken> token)
             m_mediaQueryData.setMediaType(token->value()->toString());
             m_state = ReadAnd;
         }
-    } else if ((token->isSymbol('}') || token->isSymbol(';')) &&
+    } else if ((token->isSymbol('}') || token->isSymbol(';') ||
+                token->isNull()) &&
                (!m_querySet->queryVector().size() ||
                 m_state != ReadRestrictor)) {
         m_state = Done;
@@ -2335,7 +2337,8 @@ void CSSParser::readAnd(RefPtr<CSSToken> token)
     } else if (token->isSymbol(',') && m_parserType != MediaConditionParser) {
         m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
         m_state = ReadRestrictor;
-    } else if (token->isSymbol('}') || token->isSymbol(';')) {
+    } else if (token->isSymbol('}') || token->isSymbol(';') ||
+               token->isNull()) {
         m_state = Done;
     } else {
         m_state = SkipUntilComma;
@@ -2365,7 +2368,7 @@ void CSSParser::readFeatureColon(RefPtr<CSSToken> token)
     if (token->isSymbol(':'))
         m_state = ReadFeatureValue;
     else if (token->isSymbol(')') || token->isSymbol('}') ||
-             token->isSymbol(';'))
+             token->isSymbol(';') || token->isNull())
         readFeatureEnd(token);
     else
         m_state = SkipUntilBlockEnd;
@@ -2385,11 +2388,13 @@ void CSSParser::readFeatureValue(RefPtr<CSSToken> token)
 
 void CSSParser::readFeatureEnd(RefPtr<CSSToken> token)
 {
-    if (token->isSymbol(')') || token->isSymbol('}') || token->isSymbol(';')) {
-        if (m_mediaQueryData.addExpression())
+    if (token->isSymbol(')') || token->isSymbol('}') || token->isSymbol(';') ||
+        token->isNull()) {
+        if (m_mediaQueryData.addExpression()) {
             m_state = ReadAnd;
-        else
+        } else {
             m_state = SkipUntilComma;
+        }
     } else if (token->isSymbol('/')) {
         m_mediaQueryData.tryAddParserToken(token);
         m_state = ReadFeatureValue;
@@ -2401,7 +2406,7 @@ void CSSParser::readFeatureEnd(RefPtr<CSSToken> token)
 void CSSParser::skipUntilComma(RefPtr<CSSToken> token)
 {
     if ((token->isSymbol(',')) || token->isSymbol('}') ||
-        token->isSymbol(';')) {
+        token->isSymbol(';') || token->isNull()) {
         m_state = ReadRestrictor;
         m_mediaQueryData.clear();
         m_querySet->addMediaQuery(MediaQuery::createNotAll());

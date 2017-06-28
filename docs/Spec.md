@@ -369,6 +369,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Returns the dimensions of the visual content of the video. |
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
+| [MediaList](https://drafts.csswg.org/cssom/#the-medialist-interface) | interface | MediaList | MediaList interface has an associated collection of media queries. |
+|  | attribute | mediaText | Returns a serialization of the collection of media queries. |
+|  | attribute | length | Returns the number of media queries in the collection of media queries. |
+|  | method | getter CSSOMString? item(unsigned long index) | Returns a serialization of the media query in the collection of media queries given by index, or null, if index is greater than or equal to the number of media queries in the collection of media queries. |
+|  | method | void appendMedium(CSSOMString medium) | Adds a media type to the mediaList collection. |
+|  | method | void deleteMedium(CSSOMString medium) | Removes a media type from the mediaList collection. |
 | [MediaQueryList](https://drafts.csswg.org/cssom-view/#mediaquerylist) | interface | MediaQueryList | A MediaQueryList object stores information on a media query applied to a document, and handles sending notifications to listeners when the media query state change (i.e. when the media query test starts or stops evaluating to true). |
 |  | attribute | media | Return the associated media. |
 |  | attribute | matches | Return the associated matches state. |

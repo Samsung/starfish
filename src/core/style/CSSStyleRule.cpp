@@ -31,6 +31,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleRule.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/style/MediaList.h"
 
 namespace StarFish {
 
@@ -261,11 +262,16 @@ String* CSSMediaRule::conditionText() const
     return mediaQuerySet()->mediaText();
 }
 
-// MediaList* CSSMediaRule::media()
-// {
-//    // TODO : implement
-//    return nullptr;
-// }
+MediaList* CSSMediaRule::media()
+{
+    if (!mediaQuerySet()) {
+        return nullptr;
+    }
+    if (!m_mediaWrapper) {
+        m_mediaWrapper = new MediaList(mediaQuerySet());
+    }
+    return m_mediaWrapper;
+}
 
 MediaQuerySet* CSSMediaRule::mediaQuerySet() const
 {
@@ -276,6 +282,7 @@ CSSImportRule::CSSImportRule(StyleRuleImport* importRule, CSSStyleSheet* parent)
     : CSSRule(parent)
     , m_importRule(importRule)
     , m_styleSheetWrapper(nullptr)
+    , m_mediaWrapper(nullptr)
 {
 }
 
@@ -303,11 +310,13 @@ String* CSSImportRule::href() const
     return m_importRule->href();
 }
 
-// MediaList* CSSImportRule::media() const
-// {
-//    // TODO : implement
-//    return nullptr;
-// }
+MediaList* CSSImportRule::media()
+{
+    if (!m_mediaWrapper) {
+        m_mediaWrapper = new MediaList(m_importRule->mediaQuerySet());
+    }
+    return m_mediaWrapper;
+}
 
 CSSStyleSheet* CSSImportRule::styleSheet()
 {

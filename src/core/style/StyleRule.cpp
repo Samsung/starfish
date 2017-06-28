@@ -153,7 +153,7 @@ StyleRuleMedia::StyleRuleMedia(StyleRuleMedia& o)
     : StyleRuleCondition(o)
 {
     if (o.mediaQuerySet()) {
-        m_mediaQuerySet = MediaQuerySet::create();
+        m_mediaQuerySet = MediaQuerySet::create(o.mediaQuerySet()->document());
         m_mediaQuerySet->queryVector().clear();
         m_mediaQuerySet->queryVector().assign(
             o.mediaQuerySet()->queryVector().begin(),

@@ -20,14 +20,18 @@
 
 #include "StarFishConfig.h"
 #include "MediaQuerySet.h"
+#include "core/dom/Document.h"
+#include "core/style/CSSParser.h"
 
 namespace StarFish {
-MediaQuerySet::MediaQuerySet()
+MediaQuerySet::MediaQuerySet(Document* document)
+    : m_document(document)
 {
 }
 
 MediaQuerySet::MediaQuerySet(MediaQuerySet& o)
 {
+    m_document = o.document();
     m_queries.clear();
     m_queries.assign(o.queryVector().begin(), o.queryVector().end());
 }
@@ -51,5 +55,74 @@ String* MediaQuerySet::mediaText() const
         text.appendString(m_queries[i]->cssText());
     }
     return text.finalize();
+}
+
+MediaQuerySet* MediaQuerySet::create(String* mediaString)
+{
+    if (mediaString->equals(String::emptyString)) {
+        return MediaQuerySet::create(m_document);
+    }
+
+    CSSParser parser(m_document);
+    RefPtr<CSSToken> token = parser.makeToken(mediaString);
+    return parser.parseMediaQuery();
+}
+
+bool MediaQuerySet::set(String* mediaString)
+{
+    MediaQuerySet* result = create(mediaString);
+    m_queries.swap(result->m_queries);
+    return true;
+}
+
+void MediaQuerySet::add(String* mediaString)
+{
+    MediaQuerySet* result = create(mediaString);
+
+    if (result->m_queries.size() != 1) {
+        return;
+    }
+
+    MediaQuery* newQuery = result->m_queries[0];
+    STARFISH_ASSERT(newQuery);
+
+    for (size_t i = 0; i < m_queries.size(); ++i) {
+        MediaQuery* query = m_queries[i];
+        if (*query == *newQuery) {
+            return;
+        }
+    }
+
+    m_queries.push_back(newQuery);
+}
+
+bool MediaQuerySet::remove(String* mediaString)
+{
+    MediaQuerySet* result = create(mediaString);
+
+    if (result->m_queries.size() != 1) {
+        return true;
+    }
+
+    MediaQuery* newQuery = result->m_queries[0];
+    STARFISH_ASSERT(newQuery);
+
+    bool found = false;
+    m_queries.erase(std::remove_if(m_queries.begin(), m_queries.end(),
+                                   [newQuery, &found](MediaQuery* query) {
+                                       if (*query == *newQuery) {
+                                           found = true;
+                                           return found;
+                                       }
+                                       return false;
+                                   }),
+                    m_queries.end());
+
+    return found;
+}
+
+Document* MediaQuerySet::document() const
+{
+    return m_document;
 }
 }
