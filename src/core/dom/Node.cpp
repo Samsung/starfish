@@ -770,6 +770,15 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     if (child == childRef) {
         return child;
     }
+
+    if (child->isDocumentFragment()) {
+        while (Node* nd = child->firstChild()) {
+            child->removeChild(nd);
+            insertBefore(nd, childRef);
+        }
+        return child;
+    }
+
     if (child->parentNode()) {
         child->parentNode()->removeChild(child);
     }
@@ -826,8 +835,8 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
             document(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
     }
-    if (!(child->isDocumentType() || child->isElement() || child->isText() ||
-          child->isComment())) {
+    if (!(child->isDocumentType() || child->isDocumentFragment() ||
+          child->isElement() || child->isText() || child->isComment())) {
         throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "

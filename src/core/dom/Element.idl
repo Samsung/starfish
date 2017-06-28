@@ -48,14 +48,14 @@ interface Element : Node {
   [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
 
-  [Unimplemented, CEReactions] Element? insertAdjacentElement(DOMString where, Element element); // historical
-  [Unimplemented] void insertAdjacentText(DOMString where, DOMString data); // historical
+  [CEReactions, RaisesException] Node? insertAdjacentElement(DOMString where, Element element); // historical
+  [RaisesException] void insertAdjacentText(DOMString where, DOMString data); // historical
 
 
   // [REF6]--------------------------------------------------------------
-  [STARFISH_ENABLE_TEST, CEReactions, TreatNullAs=EmptyString] attribute DOMString innerHTML;
-  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString outerHTML;
-  [Unimplemented, CEReactions] void insertAdjacentHTML(DOMString position, DOMString text);
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString innerHTML;
+  [CEReactions, RaisesException, TreatNullAs=EmptyString] attribute DOMString outerHTML;
+  [CEReactions, RaisesException] void insertAdjacentHTML(DOMString position, DOMString text);
 
 
   // [REF7]--------------------------------------------------------------

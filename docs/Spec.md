@@ -241,7 +241,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | boolean hasAttribute(DOMString qualifiedName) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
-| [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents. (Note: This API is supported only on TEST_MODE.)|
+|| method | insertAdjacentElement |t inserts the node into the tree in the position given by the position argument |
+|| method | insertAdjacentText | inserts the node into the tree in the position given by the position argument |
+| [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents.|
+|| attribute | outerHTML | Return a fragment of HTML or XML that represents the element|
+|| method | insertAdjacentHTML | Parses the given string text as HTML or XML and inserts the resulting nodes into the tree in the position given by the position argument |
 | [Element](https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface) | method | getClientRects | Return a collection of rectangles that indicate the bounding rectangles for each box in a client. (Note: This API is supported only in case of that display property is `BLOCK`.)|
 |  | method | getBoundingClientRect | Return the size of an element and its position relative to the viewport. (Note: This API is supported only in case of that display property is `BLOCK`.)|
 |  | attribute | clientTop | Return the width of the top border of an element in pixels. |
