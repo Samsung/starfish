@@ -77,19 +77,18 @@ String* XMLSerializer::serializeToXML(Element* e, bool includeSelf)
     rapidxml::xml_node<char>* root = createXMLNodeFromElement(e, doc);
 
     std::string s;
+    int xmlFlag = rapidxml::print_no_expand_quot |
+                  rapidxml::print_no_expand_amp | rapidxml::print_no_indenting |
+                  rapidxml::print_care_script_style;
     if (!includeSelf) {
         rapidxml::xml_node<char>* c = root->first_node();
         while (c) {
             rapidxml::print<std::back_insert_iterator<std::basic_string<char>>,
-                            char>(std::back_inserter(s), *c,
-                                  rapidxml::print_no_expand_quot |
-                                      rapidxml::print_no_expand_amp |
-                                      rapidxml::print_no_indenting |
-                                      rapidxml::print_care_script_style);
+                            char>(std::back_inserter(s), *c, xmlFlag);
             c = c->next_sibling();
         }
     } else {
-        // rapidxml::print(std::back_inserter(s), *root);
+        rapidxml::print(std::back_inserter(s), *root, xmlFlag);
     }
 
     return String::fromUTF8(s.data(), s.length());

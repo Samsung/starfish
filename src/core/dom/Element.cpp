@@ -27,7 +27,9 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLBodyElement.h"
 #include "core/dom/NamedNodeMap.h"
+#include "core/dom/Text.h"
 #include "core/dom/PseudoElementData.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/xml/XMLSerializer.h"
@@ -317,10 +319,22 @@ DOMRect* Element::getBoundingClientRect()
     return rect;
 }
 
-#ifdef STARFISH_ENABLE_TEST
 String* Element::innerHTML()
 {
     return XMLSerializer::serializeToXML(this, false);
+}
+
+// https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
+static DocumentFragment* fragmentParsingAlgorithm(Document* document,
+                                                  String* src,
+                                                  Element* contextElement)
+{
+    DocumentFragment* df = document->createDocumentFragment();
+    HTMLParser parser(document->starFish(), df, contextElement, src);
+    parser.startParse();
+    parser.parseStep();
+    parser.endParse();
+    return df;
 }
 
 void Element::setInnerHTML(String* html)
@@ -329,15 +343,170 @@ void Element::setInnerHTML(String* html)
         removeChild(firstChild());
     }
 
-    DocumentFragment* df = document()->createDocumentFragment();
-
-    HTMLParser parser(starFish(), df, this, html);
-    parser.startParse();
-    parser.parseStep();
-    parser.endParse();
+    DocumentFragment* df = fragmentParsingAlgorithm(document(), html, this);
     appendChild(df);
 }
-#endif
+
+String* Element::outerHTML()
+{
+    return XMLSerializer::serializeToXML(this, true);
+}
+
+void Element::setOuterHTML(String* text)
+{
+    // Let parent be the context object's parent.
+    Node* parent = parentNode();
+    // If parent is null, terminate these steps. There would be no way to obtain
+    // a reference to the nodes created even if the remaining steps were run.
+    if (parent == nullptr) {
+        return;
+    }
+    // If parent is a Document, throw a "NoModificationAllowedError"
+    // DOMException.
+    if (parent == document()) {
+        throw new DOMException(document(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "Parent can not be document");
+    }
+    // If parent is a DocumentFragment, let parent be a new Element with:
+    if (parent->isDocumentFragment()) {
+        // body as its local name,
+        // The HTML namespace as its namespace, and
+        // The context object's node document as its node document.
+        parent = new HTMLBodyElement(document());
+    }
+    // Let fragment be the result of invoking the fragment parsing algorithm
+    // with the new value as markup, and parent as the context element.
+    DocumentFragment* fragment =
+        fragmentParsingAlgorithm(document(), text, parent->asElement());
+    // Replace the context object with fragment within the context object's
+    // parent.
+    parentNode()->replaceChild(fragment, this);
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
+void Element::insertAdjacentHTML(String* position, String* text)
+{
+    Element* context = nullptr;
+    if (position->equalsWithoutCase("beforebegin") ||
+        position->equalsWithoutCase("afterend")) {
+        context = parentElement();
+        // If context is null or a Document, throw a
+        // "NoModificationAllowedError" DOMException.
+        if (context == nullptr || context->isDocument()) {
+            throw new DOMException(document(),
+                                   DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                                   "Can not execute `insertAdjacentHTML`.");
+        }
+    } else if (position->equalsWithoutCase("afterbegin") ||
+               position->equalsWithoutCase("beforeend")) {
+        context = this;
+    } else {
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
+                               "The first parameter is not one of "
+                               "'beforeBegin', 'afterBegin', 'beforeEnd', or "
+                               "'afterEnd'.");
+    }
+
+    // If context is not an Element or the following are all true:
+    if (!context->isElement() ||
+        (
+            // context's node document is an HTML document,
+            context->document()->isHTMLDocument() &&
+            // context's local name is "html", and
+            context->localName()->equals("html") &&
+            // context's namespace is the HTML namespace;
+            context->name().namespaceURI()->equals(
+                "http://www.w3.org/1999/xhtml"))) {
+        // let context be a new Element with
+        // body as its local name,
+        // The HTML namespace as its namespace, and
+        // The context object's node document as its node document.
+        context = new HTMLBodyElement(document());
+    }
+
+    DocumentFragment* df = fragmentParsingAlgorithm(document(), text, context);
+
+    Element* contextObject = this;
+    if (position->equalsWithoutCase("beforebegin")) {
+        // If position is an ASCII case-insensitive match for the string
+        // "beforebegin"
+        // Insert fragment into the context object's parent before the context
+        // object.
+        contextObject->parentNode()->insertBefore(df, contextObject);
+    } else if (position->equalsWithoutCase("afterbegin")) {
+        // If position is an ASCII case-insensitive match for the string
+        // "afterbegin"
+        // Insert fragment into the context object before its first child.
+        contextObject->insertBefore(df, firstChild());
+    } else if (position->equalsWithoutCase("beforeend")) {
+        // If position is an ASCII case-insensitive match for the string
+        // "beforeend"
+        // Append fragment to the context object.
+        contextObject->appendChild(df);
+    } else {
+        STARFISH_ASSERT(position->equalsWithoutCase("afterend"));
+        // If position is an ASCII case-insensitive match for the string
+        // "afterend"
+        // Insert fragment into the context object's parent before the context
+        // object's next sibling.
+        contextObject->parentNode()->insertBefore(df,
+                                                  contextObject->nextSibling());
+    }
+}
+
+// https://dom.spec.whatwg.org/#dom-element-insertadjacentelement
+// To insert adjacent, given an element element, string where, and a node node
+static Node* insertAdjacent(Element* element, String* where, Node* node)
+{
+    // run the steps associated with the first ASCII case-insensitive match for
+    // where:
+    if (where->equalsWithoutCase("beforebegin")) {
+        // If element’s parent is null, return null.
+        if (element->parentNode() == nullptr)
+            return nullptr;
+        // Return the result of pre-inserting node into element’s parent before
+        // element.
+        return element->parentNode()->insertBefore(node, element);
+    } else if (where->equalsWithoutCase("afterbegin")) {
+        // Return the result of pre-inserting node into element before element’s
+        // first child.
+        return element->insertBefore(node, element->firstChild());
+    } else if (where->equalsWithoutCase("beforeend")) {
+        // Return the result of pre-inserting node into element before null.
+        return element->insertBefore(node, nullptr);
+    } else if (where->equalsWithoutCase("afterend")) {
+        // If element’s parent is null, return null.
+        if (element->parentNode() == nullptr)
+            return nullptr;
+        // Return the result of pre-inserting node into element’s parent before
+        // element’s next sibling.
+        return element->parentNode()->insertBefore(node,
+                                                   element->nextSibling());
+    } else {
+        throw new DOMException(element->document(), DOMException::SYNTAX_ERR,
+                               "The first parameter is not one of "
+                               "'beforeBegin', 'afterBegin', 'beforeEnd', or "
+                               "'afterEnd'.");
+    }
+}
+
+Node* Element::insertAdjacentElement(String* where, Element* element)
+{
+    // The insertAdjacentElement(where, element) method, when invoked, must
+    // return the result of running insert adjacent, given context object,
+    // where, and element.
+    return insertAdjacent(this, where, element);
+}
+
+void Element::insertAdjacentText(String* where, String* data)
+{
+    // Let text be a new Text node whose data is data and node document is
+    // context object’s node document.
+    Text* text = new Text(document(), data);
+    // Run insert adjacent, given context object, where, and text.
+    insertAdjacent(this, where, text);
+}
 
 Node* Element::clone()
 {

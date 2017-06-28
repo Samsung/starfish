@@ -74,10 +74,18 @@ public:
 
     virtual Node* clone() override;
 
-#ifdef STARFISH_ENABLE_TEST
     String* innerHTML();
     void setInnerHTML(String*);
-#endif
+    String* outerHTML();
+    void setOuterHTML(String*);
+    // https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
+    void insertAdjacentHTML(String* position, String* text);
+
+    // https://dom.spec.whatwg.org/#dom-element-insertadjacentelement
+    // spec defines return type of insertAdjacentElement as Element?
+    // but our implementation returns Node?
+    Node* insertAdjacentElement(String* where, Element* element); // historical
+    void insertAdjacentText(String* where, String* data);         // historical
 
     virtual QualifiedName name() = 0;
     String* tagName();
