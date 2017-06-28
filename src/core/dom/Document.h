@@ -239,6 +239,19 @@ public:
 
     Location* location();
 
+    ResourceURL* cookieURI()
+    {
+        return m_cookieURI;
+    }
+
+    void setCookieURI(ResourceURL* url)
+    {
+        m_cookieURI = url;
+    }
+
+    String* cookie();
+    void setCookie(String* cookie);
+
     void open();
 
     // method for script element
@@ -368,6 +381,7 @@ protected:
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
     ResourceURL* m_documentURI;
+    ResourceURL* m_cookieURI;
     String* m_characterSet;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;

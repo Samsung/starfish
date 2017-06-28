@@ -70,7 +70,7 @@ interface Document : Node {
   [PutForwards=href, Unforgeable] readonly attribute Location? location;
   [Unimplemented] attribute DOMString domain;
   [Unimplemented] readonly attribute DOMString referrer;
-  [Unimplemented] attribute DOMString cookie;
+  attribute DOMString cookie;
   [Unimplemented] readonly attribute DOMString lastModified;
   [Unimplemented] readonly attribute DocumentReadyState readyState;
 

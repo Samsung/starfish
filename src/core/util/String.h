@@ -275,6 +275,7 @@ public:
         const UTF32String& src);
 
     static int parseInt(String* s);
+    static int64_t parseInt64(String* s);
     static float parseFloat(String* s);
     static double parseDouble(String* s);
 
@@ -380,6 +381,7 @@ public:
 
     static String* fromFloat(float f);
     static String* fromInt(int i);
+    static String* fromInt64(int64_t i);
 
     String* substring(size_t pos, size_t len);
 

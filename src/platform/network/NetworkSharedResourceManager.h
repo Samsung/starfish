@@ -21,6 +21,7 @@
 
 namespace StarFish {
 
+class Document;
 class Mutex;
 class ResourceURL;
 class String;
@@ -43,6 +44,10 @@ public:
         return m_storeCookieFile;
     }
     void initCookieSession();
+
+    // for document.cookie
+    String* cookeis(ResourceURL* url);
+    void setCookies(Document* document, ResourceURL* url, String* value);
 
 private:
     NetworkSharedResourceManager();
