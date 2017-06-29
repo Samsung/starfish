@@ -35,6 +35,10 @@ class ResourceURL : public gc {
     };
 
 public:
+    ResourceURL(const char* url)
+        : ResourceURL(String::createASCIIString(url))
+    {
+    }
     ResourceURL(String* url);
     ResourceURL(String* url, String* baseURL);
 

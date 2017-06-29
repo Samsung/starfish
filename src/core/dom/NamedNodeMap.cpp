@@ -62,7 +62,7 @@ Attr* NamedNodeMap::getNamedItem(QualifiedName name)
 
 Attr* NamedNodeMap::setNamedItem(Attr* attr)
 {
-    m_element->setAttribute(attr->qname(), attr->value());
+    m_element->setAttribute(attr->name(), attr->value());
     Attr* storedAttr = m_element->attr(attr->qname());
     if (!storedAttr)
         m_element->addAttr(attr);

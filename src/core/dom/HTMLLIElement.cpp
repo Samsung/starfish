@@ -19,10 +19,6 @@
 #include "core/dom/HTMLLIElement.h"
 
 namespace StarFish {
-String* HTMLLIElement::localName()
-{
-    return starFish()->staticStrings()->m_liTagName.localName();
-}
 
 QualifiedName HTMLLIElement::name()
 {

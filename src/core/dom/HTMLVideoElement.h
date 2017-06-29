@@ -33,7 +33,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLVideoElement() const override;
 
-    virtual String* localName();
     virtual QualifiedName name();
 
     virtual void didAttributeChanged(QualifiedName name, String* old,

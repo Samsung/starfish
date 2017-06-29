@@ -75,11 +75,6 @@ protected:
     HTMLImageElement* m_element;
 };
 
-String* HTMLImageElement::localName()
-{
-    return starFish()->staticStrings()->m_imgTagName.localName();
-}
-
 QualifiedName HTMLImageElement::name()
 {
     return starFish()->staticStrings()->m_imgTagName;

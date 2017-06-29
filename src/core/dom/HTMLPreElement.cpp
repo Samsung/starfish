@@ -19,10 +19,6 @@
 #include "core/dom/HTMLPreElement.h"
 
 namespace StarFish {
-String* HTMLPreElement::localName()
-{
-    return starFish()->staticStrings()->m_preTagName.localName();
-}
 
 QualifiedName HTMLPreElement::name()
 {

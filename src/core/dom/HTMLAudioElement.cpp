@@ -19,10 +19,6 @@
 #include "core/dom/HTMLAudioElement.h"
 
 namespace StarFish {
-String* HTMLAudioElement::localName()
-{
-    return starFish()->staticStrings()->m_audioTagName.localName();
-}
 
 QualifiedName HTMLAudioElement::name()
 {

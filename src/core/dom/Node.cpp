@@ -497,51 +497,131 @@ unsigned short Node::compareDocumentPosition(const Node* other)
     return result;
 }
 
-String* Node::lookupNamespacePrefix(String* namespaceUri, Element* element)
+// https://dom.spec.whatwg.org/#locate-a-namespace-prefix
+static Nullable<String*> locateNamespacePrefix(Element* element,
+                                               Nullable<String*> namespaceUri)
 {
-    if (namespaceUri == nullptr) {
-        return String::emptyString;
+    // If element’s namespace is namespace and its namespace prefix is not null,
+    // then return its namespace prefix.
+    QualifiedName name = element->name();
+    if (name.hasSameNamespaceURI(namespaceUri) && name.prefix().hasValue()) {
+        return name.prefixString();
     }
-    if (element->lookupNamespaceURI(prefix())->equals(namespaceUri)) {
-        return prefix();
+    // If element has an attribute whose namespace prefix is "xmlns" and value
+    // is namespace, then return element’s first such attribute’s local name.
+    auto& v = element->attributesVector();
+    for (size_t i = 0; i < v.size(); i++) {
+        if (v[i].name().prefix().hasValue()) {
+            if (v[i].name().prefix().getValue().string()->equals("xmlns")) {
+                if (v[i].name().namespaceURI().hasValue()) {
+                    if (v[i].name().hasSameNamespaceURI(namespaceUri)) {
+                        return v[i].name().localName();
+                    }
+                }
+            }
+        }
     }
-    // Impl here
-    return String::emptyString;
+
+    // If element’s parent element is not null, then return the result of
+    // running locate a namespace prefix on that element using namespace.
+    if (element->parentElement() != nullptr) {
+        return locateNamespacePrefix(element->parentElement(), namespaceUri);
+    }
+
+    // Return null.
+    return Nullable<String*>();
 }
 
-String* Node::lookupPrefix(String* namespaceUri)
+// https://dom.spec.whatwg.org/#dom-node-lookupprefix
+Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
 {
-    if (!namespaceUri) {
-        return String::emptyString;
-    }
-    if (namespaceUri->equals(String::emptyString)) {
-        return String::emptyString;
+    // If namespace is null or the empty string, then return null.
+    if (!namespaceUri.hasValue() || namespaceUri.getValue()->equals("")) {
+        return Nullable<String*>();
     }
 
     switch (nodeType()) {
     case ELEMENT_NODE:
-        return lookupNamespacePrefix(namespaceUri, asElement());
+        // Return the result of locating a namespace prefix for it using
+        // namespace.
+        return locateNamespacePrefix(asElement(), namespaceUri);
     case DOCUMENT_NODE: {
+        // Return the result of locating a namespace prefix for its document
+        // element, if its document element is non-null, and null otherwise.
         Element* documentElement = asDocument()->documentElement();
         if (documentElement) {
-            return documentElement->lookupPrefix(namespaceUri);
+            return locateNamespacePrefix(documentElement, namespaceUri);
         } else {
-            return String::emptyString;
+            return Nullable<String*>();
         }
     }
     case DOCUMENT_TYPE_NODE:
     case DOCUMENT_FRAGMENT_NODE:
-        return String::emptyString;
+        return Nullable<String*>();
+    case ATTRIBUTE_NODE:
+        // Return the result of locating a namespace prefix for its element, if
+        // its element is non-null, and null otherwise.
+        if (asAttr()->ownerElement()) {
+            return locateNamespacePrefix(asAttr()->ownerElement(),
+                                         namespaceUri);
+        }
+        return Nullable<String*>();
     default: {
-        Node* parent = parentNode();
+        // Return the result of locating a namespace prefix for its parent
+        // element, if its parent element is non-null, and null otherwise.
+        Element* parent = parentElement();
         if (parent) {
-            parent->lookupPrefix(namespaceUri);
+            return locateNamespacePrefix(parent, namespaceUri);
         } else {
-            return String::emptyString;
+            return Nullable<String*>();
         }
     }
     }
     return String::emptyString;
+}
+
+// https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+Nullable<String*> Node::lookupNamespaceURI(Nullable<String*> prefix)
+{
+    // If prefix is the empty string, then set it to null.
+    if (prefix.hasValue() && prefix.getValue()->equals(String::emptyString)) {
+        prefix = Nullable<String*>();
+    }
+    // Return the result of running locate a namespace for the context object
+    // using prefix.
+    if (isElement())
+        return locateNamespacePrefix(asElement(), prefix);
+    else
+        return parentElement() ? locateNamespacePrefix(parentElement(), prefix)
+                               : Nullable<String*>();
+}
+
+// https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+bool Node::isDefaultNamespace(Nullable<String*> namespaceUri)
+{
+    // If namespace is the empty string, then set it to null.
+    if (namespaceUri.hasValue() &&
+        namespaceUri.getValue()->equals(String::emptyString)) {
+        namespaceUri = Nullable<String*>();
+    }
+
+    // Let defaultNamespace be the result of running locate a namespace for
+    // context object using null.
+    Nullable<String*> defaultNamespace;
+    if (isElement())
+        defaultNamespace = locateNamespacePrefix(asElement(), namespaceUri);
+    else
+        defaultNamespace =
+            parentElement()
+                ? locateNamespacePrefix(parentElement(), namespaceUri)
+                : Nullable<String*>();
+
+    // Return true if defaultNamespace is the same as namespace, and false
+    // otherwise.
+    if (defaultNamespace == namespaceUri) {
+        return true;
+    }
+    return false;
 }
 
 HTMLCollection* Node::children()

@@ -32,13 +32,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLElement() const override;
 
-    /* 4.4 Interface Node */
-
-    virtual String* nodeName()
-    {
-        return localName()->toUpper();
-    }
-
     /* Other methods (not in DOM API) */
 
     virtual void didAttributeChanged(QualifiedName name, String* old,

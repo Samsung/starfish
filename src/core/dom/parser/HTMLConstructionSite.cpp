@@ -956,8 +956,8 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     //     document, form, true);
     AtomicString tagName =
         AtomicString::createAttrAtomicString(starFish(), token->name());
-    Element* element =
-        ownerDocumentForCurrentNode().createElement(tagName, false);
+    Element* element = HTMLDocument::createHTMLElement(
+        &ownerDocumentForCurrentNode(), tagName);
     setAttributes(element, token);
     STARFISH_ASSERT(element->isHTMLElement());
     return element;

@@ -147,6 +147,12 @@ public:
 
     virtual NodeType nodeType() const = 0;
     virtual String* nodeName() = 0;
+    virtual Nullable<String*> prefix()
+    {
+        // For nodes other than elements and attributes, the prefix is always
+        // null
+        return Nullable<String*>();
+    }
 
     virtual void beginParsing()
     {
@@ -249,24 +255,12 @@ public:
         return false;
     }
 
-    String* lookupPrefix(String* namespaceUri);
-
-    String* lookupNamespaceURI(String* prefix) const
-    {
-        if (prefix == nullptr) {
-            return String::emptyString;
-        }
-        if (prefix->equals(String::emptyString)) {
-            return String::emptyString;
-        }
-        // Impl here
-        return String::emptyString;
-    }
-    bool isDefaultNamespace(String* namespaceUri)
-    {
-        // Impl here
-        return false;
-    }
+    // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+    Nullable<String*> lookupPrefix(Nullable<String*> namespaceUri);
+    // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+    Nullable<String*> lookupNamespaceURI(Nullable<String*> prefix);
+    // https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+    bool isDefaultNamespace(Nullable<String*> namespaceUri);
 
     bool isInDocumentScope();
     bool isInDocumentScopeAndDocumentParticipateInRendering();
@@ -564,14 +558,6 @@ public:
     }
 
 private:
-    String* lookupNamespacePrefix(String* namespaceUri, Element* element);
-    virtual String* prefix()
-    {
-        // For nodes other than elements and attributes, the prefix is always
-        // null
-        return nullptr;
-    }
-
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
 

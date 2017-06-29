@@ -25,10 +25,6 @@
 #include "core/page/Window.h"
 
 namespace StarFish {
-String* HTMLAnchorElement::localName()
-{
-    return starFish()->staticStrings()->m_aTagName.localName();
-}
 
 QualifiedName HTMLAnchorElement::name()
 {

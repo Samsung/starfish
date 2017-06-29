@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-String* HTMLBodyElement::localName()
-{
-    return starFish()->staticStrings()->m_bodyTagName.localName();
-}
-
 QualifiedName HTMLBodyElement::name()
 {
     return starFish()->staticStrings()->m_bodyTagName;

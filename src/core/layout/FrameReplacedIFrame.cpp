@@ -81,6 +81,11 @@ void FrameReplacedIFrame::establishesStackingContextIfNeeds()
                 ->document()
                 ->frame()
                 ->establishesStackingContextIfNeeds();
+            v->browsingContext()
+                ->window()
+                ->document()
+                ->frame()
+                ->setLayoutParent(this);
         }
     }
 }

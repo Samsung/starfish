@@ -20,11 +20,6 @@
 
 namespace StarFish {
 
-String* HTMLSpanElement::localName()
-{
-    return starFish()->staticStrings()->m_spanTagName.localName();
-}
-
 QualifiedName HTMLSpanElement::name()
 {
     return starFish()->staticStrings()->m_spanTagName;

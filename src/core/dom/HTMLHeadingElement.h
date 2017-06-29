@@ -30,12 +30,6 @@ public:
     virtual bool isHTMLHeadingElement() const override;
 
     /* 4.4 Interface Node */
-
-    virtual String* localName()
-    {
-        return m_name.localName();
-    }
-
     virtual QualifiedName name()
     {
         return m_name;

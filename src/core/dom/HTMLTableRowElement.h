@@ -33,8 +33,6 @@ public:
     virtual bool isHTMLTableRowElement() const override;
 
     /* 4.4 Interface Node */
-
-    virtual String* localName();
     virtual QualifiedName name();
 };
 }

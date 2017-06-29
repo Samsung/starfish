@@ -19,10 +19,6 @@
 #include "core/dom/HTMLTFootElement.h"
 
 namespace StarFish {
-String* HTMLTFootElement::localName()
-{
-    return starFish()->staticStrings()->m_tfootTagName.localName();
-}
 
 QualifiedName HTMLTFootElement::name()
 {

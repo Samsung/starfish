@@ -19,10 +19,6 @@
 #include "core/dom/HTMLBRElement.h"
 
 namespace StarFish {
-String* HTMLBRElement::localName()
-{
-    return starFish()->staticStrings()->m_brTagName.localName();
-}
 
 QualifiedName HTMLBRElement::name()
 {

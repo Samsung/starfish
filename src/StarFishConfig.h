@@ -320,26 +320,60 @@ public:
         STARFISH_ASSERT(m_hasValue);
         return m_value;
     }
-    bool hasValue()
+
+    const T getValue() const
+    {
+        STARFISH_ASSERT(m_hasValue);
+        return m_value;
+    }
+
+    bool hasValue() const
     {
         return m_hasValue;
     }
-    bool operator==(const Nullable& other) const
+
+    bool operator==(const Nullable<T>& other) const
     {
         if (m_hasValue != other.hasValue()) {
             return false;
         }
         return m_hasValue ? m_value == other.m_value : true;
     }
-    bool operator!=(const Nullable& other) const
+
+    bool operator!=(const Nullable<T>& other) const
     {
         return !this->operator==(other);
+    }
+
+    bool operator==(const T& other) const
+    {
+        if (m_hasValue) {
+            return getValue() == other;
+        }
+        return false;
+    }
+
+    bool operator!=(const T& other) const
+    {
+        return !operator==(other);
     }
 
 protected:
     bool m_hasValue;
     T m_value;
 };
+
+template <typename T>
+inline bool operator==(const T& a, const Nullable<T>& b)
+{
+    return b == a;
+}
+
+template <typename T>
+inline bool operator!=(const T& a, const Nullable<T>& b)
+{
+    return b != a;
+}
 
 #include "core/layout/LayoutUtil.h"
 #include "core/util/String.h"

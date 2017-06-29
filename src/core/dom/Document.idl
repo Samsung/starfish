@@ -22,10 +22,10 @@ enum VisibilityState { "hidden", "visible", "prerender", "unloaded" };
  Exposed=Window]
 interface Document : Node {
   // [REF1]--------------------------------------------------------------
-  [STARFISH_ENABLE_EXP, SameObject] readonly attribute DOMImplementation implementation;
+  [SameObject] readonly attribute DOMImplementation implementation;
   [Rename=urlString] readonly attribute DOMString URL;
   [Rename=urlString] readonly attribute DOMString documentURI;
-  [Unimplemented] readonly attribute DOMString origin;
+  readonly attribute DOMString origin;
   readonly attribute DOMString compatMode;
   readonly attribute DOMString characterSet;
   [Rename=characterSet] readonly attribute DOMString charset;
@@ -38,11 +38,12 @@ interface Document : Node {
   [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
 
-  // NOTE Does not support extension version of createElement
+  // NOTE Does not support extension version of createElement yet
   // [NewObject] Element createElement(DOMString localName, optional ElementCreationOptions options);
   [RaisesException] Element createElement(DOMString localName);
-
-  [Unimplemented, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional ElementCreationOptions options);
+  // NOTE Does not support extension version of createElement yet
+  // [NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional ElementCreationOptions options);
+  [NewObject, RaisesException] Element createElementNS(DOMString? namespace, DOMString qualifiedName);
   [NewObject, RaisesException] DocumentFragment createDocumentFragment();
   [NewObject] Text createTextNode(DOMString data);
   [Unimplemented, NewObject] CDATASection createCDATASection(DOMString data);

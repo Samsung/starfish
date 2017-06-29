@@ -41,8 +41,6 @@ public:
     virtual bool isHTMLScriptElement() const override;
 
     /* 4.4 Interface Node */
-
-    virtual String* localName();
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */

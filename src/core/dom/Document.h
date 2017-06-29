@@ -42,10 +42,7 @@ class ResourceURL;
 class Window;
 class BrowsingContext;
 class AnimationExecutor;
-
-#ifdef STARFISH_ENABLE_EXP
 class DOMImplementation;
-#endif
 
 /* VisibilityState */
 enum VisibilityState {
@@ -55,10 +52,15 @@ enum VisibilityState {
     VisibilityStateUnloaded
 };
 
+// Namespaces
+#define HTML_NAMESPACE "http://www.w3.org/1999/xhtml"
+#define MathML_NAMESPACE "http://www.w3.org/1998/Math/MathML"
+#define SVG_NAMESPACE "http://www.w3.org/2000/svg"
+#define XML_NAMESPACE "http://www.w3.org/XML/1998/namespace"
+#define XMLNS_NAMESPACE "http://www.w3.org/2000/xmlns/"
+
 class Document : public Node {
-#ifdef STARFISH_ENABLE_EXP
     friend class DOMImplementation;
-#endif
     friend class Window;
     friend class ActiveResourceRequestTracker;
     friend class HTMLMetaElement;
@@ -124,9 +126,9 @@ public:
     }
 
     DocumentFragment* createDocumentFragment();
-    virtual Element* createElement(AtomicString localName,
-                                   bool shouldCheckName);
     Element* createElement(String* name);
+    Element* createElementNS(Nullable<String*> namespaceString,
+                             String* qualifiedName);
     Text* createTextNode(String* data);
     CDATASection* createCDATASectionNode(String* data);
     Comment* createComment(String* data);
@@ -138,12 +140,7 @@ public:
     Attr* createAttribute(String* name);
     QualifiedName createAttributeName(String* name);
 
-#ifdef STARFISH_ENABLE_EXP
-    DOMImplementation* implementation()
-    {
-        return m_implementation;
-    }
-#endif
+    DOMImplementation* implementation();
 
     /* Other methods */
     virtual NodeType nodeType() const override
@@ -232,6 +229,24 @@ public:
         return m_documentURI;
     }
 
+    String* origin()
+    {
+        if (m_originURL == nullptr) {
+            return String::emptyString;
+        }
+        return m_originURL->origin();
+    }
+
+    ResourceURL* originURL()
+    {
+        return m_originURL;
+    }
+
+    void setOriginURL(ResourceURL* url)
+    {
+        m_originURL = url;
+    }
+
     void setDocumentURI(ResourceURL* newURL)
     {
         m_documentURI = newURL;
@@ -279,13 +294,20 @@ public:
     {
         return m_animationExecutor;
     }
+
     String* characterSet()
     {
         return m_characterSet;
     }
+
     String* contentType()
     {
-        return String::createASCIIString("text/html");
+        return m_contentType;
+    }
+
+    void setContentType(String* c)
+    {
+        m_contentType = c;
     }
 #ifdef STARFISH_TIZEN
     size_t tizenWidgetTransparentBackground()
@@ -382,7 +404,9 @@ protected:
     Window* m_window;
     ResourceURL* m_documentURI;
     ResourceURL* m_cookieURI;
+    ResourceURL* m_originURL;
     String* m_characterSet;
+    String* m_contentType;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;
@@ -394,12 +418,9 @@ protected:
     size_t m_domVersion;
     GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
+    DOMImplementation* m_implementation;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
-#endif
-#ifdef STARFISH_ENABLE_EXP
-private:
-    DOMImplementation* m_implementation;
 #endif
 };
 }

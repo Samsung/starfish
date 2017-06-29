@@ -41,6 +41,7 @@ public:
     Attribute(QualifiedName name, String* value)
         : m_name(name)
     {
+        STARFISH_ASSERT(m_name.localName()->length());
         m_value = value;
         m_rareData = nullptr;
     }

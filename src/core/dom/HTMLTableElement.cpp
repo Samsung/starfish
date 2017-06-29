@@ -20,11 +20,6 @@
 
 namespace StarFish {
 
-String* HTMLTableElement::localName()
-{
-    return starFish()->staticStrings()->m_tableTagName.localName();
-}
-
 QualifiedName HTMLTableElement::name()
 {
     return starFish()->staticStrings()->m_tableTagName;

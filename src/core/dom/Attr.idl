@@ -2,8 +2,8 @@
 
 [Exposed=Window]
 interface Attr : Node {
-  [Unimplemented] readonly attribute DOMString? namespaceURI;
-  [Unimplemented] readonly attribute DOMString? prefix;
+  readonly attribute DOMString? namespaceURI;
+  readonly attribute DOMString? prefix;
   readonly attribute DOMString localName;
   readonly attribute DOMString name;
   [CEReactions] attribute DOMString value;

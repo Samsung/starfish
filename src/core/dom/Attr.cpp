@@ -24,7 +24,7 @@ namespace StarFish {
 String* Attr::value() const
 {
     if (m_element) {
-        return m_element->getAttributeOrEmpty(m_qname);
+        return m_element->getAttributeOrEmpty(m_name);
     }
     return m_standAloneValue;
 }
@@ -32,7 +32,7 @@ String* Attr::value() const
 void Attr::setValue(String* value)
 {
     if (m_element) {
-        m_element->setAttribute(m_qname, value);
+        m_element->setAttribute(m_name, value);
     } else {
         m_standAloneValue = value;
     }

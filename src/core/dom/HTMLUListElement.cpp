@@ -19,11 +19,6 @@
 #include "core/dom/HTMLUListElement.h"
 
 namespace StarFish {
-String* HTMLUListElement::localName()
-{
-    return starFish()->staticStrings()->m_ulTagName.localName();
-}
-
 QualifiedName HTMLUListElement::name()
 {
     return starFish()->staticStrings()->m_ulTagName;

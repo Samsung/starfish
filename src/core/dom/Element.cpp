@@ -52,6 +52,36 @@ String* Element::tagName()
     }
 }
 
+Nullable<String*> Element::namespaceURI()
+{
+    auto v = name().namespaceURI();
+    if (v.hasValue()) {
+        return v.getValue().string();
+    } else {
+        return Nullable<String*>();
+    }
+}
+
+String* Element::nodeName()
+{
+    return tagName();
+}
+
+Nullable<String*> Element::prefix()
+{
+    auto v = name().prefix();
+    if (v.hasValue()) {
+        return v.getValue().string();
+    } else {
+        return Nullable<String*>();
+    }
+}
+
+String* Element::localName()
+{
+    return name().localName();
+}
+
 bool Element::hasAttribute(String* name)
 {
     QualifiedName qName = document()->createAttributeName(name);
@@ -103,6 +133,7 @@ void Element::setAttribute(String* name, String* value)
 
 void Element::setAttribute(QualifiedName name, String* value)
 {
+    STARFISH_ASSERT(name.localName()->length());
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         m_attributes.push_back(Attribute(name, value));
@@ -416,8 +447,7 @@ void Element::insertAdjacentHTML(String* position, String* text)
             // context's local name is "html", and
             context->localName()->equals("html") &&
             // context's namespace is the HTML namespace;
-            context->name().namespaceURI()->equals(
-                "http://www.w3.org/1999/xhtml"))) {
+            context->name().hasSameNamespaceURI(HTML_NAMESPACE))) {
         // let context be a new Element with
         // body as its local name,
         // The HTML namespace as its namespace, and

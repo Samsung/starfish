@@ -190,11 +190,6 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
     executeScript();
 }
 
-String* HTMLScriptElement::localName()
-{
-    return starFish()->staticStrings()->m_scriptTagName.localName();
-}
-
 QualifiedName HTMLScriptElement::name()
 {
     return starFish()->staticStrings()->m_scriptTagName;

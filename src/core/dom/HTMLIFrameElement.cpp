@@ -22,11 +22,6 @@
 
 namespace StarFish {
 
-String* HTMLIFrameElement::localName()
-{
-    return starFish()->staticStrings()->m_iframeTagName.localName();
-}
-
 QualifiedName HTMLIFrameElement::name()
 {
     return starFish()->staticStrings()->m_iframeTagName;
