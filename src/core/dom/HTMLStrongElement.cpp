@@ -19,11 +19,6 @@
 #include "core/dom/HTMLStrongElement.h"
 
 namespace StarFish {
-String* HTMLStrongElement::localName()
-{
-    return starFish()->staticStrings()->m_strongTagName.localName();
-}
-
 QualifiedName HTMLStrongElement::name()
 {
     return starFish()->staticStrings()->m_strongTagName;

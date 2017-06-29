@@ -23,11 +23,6 @@
 
 namespace StarFish {
 
-String* HTMLVideoElement::localName()
-{
-    return starFish()->staticStrings()->m_videoTagName.localName();
-}
-
 QualifiedName HTMLVideoElement::name()
 {
     return starFish()->staticStrings()->m_videoTagName;

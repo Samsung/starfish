@@ -19,10 +19,6 @@
 #include "core/dom/HTMLTHElement.h"
 
 namespace StarFish {
-String* HTMLTHElement::localName()
-{
-    return starFish()->staticStrings()->m_thTagName.localName();
-}
 
 QualifiedName HTMLTHElement::name()
 {

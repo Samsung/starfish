@@ -23,10 +23,6 @@
 #include "core/page/Window.h"
 
 namespace StarFish {
-String* HTMLHtmlElement::localName()
-{
-    return starFish()->staticStrings()->m_htmlTagName.localName();
-}
 
 QualifiedName HTMLHtmlElement::name()
 {

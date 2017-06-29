@@ -53,8 +53,6 @@ public:
     virtual bool isHTMLImageElement() const override;
 
     /* 4.4 Interface Node */
-
-    virtual String* localName();
     virtual QualifiedName name();
 
     /* HTMLImageElement related */

@@ -318,22 +318,29 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
         Length from = oldStyle->width();
         Length to = newStyle->width();
 
-        executor->registerAnimation(new LengthAnimationTask(
-            element, CSSStyleValuePair::KeyKind::Width, AnimatedValue(from),
-            AnimatedValue(to), newStyle->transitionDuration().value(), 0,
-            new CubicBeizer(0.25, 0.1, 0.25, 1)));
-        // keep current computed style
-        newStyle->setWidth(from);
+        // TODO this check is wrong. we should use BoundRect for this
+        if (from.isFixed() && to.isFixed()) {
+            executor->registerAnimation(new LengthAnimationTask(
+                element, CSSStyleValuePair::KeyKind::Width, AnimatedValue(from),
+                AnimatedValue(to), newStyle->transitionDuration().value(), 0,
+                new CubicBeizer(0.25, 0.1, 0.25, 1)));
+            // keep current computed style
+            newStyle->setWidth(from);
+        }
     } else if (newStyle->transitionProperty() ==
                TransitionPropertyValue::TransitionPropertyHeightValue) {
         Length from = oldStyle->height();
         Length to = newStyle->height();
 
-        executor->registerAnimation(new LengthAnimationTask(
-            element, CSSStyleValuePair::KeyKind::Height, AnimatedValue(from),
-            AnimatedValue(to), newStyle->transitionDuration().value(), 0,
-            new CubicBeizer(0.25, 0.1, 0.25, 1)));
-        // keep current computed style
+        // TODO this check is wrong. we should use BoundRect for this
+        if (from.isFixed() && to.isFixed()) {
+            executor->registerAnimation(new LengthAnimationTask(
+                element, CSSStyleValuePair::KeyKind::Height,
+                AnimatedValue(from), AnimatedValue(to),
+                newStyle->transitionDuration().value(), 0,
+                new CubicBeizer(0.25, 0.1, 0.25, 1)));
+            // keep current computed style
+        }
         newStyle->setHeight(from);
     } else if (newStyle->transitionProperty() ==
                TransitionPropertyValue::TransitionPropertyAllValue) {

@@ -30,6 +30,8 @@ class AtomicString {
     friend class StarFish;
     template <unsigned int>
     friend class GatherableString;
+    friend class QualifiedName;
+
     explicit AtomicString(String* str)
     {
         m_string = str;
@@ -70,5 +72,15 @@ public:
 private:
     String* m_string;
 };
+
+inline bool operator==(const AtomicString& a, const AtomicString& b)
+{
+    return a.string() == b.string();
+}
+
+inline bool operator!=(const AtomicString& a, const AtomicString& b)
+{
+    return a.string() != b.string();
+}
 }
 #endif

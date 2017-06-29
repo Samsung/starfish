@@ -33,8 +33,6 @@ public:
     virtual bool isHTMLTableSectionElement() const;
 
     /* 4.4 Interface Node */
-
-    virtual String* localName() = 0;
     virtual QualifiedName name() = 0;
 };
 }

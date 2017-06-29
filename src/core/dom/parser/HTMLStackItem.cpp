@@ -58,7 +58,12 @@ HTMLStackItem::HTMLStackItem(Node* node, ItemType type)
     case ItemForContextElement:
         m_tokenLocalName = AtomicString::createAttrAtomicString(
             m_node->starFish(), m_node->localName());
-        m_namespaceURI = m_node->asElement()->name().namespaceURIAtomic();
+        if (m_node->asElement()->name().namespaceURI().hasValue()) {
+            m_namespaceURI =
+                m_node->asElement()->name().namespaceURI().getValue();
+        } else {
+            m_namespaceURI = AtomicString::emptyAtomicString();
+        }
         m_isDocumentFragmentNode = false;
         break;
     }

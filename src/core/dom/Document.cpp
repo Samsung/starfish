@@ -23,12 +23,11 @@
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DOMException.h"
-#ifdef STARFISH_ENABLE_EXP
 #include "core/dom/DOMImplementation.h"
-#endif
 #include "core/dom/Event.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
@@ -62,7 +61,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_window(window)
     , m_documentURI(uri)
     , m_cookieURI(uri)
+    , m_originURL(uri)
     , m_characterSet(charSet)
+    , m_contentType(String::createASCIIString("application/xml"))
     , m_resourceLoader(this)
     , m_styleResolver(this)
     , m_documentBuilder(nullptr)
@@ -71,10 +72,51 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_animationExecutor(new AnimationExecutor(window))
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
+    , m_implementation(nullptr)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
 {
+    // TODO https://html.spec.whatwg.org/multipage/origin.html#concept-origin
+    // For Document objects
+    // If the Document's active sandboxing flag set has its sandboxed origin
+    // browsing context flag set
+    // If the Document was generated from a data: URL
+    // A unique opaque origin assigned when the Document is created.
+
+    // If the Document's URL's scheme is a network scheme
+    // A copy of the Document's URL's origin assigned when the Document is
+    // created.
+
+    // The document.open() method can change the Document's URL to
+    // "about:blank". Therefore the origin is assigned when the Document is
+    // created.
+
+    // If the Document is the initial "about:blank" document
+    // The one it was assigned when its browsing context was created.
+
+    // If the Document is a non-initial "about:blank" document
+    // The origin of the incumbent settings object when the navigate algorithm
+    // was invoked, or, if no script was involved, the origin of the node
+    // document of the element that initiated the navigation to that URL.
+
+    // If the Document was created as part of the processing for javascript:
+    // URLs
+    // The origin of the active document of the browsing context being navigated
+    // when the navigate algorithm was invoked.
+
+    // If the Document is an iframe srcdoc document
+    // The origin of the Document's browsing context's browsing context
+    // container's node document.
+
+    // If the Document was obtained in some other manner (e.g. a Document
+    // created using the createDocument() API, etc)
+    // The default behavior as defined in the WHATWG DOM standard applies.
+    // [DOM].
+
+    // The origin is a unique opaque origin assigned when the Document is
+    // created.
+
     setStyle(m_styleResolver.resolveDocumentStyle(this));
     StaticStrings* sstrs = m_window->starFish()->staticStrings();
 
@@ -92,10 +134,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     auto df = new FrameDocument(this);
     setFrame(df);
-
-#ifdef STARFISH_ENABLE_EXP
-    m_implementation = new DOMImplementation(m_window, m_scriptBindingInstance);
-#endif
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -244,22 +282,120 @@ DocumentFragment* Document::createDocumentFragment()
     return new DocumentFragment(this);
 }
 
-Element* Document::createElement(AtomicString localName, bool shouldCheckName)
+Element* Document::createElement(String* localName)
 {
-    if (shouldCheckName &&
-        !QualifiedName::checkNameProductionRule(localName.string())) {
+    if (!QualifiedName::checkNameProductionRule(localName)) {
         throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
-    return new NamedElement(this, QualifiedName(AtomicString(), localName));
+    AtomicString localNameAtomic;
+    if (isHTMLDocument()) {
+        localNameAtomic = AtomicString::createAttrAtomicString(
+            window()->starFish(), localName);
+        return HTMLDocument::createHTMLElement(this, localNameAtomic);
+    } else {
+        localNameAtomic =
+            AtomicString::createAtomicString(window()->starFish(), localName);
+    }
+    return new NamedElement(this,
+                            QualifiedName(AtomicString(), localNameAtomic));
 }
 
-Element* Document::createElement(String* name)
+// https://dom.spec.whatwg.org/#validate-and-extract
+static QualifiedName validateAndExtract(Document* document,
+                                        Nullable<String*> namespaceString,
+                                        String* qualifiedName)
 {
-    AtomicString atomicName =
-        AtomicString::createAttrAtomicString(window()->starFish(), name);
-    return createElement(atomicName, true);
+    // If namespace is the empty string, set it to null.
+    if (namespaceString.hasValue() && !namespaceString.getValue()->length()) {
+        namespaceString = Nullable<String*>();
+    }
+    // Validate qualifiedName.
+    if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
+        throw new DOMException(
+            document, DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+    }
+
+    // Let prefix be null.
+    Nullable<String*> prefix;
+    // Let localName be qualifiedName.
+    String* localName = qualifiedName;
+    // If qualifiedName contains a ":" (U+003E), then split the string on it and
+    // set prefix to the part before and localName to the part after.
+    size_t colIndex = qualifiedName->indexOf(':');
+    if (colIndex != SIZE_MAX) {
+        prefix = Nullable<String*>(qualifiedName->substring(0, colIndex));
+        localName = qualifiedName->substring(
+            colIndex + 1, qualifiedName->length() - colIndex - 1);
+    }
+
+    // If prefix is non-null and namespace is null, then throw a NamespaceError.
+    if (prefix.hasValue() && namespaceString.hasValue()) {
+        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+                               "Provided namespace is wrong");
+    }
+
+    // If prefix is "xml" and namespace is not the XML namespace, then throw a
+    // NamespaceError.
+    if (prefix.hasValue() && prefix.getValue()->equals("xml") &&
+        (!namespaceString.hasValue() ||
+         !namespaceString.getValue()->equals(XML_NAMESPACE))) {
+        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+                               "Provided namespace is wrong");
+    }
+
+    // If either qualifiedName or prefix is "xmlns" and namespace is not the
+    // XMLNS namespace, then throw a NamespaceError.
+    if (qualifiedName->equals(XMLNS_NAMESPACE) ||
+        (prefix.hasValue() && prefix.getValue()->equals("xmlns"))) {
+        if (!namespaceString.hasValue() ||
+            namespaceString.getValue()->equals(XMLNS_NAMESPACE)) {
+            throw new DOMException(document, DOMException::NAMESPACE_ERR,
+                                   "Provided namespace is wrong");
+        }
+    }
+
+    // If namespace is the XMLNS namespace and neither qualifiedName nor prefix
+    // is "xmlns", then throw a NamespaceError.
+    if ((namespaceString.hasValue() &&
+         namespaceString.getValue()->equals(XMLNS_NAMESPACE)) &&
+        (qualifiedName->equals("xmlns") ||
+         (prefix.hasValue() && prefix.getValue()->equals("xmlns")))) {
+        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+                               "Provided namespace is wrong");
+    }
+
+    AtomicString ns;
+    if (namespaceString.hasValue()) {
+        ns = AtomicString::createAtomicString(document->starFish(),
+                                              namespaceString.getValue());
+    }
+
+    if (prefix.hasValue()) {
+        return QualifiedName(AtomicString::createAtomicString(
+                                 document->starFish(), prefix.getValue()),
+                             ns, AtomicString::createAtomicString(
+                                     document->starFish(), qualifiedName));
+    } else {
+        return QualifiedName(ns, AtomicString::createAtomicString(
+                                     document->starFish(), qualifiedName));
+    }
+}
+
+Element* Document::createElementNS(Nullable<String*> namespaceString,
+                                   String* qualifiedName)
+{
+    if (!namespaceString.hasValue()) {
+        return createElement(qualifiedName);
+    }
+    QualifiedName name =
+        validateAndExtract(this, namespaceString, qualifiedName);
+    if (!name.prefix().hasValue() && name.namespaceURI().hasValue() &&
+        name.namespaceURI().getValue().string()->equals(HTML_NAMESPACE)) {
+        return HTMLDocument::createHTMLElement(this, name.localNameAtomic());
+    }
+    return new NamedElement(this, name);
 }
 
 Text* Document::createTextNode(String* data)
@@ -490,15 +626,23 @@ QualifiedName Document::createAttributeName(String* name)
     }
 }
 
+DOMImplementation* Document::implementation()
+{
+    if (m_implementation == nullptr) {
+        m_implementation = new DOMImplementation(this, scriptBindingInstance());
+    }
+    return m_implementation;
+}
+
 Element* Document::activeElement()
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return this->body()->asElement();
 }
 
 bool Document::hasFocus() const
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
 

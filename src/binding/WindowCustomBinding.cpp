@@ -511,6 +511,7 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
                         return elementDOMObject->asObject()->getOwnProperty(
                             state, key);
                     }
+                    return ValueRef::createEmpty();
                 }
             }
         }

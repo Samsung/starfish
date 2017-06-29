@@ -128,15 +128,17 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |
 | [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
+|  | attribute | origin | Returns document's origin. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |
 |  | attribute | charset | Returns document's encoding type ""UTF8"". |
 |  | attribute | characterSet | Returns document's encoding type ""UTF8"". |
-|  | attribute | contentType | Returns document's content type "text/html". |
+|  | attribute | contentType | Returns document's content type. |
 |  | attribute | doctype | Returns the doctype or null if there is none. |
 |  | attribute | documentElement | Returns the document element. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
 |  | method | Element createElement(DOMString localName) | Returns an element in the HTML namespace with localName as local name. |
+|  | method | Element createElementNS(DOMString namespace, DOMString localName) | Returns an element with namespace namespace. Its namespace prefix will be everything before ":" (U+003E) in qualifiedName or null. Its local name will be everything after ":" (U+003E) in qualifiedName or qualifiedName. |
 |  | method | DocumentFragment createDocumentFragment() | Returns a new DocumentFragment node with its node document set to the context object. |
 |  | method | Text createTextNode(DOMString data) | Returns a Text node whose data is data. |
 |  | method | Comment createComment(DOMString data) | Returns a Comment node whose data is data. |
@@ -229,7 +231,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  void add(DOMString... tokens)  |  Adds all arguments passed, except those already present.  |
 |    |  method  |  void remove(DOMString... tokens)  |  Removes arguments passed, if they are present.  |
 |    |  method  |  boolean toggle(DOMString token, optional boolean force = false)  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).   |
+|  [DOMImplementation](https://dom.spec.whatwg.org/#domimplementation)  |  method  |  DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId)  |  Returns a doctype, with the given qualifiedName, publicId, and systemId. If qualifiedName does not match the Name production, an InvalidCharacterError is thrown, and if it does not match the QName production, a NamespaceError is thrown. |
+|    |  method  |    XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, optional DocumentType? doctype = null)  |  Returns an XMLDocument, with a document element whose local name is qualifiedName and whose namespace is namespace (unless qualifiedName is the empty string), and with doctype, if it is given, as its doctype. |
+|    |  method  |  Document createHTMLDocument(optional DOMString title);  |  Returns a document, with a basic tree already constructed including a title element, unless the title argument is omitted. |
+|    |  method  |  boolean hasFeature(); |  useless; always returns true |
 | [Element](https://dom.spec.whatwg.org/#interface-element) | interface | Element | Element nodes are simply known as elements. |
+|  | attribute | prefix | Return the context object’s namespace prefix. |
 |  | attribute | namespaceURI | Return the context object’s namespace. |
 |  | attribute | localName | Return the value of the attribute in element's attribute list whose namespace is namespace and local name is localName, if it has one, and null otherwise. |
 |  | attribute | tagName | If namespace prefix is not null, returns the concatenation of namespace prefix, ":", and local name. Otherwise it returns the local name. |
@@ -426,6 +433,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | Node replaceChild(Node node, Node child) | Returns the result of replacing child with node within context object. |
 |  | method | Node removeChild(Node child) | Returns the result of pre-removing child from context object. |
 |  | attribute | lastChild | Returns the last child |
+|  | method | lookupNamespaceURI | |
+|  | method | isDefaultNamespace,  | |
+|  | method | lookupPrefix | |
 | [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A NodeList object is a collection of nodes. |
 |  | method | Node? item(unsigned long index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
 |  | attribute | length | Returns the number of nodes in the collection. |

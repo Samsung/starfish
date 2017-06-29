@@ -20,11 +20,6 @@
 
 namespace StarFish {
 
-String* HTMLTBodyElement::localName()
-{
-    return starFish()->staticStrings()->m_tbodyTagName.localName();
-}
-
 QualifiedName HTMLTBodyElement::name()
 {
     return starFish()->staticStrings()->m_tbodyTagName;

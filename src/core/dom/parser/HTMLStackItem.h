@@ -100,7 +100,7 @@ public:
     bool hasTagName(const QualifiedName& name) const
     {
         return m_tokenLocalName == name.localNameAtomic() &&
-               m_namespaceURI == name.namespaceURIAtomic();
+               m_namespaceURI == name.namespaceURI();
     }
 
     bool matchesHTMLTag(const AtomicString& name) const;

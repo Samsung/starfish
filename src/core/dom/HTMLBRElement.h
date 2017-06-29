@@ -32,7 +32,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLBRElement() const override;
 
-    virtual String* localName();
     virtual QualifiedName name();
 };
 }

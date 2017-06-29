@@ -214,10 +214,6 @@ bool BrowsingContext::layoutIfNeeds()
             FrameTreeBuilder::buildFrameTree(document());
             m_needsLayout = true;
             m_needsFrameTreeBuild = false;
-
-            if (!isMainBrowsingContext()) {
-                document()->frame()->setLayoutParent(m_sourceElement->frame());
-            }
         }
     }
 

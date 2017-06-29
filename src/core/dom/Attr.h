@@ -27,7 +27,7 @@ public:
     Attr(Document* document, Element* element, QualifiedName name)
         : Node(document)
         , m_element(element)
-        , m_qname(name)
+        , m_name(name)
         , m_standAloneValue(String::emptyString)
     {
     }
@@ -35,7 +35,7 @@ public:
     Attr(Document* document, QualifiedName name)
         : Node(document)
         , m_element(nullptr)
-        , m_qname(name)
+        , m_name(name)
         , m_standAloneValue(String::emptyString)
     {
     }
@@ -43,7 +43,7 @@ public:
     Attr(Document* document, QualifiedName name, String* value)
         : Node(document)
         , m_element(nullptr)
-        , m_qname(name)
+        , m_name(name)
         , m_standAloneValue(value)
     {
     }
@@ -52,23 +52,41 @@ public:
                       void* domObjectPointer) override;
     virtual bool isAttr() const override;
 
-    QualifiedName qname() const
-    {
-        return m_qname;
-    }
-
     String* name() const
     {
-        // FIXME: If we support legacy xml, then we have to implement this
-        // to return with namespace
-        return m_qname.localName();
+        return m_name.toString();
+    }
+
+    QualifiedName qname()
+    {
+        return m_name;
+    }
+
+    Nullable<String*> namespaceURI()
+    {
+        auto v = m_name.prefix();
+        if (v.hasValue()) {
+            return v.getValue().string();
+        } else {
+            return Nullable<String*>();
+        }
+    }
+
+    Nullable<String*> prefix()
+    {
+        auto v = m_name.prefix();
+        if (v.hasValue()) {
+            return v.getValue().string();
+        } else {
+            return Nullable<String*>();
+        }
     }
 
     String* value() const;
 
     void setValue(String* value);
 
-    Element* ownerElement() const
+    Element* ownerElement()
     {
         return m_element;
     }
@@ -92,12 +110,12 @@ public:
 
     virtual String* localName()
     {
-        return m_qname.localName();
+        return m_name.localName();
     }
 
     virtual Node* clone() override
     {
-        return new Attr(document(), m_qname, value());
+        return new Attr(document(), m_name, value());
     }
 
     void detachFromElement(String* value)
@@ -108,7 +126,7 @@ public:
 
 private:
     Element* m_element;
-    QualifiedName m_qname;
+    QualifiedName m_name;
     String* m_standAloneValue;
 };
 }

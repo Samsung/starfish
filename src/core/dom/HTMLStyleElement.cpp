@@ -41,11 +41,6 @@ bool isCSSType(const char* type)
     return false;
 }
 
-String* HTMLStyleElement::localName()
-{
-    return starFish()->staticStrings()->m_styleTagName.localName();
-}
-
 QualifiedName HTMLStyleElement::name()
 {
     return starFish()->staticStrings()->m_styleTagName;

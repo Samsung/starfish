@@ -34,7 +34,6 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual String* localName();
     virtual QualifiedName name();
 };
 }

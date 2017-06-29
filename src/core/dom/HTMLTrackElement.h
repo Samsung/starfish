@@ -38,7 +38,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTrackElement() const override;
 
-    virtual String* localName();
     virtual QualifiedName name();
 
     virtual void didAttributeChanged(QualifiedName name, String* old,

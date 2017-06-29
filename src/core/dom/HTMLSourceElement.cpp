@@ -22,11 +22,6 @@
 
 namespace StarFish {
 
-String* HTMLSourceElement::localName()
-{
-    return starFish()->staticStrings()->m_sourceTagName.localName();
-}
-
 QualifiedName HTMLSourceElement::name()
 {
     return starFish()->staticStrings()->m_sourceTagName;

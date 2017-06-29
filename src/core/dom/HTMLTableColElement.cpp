@@ -19,10 +19,6 @@
 #include "core/dom/HTMLTableColElement.h"
 
 namespace StarFish {
-String* HTMLTableColElement::localName()
-{
-    return starFish()->staticStrings()->m_colTagName.localName();
-}
 
 QualifiedName HTMLTableColElement::name()
 {

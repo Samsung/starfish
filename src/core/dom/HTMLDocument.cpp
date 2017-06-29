@@ -155,26 +155,6 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     return new HTMLUnknownElement(document, name);
 }
 
-Element* HTMLDocument::createElement(AtomicString localName,
-                                     bool shouldCheckName)
-{
-    if (shouldCheckName &&
-        !QualifiedName::checkNameProductionRule(localName.string())) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
-                               nullptr);
-    }
-
-#ifdef STARFISH_TC_COVERAGE
-    if (localName.localName()->equals("style")) {
-        STARFISH_LOG_INFO("+++tag:Element&&&style\n");
-    } else {
-        STARFISH_LOG_INFO("+++tag:%s\n", localName.localName()->utf8Data());
-    }
-#endif
-
-    return HTMLDocument::createHTMLElement(this, localName);
-}
-
 static void createHtmlCaseInsensitiveAttributesSet(
     Document* document, GCUnorderedMap<String*, size_t>& attrSet)
 {

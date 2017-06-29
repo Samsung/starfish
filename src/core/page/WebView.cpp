@@ -469,15 +469,6 @@ void WebView::layoutIfNeeds()
         }
 #endif
     }
-
-    {
-        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
-        for (size_t i = 0; i < bufSiz; i++) {
-            m_backStackingContextBufferUpWhileReCompsite[i]
-                ->detachNativeBuffer();
-        }
-        m_backStackingContextBufferUpWhileReCompsite.clear();
-    }
 }
 
 void WebView::rendering()
@@ -520,6 +511,15 @@ void WebView::rendering()
 #endif
 
     layoutIfNeeds();
+
+    {
+        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
+        for (size_t i = 0; i < bufSiz; i++) {
+            m_backStackingContextBufferUpWhileReCompsite[i]
+                ->detachNativeBuffer();
+        }
+        m_backStackingContextBufferUpWhileReCompsite.clear();
+    }
 
     if (m_needsPainting) {
 #ifdef STARFISH_ENABLE_TIMER

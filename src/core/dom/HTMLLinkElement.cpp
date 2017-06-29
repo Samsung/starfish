@@ -33,11 +33,6 @@ namespace StarFish {
 
 bool isCSSType(const char* type);
 
-String* HTMLLinkElement::localName()
-{
-    return starFish()->staticStrings()->m_linkTagName.localName();
-}
-
 QualifiedName HTMLLinkElement::name()
 {
     return starFish()->staticStrings()->m_linkTagName;

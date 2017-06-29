@@ -19,10 +19,6 @@
 #include "core/dom/HTMLParagraphElement.h"
 
 namespace StarFish {
-String* HTMLParagraphElement::localName()
-{
-    return starFish()->staticStrings()->m_pTagName.localName();
-}
 
 QualifiedName HTMLParagraphElement::name()
 {

@@ -10,8 +10,8 @@
 [Exposed=Window]
 interface Element : Node {
   // [REF1]--------------------------------------------------------------
-  [Custom=Getter] readonly attribute DOMString? namespaceURI;
-  [Unimplemented] readonly attribute DOMString? prefix;
+  readonly attribute DOMString? namespaceURI;
+  readonly attribute DOMString? prefix;
   readonly attribute DOMString localName;
   readonly attribute DOMString tagName;
 

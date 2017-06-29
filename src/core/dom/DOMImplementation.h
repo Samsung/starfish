@@ -14,23 +14,23 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_EXP
-
 #ifndef __StarFishDOMImplementation__
 #define __StarFishDOMImplementation__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class DocumentType;
+class XMLDocument;
 class Window;
 
-class DOMImplementation : public ScriptWrappable {
+class DOMImplementation : public ScriptWrappable, public DocumentHoldable {
 public:
-    DOMImplementation(Window* window, ScriptBindingInstance* instance)
+    DOMImplementation(Document* document, ScriptBindingInstance* instance)
         : ScriptWrappable(this)
-        , m_window(window)
+        , DocumentHoldable(document)
         , m_instance(instance)
     {
     }
@@ -38,21 +38,26 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isDOMImplementation() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);
-    Document* createHTMLDocument(String* title = String::spaceString);
+    XMLDocument* createDocument(Nullable<String*> namespaceParameter,
+                                String* qualifiedName, DocumentType* doctype);
+    Document* createHTMLDocument(Nullable<String*> title = Nullable<String*>());
 
+    // useless; always returns true
     bool hasFeature()
     {
         return true;
-    } // useless; always returns true
+    }
+
 private:
-    Window* m_window;
     ScriptBindingInstance* m_instance;
 };
 }
-
-#endif
 
 #endif

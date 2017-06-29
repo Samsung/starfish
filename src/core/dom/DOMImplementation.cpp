@@ -14,8 +14,6 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_EXP
-
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
@@ -23,6 +21,9 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLHeadElement.h"
 #include "core/dom/HTMLBodyElement.h"
+#include "core/dom/HTMLDocument.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/XMLDocument.h"
 
 namespace StarFish {
 
@@ -30,25 +31,95 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
                                                     String* publicId,
                                                     String* systemId)
 {
-    return new DocumentType(nullptr, qualifiedName, publicId, systemId);
+    // Validate qualifiedName.
+    if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
+        throw new DOMException(document(), DOMException::INVALID_CHARACTER_ERR);
+    }
+
+    // Return a new doctype, with qualifiedName as its name, publicId as its
+    // public ID,
+    // and systemId as its system ID, and with its node document
+    // set to the associated document of the context object.
+    return new DocumentType(document(), qualifiedName, publicId, systemId);
 }
 
-Document* DOMImplementation::createHTMLDocument(String* title)
+XMLDocument* DOMImplementation::createDocument(
+    Nullable<String*> namespaceParameter, String* qualifiedName,
+    DocumentType* doctype)
 {
-    Document* doc = new Document(m_window, m_instance);
-    DocumentType* docType = new DocumentType(doc);
+    // Let document be a new XMLDocument.
+    XMLDocument* document = new XMLDocument(
+        window(), scriptBindingInstance(), new ResourceURL("about:blank"),
+        String::createASCIIString("utf-8"), false);
+    // Let element be null.
+    Element* element = nullptr;
+    // If qualifiedName is not the empty string,
+    // then set element to the result of running the internal createElementNS
+    // steps,
+    // given document, namespace, qualifiedName, and an empty dictionary.
+    if (qualifiedName->length()) {
+        element =
+            m_document->createElementNS(namespaceParameter, qualifiedName);
+    }
+    // If doctype is non-null, append doctype to document.
+    if (doctype) {
+        document->appendChild(doctype);
+    }
+    // If element is non-null, append element to document.
+    if (element) {
+        document->appendChild(element);
+    }
+
+    // document’s origin is context object’s associated document’s origin.
+    document->setOriginURL(m_document->originURL());
+
+    // document’s content type is determined by namespace:
+    if (namespaceParameter.hasValue()) {
+        if (namespaceParameter.getValue()->equals(HTML_NAMESPACE)) {
+            document->setContentType(
+                String::createASCIIString("application/xhtml+xml"));
+        } else if (namespaceParameter.getValue()->equals(SVG_NAMESPACE)) {
+            document->setContentType(
+                String::createASCIIString("image/svg+xml"));
+        } else {
+            // Any other namespace -> application/xml
+            // document already have application/xml
+        }
+    }
+
+    return document;
+}
+
+Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
+{
+    // Let doc be a new document that is an HTML document.
+    // Set doc’s content type to "text/html".
+    Document* doc = new HTMLDocument(window(), scriptBindingInstance(),
+                                     new ResourceURL("about:blank"),
+                                     String::createASCIIString("utf-8"), false);
+
+    DocumentType* docType =
+        new DocumentType(doc, String::createASCIIString("html"),
+                         String::emptyString, String::emptyString);
     doc->appendChild(docType);
 
     HTMLHtmlElement* html = new HTMLHtmlElement(doc);
     doc->appendChild(html);
 
-    // FIXME: not setting up title
     HTMLHeadElement* head = new HTMLHeadElement(doc);
     html->appendChild(head);
 
+    if (title.hasValue()) {
+        Element* titleElement =
+            doc->createElement(String::createASCIIString("title"));
+        titleElement->setTextContent(title);
+        head->appendChild(titleElement);
+    }
+
     html->appendChild(new HTMLBodyElement(doc));
+
+    // doc’s origin is context object’s associated document’s origin.
+    doc->setOriginURL(m_document->originURL());
     return doc;
 }
 }
-
-#endif

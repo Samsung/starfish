@@ -24,14 +24,31 @@ namespace StarFish {
 class QualifiedName : public gc {
     friend class StaticStrings;
     QualifiedName()
-        : m_namespaceURI(AtomicString::emptyAtomicString())
+        : m_prefix(nullptr)
+        , m_namespaceURI(AtomicString::emptyAtomicString())
         , m_localName(AtomicString::emptyAtomicString())
     {
     }
 
 public:
+    QualifiedName(const AtomicString& localName)
+        : m_prefix(nullptr)
+        , m_namespaceURI(nullptr)
+        , m_localName(localName)
+    {
+    }
+
     QualifiedName(const AtomicString& nsURI, const AtomicString& localName)
-        : m_namespaceURI(nsURI)
+        : m_prefix(nullptr)
+        , m_namespaceURI(nsURI)
+        , m_localName(localName)
+    {
+    }
+
+    QualifiedName(const AtomicString& prefix, const AtomicString& nsURI,
+                  const AtomicString& localName)
+        : m_prefix(prefix)
+        , m_namespaceURI(nsURI)
         , m_localName(localName)
     {
     }
@@ -39,7 +56,8 @@ public:
     static bool checkNameProductionRule(String* str);
     bool operator==(const QualifiedName& src) const
     {
-        return m_namespaceURI == src.m_namespaceURI &&
+        return m_prefix == src.m_prefix &&
+               m_namespaceURI == src.m_namespaceURI &&
                m_localName == src.m_localName;
     }
 
@@ -48,22 +66,81 @@ public:
         return m_localName;
     }
 
-    AtomicString namespaceURIAtomic() const
-    {
-        return m_namespaceURI;
-    }
-
     String* localName() const
     {
         return m_localName;
     }
 
-    String* namespaceURI() const
+    Nullable<AtomicString> prefix() const
     {
+        if (m_prefix.string() == nullptr) {
+            return Nullable<AtomicString>();
+        }
+        return m_prefix;
+    }
+
+    Nullable<String*> prefixString() const
+    {
+        if (m_prefix.string() == nullptr) {
+            return Nullable<String*>();
+        }
+        return m_prefix.string();
+    }
+
+    Nullable<AtomicString> namespaceURI() const
+    {
+        if (m_namespaceURI.string() == nullptr) {
+            return Nullable<AtomicString>();
+        }
         return m_namespaceURI;
     }
 
+    bool hasSameNamespaceURI(const char* str) const
+    {
+        if (m_namespaceURI.string()) {
+            return m_namespaceURI.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSameNamespaceURI(String* str) const
+    {
+        if (m_namespaceURI.string()) {
+            return m_namespaceURI.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSameNamespaceURI(Nullable<String*> str) const
+    {
+        if (m_namespaceURI.string()) {
+            if (str.hasValue()) {
+                return m_namespaceURI.string()->equals(str.getValue());
+            } else {
+                return false;
+            }
+        } else {
+            if (str.hasValue()) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    String* toString() const
+    {
+        if (!prefix().hasValue())
+            return localName();
+
+        StringBuilder sb;
+        sb.appendString(prefix().getValue().string());
+        sb.appendChar(':');
+        sb.appendString(localName());
+        return sb.finalize();
+    }
+
 private:
+    AtomicString m_prefix;
     AtomicString m_namespaceURI;
     AtomicString m_localName;
 };

@@ -39,7 +39,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLAudioElement() const override;
 
-    virtual String* localName();
     virtual QualifiedName name();
 };
 }

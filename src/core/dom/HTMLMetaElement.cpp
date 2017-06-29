@@ -29,11 +29,6 @@ namespace StarFish {
 extern bool g_enablePixelTest;
 #endif
 
-String* HTMLMetaElement::localName()
-{
-    return starFish()->staticStrings()->m_metaTagName.localName();
-}
-
 QualifiedName HTMLMetaElement::name()
 {
     return starFish()->staticStrings()->m_metaTagName;

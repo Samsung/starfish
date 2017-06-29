@@ -2012,7 +2012,8 @@ bool StyleResolver::anyAttributeMatches(Element* element,
     }
 
     if (caseSensitivity == CSSSelector::CaseInsensitive) {
-        if (!selectorAttr.namespaceURI()->equals("*")) {
+        if (!selectorAttr.namespaceURI().hasValue() &&
+            selectorAttr.namespaceURI().getValue().string()->equals("*")) {
             return false;
         }
     }
@@ -2030,7 +2031,8 @@ bool StyleResolver::anyAttributeMatches(Element* element,
                               CSSSelector::CaseInsensitive)) {
         return true;
     }
-    if (!selectorAttr.namespaceURI()->equals("*")) {
+    if (!selectorAttr.namespaceURI().hasValue() &&
+        selectorAttr.namespaceURI().getValue().string()->equals("*")) {
         return false;
     }
 

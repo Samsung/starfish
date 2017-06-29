@@ -120,6 +120,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "scope"));
     m_media = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "media"));
+    m_value = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "value"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

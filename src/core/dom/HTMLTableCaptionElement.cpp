@@ -19,11 +19,6 @@
 #include "core/dom/HTMLTableCaptionElement.h"
 
 namespace StarFish {
-String* HTMLTableCaptionElement::localName()
-{
-    return starFish()->staticStrings()->m_captionTagName.localName();
-}
-
 QualifiedName HTMLTableCaptionElement::name()
 {
     return starFish()->staticStrings()->m_captionTagName;

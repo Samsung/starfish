@@ -19,10 +19,6 @@
 #include "core/dom/HTMLDivElement.h"
 
 namespace StarFish {
-String* HTMLDivElement::localName()
-{
-    return starFish()->staticStrings()->m_divTagName.localName();
-}
 
 QualifiedName HTMLDivElement::name()
 {

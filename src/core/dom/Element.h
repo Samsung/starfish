@@ -88,6 +88,10 @@ public:
     void insertAdjacentText(String* where, String* data);         // historical
 
     virtual QualifiedName name() = 0;
+    virtual String* nodeName() override;
+    Nullable<String*> namespaceURI();
+    virtual Nullable<String*> prefix() override;
+    virtual String* localName() override;
     String* tagName();
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
@@ -286,6 +290,11 @@ public:
     }
 
     String* getLaunguage();
+
+    const GCVector<Attribute>& attributesVector()
+    {
+        return m_attributes;
+    }
 
 protected:
     // clientRect is differ with clientBoundingRect.

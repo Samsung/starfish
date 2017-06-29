@@ -31,14 +31,13 @@ public:
         : Document(window, scriptBindingInstance, url, charSet,
                    doesParticipateInRendering)
     {
+        m_contentType = String::createASCIIString("text/html");
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLDocument() const override;
 
-    virtual Element* createElement(AtomicString localName,
-                                   bool shouldCheckName);
     static Element* createHTMLElement(Document* document,
                                       AtomicString localName);
 

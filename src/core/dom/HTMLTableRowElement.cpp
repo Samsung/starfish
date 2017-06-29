@@ -19,10 +19,6 @@
 #include "core/dom/HTMLTableRowElement.h"
 
 namespace StarFish {
-String* HTMLTableRowElement::localName()
-{
-    return starFish()->staticStrings()->m_trTagName.localName();
-}
 
 QualifiedName HTMLTableRowElement::name()
 {
