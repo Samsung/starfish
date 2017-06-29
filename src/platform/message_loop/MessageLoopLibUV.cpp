@@ -288,7 +288,6 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
             iter++;
         }
     }
-    m_idlers.clear();
 
     Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
     auto iter2 = m_idlersFromOtherThread.begin();
