@@ -99,6 +99,11 @@ StyleRule::StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl)
 {
 }
 
+void StyleRule::wrapperTakeSelectorList(CSSSelectorList& selectors)
+{
+    m_selectorList = std::move(selectors);
+}
+
 StyleRuleGroup::StyleRuleGroup(RuleType type, GCVector<StyleRuleBase*>& rules)
     : StyleRuleBase(type)
 {

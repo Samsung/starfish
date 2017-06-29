@@ -105,7 +105,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 |  | attribute | parentRule | Returns the parent CSS rule. |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | Represents a style rule. |
-|  | attribute | selectorText | Returns the result of serializing the associated group of selectors. (Note: We won't support result separated by ',' for a while.)|
+|  | attribute | selectorText | Returns the result of serializing the associated group of selectors. (Note: We will support result separated by ',' for a while.)|
 |  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
 | [CSSImportRule](https://drafts.csswg.org/cssom/#the-cssimportrule-interface) | interface | CSSImportRule | Represents an @import at-rule. |
 |  | attribute | href | Returns the URL specified by the @import at-rule. |
@@ -115,6 +115,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns the result of invoking insert a CSS rule rule into the child CSS rules at index. |
 |  | method | void deleteRule(unsigned long index) | Removes a CSS rule from the child CSS rules at index. |
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
+|  | attribute | conditionText | Returns the result of serializing the associated condition. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 |  | attribute | conditionText | Returns the value of media.mediaText on the rule. (CSSMediaRule-specific definition for attribute on CSSConditionRule) Note: Currently, widget engine supports only getter.|
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |

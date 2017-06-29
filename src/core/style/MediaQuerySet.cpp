@@ -64,7 +64,7 @@ MediaQuerySet* MediaQuerySet::create(String* mediaString)
     }
 
     CSSParser parser(m_document);
-    RefPtr<CSSToken> token = parser.makeToken(mediaString);
+    parser.makeToken(mediaString);
     return parser.parseMediaQuery();
 }
 

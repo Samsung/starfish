@@ -82,13 +82,31 @@ String* CSSStyleRule::cssText()
 
 String* CSSStyleRule::selectorText() const
 {
-    // TODO : Do we need to cache this information?
     return generateSelectorText();
 }
 
 void CSSStyleRule::setSelectorText(String* selectorText)
 {
-    // TODO : implement
+    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    parser.makeToken(selectorText);
+
+    bool isValid = true;
+    GCVector<CSSSelectorList*> list;
+    parser.parseSelector(list, isValid);
+
+    if (!isValid || list.size() == 0) {
+        return;
+    }
+
+    // TODO: Now, our engine has a list of CSSSelectorLists that are separated
+    // by ','.
+    // However, it should have only one CSSSelectorList like 'div, p, span'.
+    m_styleRule->wrapperTakeSelectorList(*list[0]);
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
 }
 
 String* CSSStyleRule::generateSelectorText() const
@@ -236,6 +254,7 @@ String* CSSConditionRule::conditionText() const
 
 CSSMediaRule::CSSMediaRule(StyleRuleMedia* mediaRule, CSSStyleSheet* parent)
     : CSSConditionRule(mediaRule, parent)
+    , m_mediaWrapper(nullptr)
 {
 }
 

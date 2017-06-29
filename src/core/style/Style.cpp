@@ -686,7 +686,8 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
     StringBuilder str;
     CSSSelector* cs = list->at(idx);
 
-    if (cs->type() == CSSSelector::Tag) {
+    if (cs->type() == CSSSelector::Tag ||
+        cs->type() == CSSSelector::Universal) {
         str.appendString(cs->selectorText().string());
     }
 
