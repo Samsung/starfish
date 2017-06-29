@@ -19,7 +19,6 @@
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
 #include "core/modules/canvas/image/ImageData.h"
-#include "ImageDecoder.h"
 #include "platform/file/FileIO.h"
 
 #include <png.h>
@@ -38,7 +37,8 @@ public:
 
     ImageDataMISC(const char* buf, size_t len)
     {
-        decodeImage(nullptr, buf, len);
+        if (buf && len != 0)
+            decodeImage(nullptr, buf, len);
     }
 
     virtual size_t bufferSize()
