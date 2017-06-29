@@ -118,6 +118,8 @@ public:
         return m_styleDeclaration;
     }
 
+    void wrapperTakeSelectorList(CSSSelectorList& selectors);
+
 protected:
     CSSSelectorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;

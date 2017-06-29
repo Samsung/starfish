@@ -1000,6 +1000,7 @@ public:
     StyleRuleImport* parseImportRule();
     String* parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
+    void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
 protected:
     RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
@@ -1010,7 +1011,6 @@ protected:
     void restoreState();
     void forgetState();
     RefPtr<CSSToken> lookAhead(bool aSkipWS, bool aSkipComment);
-    void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
     bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList);
     void parseComplexSelector(CSSSelectorList* selectorList);
