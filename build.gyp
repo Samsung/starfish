@@ -175,6 +175,7 @@
                        '-Wl,-rpath=/usr/local/lib',
                        '-lpthread',
                        '-lcurl',
+                       '-lgcrypt',
                    ],
                    'configurations': {
                        'debug': {
