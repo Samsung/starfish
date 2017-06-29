@@ -28,6 +28,7 @@ public:
     void info(String* m);
     void error(String* m);
     void warn(String* m);
+    void debug(String* m);
 
 protected:
     StarFish* m_starFish;

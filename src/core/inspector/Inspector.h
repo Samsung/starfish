@@ -30,6 +30,7 @@ public:
     void sendInfoMessage(String* m);
     void sendErrorMessage(String* m);
     void sendWarnMessage(String* m);
+    void sendDebugMessage(String* m);
 
 protected:
     StarFish* m_starFish;

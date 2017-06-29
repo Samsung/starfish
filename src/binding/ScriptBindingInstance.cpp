@@ -121,6 +121,17 @@ static ValueRef* warnFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
+static ValueRef* debugFunction(ExecutionStateRef* state, ValueRef* thisValue,
+                               size_t argc, ValueRef** argv,
+                               bool isNewExpression)
+{
+    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
+    fetchStarFish(state->context())
+        ->console()
+        ->debug(toBrowserStringForConsole(state, val));
+    return ValueRef::createUndefined();
+}
+
 void ScriptBindingInstance::initBinding(Document* ownerDocument)
 {
     m_ownerDocument = ownerDocument;
@@ -171,7 +182,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             state, FunctionObjectRef::NativeFunctionInfo(
                        AtomicStringRef::create(context, "log"), logFunction, 1,
                        nullptr, true, false))),
-        false, false, false);
+        true, true, true);
 
     console->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("info")),
@@ -179,7 +190,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             state, FunctionObjectRef::NativeFunctionInfo(
                        AtomicStringRef::create(context, "info"), infoFunction,
                        1, nullptr, true, false))),
-        false, false, false);
+        true, true, true);
 
     console->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("error")),
@@ -187,7 +198,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             state, FunctionObjectRef::NativeFunctionInfo(
                        AtomicStringRef::create(context, "error"), errorFunction,
                        1, nullptr, true, false))),
-        false, false, false);
+        true, true, true);
 
     console->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("warn")),
@@ -195,11 +206,19 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             state, FunctionObjectRef::NativeFunctionInfo(
                        AtomicStringRef::create(context, "warn"), warnFunction,
                        1, nullptr, true, false))),
-        false, false, false);
+        true, true, true);
+
+    console->defineDataProperty(
+        state, ValueRef::create(StringRef::fromASCII("debug")),
+        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
+            state, FunctionObjectRef::NativeFunctionInfo(
+                       AtomicStringRef::create(context, "debug"), debugFunction,
+                       1, nullptr, true, false))),
+        true, true, true);
 
     globalObject->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("console")),
-        ValueRef::create(console), false, false, false);
+        ValueRef::create(console), true, true, true);
 
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::initialize(fetchData(this)->m_instance);
