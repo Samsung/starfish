@@ -150,7 +150,8 @@ void Inspector::sendInfoMessage(String* m)
     document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
                        document.GetAllocator());
     rapidjson::Value v2;
-    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    auto str = m->toUTF8NonGCString();
+    v2 = rapidjson::Value(str.c_str(), str.length());
     document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
                        document.GetAllocator());
     rapidjson::StringBuffer strbuf;
@@ -179,7 +180,8 @@ void Inspector::sendErrorMessage(String* m)
     document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
                        document.GetAllocator());
     rapidjson::Value v2;
-    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    auto str = m->toUTF8NonGCString();
+    v2 = rapidjson::Value(str.c_str(), str.length());
     document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
                        document.GetAllocator());
     rapidjson::StringBuffer strbuf;
@@ -208,7 +210,8 @@ void Inspector::sendWarnMessage(String* m)
     document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
                        document.GetAllocator());
     rapidjson::Value v2;
-    v2 = rapidjson::Value(m->utf8Data(), strlen(m->utf8Data()));
+    auto str = m->toUTF8NonGCString();
+    v2 = rapidjson::Value(str.c_str(), str.length());
     document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
                        document.GetAllocator());
     rapidjson::StringBuffer strbuf;
@@ -222,6 +225,36 @@ void Inspector::sendWarnMessage(String* m)
                            ownShipRadarString.size());
     bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
     // STARFISH_LOG_INFO("inspector::sendWarnMessage %d, %d\n", (int)result,
+    // zmq_errno());
+}
+
+void Inspector::sendDebugMessage(String* m)
+{
+    if (!m_ioThread) {
+        return;
+    }
+    rapidjson::Document document;
+    document.Parse("{}");
+    rapidjson::Value v;
+    v = "console-debug";
+    document.AddMember(rapidjson::Value("command", document.GetAllocator()), v,
+                       document.GetAllocator());
+    rapidjson::Value v2;
+    auto str = m->toUTF8NonGCString();
+    v2 = rapidjson::Value(str.c_str(), str.length());
+    document.AddMember(rapidjson::Value("content", document.GetAllocator()), v2,
+                       document.GetAllocator());
+    rapidjson::StringBuffer strbuf;
+    strbuf.Clear();
+
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+    document.Accept(writer);
+
+    std::string ownShipRadarString = strbuf.GetString();
+    zmq::message_t request(ownShipRadarString.data(),
+                           ownShipRadarString.size());
+    bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
+    // STARFISH_LOG_INFO("inspector::sendDebugMessage %d, %d\n", (int)result,
     // zmq_errno());
 }
 

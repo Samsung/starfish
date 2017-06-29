@@ -33,7 +33,7 @@ void Console::log(String* m)
         m_starFish->inspector()->sendInfoMessage(m);
     }
 #endif
-    STARFISH_LOG_INFO("console.log: %s\n", m->utf8Data());
+    STARFISH_LOG_INFO("console.log: %s\n", m->toUTF8NonGCString().c_str());
 }
 
 void Console::info(String* m)
@@ -43,7 +43,7 @@ void Console::info(String* m)
         m_starFish->inspector()->sendInfoMessage(m);
     }
 #endif
-    STARFISH_LOG_INFO("console.info: %s\n", m->utf8Data());
+    STARFISH_LOG_INFO("console.info: %s\n", m->toUTF8NonGCString().c_str());
 }
 
 void Console::error(String* m)
@@ -53,7 +53,7 @@ void Console::error(String* m)
         m_starFish->inspector()->sendErrorMessage(m);
     }
 #endif
-    STARFISH_LOG_ERROR("console.error: %s\n", m->utf8Data());
+    STARFISH_LOG_ERROR("console.error: %s\n", m->toUTF8NonGCString().c_str());
 }
 
 void Console::warn(String* m)
@@ -63,6 +63,16 @@ void Console::warn(String* m)
         m_starFish->inspector()->sendWarnMessage(m);
     }
 #endif
-    STARFISH_LOG_ERROR("console.warn: %s\n", m->utf8Data());
+    STARFISH_LOG_ERROR("console.warn: %s\n", m->toUTF8NonGCString().c_str());
+}
+
+void Console::debug(String* m)
+{
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    if (m_starFish->inspector()) {
+        m_starFish->inspector()->sendDebugMessage(m);
+    }
+#endif
+    STARFISH_LOG_ERROR("console.debug: %s\n", m->toUTF8NonGCString().data());
 }
 }
