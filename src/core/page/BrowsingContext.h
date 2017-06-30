@@ -168,6 +168,11 @@ public:
         return m_parentBrowsingContext == nullptr;
     }
 
+    BrowsingContext* parentBrowsingContext()
+    {
+        return m_parentBrowsingContext;
+    }
+
 private:
     // return did layout
     bool layoutIfNeeds();

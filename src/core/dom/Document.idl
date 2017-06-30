@@ -77,8 +77,8 @@ interface Document : Node {
 
   // DOM tree accessors
   // getter object (DOMString name);
-  [Unimplemented, CEReactions] attribute DOMString title;
-  [Unimplemented, CEReactions] attribute DOMString dir;
+  [CEReactions] attribute DOMString title;
+  [CEReactions] attribute DOMString dir;
   [RaisesException=Setter, CEReactions] attribute HTMLElement? body;
   readonly attribute HTMLHeadElement? head;
   [Unimplemented, SameObject] readonly attribute HTMLCollection images;
@@ -87,7 +87,7 @@ interface Document : Node {
   [Unimplemented, SameObject] readonly attribute HTMLCollection links;
   [Unimplemented, SameObject] readonly attribute HTMLCollection forms;
   [Unimplemented, SameObject] readonly attribute HTMLCollection scripts;
-  [Unimplemented] NodeList getElementsByName(DOMString elementName);
+  NodeList getElementsByName(DOMString elementName);
   [Unimplemented] readonly attribute HTMLOrSVGScriptElement? currentScript; // classic scripts in a document tree only
 
   // dynamic markup insertion

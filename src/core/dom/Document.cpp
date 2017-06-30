@@ -29,6 +29,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLTitleElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
@@ -277,6 +278,12 @@ Element* Document::getElementById(String* id)
     });
 }
 
+NodeList* Document::getElementsByName(String* elementName)
+{
+    return ensureRareMembers()->ensureQueryInActiveNodeListVectorForName(
+        this, elementName);
+}
+
 DocumentFragment* Document::createDocumentFragment()
 {
     return new DocumentFragment(this);
@@ -501,6 +508,93 @@ void Document::setBody(HTMLElement* element)
         html->removeChild(body);
     }
     html->appendChild(newBody);
+}
+
+String* Document::title()
+{
+    // The title element of a document is the first title element in the
+    // document (in tree order), if there is one, or null otherwise.
+    Node* title = childMatchedBy(
+        this, [](Node* nd) -> bool { return nd->isHTMLTitleElement(); });
+    if (!title) {
+        return String::emptyString;
+    }
+
+    // TODO If the document element is an SVG svg element, then let value be the
+    // child text content of the first SVG title element that is a child of the
+    // document element.
+    // Otherwise, let value be the child text content of the title element, or
+    // the empty string if the title element is null.
+    Nullable<String*> value = title->textContent();
+    if (!value.hasValue())
+        return String::emptyString;
+    // Strip and collapse ASCII whitespace in value.
+    String* v = value.getValue();
+    return v->stripAndCollapseASCIIwhitespace();
+}
+
+void Document::setTitle(String* titleString)
+{
+    // TODO If the document element is an SVG svg element
+    // TODO If there is an SVG title element that is a child of the document
+    // element, let element be the first such element.
+    // TODO Otherwise:
+    // TODO Let element be the result of creating an element given the document
+    // element's node document, title, and the SVG namespace.
+    // TODO Insert element as the first child of the document element.
+    // TODO Act as if the textContent IDL attribute of element was set to the
+    // new value being assigned.
+    // If the document element is in the HTML namespace
+    if (documentElement() && isHTMLDocument()) {
+        Node* head = childMatchedBy(
+            this, [](Node* nd) -> bool { return nd->isHTMLHeadElement(); });
+        Node* title = childMatchedBy(
+            this, [](Node* nd) -> bool { return nd->isHTMLTitleElement(); });
+        // If the title element is null and the head element is null, then abort
+        // these steps.
+        if (!title && !head) {
+            return;
+        }
+        // If the title element is non-null, let element be the title element.
+        Element* element;
+        if (title) {
+            element = title->asElement();
+        } else {
+            // Otherwise:
+            // Let element be the result of creating an element given the
+            // document element's node document, title, and the HTML namespace.
+            element = new HTMLTitleElement(document());
+        }
+        // Append element to the head element.
+        head->appendChild(title);
+        // Act as if the textContent IDL attribute of element was set to the new
+        // value being assigned.
+        title->setTextContent(titleString);
+    } else {
+        // Otherwise
+        // Do nothing.
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
+// The dir IDL attribute on Document objects must reflect the dir content
+// attribute of the html element,
+// if any, limited to only known values. If there is no such element, then the
+// attribute must return the empty string and do nothing on setting.
+String* Document::dir()
+{
+    Node* html = childMatchedBy(
+        this, [](Node* nd) -> bool { return nd->isHTMLHtmlElement(); });
+    if (!html) {
+        return String::emptyString;
+    }
+
+    return html->asHTMLElement()->dir();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
+void Document::setDir(String* dir)
+{
 }
 
 bool Document::hidden() const

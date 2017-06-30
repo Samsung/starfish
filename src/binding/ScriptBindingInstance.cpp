@@ -19,9 +19,9 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
-#ifdef STARFISH_ENABLE_EXP
 #include "core/dom/DOMImplementation.h"
-#endif
+#include "core/dom/Element.h"
+#include "core/dom/HTMLCollection.h"
 #include "core/extra/Console.h"
 #include "core/page/History.h"
 #include "core/page/Location.h"
@@ -132,6 +132,51 @@ static ValueRef* debugFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
+static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
+                                           ValueRef* key)
+{
+    Window* self = fetchWindow(state->context());
+
+    auto callee = state->resolveCallee();
+    if (callee) {
+        void* data = callee->asObject()->extraData();
+        if (data) {
+            ScriptWrappable* w = (ScriptWrappable*)data;
+            if (w->isAttributeEventFunction()) {
+                auto elementDOMObject =
+                    ((AttributeEventFunction*)w)->element()->scriptValue();
+                if (elementDOMObject->isObject()) {
+                    bool exist = elementDOMObject->asObject()->hasOwnProperty(
+                        state, key);
+                    if (exist) {
+                        return elementDOMObject->asObject()->getOwnProperty(
+                            state, key);
+                    }
+                    return ValueRef::createEmpty();
+                }
+            }
+        }
+    }
+
+    String* name = toBrowserString(state, key);
+    HTMLCollection* coll = self->namedAccess(name);
+    if (coll) {
+        if (coll->length()) {
+            if (coll->length() > 1) {
+                return coll->scriptValue();
+            } else {
+                return coll->item(0)->scriptValue();
+            }
+        }
+    }
+
+    if (name->equals("self")) {
+        return self->scriptValue();
+    }
+
+    return ValueRef::createEmpty();
+}
+
 void ScriptBindingInstance::initBinding(Document* ownerDocument)
 {
     m_ownerDocument = ownerDocument;
@@ -223,6 +268,8 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::initialize(fetchData(this)->m_instance);
 #endif
+
+    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
 
     state->destroy();
 }

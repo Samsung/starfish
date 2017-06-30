@@ -1,0 +1,6 @@
+// https://html.spec.whatwg.org/multipage/semantics.html#the-title-element
+[HTMLConstructor]
+interface HTMLTitleElement : HTMLElement {
+    [CEReactions] attribute DOMString text;
+};
+

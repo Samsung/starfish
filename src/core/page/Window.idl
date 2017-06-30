@@ -6,6 +6,8 @@
 interface Window : EventTarget {
   // the current browsing context
   [Custom, Unforgeable] readonly attribute WindowProxy window;
+  
+  // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
   [Unimplemented] attribute DOMString name;
@@ -30,7 +32,8 @@ interface Window : EventTarget {
   [Unimplemented, Replaceable] readonly attribute unsigned long length;
   [Unimplemented, Unforgeable] readonly attribute WindowProxy? top;
   [Unimplemented] attribute any opener;
-  [Unimplemented, Replaceable] readonly attribute WindowProxy? parent;
+  // [Unimplemented, Replaceable] readonly attribute WindowProxy? parent;
+  [Replaceable] readonly attribute Window? parent;
   [Unimplemented] readonly attribute Element? frameElement;
   [Unimplemented] WindowProxy? open(optional DOMString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
   [Unimplemented] getter object (DOMString name);

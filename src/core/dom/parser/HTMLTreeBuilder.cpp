@@ -143,7 +143,7 @@ static bool isFormattingTag(StaticStrings* s, const AtomicString& tagName)
 static HTMLFormElement* closestFormAncestor(StaticStrings* s, Element* element)
 {
     while (element) {
-        if (element->name() == s->m_formTagName) {
+        if (element->isHTMLFormElement()) {
             return element->asHTMLFormElement();
         }
         Node* parent = element->parentNode();

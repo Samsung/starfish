@@ -135,7 +135,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | contentType | Returns document's content type. |
 |  | attribute | doctype | Returns the doctype or null if there is none. |
 |  | attribute | documentElement | Returns the document element. |
+|  | attribute | title | Returns the title of document. |
+|  | attribute | dir | Returns the dir attribute of html element. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
+|  | method | NodeList getElementsByName(DOMString name) | returns an NodeList of all descendant elements whose name is name. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
 |  | method | Element createElement(DOMString localName) | Returns an element in the HTML namespace with localName as local name. |
 |  | method | Element createElementNS(DOMString namespace, DOMString localName) | Returns an element with namespace namespace. Its namespace prefix will be everything before ":" (U+003E) in qualifiedName or null. Its local name will be everything after ":" (U+003E) in qualifiedName or qualifiedName. |
@@ -564,6 +567,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
 |  | attribute | self | Returns window. |
+|  | attribute | parent | Returns parent window. |
 |  | attribute | document | Returns the document associated with window. |
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |

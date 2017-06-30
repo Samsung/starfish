@@ -367,7 +367,7 @@ public:
     bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX);
     bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX);
     bool containsOnlyASCIIChars() const;
-
+    String* stripAndCollapseASCIIwhitespace();
     template <typename T>
     static inline size_t stringHash(T* src, size_t length)
     {

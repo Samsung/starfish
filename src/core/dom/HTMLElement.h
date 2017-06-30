@@ -46,6 +46,7 @@ public:
     int tabIndex();
     bool supportsFocus();
     LayoutRect offsetRect();
+
     long offsetWidth()
     {
         return (float)offsetRect().width() + .5f;

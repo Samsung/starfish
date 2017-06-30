@@ -126,7 +126,12 @@ Element* HTMLElement::offsetParent()
 
 String* HTMLElement::dir()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_dir);
+    String* dir =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_dir)->toLower();
+    if (dir->equals("ltr") || dir->equals("rtl") || dir->equals("auto")) {
+        return dir;
+    }
+    return String::emptyString;
 }
 
 void HTMLElement::setDir(String* dir)

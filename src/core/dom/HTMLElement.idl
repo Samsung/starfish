@@ -22,8 +22,6 @@ interface HTMLElement : Element {
   [Unimplemented, CEReactions] attribute boolean spellcheck;
   [Unimplemented] void forceSpellCheck();
 
-  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString innerText;
-
 
   // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
   [Unimplemented] readonly attribute Element? offsetParent;
