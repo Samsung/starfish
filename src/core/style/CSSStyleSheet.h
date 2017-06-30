@@ -76,6 +76,12 @@ public:
         m_ownerRule = nullptr;
     }
 
+    void clearStyleRules()
+    {
+        m_styleRules.clear();
+        m_styleRules.shrink_to_fit();
+    }
+
     void setOwnerRule(CSSRule* ownerRule);
     CSSStyleSheet* parentStyleSheet() const;
     void sortStyleRulesBySpecificity();

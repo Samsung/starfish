@@ -795,10 +795,12 @@ RefPtr<CSSToken> CSSParser::currentToken()
 RefPtr<CSSToken> CSSParser::lookAhead(bool aSkipWS, bool aSkipComment)
 {
     RefPtr<CSSToken> preservedToken = m_token;
+    RefPtr<CSSToken> preservedLookAhead = m_lookAhead;
     m_scanner->preserveState();
     RefPtr<CSSToken> token = getToken(aSkipWS, aSkipComment);
     m_scanner->restoreState();
     m_token = preservedToken;
+    m_lookAhead = preservedLookAhead;
 
     return token;
 }
@@ -1861,7 +1863,7 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
 void CSSParser::addUnknownAtRule()
 {
     GCVector<RefPtr<CSSToken>> blocks;
-    RefPtr<CSSToken> token = getToken(false, false);
+    RefPtr<CSSToken> token = getToken(true, false);
     while (token->isNotNull()) {
         if (token->isSymbol(';') && !blocks.size()) {
             break;
@@ -2077,8 +2079,12 @@ String* CSSParser::parseURLString()
         urlSource.appendChar(')');
     } else if (token->isFunction() && token->value()->equals("url(")) {
         urlSource = *token->value();
-        urlSource.appendOther(*getToken(true, false)->value());
-        urlSource.appendOther(*getToken(true, false)->value());
+        token = getToken(true, false);
+        while (token->isNotNull() && !token->isSymbol(')')) {
+            urlSource.appendOther(*(token->value()));
+            token = getToken(true, false);
+        }
+        urlSource.appendOther(*(token->value()));
     } else {
         return String::emptyString;
     }
@@ -2157,6 +2163,9 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 rule = parseImportRule();
             } else if (token->isAtRule("@media")) {
                 rule = parseMediaRule();
+                if (lookAhead(true, false)->isSymbol(';')) {
+                    rule = nullptr;
+                }
             }
             /*
              else if (token.isAtRule("@variables")) {

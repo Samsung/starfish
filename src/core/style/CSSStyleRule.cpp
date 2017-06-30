@@ -153,12 +153,9 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;
-    GCVector<CSSSelectorList*> selectorListContainer;
-    parser.parseStyleRule(token, rules,
-                          CSSParser::AllowedRulesType::RegularRules,
-                          &selectorListContainer);
+    parser.parseRules(token, rules, CSSParser::RuleListType::TopLevelRuleList);
 
-    if (rules.size() == 0) {
+    if (rules.size() != 1) {
         StringBuilder msg;
         msg.appendString("the rule '");
         msg.appendString(ruleString);
@@ -182,6 +179,11 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
     m_groupRule->wrapperInsertRule(index, rules[0]);
     m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index,
                                (CSSRule*)(nullptr));
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
     return index;
 }
 
@@ -206,6 +208,11 @@ void CSSGroupingRule::deleteRule(unsigned index)
         m_childRuleWrappers[index]->setParentRule(nullptr);
     }
     m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
 }
 
 unsigned CSSGroupingRule::length() const
