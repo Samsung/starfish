@@ -19,6 +19,8 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/Node.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSRuleList.h"
 #include "core/style/CSSStyleRule.h"
@@ -313,12 +315,9 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;
-    GCVector<CSSSelectorList*> selectorListContainer;
-    parser.parseStyleRule(token, rules,
-                          CSSParser::AllowedRulesType::AllowImportRules,
-                          &selectorListContainer);
+    parser.parseRules(token, rules, CSSParser::RuleListType::TopLevelRuleList);
 
-    if (rules.size() == 0) {
+    if (rules.size() != 1) {
         StringBuilder msg;
         msg.appendString("Failed to parse the rule '");
         msg.appendString(ruleString);
@@ -336,6 +335,12 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     }
 
     m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index, nullptr);
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
+
     return index;
 }
 
@@ -389,6 +394,11 @@ void CSSStyleSheet::deleteRule(unsigned index)
         }
         m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
     }
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
 }
 
 unsigned CSSStyleSheet::length() const

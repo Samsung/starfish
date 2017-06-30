@@ -167,6 +167,7 @@ bool BrowsingContext::layoutIfNeeds()
 
                 authorSheet->parseSheetIfneeds();
 
+                authorSheet->clearStyleRules();
                 authorSheet->collectRulesFromImportedSheet(
                     authorSheet->importRules());
                 authorSheet->collectStyleRules(authorSheet->childRules(),
