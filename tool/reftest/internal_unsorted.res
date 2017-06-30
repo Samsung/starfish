@@ -208,3 +208,6 @@
 197;test/internal-test/cookie/cookie-internal-test-1.html
 173;test/internal-test/cookie/cookie-internal-test-2.html
 1432;http://10.113.64.74:7000/cookie/cookie-internal-test-3.html
+272;test/internal-test/css/text/word-concatenating.html
+267;test/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
+276;test/internal-test/css/width/dont-break-line.html
