@@ -2040,7 +2040,7 @@ test/reftest/csswg-test/css21_original/text/white-space-p-element-001.htm
 # test/reftest/csswg-test/css21_original/text/white-space-control-characters-001.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-001.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-002.htm
-test/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
+#test/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-005.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-006.htm
 test/reftest/csswg-test/css21_original/generated-content/after-content-display-007.htm
@@ -2071,7 +2071,7 @@ test/reftest/csswg-test/css21_original/generated-content/before-after-dynamic-re
 # test/reftest/csswg-test/css21_original/generated-content/before-after-table-whitespace-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-001.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-002.htm
-test/reftest/csswg-test/css21_original/generated-content/before-content-display-003.htm
+#test/reftest/csswg-test/css21_original/generated-content/before-content-display-003.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-005.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-006.htm
 test/reftest/csswg-test/css21_original/generated-content/before-content-display-007.htm

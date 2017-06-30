@@ -124,6 +124,13 @@ public:
         return m_textRun;
     }
 
+    void unmarkFirstLine()
+    {
+        m_isFirstLine = false;
+        setWidth(style()->font()->measureText(textRun().m_stringView));
+        setHeight(style()->font()->metrics().m_fontHeight);
+    }
+
     bool isFirstLine()
     {
         return m_isFirstLine;
@@ -723,11 +730,6 @@ public:
         return m_lineBoxes;
     }
 
-    bool isFirstLineBox() const
-    {
-        return m_lineBoxes.size() == 1;
-    }
-
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
@@ -759,6 +761,64 @@ struct FloatingBoxLayoutContext {
     }
 };
 
+class Word {
+public:
+    void concat(FrameBox* box)
+    {
+        m_boxes.push_back(box);
+    }
+
+    void clear()
+    {
+        m_boxes.clear();
+    }
+
+    bool isEmpty() const
+    {
+        return m_boxes.size() == 0;
+    }
+
+    LayoutUnit width() const
+    {
+        // TODO: consider starting mbp of InlineNonReplacedBox
+        return std::accumulate(std::next(m_boxes.begin()), m_boxes.end(),
+                               (*m_boxes.begin())->boxWidth(),
+                               [](LayoutUnit w, FrameBox* box) {
+                                   if (box->isNormalFlow()) {
+                                       return w + box->boxWidth();
+                                   } else {
+                                       return w;
+                                   }
+                               });
+    }
+
+    void unmarkFirstLine()
+    {
+        unmarkFirstLine(m_boxes);
+    }
+
+    GCVector<FrameBox*>& boxes()
+    {
+        return m_boxes;
+    }
+
+private:
+    GCVector<FrameBox*> m_boxes;
+
+    void unmarkFirstLine(GCVector<FrameBox*>& boxes)
+    {
+        std::for_each(boxes.begin(), boxes.end(), [this](FrameBox* box) {
+            if (box->isNormalFlow()) {
+                if (box->isInlineNonReplacedBox()) {
+                    unmarkFirstLine(box->asInlineNonReplacedBox()->boxes());
+                } else {
+                    box->asInlineTextBox()->unmarkFirstLine();
+                }
+            }
+        });
+    }
+};
+
 class LineFormattingContext {
 private:
     void resetLineBox();
@@ -779,10 +839,11 @@ private:
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
     void generateInlineTextBox(TextToken& token);
-    void generateFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
+    void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
+    void insertInlineBox(FrameBox* box);
+    void insertAbsolutePositionedBoxes();
 
     void registerAbsolutePositionedBox(FrameBox* box);
-    void unregisterAbsolutePositionedBoxes();
 
     template <typename Box>
     LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
@@ -822,8 +883,9 @@ public:
     void breakLine(FrameLineBreak* br);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
 
-    void insertInlineBox(FrameBox* box, bool force);
-    void insertFloatingBox(FrameBox* box);
+    void tryInsertInlineBox(FrameBox* box);
+    void tryInsertFloatingBox(FrameBox* box);
+    void insertWord(Frame* next);
     void markInlineBoxIndex(FrameBox* box);
 
     bool removeLastLineBoxIfNeeds();
@@ -840,6 +902,16 @@ public:
     LineBox* currentLine()
     {
         return m_block->m_lineBoxes.back();
+    }
+
+    bool isFirstLineBox() const
+    {
+        return m_block->m_lineBoxes.size() == 1 && !m_isPendingBreakLine;
+    }
+
+    bool isWordProcessing() const
+    {
+        return !m_word.isEmpty();
     }
 
     void handleTextToken(TextToken& token);
@@ -882,7 +954,6 @@ public:
     FrameBlockBox* m_block;
     LayoutContext& m_layoutContext;
     InlineBoxLayoutParentBox* m_currentLayoutParent;
-    FrameText* m_lastFrameText;
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;
     size_t m_inlineBoxIndex;
@@ -898,7 +969,8 @@ public:
     std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
     std::vector<FrameBox*> m_absolutePositionedBoxes;
     std::vector<FrameBox*> m_pendingFloatingBoxes;
-    std::vector<FrameBox*> m_pendingInlineBoxes;
+    GCVector<FrameBox*> m_pendingInlineBoxes;
+    Word m_word;
 
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;

@@ -397,9 +397,11 @@ public:
         , m_currentLineWidth(0)
         , m_unprocessedStartingMBPWidth(0)
         , m_lastWhiteSpaceWidth(0)
+        , m_wordWidth(0)
         , m_remainedWidth(lastKnownWidth)
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
+        , m_isLastWordBreakable(false)
         , m_isPendingWrapLine(false)
     {
     }
@@ -490,6 +492,7 @@ public:
         if (wrapped) {
             updatePreferredWidth(m_remainedWidth);
         } else {
+            updateCurrentLineWidthByWordWidth();
             removeDanglingSpace();
             updatePreferredWidth(m_currentLineWidth);
         }
@@ -498,6 +501,22 @@ public:
     void handleTextToken(TextToken& token);
 
     void handleFloatingBox(Frame* f, LayoutUnit w);
+
+    void updateCurrentLineWidthByWordWidth()
+    {
+        if (m_wordWidth == 0) {
+            return;
+        }
+
+        if (dontBreakLine(m_wordWidth)) {
+            m_currentLineWidth += m_wordWidth;
+        } else {
+            breakLine(true);
+            m_currentLineWidth = m_wordWidth;
+        }
+        m_wordWidth = 0;
+        m_isLastWordBreakable = false;
+    }
 
     void updateCurrentLineWidth(Frame* f, LayoutUnit w,
                                 WordType type = General);
@@ -514,19 +533,21 @@ private:
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_unprocessedStartingMBPWidth;
     LayoutUnit m_lastWhiteSpaceWidth;
+    LayoutUnit m_wordWidth;
     LayoutUnit m_remainedWidth;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
+    bool m_isLastWordBreakable;
     bool m_isPendingWrapLine;
 
     bool canInsertToLineBox(LayoutUnit width);
-    bool hasFloatingBoxAlreadyInLineBox(Frame* f) const
+    bool hasFloatingBoxAlreadyInLineBox() const
     {
         return m_hasFloat != HasNone;
     }
 
     bool canInsertFloatingBox(Frame* f);
-    bool dontBreakLine(Frame* f, LayoutUnit width);
+    bool dontBreakLine(LayoutUnit width);
 
     void removeDanglingSpace()
     {
