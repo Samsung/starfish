@@ -14,27 +14,29 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLFormElement__
-#define __StarFishHTMLFormElement__
+#ifndef __StarFishHTMLTitleElement__
+#define __StarFishHTMLTitleElement__
 
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLFormElement : public HTMLElement {
+class HTMLTitleElement : public HTMLElement {
 public:
-    HTMLFormElement(Document* document);
+    HTMLTitleElement(Document* document)
+        : HTMLElement(document)
+    {
+    }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLFormElement() const override;
+    virtual bool isHTMLTitleElement() const override;
 
-    // 4.4 Interface Node
+    /* 4.4 Interface Node */
     virtual QualifiedName name();
 
-    // 4.10 Interface Form
-    String* domName();
-    void setDomName(String* name);
+    String* text();
+    void setText(String* title);
 };
 }
 

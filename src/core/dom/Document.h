@@ -135,6 +135,7 @@ public:
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);
+    NodeList* getElementsByName(String* elementName);
 
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);
@@ -181,6 +182,13 @@ public:
     HTMLHeadElement* head();
     HTMLElement* body();
     void setBody(HTMLElement* element);
+
+    // https://html.spec.whatwg.org/multipage/dom.html#document.title
+    String* title();
+    void setTitle(String* title);
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
+    String* dir();
+    void setDir(String* dir);
 
     /* Page Visibility */
     bool hidden() const;

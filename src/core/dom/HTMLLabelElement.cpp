@@ -21,13 +21,8 @@
 
 namespace StarFish {
 
-String* HTMLLabelElement::localName()
-{
-    return starFish()->staticStrings()->m_formTagName.localName();
-}
-
 QualifiedName HTMLLabelElement::name()
 {
-    return starFish()->staticStrings()->m_formTagName;
+    return starFish()->staticStrings()->m_labelTagName;
 }
 }

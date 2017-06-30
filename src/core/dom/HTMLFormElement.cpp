@@ -30,11 +30,6 @@ HTMLFormElement::HTMLFormElement(Document* document)
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
-String* HTMLFormElement::localName()
-{
-    return starFish()->staticStrings()->m_formTagName.localName();
-}
-
 QualifiedName HTMLFormElement::name()
 {
     return starFish()->staticStrings()->m_formTagName;

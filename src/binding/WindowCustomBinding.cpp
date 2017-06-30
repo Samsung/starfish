@@ -491,57 +491,10 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
-static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
-                                           ValueRef* key)
-{
-    Window* self = fetchWindow(state->context());
-
-    auto callee = state->resolveCallee();
-    if (callee) {
-        void* data = callee->asObject()->extraData();
-        if (data) {
-            ScriptWrappable* w = (ScriptWrappable*)data;
-            if (w->isAttributeEventFunction()) {
-                auto elementDOMObject =
-                    ((AttributeEventFunction*)w)->element()->scriptValue();
-                if (elementDOMObject->isObject()) {
-                    bool exist = elementDOMObject->asObject()->hasOwnProperty(
-                        state, key);
-                    if (exist) {
-                        return elementDOMObject->asObject()->getOwnProperty(
-                            state, key);
-                    }
-                    return ValueRef::createEmpty();
-                }
-            }
-        }
-    }
-
-    String* name = toBrowserString(state, key);
-    HTMLCollection* coll = self->namedAccess(name);
-    if (coll) {
-        if (coll->length()) {
-            if (coll->length() > 1) {
-                return coll->scriptValue();
-            } else {
-                return coll->item(0)->scriptValue();
-            }
-        }
-    }
-
-    if (name->equals("self")) {
-        return self->scriptValue();
-    }
-
-    return ValueRef::createEmpty();
-}
-
 void Window::postInit(ScriptBindingInstance* instance)
 {
     ContextRef* context = instance->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(context);
-
-    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
 
 #ifdef STARFISH_ENABLE_TEST
 #define DEFINE_TEST_FUNCTION(name, length)                              \

@@ -30,8 +30,6 @@ public:
     virtual bool isHTMLInputElement() const override;
 
     // 4.4 Interface Node
-
-    virtual String* localName();
     virtual QualifiedName name();
 
     // 4.10 Interface Input

@@ -29,11 +29,6 @@ HTMLInputElement::HTMLInputElement(Document* document)
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
-String* HTMLInputElement::localName()
-{
-    return starFish()->staticStrings()->m_inputTagName.localName();
-}
-
 QualifiedName HTMLInputElement::name()
 {
     return starFish()->staticStrings()->m_inputTagName;

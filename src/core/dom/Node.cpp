@@ -61,6 +61,14 @@ RareNodeMembers::ensureActiveHtmlCollectionListForClassName()
     return m_activeHtmlCollectionListsForClassName;
 }
 
+ActiveNodeListVector* RareNodeMembers::ensureActiveNodeListVectorForName()
+{
+    if (m_activeNodeListVectorForName == nullptr) {
+        m_activeNodeListVectorForName = new (GC) ActiveNodeListVector;
+    }
+    return m_activeNodeListVectorForName;
+}
+
 HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
     ActiveHTMLCollectionList* list, String* query)
 {
@@ -70,6 +78,26 @@ HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
         }
     }
     return nullptr;
+}
+
+NodeList* RareNodeMembers::ensureQueryInActiveNodeListVectorForName(
+    Node* ownerNode, String* query)
+{
+    ensureActiveNodeListVectorForName();
+    for (size_t i = 0; i < m_activeNodeListVectorForName->size(); i++) {
+        if ((*m_activeNodeListVectorForName)[i].first->equals(query)) {
+            return (*m_activeNodeListVectorForName)[i].second;
+        }
+    }
+
+    QualifiedName* ptr = new QualifiedName(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAtomicString(ownerNode->starFish(), query));
+
+    m_activeNodeListVectorForName->emplace_back(std::make_pair(
+        query,
+        new NodeList(ownerNode, NodeListImpl::NamedAccessFilter, ptr, false)));
+    return m_activeNodeListVectorForName->back().second;
 }
 
 void RareNodeMembers::putActiveHtmlCollectionListWithQuery(

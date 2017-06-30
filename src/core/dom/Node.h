@@ -35,8 +35,8 @@ class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
 
-// TODO use weak reference for activeHtmlCollectionLists
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
+typedef GCVector<std::pair<String*, NodeList*>> ActiveNodeListVector;
 
 class RareNodeMembers : public gc {
 public:
@@ -46,6 +46,7 @@ public:
         , m_domTokenList(nullptr)
         , m_activeHtmlCollectionListsForTagName(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
+        , m_activeNodeListVectorForName(nullptr)
     {
     }
 
@@ -62,6 +63,10 @@ public:
 
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName();
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName();
+    ActiveNodeListVector* ensureActiveNodeListVectorForName();
+
+    NodeList* ensureQueryInActiveNodeListVectorForName(Node* ownerNode,
+                                                       String* query);
 
     HTMLCollection* hasQueryInActiveHtmlCollectionList(
         ActiveHTMLCollectionList* list, String* query);
@@ -76,6 +81,7 @@ public:
 
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForTagName;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
+    ActiveNodeListVector* m_activeNodeListVectorForName;
 };
 
 class Node : public EventTarget {
@@ -223,11 +229,9 @@ public:
     }
 
     Nullable<String*> nodeValue() const;
-
     void setNodeValue(Nullable<String*> newVal);
 
     Nullable<String*> textContent() const;
-
     void setTextContent(Nullable<String*> val);
 
     bool isEqualNode(Node* other);

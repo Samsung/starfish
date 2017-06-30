@@ -22,6 +22,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
@@ -103,6 +104,22 @@ void Window::close()
     clearEventListeners();
     m_location->close();
     m_navigator->close();
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
+Window* Window::parent()
+{
+    if (browsingContext()->isMainBrowsingContext()) {
+        return this;
+    } else {
+        if (browsingContext()->sourceElement()->isInDocumentScope() &&
+            browsingContext()->sourceElement()->document() ==
+                browsingContext()->parentBrowsingContext()->document()) {
+            return browsingContext()->parentBrowsingContext()->window();
+        } else {
+            return nullptr;
+        }
+    }
 }
 
 Storage* Window::localStorage()

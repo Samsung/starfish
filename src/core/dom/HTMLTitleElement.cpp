@@ -14,28 +14,28 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLFormElement__
-#define __StarFishHTMLFormElement__
-
-#include "core/dom/HTMLElement.h"
+#include "StarFishConfig.h"
+#include "StarFish.h"
+#include "core/dom/HTMLTitleElement.h"
 
 namespace StarFish {
 
-class HTMLFormElement : public HTMLElement {
-public:
-    HTMLFormElement(Document* document);
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLFormElement() const override;
-
-    // 4.4 Interface Node
-    virtual QualifiedName name();
-
-    // 4.10 Interface Form
-    String* domName();
-    void setDomName(String* name);
-};
+QualifiedName HTMLTitleElement::name()
+{
+    return starFish()->staticStrings()->m_titleTagName;
 }
 
-#endif
+String* HTMLTitleElement::text()
+{
+    Nullable<String*> value = textContent();
+    if (value.hasValue()) {
+        return value.getValue();
+    }
+    return String::emptyString;
+}
+
+void HTMLTitleElement::setText(String* title)
+{
+    setTextContent(title);
+}
+}

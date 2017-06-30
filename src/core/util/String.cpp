@@ -491,6 +491,49 @@ bool String::containsOnlyASCIIChars() const
     return true;
 }
 
+String* String::stripAndCollapseASCIIwhitespace()
+{
+    StringBuilder sb;
+
+    size_t len = length();
+    size_t pt = 0;
+
+    for (; pt < len; pt++) {
+        if (!isASCIISpace(pt)) {
+            break;
+        }
+    }
+
+    bool inSpaceMode = false;
+    for (; pt < (len - 1); pt++) {
+        char32_t ch = charAt(pt);
+        if (inSpaceMode) {
+            if (isASCIISpace(ch)) {
+            } else {
+                sb.appendChar(ch);
+                inSpaceMode = false;
+            }
+        } else {
+            if (isASCIISpace(ch)) {
+                inSpaceMode = true;
+                sb.appendChar(' ');
+            } else {
+                sb.appendChar(ch);
+            }
+        }
+    }
+
+    char32_t ch = charAt(pt);
+    if (!isASCIISpace(ch)) {
+        sb.appendChar(ch);
+    }
+
+    if (len == sb.contentLength()) {
+        return this;
+    }
+    return sb.finalize();
+}
+
 icu::UnicodeString String::toUnicodeString() const
 {
     auto data = bufferAccessData();

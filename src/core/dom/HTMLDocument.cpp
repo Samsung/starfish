@@ -50,6 +50,7 @@
 #include "core/dom/HTMLTFootElement.h"
 #include "core/dom/HTMLTHeadElement.h"
 #include "core/dom/HTMLTHElement.h"
+#include "core/dom/HTMLTitleElement.h"
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/HTMLUListElement.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -137,6 +138,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLInputElement(document);
     } else if (name == str->m_labelTagName.localNameAtomic()) {
         return new HTMLLabelElement(document);
+    } else if (name == str->m_titleTagName.localNameAtomic()) {
+        return new HTMLTitleElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
