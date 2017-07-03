@@ -21,7 +21,69 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 
+#ifdef STARFISH_SSLBACKEND_GNU_TLS
+#include <gcrypt.h>
+#include <errno.h>
+#endif
+
+#ifdef STARFISH_SSLBACKEND_OPENSSL
+#include <openssl/crypto.h>
+#endif
+
 namespace StarFish {
+
+#ifdef STARFISH_SSLBACKEND_GNU_TLS
+GCRY_THREAD_OPTION_PTHREAD_IMPL;
+
+void initSSLLocks(void)
+{
+    gcry_control(GCRYCTL_SET_THREAD_CBS);
+}
+
+#define removeSSLLocks() // Do nohting
+#endif
+
+#ifdef STARFISH_SSLBACKEND_OPENSSL
+static pthread_mutex_t* sslLockarray;
+
+static void sslLockCallback(int mode, int type, const char* file, int line)
+{
+    (void)file;
+    (void)line;
+    if (mode & CRYPTO_LOCK) {
+        pthread_mutex_lock(&(sslLockarray[type]));
+    } else {
+        pthread_mutex_unlock(&(sslLockarray[type]));
+    }
+}
+
+static unsigned long getThreadID(void)
+{
+    return (unsigned long)pthread_self();
+}
+
+static void initSSLLocks(void)
+{
+    sslLockarray = (pthread_mutex_t*)OPENSSL_malloc(CRYPTO_num_locks() *
+                                                    sizeof(pthread_mutex_t));
+    for (int i = 0; i < CRYPTO_num_locks(); i++) {
+        pthread_mutex_init(&(sslLockarray[i]), NULL);
+    }
+
+    CRYPTO_set_id_callback(getThreadID);
+    CRYPTO_set_locking_callback(sslLockCallback);
+}
+
+static void removeSSLLocks(void)
+{
+    int i;
+    CRYPTO_set_locking_callback(NULL);
+    for (i = 0; i < CRYPTO_num_locks(); i++)
+        pthread_mutex_destroy(&(sslLockarray[i]));
+
+    OPENSSL_free(sslLockarray);
+}
+#endif
 
 static NetworkSharedResourceManager* instance = nullptr;
 
@@ -205,6 +267,8 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     , m_shareMutex(new (NoGC) Mutex())
     , m_storeCookieFile(false)
 {
+    initSSLLocks();
+
     curl_global_init(CURL_GLOBAL_ALL);
     m_curlShareHandle = curl_share_init();
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE,
@@ -220,6 +284,8 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
 {
     curl_share_cleanup(m_curlShareHandle);
     curl_global_cleanup();
+
+    removeSSLLocks();
 
     delete m_cookieMutex;
     delete m_dnsMutex;

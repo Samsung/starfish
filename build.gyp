@@ -14,6 +14,8 @@
         ],
         'cflags_extra': [
         ],
+        'libraries_extra': [
+        ],
         'deps_extra': [
         ],
         'deps_debug_extra': [
@@ -25,6 +27,7 @@
             'component%': 'static_library',
             'backend%': 'efl',
             'enable_ffmpeg_demuxer%': 'false',
+            'ssl_backend%': 'gnutls',
         },
         'component%':'<(component)',
         'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
@@ -60,6 +63,23 @@
                 'deps_release_extra': [
                     './build.dep.gyp:av.x64.release',
                 ],
+            }],
+            ['ssl_backend=="gnutls"', {
+                'defines_extra': [
+                    'STARFISH_SSLBACKEND_GNU_TLS',
+                ],
+                'libraries_extra': [
+                    '-lgcrypt',
+                ]
+            }],
+            ['ssl_backend=="openssl"', {
+                'defines_extra': [
+                    'STARFISH_SSLBACKEND_OPENSSL',
+                ],
+                'libraries_extra': [
+                    '-lssl',
+                    '-lcrypto',
+                ]
             }],
         ],
     },
@@ -175,7 +195,7 @@
                        '-Wl,-rpath=/usr/local/lib',
                        '-lpthread',
                        '-lcurl',
-                       '-lgcrypt',
+                       '<@(libraries_extra)',
                    ],
                    'configurations': {
                        'debug': {

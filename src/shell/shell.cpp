@@ -33,18 +33,6 @@
 
 #include <Elementary.h>
 
-#include <gcrypt.h>
-#include <errno.h>
-
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-
-void init_locks(void)
-{
-    gcry_control(GCRYCTL_SET_THREAD_CBS);
-}
-
-#define kill_locks()
-
 using namespace StarFish;
 
 bool hasEnding(std::string const& fullString, std::string const& ending)
@@ -218,8 +206,6 @@ int main(int argc, char* argv[])
     setbuf(stderr, NULL);
 #endif
 
-    init_locks();
-
     // setenv("ELM_ENGINE", "gl", 1);
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
@@ -385,6 +371,5 @@ int main(int argc, char* argv[])
 // delete sf;
 #endif
 
-    kill_locks();
     return 0;
 }
