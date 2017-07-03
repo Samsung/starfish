@@ -130,3 +130,6 @@ test/reftest/vendor/blink/fast/dom/Window/window-remove-event-listener.html
 # Media queries
 test/reftest/vendor/blink/fast/media/viewport-media-query-synchronous.html
 test/reftest/vendor/blink/fast/media/mq-append-delete.html
+test/reftest/vendor/blink/fast/media/media-query-list-syntax.html
+test/reftest/vendor/blink/fast/media/mq-color-index-02.html
+test/reftest/vendor/blink/fast/media/mq-resolution.html

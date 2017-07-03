@@ -153,6 +153,7 @@ public:
             m_element->document()->styleResolver().mediaQueryEvaluator();
         if (evaluator.eval(mediaQuerySet)) {
             CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
+            sheet->setMediaQuerySet(mediaQuerySet);
             m_element->m_generatedSheet = sheet;
             m_element->document()->styleResolver().addSheet(sheet);
             m_element->window()

@@ -43,11 +43,10 @@ public:
     String* item(unsigned index) const;
     void appendMedium(String* newMedium);
     void deleteMedium(String* oldMedium);
+    MediaQuerySet* mediaQuerySet() const;
+    void setMediaQuerySet(MediaQuerySet* mediaQuerySet);
 
-    const MediaQuerySet* querySet() const
-    {
-        return m_mediaQuerySet;
-    }
+    void modifyStyleSheet();
 
 protected:
     MediaQuerySet* m_mediaQuerySet;

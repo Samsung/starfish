@@ -64,3 +64,9 @@ test/reftest/vendor/blink/fast/media/mq-size-include-scrollbars.html
 test/reftest/vendor/blink/fast/media/mq-unknown-ident-values.html
 test/reftest/vendor/blink/fast/media/mq-valueless.html
 test/reftest/vendor/blink/fast/media/mq-width-absolute-04.html
+test/reftest/vendor/blink/fast/dom/css-mediarule-deleteRule-update.html
+test/reftest/vendor/blink/fast/dom/css-mediarule-insertRule-update.html
+test/reftest/vendor/blink_original/fast/media/mq-js-media-except-01.html
+test/reftest/vendor/blink_original/fast/media/mq-js-media-except-02.html
+test/reftest/vendor/blink_original/fast/media/mq-js-media-except-03.html
+test/reftest/vendor/blink_original/fast/media/mq-js-media-forward-syntax.html

@@ -8,7 +8,7 @@ interface StyleSheet {
     readonly attribute USVString? href;
     readonly attribute StyleSheet? parentStyleSheet;
     [Unimplemented] readonly attribute DOMString? title;
-    [Unimplemented, SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+    [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
     [Unimplemented] attribute boolean disabled;
 
     // [REF2]--------------------------------------------------------------

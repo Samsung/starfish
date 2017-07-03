@@ -25,6 +25,7 @@
 #include "core/style/CSSRuleList.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/MediaList.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/StyleRule.h"
 
@@ -67,6 +68,8 @@ CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     , m_origin(origin)
     , m_ownerRule(nullptr)
     , m_ruleList(nullptr)
+    , m_mediaQuerySet(nullptr)
+    , m_mediaWrapper(nullptr)
 {
 }
 
@@ -249,6 +252,28 @@ String* CSSStyleSheet::href() const
         return url->urlString();
     }
     return String::emptyString;
+}
+
+void CSSStyleSheet::setMediaQuerySet(MediaQuerySet* mediaQuerySet)
+{
+    m_mediaQuerySet = mediaQuerySet;
+
+    if (m_mediaWrapper && m_mediaQuerySet) {
+        m_mediaWrapper->setMediaQuerySet(m_mediaQuerySet);
+    }
+}
+
+MediaList* CSSStyleSheet::media()
+{
+    if (!m_mediaQuerySet) {
+        return nullptr;
+    }
+
+    if (!m_mediaWrapper) {
+        m_mediaWrapper = new MediaList(m_mediaQuerySet);
+    }
+
+    return m_mediaWrapper;
 }
 
 CSSRuleList* CSSStyleSheet::cssRules()

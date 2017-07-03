@@ -27,6 +27,7 @@ class StyleRuleBase;
 class StyleRule;
 class StyleRuleImport;
 
+class MediaList;
 class MediaQueryEvaluator;
 class MediaQuerySet;
 class Node;
@@ -110,6 +111,14 @@ public:
     bool wrapperInsertRule(StyleRuleBase* rule, unsigned index);
     bool wrapperDeleteRule(unsigned index);
 
+    MediaQuerySet* mediaQuerySet()
+    {
+        return m_mediaQuerySet;
+    }
+
+    void setMediaQuerySet(MediaQuerySet* mediaQuerySet);
+    MediaList* media();
+
     CSSRuleList* cssRules();
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
@@ -121,6 +130,8 @@ protected:
     Node* m_origin;
     CSSRule* m_ownerRule;
     CSSRuleList* m_ruleList;
+    MediaQuerySet* m_mediaQuerySet;
+    MediaList* m_mediaWrapper;
 
     GCVector<StyleRuleBase*> m_childRules;
     GCVector<StyleRuleImport*> m_importRules;

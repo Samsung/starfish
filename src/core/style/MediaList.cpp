@@ -24,6 +24,8 @@
 #include "core/dom/DOMException.h"
 #include "core/style/MediaList.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
@@ -38,14 +40,34 @@ ScriptBindingInstance* MediaList::scriptBindingInstance()
     return m_mediaQuerySet->document()->scriptBindingInstance();
 }
 
+MediaQuerySet* MediaList::mediaQuerySet() const
+{
+    return m_mediaQuerySet;
+}
+
+void MediaList::setMediaQuerySet(MediaQuerySet* mediaQuerySet)
+{
+    m_mediaQuerySet = mediaQuerySet;
+}
+
 String* MediaList::mediaText() const
 {
     return m_mediaQuerySet->mediaText();
 }
 
+// TODO: need to handle the style sheets individually.
+void MediaList::modifyStyleSheet()
+{
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setWholeDocumentNeedsStyleRecalc();
+}
+
 void MediaList::setMediaText(String* text)
 {
     m_mediaQuerySet->set(text);
+    modifyStyleSheet();
 }
 
 unsigned MediaList::length() const
@@ -65,6 +87,7 @@ String* MediaList::item(unsigned index) const
 void MediaList::appendMedium(String* newMedium)
 {
     m_mediaQuerySet->add(newMedium);
+    modifyStyleSheet();
 }
 
 void MediaList::deleteMedium(String* oldMedium)
@@ -78,5 +101,6 @@ void MediaList::deleteMedium(String* oldMedium)
                                DOMException::NOT_FOUND_ERR,
                                msg.finalize()->utf8Data());
     }
+    modifyStyleSheet();
 }
 }
