@@ -23,6 +23,7 @@ namespace StarFish {
 
 class FrameReplacedImage;
 class FrameReplacedVideo;
+class FrameReplacedIFrame;
 
 struct IntrinsicSize {
     bool m_isContentExists;
@@ -64,6 +65,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameReplacedIFrame()
+    {
+        return false;
+    }
+
     FrameReplacedImage* asFrameReplacedImage()
     {
         STARFISH_ASSERT(isFrameReplacedImage());
@@ -74,6 +80,12 @@ public:
     {
         STARFISH_ASSERT(isFrameReplacedVideo());
         return (FrameReplacedVideo*)this;
+    }
+
+    FrameReplacedIFrame* asFrameReplacedIFrame()
+    {
+        STARFISH_ASSERT(isFrameReplacedIFrame());
+        return (FrameReplacedIFrame*)this;
     }
 
     void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height,
@@ -120,7 +132,9 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        if (!isFrameReplaced()) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     }
 
     virtual void paint(PaintingContext& ctx);

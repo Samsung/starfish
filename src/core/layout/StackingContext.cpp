@@ -20,8 +20,11 @@
 
 #include "StarFish.h"
 #include "core/dom/Node.h"
+#include "core/dom/Document.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameReplaced.h"
+#include "core/page/BrowsingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
@@ -361,7 +364,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     canvas->restore();
 }
 
-Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
+Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
+                                               BrowsingContext* from)
 {
     if (!m_matrix.isIdentity()) {
         SkMatrix invert;
@@ -391,6 +395,19 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
         y = pt.y() + oy;
     }
 
+    if (!m_owner->isAnonymous() &&
+        m_owner->node()->document()->browsingContext() != from) {
+        if (m_owner->FrameBox::hitTest(x, y, HitTestStageEnd)) {
+            return m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->sourceElement()
+                ->frame();
+        } else {
+            return nullptr;
+        }
+    }
+
     Frame* result = nullptr;
     // the child stacking contexts with positive stack levels (least positive
     // first).
@@ -407,7 +424,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                     LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                     x -= l.x();
                     y -= l.y();
-                    result = sCtx->hitTestStackingContext(x, y);
+                    result = sCtx->hitTestStackingContext(x, y, from);
                     x = oldX;
                     y = oldY;
                     if (result) {
@@ -465,7 +482,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                 LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                 x -= l.x();
                 y -= l.y();
-                result = sCtx->hitTestStackingContext(x, y);
+                result = sCtx->hitTestStackingContext(x, y, from);
                 if (result) {
                     return result;
                 }

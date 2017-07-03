@@ -47,7 +47,20 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
 
-    virtual void paintReplaced(Canvas* canvas);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+    {
+        if (x >= 0 && x < m_frameRect.width() && y >= 0 &&
+            y < m_frameRect.height()) {
+            return this;
+        }
+        return nullptr;
+    }
+
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
+                                       HitTestStage stage)
+    {
+        return this;
+    }
 
     virtual IntrinsicSize intrinsicSize();
 

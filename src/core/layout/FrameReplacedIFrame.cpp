@@ -52,25 +52,6 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
     }
 }
 
-void FrameReplacedIFrame::paintReplaced(Canvas* canvas)
-{
-    HTMLIFrameElement* v = node()->asHTMLIFrameElement();
-    if (v->browsingContext()) {
-        if (v->browsingContext()->window()) {
-            canvas->save();
-            canvas->clip(Unit::Rect(paddingLeft() + borderLeft(),
-                                    paddingTop() + borderTop(), contentWidth(),
-                                    contentHeight()));
-
-            PaintingContext ctx(canvas);
-            ctx.m_paintingStage = PaintingStageEnd;
-            v->browsingContext()->document()->frame()->paint(ctx);
-
-            canvas->restore();
-        }
-    }
-}
-
 void FrameReplacedIFrame::establishesStackingContextIfNeeds()
 {
     HTMLIFrameElement* v = node()->asHTMLIFrameElement();

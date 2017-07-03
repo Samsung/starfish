@@ -20,18 +20,18 @@
 #include "core/dom/TouchEvent.h"
 
 namespace StarFish {
+
 TouchEvent::TouchEvent(Document* document, String* eventType)
     : UIEvent(document, eventType)
     , m_touches(new TouchList(document))
 {
 }
-TouchEvent::TouchEvent(Document* document, String* eventType,
-                       TouchEventInit& init)
+TouchEvent::TouchEvent(Document* document, String* eventType, TouchData* data,
+                       size_t touchCount)
     : TouchEvent(document, eventType)
 {
-    GCVector<TouchInit>& list = init.touchInits();
-    for (size_t i = 0; i < list.size(); i++) {
-        m_touches->push_back(new Touch(document, list[i]));
+    for (size_t i = 0; i < touchCount; i++) {
+        m_touches->push_back(new Touch(document, data[i]));
     }
 }
 }

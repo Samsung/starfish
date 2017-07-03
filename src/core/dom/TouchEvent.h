@@ -22,34 +22,18 @@
 
 namespace StarFish {
 
-class TouchList;
-struct TouchEventInit : public EventModifierInit {
-public:
-    TouchEventInit()
-        : EventModifierInit()
-    {
-    }
+// TODO TouchEventInit
+// https://w3c.github.io/touch-events/#idl-def-toucheventinit
 
-    // TODO Implement JS binding interfaces
-    // such as,
-    // Vector touches();
-    // void setTouches(Vector touches);
-
-    GCVector<TouchInit>& touchInits()
-    {
-        return m_touchInits;
-    }
-
-private:
-    GCVector<TouchInit> m_touchInits;
-};
-
+// Binding interface
+// https://w3c.github.io/touch-events/#touchevent-interface
 class TouchEvent : public UIEvent {
-    friend TouchEventInit;
-
 public:
     TouchEvent(Document* document, String* eventType);
-    TouchEvent(Document* document, String* eventType, TouchEventInit& init);
+    TouchEvent(Document* document, String* eventType, TouchData* data,
+               size_t touchCount);
+    // TODO Implement offitial constructor
+    // TouchEvent(Document* document, String* eventType, TouchEventInit& init);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
