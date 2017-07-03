@@ -51,6 +51,7 @@
 #include <locale>
 #include <clocale>
 #include <cwchar>
+#include <numeric>
 
 #include <GCUtil.h>
 
