@@ -7,3 +7,5 @@ test/reftest/vendor/blink/fast/css/positioned-in-relative-position-inline-crash.
 test/reftest/vendor/blink/fast/css/invalid-hex-color.html
 test/reftest/vendor/blink/fast/css/media-rule-dyn.html
 test/reftest/vendor/blink/fast/dom/css-mediarule-functions.html
+test/reftest/vendor/blink_original/fast/media/mq-parsing.html
+test/reftest/vendor/blink_original/fast/dom/css-dom-read-2.html
