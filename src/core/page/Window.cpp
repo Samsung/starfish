@@ -216,12 +216,11 @@ void Window::forceDisableOnloadCapture()
 
 void Window::simulateClick(float x, float y)
 {
-    TouchEventInit init;
-    init.touchInits().emplace_back(x, y);
+    TouchData data(x, y);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        PlatformWindow::TouchEventStart, init);
+        PlatformWindow::TouchEventStart, &data, 1);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        PlatformWindow::TouchEventEnd, init);
+        PlatformWindow::TouchEventEnd, &data, 1);
 }
 
 void Window::simulateVisibilitychange(bool show)

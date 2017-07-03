@@ -20,23 +20,25 @@
 #include "UIEvent.h"
 
 namespace StarFish {
-struct MouseEventInit : EventModifierInit {
+
+// https://w3c.github.io/uievents/#idl-mouseevent
+// https://w3c.github.io/uievents/#idl-mouseeventinit
+class MouseData {
+    friend MouseEvent;
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    MouseEventInit()
-        : MouseEventInit(0, 0, 0, 0)
+    MouseData()
+        : MouseData(0, 0)
     {
     }
 
-    MouseEventInit(double clientX, double clientY)
-        : MouseEventInit(clientX, clientY, clientX, clientY)
+    MouseData(double clientX, double clientY)
+        : MouseData(clientX, clientY, clientX, clientY)
     {
     }
 
-    MouseEventInit(double clientX, double clientY, double screenX,
-                   double screenY)
-        : EventModifierInit()
-        , m_clientX(clientX)
+    MouseData(double clientX, double clientY, double screenX, double screenY)
+        : m_clientX(clientX)
         , m_clientY(clientY)
         , m_screenX(screenX)
         , m_screenY(screenY)
@@ -83,82 +85,92 @@ public:
         m_screenY = screenY;
     }
 
-private:
+protected:
     double m_clientX;
     double m_clientY;
     double m_screenX;
     double m_screenY;
 };
 
+// Binding interface
+// https://w3c.github.io/uievents/#idl-mouseeventinit
+class MouseEventInit : public EventModifierInit, public MouseData {
+    STARFISH_MAKE_STACK_ALLOCATED()
+public:
+    MouseEventInit()
+        : EventModifierInit()
+        , MouseData()
+    {
+    }
+};
+
+// Binding interface
 class MouseEvent : public UIEvent {
 public:
     MouseEvent(Document* document, String* eventType)
         : UIEvent(document, eventType)
-        , m_clientX(0)
-        , m_clientY(0)
-        , m_screenX(0)
-        , m_screenY(0)
+        , m_mouseData()
+    {
+    }
+
+    MouseEvent(Document* document, String* eventType, MouseData& data)
+        : UIEvent(document, eventType)
+        , m_mouseData(data)
     {
     }
 
     MouseEvent(Document* document, String* eventType, MouseEventInit& init)
         : UIEvent(document, eventType, init)
-        , m_clientX(init.clientX())
-        , m_clientY(init.clientY())
-        , m_screenX(init.screenX())
-        , m_screenY(init.screenY())
+        , m_mouseData(init)
     {
+    }
+
+    double clientX() const
+    {
+        return m_mouseData.m_clientX;
+    }
+
+    void setClientX(double clientX)
+    {
+        m_mouseData.m_clientX = clientX;
+    }
+
+    double clientY() const
+    {
+        return m_mouseData.m_clientY;
+    }
+
+    void setClientY(double clientY)
+    {
+        m_mouseData.m_clientY = clientY;
+    }
+
+    double screenX() const
+    {
+        return m_mouseData.m_screenX;
+    }
+
+    void setScreenX(double screenX)
+    {
+        m_mouseData.m_screenX = screenX;
+    }
+
+    double screenY() const
+    {
+        return m_mouseData.m_screenY;
+    }
+
+    void setScreenY(double screenY)
+    {
+        m_mouseData.m_screenY = screenY;
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
 
-    double clientX() const
-    {
-        return m_clientX;
-    }
-
-    void setClientX(double clientX)
-    {
-        m_clientX = clientX;
-    }
-
-    double clientY() const
-    {
-        return m_clientY;
-    }
-
-    void setClientY(double clientY)
-    {
-        m_clientY = clientY;
-    }
-
-    double screenX() const
-    {
-        return m_screenX;
-    }
-
-    void setScreenX(double screenX)
-    {
-        m_screenX = screenX;
-    }
-
-    double screenY() const
-    {
-        return m_screenY;
-    }
-
-    void setScreenY(double screenY)
-    {
-        m_screenY = screenY;
-    }
-
 private:
-    double m_clientX;
-    double m_clientY;
-    double m_screenX;
-    double m_screenY;
+    MouseData m_mouseData;
 };
 }
 

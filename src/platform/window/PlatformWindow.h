@@ -28,8 +28,8 @@ class Canvas;
 class Node;
 class WebView;
 
-struct MouseEventInit;
-struct TouchEventInit;
+class MouseData;
+class TouchData;
 
 class PlatformWindow : public gc {
 public:
@@ -63,9 +63,9 @@ public:
     virtual Canvas* preparePainting(bool forPainting) = 0;
 
     void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
-                            TouchEventInit& init);
+                            TouchData* touches, size_t touchCount);
     void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                            MouseEventInit& init);
+                            MouseData& data);
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
     void rendering();

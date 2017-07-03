@@ -25,6 +25,7 @@ class Frame;
 class FrameBox;
 class Node;
 class StackingContext;
+class BrowsingContext;
 
 class StackingContextChild : public GCVector<StackingContext*>, public gc {
 };
@@ -79,7 +80,8 @@ public:
 
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Canvas* canvas);
-    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
+    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
+                                  BrowsingContext* from);
 
 protected:
     bool m_needsOwnBuffer : 1;

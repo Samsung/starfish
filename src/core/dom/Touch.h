@@ -24,24 +24,26 @@ namespace StarFish {
 
 class EventTarget;
 
-struct TouchInit {
+class TouchData {
+    friend Touch;
+    STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    TouchInit()
-        : TouchInit(0, 0, 0, 0)
+    TouchData()
+        : TouchData(0, 0)
     {
     }
 
-    TouchInit(double clientX, double clientY)
-        : TouchInit(clientX, clientY, clientX, clientY)
+    TouchData(double clientX, double clientY)
+        : TouchData(clientX, clientY, clientX, clientY)
     {
     }
 
-    TouchInit(double clientX, double clientY, double screenX, double screenY)
+    TouchData(double clientX, double clientY, double screenX, double screenY)
         : m_target(nullptr)
         , m_clientX(clientX)
         , m_clientY(clientY)
-        , m_screenX(screenX)
-        , m_screenY(screenY)
+        , m_screenX(clientX)
+        , m_screenY(clientY)
     {
     }
 
@@ -86,46 +88,89 @@ public:
         m_screenY = screenY;
     }
 
-private:
+protected:
     EventTarget* m_target;
     double m_clientX;
     double m_clientY;
     double m_screenX;
     double m_screenY;
-
-    // TODO Implement
-    // int32_t m_identifier;
-    // double m_pageX;
-    // double m_pageY;
-    // double m_radiusX;
-    // double m_radiusY;
-    // double m_rotationAngle;
-    // double m_force;
 };
 
+// Binding interface
+// https://w3c.github.io/touch-events/#idl-def-touchinit
+class TouchInit : public TouchData {
+    STARFISH_MAKE_STACK_ALLOCATED()
+public:
+    TouchInit()
+        : TouchData()
+    {
+    }
+};
+
+// Binding interface
+// https://w3c.github.io/touch-events/#idl-def-touch
 class Touch : public ScriptWrappable, public DocumentHoldable {
 public:
     Touch(Document* document)
         : ScriptWrappable(this)
         , DocumentHoldable(document)
-        , m_target(nullptr)
-        , m_clientX(0)
-        , m_clientY(0)
-        , m_screenX(0)
-        , m_screenY(0)
+        , m_touchData()
     {
     }
 
-    // JS binding interface
     Touch(Document* document, TouchInit& init)
         : ScriptWrappable(this)
         , DocumentHoldable(document)
-        , m_target(init.target())
-        , m_clientX(init.clientX())
-        , m_clientY(init.clientY())
-        , m_screenX(init.screenX())
-        , m_screenY(init.screenY())
+        , m_touchData(init)
     {
+    }
+
+    Touch(Document* document, TouchData& data)
+        : ScriptWrappable(this)
+        , DocumentHoldable(document)
+        , m_touchData(data)
+    {
+    }
+
+    EventTarget* target() const
+    {
+        return m_touchData.m_target;
+    }
+    void setTarget(EventTarget* target)
+    {
+        m_touchData.m_target = target;
+    }
+    double clientX() const
+    {
+        return m_touchData.m_clientX;
+    }
+    void setClientX(double clientX)
+    {
+        m_touchData.m_clientX = clientX;
+    }
+    double clientY() const
+    {
+        return m_touchData.m_clientY;
+    }
+    void setClientY(double clientY)
+    {
+        m_touchData.m_clientY = clientY;
+    }
+    double screenX() const
+    {
+        return m_touchData.m_screenX;
+    }
+    void setScreenX(double screenX)
+    {
+        m_touchData.m_screenX = screenX;
+    }
+    double screenY() const
+    {
+        return m_touchData.m_screenY;
+    }
+    void setScreenY(double screenY)
+    {
+        m_touchData.m_screenY = screenY;
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -133,53 +178,8 @@ public:
     virtual bool isTouch() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    EventTarget* target() const
-    {
-        return m_target;
-    }
-    void setTarget(EventTarget* target)
-    {
-        m_target = target;
-    }
-    double clientX() const
-    {
-        return m_clientX;
-    }
-    void setClientX(double clientX)
-    {
-        m_clientX = clientX;
-    }
-    double clientY() const
-    {
-        return m_clientY;
-    }
-    void setClientY(double clientY)
-    {
-        m_clientY = clientY;
-    }
-    double screenX() const
-    {
-        return m_screenX;
-    }
-    void setScreenX(double screenX)
-    {
-        m_screenX = screenX;
-    }
-    double screenY() const
-    {
-        return m_screenY;
-    }
-    void setScreenY(double screenY)
-    {
-        m_screenY = screenY;
-    }
-
 private:
-    EventTarget* m_target;
-    double m_clientX;
-    double m_clientY;
-    double m_screenX;
-    double m_screenY;
+    TouchData m_touchData;
 };
 }
 

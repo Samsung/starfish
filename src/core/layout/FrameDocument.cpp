@@ -67,7 +67,7 @@ Frame* FrameDocument::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
     Frame* result =
         firstChild()->asFrameBox()->stackingContext()->hitTestStackingContext(
-            x, y);
+            x, y, node()->asDocument()->browsingContext());
     if (result) {
         return result;
     }
