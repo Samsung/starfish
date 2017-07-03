@@ -2215,6 +2215,24 @@ void CSSParser::parseStyleDeclaration(String* str,
     }
 }
 
+bool CSSParser::isBlockStart(RefPtr<CSSToken> token) const
+{
+    if ((token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') ||
+         token->isFunction())) {
+        return true;
+    }
+    return false;
+}
+
+bool CSSParser::isBlockEnd(RefPtr<CSSToken> token) const
+{
+    if ((token->isSymbol('}') || token->isSymbol(')') ||
+         token->isSymbol(']'))) {
+        return true;
+    }
+    return false;
+}
+
 const CSSParser::State CSSParser::ReadRestrictor = &CSSParser::readRestrictor;
 const CSSParser::State CSSParser::ReadMediaNot = &CSSParser::readMediaNot;
 const CSSParser::State CSSParser::ReadMediaType = &CSSParser::readMediaType;
@@ -2235,6 +2253,7 @@ const CSSParser::State CSSParser::Done = &CSSParser::done;
 void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
 {
     m_parserType = parserType;
+    m_blockLevel = 0;
     m_querySet = MediaQuerySet::create(m_document);
     if (parserType == MediaQuerySetParser)
         m_state = &CSSParser::readRestrictor;
@@ -2244,12 +2263,27 @@ void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
 
 void CSSParser::handleBlocks(RefPtr<CSSToken> token)
 {
-    if (!token->isSymbol('('))
-        m_state = SkipUntilBlockEnd;
+    if (isBlockStart(token)) {
+        if (!token->isSymbol('(') || m_blockLevel) {
+            m_state = SkipUntilBlockEnd;
+        }
+    }
+}
+
+void CSSParser::handleToken(RefPtr<CSSToken> token)
+{
+    if (isBlockStart(token)) {
+        ++m_blockLevel;
+    } else if (isBlockEnd(token)) {
+        STARFISH_ASSERT(m_blockLevel);
+        --m_blockLevel;
+    }
 }
 
 void CSSParser::processToken(RefPtr<CSSToken> token)
 {
+    handleBlocks(token);
+    handleToken(token);
     // Call the function that handles current state
     if (!token->isWhiteSpace()) {
         ((this)->*(m_state))(token);
@@ -2261,7 +2295,8 @@ MediaQuerySet* CSSParser::parseMediaQuery()
     initParseMediaQuery(MediaQuerySetParser);
 
     RefPtr<CSSToken> token = currentToken();
-    while (token->isNotNull() && !token->isSymbol('{') && m_state != Done) {
+    while (token->isNotNull() && !(token->isSymbol('{') && !m_blockLevel) &&
+           m_state != Done) {
         processToken(token);
         token = getToken(false, true);
     }
@@ -2356,10 +2391,11 @@ void CSSParser::readAnd(RefPtr<CSSToken> token)
 
 void CSSParser::readFeatureStart(RefPtr<CSSToken> token)
 {
-    if (token->isSymbol('('))
+    if (token->isSymbol('(')) {
         m_state = ReadFeature;
-    else
+    } else {
         m_state = SkipUntilComma;
+    }
 }
 
 void CSSParser::readFeature(RefPtr<CSSToken> token)
@@ -2374,13 +2410,14 @@ void CSSParser::readFeature(RefPtr<CSSToken> token)
 
 void CSSParser::readFeatureColon(RefPtr<CSSToken> token)
 {
-    if (token->isSymbol(':'))
+    if (token->isSymbol(':')) {
         m_state = ReadFeatureValue;
-    else if (token->isSymbol(')') || token->isSymbol('}') ||
-             token->isSymbol(';') || token->isNull())
+    } else if (token->isSymbol(')') || token->isSymbol('}') ||
+               token->isSymbol(';') || token->isNull()) {
         readFeatureEnd(token);
-    else
+    } else {
         m_state = SkipUntilBlockEnd;
+    }
 }
 
 void CSSParser::readFeatureValue(RefPtr<CSSToken> token)
@@ -2388,10 +2425,11 @@ void CSSParser::readFeatureValue(RefPtr<CSSToken> token)
     if (token->isDimension() && token->unitType() == UnitType::UnknownType) {
         m_state = SkipUntilComma;
     } else {
-        if (m_mediaQueryData.tryAddParserToken(token))
+        if (m_mediaQueryData.tryAddParserToken(token)) {
             m_state = ReadFeatureEnd;
-        else
+        } else {
             m_state = SkipUntilBlockEnd;
+        }
     }
 }
 
@@ -2424,8 +2462,9 @@ void CSSParser::skipUntilComma(RefPtr<CSSToken> token)
 
 void CSSParser::skipUntilBlockEnd(RefPtr<CSSToken> token)
 {
-    if (token->isSymbol('}') || token->isSymbol(';'))
+    if (isBlockEnd(token) || token->isSymbol(';')) {
         m_state = SkipUntilComma;
+    }
 }
 
 void CSSParser::done(RefPtr<CSSToken> token)

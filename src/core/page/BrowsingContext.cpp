@@ -167,6 +167,14 @@ bool BrowsingContext::layoutIfNeeds()
 
                 authorSheet->parseSheetIfneeds();
 
+                const MediaQueryEvaluator& evaluator =
+                    document()->styleResolver().mediaQueryEvaluator();
+                if (authorSheet->mediaQuerySet() &&
+                    !authorSheet->matchesMediaQueries(
+                        evaluator, authorSheet->mediaQuerySet())) {
+                    continue;
+                }
+
                 authorSheet->clearStyleRules();
                 authorSheet->collectRulesFromImportedSheet(
                     authorSheet->importRules());

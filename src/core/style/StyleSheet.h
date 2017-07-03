@@ -21,6 +21,7 @@
 
 namespace StarFish {
 
+class MediaList;
 class StyleSheet : public ScriptWrappable {
 public:
     StyleSheet()
@@ -40,6 +41,7 @@ public:
     {
         return nullptr;
     }
+    virtual MediaList* media() = 0;
 };
 
 } /* namespace StarFish */

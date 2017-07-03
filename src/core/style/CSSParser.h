@@ -1040,6 +1040,9 @@ protected:
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
     static CSSTokenString combineAndTrimTokenValues(
         const GCVector<RefPtr<CSSToken>>& list);
+    bool isBlockStart(RefPtr<CSSToken> token) const;
+    bool isBlockEnd(RefPtr<CSSToken> token) const;
+
     bool m_preserveWS;
     bool m_preserveComments;
     GCVector<RefPtr<CSSToken>> m_preservedTokens;
@@ -1075,7 +1078,8 @@ protected:
     using State = void (CSSParser::*)(RefPtr<CSSToken>);
 
     void setStateAndRestrict(State, MediaQuery::RestrictorType);
-    void handleBlocks(RefPtr<CSSToken>);
+    void handleBlocks(RefPtr<CSSToken> token);
+    void handleToken(RefPtr<CSSToken> token);
 
     State m_state;
     MediaQueryParserType m_parserType;
@@ -1101,6 +1105,7 @@ protected:
     size_t m_initialTokenMemoryPoolSize;
     GCVector<CSSToken*> m_tokenMemoryPool;
     char m_tokenInnerPool[CSSTOKEN_POOL_INITIAL_SIZE * sizeof(CSSToken)];
+    unsigned m_blockLevel;
 };
 
 struct MediaQueryExpValue {

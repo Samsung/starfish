@@ -543,6 +543,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
+| | attribute | media | Returns the MediaList object that is associated with the CSS style sheet. |
 | [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
 | | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
 | | attribute | length | Return the number of CSS style sheets represented by the collection. |

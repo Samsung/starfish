@@ -136,6 +136,7 @@ void HTMLStyleElement::generateStyleSheet()
         document()->styleResolver().mediaQueryEvaluator();
     if (evaluator.eval(mediaQuerySet)) {
         CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
+        sheet->setMediaQuerySet(mediaQuerySet);
         m_generatedSheet = sheet;
         document()->styleResolver().addSheet(sheet);
         sheet->parseSheetIfneeds();

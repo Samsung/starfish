@@ -5,3 +5,5 @@ test/reftest/vendor/blink/fast/css/percent-top-relative-container-height-unspeci
 test/reftest/vendor/blink/fast/css/percent-top-value-with-relative-position.html
 test/reftest/vendor/blink/fast/css/positioned-in-relative-position-inline-crash.html
 test/reftest/vendor/blink/fast/css/invalid-hex-color.html
+test/reftest/vendor/blink/fast/css/media-rule-dyn.html
+test/reftest/vendor/blink/fast/dom/css-mediarule-functions.html
