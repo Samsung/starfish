@@ -756,10 +756,11 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     String* name = String::emptyString;
     switch (kind) {
     case PlatformWindow::MouseEventDown: {
+        Node* t = targetNode->nearestParentElement();
+        t = t ? t : document();
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
         Event* e = createMouseEvent(document(), name, data);
-        Node* t = m_activeNodes.size() > 0 ? m_activeNodes[0] : document();
         document()->window()->dispatchEvent(t, e);
         break;
     }
