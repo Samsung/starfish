@@ -76,6 +76,10 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_webapis(nullptr)
 #endif
     , m_touchDownPoint(0, 0)
+    , m_activeNodeTarget(nullptr)
+    , m_documentVersionWhenComputingActiveNodeSet(0)
+    , m_hoveredNodeTarget(nullptr)
+    , m_documentVersionWhenComputingHoveredNodeSet(0)
     , m_ctrlKeyDown(0)
     , m_shiftKeyDown(0)
     , m_altKeyDown(0)
@@ -345,10 +349,13 @@ void BrowsingContext::close()
     m_focusedNode = nullptr;
     m_relatedTarget = nullptr;
 
-    m_activeNodes.clear();
-    m_activeNodes.shrink_to_fit();
-    m_hoveredNodes.clear();
-    m_hoveredNodes.shrink_to_fit();
+    m_activeNodeSet.clear();
+    m_activeNodeTarget = nullptr;
+    m_documentVersionWhenComputingActiveNodeSet = 0;
+
+    m_hoveredNodeSet.clear();
+    m_hoveredNodeTarget = nullptr;
+    m_documentVersionWhenComputingHoveredNodeSet = 0;
 
     if (m_window) {
         StarFishEnterer enter(m_starFish);
@@ -486,56 +493,94 @@ void BrowsingContext::releaseFocusedNode()
     }
 }
 
-void BrowsingContext::setActiveNode(Node* n)
+static bool updateEventNodeSet(Document* document, Node* n,
+                               GCUnorderedSet<Node*>& set, Node** target,
+                               size_t* version, Node::NodeState state,
+                               Node::DynamicRestyleFlags flag)
 {
     Node* t = n->nearestParentElement();
-    while (t) {
-        t->setState(Node::NodeStateActive,
-                    Node::ChildrenOrSiblingsAffectedByActive, true);
-        m_activeNodes.push_back(t);
-        t = t->parentNode();
+    if (*target != n || set.find(t) != set.end() ||
+        *version != document->domVersion()) {
+        GCUnorderedSet<Node*> newSet;
+        while (t) {
+            newSet.insert(t);
+            t = t->parentNode();
+        }
+
+        auto iter = set.begin();
+        while (iter != set.end()) {
+            // new(X) old(O)
+            if (newSet.find(*iter) == newSet.end()) {
+                (*iter)->setState(state, flag, false);
+            }
+            iter++;
+        }
+
+        iter = newSet.begin();
+        while (iter != newSet.end()) {
+            // new(O) old(X)
+            if (set.find(*iter) == set.end()) {
+                (*iter)->setState(state, flag, true);
+            }
+            iter++;
+        }
+
+        set = std::move(newSet);
+        *target = n;
+        *version = document->domVersion();
+        return true;
     }
+    return false;
+}
+
+bool BrowsingContext::setActiveNode(Node* n)
+{
+    return updateEventNodeSet(
+        document(), n, m_activeNodeSet, &m_activeNodeTarget,
+        &m_documentVersionWhenComputingActiveNodeSet, Node::NodeStateActive,
+        Node::ChildrenOrSiblingsAffectedByActive);
 }
 
 void BrowsingContext::releaseActiveNode()
 {
-    if (m_activeNodes.size() == 0) {
+    if (!m_activeNodeTarget) {
         return;
     }
 
-    for (size_t i = 0; i < m_activeNodes.size(); i++) {
-        m_activeNodes[i]->setState(Node::NodeStateActive,
-                                   Node::ChildrenOrSiblingsAffectedByActive,
-                                   false);
+    auto iter = m_activeNodeSet.begin();
+    while (iter != m_activeNodeSet.end()) {
+        (*iter)->setState(Node::NodeStateActive,
+                          Node::ChildrenOrSiblingsAffectedByActive, false);
+        iter++;
     }
-    m_activeNodes.clear();
-    m_activeNodes.shrink_to_fit();
+    m_activeNodeSet.clear();
+    m_activeNodeTarget = nullptr;
+    m_documentVersionWhenComputingActiveNodeSet = 0;
 }
 
-void BrowsingContext::setHoveredNode(Node* n)
+bool BrowsingContext::setHoveredNode(Node* n)
 {
-    Node* t = n->nearestParentElement();
-    while (t) {
-        t->setState(Node::NodeStateHovered,
-                    Node::ChildrenOrSiblingsAffectedByHover, true);
-        m_hoveredNodes.push_back(t);
-        t = t->parentNode();
-    }
+    return updateEventNodeSet(
+        document(), n, m_hoveredNodeSet, &m_hoveredNodeTarget,
+        &m_documentVersionWhenComputingHoveredNodeSet, Node::NodeStateHovered,
+        Node::ChildrenOrSiblingsAffectedByHover);
 }
 
 void BrowsingContext::releaseHoveredNode()
 {
-    if (m_hoveredNodes.size() == 0) {
+    if (!m_hoveredNodeTarget) {
         return;
     }
-    for (size_t i = 0; i < m_hoveredNodes.size(); i++) {
-        m_hoveredNodes[i]->setState(Node::NodeStateHovered,
-                                    Node::ChildrenOrSiblingsAffectedByHover,
-                                    false);
-    }
 
-    m_hoveredNodes.clear();
-    m_hoveredNodes.shrink_to_fit();
+    auto iter = m_hoveredNodeSet.begin();
+    while (iter != m_hoveredNodeSet.end()) {
+        (*iter)->setState(Node::NodeStateHovered,
+                          Node::ChildrenOrSiblingsAffectedByHover, false);
+        iter++;
+    }
+    m_hoveredNodeSet.clear();
+    m_hoveredNodeTarget = nullptr;
+    m_documentVersionWhenComputingHoveredNodeSet = 0;
 }
 
 static TouchEvent* createTouchEvent(Document* document, String* name,
@@ -600,19 +645,25 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
     if (kind != PlatformWindow::MouseEventMove) {
         return;
     }
-    Node* t = targetNode->nearestParentElement();
-    bool check = true;
-    if (m_hoveredNodes.size() > 0) {
-        check = (t != m_hoveredNodes[0]);
-    }
-    if (check) {
-        releaseHoveredNode();
-        setHoveredNode(targetNode);
 
-        String* name = starFish()->staticStrings()->m_mouseover.localName();
-        MouseData data(posX, posY);
-        Event* e = createMouseEvent(document(), name, data);
-        document()->window()->dispatchEvent(t ? t : document(), e);
+    Node* oldTarget = m_hoveredNodeTarget;
+    if (setHoveredNode(targetNode)) {
+        Node* newTarget = m_hoveredNodeTarget;
+        if (newTarget != oldTarget) {
+            if (oldTarget) {
+                String* name =
+                    starFish()->staticStrings()->m_mouseout.localName();
+                MouseData data(posX, posY);
+                Event* e = createMouseEvent(document(), name, data);
+                Node* t = oldTarget->nearestParentElement();
+                document()->window()->dispatchEvent(t ? t : document(), e);
+            }
+            String* name = starFish()->staticStrings()->m_mouseover.localName();
+            MouseData data(posX, posY);
+            Event* e = createMouseEvent(document(), name, data);
+            Node* t = newTarget->nearestParentElement();
+            document()->window()->dispatchEvent(t ? t : document(), e);
+        }
     }
 }
 
@@ -678,7 +729,8 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         // Dispatch touchstart event
         name = starFish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
-        Node* t = m_activeNodes.size() > 0 ? m_activeNodes[0] : document();
+        Node* t = targetNode->nearestParentElement();
+        t = t ? t : document();
         document()->window()->dispatchEvent(t, e);
         break;
     }
@@ -692,13 +744,9 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         break;
     }
     case PlatformWindow::TouchEventEnd: {
-        Node* t = targetNode->nearestParentElement();
-        bool check = false;
-        if (m_activeNodes.size() > 0) {
-            check = (t == m_activeNodes[0]);
-        }
-        if (check) {
+        if (setActiveNode(targetNode)) {
             // Dispatch click event
+            Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
             name = starFish()->staticStrings()->m_click.localName();
             MouseData clickData(targetX, targetY);
@@ -775,13 +823,9 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     }
     case PlatformWindow::MouseEventUp: {
         // Check whether it is skippable or not
-        Node* t = targetNode->nearestParentElement();
-        bool check = false;
-        if (m_activeNodes.size() > 0) {
-            check = (t == m_activeNodes[0]);
-        }
-        if (check) {
+        if (setActiveNode(targetNode)) {
             // Dispatch click event
+            Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
             name = starFish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
