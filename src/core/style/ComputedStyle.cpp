@@ -33,6 +33,16 @@ bool ComputedStyle::hasTransforms(Frame* frame)
     return transforms(frame) != nullptr;
 }
 
+bool ComputedStyle::hasComplexTransforms(Frame* frame)
+{
+    StyleTransformDataGroup* t = transforms(frame);
+    if (t) {
+        return t->hasComplexTransform();
+    } else {
+        return false;
+    }
+}
+
 StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
 {
     // https://www.w3.org/TR/css-transforms-1/#transformable-element
@@ -582,6 +592,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
+        bool oldComplex = oldStyle->m_transforms->hasComplexTransform();
+        bool newComplex = newStyle->m_transforms->hasComplexTransform();
+        if (oldComplex != newComplex || (!oldComplex && !newComplex)) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
         if (*newStyle->m_transforms != *oldStyle->m_transforms) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageComposite | damage);

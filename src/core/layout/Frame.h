@@ -641,8 +641,7 @@ public:
         m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
 
         // TODO add condition
-        m_flags.m_needsGraphicsBuffer |= (style->opacity() != 1);
-        m_flags.m_needsGraphicsBuffer |= (style->hasTransforms(this));
+        m_flags.m_needsGraphicsBuffer |= (style->hasComplexTransforms(this));
 
         if ((style->position() == PositionValue::AbsolutePositionValue) ||
             (style->floating() != FloatValue::NoneFloatValue)) {

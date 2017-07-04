@@ -274,6 +274,7 @@ public:
     }
 
     bool hasTransforms(Frame* frame);
+    bool hasComplexTransforms(Frame* frame);
 
     // DO NOT USE THIS FUNCTION
     StyleTransformDataGroup* uncheckedTransforms()
@@ -341,10 +342,10 @@ public:
             m_transformOrigin = new StyleTransformOrigin();
     }
 
-    void setTransformOriginValue(Length x, Length y)
+    void setTransformOriginValue(Length x, Length y, Length z)
     {
         setTransformOriginIfNeeded();
-        m_transformOrigin->setOriginValue(x, y);
+        m_transformOrigin->setOriginValue(x, y, z);
     }
 
     void setBackgroundColor(Unit::Color color)

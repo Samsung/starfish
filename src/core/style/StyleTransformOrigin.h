@@ -30,10 +30,10 @@ public:
     {
     }
 
-    TransformOriginData(Length x, Length y)
+    TransformOriginData(Length x, Length y, Length z)
         : m_xaxis(x)
         , m_yaxis(y)
-        , m_zaxis(Length())
+        , m_zaxis(z)
     {
     }
 
@@ -48,11 +48,11 @@ public:
         m_zaxis = data->m_zaxis;
     }
 
-    void setData(Length a, Length b)
+    void setData(Length a, Length b, Length c)
     {
         m_xaxis = a;
         m_yaxis = b;
-        m_zaxis = Length();
+        m_zaxis = c;
     }
 
     Length getXAxis()
@@ -90,12 +90,12 @@ public:
     {
     }
 
-    void setOriginValue(Length x, Length y)
+    void setOriginValue(Length x, Length y, Length z)
     {
         if (!m_originValue) {
-            m_originValue = new TransformOriginData(x, y);
+            m_originValue = new TransformOriginData(x, y, z);
         }
-        m_originValue->setData(x, y);
+        m_originValue->setData(x, y, z);
     }
 
     TransformOriginData* originValue()
@@ -106,13 +106,16 @@ public:
     String* dumpString()
     {
         char temp[100];
-        snprintf(temp, sizeof(temp), "(%.3f %.3f)",
+        snprintf(temp, sizeof(temp), "(%.3f %.3f %.3f)",
                  m_originValue->getXAxis().isFixed()
                      ? m_originValue->getXAxis().fixed()
                      : m_originValue->getXAxis().percent(),
                  m_originValue->getYAxis().isFixed()
                      ? m_originValue->getYAxis().fixed()
-                     : m_originValue->getYAxis().percent());
+                     : m_originValue->getYAxis().percent(),
+                 m_originValue->getZAxis().isFixed()
+                     ? m_originValue->getZAxis().fixed()
+                     : m_originValue->getZAxis().percent());
 
         return String::fromUTF8(temp);
     }

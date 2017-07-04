@@ -43,13 +43,18 @@ void FrameBox::paintChildrenWith(PaintingContext& ctx)
 
 void FrameBox::paintBackground(Canvas* canvas, ComputedStyle* style,
                                LayoutRect imageRect, LayoutRect colorRect,
-                               bool isRootElement)
+                               bool isRootElement,
+                               bool needsToFillBgColorAtBorderBox)
 {
     if (!style->backgroundColor().isTransparent() &&
         style->visibility() == VisibilityValue::VisibleVisibilityValue) {
         canvas->save();
         canvas->setColor(style->backgroundColor());
-        canvas->drawRect(colorRect);
+        if (isRootElement || needsToFillBgColorAtBorderBox) {
+            canvas->drawRect(colorRect);
+        } else {
+            canvas->drawRect(imageRect);
+        }
         canvas->restore();
     }
 
@@ -297,8 +302,18 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
         LayoutRect bgRect(borderLeft(), borderTop(),
                           m_frameRect.width() - borderWidth(),
                           m_frameRect.height() - borderHeight());
-        paintBackground(canvas, style(), bgRect,
-                        LayoutRect(0, 0, width(), height()), false);
+
+        if (style()->hasBorderStyle() &&
+            (style()->borderTopColor() == style()->borderRightColor()) &&
+            (style()->borderRightColor() == style()->borderBottomColor()) &&
+            (style()->borderBottomColor() == style()->borderLeftColor()) &&
+            borderWidth() && borderHeight() && !style()->hasBorderImageData()) {
+            paintBackground(canvas, style(), bgRect,
+                            LayoutRect(0, 0, width(), height()), false, false);
+        } else {
+            paintBackground(canvas, style(), bgRect,
+                            LayoutRect(0, 0, width(), height()), false, true);
+        }
 
     } while (false);
 
@@ -398,15 +413,17 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
             // right
             canvas->setColor(style()->borderRightColor());
-            canvas->drawRect(LayoutRect(width() - borderRight(), 0,
-                                        borderRight(), height()));
+            canvas->drawRect(LayoutRect(width() - borderRight(), borderTop(),
+                                        borderRight(),
+                                        height() - borderHeight()));
             // bottom
             canvas->setColor(style()->borderBottomColor());
             canvas->drawRect(LayoutRect(0, height() - borderBottom(), width(),
                                         borderBottom()));
             // left
             canvas->setColor(style()->borderLeftColor());
-            canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
+            canvas->drawRect(LayoutRect(0, borderTop(), borderLeft(),
+                                        height() - borderHeight()));
         } else {
             // top
             canvas->setColor(style()->borderTopColor());
@@ -497,6 +514,9 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     }
                     if (p->style()->IsSpecifiedZIndex()) {
+                        break;
+                    }
+                    if (p->style()->opacity() != 1) {
                         break;
                     }
                 }

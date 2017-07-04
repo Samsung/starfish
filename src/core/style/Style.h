@@ -808,16 +808,23 @@ class CSSTransformFunction {
 public:
     enum Kind {
         Matrix,
+        Matrix3D,
         Translate,
+        Translate3D,
         TranslateX,
         TranslateY,
+        TranslateZ,
         Scale,
+        Scale3D,
         ScaleX,
         ScaleY,
+        ScaleZ,
         Rotate,
+        Rotate3D,
         Skew,
         SkewX,
-        SkewY
+        SkewY,
+        Perspective
     };
 
     CSSTransformFunction(Kind kind, ValueList* values)
@@ -847,26 +854,40 @@ public:
         switch (m_kind) {
         case Matrix:
             return String::fromUTF8("matrix");
+        case Matrix3D:
+            return String::fromUTF8("matrix3d");
         case Translate:
             return String::fromUTF8("translate");
+        case Translate3D:
+            return String::fromUTF8("translate3d");
         case TranslateX:
             return String::fromUTF8("translateX");
         case TranslateY:
             return String::fromUTF8("translateY");
+        case TranslateZ:
+            return String::fromUTF8("translateZ");
         case Scale:
             return String::fromUTF8("scale");
+        case Scale3D:
+            return String::fromUTF8("scale3d");
         case ScaleX:
             return String::fromUTF8("scaleX");
         case ScaleY:
             return String::fromUTF8("scaleY");
+        case ScaleZ:
+            return String::fromUTF8("scaleZ");
         case Rotate:
             return String::fromUTF8("rotate");
+        case Rotate3D:
+            return String::fromUTF8("rotate3D");
         case Skew:
             return String::fromUTF8("skew");
         case SkewX:
             return String::fromUTF8("skewX");
         case SkewY:
             return String::fromUTF8("skewY");
+        case Perspective:
+            return String::fromUTF8("perspective");
         }
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1458,6 +1479,7 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
+    bool updateValueLength(const CSSTokenValue& token, bool allowNegative);
     bool updateValueLengthOrPercent(const CSSTokenVector& tokens,
                                     bool allowNegative);
     bool updateValueLengthOrPercent(const CSSTokenValue& token,

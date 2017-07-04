@@ -241,9 +241,12 @@ bool operator!=(const StyleTransformData& a, const StyleTransformData& b)
 }
 
 class StyleTransformDataGroup : public gc {
+    friend class StyleResolver;
+
 public:
     StyleTransformDataGroup()
     {
+        m_hasComplexTransform = false;
     }
 
     ~StyleTransformDataGroup()
@@ -274,12 +277,18 @@ public:
         return str;
     }
 
+    bool hasComplexTransform()
+    {
+        return m_hasComplexTransform;
+    }
+
 private:
     friend inline bool operator==(const StyleTransformDataGroup& a,
                                   const StyleTransformDataGroup& b);
     friend inline bool operator!=(const StyleTransformDataGroup& a,
                                   const StyleTransformDataGroup& b);
 
+    bool m_hasComplexTransform;
     GCVector<StyleTransformData> m_group;
 };
 

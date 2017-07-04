@@ -369,7 +369,8 @@ public:
 
     static void paintBackground(Canvas* canvas, ComputedStyle* style,
                                 LayoutRect imageRect, LayoutRect colorRect,
-                                bool isRootElement);
+                                bool isRootElement = false,
+                                bool needsToFillBgColorAtBorderBox = false);
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 

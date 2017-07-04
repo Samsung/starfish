@@ -158,6 +158,39 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     canvas->save();
 
+    if (!m_needsOwnBuffer && owner()->style()->opacity() != 1)
+        canvas->beginOpacityLayer(owner()->style()->opacity());
+
+    if (!m_needsOwnBuffer) {
+        m_matrix = m_owner->style()->transformsToMatrix(
+            m_owner->width(), m_owner->height(),
+            m_owner->style()->hasTransforms(m_owner));
+
+        if (!m_matrix.isIdentity()) {
+            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
+                , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
+                , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
+                , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8)); */
+            LayoutUnit ox = m_owner->width() / 2;
+            LayoutUnit oy = m_owner->height() / 2;
+            if (m_owner->style()->hasTransformOrigin()) {
+                ox = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getXAxis()
+                         .specifiedValue(m_owner->width());
+                oy = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getYAxis()
+                         .specifiedValue(m_owner->height());
+            }
+            canvas->translate(ox, oy);
+            canvas->postMatrix(m_matrix);
+            canvas->translate(-ox, -oy);
+        }
+    }
+
     if (owner()->style()->visibility() ==
         VisibilityValue::HiddenVisibilityValue) {
         canvas->setVisible(false);
@@ -226,6 +259,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             iter++;
         }
     }
+
+    if (!m_needsOwnBuffer && owner()->style()->opacity() != 1)
+        canvas->endOpacityLayer();
 
     canvas->restore();
     if (hasStackingBuffer) {

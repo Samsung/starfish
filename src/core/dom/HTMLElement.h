@@ -56,6 +56,10 @@ public:
         return (float)offsetRect().height() + .5f;
     }
 
+    // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
+    String* innerText();
+    void setInnerText(String* text);
+
     String* dir();
     void setDir(String* dir);
 
