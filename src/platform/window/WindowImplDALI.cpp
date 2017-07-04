@@ -46,71 +46,23 @@ struct IdlerData {
     void* m_data;
 };
 
-class EventController : public Dali::ConnectionTracker, public gc {
-public:
-    EventController(StarFish* sf)
-    {
-        m_sf = sf;
-    }
-    bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
-    {
-        size_t pointCount = data.GetPointCount();
-        if (pointCount == 1) {
-            // Single touch event
-
-            Dali::PointState::Type pointState = data.GetState(0);
-            if (pointState == Dali::PointState::DOWN) {
-                StarFishEnterer enter(m_sf);
-                const Dali::Vector2& screen = data.GetScreenPosition(0);
-                MouseData data(screen.x, screen.y);
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    PlatformWindow::MouseEventDown, data);
-            } else if (pointState == Dali::PointState::UP) {
-                StarFishEnterer enter(m_sf);
-                const Dali::Vector2& screen = data.GetScreenPosition(0);
-                MouseData data(screen.x, screen.y);
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    PlatformWindow::MouseEventUp, data);
-            }
-        }
-        return true;
-    }
-    bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
-    {
-        const Dali::Vector2& point = event.GetPoint(0).screen;
-        StarFishEnterer enter(m_sf);
-        MouseData data(point.x, point.y);
-        m_sf->platformWindow()->dispatchMouseEvent(
-            PlatformWindow::MouseEventMove, data);
-        return true;
-    }
-
-protected:
-    StarFish* m_sf;
-};
-
 class WindowImplDALI : public PlatformWindow {
 public:
-    WindowImplDALI(StarFish* sf)
+    WindowImplDALI(StarFish* sf, int32_t width, int32_t height)
         : PlatformWindow(sf)
+        , m_width(width)
+        , m_height(height)
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
 
-        Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-        m_daliBuffer = Dali::BufferImage::New(size.width, size.height,
-                                              Dali::Pixel::BGRA8888);
+        m_daliBuffer =
+            Dali::BufferImage::New(m_width, m_height, Dali::Pixel::BGRA8888);
         m_mainView = Dali::Toolkit::ImageView::New(m_daliBuffer);
         m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
         m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
         m_mainView.SetPosition(0, 0);
         Dali::Stage::GetCurrent().Add(m_mainView);
-        m_eventController = new EventController(sf);
-        Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
-            m_eventController, &EventController::TouchEventHandler);
-
-        Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
-            m_eventController, &EventController::HoverEventHandler);
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -128,8 +80,7 @@ public:
             return atoi(getenv("SCREEN_SHOT_WIDTH"));
         }
 #endif
-        Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-        return (int32_t)size.width;
+        return m_width;
     }
 
     virtual int32_t height() override
@@ -140,8 +91,7 @@ public:
             return atoi(getenv("SCREEN_SHOT_HEIGHT"));
         }
 #endif
-        Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-        return (int32_t)size.height;
+        return m_height;
     }
 
     virtual void resizeTo(int w, int h)
@@ -157,12 +107,13 @@ public:
     virtual void clearResources();
     virtual Canvas* preparePainting(bool forPainting);
 
+    int32_t m_width;
+    int32_t m_height;
     size_t m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
     float m_lastMouseX, m_lastMouseY;
     Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
-    EventController* m_eventController;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -246,7 +197,7 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
-    auto wnd = new WindowImplDALI(sf);
+    auto wnd = new WindowImplDALI(sf, width, height);
     wnd->m_starFish = sf;
 
 #ifdef STARFISH_ENABLE_TEST
@@ -325,11 +276,6 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     }
 #endif
 
-    int width, height;
-    Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-    width = size.width;
-    height = size.height;
-
     struct dummy {
         Dali::BufferImage image;
         int w;
@@ -337,10 +283,9 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     };
 
     dummy* d = new dummy;
-    d->w = width;
-    d->h = height;
+    d->w = m_width;
+    d->h = m_height;
     d->image = m_daliBuffer;
-    m_mainView.SetSize(width, height);
 
     Canvas* canvas = Canvas::createDirect(d);
     delete d;

@@ -22,6 +22,7 @@ namespace StarFish {
 class MessageLoop;
 typedef void* (*ThreadWorker)(void*);
 
+void registerMainThread();
 bool isMainThread();
 
 class Thread : public gc {
