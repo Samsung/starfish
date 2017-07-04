@@ -506,17 +506,18 @@ void FrameBox::establishesStackingContextIfNeeds()
                 if (p->isEstablishesStackingContext()) {
                     if (p->isRootElement()) {
                         break;
-                    }
-                    if (p->needsGraphicsBuffer()) {
+                    } else if (p->needsGraphicsBuffer()) {
                         break;
-                    }
-                    if (!p->isPositioned()) {
+                    } else if (!p->isPositioned()) {
                         break;
-                    }
-                    if (p->style()->IsSpecifiedZIndex()) {
+                    } else if (p->style()->IsSpecifiedZIndex()) {
                         break;
-                    }
-                    if (p->style()->opacity() != 1) {
+                    } else if (p->style()->opacity() != 1) {
+                        break;
+                    } else if (!p->isPositioned()) {
+                        break;
+                    } else if (p->style()->overflow() !=
+                               OverflowValue::VisibleOverflow) {
                         break;
                     }
                 }
