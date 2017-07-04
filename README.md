@@ -76,7 +76,7 @@ e.g. `make x64.exe.debug -j`
 
 
 ## Testing
-#### Summary
+### Summary
 ``` sh
 # Run all test at once
 make test_all
@@ -109,7 +109,7 @@ make internal_test
 make [test_name] TEST_NPROCS=5
 ```
 
-#### CSSWG Test (compare with node-WebKit/previous version of StarFish)
+### CSSWG Test (compare with node-WebKit/previous version of StarFish)
 
 We use the W3C's CSS conformance test suites.
 (W3C CSS WG Test Suites Repository: https://hg.csswg.org/test)
@@ -140,7 +140,7 @@ test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -l [filepath=**.res] pc
 test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f [filepath=**.html] pc
 ```
 
-#### Web Platform Tests
+### Web Platform Tests
 
 We use the [Web Platform Tests](https://github.com/w3c/web-platform-tests). The Web Platform Tests Project is a W3C-coordinated attempt to build a cross-browser testsuite for the Web-platform stack.
 
@@ -152,7 +152,7 @@ To run the Web Platform Tests, use:
 make web_platform_test_[name]
 ```
 
-#### Bidi Tests
+### Bidi Tests
 Bidi tests perform pixel tests on a device. To run the tests,
 - Connect your device
 - run the following
@@ -165,4 +165,8 @@ cd /home/developer
 ./bidi_test_clean.sh
 ```
 
-[Wiki](https://github.sec.samsung.net/RS7-webtf/starfish/wiki)
+## Misc.
+
+### CI Infrastructure
+
+http://10.113.138.181/overview/444
