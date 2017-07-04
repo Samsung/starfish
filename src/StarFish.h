@@ -190,6 +190,10 @@ protected:
 #endif
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
+#ifdef PORT_GRAPHIC_BACKEND_DALI
+    int m_width;
+    int m_height;
+#endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;

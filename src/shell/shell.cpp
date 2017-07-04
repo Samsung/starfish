@@ -29,6 +29,10 @@
 #if defined(PORT_GRAPHIC_BACKEND_DALI)
 #include <dali-toolkit/dali-toolkit.h>
 #include "platform/window/PlatformWindow.h"
+
+#include "core/dom/MouseEvent.h"
+#include "core/dom/TouchEvent.h"
+#include "core/dom/KeyboardEvent.h"
 #endif
 
 #include <Elementary.h>
@@ -108,8 +112,11 @@ char* url = nullptr;
 
 class DaliShellController : public ConnectionTracker {
 public:
-    DaliShellController(Application& application)
-        : mApplication(application)
+    DaliShellController(Application& application, int width, int height)
+        : m_width(width)
+        , m_height(height)
+        , mApplication(application)
+
     {
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
@@ -118,7 +125,7 @@ public:
     }
     void Create(Application& application)
     {
-        int width = 360, height = 360;
+        int width = m_width, height = m_height;
         int flag = 0;
 
         // TODO: Need to get screen info from X11.
@@ -183,17 +190,56 @@ public:
                        },
                        m_sf);
 
-        m_sf->run();
         // mApplication.AddIdle(MakeCallback(this,
         // &DaliShellController::OnIdle));
+        Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
+            this, &DaliShellController::TouchEventHandler);
+
+        Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
+            this, &DaliShellController::HoverEventHandler);
+        m_sf->run();
     }
     void OnIdle()
     {
         m_sf->run();
         mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
     }
+    bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
+    {
+        size_t pointCount = data.GetPointCount();
+        if (pointCount == 1) {
+            // Single touch event
+
+            Dali::PointState::Type pointState = data.GetState(0);
+            if (pointState == Dali::PointState::DOWN) {
+                StarFishEnterer enter(m_sf);
+                const Dali::Vector2& screen = data.GetScreenPosition(0);
+                StarFish::MouseData data(screen.x, screen.y);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    PlatformWindow::MouseEventDown, data);
+            } else if (pointState == Dali::PointState::UP) {
+                StarFishEnterer enter(m_sf);
+                const Dali::Vector2& screen = data.GetScreenPosition(0);
+                StarFish::MouseData data(screen.x, screen.y);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    PlatformWindow::MouseEventUp, data);
+            }
+        }
+        return true;
+    }
+    bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
+    {
+        const Dali::Vector2& point = event.GetPoint(0).screen;
+        StarFishEnterer enter(m_sf);
+        StarFish::MouseData data(point.x, point.y);
+        m_sf->platformWindow()->dispatchMouseEvent(
+            PlatformWindow::MouseEventMove, data);
+        return true;
+    }
 
 private:
+    int m_width;
+    int m_height;
     StarFish::StarFish* m_sf;
     Application& mApplication;
 };
@@ -271,7 +317,7 @@ int main(int argc, char* argv[])
 
     url = argv[1];
     Application application = Application::New(&argc, &argv);
-    DaliShellController shell(application);
+    DaliShellController shell(application, width, height);
     application.MainLoop();
 
 #elif defined(PORT_GRAPHIC_BACKEND_EFL)

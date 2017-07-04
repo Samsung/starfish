@@ -23,14 +23,19 @@
 
 namespace StarFish {
 
-bool isMainThread()
+pid_t main_tid;
+void registerMainThread()
 {
 #ifdef SYS_gettid
-    pid_t tid = syscall(SYS_gettid);
+    main_tid = syscall(SYS_gettid);
 #else
 #error "SYS_gettid unavailable on this system"
 #endif
-    return getpid() == tid;
+}
+
+bool isMainThread()
+{
+    return getpid() == main_tid;
 }
 
 Thread::Thread()

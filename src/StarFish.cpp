@@ -182,6 +182,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_enterCount(0)
     , m_screenInfo(info)
 {
+#ifdef PORT_GRAPHIC_BACKEND_DALI
+    m_width = w;
+    m_height = h;
+#endif
+    registerMainThread();
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
 
@@ -358,9 +363,8 @@ void StarFish::loadHTMLDocument(String* filePath)
     int height;
 
 #if defined(PORT_GRAPHIC_BACKEND_DALI)
-    Dali::Vector2 size = Dali::Stage::GetCurrent().GetSize();
-    width = size.width;
-    height = size.height;
+    width = m_width;
+    height = m_height;
 #elif defined(PORT_GRAPHIC_BACKEND_EFL)
     evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
                              &height);
