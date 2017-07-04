@@ -356,6 +356,28 @@ public:
         return false;
     }
 
+    static bool parseLength(const char* token, bool allowNegative,
+                            CSSStyleValuePair* pair)
+    {
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
+            return false;
+        }
+        float num = parser.parsedNumber();
+        if (!allowNegative && num < 0) {
+            return false;
+        }
+        parser.consumeString();
+        String* str = parser.parsedString();
+        if (str->equals("%")) {
+            return false;
+        } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
+            pair->setLengthValue(CSSLength(str, num));
+            return parser.isEnd();
+        }
+        return false;
+    }
+
     static bool parseLengthOrPercent(const char* token, bool allowNegative,
                                      CSSStyleValuePair* pair)
     {

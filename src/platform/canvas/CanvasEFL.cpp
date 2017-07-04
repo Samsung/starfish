@@ -217,14 +217,15 @@ public:
         if (m_objList) {
             m_objList->push_back(eo);
         }
-        int r = clr.r(), g = clr.g(), b = clr.b();
-
-        evas_color_argb_premul(clr.a(), &r, &g, &b);
-        evas_object_color_set(eo, r, g, b, clr.a());
+        save();
+        setColor(clr);
+        Unit::Color c = computedAlphaColor();
+        evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, 0, 0);
         evas_object_resize(eo, m_width, m_height);
         applyClippers(eo);
         evas_object_show(eo);
+        restore();
     }
 
     // state
@@ -574,28 +575,27 @@ public:
 
     virtual void setColor(const Unit::Color& clr_)
     {
-        Unit::Color clr = clr_;
-        int r = clr.r(), g = clr.g(), b = clr.b();
-        evas_color_argb_premul(clr.a(), &r, &g, &b);
-        clr.m_a = clr_.m_a;
+        lastState().m_color = clr_;
+    }
+
+    Unit::Color computedAlphaColor()
+    {
+        int r = lastState().m_color.r();
+        int g = lastState().m_color.g();
+        int b = lastState().m_color.b();
+        int a = lastState().m_color.a() * lastState().m_opacity;
+        evas_color_argb_premul(a, &r, &g, &b);
+        Unit::Color clr;
+        clr.m_a = a;
         clr.m_r = r;
         clr.m_g = g;
         clr.m_b = b;
-        lastState().m_color = clr;
+        return clr;
     }
 
     virtual void setVisible(bool visible)
     {
         lastState().m_visible = visible;
-    }
-
-    virtual Unit::Color color()
-    {
-        int r = lastState().m_color.r(), g = lastState().m_color.g(),
-            b = lastState().m_color.b();
-        evas_color_argb_unpremul(lastState().m_color.a(), &r, &g, &b);
-        Unit::Color clr(r, g, b, lastState().m_color.a());
-        return clr;
     }
 
     virtual void setFont(Font* font)
@@ -630,9 +630,8 @@ public:
         if (m_objList) {
             m_objList->push_back(eo);
         }
-        evas_object_color_set(eo, lastState().m_color.r(),
-                              lastState().m_color.g(), lastState().m_color.b(),
-                              lastState().m_color.a());
+        Unit::Color c = computedAlphaColor();
+        evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
         if (!isHole) {
@@ -794,32 +793,14 @@ public:
         if (m_objList) {
             m_objList->push_back(eo);
         }
-        evas_object_color_set(eo, lastState().m_color.r(),
-                              lastState().m_color.g(), lastState().m_color.b(),
-                              lastState().m_color.a());
+
+        auto clr = computedAlphaColor();
+        evas_object_color_set(eo, clr.r(), clr.g(), clr.b(), clr.a());
 
         evas_object_polygon_point_add(eo, p1.x().floor(), p1.y().floor());
         evas_object_polygon_point_add(eo, p2.x().floor(), p2.y().floor());
         evas_object_polygon_point_add(eo, p3.x().floor(), p3.y().floor());
         evas_object_polygon_point_add(eo, p4.x().floor(), p4.y().floor());
-
-        if (lastState().m_opacity != 1) {
-            Evas_Map* map = evas_map_new(4);
-
-            evas_map_util_points_populate_from_object(map, eo);
-            evas_map_alpha_set(map, EINA_TRUE);
-
-            int c = lastState().m_opacity * 255;
-            evas_map_point_color_set(map, 0, c, c, c, c);
-            evas_map_point_color_set(map, 1, c, c, c, c);
-            evas_map_point_color_set(map, 2, c, c, c, c);
-            evas_map_point_color_set(map, 3, c, c, c, c);
-
-            evas_object_map_set(eo, map);
-            evas_object_map_enable_set(eo, EINA_TRUE);
-            evas_map_free(map);
-        }
-
         evas_object_show(eo);
     }
 
@@ -941,9 +922,8 @@ public:
             float ptSize = siz;
             evas_object_text_font_set(
                 eo, lastState().m_font->familyName()->utf8Data(), ptSize);
-            evas_object_color_set(
-                eo, lastState().m_color.r(), lastState().m_color.g(),
-                lastState().m_color.b(), lastState().m_color.a());
+            Unit::Color c = computedAlphaColor();
+            evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
             UTF8StringDataNonGCStd us = sv.originalString()->toUTF8NonGCString(
                 sv.start(), sv.end(), true);
             evas_object_text_text_set(eo, us.c_str());

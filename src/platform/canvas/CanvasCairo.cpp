@@ -448,11 +448,6 @@ public:
         lastState().m_visible = visible;
     }
 
-    virtual Unit::Color color()
-    {
-        return lastState().m_color;
-    }
-
     virtual void setFont(Font* font)
     {
         lastState().m_font = font;

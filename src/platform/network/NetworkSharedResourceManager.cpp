@@ -37,7 +37,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 void initSSLLocks(void)
 {
-    gcry_control(GCRYCTL_SET_THREAD_CBS);
+    gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 }
 
 #define removeSSLLocks() // Do nohting

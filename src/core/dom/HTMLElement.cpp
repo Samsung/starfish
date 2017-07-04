@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Text.h"
+#include "core/dom/HTMLBRElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -122,6 +123,30 @@ Element* HTMLElement::offsetParent()
 {
     Frame* frameObject = frame();
     return frameObject ? frameObject->offsetParent() : nullptr;
+}
+
+String* HTMLElement::innerText()
+{
+    // TODO
+    // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    auto v = textContent();
+    return v.hasValue() ? v.getValue() : String::emptyString;
+}
+
+void HTMLElement::setInnerText(String* text)
+{
+    while (firstChild()) {
+        removeChild(firstChild());
+    }
+
+    GCVector<StringView> v = StringUtils::tokenize(text, "\r\n", 2);
+    for (size_t i = 0; i < v.size(); i++) {
+        appendChild(new Text(document(), new StringView(v[i])));
+        if (i + 1 < v.size()) {
+            appendChild(new HTMLBRElement(document()));
+        }
+    }
 }
 
 String* HTMLElement::dir()

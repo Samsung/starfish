@@ -72,7 +72,6 @@ public:
     virtual void clip(const Unit::Rect& rt) = 0;
 
     virtual void setColor(const Unit::Color& clr) = 0;
-    virtual Unit::Color color() = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
