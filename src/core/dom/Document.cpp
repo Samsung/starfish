@@ -758,6 +758,7 @@ DEFINE_EVENT_LISTENER(Document, loadstart);
 DEFINE_EVENT_LISTENER(Document, mousedown);
 DEFINE_EVENT_LISTENER(Document, mousemove);
 DEFINE_EVENT_LISTENER(Document, mouseover);
+DEFINE_EVENT_LISTENER(Document, mouseout);
 DEFINE_EVENT_LISTENER(Document, mouseup);
 DEFINE_EVENT_LISTENER(Document, pause);
 DEFINE_EVENT_LISTENER(Document, play);

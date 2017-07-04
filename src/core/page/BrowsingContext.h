@@ -157,14 +157,14 @@ public:
                             MouseData& data);
     void dispatchKeyEvent(String* key, PlatformWindow::KeyEventKind kind);
 
-    void setActiveNode(Node* n);
+    bool setActiveNode(Node* n);
     void releaseActiveNode();
+
+    bool setHoveredNode(Node* n);
+    void releaseHoveredNode();
 
     void setFocusedNode(Node* n);
     void releaseFocusedNode();
-
-    void setHoveredNode(Node* n);
-    void releaseHoveredNode();
 
     void paintWindowBackground(Canvas* canvas);
 
@@ -209,8 +209,13 @@ private:
 
     Unit::Location m_touchDownPoint;
 
-    GCVector<Node*> m_activeNodes;
-    GCVector<Node*> m_hoveredNodes;
+    GCUnorderedSet<Node*> m_activeNodeSet;
+    Node* m_activeNodeTarget;
+    size_t m_documentVersionWhenComputingActiveNodeSet;
+
+    GCUnorderedSet<Node*> m_hoveredNodeSet;
+    Node* m_hoveredNodeTarget;
+    size_t m_documentVersionWhenComputingHoveredNodeSet;
 
     int m_ctrlKeyDown;
     int m_shiftKeyDown;
