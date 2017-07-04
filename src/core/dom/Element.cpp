@@ -35,6 +35,7 @@
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -283,22 +284,20 @@ uint32_t Element::clientHeight()
     return (float)clientRect().height() + .5f;
 }
 
-void Element::getClientQuads(std::vector<DOMQuad>& quads)
+void Element::getClientQuads(GCVector<DOMQuad*>& quads)
 {
     Frame* frameObject = this->frame();
     if (!frameObject) {
         return;
     }
-    // todo : support SVG model
+    // TODO : support SVG model
     // there is Getting bounding rectangle from the SVG model in the spec, but
     // SVG model is not supported
 
-    // initial version : implement for display:block
     if (frameObject->isFrameBox() &&
         frameObject->style()->display() == DisplayValue::BlockDisplayValue) {
-        LayoutRect rect =
-            ((FrameBox*)frameObject)
-                ->absoluteRect((FrameBox*)document()->rootElement()->frame());
+        LayoutRect rect = frameObject->asFrameBox()->absoluteRect(
+            document()->frame()->asFrameBox());
 
         DOMQuad* q = new DOMQuad(
             document(), DOMPointInit(rect.location().x(), rect.location().y()),
@@ -309,44 +308,77 @@ void Element::getClientQuads(std::vector<DOMQuad>& quads)
             DOMPointInit(rect.location().x(),
                          rect.location().y() + rect.size().height()));
 
-        quads.push_back(*q);
+        quads.push_back(q);
     } else {
-        // todo assert
-        STARFISH_LOG_ERROR("%s %d\n : implement not yet", __FUNCTION__,
-                           __LINE__);
-        STARFISH_ASSERT(false);
+        if (frameObject->isFrameInline()) {
+            Frame* nearestFrameBox = frameObject->parent();
+            while (!nearestFrameBox->isFrameBox()) {
+                nearestFrameBox = nearestFrameBox->parent();
+            }
+
+            if (nearestFrameBox) {
+                FrameBox* box = nearestFrameBox->asFrameBox();
+                box->iterateChildFrameBox([&](FrameBox* childBox) {
+                    if (childBox->isInlineNonReplacedBox()) {
+                        if (childBox->asInlineNonReplacedBox()
+                                ->origin()
+                                ->node() == this) {
+                            LayoutRect rect = childBox->absoluteRect(
+                                document()->frame()->asFrameBox());
+
+                            DOMQuad* q = new DOMQuad(
+                                document(), DOMPointInit(rect.location().x(),
+                                                         rect.location().y()),
+                                DOMPointInit(rect.location().x() +
+                                                 rect.size().width(),
+                                             rect.location().y()),
+                                DOMPointInit(
+                                    rect.location().x() + rect.size().width(),
+                                    rect.location().y() + rect.size().height()),
+                                DOMPointInit(rect.location().x(),
+                                             rect.location().y() +
+                                                 rect.size().height()));
+
+                            quads.push_back(q);
+                        }
+                    }
+                });
+            }
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
     }
     return;
 }
 
 DOMRectList* Element::getClientRects()
 {
-    std::vector<DOMQuad> quads;
+    GCVector<DOMQuad*> quads;
     getClientQuads(quads);
 
     if (quads.empty()) {
         return DOMRectList::create(document());
     }
 
-    // todo : Apply the transforms
+    // TODO : Apply the transforms
     return DOMRectList::create(document(), quads);
 }
 
 DOMRect* Element::getBoundingClientRect()
 {
-    std::vector<DOMQuad> quads;
+    GCVector<DOMQuad*> quads;
     getClientQuads(quads);
     if (quads.empty()) {
         return new DOMRect(document());
     }
 
-    DOMRect* rect = quads[0].getBounds();
+    DOMRect* rect = quads[0]->getBounds();
 
     for (size_t i = 1; i < quads.size(); ++i) {
-        rect->unite(quads[i].getBounds());
+        rect->unite(quads[i]->getBounds());
     }
 
-    // todo : Apply the transforms
+    // TODO : Apply the transforms
     return rect;
 }
 

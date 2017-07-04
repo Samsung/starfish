@@ -24,8 +24,8 @@ interface Window : EventTarget {
   [Unimplemented] void close();
   [Unimplemented] readonly attribute boolean closed;
   [Unimplemented] void stop();
-  [Unimplemented] void focus();
-  [Unimplemented] void blur();
+  void focus();
+  void blur();
 
   // other browsing contexts
   [Unimplemented, Replaceable] readonly attribute WindowProxy frames;

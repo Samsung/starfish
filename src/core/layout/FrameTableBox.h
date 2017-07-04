@@ -153,6 +153,16 @@ public:
 
     bool isCellWidthAuto(unsigned i);
 
+    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    {
+        fn(this);
+        Frame* box = firstChild();
+        while (box) {
+            box->asFrameBox()->iterateChildFrameBox(fn);
+            box = box->next();
+        }
+    }
+
 private:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);

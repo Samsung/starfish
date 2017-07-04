@@ -386,6 +386,12 @@ public:
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage)
     {
+        if (style()->overflow() != OverflowValue::VisibleOverflow) {
+            if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
+                return nullptr;
+            }
+        }
+
         Frame* child = lastChild();
         Frame* result = nullptr;
         while (child) {
@@ -460,6 +466,16 @@ public:
     size_t inlineBoxIndex()
     {
         return m_inlineBoxIndex;
+    }
+
+    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    {
+        fn(this);
+        Frame* box = firstChild();
+        while (box) {
+            box->asFrameBox()->iterateChildFrameBox(fn);
+            box = box->next();
+        }
     }
 
 protected:

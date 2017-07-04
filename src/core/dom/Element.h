@@ -301,7 +301,7 @@ protected:
     // this function is only for client{Left, Top, Width, Top}
     LayoutRect clientRect();
 
-    void getClientQuads(std::vector<DOMQuad>& quads);
+    void getClientQuads(GCVector<DOMQuad*>& quads);
 
     // DO NOT MODIFY ATTRIBUTES.
     const GCVector<Attribute>* getAttributes()
