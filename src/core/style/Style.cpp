@@ -1691,6 +1691,29 @@ String* CSSStyleValuePair::toString() const
         }
     case CSSStyleValuePair::ValueKind::Time:
         return timeValue().toString();
+    case CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind:
+        switch (transitionTimingFunctionValue()) {
+        case TransitionTimingFunctionEaseValue:
+            return String::fromUTF8("ease");
+        case TransitionTimingFunctionLinearValue:
+            return String::fromUTF8("linear");
+        case TransitionTimingFunctionEaseInValue:
+            return String::fromUTF8("ease-in");
+        case TransitionTimingFunctionEaseOutValue:
+            return String::fromUTF8("ease-out");
+        case TransitionTimingFunctionEaseInOutValue:
+            return String::fromUTF8("ease-in-out");
+        case TransitionTimingFunctionStepStartValue:
+            return String::fromUTF8("step-start");
+        case TransitionTimingFunctionStepEndValue:
+            return String::fromUTF8("step-end");
+        case TransitionTimingFunctionStepsValue:
+            return String::fromUTF8("steps");
+        case TransitionTimingFunctionCubicBezierValue:
+            return String::fromUTF8("cubic-bezier");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

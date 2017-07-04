@@ -444,6 +444,12 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
         }
     }
 
+    if (owner()->style()->overflow() != OverflowValue::VisibleOverflow) {
+        if (owner()->FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
+            return nullptr;
+        }
+    }
+
     Frame* result = nullptr;
     // the child stacking contexts with positive stack levels (least positive
     // first).

@@ -21,8 +21,10 @@
 #include "StarFish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Text.h"
+#include "core/dom/Document.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -107,14 +109,52 @@ LayoutRect HTMLElement::offsetRect()
 {
     window()->browsingContext()->webView()->layoutIfNeeds();
     if (frame()) {
-        if (frame()->isFrameBox()) {
-            FrameBox* box = frame()->asFrameBox();
+        Frame* frameObject = frame();
+        if (frameObject->isFrameBox()) {
+            FrameBox* box = frameObject->asFrameBox();
             return LayoutRect(box->marginLeft(), box->marginTop(),
                               box->contentWidth() + box->paddingWidth() +
                                   box->borderWidth(),
                               box->contentHeight() + box->paddingHeight() +
                                   box->borderHeight());
+        } else {
+            if (frameObject->isFrameInline()) {
+                Frame* nearestFrameBox = frameObject->parent();
+                while (!nearestFrameBox->isFrameBox()) {
+                    nearestFrameBox = nearestFrameBox->parent();
+                }
+
+                if (nearestFrameBox) {
+                    Node* offsetParentNode = frameObject->offsetParent();
+                    FrameBox* offsetParent;
+                    if (!offsetParent) {
+                        offsetParent = document()->frame()->asFrameBox();
+                    } else if (offsetParentNode->frame()->isFrameBox()) {
+                        offsetParent = offsetParentNode->frame()->asFrameBox();
+                    } else {
+                        offsetParent = document()->frame()->asFrameBox();
+                    }
+                    FrameBox* box = nearestFrameBox->asFrameBox();
+                    LayoutRect result(0, 0, 0, 0);
+                    box->iterateChildFrameBox([&](FrameBox* childBox) {
+                        if (childBox->isInlineNonReplacedBox()) {
+                            if (childBox->asInlineNonReplacedBox()
+                                    ->origin()
+                                    ->node() == this) {
+                                LayoutRect rect =
+                                    childBox->absoluteRect(offsetParent);
+
+                                result.unite(rect);
+                            }
+                        }
+                    });
+                    return result;
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
         }
+    } else {
     }
     return LayoutRect(0, 0, 0, 0);
 }

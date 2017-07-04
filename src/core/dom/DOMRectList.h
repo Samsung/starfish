@@ -31,7 +31,7 @@ public:
     }
 
     static DOMRectList* create(Document* document,
-                               const std::vector<DOMQuad>& quads)
+                               const GCVector<DOMQuad*>& quads)
     {
         return new DOMRectList(document, quads);
     }
@@ -49,7 +49,7 @@ public:
 
 private:
     DOMRectList(Document* document);
-    explicit DOMRectList(Document* document, const std::vector<DOMQuad>&);
+    explicit DOMRectList(Document* document, const GCVector<DOMQuad*>&);
     ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<DOMRect*> m_list;
 };

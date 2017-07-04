@@ -180,6 +180,16 @@ void Window::resize(uint32_t w, uint32_t h)
     }
 }
 
+void Window::focus()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+void Window::blur()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
 float Window::devicePixelRatio()
 {
     return screen()->devicePixelRatio();

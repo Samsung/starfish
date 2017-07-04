@@ -146,6 +146,16 @@ public:
         return Frame::style(parent, parent->style(), m_isFirstLine);
     }
 
+    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    {
+        fn(this);
+        Frame* box = firstChild();
+        while (box) {
+            box->asFrameBox()->iterateChildFrameBox(fn);
+            box = box->next();
+        }
+    }
+
 protected:
     TextRun m_textRun;
     bool m_isFirstLine;
@@ -245,6 +255,14 @@ public:
 
     void setLeftMBPs();
     void setRightMBPs();
+
+    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    {
+        fn(this);
+        for (size_t i = 0; i < m_boxes.size(); i++) {
+            m_boxes[i]->iterateChildFrameBox(fn);
+        }
+    }
 
 protected:
     LayoutUnit m_ascender;
@@ -728,6 +746,22 @@ public:
     GCVector<LineBox*>& lineBoxes()
     {
         return m_lineBoxes;
+    }
+
+    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    {
+        fn(this);
+        if (hasBlockFlow()) {
+            Frame* box = firstChild();
+            while (box) {
+                box->asFrameBox()->iterateChildFrameBox(fn);
+                box = box->next();
+            }
+        } else {
+            for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+                m_lineBoxes[i]->iterateChildFrameBox(fn);
+            }
+        }
     }
 
 protected:

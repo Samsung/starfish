@@ -139,8 +139,6 @@ public:
 
     MediaQueryList* matchMedia(String* query);
 
-    // The viewport width and height are same as the window size for wearable
-    // widget.
     int32_t innerWidth();
     int32_t innerHeight();
 
@@ -162,6 +160,9 @@ public:
     }
 
     void resize(uint32_t w, uint32_t h);
+
+    void focus();
+    void blur();
 
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object

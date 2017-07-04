@@ -28,13 +28,13 @@ DOMRectList::DOMRectList(Document* document)
 {
 }
 
-DOMRectList::DOMRectList(Document* document, const std::vector<DOMQuad>& quads)
+DOMRectList::DOMRectList(Document* document, const GCVector<DOMQuad*>& quads)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {
-        m_list.push_back(quads[i].getBounds());
+        m_list.push_back(quads[i]->getBounds());
     }
 }
 
