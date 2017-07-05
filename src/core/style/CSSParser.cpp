@@ -1246,6 +1246,8 @@ CSSSelector* CSSParser::getAttributeSelector()
         return nullptr;
     }
 
+    CSSSelector::AttributeMatchType flag = getAttributeFlags();
+
     token = getToken(true, false);
     getToken(false, false);
 
@@ -1255,8 +1257,8 @@ CSSSelector* CSSParser::getAttributeSelector()
 
     return new CSSAttributeSelector(
         type, attrQualifiedName,
-        getStringWithoutQuotationMarks(*attributeValue->value()),
-        getAttributeFlags(), CSSSelector::RelationType::SubSelector);
+        getStringWithoutQuotationMarks(*attributeValue->value()), flag,
+        CSSSelector::RelationType::SubSelector);
 }
 
 CSSSelector* CSSParser::getClassSelector()
