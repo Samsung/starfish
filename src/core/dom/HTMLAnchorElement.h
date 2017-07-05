@@ -47,6 +47,9 @@ public:
     {
         return Element::tabIndex();
     }
+
+    String* href();
+    void setHref(String* href);
 };
 }
 

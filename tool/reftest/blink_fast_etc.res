@@ -268,3 +268,7 @@ test/reftest/vendor/blink_original/fast/block/float/avoid-floats-with-negative-m
 #test/reftest/vendor/blink_original/fast/block/float/overlapping-floats-paint-hittest-order-2.html
 test/reftest/vendor/blink_original/fast/block/float/trailing-float.html
 test/reftest/vendor/blink_original/fast/block/float/trailing-float-with-content.html
+#DOMAPI
+test/reftest/vendor/blink/fast/block/float/add-inlines-in-block-children-block.html
+test/reftest/vendor/blink/fast/dynamic/002.html
+test/reftest/vendor/blink/fast/dynamic/005.html

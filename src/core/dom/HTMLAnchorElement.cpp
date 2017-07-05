@@ -59,4 +59,21 @@ bool HTMLAnchorElement::supportsFocus()
     auto href = starFish()->staticStrings()->m_href;
     return hasAttribute(href) != SIZE_MAX ? true : false;
 }
+
+String* HTMLAnchorElement::href()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->urlString()))
+            ->urlString();
+    }
+    return String::emptyString;
+}
+
+void HTMLAnchorElement::setHref(String* href)
+{
+    setAttribute(starFish()->staticStrings()->m_href, href);
+}
 }

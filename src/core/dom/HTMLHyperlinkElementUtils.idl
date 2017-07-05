@@ -1,0 +1,17 @@
+// https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements
+
+[PartialInterface,
+ NoInterfaceObject]
+interface HTMLHyperlinkElementUtils {
+  [CEReactions] attribute USVString href;
+  [Unimplemented] readonly attribute USVString origin;
+  [Unimplemented, CEReactions] attribute USVString protocol;
+  [Unimplemented, CEReactions] attribute USVString username;
+  [Unimplemented, CEReactions] attribute USVString password;
+  [Unimplemented, CEReactions] attribute USVString host;
+  [Unimplemented, CEReactions] attribute USVString hostname;
+  [Unimplemented, CEReactions] attribute USVString port;
+  [Unimplemented, CEReactions] attribute USVString pathname;
+  [Unimplemented, CEReactions] attribute USVString search;
+  [Unimplemented, CEReactions] attribute USVString hash;
+};
