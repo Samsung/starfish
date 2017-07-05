@@ -37,7 +37,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
                 String::createASCIIString("image/*"));
         } else {
             // The current implementation has no difference between
-            // text resource and default resouce.
+            // text resource and default resource.
             m_resourceRequest->setRequestHeader(
                 String::createASCIIString("Accept"),
                 String::createASCIIString("text/html,text/plain,text/*"));
