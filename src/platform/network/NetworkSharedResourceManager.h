@@ -56,6 +56,7 @@ private:
     CURLSH* m_curlShareHandle;
     std::string m_cookieJarFileName;
     Mutex* m_cookieMutex;
+    Mutex* m_sslMutex;
     Mutex* m_dnsMutex;
     Mutex* m_shareMutex;
     bool m_storeCookieFile;
