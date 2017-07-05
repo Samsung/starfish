@@ -35,6 +35,8 @@ Default values are written in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Dbackend=[ **efl** | dali ]<br>
   Use either efl or dali as the backend graphics library
+* -Dssl_backend=[ **gnutls** | openssl ]<br>
+  Use either gnutls or openssl as the backend ssl library (It must be the same one using in libcurl.)
 
 The following build options are supported when running ninja script.
 
