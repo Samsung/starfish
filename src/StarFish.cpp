@@ -33,6 +33,7 @@
 #include "core/modules/canvas/image/ImageData.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
+#include "core/util/LineBreakerIteratorPool.h"
 #include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -172,7 +173,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
                    float defaultFontSizeMultiplier, ScreenInfo& info)
     : m_locale(icu::Locale::createFromName(locale))
-    , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
     , m_console(new Console(this))
@@ -260,14 +260,15 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_nativeHandle = platformHandle;
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
-
+#ifndef STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE
+#define STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE 4
+#endif
+    m_lineBreakIteratorPool =
+        new LineBreakIteratorPool(STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE);
     String* s = String::emptyString;
     AtomicString emptyAtom(s);
     m_atomicStringMap.insert(s);
     m_staticStrings = new StaticStrings(this);
-    UErrorCode code = U_ZERO_ERROR;
-    m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
-    STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     m_messageLoop = new MessageLoop(this);
     m_timer = new Timer(this);
 #ifndef STARFISH_THREAD_POOL_SIZE
@@ -289,7 +290,6 @@ StarFish::~StarFish()
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
-    delete m_lineBreaker;
     delete m_platformWindow;
     NetworkSharedResourceManager::close();
 }

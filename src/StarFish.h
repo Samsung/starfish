@@ -27,6 +27,7 @@ class Timer;
 class Window;
 class PlatformWindow;
 class ImageData;
+class LineBreakIteratorPool;
 class ThreadPool;
 class Console;
 class Inspector;
@@ -113,9 +114,9 @@ public:
         return m_locale;
     }
 
-    icu::BreakIterator* lineBreaker()
+    LineBreakIteratorPool* lineBreakIteratorPool()
     {
-        return m_lineBreaker;
+        return m_lineBreakIteratorPool;
     }
 
     String* timezoneID()
@@ -173,7 +174,7 @@ protected:
     }
     StaticStrings* m_staticStrings;
     icu::Locale m_locale;
-    icu::BreakIterator* m_lineBreaker;
+    LineBreakIteratorPool* m_lineBreakIteratorPool;
     String* m_timezoneID;
     unsigned int m_startUpFlag;
     float m_defaultFontSizeMultiplier;

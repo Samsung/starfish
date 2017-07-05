@@ -26,6 +26,7 @@
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/util/LineBreakerIteratorPool.h"
 
 namespace StarFish {
 
@@ -507,6 +508,16 @@ static bool startsWithNewlineChar(const StringView& sv)
     return String::isNewline(sv.originalString()->charAt(sv.start()));
 }
 
+static bool isHyphen(char32_t d)
+{
+    return d == 0x2010 || d == '-';
+}
+
+static bool isSoftHyphen(char32_t d)
+{
+    return d == 0x00AD;
+}
+
 static bool isNumberChar(char32_t d)
 {
     if (('0' <= d && d <= '9') ||
@@ -549,54 +560,6 @@ static bool isWord(FrameBox* box)
     }
 
     return false;
-}
-
-// FIXME
-static bool isWholeWordBoundary(StarFish* sf, String* str)
-{
-    char32_t boundaries[] = { 0x00AD, 0x2010, '-', '?' };
-    char32_t c = str->charAt(str->length() - 1);
-
-    size_t len = sizeof(boundaries) / sizeof(char32_t);
-
-    for (size_t i = 0; i < len; i++) {
-        if (c == boundaries[i]) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-static bool isLastWordBreakable(LineFormattingContext* ctx)
-{
-    if (!ctx->isWordProcessing()) {
-        return false;
-    }
-
-    auto& boxes = ctx->m_word.boxes();
-    auto iter = boxes.rbegin();
-
-    while (iter != boxes.rend()) {
-        FrameBox* box = *iter;
-
-        if (box->isInlineTextBox()) {
-            String* str =
-                box->asInlineTextBox()->textRun().m_stringView.substring();
-            return isWholeWordBoundary(ctx->m_layoutContext.starFish(), str);
-        }
-
-        iter++;
-    }
-
-    return false;
-}
-
-static bool isLastWordBreakable(StarFish* sf, TextToken& token)
-{
-    String* str = token.m_frameText->text()->substring(
-        token.m_start, token.m_end - token.m_start);
-    return isWholeWordBoundary(sf, str);
 }
 
 static bool hasIsolateBidiContent(InlineNonReplacedBox* box)
@@ -1692,10 +1655,7 @@ void LineFormattingContext::insertPendingInlineBoxes()
             // TODO: consider if continuous box can form a word, these
             // should be on the same line
             if (box->style()->position() == AbsolutePositionValue) {
-                if (box->style()->originalDisplay() != BlockDisplayValue) {
-                    m_currentLayoutParent->insertInlineBox(box);
-                }
-                m_currentLayoutParent->markAbsolutePositionedBoxLayoutParent();
+                handleAbsoluteBox(box, true, false);
             } else {
                 if (!dontBreakLine(box, box->boxWidth())) {
                     break;
@@ -1722,6 +1682,7 @@ void LineFormattingContext::resetLineBox()
             m_pendingFloatingBoxes.size();
     }
     m_isPendingBreakLine = false;
+    m_isHyphenAtLast = false;
     m_isWhiteSpaceAtLast = true;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
 }
@@ -1949,13 +1910,48 @@ bool LineFormattingContext::dontBreakLine(Frame* f, LayoutUnit width)
            !f->shouldWrapLines() || canInsertToLineBox(f, width);
 }
 
+void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)
+{
+    // It can behave different depending on the language.
+    // Please refer to http://unicode.org/reports/tr14/#SoftHyphen
+    InlineTextBox* itb = nullptr;
+    if (isWordProcessing()) {
+        itb = (*m_word.boxes().begin())->asInlineTextBox();
+    } else {
+        itb = (*m_currentLayoutParent->boxes().rbegin())->asInlineTextBox();
+    }
+    const StringView& sv = itb->textRun().m_stringView;
+    size_t start = sv.start();
+    size_t end = sv.end();
+    if (!isSoftHyphen(sv.originalString()->charAt(end - 1))) {
+        return;
+    }
+    StringBuilder builder;
+    builder.appendSubString(sv.originalString(), start, end - 1);
+    if (hyphenateOnLine) {
+        builder.appendChar((char32_t)0x2010);
+    }
+    String* newStr = builder.finalize();
+    itb->setText(newStr);
+    LayoutUnit width = itb->width();
+    itb->setWidth(itb->style()->font()->measureText(
+        itb->asInlineTextBox()->textRun().m_stringView));
+    itb->setHeight(itb->style()->font()->metrics().m_fontHeight);
+    m_currentLineWidth += itb->width() - width;
+    m_isHyphenAtLast = false;
+}
+
 void LineFormattingContext::insertWord(Frame* next)
 {
     if (!isWordProcessing()) {
+        m_isHyphenAtLast = false;
         return;
     }
 
     if (dontBreakLine(m_word.boxes()[0], m_word.width())) {
+        if (m_isHyphenAtLast) {
+            handleSoftHyphenate(false);
+        }
         auto& boxes = m_word.boxes();
         auto iter = boxes.begin();
         m_currentLayoutParent =
@@ -1992,13 +1988,9 @@ void LineFormattingContext::insertWord(Frame* next)
                     m_currentLayoutParent = currentLine();
                     break;
                 } else {
-                    InlineBoxLayoutParentBox* newLayoutParent =
+                    m_currentLayoutParent =
                         m_currentLayoutParent->layoutParent()
-                            ->asInlineBoxLayoutParentBox();
-                    newLayoutParent->setWidth(
-                        newLayoutParent->width() +
-                        m_currentLayoutParent->boxWidth());
-                    m_currentLayoutParent = newLayoutParent;
+                            ->asInlineNonReplacedBox();
                 }
             }
 
@@ -2014,13 +2006,7 @@ void LineFormattingContext::insertWord(Frame* next)
                 m_currentLayoutParent = box->asInlineBoxLayoutParentBox();
             } else {
                 if (box->style()->position() == AbsolutePositionValue) {
-                    registerAbsolutePositionedBox(box);
-
-                    if (box->style()->originalDisplay() != BlockDisplayValue) {
-                        m_currentLayoutParent->insertInlineBox(box);
-                    }
-                    m_currentLayoutParent
-                        ->markAbsolutePositionedBoxLayoutParent();
+                    handleAbsoluteBox(box, true, true);
                 } else {
                     insertInlineBox(box);
                     markInlineBoxIndex(box);
@@ -2031,12 +2017,18 @@ void LineFormattingContext::insertWord(Frame* next)
         }
 
         m_word.clear();
+        m_isHyphenAtLast = false;
     } else {
         if (isFirstLineBox() && m_block->node() &&
             m_block->node()->asElement()->hasPseudoElement(
                 StyleResolver::PseudoElementFirstLine)) {
             m_word.unmarkFirstLine();
         }
+
+        if (m_isHyphenAtLast) {
+            handleSoftHyphenate(true);
+        }
+
         auto& boxes = m_word.boxes();
         m_currentLayoutParent =
             boxes[0]->layoutParent()->asInlineBoxLayoutParentBox();
@@ -2062,9 +2054,7 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
 
 void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
 {
-    bool w = isWord(box);
-
-    if (w) {
+    if (isWord(box)) {
         m_word.concat(box);
         return;
     }
@@ -2236,164 +2226,135 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
     }
 }
 
+void LineFormattingContext::handleAbsoluteBox(FrameBox* box, bool canInsert,
+                                              bool canRegister)
+{
+    if (canInsert) {
+        if (canRegister) {
+            registerAbsolutePositionedBox(box);
+        }
+
+        if (box->style()->originalDisplay() != BlockDisplayValue) {
+            m_currentLayoutParent->insertInlineBox(box);
+        }
+
+        m_currentLayoutParent->markAbsolutePositionedBoxLayoutParent();
+    } else {
+        box->setLayoutParent(m_currentLayoutParent);
+        m_word.concat(box);
+    }
+}
+
 void LineFormattingContext::handleTextToken(TextToken& token)
 {
     if (m_isPendingBreakLine) {
         breakLine(nullptr);
     }
 
-    if (token.m_type != WordType::General || isLastWordBreakable(this)) {
+    if (token.m_type != WordType::General) {
         insertWord(token.m_frameText);
     }
 
-    if (token.m_type != WordType::ForcedNewline && token.isWhiteSpace() &&
-        !token.m_frameText->shouldPreserveWhiteSpaces()) {
-        // Ignore first White space
-        if (m_currentLineWidth == 0) {
-            return;
-        }
-
-        // White space collapsing
-        if (isWhiteSpaceAtLast()) {
-            return;
-        }
+    if (token.m_type == WordType::CollapsibleWhiteSpace &&
+        !token.m_frameText->shouldPreserveWhiteSpaces() &&
+        isWhiteSpaceAtLast()) {
+        return;
     }
 
     generateInlineTextBox(token);
-}
 
-void LineFormattingContext::tokenizeText(StarFish* sf, FrameText* f)
-{
-    // TODO : Consider direction
-    String* txt = f->text();
-    size_t len = txt->length();
+    // Consider direction for hyphen
+    char32_t c = token.m_frameText->text()->charAt(token.m_end - 1);
+    bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
 
-    bool collapseSpace = !f->shouldPreserveWhiteSpaces();
-    bool collapseNewline = f->shouldIgnoreNewlineChar();
-
-    unsigned offset = 0;
-    bool isFirstLine = true;
-    while (offset < len) {
-        isFirstLine = LineFormattingContext::isFirstLineBox();
-        if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
-            TextToken token = TextToken(f, offset, offset + 1,
-                                        WordType::ForcedNewline, isFirstLine);
-            handleTextToken(token);
-            offset++;
-            continue;
-        }
-        bool isWhiteSpace = false;
-        if (isSeparator(txt->charAt(offset))) {
-            isWhiteSpace = true;
-        }
-
-        // find next space
-        unsigned nextOffset = offset + 1;
-        if (isWhiteSpace) {
-            while (nextOffset < txt->length() &&
-                   isSeparator((*txt)[nextOffset])) {
-                if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
-                    break;
-                }
-                nextOffset++;
-            }
-
-            // Mostly white-spaces in text are collapsed.
-            // But the text in <pre> or depending on CSS white-space property,
-            // user agent should preserve white-spaces in text.
-            WordType type = WordType::CollapsibleWhiteSpace;
-            if (!collapseSpace) {
-                type = WordType::NonCollapsibleWhiteSpace;
-            }
-            TextToken token =
-                TextToken(f, offset, nextOffset, type, isFirstLine);
-            handleTextToken(token);
-        } else {
-            size_t start = offset;
-            while (nextOffset < txt->length() &&
-                   !isSeparator((*txt)[nextOffset])) {
-                nextOffset++;
-            }
-
-            auto breaker = sf->lineBreaker();
-            breaker->setText(txt->toUnicodeString(start, nextOffset));
-            int32_t c, prev = 0;
-            size_t txtLen = txt->length();
-            while (((c = breaker->next()) != icu::BreakIterator::DONE) &&
-                   (c + start <= txtLen)) {
-                TextToken token = TextToken(f, prev + start, c + start,
-                                            WordType::General, isFirstLine);
-                handleTextToken(token);
-                prev = c;
-            }
-        }
-        offset = nextOffset;
+    if (isHyphenAtLast) {
+        insertWord(token.m_frameText);
+        m_isHyphenAtLast = isHyphenAtLast;
     }
 }
 
-void PreferredWidthContext::tokenizeText(StarFish* sf, FrameText* f)
+static void nextToken(std::vector<int32_t>::iterator& iter, int32_t& cur,
+                      int32_t next)
+{
+    if (next == *iter) {
+        iter++;
+    }
+    cur = next;
+}
+
+template <typename Context>
+static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
 {
     // TODO : Consider direction
     String* txt = f->text();
-    size_t len = txt->length();
 
     bool collapseSpace = !f->shouldPreserveWhiteSpaces();
     bool collapseNewline = f->shouldIgnoreNewlineChar();
 
-    unsigned offset = 0;
-    while (offset < len) {
-        if (!collapseNewline && String::isNewline(txt->charAt(offset))) {
-            TextToken token =
-                TextToken(f, offset, offset + 1, WordType::ForcedNewline);
-            offset++;
-            handleTextToken(token);
-            continue;
-        }
-        bool isWhiteSpace = false;
-        if (isSeparator(txt->charAt(offset))) {
-            isWhiteSpace = true;
-        }
+    auto breaker = sf->lineBreakIteratorPool()->get(
+        icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
+    std::vector<int32_t> locs;
 
-        // find next space
-        unsigned nextOffset = offset + 1;
-        if (isWhiteSpace) {
-            while (nextOffset < txt->length() &&
-                   isSeparator((*txt)[nextOffset])) {
-                if (!collapseNewline && String::isNewline((*txt)[nextOffset])) {
-                    break;
-                }
-                nextOffset++;
-            }
+    breaker->setText(txt->toUnicodeString());
 
-            // Mostly white-spaces in text are collaped.
+    int32_t cur = 0;
+    int32_t next = 0;
+
+    while ((next = breaker->next()) != icu::BreakIterator::DONE) {
+        locs.push_back(next);
+    }
+
+    cur = 0;
+    next = 0;
+
+    auto iter = locs.begin();
+    WordType type = WordType::CollapsibleWhiteSpace;
+
+    while (iter != locs.end()) {
+        next = *iter;
+
+        if (!collapseNewline && String::isNewline(txt->charAt(cur))) {
+            type = WordType::ForcedNewline;
+        } else if (isSeparator(txt->charAt(cur))) {
+            // Mostly white-spaces in text are collapsed.
             // But the text in <pre> or depending on CSS white-space property,
             // user agent should preserve white-spaces in text.
-            WordType type = WordType::CollapsibleWhiteSpace;
-            if (!collapseSpace) {
-                type = WordType::NonCollapsibleWhiteSpace;
-            }
-            TextToken token = TextToken(f, offset, nextOffset, type);
-            handleTextToken(token);
-        } else {
-            size_t start = offset;
-            while (nextOffset < txt->length() &&
-                   !isSeparator((*txt)[nextOffset])) {
-                nextOffset++;
+
+            int32_t offset = cur + 1;
+
+            while (offset < next && isSeparator(txt->charAt(offset))) {
+                if (!collapseNewline &&
+                    String::isNewline(txt->charAt(offset))) {
+                    break;
+                }
+                offset++;
             }
 
-            auto breaker = sf->lineBreaker();
-            breaker->setText(txt->toUnicodeString(start, nextOffset));
-            int32_t c, prev = 0;
-            size_t txtLen = txt->length();
-            while (((c = breaker->next()) != icu::BreakIterator::DONE) &&
-                   (c + start <= txtLen)) {
-                TextToken token =
-                    TextToken(f, prev + start, c + start, WordType::General);
-                handleTextToken(token);
-                prev = c;
+            next = offset;
+
+            if (collapseSpace) {
+                if (type == WordType::CollapsibleWhiteSpace && cur != 0) {
+                    nextToken(iter, cur, next);
+                    continue;
+                }
+                type = WordType::CollapsibleWhiteSpace;
+            } else {
+                type = WordType::NonCollapsibleWhiteSpace;
             }
+        } else {
+            int32_t offset = cur + 1;
+
+            while (offset < next && !isSeparator(txt->charAt(offset))) {
+                offset++;
+            }
+
+            next = offset;
+            type = WordType::General;
         }
-        offset = nextOffset;
+
+        TextToken token = TextToken(f, cur, next, type, ctx.isFirstLineBox());
+        ctx.handleTextToken(token);
+        nextToken(iter, cur, next);
     }
 }
 
@@ -2401,7 +2362,7 @@ void FrameText::layoutInline(LineFormattingContext& ctx)
 {
     // split the text into tokens using the ICU divider, and for each
     // token, execute the following function
-    ctx.tokenizeText(ctx.m_layoutContext.starFish(), this);
+    tokenizeText(ctx.m_layoutContext.starFish(), this, ctx);
 }
 
 void FrameReplaced::layoutInline(LineFormattingContext& ctx)
@@ -2480,6 +2441,12 @@ void FrameLineBreak::layoutInline(LineFormattingContext& ctx)
 
 void FrameInline::layoutInline(LineFormattingContext& ctx)
 {
+    // There are different policies between browsers. In chrome, soft hyphen
+    // isn't visible when FrameInline comes next, not in fire-fox, though.
+    // Here we follow the policy of chrome.
+    if (ctx.m_isHyphenAtLast) {
+        ctx.handleSoftHyphenate(false);
+    }
     InlineNonReplacedBox* inlineBox =
         new InlineNonReplacedBox(this, ctx.isFirstLineBox());
 
@@ -2501,13 +2468,8 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
             ctx.m_currentLayoutParent->layoutParent()->asLineBox();
     } else {
         inlineBox->layoutInline(ctx);
-        InlineNonReplacedBox* newLayoutParent =
+        ctx.m_currentLayoutParent =
             ctx.m_currentLayoutParent->layoutParent()->asInlineNonReplacedBox();
-        if (!ctx.isWordProcessing()) {
-            newLayoutParent->setWidth(newLayoutParent->width() +
-                                      ctx.m_currentLayoutParent->boxWidth());
-        }
-        ctx.m_currentLayoutParent = newLayoutParent;
     }
 }
 
@@ -2523,18 +2485,7 @@ void LineFormattingContext::layoutInline(Frame* origin)
                 breakLine(nullptr);
             }
 
-            if (m_word.isEmpty()) {
-                registerAbsolutePositionedBox(f->asFrameBox());
-
-                if (f->style()->originalDisplay() != BlockDisplayValue) {
-                    m_currentLayoutParent->insertInlineBox(f->asFrameBox());
-                }
-
-                m_currentLayoutParent->markAbsolutePositionedBoxLayoutParent();
-            } else {
-                f->setLayoutParent(m_currentLayoutParent);
-                m_word.concat(f->asFrameBox());
-            }
+            handleAbsoluteBox(f->asFrameBox(), m_word.isEmpty(), true);
         } else {
             f->layoutInline(*this);
         }
@@ -2886,10 +2837,14 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
     if (isLastNode) {
         self->processStartingMBP(this);
         self->processEndingMBP(this);
+        if (m_isHyphenAtLast) {
+            handleSoftHyphenate(false);
+        }
     }
 
     InlineNonReplacedBox* current = self;
-    InlineNonReplacedBox* last = nullptr;
+    InlineBoxLayoutParentBox* parent =
+        current->layoutParent()->asInlineBoxLayoutParentBox();
     while (current) {
         LayoutUnit w = current->width();
         if (current->isProcessedStartingMBP()) {
@@ -2908,14 +2863,11 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
             }
         }
         current->setWidth(std::max(LayoutUnit(0), w));
-        if (last) {
-            current->setWidth(current->width() + last->boxWidth());
-        }
-        last = current;
+        parent->setWidth(parent->width() + current->width());
 
         computeVerticalProperties(current, br);
 
-        if (current->layoutParent()->isLineBox()) {
+        if (parent->isLineBox()) {
             break;
         }
 
@@ -2923,7 +2875,8 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
             break;
         }
 
-        current = current->layoutParent()->asInlineNonReplacedBox();
+        current = parent->asInlineNonReplacedBox();
+        parent = current->layoutParent()->asInlineBoxLayoutParentBox();
     }
 
     if (hasIsolateBidiContent(self)) {
@@ -3098,7 +3051,12 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
         breakLine(true);
     }
 
+    if (token.m_type != WordType::General) {
+        updateCurrentLineWidthByWordWidth();
+    }
+
     if (token.m_type == WordType::CollapsibleWhiteSpace &&
+        !token.m_frameText->shouldPreserveWhiteSpaces() &&
         isWhiteSpaceAtLast()) {
         return;
     }
@@ -3111,17 +3069,8 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
         w += m_unprocessedStartingMBPWidth;
     }
 
-    if (token.m_type != WordType::General || m_isLastWordBreakable) {
-        updateCurrentLineWidthByWordWidth();
-    }
-
     setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace, w);
     updateCurrentLineWidth(token.m_frameText, w, token.m_type);
-
-    if (token.m_type == WordType::General) {
-        m_isLastWordBreakable =
-            isLastWordBreakable(m_layoutContext.starFish(), token);
-    }
 }
 
 void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
@@ -3261,7 +3210,7 @@ bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)
 
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    ctx.tokenizeText(ctx.layoutContext().starFish(), this);
+    tokenizeText(ctx.layoutContext().starFish(), this, ctx);
 }
 
 void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)

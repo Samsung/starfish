@@ -63,6 +63,7 @@
 #include <unicode/uchar.h>
 #include <unicode/ucnv.h>
 #include <unicode/ucsdet.h>
+#include <unicode/rbbi.h>
 
 #include <pthread.h>
 #include <semaphore.h>

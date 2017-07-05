@@ -948,7 +948,9 @@ public:
         return !m_word.isEmpty();
     }
 
+    void handleAbsoluteBox(FrameBox* box, bool canInsert, bool canRegister);
     void handleTextToken(TextToken& token);
+    void handleSoftHyphenate(bool hyphenateOnLine);
 
     bool isWhiteSpaceAtLast()
     {
@@ -974,8 +976,6 @@ public:
 
     void computeDirection(Frame* parent, DirectionValue direction);
 
-    void tokenizeText(StarFish* sf, FrameText* f);
-
     LayoutUnit m_leftBoundary;
     LayoutUnit m_rightBoundary;
     LayoutLocation m_absPosition;
@@ -990,6 +990,7 @@ public:
     InlineBoxLayoutParentBox* m_currentLayoutParent;
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;
+    bool m_isHyphenAtLast;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
