@@ -74,6 +74,7 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
+        m_isMouseLbuttonDown = false;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -153,6 +154,7 @@ public:
     IdlerData* m_renderingIdlerData;
 
     float m_lastMouseX, m_lastMouseY;
+    bool m_isMouseLbuttonDown;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -308,11 +310,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_BUTTON_DOWN,
         [](void* data, int type, void* event) -> Eina_Bool {
-            PlatformWindow* sf = (PlatformWindow*)data;
+            WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->starFish());
-            MouseData mdata(d->x, d->y);
-            sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+            // We care just left button now
+            if (d->buttons == 1) {
+                StarFishEnterer enter(sf->starFish());
+                MouseData mdata(MouseData::MouseButtonValue::LeftButton,
+                                MouseData::MouseButtonsValue::LeftButtonDown,
+                                d->x, d->y);
+                sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+                sf->m_isMouseLbuttonDown = true;
+            }
             return EINA_TRUE;
         },
         wnd);
@@ -320,11 +328,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_desktopMouseUpEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_BUTTON_UP,
         [](void* data, int type, void* event) -> Eina_Bool {
-            PlatformWindow* sf = (PlatformWindow*)data;
+            WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            StarFishEnterer enter(sf->starFish());
-            MouseData mdata(d->x, d->y);
-            sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+            // We care just left button now
+            if (d->buttons == 1) {
+                StarFishEnterer enter(sf->starFish());
+                MouseData mdata(MouseData::MouseButtonValue::NoButton,
+                                MouseData::MouseButtonsValue::NoButtonDown,
+                                d->x, d->y);
+                sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+                sf->m_isMouseLbuttonDown = false;
+            }
             return EINA_TRUE;
         },
         wnd);
@@ -332,10 +346,14 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_MOVE,
         [](void* data, int type, void* event) -> Eina_Bool {
-            PlatformWindow* sf = (PlatformWindow*)data;
+            WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
             StarFishEnterer enter(sf->m_starFish);
-            MouseData mdata(d->x, d->y);
+            unsigned char buttons =
+                sf->m_isMouseLbuttonDown
+                    ? MouseData::MouseButtonsValue::LeftButtonDown
+                    : 0;
+            MouseData mdata(0, buttons, d->x, d->y);
             sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
             return EINA_TRUE;
         },

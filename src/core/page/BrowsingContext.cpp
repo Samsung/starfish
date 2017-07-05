@@ -652,7 +652,9 @@ void BrowsingContext::handleActiveAndFocus(PlatformWindow::MouseEventKind kind,
 }
 
 void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
-                                  Node* targetNode, double posX, double posY)
+                                  Node* targetNode, unsigned char button,
+                                  unsigned char buttons, double posX,
+                                  double posY)
 {
     if (kind != PlatformWindow::MouseEventMove) {
         return;
@@ -665,13 +667,13 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
             if (oldTarget) {
                 String* name =
                     starFish()->staticStrings()->m_mouseout.localName();
-                MouseData data(posX, posY);
+                MouseData data(button, buttons, posX, posY);
                 Event* e = createMouseEvent(document(), name, data);
                 Node* t = oldTarget->nearestParentElement();
                 document()->window()->dispatchEvent(t ? t : document(), e);
             }
             String* name = starFish()->staticStrings()->m_mouseover.localName();
-            MouseData data(posX, posY);
+            MouseData data(button, buttons, posX, posY);
             Event* e = createMouseEvent(document(), name, data);
             Node* t = newTarget->nearestParentElement();
             document()->window()->dispatchEvent(t ? t : document(), e);
@@ -761,7 +763,9 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
             name = starFish()->staticStrings()->m_click.localName();
-            MouseData clickData(targetX, targetY);
+            MouseData clickData(MouseData::MouseButtonValue::LeftButton,
+                                MouseData::MouseButtonsValue::LeftButtonDown,
+                                targetX, targetY);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEvent(t, click);
 
@@ -804,12 +808,13 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
 
     // Handle event inside iframe
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
-        MouseData newData(newX, newY);
+        MouseData newData(data.button(), data.buttons(), newX, newY);
         targetNode->asHTMLIFrameElement()
             ->browsingContext()
             ->dispatchMouseEvent(kind, newData);
         handleActiveAndFocus(kind, targetNode, targetX, targetY);
-        handleHover(kind, targetNode, targetX, targetY);
+        handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
+                    targetY);
         return;
     }
     // Dispatch events
@@ -855,7 +860,8 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     }
     // Handle properties
     handleActiveAndFocus(kind, targetNode, targetX, targetY);
-    handleHover(kind, targetNode, targetX, targetY);
+    handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
+                targetY);
 }
 
 void BrowsingContext::dispatchKeyEvent(String* key,

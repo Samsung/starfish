@@ -27,18 +27,37 @@ class MouseData {
     friend MouseEvent;
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
+    enum MouseButtonValue {
+        NoButton = 0,
+        LeftButton = 0,
+        MiddleButton = 1,
+        RightButton = 2
+    };
+
+    enum MouseButtonsValue {
+        NoButtonDown = 0,
+        LeftButtonDown = 1,
+        RightButtonDown = 1 << 1,
+        MiddleButtonDown = 1 << 2,
+    };
+
     MouseData()
-        : MouseData(0, 0)
+        : MouseData(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
+                    0, 0)
     {
     }
 
-    MouseData(double clientX, double clientY)
-        : MouseData(clientX, clientY, clientX, clientY)
+    MouseData(unsigned char button, unsigned char buttons, double clientX,
+              double clientY)
+        : MouseData(button, buttons, clientX, clientY, clientX, clientY)
     {
     }
 
-    MouseData(double clientX, double clientY, double screenX, double screenY)
-        : m_clientX(clientX)
+    MouseData(unsigned char button, unsigned char buttons, double clientX,
+              double clientY, double screenX, double screenY)
+        : m_button(button)
+        , m_buttons(buttons)
+        , m_clientX(clientX)
         , m_clientY(clientY)
         , m_screenX(screenX)
         , m_screenY(screenY)
@@ -85,7 +104,30 @@ public:
         m_screenY = screenY;
     }
 
+    unsigned char button() const
+    {
+        return m_button;
+    }
+
+    void setButton(unsigned char button)
+    {
+        m_button = button;
+    }
+
+    unsigned char buttons() const
+    {
+        return m_buttons;
+    }
+
+    void setButtons(unsigned char buttons)
+    {
+        m_buttons = buttons;
+    }
+
 protected:
+    unsigned char m_button;
+    unsigned char m_buttons;
+
     double m_clientX;
     double m_clientY;
     double m_screenX;
@@ -130,19 +172,9 @@ public:
         return m_mouseData.m_clientX;
     }
 
-    void setClientX(double clientX)
-    {
-        m_mouseData.m_clientX = clientX;
-    }
-
     double clientY() const
     {
         return m_mouseData.m_clientY;
-    }
-
-    void setClientY(double clientY)
-    {
-        m_mouseData.m_clientY = clientY;
     }
 
     double screenX() const
@@ -150,19 +182,19 @@ public:
         return m_mouseData.m_screenX;
     }
 
-    void setScreenX(double screenX)
-    {
-        m_mouseData.m_screenX = screenX;
-    }
-
     double screenY() const
     {
         return m_mouseData.m_screenY;
     }
 
-    void setScreenY(double screenY)
+    short button() const
     {
-        m_mouseData.m_screenY = screenY;
+        return m_mouseData.button();
+    }
+
+    unsigned short buttons() const
+    {
+        return m_mouseData.buttons();
     }
 
     virtual void init(ScriptBindingInstance* instance,

@@ -23,8 +23,8 @@ interface MouseEvent : UIEvent {
   [Unimplemented] readonly attribute boolean altKey;
   [Unimplemented] readonly attribute boolean metaKey;
 
-  [Unimplemented] readonly attribute short button;
-  [Unimplemented] readonly attribute unsigned short buttons;
+  readonly attribute short button;
+  readonly attribute unsigned short buttons;
 
   [Unimplemented] readonly attribute EventTarget? relatedTarget;
 

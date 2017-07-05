@@ -149,7 +149,8 @@ public:
     void handleActiveAndFocus(PlatformWindow::MouseEventKind kind,
                               Node* targetNode, double posX, double posY);
     void handleHover(PlatformWindow::MouseEventKind kind, Node* targetNode,
-                     double posX, double posY);
+                     unsigned char button, unsigned char buttons, double posX,
+                     double posY);
 
     void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                             TouchData* touches, size_t touchCount);
