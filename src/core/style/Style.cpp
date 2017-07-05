@@ -31,9 +31,12 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
+#include "core/style/MediaQueryResult.h"
+#include "core/style/MediaValues.h"
 #include "core/style/NamedColors.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
@@ -4837,6 +4840,30 @@ const MediaQueryEvaluator& StyleResolver::mediaQueryEvaluator()
             String::fromUTF8("screen"), new MediaValues(document()->frame()));
     }
     return *m_mediaQueryEvaluator;
+}
+
+bool StyleResolver::mediaQueryAffectedByViewportChange()
+{
+    auto evaluator = mediaQueryEvaluator();
+    auto results = viewportDependentMediaQueryResults();
+    for (size_t i = 0; i < results.size(); i++) {
+        if (evaluator.eval(results[i]->expression()) != results[i]->result()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool StyleResolver::mediaQueryAffectedByDeviceChange()
+{
+    auto evaluator = mediaQueryEvaluator();
+    auto results = deviceDependentMediaQueryResults();
+    for (size_t i = 0; i < results.size(); i++) {
+        if (evaluator.eval(results[i]->expression()) != results[i]->result()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueUnitColor(const CSSTokenValue& token)

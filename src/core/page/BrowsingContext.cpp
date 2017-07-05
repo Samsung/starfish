@@ -164,6 +164,15 @@ bool BrowsingContext::layoutIfNeeds()
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
             document()->styleResolver().removeAllRules();
 
+            auto viewportDependentResult =
+                &document()
+                     ->styleResolver()
+                     .viewportDependentMediaQueryResults();
+            auto deviceDependentResult =
+                &document()->styleResolver().deviceDependentMediaQueryResults();
+            viewportDependentResult->clear();
+            deviceDependentResult->clear();
+
             size_t sheets = document()->styleResolver().sheets().size();
             for (size_t i = 1; i < sheets; i++) {
                 CSSStyleSheet* authorSheet =
@@ -175,15 +184,18 @@ bool BrowsingContext::layoutIfNeeds()
                     document()->styleResolver().mediaQueryEvaluator();
                 if (authorSheet->mediaQuerySet() &&
                     !authorSheet->matchesMediaQueries(
-                        evaluator, authorSheet->mediaQuerySet())) {
+                        evaluator, authorSheet->mediaQuerySet(),
+                        viewportDependentResult, deviceDependentResult)) {
                     continue;
                 }
 
                 authorSheet->clearStyleRules();
                 authorSheet->collectRulesFromImportedSheet(
-                    authorSheet->importRules());
-                authorSheet->collectStyleRules(authorSheet->childRules(),
-                                               authorSheet->url());
+                    authorSheet->importRules(), viewportDependentResult,
+                    deviceDependentResult);
+                authorSheet->collectStyleRules(
+                    authorSheet->childRules(), authorSheet->url(),
+                    viewportDependentResult, deviceDependentResult);
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {

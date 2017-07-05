@@ -2823,6 +2823,34 @@ MediaQueryExp* MediaQueryExp::createIfValid(
     return new MediaQueryExp(lowerMediaFeature, expValue);
 }
 
+bool MediaQueryExp::isViewportDependent() const
+{
+    return m_mediaFeature->equals(widthMediaFeature) ||
+           m_mediaFeature->equals(minWidthMediaFeature) ||
+           m_mediaFeature->equals(maxWidthMediaFeature) ||
+           m_mediaFeature->equals(heightMediaFeature) ||
+           m_mediaFeature->equals(minHeightMediaFeature) ||
+           m_mediaFeature->equals(maxHeightMediaFeature) ||
+           m_mediaFeature->equals(orientationMediaFeature) ||
+           m_mediaFeature->equals(aspectRatioMediaFeature) ||
+           m_mediaFeature->equals(minAspectRatioMediaFeature) ||
+           m_mediaFeature->equals(maxAspectRatioMediaFeature) ||
+           m_mediaFeature->equals(resolutionMediaFeature);
+}
+
+bool MediaQueryExp::isDeviceDependent() const
+{
+    return m_mediaFeature->equals(deviceWidthMediaFeature) ||
+           m_mediaFeature->equals(minDeviceWidthMediaFeature) ||
+           m_mediaFeature->equals(maxDeviceWidthMediaFeature) ||
+           m_mediaFeature->equals(deviceHeightMediaFeature) ||
+           m_mediaFeature->equals(minDeviceHeightMediaFeature) ||
+           m_mediaFeature->equals(maxDeviceHeightMediaFeature) ||
+           m_mediaFeature->equals(deviceAspectRatioMediaFeature) ||
+           m_mediaFeature->equals(minDeviceAspectRatioMediaFeature) ||
+           m_mediaFeature->equals(maxDeviceAspectRatioMediaFeature);
+}
+
 String* MediaQueryExp::serialize() const
 {
     StringBuilder result;

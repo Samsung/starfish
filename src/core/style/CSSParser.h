@@ -19,6 +19,7 @@
 
 #include "binding/DocumentHoldable.h"
 #include "core/style/Style.h"
+#include "core/style/MediaQuery.h"
 #include "core/style/MediaQuerySet.h"
 #include "core/util/RefPtr.h"
 #include "core/util/GatherableString.h"

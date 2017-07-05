@@ -22,11 +22,10 @@
 #ifndef __StarFishMediaQuerySet__
 #define __StarFishMediaQuerySet__
 
-#include "MediaQuery.h"
-
 namespace StarFish {
 
 class Document;
+class MediaQuery;
 class MediaQuerySet : public gc {
 public:
     static MediaQuerySet* create(Document* document)

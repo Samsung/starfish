@@ -14,36 +14,34 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishMediaValues__
-#define __StarFishMediaValues__
+#ifndef __StarFishMediaQueryResult__
+#define __StarFishMediaQueryResult__
 
 namespace StarFish {
 
-class Frame;
-class MediaValues : public gc {
+class MediaQueryResult : public gc {
 public:
-    MediaValues(Frame* frame)
-        : m_frame(frame)
+    MediaQueryResult(MediaQueryExp* expression, bool result)
+        : m_expression(expression)
+        , m_result(result)
     {
     }
 
-    bool computeLength(double value, UnitType type, double& result);
-    bool computeLength(double value, UnitType type, float defaultFontSize,
-                       double viewportWidth, double viewportHeight,
-                       double& reslt);
+    MediaQueryExp* expression() const
+    {
+        return m_expression;
+    }
 
-    int32_t viewportWidth() const;
-    int32_t viewportHeight() const;
-    int32_t screenWidth() const;
-    int32_t screenHeight() const;
-    float devicePixelRatio() const;
-    int32_t colorBitsPerComponent() const;
-    bool isMonochrome() const;
+    bool result() const
+    {
+        return m_result;
+    }
 
 private:
-    Frame* m_frame;
+    MediaQueryExp* m_expression;
+    bool m_result;
 };
 
 } /* namespace StarFish */
 
-#endif /* __StarFishMediaValues__ */
+#endif /* __StarFishMediaQueryResult__ */

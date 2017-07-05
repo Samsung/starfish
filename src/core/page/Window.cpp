@@ -178,6 +178,9 @@ void Window::resize(uint32_t w, uint32_t h)
         m_height = h;
         browsingContext()->setNeedsLayout();
     }
+    if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
+        browsingContext()->setWholeDocumentNeedsStyleRecalc();
+    }
 }
 
 void Window::focus()
