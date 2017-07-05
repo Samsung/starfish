@@ -263,6 +263,7 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     : m_curlShareHandle(nullptr)
     , m_cookieJarFileName("/tmp/StarFish_Cookies.txt") // Temporary name
     , m_cookieMutex(new (NoGC) Mutex())
+    , m_sslMutex(new (NoGC) Mutex())
     , m_dnsMutex(new (NoGC) Mutex())
     , m_shareMutex(new (NoGC) Mutex())
     , m_storeCookieFile(false)
@@ -274,6 +275,8 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE,
                       CURL_LOCK_DATA_COOKIE);
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
+    curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE,
+                      CURL_LOCK_DATA_SSL_SESSION);
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_LOCKFUNC, curlLockCallback);
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_UNLOCKFUNC,
                       curlUnlockCallback);
@@ -288,6 +291,7 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
     removeSSLLocks();
 
     delete m_cookieMutex;
+    delete m_sslMutex;
     delete m_dnsMutex;
     delete m_shareMutex;
 }
@@ -330,6 +334,8 @@ Mutex* NetworkSharedResourceManager::resourceMutex(curl_lock_data data)
     switch (data) {
     case CURL_LOCK_DATA_COOKIE:
         return m_cookieMutex;
+    case CURL_LOCK_DATA_SSL_SESSION:
+        return m_sslMutex;
     case CURL_LOCK_DATA_DNS:
         return m_dnsMutex;
     case CURL_LOCK_DATA_SHARE:
