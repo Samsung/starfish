@@ -18,19 +18,20 @@
 #define __StarFishCSSStyleSheet__
 
 #include "core/style/StyleSheet.h"
+#include "core/style/MediaQueryEvaluator.h"
+
 namespace StarFish {
 
 class CSSImportRule;
 class CSSRule;
 class CSSRuleList;
-class StyleRuleBase;
-class StyleRule;
-class StyleRuleImport;
-
 class MediaList;
 class MediaQueryEvaluator;
 class MediaQuerySet;
 class Node;
+class StyleRule;
+class StyleRuleBase;
+class StyleRuleImport;
 class URL;
 
 class CSSStyleSheet : public StyleSheet {
@@ -87,9 +88,17 @@ public:
     CSSStyleSheet* parentStyleSheet() const;
     void sortStyleRulesBySpecificity();
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
-                             MediaQuerySet* mediaQueres);
-    void collectRulesFromImportedSheet(GCVector<StyleRuleImport*>& rules);
-    void collectStyleRules(GCVector<StyleRuleBase*>& rules, ResourceURL* url);
+                             MediaQuerySet* mediaQueres,
+                             MediaQueryResultList* viewportDependentResult,
+                             MediaQueryResultList* deviceDependentResult);
+    void collectRulesFromImportedSheet(
+        GCVector<StyleRuleImport*>& rules,
+        MediaQueryResultList* viewportDependentResult,
+        MediaQueryResultList* deviceDependentResult);
+    void collectStyleRules(
+        GCVector<StyleRuleBase*>& rules, ResourceURL* url,
+        MediaQueryResultList* viewportDependentResult = nullptr,
+        MediaQueryResultList* deviceDependentResult = nullptr);
 
     /* DOM APIs */
     String* type() const override

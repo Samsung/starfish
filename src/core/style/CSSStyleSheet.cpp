@@ -186,18 +186,23 @@ void CSSStyleSheet::sortStyleRulesBySpecificity()
                      compareSpecificity);
 }
 
-bool CSSStyleSheet::matchesMediaQueries(const MediaQueryEvaluator& evaluator,
-                                        MediaQuerySet* mediaQueries)
+bool CSSStyleSheet::matchesMediaQueries(
+    const MediaQueryEvaluator& evaluator, MediaQuerySet* mediaQueries,
+    MediaQueryResultList* viewportDependentResult,
+    MediaQueryResultList* deviceDependentResult)
 {
     if (!mediaQueries) {
         return true;
     }
 
-    return evaluator.eval(mediaQueries);
+    return evaluator.eval(mediaQueries, viewportDependentResult,
+                          deviceDependentResult);
 }
 
 void CSSStyleSheet::collectRulesFromImportedSheet(
-    GCVector<StyleRuleImport*>& rules)
+    GCVector<StyleRuleImport*>& rules,
+    MediaQueryResultList* viewportDependentResult,
+    MediaQueryResultList* deviceDependentResult)
 {
     for (unsigned i = 0; i < rules.size(); i++) {
         if (rules[i]->isLoading()) {
@@ -205,23 +210,29 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
         }
         if (matchesMediaQueries(
                 origin()->document()->styleResolver().mediaQueryEvaluator(),
-                rules[i]->mediaQuerySet())) {
+                rules[i]->mediaQuerySet(), viewportDependentResult,
+                deviceDependentResult)) {
             if (rules[i]->styleSheet()->importRules().size() > 0) {
                 collectRulesFromImportedSheet(
-                    rules[i]->styleSheet()->importRules());
+                    rules[i]->styleSheet()->importRules(),
+                    viewportDependentResult, deviceDependentResult);
             }
             if (rules[i]->styleSheet()->childRules().size() > 0) {
                 ResourceURL* url = new ResourceURL(
                     rules[i]->href(),
                     rules[i]->parentStyleSheet()->url()->urlString());
-                collectStyleRules(rules[i]->styleSheet()->childRules(), url);
+                collectStyleRules(rules[i]->styleSheet()->childRules(), url,
+                                  viewportDependentResult,
+                                  deviceDependentResult);
             }
         }
     }
 }
 
-void CSSStyleSheet::collectStyleRules(GCVector<StyleRuleBase*>& rules,
-                                      ResourceURL* url)
+void CSSStyleSheet::collectStyleRules(
+    GCVector<StyleRuleBase*>& rules, ResourceURL* url,
+    MediaQueryResultList* viewportDependentResult,
+    MediaQueryResultList* deviceDependentResult)
 {
     auto iter = rules.begin();
     while (iter != rules.end()) {
@@ -232,8 +243,12 @@ void CSSStyleSheet::collectStyleRules(GCVector<StyleRuleBase*>& rules,
             auto resolver = origin()->document()->styleResolver();
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
-            if (matchesMediaQueries(evaluator, media->mediaQuerySet())) {
-                collectStyleRules(media->childRules(), url);
+            if (matchesMediaQueries(evaluator, media->mediaQuerySet(),
+                                    viewportDependentResult,
+                                    deviceDependentResult)) {
+                collectStyleRules(media->childRules(), url,
+                                  viewportDependentResult,
+                                  deviceDependentResult);
             }
         }
         iter++;

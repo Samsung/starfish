@@ -15,14 +15,14 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/style/MediaValues.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
+#include "core/page/Screen.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/MediaValues.h"
 #include "core/style/UnitHelper.h"
-#include "core/page/Screen.h"
 
 namespace StarFish {
 

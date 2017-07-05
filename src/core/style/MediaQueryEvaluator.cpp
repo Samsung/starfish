@@ -15,8 +15,11 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/style/MediaQueryEvaluator.h"
 #include "core/layout/LayoutUtil.h"
+#include "core/style/CSSParser.h"
+#include "core/style/MediaQueryEvaluator.h"
+#include "core/style/MediaQueryResult.h"
+#include "core/style/MediaValues.h"
 #include "core/style/UnitHelper.h"
 
 namespace StarFish {
@@ -38,7 +41,9 @@ static bool applyRestrictor(MediaQuery::RestrictorType type, bool value)
     return type == MediaQuery::Not ? !value : value;
 }
 
-bool MediaQueryEvaluator::eval(MediaQuerySet* mediaQueries) const
+bool MediaQueryEvaluator::eval(
+    MediaQuerySet* mediaQueries, MediaQueryResultList* viewportDependentResult,
+    MediaQueryResultList* deviceDependentResult) const
 {
     auto queries = mediaQueries->queryVector();
     if (!queries.size()) {
@@ -49,7 +54,7 @@ bool MediaQueryEvaluator::eval(MediaQuerySet* mediaQueries) const
     // Iterate over queries, stop if any of them eval to true.
     auto iter = queries.begin();
     while (iter != queries.end()) {
-        if (eval(*iter)) {
+        if (eval(*iter, viewportDependentResult, deviceDependentResult)) {
             return true;
         }
         iter++;
@@ -58,7 +63,9 @@ bool MediaQueryEvaluator::eval(MediaQuerySet* mediaQueries) const
     return false;
 }
 
-bool MediaQueryEvaluator::eval(MediaQuery* query) const
+bool MediaQueryEvaluator::eval(
+    MediaQuery* query, MediaQueryResultList* viewportDependentResult,
+    MediaQueryResultList* deviceDependentResult) const
 {
     if (!mediaTypeMatch(query->mediaType())) {
         return applyRestrictor(query->restrictor(), false);
@@ -67,7 +74,16 @@ bool MediaQueryEvaluator::eval(MediaQuery* query) const
     auto expressions = query->expressions();
     size_t i = 0;
     for (; i < expressions.size(); ++i) {
-        if (!eval(expressions[i])) {
+        bool result = eval(expressions[i]);
+        if (viewportDependentResult && expressions[i]->isViewportDependent()) {
+            viewportDependentResult->push_back(
+                new MediaQueryResult(expressions[i], result));
+        }
+        if (deviceDependentResult && expressions[i]->isDeviceDependent()) {
+            deviceDependentResult->push_back(
+                new MediaQueryResult(expressions[i], result));
+        }
+        if (!result) {
             break;
         }
     }
@@ -494,7 +510,7 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return gridMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
         STARFISH_LOG_INFO("unsupported media feature: %s\n",
-                          exp->mediaFeature()->utf8Data());
+                          exp->mediaFeature()->toUTF8NonGCString().data());
         return false;
     }
 }

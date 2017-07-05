@@ -17,8 +17,6 @@
 #ifndef __StarFishMediaValues__
 #define __StarFishMediaValues__
 
-#include "core/style/Style.h"
-
 namespace StarFish {
 
 class Frame;

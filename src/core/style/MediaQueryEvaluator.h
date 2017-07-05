@@ -17,10 +17,15 @@
 #ifndef __StarFishMediaQueryEvaluator__
 #define __StarFishMediaQueryEvaluator__
 
-#include "core/style/CSSParser.h"
-#include "core/style/MediaValues.h"
-
 namespace StarFish {
+
+class MediaQuery;
+class MediaQueryExp;
+class MediaQuerySet;
+class MediaQueryResult;
+class MediaValues;
+
+using MediaQueryResultList = GCVector<MediaQueryResult*>;
 
 class MediaQueryEvaluator : public gc {
 public:
@@ -38,8 +43,11 @@ public:
 
     bool mediaTypeMatch(String* mediaType) const;
 
-    bool eval(MediaQuerySet* mediaQueries) const;
-    bool eval(MediaQuery* query) const;
+    bool eval(MediaQuerySet* mediaQueries,
+              MediaQueryResultList* viewportDependentResult = nullptr,
+              MediaQueryResultList* deviceDependentResult = nullptr) const;
+    bool eval(MediaQuery* query, MediaQueryResultList* viewportDependentResult,
+              MediaQueryResultList* deviceDependentResult) const;
     bool eval(MediaQueryExp*) const;
 
 private:

@@ -46,7 +46,6 @@
 
 namespace StarFish {
 
-class String;
 class MediaQueryExp;
 class MediaQuery : public gc {
 public:

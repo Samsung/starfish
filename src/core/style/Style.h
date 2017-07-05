@@ -19,6 +19,7 @@
 
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
+#include "core/style/MediaQueryEvaluator.h"
 #include "core/util/VectorWithInlineStorage.h"
 
 namespace StarFish {
@@ -1901,6 +1902,19 @@ public:
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
 
+    MediaQueryResultList& viewportDependentMediaQueryResults()
+    {
+        return m_viewportDependentMediaQueryResults;
+    }
+
+    MediaQueryResultList& deviceDependentMediaQueryResults()
+    {
+        return m_deviceDependentMediaQueryResults;
+    }
+
+    bool mediaQueryAffectedByViewportChange();
+    bool mediaQueryAffectedByDeviceChange();
+
 protected:
     void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
                ResourceURL* origin, ComputedStyle* style,
@@ -1934,6 +1948,8 @@ protected:
     CSSStyleSheet* m_styleSheetWithAllRules;
     bool m_usesFirstLineRule;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
+    MediaQueryResultList m_viewportDependentMediaQueryResults;
+    MediaQueryResultList m_deviceDependentMediaQueryResults;
 };
 }
 

@@ -23,9 +23,10 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/style/MediaList.h"
+#include "core/style/MediaQuery.h"
 #include "core/style/MediaQuerySet.h"
-#include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
