@@ -212,7 +212,7 @@ test/reftest/vendor/webkit/fast/text/container-align-with-inlines.html
 test/reftest/vendor/webkit/fast/text/dilation-save-restore.html
 test/reftest/vendor/webkit/fast/text/international/harfbuzz-buffer-overrun.html
 test/reftest/vendor/webkit/fast/text/international/rtl-mark.html
-test/reftest/vendor/webkit/fast/text/line-break-between-text-nodes.html
+#test/reftest/vendor/webkit/fast/text/line-break-between-text-nodes.html
 test/reftest/vendor/webkit/fast/text/simple-line-layout-multiple-renderers-non-breaking-space.html
 test/reftest/vendor/webkit/fast/text/simple-lines-multiple-renderers.html
 test/reftest/vendor/webkit/fast/text/simple-lines-range-low-line-height.html

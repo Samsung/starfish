@@ -1877,7 +1877,7 @@ public:
         m_styleSheetWithAllRules = nullptr;
     }
 
-    bool usesFirstLineRule()
+    bool usesFirstLineRule() const
     {
         return m_usesFirstLineRule;
     }

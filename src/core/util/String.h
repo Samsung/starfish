@@ -266,6 +266,7 @@ public:
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
     static String* fromUTF16(const char16_t* src, size_t len);
+    static String* createASCIIString(const char c);
     static String* createASCIIString(const char* src);
     static String* createASCIIStringWithNoGC(const char* src);
     static String* createUTF32String(const UTF32String& src);
@@ -389,6 +390,8 @@ public:
     String* toLower();
     String* replaceAll(String* from, String* to);
 
+    String* concat(const char32_t c);
+    String* concat(const char c);
     String* concat(const char* str);
     String* concat(String* str);
     void split(char delim, GCVector<String*>& tokens);

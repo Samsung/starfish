@@ -401,7 +401,6 @@ public:
         , m_remainedWidth(lastKnownWidth)
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
-        , m_isLastWordBreakable(false)
         , m_isPendingWrapLine(false)
     {
     }
@@ -479,6 +478,11 @@ public:
         return m_isPendingWrapLine;
     }
 
+    bool isFirstLineBox() const
+    {
+        return false;
+    }
+
     void breakLine(bool wrapped)
     {
         finishLine(wrapped);
@@ -490,7 +494,8 @@ public:
     void finishLine(bool wrapped)
     {
         if (wrapped) {
-            updatePreferredWidth(m_remainedWidth);
+            removeDanglingSpace();
+            updatePreferredWidth(std::max(m_remainedWidth, m_currentLineWidth));
         } else {
             updateCurrentLineWidthByWordWidth();
             removeDanglingSpace();
@@ -515,7 +520,6 @@ public:
             m_currentLineWidth = m_wordWidth;
         }
         m_wordWidth = 0;
-        m_isLastWordBreakable = false;
     }
 
     void updateCurrentLineWidth(Frame* f, LayoutUnit w,
@@ -524,7 +528,6 @@ public:
     void updateUnprocessedStartingMBPWidth(Frame* f);
 
     void computePreferredWidthInline(Frame* prent);
-    void tokenizeText(StarFish* sf, FrameText* f);
 
 private:
     LayoutContext& m_layoutContext;
@@ -537,7 +540,6 @@ private:
     LayoutUnit m_remainedWidth;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
-    bool m_isLastWordBreakable;
     bool m_isPendingWrapLine;
 
     bool canInsertToLineBox(LayoutUnit width);

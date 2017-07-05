@@ -248,7 +248,7 @@ test/reftest/vendor/blink/fast/text/container-align-with-inlines.html
 test/reftest/vendor/blink/fast/text/international/bdi-break-crash-1.html
 test/reftest/vendor/blink/fast/text/international/bdi-break-crash-2.html
 test/reftest/vendor/blink/fast/text/international/rtl-mark.html
-test/reftest/vendor/blink/fast/text/line-break-between-text-nodes.html
+#test/reftest/vendor/blink/fast/text/line-break-between-text-nodes.html
 test/reftest/vendor/blink/fast/text/stripNullFromText.html
 test/reftest/vendor/blink/fast/text/text-between-two-brs-in-nowrap-overflow.html
 test/reftest/vendor/blink/fast/text/whitespace/028.html

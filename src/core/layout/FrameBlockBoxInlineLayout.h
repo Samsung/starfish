@@ -40,7 +40,7 @@ struct TextToken {
         setWidth(type);
     }
 
-    bool isWhiteSpace()
+    bool isWhiteSpace() const
     {
         return m_type != General;
     }
@@ -76,12 +76,12 @@ struct TextToken {
         m_isFirstLine = isFirstLine;
     }
 
-    bool isFirstLine()
+    bool isFirstLine() const
     {
         return m_isFirstLine;
     }
 
-    LayoutUnit width()
+    LayoutUnit width() const
     {
         return m_width;
     }

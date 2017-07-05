@@ -663,6 +663,12 @@ String* String::fromUTF16(const char16_t* src, size_t len)
     return new StringDataASCII(std::move(ascii));
 }
 
+String* String::createASCIIString(const char c)
+{
+    char s[2] = { c, '\0' };
+    return new StringDataASCII(s);
+}
+
 String* String::createASCIIString(const char* str)
 {
     return new StringDataASCII(str);
@@ -766,6 +772,56 @@ String* String::toLower()
     }
 }
 
+String* String::concat(const char c)
+{
+    if (length() == 0) {
+        return String::createASCIIString(c);
+    }
+
+    auto dataA = bufferAccessData();
+
+    if (dataA.hasASCIIContent) {
+        ASCIIString str;
+        str.reserve(dataA.length + 1);
+        str.append(dataA.asciiData(), dataA.length);
+        str.push_back(c);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str;
+        str.resize(dataA.length + 1);
+        for (size_t i = 0; i < dataA.length; i++) {
+            str[i] = dataA.utf32Data()[i];
+        }
+        str[dataA.length] = c;
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
+String* String::concat(const char32_t c)
+{
+    if (length() == 0) {
+        return String::createUTF32String(c);
+    }
+
+    auto dataA = bufferAccessData();
+
+    if (dataA.hasASCIIContent) {
+        UTF32String str;
+        str.resize(dataA.length + 1);
+        for (size_t i = 0; i < dataA.length; i++) {
+            str[i] = dataA.asciiData()[i];
+        }
+        str[dataA.length] = c;
+        return new StringDataUTF32(std::move(str));
+    } else {
+        UTF32String str;
+        str.reserve(dataA.length + 1);
+        str.append(dataA.utf32Data());
+        str.push_back(c);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
 String* String::concat(const char* src)
 {
     if (length() == 0) {
@@ -787,14 +843,8 @@ String* String::concat(const char* src)
     } else {
         UTF32String str;
         str.resize(dataA.length + srcLen);
-        if (dataA.hasASCIIContent) {
-            for (size_t i = 0; i < dataA.length; i++) {
-                str[i] = dataA.asciiData()[i];
-            }
-        } else {
-            for (size_t i = 0; i < dataA.length; i++) {
-                str[i] = dataA.utf32Data()[i];
-            }
+        for (size_t i = 0; i < dataA.length; i++) {
+            str[i] = dataA.utf32Data()[i];
         }
 
         for (size_t i = 0; i < srcLen; i++) {
