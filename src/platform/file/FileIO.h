@@ -48,6 +48,7 @@ public:
     virtual size_t read(void* buf, size_t size, size_t count) = 0;
     virtual size_t write(void* buf, size_t size, size_t count) = 0;
     virtual String* readLine() = 0;
+    virtual String* readAll() = 0;
     virtual size_t writeLine(const char* buf) = 0;
     virtual size_t writeLine(String* buf) = 0;
     virtual int flush() = 0;

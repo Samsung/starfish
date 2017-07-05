@@ -22,7 +22,7 @@
 
 namespace StarFish {
 
-const char* FileIOTypeList[] = { "r", "w", "r+" };
+const char* FileIOTypeList[] = { "r", "w", "w+" };
 
 class FileIOPosix : public FileIO {
 public:
@@ -75,6 +75,18 @@ public:
             } else {
                 break;
             }
+        }
+        return String::fromUTF8((char*)(&buf[0]));
+    }
+    String* readAll()
+    {
+        std::string buf;
+        while (!feof(m_fp)) {
+            char temp;
+            if (read(&temp, 1, 1) == 0) {
+                break;
+            }
+            buf += temp;
         }
         return String::fromUTF8((char*)(&buf[0]));
     }
@@ -177,6 +189,11 @@ public:
         }
         return fread(buf, size, count, m_fp);
     }
+    String* readAll()
+    {
+        // TODO : It will connect to the Tizen file I/O interface.
+        return String::emptyString;
+    }
     size_t write(void* buf, size_t size, size_t count)
     {
         // TODO : It will connect to the Tizen file I/O interface.
@@ -184,7 +201,7 @@ public:
     }
     String* readLine()
     {
-        // TODO : I will connect to the Tizen file I/O interface.
+        // TODO : It will connect to the Tizen file I/O interface.
         std::string buf;
         while (!feof(m_fp)) {
             char temp;
