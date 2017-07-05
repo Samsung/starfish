@@ -659,6 +659,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | screenY | The vertical coordinate at which the event occurred relative to the origin of the screen |
 | | attribute | clientX | The horizontal coordinate at which the event occurred relative to the viewport |
 | | attribute | clientY | The vertical coordinate at which the event occurred relative to the viewport |
+| | attribute | button | Indicates which button was pressed on the mouse to trigger the event |
+| | attribute | buttons | Indicates which buttons are pressed on the mouse when the event is triggered. |
 | [MouseEventInit](https://w3c.github.io/uievents/#idl-mouseeventinit) | dictionary | MouseEventInit |  |
 | | attribute | screenX | Initializes the screenX attribute of the MouseEvent object |
 | | attribute | screenY | Initializes the screenY attribute of the MouseEvent object |
