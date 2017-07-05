@@ -11,7 +11,7 @@ interface CSSStyleDeclaration {
   [Unimplemented, CEReactions] void setPropertyPriority(DOMString property, [TreatNullAs=EmptyString] DOMString priority);
   [Unimplemented, CEReactions, RaisesException] DOMString removeProperty(DOMString property);
   readonly attribute CSSRule? parentRule;
-  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cssFloat;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString cssFloat;
 
   // NOTE add getter&setter for named access
   getter DOMString? (DOMString property);

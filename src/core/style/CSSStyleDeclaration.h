@@ -149,6 +149,17 @@ public:
         return nullptr;
     }
 
+    String* cssFloat()
+    {
+        return getPropertyValue(String::createASCIIString("float"));
+    }
+
+    void setCssFloat(String* value)
+    {
+        setProperty(String::createASCIIString("float"), value,
+                    String::emptyString);
+    }
+
 protected:
     GCVector<CSSStyleValuePair> m_cssValues;
     Element* m_element;

@@ -104,6 +104,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | DOMString getPropertyValue(DOMString property) | Returns the property value |
 |  | method | void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "") | Sets the property |
 |  | attribute | parentRule | Returns the parent CSS rule. |
+|  | attribute | cssFloat | Returns the result of invoking getPropertyValue() with float as argument. |
 | [CSSStyleRule](https://dev.w3.org/csswg/cssom/#the-cssstylerule-interface) | interface | CSSStyleRule | Represents a style rule. |
 |  | attribute | selectorText | Returns the result of serializing the associated group of selectors. (Note: We will support result separated by ',' for a while.)|
 |  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
@@ -272,6 +273,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
+| [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
+|  | attribute | href | Return the whole URL. |
 | [HTMLAudioElement](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) | interface | HTMLAudioElement | The audio element represents a sound or audio stream. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
