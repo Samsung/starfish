@@ -19,15 +19,36 @@
 
 namespace StarFish {
 
+struct JSONDocumentHolder {
+    void* m_ptr;
+};
+
 class FileIO;
+class SecurityOriginData;
 
 class StorageManager : public gc {
 public:
     StorageManager(String* localStoragePath);
+    ~StorageManager()
+    {
+    }
+    Nullable<String*> key(SecurityOriginData* securityOriginData,
+                          unsigned long index);
+    Nullable<String*> getItem(SecurityOriginData* securityOriginData,
+                              String* key);
+    GCUnorderedMap<String*, String*>* getItems(
+        SecurityOriginData* securityOriginData);
+    void setItem(SecurityOriginData* securityOriginData, String* key,
+                 String* value);
+    void removeItem(SecurityOriginData* securityOriginData, String* key);
+    void clear(SecurityOriginData* securityOriginData);
+    unsigned long length(SecurityOriginData* securityOriginData);
 
 private:
+    void jsonDocumentRead();
+    void jsonDocumentWrite();
     String* m_localStoragePath;
-    FileIO* m_fileIO;
+    JSONDocumentHolder m_jsonHolder;
 };
 }
 
