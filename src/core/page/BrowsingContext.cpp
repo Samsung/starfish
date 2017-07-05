@@ -408,7 +408,7 @@ Node* BrowsingContext::hitTest(float x, float y)
 {
     webView()->layoutIfNeeds();
 
-    if (document() && document()->frame()) {
+    if (window() && document() && document()->frame()) {
         Frame* frame = document()->frame()->hitTest(x, y, HitTestStageEnd);
 
         if (!frame) {
@@ -754,7 +754,8 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         break;
     }
     case PlatformWindow::TouchEventEnd: {
-        if (setActiveNode(targetNode)) {
+        Node* t = targetNode->nearestParentElement();
+        if (m_activeNodeTarget == targetNode) {
             // Dispatch click event
             Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
@@ -764,13 +765,11 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                                 targetX, targetY);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEvent(t, click);
-
-            // Dispatch touchend event
-            name = starFish()->staticStrings()->m_touchend.localName();
-            Event* e = createTouchEvent(document(), name, touches, count);
-            document()->window()->dispatchEvent(t, e);
         }
-        releaseActiveNode();
+        // Dispatch touchend event
+        name = starFish()->staticStrings()->m_touchend.localName();
+        Event* e = createTouchEvent(document(), name, touches, count);
+        document()->window()->dispatchEvent(t, e);
         break;
     }
     default:
@@ -792,6 +791,10 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return;
     }
+
+    // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f\n",
+    // (int)kind, data.clientX(), data.clientY());
+
     // Hit test to validate event position
     Node* targetNode = hitTest((float)data.clientX(), (float)data.clientY());
     if (!targetNode) {
@@ -836,18 +839,18 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     }
     case PlatformWindow::MouseEventUp: {
         // Check whether it is skippable or not
-        if (setActiveNode(targetNode)) {
+        Node* t = targetNode->nearestParentElement();
+        t = t ? t : document();
+        // Dispatch mouseup event
+        name = starFish()->staticStrings()->m_mouseup.localName();
+        Event* mouseup = createMouseEvent(document(), name, data);
+        document()->window()->dispatchEvent(t, mouseup);
+
+        if (m_activeNodeTarget == targetNode) {
             // Dispatch click event
-            Node* t = targetNode->nearestParentElement();
-            t = t ? t : document();
             name = starFish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
             document()->window()->dispatchEvent(t, click);
-
-            // Dispatch mouseup event
-            name = starFish()->staticStrings()->m_mouseup.localName();
-            Event* mouseup = createMouseEvent(document(), name, data);
-            document()->window()->dispatchEvent(t, mouseup);
         }
         break;
     }
