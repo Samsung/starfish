@@ -21,51 +21,44 @@
 
 namespace StarFish {
 
-#define KEYBOARD_KEYCODE_NONE 0
-#define KEYBOARD_KEYCODE_BACKSPACE 8
-#define KEYBOARD_KEYCODE_RETURN 13
-#define KEYBOARD_KEYCODE_SHIFT 16
-#define KEYBOARD_KEYCODE_CTRL_L 17
-#define KEYBOARD_KEYCODE_ALT_L 18
-#define KEYBOARD_KEYCODE_ALT_R 21
-#define KEYBOARD_KEYCODE_CTRL_R 25
-#define KEYBOARD_KEYCODE_ESC 27
-#define KEYBOARD_KEYCODE_SPACE 32
-#define KEYBOARD_KEYCODE_LEFT 37
-#define KEYBOARD_KEYCODE_UP 38
-#define KEYBOARD_KEYCODE_RIGHT 39
-#define KEYBOARD_KEYCODE_DOWN 40
-#define KEYBOARD_KEYCODE_0 48
-#define KEYBOARD_KEYCODE_a 65
+class KeyboardData {
+    STARFISH_MAKE_STACK_ALLOCATED()
+    friend KeyboardEvent;
 
-class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
-        , m_keyCode(0)
+    KeyboardData()
+        : KeyboardData(String::emptyString)
+    {
+    }
+    KeyboardData(String* key)
+        : KeyboardData(key, String::emptyString)
+    {
+    }
+    KeyboardData(String* key, String* code)
+        : KeyboardData(key, code, 0)
+    {
+    }
+    KeyboardData(String* key, String* code, uint32_t keyCode)
+        : m_key(key)
+        , m_code(code)
+        , m_keyCode(keyCode)
         , m_ctrlKey(false)
         , m_shiftKey(false)
         , m_altKey(false)
         , m_metaKey(false)
     {
     }
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isKeyboardEvent() const override;
-
-    void setKey(String* key)
+    String* key()
     {
-        m_keyCode = convertKeyCodeFromEcore(key);
-        m_ctrlKey = ((m_keyCode == KEYBOARD_KEYCODE_CTRL_L) ||
-                     (m_keyCode == KEYBOARD_KEYCODE_CTRL_R));
-        m_shiftKey = (m_keyCode == KEYBOARD_KEYCODE_SHIFT);
-        m_altKey = ((m_keyCode == KEYBOARD_KEYCODE_ALT_L) ||
-                    (m_keyCode == KEYBOARD_KEYCODE_ALT_R));
+        return m_key;
     }
-    unsigned long keyCode()
+    String* code()
     {
-        return (unsigned)m_keyCode;
+        return m_code;
+    }
+    uint32_t keyCode()
+    {
+        return m_keyCode;
     }
     bool ctrlKey()
     {
@@ -100,16 +93,65 @@ public:
         m_metaKey = true;
     }
 
-    static unsigned long convertKeyCodeFromEcore(String* key);
-
-private:
-    // String* m_key;
-    // String* m_code;
-    unsigned long m_keyCode;
+protected:
+    String* m_key;
+    String* m_code;
+    uint32_t m_keyCode;
     bool m_ctrlKey;
     bool m_shiftKey;
     bool m_altKey;
     bool m_metaKey;
+};
+
+class KeyboardEvent : public UIEvent {
+public:
+    KeyboardEvent(Document* document, String* eventType)
+        : UIEvent(document, eventType)
+        , m_keyboardData()
+    {
+    }
+
+    KeyboardEvent(Document* document, String* eventType, KeyboardData& data)
+        : UIEvent(document, eventType)
+        , m_keyboardData(data)
+    {
+    }
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isKeyboardEvent() const override;
+
+    String* key()
+    {
+        return m_keyboardData.m_key;
+    }
+    String* code()
+    {
+        return m_keyboardData.m_code;
+    }
+    uint32_t keyCode()
+    {
+        return m_keyboardData.m_keyCode;
+    }
+    bool ctrlKey()
+    {
+        return m_keyboardData.m_ctrlKey;
+    }
+    bool shiftKey()
+    {
+        return m_keyboardData.m_shiftKey;
+    }
+    bool altKey()
+    {
+        return m_keyboardData.m_altKey;
+    }
+    bool metaKey()
+    {
+        return m_keyboardData.m_metaKey;
+    }
+
+private:
+    KeyboardData m_keyboardData;
 };
 }
 

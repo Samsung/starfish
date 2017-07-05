@@ -82,9 +82,9 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData& data)
     webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
 }
 
-void PlatformWindow::dispatchKeyEvent(String* key, KeyEventKind kind)
+void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData& data)
 {
-    webView()->mainBrowsingContext()->dispatchKeyEvent(key, kind);
+    webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
 }
 
 void PlatformWindow::rendering()
