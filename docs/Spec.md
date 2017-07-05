@@ -671,6 +671,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
 |  | constant | DOM_KEY_LOCATION_RIGHT = 0x02 |  |
 |  | constant | DOM_KEY_LOCATION_NUMPAD = 0x03 |  |
+|  | attribute | key | Returns the key value of the key pressed. |
+|  | attribute | code | Returns a string that identifies the physical key being pressed. |
 |  | attribute | ctrlKey | Returns a Boolean that is true if the Ctrl key was active when the key event was generated. |
 |  | attribute | shiftKey | Returns a Boolean that is true if the Shift key was active when the key event was generated. |
 |  | attribute | altKey | Returns a Boolean that is true if the Alt key was active when the key event was generated. |

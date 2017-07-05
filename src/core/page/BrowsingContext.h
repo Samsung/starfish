@@ -37,6 +37,7 @@ class Window;
 class HTMLIFrameElement;
 class MouseData;
 class TouchData;
+class KeyboardData;
 
 class BrowsingContext : public gc, public StarFishHoldable {
     friend class PlatformWindow;
@@ -156,7 +157,8 @@ public:
                             TouchData* touches, size_t touchCount);
     void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                             MouseData& data);
-    void dispatchKeyEvent(String* key, PlatformWindow::KeyEventKind kind);
+    void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
+                          KeyboardData& data);
 
     bool setActiveNode(Node* n);
     void releaseActiveNode();
@@ -217,11 +219,6 @@ private:
     GCUnorderedSet<Node*> m_hoveredNodeSet;
     Node* m_hoveredNodeTarget;
     size_t m_documentVersionWhenComputingHoveredNodeSet;
-
-    int m_ctrlKeyDown;
-    int m_shiftKeyDown;
-    int m_altKeyDown;
-    int m_metaKeyDown;
 
     Node* m_focusedNode;
     Node* m_relatedTarget;

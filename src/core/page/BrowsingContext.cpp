@@ -80,10 +80,6 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_documentVersionWhenComputingActiveNodeSet(0)
     , m_hoveredNodeTarget(nullptr)
     , m_documentVersionWhenComputingHoveredNodeSet(0)
-    , m_ctrlKeyDown(0)
-    , m_shiftKeyDown(0)
-    , m_altKeyDown(0)
-    , m_metaKeyDown(0)
 {
     initFlags();
 }
@@ -864,9 +860,24 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                 targetY);
 }
 
-void BrowsingContext::dispatchKeyEvent(String* key,
-                                       PlatformWindow::KeyEventKind kind)
+void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
+                                       KeyboardData& data)
 {
+    // Set target
+    // 1) currently focused element if possible
+    // or 2) body element if possible
+    // or 3) root element
+    EventTarget* target = m_focusedNode;
+    if (!target && document()->body()) {
+        target = document()->body();
+    }
+    if (!target && document()->rootElement()) {
+        target = document()->rootElement();
+    }
+    if (!target) {
+        return;
+    }
+    // Dispatch event
     String* eventType = String::emptyString;
     if (kind == PlatformWindow::KeyEventKind::KeyEventUp) {
         eventType = starFish()->staticStrings()->m_keyup.localName();
@@ -874,55 +885,11 @@ void BrowsingContext::dispatchKeyEvent(String* key,
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
-    KeyboardEvent* e = new KeyboardEvent(document(), eventType);
+    KeyboardEvent* e = new KeyboardEvent(document(), eventType, data);
     e->setBubbles(true);
     e->setCancelable(true);
-    e->setKey(key);
-
-    if (e->ctrlKey()) {
-        m_ctrlKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
-                            ? m_ctrlKeyDown + 1
-                            : m_ctrlKeyDown - 1;
-        STARFISH_ASSERT(m_ctrlKeyDown >= 0);
-    } else if (e->altKey()) {
-        m_altKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
-                           ? m_altKeyDown + 1
-                           : m_altKeyDown - 1;
-        STARFISH_ASSERT(m_altKeyDown >= 0);
-    } else if (e->shiftKey()) {
-        m_shiftKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
-                             ? m_shiftKeyDown + 1
-                             : m_shiftKeyDown - 1;
-        STARFISH_ASSERT(m_shiftKeyDown >= 0);
-    } else if (e->shiftKey()) {
-        m_metaKeyDown = kind == PlatformWindow::KeyEventKind::KeyEventDown
-                            ? m_metaKeyDown + 1
-                            : m_metaKeyDown - 1;
-        STARFISH_ASSERT(m_metaKeyDown >= 0);
-    }
-    if (m_ctrlKeyDown > 0) {
-        e->setCtrlKey();
-    }
-    if (m_altKeyDown > 0) {
-        e->setAltKey();
-    }
-    if (m_shiftKeyDown > 0) {
-        e->setShiftKey();
-    }
-    if (m_metaKeyDown > 0) {
-        e->setMetaKey();
-    }
-
-    // [Target]
-    // 1) currently focused element if possible -> no focus concept
-    // or 2) body element if possible
-    // or 3) root element
-    if (document()->rootElement()) {
-        document()->window()->dispatchEvent(
-            (document()->body() ? document()->body()->asNode()
-                                : document()->rootElement()->asNode()),
-            e);
-    }
+    e->setView(document()->window());
+    document()->window()->dispatchEvent(target, e);
 }
 
 void BrowsingContext::pause()

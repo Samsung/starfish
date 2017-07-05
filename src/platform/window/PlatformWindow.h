@@ -30,6 +30,7 @@ class WebView;
 
 class MouseData;
 class TouchData;
+class KeyboardData;
 
 class PlatformWindow : public gc {
 public:
@@ -62,11 +63,10 @@ public:
     virtual void clearResources() = 0;
     virtual Canvas* preparePainting(bool forPainting) = 0;
 
-    void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
-                            TouchData* touches, size_t touchCount);
-    void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                            MouseData& data);
-    void dispatchKeyEvent(String* key, KeyEventKind kind);
+    void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
+                            size_t touchCount);
+    void dispatchMouseEvent(MouseEventKind kind, MouseData& data);
+    void dispatchKeyEvent(KeyEventKind kind, KeyboardData& data);
 
     void rendering();
     void pause();
