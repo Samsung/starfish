@@ -31,6 +31,7 @@ class ResourceRequest;
 class Resource : public gc {
     friend class ResourceLoader;
     friend class ResourceWatcher;
+    friend class ResourceLoaderTracer;
 
 public:
     enum State {

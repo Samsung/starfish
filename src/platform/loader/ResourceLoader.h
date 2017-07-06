@@ -26,6 +26,7 @@
 namespace StarFish {
 
 class ResourceCacheData : public gc {
+public:
     friend class ResourceLoader;
     Resource* m_resource;
     uint64_t m_lastUsedTime; // stores tick count
@@ -36,7 +37,7 @@ class ResourceLoader : public gc, public DocumentHoldable {
     friend class ImageResource;
     friend class DocumentOnLoadChecker;
     friend class ResourceAliveChecker;
-    friend class ResourceSizeTracer;
+    friend class ResourceLoaderTracer;
 
 public:
     ResourceLoader(Document* doc);
