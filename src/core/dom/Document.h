@@ -26,6 +26,7 @@ namespace StarFish {
 class Attr;
 class CDATASection;
 class Comment;
+class ProcessingInstruction;
 class DocumentType;
 class DocumentFragment;
 class DocumentBuilder;
@@ -132,6 +133,9 @@ public:
     Text* createTextNode(String* data);
     CDATASection* createCDATASection(String* data);
     Comment* createComment(String* data);
+    ProcessingInstruction* createProcessingInstruction(String* target,
+                                                       String* data);
+
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);

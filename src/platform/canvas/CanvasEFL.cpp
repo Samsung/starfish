@@ -177,6 +177,7 @@ public:
         m_height = d->h;
         m_objList = d->objList;
         m_surfaceList = d->surfaceList;
+
         save();
     }
 
@@ -328,6 +329,71 @@ public:
     virtual void endOpacityLayer()
     {
         restore();
+    }
+
+    bool canSkipPainting(const Unit::Rect& rt)
+    {
+        if (!lastState().m_visible) {
+            return true;
+        }
+
+        if (lastState().m_didClip && lastState().m_hasPathClip) {
+            // TODO
+            return false;
+        }
+
+        // compute abs rect
+        float xx, yy, ww, hh;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
+                                          SkFloatToScalar((float)rt.y()),
+                                          SkFloatToScalar((float)rt.width()),
+                                          SkFloatToScalar((float)rt.height()));
+            if (!shouldApplyEvasMap()) {
+                lastState().m_matrix.mapRect(&sss);
+            }
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + rt.x();
+                yy = lastState().m_baseY + rt.y();
+            } else {
+                xx = rt.x();
+                yy = rt.y();
+            }
+
+            ww = rt.width();
+            hh = rt.height();
+        }
+
+        SkRect absRect =
+            SkRect::MakeXYWH(SkFloatToScalar(xx), SkFloatToScalar(yy),
+                             SkFloatToScalar(ww), SkFloatToScalar(hh));
+
+        // check cliprect if exists
+        if (lastState().m_didClip) {
+            if (lastState().m_clipRect.isEmpty())
+                return true;
+            if (SkRect::Intersects(absRect, lastState().m_clipRect)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        // check canvas bound
+        SkRect screenRect = SkRect::MakeXYWH(
+            SkFloatToScalar(0), SkFloatToScalar(0), SkFloatToScalar(m_width),
+            SkFloatToScalar(m_height));
+
+        if (SkRect::Intersects(absRect, lastState().m_clipRect)) {
+            return false;
+        }
+
+        return true;
     }
 
     virtual void clip(const Unit::Rect& rt)
@@ -648,7 +714,7 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(rt)) {
             return;
         }
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
@@ -715,7 +781,8 @@ public:
 
     virtual void drawRect(const LayoutRect& rt)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(
+                Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()))) {
             return;
         }
 
@@ -807,7 +874,9 @@ public:
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& sv)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(
+                Unit::Rect(x, y, stringWidth,
+                           lastState().m_font->metrics().m_fontHeight))) {
             return;
         }
 
@@ -1090,7 +1159,7 @@ public:
     void drawImageInner(ImageData* data, const Unit::Rect& dst, size_t l,
                         size_t t, size_t r, size_t b, double scale, bool fill)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(dst)) {
             return;
         }
 

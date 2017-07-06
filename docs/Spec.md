@@ -147,6 +147,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | Text createTextNode(DOMString data) | Returns a Text node whose data is data. |
 |  | method | Comment createComment(DOMString data) | Returns a Comment node whose data is data. |
 | [Document](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
+| | method | ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data) | Return a new ProcessingInstruction node, with target set to target, data set to data |
 |  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |

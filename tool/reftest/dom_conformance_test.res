@@ -1,8 +1,8 @@
 test/reftest/dom-conformance-test/html/level1/core/documentgetdoctypenodtd.html
 test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreateentref.html
 test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreateentref1.html
-#test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreatepi.html
-#test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreatepi1.html
+test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreatepi.html
+test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexceptioncreatepi1.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild1.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild2.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild4.html
