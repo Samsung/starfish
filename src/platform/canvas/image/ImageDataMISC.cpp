@@ -98,6 +98,15 @@ private:
         }
     }
 
+    static bool isGIFFormat(const unsigned char* data)
+    {
+        if (data[0] == 71 && data[1] == 73 && data[2] == 70) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     static ImageFormat parseImageFormatFromBuffer(const char* buf)
     {
         ImageFormat imageFormat = ImageFormat::ERROR;
@@ -106,6 +115,8 @@ private:
             imageFormat = ImageFormat::PNG;
         } else if (isJPGFormat((unsigned char*)buf)) {
             imageFormat = ImageFormat::JPG;
+        } else if (isGIFFormat((unsigned char*)buf)) {
+            imageFormat = ImageFormat::GIF;
         } else {
             // TODO ERROR
         }
@@ -121,13 +132,15 @@ private:
             return imageFormat;
         }
 
-        unsigned char* buf = new unsigned char[5];
-        fgets((char*)buf, 5, fp);
+        unsigned char* buf = new unsigned char[4];
+        fgets((char*)buf, 4, fp);
 
         if (isPNGFormat(buf)) {
             imageFormat = ImageFormat::PNG;
         } else if (isJPGFormat(buf)) {
             imageFormat = ImageFormat::JPG;
+        } else if (isGIFFormat((unsigned char*)buf)) {
+            imageFormat = ImageFormat::GIF;
         } else {
             // TODO ERROR
         }
