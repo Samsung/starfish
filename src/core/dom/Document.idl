@@ -48,7 +48,7 @@ interface Document : Node {
   [NewObject] Text createTextNode(DOMString data);
   [NewObject, RaisesException] CDATASection createCDATASection(DOMString data);
   [NewObject] Comment createComment(DOMString data);
-  [Unimplemented, NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
+  [NewObject, RaisesException] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
   [Unimplemented, CEReactions, NewObject] Node importNode(Node node, optional boolean deep = false);
   [Unimplemented, CEReactions] Node adoptNode(Node node);

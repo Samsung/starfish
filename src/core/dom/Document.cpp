@@ -20,6 +20,7 @@
 #include "core/dom/Attribute.h"
 #include "core/dom/CDATASection.h"
 #include "core/dom/Comment.h"
+#include "core/dom/ProcessingInstruction.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DOMException.h"
@@ -428,6 +429,23 @@ CDATASection* Document::createCDATASection(String* data)
 Comment* Document::createComment(String* data)
 {
     return new Comment(this, data);
+}
+
+ProcessingInstruction* Document::createProcessingInstruction(String* target,
+                                                             String* data)
+{
+    // If target does not match the Name production, then throw an
+    // InvalidCharacterError.
+    if (!QualifiedName::checkNameProductionRule(target)) {
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+    }
+    // If data contains the string "?>", then throw an InvalidCharacterError.
+    if (data->contains("?>")) {
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+    }
+    // Return a new ProcessingInstruction node, with target set to target, data
+    // set to data, and node document set to the context object.
+    return new ProcessingInstruction(this, data, target);
 }
 
 Attr* Document::createAttribute(String* name)
