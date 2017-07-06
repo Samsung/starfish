@@ -118,10 +118,16 @@ public:
         return new Attr(document(), m_name, value());
     }
 
-    void detachFromElement(String* value)
+    void convertToStandAloneAttr(String* value)
     {
         m_standAloneValue = value;
         m_element = nullptr;
+    }
+
+    void convertToElementAttr(Element* element)
+    {
+        m_standAloneValue = String::emptyString;
+        m_element = element;
     }
 
     bool isContainerNode()

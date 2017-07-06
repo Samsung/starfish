@@ -160,7 +160,7 @@ void Element::removeAttribute(QualifiedName name)
         m_attributes.erase(m_attributes.begin() + idx);
         Attr* attrNode = attr(name);
         if (attrNode) {
-            attrNode->detachFromElement(v);
+            attrNode->convertToStandAloneAttr(v);
             STARFISH_ASSERT(hasRareMembers());
             STARFISH_ASSERT(rareMembers()->isRareElementMembers());
             STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
@@ -614,15 +614,54 @@ RareElementMembers* Element::ensureRareElementMembers()
     return rareMembers->asRareElementMembers();
 }
 
-void Element::addAttr(Attr* attr)
+Attr* Element::replaceAttrAndReturnOld(Attr* attr)
 {
+    // Prepare attrList
+
     RareElementMembers* rareMembers = ensureRareElementMembers();
-    STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_attrList) {
         rareMembers->m_attrList = new (GC) GCVector<Attr*>();
     }
-    STARFISH_ASSERT(this->attr(attr->qname()) == nullptr);
-    rareMembers->m_attrList->push_back(attr);
+    GCVector<Attr*>* attrList = rareMembers->m_attrList;
+
+    Attr* prevAttr = nullptr;
+    String* prevAttrValue = String::emptyString;
+    String* newAttrValue = attr->value();
+    attr->convertToElementAttr(this);
+
+    size_t attributeIdx = hasAttribute(attr->qname());
+    if (attributeIdx != SIZE_MAX) {
+        // Handle `Attribute`
+        prevAttrValue = m_attributes[attributeIdx].value();
+        m_attributes[attributeIdx].setValue(newAttrValue);
+        // Handle `Attr`
+        size_t len = attrList->size();
+        size_t attrIdx = 0;
+        for (; attrIdx < len; attrIdx++) {
+            if (attrList->at(attrIdx)->qname() == attr->qname()) {
+                prevAttr = attrList->at(attrIdx);
+                prevAttr->convertToStandAloneAttr(prevAttrValue);
+                (*attrList)[attrIdx] = attr;
+                break;
+            }
+        }
+        if (attrIdx == len) {
+            prevAttr = new Attr(document(), attr->qname(), prevAttrValue);
+            attrList->push_back(attr);
+        }
+        STARFISH_ASSERT(prevAttr != nullptr);
+    } else {
+        // Handle `Attribute`
+        m_attributes.emplace_back(attr->qname(), newAttrValue);
+        // Handle `Attr`
+        attrList->push_back(attr);
+        STARFISH_ASSERT(prevAttr == nullptr);
+    }
+
+    // Notify changes
+    didAttributeChanged(attr->qname(), prevAttrValue, newAttrValue,
+                        attributeIdx == SIZE_MAX, false);
+    return prevAttr;
 }
 
 Attr* Element::attr(QualifiedName name)

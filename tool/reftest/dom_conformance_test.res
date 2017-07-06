@@ -126,7 +126,7 @@ test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapreturnfirstite
 test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapreturnlastitem.html
 test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapreturnnull.html
 test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapsetnameditem.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapsetnameditemreturnvalue.html
+test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapsetnameditemreturnvalue.html
 test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapsetnameditemthatexists.html
 test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapsetnameditemwithnewvalue.html
 #test/reftest/dom-conformance-test/html/level1/core/hc_namednodemapwrongdocumenterr.html
