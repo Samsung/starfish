@@ -39,11 +39,7 @@ extern bool g_enablePixelTest;
 
 class CanvasState {
 public:
-    SkMatrix m_matrix;
     Unit::Color m_color;
-    // Evas_Object* m_clipper;
-    SkRect m_clipRect;
-    ClipperLib::Paths m_clipPath;
     float m_opacity;
     Font* m_font;
     LayoutUnit m_baseX;
@@ -51,21 +47,14 @@ public:
     Unit::Color m_underLineColor;
     Unit::Color m_lineThroughColor;
 
-    bool m_mapMode;
-    bool m_didClip;
-    bool m_hasPathClip;
     bool m_visible;
     bool m_hasUnderLine;
     bool m_hasLineThrough;
 
     CanvasState()
     {
-        // m_clipper = NULL;
         m_opacity = 1;
         m_font = nullptr;
-        m_mapMode = false;
-        m_didClip = false;
-        m_hasPathClip = false;
         m_visible = true;
         m_hasUnderLine = false;
         m_hasLineThrough = false;
@@ -88,7 +77,6 @@ public:
     {
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_imageCount = 0;
         m_buffer = NULL;
         m_directDraw = true;
         struct dummy {
@@ -112,7 +100,6 @@ public:
     {
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_imageCount = 0;
         m_directDraw = false;
 
         m_buffer = (void*)data->unwrap();
@@ -134,14 +121,10 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        cairo_save(m_canvas);
-        applyClippers();
-        cairo_new_path(m_canvas);
-
-        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
+                              clr.A() * lastState().m_opacity);
         cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
         cairo_fill(m_canvas);
-        cairo_restore(m_canvas);
     }
 
     // state
@@ -149,85 +132,56 @@ public:
     {
         CanvasState state;
         if (m_state.size()) {
-            state.m_matrix = lastState().m_matrix;
-            state.m_clipRect = lastState().m_clipRect;
-            state.m_clipPath = lastState().m_clipPath;
-            // state.m_clipper = lastState().m_clipper;
             state.m_color = lastState().m_color;
             state.m_opacity = lastState().m_opacity;
             state.m_baseX = lastState().m_baseX;
             state.m_baseY = lastState().m_baseY;
             state.m_font = lastState().m_font;
-            state.m_mapMode = lastState().m_mapMode;
             state.m_visible = lastState().m_visible;
-            state.m_didClip = lastState().m_didClip;
-            state.m_hasPathClip = lastState().m_hasPathClip;
             state.m_hasUnderLine = lastState().m_hasUnderLine;
             state.m_hasLineThrough = lastState().m_hasLineThrough;
             state.m_underLineColor = lastState().m_underLineColor;
             state.m_lineThroughColor = lastState().m_lineThroughColor;
-        } else {
-            state.m_matrix.reset();
-            state.m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
-                                     SkFloatToScalar((float)m_height));
-            // state.m_clipper = NULL;
         }
         m_state.push_back(state);
+        cairo_save(m_canvas);
     }
 
     // pop state stack and restore state
     virtual void restore()
     {
         m_state.erase(m_state.end() - 1);
+        cairo_restore(m_canvas);
     }
 
     virtual void assureMapMode()
     {
-        if (lastState().m_mapMode) {
-            return;
-        }
-        lastState().m_matrix.preTranslate(lastState().m_baseX,
-                                          lastState().m_baseY);
-        lastState().m_mapMode = true;
     }
 
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y)
     {
-        assureMapMode();
-        lastState().m_matrix.preScale(SkDoubleToScalar(x), SkDoubleToScalar(y));
+        cairo_scale(m_canvas, x, y);
     }
 
     virtual void scale(double x, double y, double ox, double oy)
     {
-        assureMapMode();
-        lastState().m_matrix.preScale(SkDoubleToScalar(x), SkDoubleToScalar(y),
-                                      SkDoubleToScalar(ox),
-                                      SkDoubleToScalar(oy));
+        // TODO
     }
 
     virtual void rotate(double angle)
     {
-        assureMapMode();
-        lastState().m_matrix.preRotate(SkDoubleToScalar(angle));
+        cairo_rotate(m_canvas, angle);
     }
 
     virtual void rotate(double angle, double ox, double oy)
     {
-        assureMapMode();
-        lastState().m_matrix.preRotate(SkDoubleToScalar(angle),
-                                       SkDoubleToScalar(ox),
-                                       SkDoubleToScalar(oy));
+        // TODO
     }
 
     virtual void translate(double x, double y)
     {
-        if (lastState().m_mapMode) {
-            lastState().m_matrix.preTranslate(x, y);
-        } else {
-            lastState().m_baseX = lastState().m_baseX.toDouble() + x;
-            lastState().m_baseY = lastState().m_baseY.toDouble() + y;
-        }
+        cairo_translate(m_canvas, x, y);
     }
 
     virtual void translate(LayoutUnit x, LayoutUnit y)
@@ -246,201 +200,19 @@ public:
         restore();
     }
 
-    bool shouldApplyMatrix()
-    {
-        if (lastState().m_opacity != 1) {
-            return true;
-        }
-        return hasValidMatrixValue();
-    }
-
     virtual void clip(const Unit::Rect& rt)
     {
-        if (lastState().m_hasPathClip) {
-            ClipperLib::Clipper clipper;
-
-            clipper.AddPaths(lastState().m_clipPath,
-                             ClipperLib::PolyType::ptSubject, true);
-
-            ClipperLib::Path path;
-            STARFISH_ASSERT(lastState().m_mapMode);
-            SkPoint pt;
-            pt = SkPoint::Make(rt.x(), rt.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            clipper.AddPath(path, ClipperLib::PolyType::ptClip, true);
-
-            ClipperLib::Paths result;
-            clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
-
-            lastState().m_clipPath = result;
-            // lastState().m_clipper = NULL;
-        } else if (hasValidMatrixValue()) {
-            ClipperLib::Path path;
-
-            path.emplace_back(lastState().m_clipRect.x(),
-                              lastState().m_clipRect.y());
-            path.emplace_back(lastState().m_clipRect.x() +
-                                  lastState().m_clipRect.width(),
-                              lastState().m_clipRect.y());
-            path.emplace_back(
-                lastState().m_clipRect.x() + lastState().m_clipRect.width(),
-                lastState().m_clipRect.y() + lastState().m_clipRect.height());
-            path.emplace_back(lastState().m_clipRect.x(),
-                              lastState().m_clipRect.y() +
-                                  lastState().m_clipRect.height());
-            path.push_back(path[0]);
-
-            ClipperLib::Clipper clipper;
-
-            clipper.AddPath(path, ClipperLib::PolyType::ptSubject, true);
-
-            path.clear();
-            STARFISH_ASSERT(lastState().m_mapMode);
-            SkPoint pt;
-            pt = SkPoint::Make(rt.x(), rt.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            path.emplace_back(pt.x(), pt.y());
-
-            path.push_back(path[0]);
-
-            clipper.AddPath(path, ClipperLib::PolyType::ptClip, true);
-
-            ClipperLib::Paths result;
-            clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
-
-            lastState().m_clipPath = result;
-            // lastState().m_clipper = NULL;
-            lastState().m_hasPathClip = true;
-        } else {
-            SkRect sss;
-
-            if (lastState().m_mapMode) {
-                STARFISH_ASSERT(!hasValidMatrixValue());
-                sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                       SkFloatToScalar((float)rt.y()),
-                                       SkFloatToScalar((float)rt.width()),
-                                       SkFloatToScalar((float)rt.height()));
-                lastState().m_matrix.mapRect(&sss);
-            } else {
-                sss = SkRect::MakeXYWH(
-                    SkFloatToScalar((float)rt.x() + lastState().m_baseX),
-                    SkFloatToScalar((float)rt.y() + lastState().m_baseY),
-                    SkFloatToScalar((float)rt.width()),
-                    SkFloatToScalar((float)rt.height()));
-            }
-
-            if (!SkRect::Intersects(lastState().m_clipRect, sss)) {
-                lastState().m_clipRect.setEmpty();
-            } else {
-                lastState().m_clipRect.sort();
-                sss.sort();
-
-                SkRect tmp;
-                tmp.fLeft = std::max(lastState().m_clipRect.fLeft, sss.fLeft);
-                tmp.fRight =
-                    std::min(lastState().m_clipRect.fRight, sss.fRight);
-                tmp.fTop = std::max(lastState().m_clipRect.fTop, sss.fTop);
-                tmp.fBottom =
-                    std::min(lastState().m_clipRect.fBottom, sss.fBottom);
-                lastState().m_clipRect = tmp;
-            }
-        }
-        lastState().m_didClip = true;
-    }
-
-    void applyClippers()
-    {
-        if (lastState().m_didClip) {
-            if (lastState().m_hasPathClip) {
-                const ClipperLib::Paths& clipPaths = lastState().m_clipPath;
-
-                if (clipPaths.size() > 0) {
-                    Unit::Rect clipRt(0, 0, 0, 0);
-                    for (size_t i = 0; i < clipPaths.size(); i++) {
-                        Unit::Rect rt = boundingRect(clipPaths[i]);
-                        if (rt.width() && rt.height()) {
-                            clipRt.unite(rt);
-                        }
-                    }
-
-                    if (clipRt.width() && clipRt.height()) {
-                        for (size_t i = 0; i < clipPaths.size(); i++) {
-                            Unit::Rect rt = boundingRect(clipPaths[i]);
-                            if (rt.width() && rt.height()) {
-                                cairo_translate(m_canvas, -rt.x(), -rt.y());
-                                const ClipperLib::Path& path = clipPaths[i];
-                                cairo_move_to(m_canvas, path[0].X, path[0].Y);
-                                for (size_t j = 1; j < path.size(); j++) {
-                                    cairo_line_to(m_canvas, path[j].X,
-                                                  path[j].Y);
-                                }
-                                cairo_translate(m_canvas, rt.x(), rt.y());
-                            }
-                        }
-                    }
-                    cairo_clip(m_canvas);
-                }
-            } else {
-                cairo_rectangle(m_canvas, lastState().m_clipRect.x(),
-                                lastState().m_clipRect.y(),
-                                lastState().m_clipRect.width(),
-                                lastState().m_clipRect.height());
-                cairo_clip(m_canvas);
-            }
-        }
-    }
-    Unit::Rect boundingRect(const ClipperLib::Path& path)
-    {
-        int minX = 0, minY = 0, maxX = 0, maxY = 0;
-
-        if (path.size()) {
-            minX = path[0].X;
-            minY = path[0].X;
-            maxX = path[0].X;
-            maxY = path[0].X;
-        }
-
-        for (size_t i = 1; i < path.size(); i++) {
-            minX = std::min((int)path[i].X, minX);
-            minY = std::min((int)path[i].Y, minY);
-            maxX = std::max((int)path[i].X, maxX);
-            maxX = std::max((int)path[i].Y, maxY);
-        }
-
-        return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+        cairo_rectangle(m_canvas, rt.x(), rt.y(), rt.width(), rt.height());
+        cairo_clip(m_canvas);
+        cairo_new_path(m_canvas);
     }
 
     virtual void setColor(const Unit::Color& clr_)
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr_;
-        cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
+        cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(),
+                              clr_.A() * lastState().m_opacity);
     }
 
     virtual void setVisible(bool visible)
@@ -475,46 +247,18 @@ public:
 
     virtual void punchHole(const Unit::Rect& rt)
     {
-        if (!lastState().m_visible) {
-            return;
-        }
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                          SkFloatToScalar((float)rt.y()),
-                                          SkFloatToScalar((float)rt.width()),
-                                          SkFloatToScalar((float)rt.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            xx = lastState().m_baseX + rt.x();
-            yy = lastState().m_baseY + rt.y();
-        }
         drawCairoRect(xx, yy, ww, hh, true);
-    }
-
-    bool hasValidMatrixValue()
-    {
-        return lastState().m_matrix.getType() &
-               (SkMatrix::TypeMask::kTranslate_Mask |
-                SkMatrix::TypeMask::kScale_Mask |
-                SkMatrix::TypeMask::kAffine_Mask);
     }
 
     void drawCairoRect(float xx, float yy, float ww, float hh,
                        bool isHole = false)
     {
         cairo_save(m_canvas);
-        applyClippers();
-        cairo_new_path(m_canvas);
-
         cairo_translate(m_canvas, xx, yy);
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_fill(m_canvas);
@@ -528,20 +272,6 @@ public:
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                          SkFloatToScalar((float)rt.y()),
-                                          SkFloatToScalar((float)rt.width()),
-                                          SkFloatToScalar((float)rt.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            xx = lastState().m_baseX + rt.x();
-            yy = lastState().m_baseY + rt.y();
-        }
         drawCairoRect(xx, yy, ww, hh);
     }
 
@@ -552,27 +282,13 @@ public:
             return;
         }
         int xx = 0, yy = 0, ww = 0, hh = 0;
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                          SkFloatToScalar((float)rt.y()),
-                                          SkFloatToScalar((float)rt.width()),
-                                          SkFloatToScalar((float)rt.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            LayoutUnit rx = rt.x();
-            LayoutUnit ry = rt.y();
-            rx += lastState().m_baseX;
-            ry += lastState().m_baseY;
-            xx = rx.floor();
-            yy = ry.floor();
-            ww = snapSizeToPixel(rt.width(), rx);
-            hh = snapSizeToPixel(rt.height(), ry);
-        }
+        LayoutUnit rx = rt.x();
+        LayoutUnit ry = rt.y();
 
+        xx = rx.floor();
+        yy = ry.floor();
+        ww = snapSizeToPixel(rt.width(), rx);
+        hh = snapSizeToPixel(rt.height(), ry);
         drawCairoRect(xx, yy, ww, hh);
     }
 
@@ -582,47 +298,6 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-
-        if (lastState().m_mapMode) {
-            SkPoint pt;
-            pt = SkPoint::Make((float)p1.x(), (float)p1.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            p1.setX(pt.x());
-            p1.setY(pt.y());
-
-            pt = SkPoint::Make((float)p2.x(), (float)p2.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            p2.setX(pt.x());
-            p2.setY(pt.y());
-
-            pt = SkPoint::Make((float)p3.x(), (float)p3.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            p3.setX(pt.x());
-            p3.setY(pt.y());
-
-            pt = SkPoint::Make((float)p4.x(), (float)p4.y());
-            lastState().m_matrix.mapPoints(&pt, 1);
-            p4.setX(p4.x() + lastState().m_baseX);
-            p4.setY(p4.y() + lastState().m_baseY);
-            p4.setX(pt.x());
-            p4.setY(pt.y());
-        } else {
-            p1.setX(p1.x() + lastState().m_baseX);
-            p1.setY(p1.y() + lastState().m_baseY);
-
-            p2.setX(p2.x() + lastState().m_baseX);
-            p2.setY(p2.y() + lastState().m_baseY);
-
-            p3.setX(p3.x() + lastState().m_baseX);
-            p3.setY(p3.y() + lastState().m_baseY);
-
-            p4.setX(p4.x() + lastState().m_baseX);
-            p4.setY(p4.y() + lastState().m_baseY);
-        }
-        applyClippers();
-        cairo_new_path(m_canvas);
-
-        // TODO(MONG) polygon is aligned?
         cairo_move_to(m_canvas, p1.x(), p1.y());
         cairo_line_to(m_canvas, p2.x(), p2.y());
         cairo_line_to(m_canvas, p3.x(), p3.y());
@@ -693,40 +368,27 @@ public:
 #endif
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
-        if (lastState().m_mapMode) {
-            sz.setWidth(lastState().m_font->measureText(sv));
-        }
+        // if (lastState().m_mapMode) {
+        //     sz.setWidth(lastState().m_font->measureText(sv));
+        // }
         LayoutRect rt(x, y, sz.width(), sz.height());
 
         LayoutUnit xx = 0, yy = 0;
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                          SkFloatToScalar((float)rt.y()),
-                                          SkFloatToScalar((float)rt.width()),
-                                          SkFloatToScalar((float)rt.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-        } else {
-            xx = lastState().m_baseX + rt.x();
-            yy = lastState().m_baseY + rt.y();
+        xx = rt.x();
+        yy = rt.y();
 
-            Unit::Rect test((float)xx, (float)yy, (float)rt.width(),
-                            (float)rt.height());
-            Unit::Rect canvasSize(0, 0, m_width, m_height);
-            if (canvasSize.contains(test.x(), test.y()) ||
-                canvasSize.contains(test.maxX(), test.y()) ||
-                canvasSize.contains(test.x(), test.maxY()) ||
-                canvasSize.contains(test.maxX(), test.maxY())) {
-            } else {
-                return;
-            }
+        Unit::Rect test((float)xx, (float)yy, (float)rt.width(),
+                        (float)rt.height());
+        Unit::Rect canvasSize(0, 0, m_width, m_height);
+        if (canvasSize.contains(test.x(), test.y()) ||
+            canvasSize.contains(test.maxX(), test.y()) ||
+            canvasSize.contains(test.x(), test.maxY()) ||
+            canvasSize.contains(test.maxX(), test.maxY())) {
+        } else {
+            return;
         }
 
         cairo_save(m_canvas);
-        applyClippers();
-        cairo_new_path(m_canvas);
-
         cairo_translate(m_canvas, xx, yy);
 
         UTF8StringDataNonGCStd us =
@@ -786,47 +448,21 @@ public:
     {
         cairo_save(m_canvas);
 
-        applyClippers();
-        cairo_new_path(m_canvas);
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)dst.x()),
-                                          SkFloatToScalar((float)dst.y()),
-                                          SkFloatToScalar((float)dst.width()),
-                                          SkFloatToScalar((float)dst.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            xx = dst.x() + lastState().m_baseX;
-            yy = dst.y() + lastState().m_baseY;
-            ww = dst.width();
-            hh = dst.height();
-        }
+        xx = dst.x() + lastState().m_baseX;
+        yy = dst.y() + lastState().m_baseY;
+        ww = dst.width();
+        hh = dst.height();
 
         cairo_pattern_t* resizePattern;
-
         cairo_matrix_t matrix;
 
         resizePattern = cairo_pattern_create_for_surface(localSurface);
         cairo_translate(m_canvas, xx, yy);
 
-        if (lastState().m_mapMode) {
-            cairo_matrix_init(&matrix, lastState().m_matrix.getScaleX(),
-                              lastState().m_matrix.getSkewY(),
-                              lastState().m_matrix.getSkewX(),
-                              lastState().m_matrix.getScaleY(),
-                              lastState().m_matrix.getTranslateX(),
-                              lastState().m_matrix.getTranslateY());
-
-            cairo_set_matrix(m_canvas, &matrix);
-        } else {
-            cairo_matrix_init_identity(&matrix);
-            cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
-            cairo_pattern_set_matrix(resizePattern, &matrix);
-        }
+        cairo_matrix_init_identity(&matrix);
+        cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
+        cairo_pattern_set_matrix(resizePattern, &matrix);
         cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_NEAREST);
 
         cairo_set_source(m_canvas, resizePattern);
@@ -909,26 +545,9 @@ public:
         }
 
         cairo_save(m_canvas);
-        applyClippers();
-        cairo_new_path(m_canvas);
-
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)dst.x()),
-                                          SkFloatToScalar((float)dst.y()),
-                                          SkFloatToScalar((float)dst.width()),
-                                          SkFloatToScalar((float)dst.height()));
-            lastState().m_matrix.mapRect(&sss);
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            xx = lastState().m_baseX;
-            yy = lastState().m_baseY;
-            ww = dst.width();
-            hh = dst.height();
-        }
+        ww = dst.width();
+        hh = dst.height();
 
         float x = 0.0, y = 0.0;
         if (xRepeat) {
@@ -970,10 +589,6 @@ public:
         }
 
         pattern = cairo_pattern_create_for_surface(image);
-
-        // cairo_matrix_init_translate(&matrix,x,y);
-        // cairo_matrix_translate(&matrix, surfaceWidth / imageWidth,
-        // surfaceHeight / imageHeight);
         cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
                                 surfaceHeight / imageHeight);
         cairo_matrix_translate(&matrix, -x, -y);
@@ -987,7 +602,6 @@ public:
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_clip(m_canvas);
         cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
-        // cairo_fill(m_canvas);
 
         cairo_pattern_destroy(pattern);
         cairo_surface_destroy(image);
@@ -997,41 +611,41 @@ public:
 
     virtual void postMatrix(const SkMatrix& matrix)
     {
-        assureMapMode();
-        lastState().m_matrix.preConcat(matrix);
+        cairo_matrix_t result_matrix;
+        cairo_matrix_init_identity(&result_matrix);
+
+        cairo_matrix_t a_matrix;
+        cairo_matrix_t b_matrix;
+        cairo_get_matrix(m_canvas, &a_matrix);
+        cairo_matrix_init(&b_matrix, matrix.getScaleX(), matrix.getSkewY(),
+                          matrix.getSkewX(), matrix.getScaleY(),
+                          matrix.getTranslateX(), matrix.getTranslateY());
+        cairo_matrix_multiply(&result_matrix, &a_matrix, &b_matrix);
+        cairo_set_matrix(m_canvas, &result_matrix);
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
-        if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasValidMatrixValue());
-            SkPoint point = SkPoint::Make((float)lp.x(), (float)lp.y());
-            lastState().m_matrix.mapPoints(&point, 1);
-            lp.setX(point.x());
-            lp.setY(point.y());
-        } else {
-            lp.setX(lp.x() + lastState().m_baseX);
-            lp.setY(lp.y() + lastState().m_baseY);
-        }
+        double x = lp.x();
+        double y = lp.y();
+        cairo_matrix_t a_matrix;
+
+        cairo_get_matrix(m_canvas, &a_matrix);
+        cairo_matrix_transform_point(&a_matrix, &x, &y);
+        lp.setX(x);
+        lp.setY(y);
     }
 
     virtual void applyMatrixTo(LayoutRect& lp)
     {
-        if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasValidMatrixValue());
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)lp.x()),
-                                          SkFloatToScalar((float)lp.y()),
-                                          SkFloatToScalar((float)lp.width()),
-                                          SkFloatToScalar((float)lp.height()));
-            lastState().m_matrix.mapRect(&sss);
-            lp.setX(sss.x());
-            lp.setY(sss.y());
-            lp.setWidth(sss.width());
-            lp.setHeight(sss.height());
-        } else {
-            lp.setX(lp.x() + lastState().m_baseX);
-            lp.setY(lp.y() + lastState().m_baseY);
-        }
+        double x = lp.x();
+        double y = lp.y();
+        cairo_matrix_t a_matrix;
+
+        cairo_get_matrix(m_canvas, &a_matrix);
+        cairo_matrix_transform_point(&a_matrix, &x, &y);
+        lp.setX(x);
+        lp.setY(y);
     }
 
     virtual void* unwrap()
@@ -1054,7 +668,6 @@ protected:
     void* m_buffer;
     unsigned m_width;
     unsigned m_height;
-    size_t m_imageCount;
 };
 
 Canvas* Canvas::createDirect(void* data)
