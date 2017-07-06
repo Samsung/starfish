@@ -149,6 +149,12 @@ public:
 // Binding interface
 class MouseEvent : public UIEvent {
 public:
+    MouseEvent(Document* document)
+        : UIEvent(document)
+        , m_mouseData()
+    {
+    }
+
     MouseEvent(Document* document, String* eventType)
         : UIEvent(document, eventType)
         , m_mouseData()

@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/Event.h"
@@ -151,6 +152,16 @@ bool EventTarget::dispatchEvent(Event* event)
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
     STARFISH_ASSERT(origin);
+
+    // The dispatchEvent method throws DOM exception
+    // if the event's type was not specified by initializing the event
+    // before the method was called, or if the event's type is null or
+    // an empty string.
+    if (!event->isTypeInitialized()) {
+        throw new DOMException(document(),
+                               DOMException::Code::INVALID_STATE_ERR, nullptr);
+    }
+
     // https://www.w3.org/TR/dom/#dispatching-events
     // 1. Let event be the event that is dispatched.
     // 2. Set event's dispatch flag.

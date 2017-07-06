@@ -45,6 +45,11 @@ private:
 
 class FocusEvent : public UIEvent {
 public:
+    FocusEvent(Document* document)
+        : UIEvent(document)
+        , m_relatedTarget(nullptr)
+    {
+    }
     FocusEvent(Document* document, String* eventType)
         : UIEvent(document, eventType)
         , m_relatedTarget(nullptr)

@@ -68,11 +68,10 @@ void EventInit::setComposed(bool composed)
     m_composed = composed;
 }
 
-Event::Event(Document* document, String* eventType)
+Event::Event(Document* document)
     : ScriptWrappable(this)
     , m_isInitialized(true)
     , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_type(eventType)
     , m_target(nullptr)
     , m_currentTarget(nullptr)
     , m_eventPhase(0)
@@ -85,6 +84,13 @@ Event::Event(Document* document, String* eventType)
     , m_timeStamp(timestamp())
     , m_isDispatched(false)
 {
+    unintializeType();
+}
+
+Event::Event(Document* document, String* eventType)
+    : Event(document)
+{
+    m_type = eventType;
 }
 
 Event::Event(Document* document, String* eventType, const EventInit& init)

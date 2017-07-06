@@ -11,7 +11,7 @@ interface EventTarget {
   // void removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options);
   [ForceDenyStrictMode] void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
   [ForceDenyStrictMode] void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
-  [ForceDenyStrictMode] boolean dispatchEvent(Event event);
+  [RaisesException, ForceDenyStrictMode] boolean dispatchEvent(Event event);
 };
 
 

@@ -29,6 +29,7 @@ namespace StarFish {
 // https://w3c.github.io/touch-events/#touchevent-interface
 class TouchEvent : public UIEvent {
 public:
+    TouchEvent(Document* document);
     TouchEvent(Document* document, String* eventType);
     TouchEvent(Document* document, String* eventType, TouchData* data,
                size_t touchCount);
