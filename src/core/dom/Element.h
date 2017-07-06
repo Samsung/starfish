@@ -180,7 +180,7 @@ public:
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
-    void addAttr(Attr* attr);
+    Attr* replaceAttrAndReturnOld(Attr* attr);
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
 
