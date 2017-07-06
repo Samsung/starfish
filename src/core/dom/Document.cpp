@@ -410,8 +410,18 @@ Text* Document::createTextNode(String* data)
     return new Text(this, data);
 }
 
-CDATASection* Document::createCDATASectionNode(String* data)
+CDATASection* Document::createCDATASection(String* data)
 {
+    if (isHTMLDocument()) {
+        throw new DOMException(
+            this, DOMException::Code::NOT_SUPPORTED_ERR,
+            "This operation is not supported for HTML documents.");
+    }
+    if (data->contains("]]>")) {
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+                               "String cannot contain ']]>' since that is the "
+                               "end delimiter of a CData section.");
+    }
     return new CDATASection(this, data);
 }
 
