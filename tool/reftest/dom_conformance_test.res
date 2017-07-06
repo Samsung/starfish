@@ -6,7 +6,7 @@ test/reftest/dom-conformance-test/html/level1/core/documentinvalidcharacterexcep
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild1.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild2.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild4.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild5.html
+test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild5.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrappendchild6.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrchildnodes1.html
 test/reftest/dom-conformance-test/html/level1/core/hc_attrchildnodes2.html

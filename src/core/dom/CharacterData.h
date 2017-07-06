@@ -67,6 +67,11 @@ public:
         return m_data->length();
     }
 
+    bool isContainerNode()
+    {
+        return false;
+    }
+
     /* Other methods (not in DOM API) */
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,

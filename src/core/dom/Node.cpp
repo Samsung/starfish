@@ -827,6 +827,11 @@ static void didInsertNode(Node* self, Node* child)
 
 Node* Node::appendChild(Node* child)
 {
+    if (!isContainerNode()) {
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+                               "This node type does not support this method.");
+    }
+
     // spec does not say what to do when child is null
     STARFISH_ASSERT(child);
 

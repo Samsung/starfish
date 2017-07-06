@@ -561,6 +561,11 @@ public:
         return StyleResolver::PseudoElementType::PseudoElementNone;
     }
 
+    virtual bool isContainerNode()
+    {
+        return true;
+    }
+
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);

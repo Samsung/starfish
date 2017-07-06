@@ -124,6 +124,11 @@ public:
         m_element = nullptr;
     }
 
+    bool isContainerNode()
+    {
+        return false;
+    }
+
 private:
     Element* m_element;
     QualifiedName m_name;
