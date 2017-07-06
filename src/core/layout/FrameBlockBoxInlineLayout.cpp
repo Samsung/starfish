@@ -1016,6 +1016,8 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     m_block->m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     resetLineBox();
+    Length textIndent = block->style()->textIndent();
+    m_textIndentWidth = textIndent.specifiedValue(block->boxWidth());
 }
 
 void LineFormattingContext::registerInlineContent()
@@ -1467,7 +1469,7 @@ void LineFormattingContext::computeHorizontalProperties()
 
     back->setX(m_lineBoxX);
     back->setWidth(m_lineBoxWidth);
-    LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(0);
+    LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(m_textIndentWidth);
 
     // text align
     if (m_block->style()->textAlign() == SideValue::LeftSideValue) {
@@ -1676,6 +1678,9 @@ void LineFormattingContext::resetLineBox()
     m_block->m_lineBoxes.push_back(lineBox);
     m_floatingBoxLayoutContexts.clear();
     layoutLineBox(0, 0);
+    if (m_currentLineWidth > 0) {
+        m_textIndentWidth = 0;
+    }
     m_currentLineWidth = 0;
     if (m_pendingInlineBoxes.size() == 0) {
         m_pendingFloatingBoxNumsBeforeCurrentLine =
@@ -1868,8 +1873,9 @@ bool LineFormattingContext::canInsertToLineBox(Frame* f, LayoutUnit width)
             return width <= remainedWidth;
         }
     } else {
-        LayoutUnit remainingWidth = (m_lineBoxWidth - m_currentLineWidth -
-                                     m_unprocessedStartingMBPWidth);
+        LayoutUnit remainingWidth =
+            (m_lineBoxWidth - m_currentLineWidth -
+             m_unprocessedStartingMBPWidth - m_textIndentWidth);
         bool ret = width <= remainingWidth;
 
         if (!ret && f->isInlineTextBox()) {
@@ -3335,6 +3341,11 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
             ctx.updatePreferredWidth(w);
         } else {
+            Length textIndent = style()->textIndent();
+            LayoutUnit textIndentWidth =
+                textIndent.specifiedValue(ctx.remainedWidth());
+            ctx.setCurrentLineWidth(textIndentWidth);
+            ctx.setTextIndentWidth(textIndentWidth);
             ctx.computePreferredWidthInline(this);
         }
     }

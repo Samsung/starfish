@@ -982,9 +982,9 @@ public:
     LayoutUnit m_lineBoxX;
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
+    LayoutUnit m_textIndentWidth;
     LayoutUnit m_lineBoxWidth;
     LayoutUnit m_unprocessedStartingMBPWidth;
-    size_t m_currentLine;
     FrameBlockBox* m_block;
     LayoutContext& m_layoutContext;
     InlineBoxLayoutParentBox* m_currentLayoutParent;

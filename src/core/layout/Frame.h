@@ -395,6 +395,7 @@ public:
         , m_preferredWidthSoFar(0)
         , m_preferredMinWidthSoFar(0)
         , m_currentLineWidth(0)
+        , m_textIndentWidth(0)
         , m_unprocessedStartingMBPWidth(0)
         , m_lastWhiteSpaceWidth(0)
         , m_wordWidth(0)
@@ -433,6 +434,11 @@ public:
     void setCurrentLineWidth(LayoutUnit w)
     {
         m_currentLineWidth = w;
+    }
+
+    void setTextIndentWidth(LayoutUnit w)
+    {
+        m_textIndentWidth = w;
     }
 
     LayoutUnit remainedWidth() const
@@ -534,6 +540,7 @@ private:
     LayoutUnit m_preferredWidthSoFar;
     LayoutUnit m_preferredMinWidthSoFar;
     LayoutUnit m_currentLineWidth;
+    LayoutUnit m_textIndentWidth;
     LayoutUnit m_unprocessedStartingMBPWidth;
     LayoutUnit m_lastWhiteSpaceWidth;
     LayoutUnit m_wordWidth;

@@ -3226,6 +3226,21 @@ void StyleResolver::apply(Element* element,
                 style->setTextAlign(cssValues[k].sideValue());
             }
             break;
+        case CSSStyleValuePair::KeyKind::TextIndent:
+            // length | percentage | inherit
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setTextIndent(parentStyle->textIndent());
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Length ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Percentage) {
+                style->setTextIndent(convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value()));
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::TextDecoration:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
@@ -6060,6 +6075,11 @@ bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueTextIndent(const CSSTokenVector& tokens)
+{
+    return updateValueLengthOrPercent(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueUnicodeBidi(const CSSTokenVector& tokens)

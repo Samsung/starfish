@@ -56,7 +56,7 @@ test/reftest/csswg-test/css1_converted/c5516-ibrdr-c-000.htm
 test/reftest/csswg-test/css1_converted/c63-color-000.htm
 test/reftest/csswg-test/css1_original/c71-fwd-parsing-000.htm
 test/reftest/csswg-test/css1_converted/c71-fwd-parsing-001.htm
-test/reftest/csswg-test/css1_original/c71-fwd-parsing-002.htm
+#test/reftest/csswg-test/css1_original/c71-fwd-parsing-002.htm
 test/reftest/csswg-test/css1_converted/c71-fwd-parsing-003.htm
 test/reftest/csswg-test/css1_original/c71-fwd-parsing-004.htm
 test/reftest/csswg-test/css1_original/c562-white-sp-000.htm

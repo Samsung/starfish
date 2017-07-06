@@ -760,6 +760,7 @@ class CSSStyleDeclaration;
     F(BorderSpacing, borderSpacing, "border-spacing")                    \
     F(CaptionSide, CaptionSide, "caption-side")                          \
     F(TextAlign, textAlign, "text-align")                                \
+    F(TextIndent, textIndent, "text-indent")                             \
     F(Transform, transform, "transform")                                 \
     F(TransformOrigin, transformOrigin, "transform-origin")              \
     F(Visibility, visibility, "visibility")                              \
