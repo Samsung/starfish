@@ -130,7 +130,7 @@ public:
     Element* createElementNS(Nullable<String*> namespaceString,
                              String* qualifiedName);
     Text* createTextNode(String* data);
-    CDATASection* createCDATASectionNode(String* data);
+    CDATASection* createCDATASection(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);

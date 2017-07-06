@@ -46,7 +46,7 @@ interface Document : Node {
   [NewObject, RaisesException] Element createElementNS(DOMString? namespace, DOMString qualifiedName);
   [NewObject, RaisesException] DocumentFragment createDocumentFragment();
   [NewObject] Text createTextNode(DOMString data);
-  [Unimplemented, NewObject] CDATASection createCDATASection(DOMString data);
+  [NewObject, RaisesException] CDATASection createCDATASection(DOMString data);
   [NewObject] Comment createComment(DOMString data);
   [Unimplemented, NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
