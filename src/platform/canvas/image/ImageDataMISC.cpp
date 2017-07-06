@@ -90,8 +90,12 @@ private:
         if (data[0] == 255 && data[1] == 216 && data[2] == 255 &&
             data[3] == 224) {
             return true;
+        } else if (data[6] == 69 && data[7] == 120 && data[8] == 105 &&
+                   data[9] == 102) {
+            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     static ImageFormat parseImageFormatFromBuffer(const char* buf)
