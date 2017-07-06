@@ -46,6 +46,11 @@ public:
         return new Comment(document(), data());
     }
 
+    bool isContainerNode()
+    {
+        return false;
+    }
+
     /* 4.12 Interface Comment */
     // Comment node does not have any public APIs
 };

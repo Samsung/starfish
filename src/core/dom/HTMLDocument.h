@@ -34,6 +34,18 @@ public:
         m_contentType = String::createASCIIString("text/html");
     }
 
+    HTMLDocument(HTMLDocument& doc)
+        : Document(doc.m_window, doc.scriptBindingInstance(), doc.m_documentURI,
+                   doc.m_characterSet, false)
+    {
+        m_contentType = String::createASCIIString("text/html");
+    }
+
+    Node* clone()
+    {
+        return new HTMLDocument(*this);
+    }
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLDocument() const override;

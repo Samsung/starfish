@@ -85,6 +85,11 @@ public:
         // TODO
     }
 
+    bool isContainerNode()
+    {
+        return false;
+    }
+
 protected:
     String* m_name;
     String* m_publicId;

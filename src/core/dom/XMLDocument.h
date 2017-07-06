@@ -33,6 +33,18 @@ public:
     {
     }
 
+    XMLDocument(XMLDocument& doc)
+        : Document(doc.m_window, doc.scriptBindingInstance(), doc.m_documentURI,
+                   doc.m_characterSet, false)
+    {
+        m_contentType = String::createASCIIString("text/html");
+    }
+
+    Node* clone()
+    {
+        return new XMLDocument(*this);
+    }
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isXMLDocument() const override;
