@@ -739,6 +739,9 @@ NullableUTF8String String::toNullableUTF8String()
 
 String* String::substring(size_t pos, size_t len)
 {
+    if (!len) {
+        return String::emptyString;
+    }
     return new StringView(this, pos, pos + len);
 }
 

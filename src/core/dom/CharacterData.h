@@ -72,6 +72,12 @@ public:
         return false;
     }
 
+    String* substringData(unsigned long offset, unsigned long count);
+    void appendData(String* data);
+    void insertData(unsigned long offset, String* data);
+    void deleteData(unsigned long offset, unsigned long count);
+    void replaceData(unsigned long offset, unsigned long count, String* data);
+
     /* Other methods (not in DOM API) */
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,

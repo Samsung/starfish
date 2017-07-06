@@ -4,11 +4,11 @@
 interface CharacterData : Node {
   [TreatNullAs=EmptyString] attribute DOMString data;
   [Custom=Getter] readonly attribute unsigned long length;
-  [Unimplemented] DOMString substringData(unsigned long offset, unsigned long count);
-  [Unimplemented] void appendData(DOMString data);
-  [Unimplemented] void insertData(unsigned long offset, DOMString data);
-  [Unimplemented] void deleteData(unsigned long offset, unsigned long count);
-  [Unimplemented] void replaceData(unsigned long offset, unsigned long count, DOMString data);
+  [RaisesException] DOMString substringData(unsigned long offset, unsigned long count);
+  [RaisesException] void appendData(DOMString data);
+  [RaisesException] void insertData(unsigned long offset, DOMString data);
+  [RaisesException] void deleteData(unsigned long offset, unsigned long count);
+  [RaisesException] void replaceData(unsigned long offset, unsigned long count, DOMString data);
 };
 
 
