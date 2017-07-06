@@ -146,16 +146,18 @@ public:
         ResourceClient::didLoadFinished();
         String* text = m_resource->asTextResource()->text();
 
+        CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
+        sheet->parseSheetIfneeds();
+        m_element->m_generatedSheet = sheet;
+        m_element->document()->styleResolver().addSheet(sheet);
+
         CSSParser parser(m_element->document());
-        RefPtr<CSSToken> token = parser.makeToken(m_element->media());
+        parser.makeToken(m_element->media());
         MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
+        sheet->setMediaQuerySet(mediaQuerySet);
         const MediaQueryEvaluator& evaluator =
             m_element->document()->styleResolver().mediaQueryEvaluator();
         if (evaluator.eval(mediaQuerySet)) {
-            CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
-            sheet->setMediaQuerySet(mediaQuerySet);
-            m_element->m_generatedSheet = sheet;
-            m_element->document()->styleResolver().addSheet(sheet);
             m_element->window()
                 ->browsingContext()
                 ->setWholeDocumentNeedsStyleRecalc();

@@ -118,10 +118,7 @@ void HTMLStyleElement::generateStyleSheet()
         removeStyleSheet();
     }
 
-    CSSParser parser(document());
-
     String* str = String::emptyString;
-
     Node* child = firstChild();
     while (child) {
         if (child->isCharacterData() && child->asCharacterData()->isText()) {
@@ -130,16 +127,18 @@ void HTMLStyleElement::generateStyleSheet()
         child = child->nextSibling();
     }
 
-    RefPtr<CSSToken> token = parser.makeToken(media());
+    CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
+    sheet->parseSheetIfneeds();
+    m_generatedSheet = sheet;
+    document()->styleResolver().addSheet(sheet);
+
+    CSSParser parser(document());
+    parser.makeToken(media());
     MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
+    sheet->setMediaQuerySet(mediaQuerySet);
     const MediaQueryEvaluator& evaluator =
         document()->styleResolver().mediaQueryEvaluator();
     if (evaluator.eval(mediaQuerySet)) {
-        CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
-        sheet->setMediaQuerySet(mediaQuerySet);
-        m_generatedSheet = sheet;
-        document()->styleResolver().addSheet(sheet);
-        sheet->parseSheetIfneeds();
         window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
     }
 }
