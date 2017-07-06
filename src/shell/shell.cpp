@@ -113,7 +113,8 @@ char* url = nullptr;
 class DaliShellController : public ConnectionTracker {
 public:
     DaliShellController(Application& application, int width, int height)
-        : m_width(width)
+        : m_isMouseLbuttonDown(false)
+        , m_width(width)
         , m_height(height)
         , mApplication(application)
 
@@ -214,15 +215,24 @@ public:
             if (pointState == Dali::PointState::DOWN) {
                 StarFishEnterer enter(m_sf);
                 const Dali::Vector2& screen = data.GetScreenPosition(0);
-                StarFish::MouseData data(screen.x, screen.y);
+                MouseData data(MouseData::MouseButtonValue::LeftButton,
+                               MouseData::MouseButtonsValue::LeftButtonDown,
+                               screen.x, screen.y);
+
                 m_sf->platformWindow()->dispatchMouseEvent(
                     PlatformWindow::MouseEventDown, data);
+                m_isMouseLbuttonDown = true;
             } else if (pointState == Dali::PointState::UP) {
                 StarFishEnterer enter(m_sf);
                 const Dali::Vector2& screen = data.GetScreenPosition(0);
-                StarFish::MouseData data(screen.x, screen.y);
+                StarFish::MouseData data(
+                    MouseData::MouseButtonValue::NoButton,
+                    MouseData::MouseButtonsValue::NoButtonDown, screen.x,
+                    screen.y);
+
                 m_sf->platformWindow()->dispatchMouseEvent(
                     PlatformWindow::MouseEventUp, data);
+                m_isMouseLbuttonDown = false;
             }
         }
         return true;
@@ -231,13 +241,18 @@ public:
     {
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFishEnterer enter(m_sf);
-        StarFish::MouseData data(point.x, point.y);
+        unsigned char buttons =
+            m_isMouseLbuttonDown ? MouseData::MouseButtonsValue::LeftButtonDown
+                                 : 0;
+        StarFish::MouseData data(0, buttons, point.x, point.y);
+
         m_sf->platformWindow()->dispatchMouseEvent(
             PlatformWindow::MouseEventMove, data);
         return true;
     }
 
 private:
+    bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
     StarFish::StarFish* m_sf;
