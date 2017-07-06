@@ -56,7 +56,7 @@ interface Document : Node {
   [NewObject, RaisesException] Attr createAttribute(DOMString localName);
   [Unimplemented, NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
 
-  [Unimplemented, NewObject] Event createEvent(DOMString type);
+  [RaisesException, NewObject] Event createEvent(DOMString type);
 
   [Unimplemented, NewObject] Range createRange();
 

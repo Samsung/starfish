@@ -97,6 +97,12 @@ private:
 
 class UIEvent : public Event {
 public:
+    UIEvent(Document* document)
+        : Event(document)
+        , m_view(nullptr)
+    {
+    }
+
     UIEvent(Document* document, String* eventType)
         : Event(document, eventType)
         , m_view(nullptr)

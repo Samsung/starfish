@@ -105,6 +105,12 @@ protected:
 
 class KeyboardEvent : public UIEvent {
 public:
+    KeyboardEvent(Document* document)
+        : UIEvent(document)
+        , m_keyboardData()
+    {
+    }
+
     KeyboardEvent(Document* document, String* eventType)
         : UIEvent(document, eventType)
         , m_keyboardData()

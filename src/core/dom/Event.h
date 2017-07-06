@@ -55,6 +55,7 @@ public:
         BUBBLING_PHASE = 3
     };
 
+    Event(Document* document);
     Event(Document* document, String* eventType);
     Event(Document* document, String* eventType, const EventInit& init);
 
@@ -63,9 +64,20 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
     virtual bool isEvent() const override;
 
+    bool isTypeInitialized() const
+    {
+        return m_type.hasValue();
+    }
+    void unintializeType()
+    {
+        m_type = Nullable<String*>();
+    }
     String* type() const
     {
-        return m_type;
+        if (isTypeInitialized()) {
+            return m_type.getValue();
+        }
+        return String::emptyString;
     }
     EventTarget* target() const
     {
@@ -182,11 +194,18 @@ public:
         m_isDispatched = isDispatched;
     }
 
+    void initEvent(String* type, bool bubbles, bool cancelable)
+    {
+        m_type = type;
+        m_bubbles = bubbles;
+        m_cancelable = cancelable;
+    }
+
 private:
     bool m_isInitialized; // initialized flag
 
     ScriptBindingInstance* m_scriptBindingInstance;
-    String* m_type;
+    Nullable<String*> m_type;
     EventTarget* m_target;
     EventTarget* m_currentTarget;
 

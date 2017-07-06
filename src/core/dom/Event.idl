@@ -28,7 +28,7 @@ interface Event {
   [Unimplemented, Unforgeable] readonly attribute boolean isTrusted;
   readonly attribute DOMTimeStamp timeStamp;
 
-  [Unimplemented] void initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
+  void initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
 };
 
 dictionary EventInit {

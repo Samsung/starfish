@@ -21,11 +21,18 @@
 
 namespace StarFish {
 
+TouchEvent::TouchEvent(Document* document)
+    : UIEvent(document)
+    , m_touches(new TouchList(document))
+{
+}
+
 TouchEvent::TouchEvent(Document* document, String* eventType)
     : UIEvent(document, eventType)
     , m_touches(new TouchList(document))
 {
 }
+
 TouchEvent::TouchEvent(Document* document, String* eventType, TouchData* data,
                        size_t touchCount)
     : TouchEvent(document, eventType)

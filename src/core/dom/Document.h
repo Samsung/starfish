@@ -333,6 +333,8 @@ public:
     }
 #endif
 
+    Event* createEvent(String* type);
+
     /* Document-level focus APIs */
     Element* activeElement();
     bool hasFocus() const;
