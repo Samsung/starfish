@@ -243,6 +243,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // White-Space
         // Padding-Top
         // Margin-Left
+        // Text-Indent
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
@@ -274,6 +275,10 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::MarginLeft;
             }
             break;
+        case 't':
+            if (memcmp(data, "text-indent", 11) == 0) {
+                return CSSStyleKind::TextIndent;
+            }
         }
         break;
     case 12:

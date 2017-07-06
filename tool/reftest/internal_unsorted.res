@@ -211,3 +211,4 @@
 272;test/internal-test/css/text/word-concatenating.html
 267;test/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 276;test/internal-test/css/width/dont-break-line.html
+277;test/internal-test/css/text/text-indent-basic.html

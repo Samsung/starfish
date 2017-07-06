@@ -271,6 +271,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize,
                                                             font());
     m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(baseFontSize, font());
+    m_inheritedStyles.m_textIndent.changeToFixedIfNeeded(baseFontSize, font());
     m_inheritedStyles.m_horizontalBorderSpacing.changeToFixedIfNeeded(
         baseFontSize, font());
     m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
@@ -411,6 +412,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_lineHeight !=
         oldStyle->m_inheritedStyles.m_lineHeight) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_inheritedStyles.m_textIndent !=
+        oldStyle->m_inheritedStyles.m_textIndent) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }

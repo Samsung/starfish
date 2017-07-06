@@ -61,6 +61,7 @@ public:
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
+        m_inheritedStyles.m_textIndent = Length(Length::Fixed, 0);
         m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
         m_inheritedStyles.m_verticalBorderSpacing = Length(Length::Fixed, 0);
         initNonInheritedStyles();
@@ -220,6 +221,16 @@ public:
     void setTextAlign(SideValue t)
     {
         m_inheritedStyles.m_textAlign = t;
+    }
+
+    Length textIndent()
+    {
+        return m_inheritedStyles.m_textIndent;
+    }
+
+    void setTextIndent(Length val)
+    {
+        m_inheritedStyles.m_textIndent = val;
     }
 
     TextDecorationValue textDecoration()
@@ -1042,6 +1053,7 @@ protected:
         Length m_fontSize;
         Length m_letterSpacing;
         Length m_lineHeight;
+        Length m_textIndent;
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
         SideValue m_textAlign : 3;
