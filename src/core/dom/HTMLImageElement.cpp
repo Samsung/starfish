@@ -45,6 +45,7 @@ public:
     {
         ResourceClient::didLoadFinished();
 
+        m_element->m_imageResource = nullptr;
         ImageData* imageDataBefore = m_element->imageData();
         ImageData* imageData = m_resource->asImageResource()->imageData();
         STARFISH_ASSERT(imageData);

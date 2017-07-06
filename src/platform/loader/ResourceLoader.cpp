@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2016-present Samsung Electronics Co., Ltd
  *
@@ -150,9 +151,9 @@ public:
     }
 };
 
-class ResourceSizeTracer : public ResourceClient {
+class ResourceLoaderTracer : public ResourceClient {
 public:
-    ResourceSizeTracer(Resource* res)
+    ResourceLoaderTracer(Resource* res)
         : ResourceClient(res)
     {
     }
@@ -170,6 +171,22 @@ public:
     virtual void didLoadCanceled()
     {
         ResourceClient::didLoadCanceled();
+        if (!m_resource->m_isReferencedByAnoterResource) {
+            auto& l = m_resource->loader()->m_imageResourceCacheLRUList;
+            auto iter = std::find(l.begin(), l.end(), m_resource);
+            if (iter != l.end()) {
+                l.erase(iter);
+            }
+
+            auto& cache = m_resource->loader()->m_imageResourceCache;
+            auto u8Str = resource()->url()->urlString()->toUTF8NonGCString();
+            ASCIIString url(u8Str.data(), u8Str.length());
+            auto iter2 = cache.find(url);
+            if (iter2 != cache.end() &&
+                iter2->second.m_resource == resource()) {
+                cache.erase(iter2);
+            }
+        }
     }
 };
 
@@ -197,7 +214,7 @@ public:
         ResourceClient::didLoadCanceled();
         STARFISH_ASSERT(m_resource->m_isCanceledButContinueLoadingDueToCache);
         m_resource->addResourceClient(this);
-        m_resource->addResourceClient(new ResourceSizeTracer(m_resource));
+        m_resource->addResourceClient(new ResourceLoaderTracer(m_resource));
     }
 
     Resource* m_watcher;
@@ -341,7 +358,7 @@ bool ResourceLoader::requestResourcePreprocess(
         }
 
         STARFISH_ASSERT(res->state() == Resource::BeforeSend);
-        res->addResourceClient(new ResourceSizeTracer(res));
+        res->addResourceClient(new ResourceLoaderTracer(res));
     }
 
     cachePruning();

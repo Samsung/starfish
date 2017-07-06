@@ -54,6 +54,12 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 
 void Resource::cancel()
 {
+    STARFISH_ASSERT(m_state <= Receiving);
+
+    if (m_isReferencedByAnoterResource) {
+        m_isCanceledButContinueLoadingDueToCache = true;
+    }
+
     if (m_state == BeforeSend || m_state == Receiving) {
         didLoadCanceled();
     }
