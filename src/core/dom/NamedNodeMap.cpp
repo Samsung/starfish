@@ -62,7 +62,7 @@ Attr* NamedNodeMap::getNamedItem(QualifiedName name)
 
 Attr* NamedNodeMap::setNamedItem(Attr* attr)
 {
-    return m_element->replaceAttrAndReturnOld(attr);
+    return m_element->setAttributeNode(attr);
 }
 
 Attr* NamedNodeMap::removeNamedItem(String* name)
