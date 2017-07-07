@@ -34,9 +34,9 @@ interface Element : Node {
 
   Attr? getAttributeNode(DOMString qualifiedName);
   [Unimplemented] Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
-  [CEReactions] Attr? setAttributeNode(Attr attr);
+  [CEReactions, RaisesException] Attr? setAttributeNode(Attr attr);
   [Unimplemented, CEReactions] Attr? setAttributeNodeNS(Attr attr);
-  [Unimplemented, CEReactions] Attr removeAttributeNode(Attr attr);
+  [CEReactions, RaisesException] Attr removeAttributeNode(Attr attr);
 
   [Unimplemented] ShadowRoot attachShadow(ShadowRootInit init);
   [Unimplemented] readonly attribute ShadowRoot? shadowRoot;

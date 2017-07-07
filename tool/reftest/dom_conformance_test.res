@@ -105,11 +105,11 @@ test/reftest/dom-conformance-test/html/level1/core/hc_elementinvalidcharacterexc
 #test/reftest/dom-conformance-test/html/level1/core/hc_elementnormalize.html
 #test/reftest/dom-conformance-test/html/level1/core/hc_elementnotfounderr.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementremoveattribute.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementremoveattributeaftercreate.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementremoveattributenode.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceattributewithself.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceexistingattribute.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceexistingattributegevalue.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementremoveattributeaftercreate.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementremoveattributenode.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceattributewithself.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceexistingattribute.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementreplaceexistingattributegevalue.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementretrieveallattributes.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementretrieveattrvalue.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementretrievetagname.html

@@ -124,6 +124,7 @@ public:
 
     void removeAttribute(String* name);
     void removeAttribute(QualifiedName name);
+    Attr* removeAttributeNode(Attr* attr);
 
     // DO NOT MODIFY ATTRIBUTE
     const Attribute& attributeData(QualifiedName name)
