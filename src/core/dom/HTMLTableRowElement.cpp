@@ -24,4 +24,21 @@ QualifiedName HTMLTableRowElement::name()
 {
     return starFish()->staticStrings()->m_trTagName;
 }
+
+String* HTMLTableRowElement::ch()
+{
+    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    if (ret.hasValue()) {
+        return ret.getValue();
+    }
+    // TODO : Set defualt Value that is the decimal point character for the
+    // current language as set by the lang attribute
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::createASCIIString(".");
+}
+
+void HTMLTableRowElement::setCh(String* ch)
+{
+    setAttribute(starFish()->staticStrings()->m_char, ch);
+}
 }

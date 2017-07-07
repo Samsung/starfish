@@ -34,6 +34,10 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name() = 0;
+
+    // only for DOM conformance test
+    String* ch();
+    void setCh(String* ch);
 };
 }
 

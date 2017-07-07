@@ -709,8 +709,8 @@ test/reftest/dom-conformance-test/html/level2/html/HTMLStyleElement03.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement08.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement09.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement10.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement11.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement12.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement11.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement12.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement13.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement14.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement15.html
@@ -731,8 +731,8 @@ test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement24.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableCellElement30.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement01.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement02.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement03.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement04.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement03.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement04.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement05.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement06.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLTableColElement07.html
@@ -788,7 +788,7 @@ test/reftest/dom-conformance-test/html/level2/html/HTMLTableElement18.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement05.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement06.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement07.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement08.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement08.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement09.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement10.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableRowElement11.html
@@ -805,9 +805,9 @@ test/reftest/dom-conformance-test/html/level2/html/HTMLTableElement18.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement01.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement02.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement03.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement04.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement05.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement06.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement04.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement05.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement06.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement07.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement08.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLTableSectionElement09.html
@@ -883,7 +883,7 @@ test/reftest/dom-conformance-test/html/level2/html/table01.html
 #test/reftest/dom-conformance-test/html/level2/html/table20.html
 #test/reftest/dom-conformance-test/html/level2/html/table21.html
 test/reftest/dom-conformance-test/html/level2/html/table22.html
-#test/reftest/dom-conformance-test/html/level2/html/table23.html
+test/reftest/dom-conformance-test/html/level2/html/table23.html
 #test/reftest/dom-conformance-test/html/level2/html/table24.html
 test/reftest/dom-conformance-test/html/level2/html/table25.html
 #test/reftest/dom-conformance-test/html/level2/html/table26.html
@@ -905,11 +905,11 @@ test/reftest/dom-conformance-test/html/level2/html/table41.html
 #test/reftest/dom-conformance-test/html/level2/html/table42.html
 #test/reftest/dom-conformance-test/html/level2/html/table43.html
 #test/reftest/dom-conformance-test/html/level2/html/table44.html
-#test/reftest/dom-conformance-test/html/level2/html/table45.html
+test/reftest/dom-conformance-test/html/level2/html/table45.html
 #test/reftest/dom-conformance-test/html/level2/html/table46.html
 #test/reftest/dom-conformance-test/html/level2/html/table47.html
 #test/reftest/dom-conformance-test/html/level2/html/table48.html
-#test/reftest/dom-conformance-test/html/level2/html/table49.html
+test/reftest/dom-conformance-test/html/level2/html/table49.html
 #test/reftest/dom-conformance-test/html/level2/html/table50.html
 test/reftest/dom-conformance-test/html/level2/html/table51.html
 #test/reftest/dom-conformance-test/html/level2/html/table52.html

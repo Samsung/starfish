@@ -32,10 +32,10 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTableCellElement() const override;
 
-    /* 4.4 Interface Node */
+    // 4.4 Interface Node
     virtual QualifiedName name() = 0;
 
-    /* table cell related */
+    // table cell related
 
     uint32_t colSpan();
     void setColSpan(uint32_t colSpan);
@@ -43,9 +43,13 @@ public:
     uint32_t rowSpan();
     void setRowSpan(uint32_t rowSpan);
 
-    /* Not in HTML5 */
+    // Not in HTML5
     String* bgColor();
     void setBgColor(String* bgColor);
+
+    // only for DOM conformance test
+    String* ch();
+    void setCh(String* ch);
 };
 }
 

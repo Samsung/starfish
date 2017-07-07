@@ -6,7 +6,7 @@ interface HTMLTableColElement : HTMLElement {
 
   // also has obsolete members
   [Unimplemented, CEReactions] attribute DOMString align;
-  [Unimplemented, CEReactions] attribute DOMString ch;
+  [CEReactions] attribute DOMString ch;
   [Unimplemented, CEReactions] attribute DOMString chOff;
   [Unimplemented, CEReactions] attribute DOMString vAlign;
   [Unimplemented, CEReactions] attribute DOMString width;
