@@ -1304,6 +1304,14 @@ public:
         {
             m_position = v;
         }
+        ValueData(FloatValue v)
+        {
+            m_float = v;
+        }
+        ValueData(ClearValue v)
+        {
+            m_clear = v;
+        }
         ValueData(VerticalAlignValue v)
         {
             m_verticalAlign = v;
