@@ -244,6 +244,40 @@ void Element::removeAttribute(QualifiedName name)
     }
 }
 
+Attr* Element::removeAttributeNode(Attr* attr)
+{
+    STARFISH_ASSERT(attr);
+    if (attr->ownerElement() != this) {
+        throw new DOMException(
+            document(), DOMException::NOT_FOUND_ERR,
+            "The node provided is owned by another element.");
+    }
+    size_t idx = hasAttribute(attr->qname());
+    if (idx == SIZE_MAX) {
+        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
+                               "The attribute was not found on this element.");
+    }
+
+    const Attribute& attribute = m_attributes[idx];
+    STARFISH_ASSERT(attribute.name() == attr->qname());
+
+    attr->detachFromElement(attribute.value());
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    GCVector<Attr*>* attrList = rareMembers->m_attrList;
+
+    attrList->erase(std::remove_if(attrList->begin(), attrList->end(),
+                                   [attr](Attr* o) {
+                                       if (o->qname() == attr->qname()) {
+                                           return true;
+                                       }
+                                       return false;
+                                   }),
+                    attrList->end());
+    removeAttribute(attr->qname());
+
+    return attr;
+}
+
 void Element::didAttributeChanged(QualifiedName name, String* old,
                                   String* value, bool attributeCreated,
                                   bool attributeRemoved)
