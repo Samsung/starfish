@@ -427,9 +427,7 @@ public:
 
     void computeHorizontalMargin(LayoutUnit parentContentWidth);
 
-    void applyHorizontalMargin(bool isOpposite = false);
-
-    void applyVerticalMargin();
+    void applyVerticalMarginForAbsoluteBox();
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {

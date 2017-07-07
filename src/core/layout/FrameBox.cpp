@@ -257,18 +257,7 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth)
     }
 }
 
-void FrameBox::applyHorizontalMargin(bool isOpposite)
-{
-    STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
-    if ((style()->direction() == LtrDirectionValue && !isOpposite) ||
-        (style()->direction() == RtlDirectionValue && isOpposite)) {
-        moveX(marginLeft());
-    } else {
-        moveX(-marginRight());
-    }
-}
-
-void FrameBox::applyVerticalMargin()
+void FrameBox::applyVerticalMarginForAbsoluteBox()
 {
     STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
     Length marginTop = style()->marginTop();
