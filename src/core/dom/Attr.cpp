@@ -37,4 +37,15 @@ void Attr::setValue(String* value)
         m_standAloneValue = value;
     }
 }
+
+bool Attr::operator==(const Attr& attr)
+{
+    return (m_element == attr.m_element && m_name == attr.m_name &&
+            m_standAloneValue->equals(attr.m_standAloneValue));
+}
+
+bool Attr::operator!=(const Attr& attr)
+{
+    return !operator==(attr);
+}
 }

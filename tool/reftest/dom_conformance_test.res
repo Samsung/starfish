@@ -90,10 +90,10 @@ test/reftest/dom-conformance-test/html/level1/core/hc_domimplementationfeaturexm
 test/reftest/dom-conformance-test/html/level1/core/hc_elementaddnewattribute.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementassociatedattribute.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementchangeattributevalue.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementcreatenewattribute.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementgetattributenode.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementgetattributenodenull.html
-#test/reftest/dom-conformance-test/html/level1/core/hc_elementgetelementempty.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementcreatenewattribute.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementgetattributenode.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementgetattributenodenull.html
+test/reftest/dom-conformance-test/html/level1/core/hc_elementgetelementempty.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementgetelementsbytagname.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementgetelementsbytagnameaccessnodelist.html
 test/reftest/dom-conformance-test/html/level1/core/hc_elementgetelementsbytagnamenomatch.html
