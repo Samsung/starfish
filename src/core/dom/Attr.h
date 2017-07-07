@@ -118,19 +118,6 @@ public:
         return new Attr(document(), m_name, value());
     }
 
-    void convertToStandAloneAttr(String* value)
-    {
-        STARFISH_ASSERT(m_element);
-        m_standAloneValue = value;
-        m_element = nullptr;
-    }
-
-    void convertToElementAttr(Element* element)
-    {
-        m_standAloneValue = String::emptyString;
-        m_element = element;
-    }
-
     void detachFromElement(String* value)
     {
         STARFISH_ASSERT(m_element);

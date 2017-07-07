@@ -4,6 +4,6 @@
  ConstructorCallWith=Document,
  Exposed=Window]
 interface Text : CharacterData {
-  [Unimplemented, NewObject] Text splitText(unsigned long offset);
+  [RaisesException, NewObject] Text splitText(unsigned long offset);
   readonly attribute DOMString wholeText;
 };

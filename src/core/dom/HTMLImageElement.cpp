@@ -172,4 +172,14 @@ void HTMLImageElement::loadImage(String* src)
     m_imageResource->request(
         Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 }
+
+String* HTMLImageElement::nameAttr()
+{
+    return getAttributeOrEmpty(document()->starFish()->staticStrings()->m_name);
+}
+
+void HTMLImageElement::setNameAttr(String* name)
+{
+    setAttribute(document()->starFish()->staticStrings()->m_name, name);
+}
 }
