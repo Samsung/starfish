@@ -4005,7 +4005,10 @@ void StyleResolver::apply(Element* element,
                         style->setTransformMatrix(dValues[0], dValues[1],
                                                   dValues[2], dValues[3],
                                                   dValues[4], dValues[5]);
-                        style->m_transforms->m_hasComplexTransform = true;
+
+                        if (dValues[0] != dValues[3] || dValues[1] ||
+                            dValues[2])
+                            style->m_transforms->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);

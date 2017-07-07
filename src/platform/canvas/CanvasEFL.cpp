@@ -1193,7 +1193,12 @@ public:
         }
 
         Evas_Object* imgData = (Evas_Object*)data->unwrap();
-        if (evas_object_evas_get(imgData) == evas_object_evas_get(eo)) {
+        // NOTE
+        // we don't need to check `!shouldApplyEvasMap()` here
+        // but, `evas_object_image_source_set(eo, imgData) + evas_map` gives
+        // segfault or uncorrect result.....
+        if (evas_object_evas_get(imgData) == evas_object_evas_get(eo) &&
+            !shouldApplyEvasMap()) {
             evas_object_image_source_set(eo, imgData);
         } else {
             if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {

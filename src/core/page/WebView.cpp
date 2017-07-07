@@ -50,6 +50,8 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
+// #define STARFISH_ENABLE_TIMER
+
 #if defined(STARFISH_ENABLE_TEST)
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Elementary.h>
@@ -507,7 +509,7 @@ void WebView::rendering()
     m_lastRenderingTime = currentTick;
     m_inRendering = true;
 #ifdef STARFISH_ENABLE_TIMER
-    Timer renderingTimer("BrowsingContext::rendering");
+    ProfilerTimer renderingTimer("BrowsingContext::rendering");
 #endif
 
     layoutIfNeeds();
@@ -523,7 +525,7 @@ void WebView::rendering()
 
     if (m_needsPainting) {
 #ifdef STARFISH_ENABLE_TIMER
-        Timer t("painting");
+        ProfilerTimer t("painting");
 #endif
         // painting
         Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
@@ -629,7 +631,7 @@ void WebView::rendering()
 
     if (m_needsComposite) {
 #ifdef STARFISH_ENABLE_TIMER
-        Timer t("composite");
+        ProfilerTimer t("composite");
 #endif
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsOwnBuffer()) {

@@ -67,8 +67,6 @@ public:
                 // TODO consider width, height attribute
                 m_element->setNeedsLayout();
             }
-        } else {
-            m_element->setNeedsFrameTreeBuild();
         }
     }
 

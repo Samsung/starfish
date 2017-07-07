@@ -588,6 +588,17 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    bool oldComplex = oldStyle->m_transforms
+                          ? oldStyle->m_transforms->hasComplexTransform()
+                          : false;
+    bool newComplex = newStyle->m_transforms
+                          ? newStyle->m_transforms->hasComplexTransform()
+                          : false;
+    if (oldComplex != newComplex || (!oldComplex && !newComplex)) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->m_transforms == nullptr &&
         oldStyle->m_transforms == nullptr) {
     } else if (newStyle->m_transforms == nullptr ||
@@ -599,12 +610,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
-        bool oldComplex = oldStyle->m_transforms->hasComplexTransform();
-        bool newComplex = newStyle->m_transforms->hasComplexTransform();
-        if (oldComplex != newComplex || (!oldComplex && !newComplex)) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-        }
         if (*newStyle->m_transforms != *oldStyle->m_transforms) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageComposite | damage);
@@ -679,6 +684,10 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+    // printf("[%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f]\n",
+    //         matrix.get(0), matrix.get(1), matrix.get(2), matrix.get(3),
+    //         matrix.get(4), matrix.get(5),
+    //              matrix.get(6), matrix.get(7), matrix.get(8));
     return matrix;
 }
 
