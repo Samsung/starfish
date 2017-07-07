@@ -114,6 +114,21 @@ Nullable<String*> Element::getAttribute(QualifiedName name)
     return Nullable<String*>(m_attributes[idx].value());
 }
 
+Attr* Element::getAttributeNode(String* localName)
+{
+    if (!hasRareMembers()) {
+        return nullptr;
+    }
+
+    QualifiedName qName = document()->createAttributeName(localName);
+    size_t idx = hasAttribute(qName);
+    if (idx == SIZE_MAX) {
+        return nullptr;
+    }
+    const Attribute& attribute = m_attributes[idx];
+    return ensureAttr(attribute.name());
+}
+
 String* Element::getAttributeOrEmpty(QualifiedName name)
 {
     Nullable<String*> result = getAttribute(name);
@@ -144,6 +159,59 @@ void Element::setAttribute(QualifiedName name, String* value)
         m_attributes[idx].setValue(value);
         didAttributeChanged(name, v, value, false, false);
     }
+}
+
+Attr* Element::setAttributeNode(Attr* attrNode)
+{
+    Attr* oldAttrNode = attr(attrNode->qname());
+    if (oldAttrNode == attrNode) {
+        return attrNode;
+    }
+
+    if (attrNode->ownerElement()) {
+        throw new DOMException(document(), DOMException::INUSE_ATTRIBUTE_ERR,
+                               "The node provided is an attribute node that is "
+                               "already an attribute of another Element; "
+                               "attribute nodes must be explicitly cloned.");
+    }
+
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    STARFISH_ASSERT(rareMembers->isRareElementMembers());
+    if (!rareMembers->m_attrList) {
+        rareMembers->m_attrList = new (GC) GCVector<Attr*>();
+    }
+
+    size_t idx = hasAttribute(attrNode->qname());
+    String* localName = String::emptyString;
+    if (idx != SIZE_MAX) {
+        const Attribute& attr = m_attributes[idx];
+        if (attr.name() != attrNode->qname()) {
+            localName = attr.name().localName();
+        }
+
+        if (oldAttrNode) {
+            oldAttrNode->detachFromElement(attr.value());
+            GCVector<Attr*>* list = rareMembers->m_attrList;
+            list->erase(std::remove_if(list->begin(), list->end(),
+                                       [attrNode](Attr* attr) {
+                                           if (attr->qname() ==
+                                               attrNode->qname()) {
+                                               return true;
+                                           }
+                                           return false;
+                                       }),
+                        list->end());
+
+        } else {
+            oldAttrNode = new Attr(document(), attrNode->qname(), attr.value());
+        }
+    }
+
+    setAttribute(attrNode->qname(), attrNode->value());
+    attrNode->attachToElement(this, localName);
+    rareMembers->m_attrList->push_back(attrNode);
+
+    return oldAttrNode;
 }
 
 void Element::removeAttribute(String* name)

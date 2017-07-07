@@ -32,9 +32,9 @@ interface Element : Node {
   boolean hasAttribute(DOMString qualifiedName);
   [Unimplemented] boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
-  [Unimplemented] Attr? getAttributeNode(DOMString qualifiedName);
+  Attr? getAttributeNode(DOMString qualifiedName);
   [Unimplemented] Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
-  [Unimplemented, CEReactions] Attr? setAttributeNode(Attr attr);
+  [CEReactions] Attr? setAttributeNode(Attr attr);
   [Unimplemented, CEReactions] Attr? setAttributeNodeNS(Attr attr);
   [Unimplemented, CEReactions] Attr removeAttributeNode(Attr attr);
 

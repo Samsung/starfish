@@ -120,6 +120,7 @@ public:
 
     void convertToStandAloneAttr(String* value)
     {
+        STARFISH_ASSERT(m_element);
         m_standAloneValue = value;
         m_element = nullptr;
     }
@@ -130,10 +131,26 @@ public:
         m_element = element;
     }
 
+    void detachFromElement(String* value)
+    {
+        STARFISH_ASSERT(m_element);
+        m_standAloneValue = value;
+        m_element = nullptr;
+    }
+
+    void attachToElement(Element* element, String* attachedLocalName)
+    {
+        m_element = element;
+        m_standAloneValue = attachedLocalName;
+    }
+
     bool isContainerNode()
     {
         return false;
     }
+
+    bool operator==(const Attr& attr);
+    bool operator!=(const Attr& attr);
 
 private:
     Element* m_element;

@@ -115,10 +115,12 @@ public:
 
     Nullable<String*> getAttribute(String* name);
     Nullable<String*> getAttribute(QualifiedName name);
+    Attr* getAttributeNode(String* localName);
     String* getAttributeOrEmpty(QualifiedName name);
 
     void setAttribute(String* name, String* value);
     void setAttribute(QualifiedName name, String* value);
+    Attr* setAttributeNode(Attr* attrNode);
 
     void removeAttribute(String* name);
     void removeAttribute(QualifiedName name);

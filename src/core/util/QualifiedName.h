@@ -61,6 +61,11 @@ public:
                m_localName == src.m_localName;
     }
 
+    bool operator!=(const QualifiedName& src) const
+    {
+        return !operator==(src);
+    }
+
     AtomicString localNameAtomic() const
     {
         return m_localName;
