@@ -248,48 +248,67 @@ void FrameReplaced::layout(LayoutContext& ctx,
             // is 'rtl', set 'right' to the static position.
             if (left.isAuto() && right.isAuto()) {
                 // static location computed in normal flow processing
-                applyHorizontalMargin();
-            } else if (!left.isAuto() && right.isAuto()) {
-                LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
-                setAbsX(l, absX);
-                applyHorizontalMargin(direction == RtlDirectionValue);
-            } else if (left.isAuto() && !right.isAuto()) {
-                LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
-                setAbsX(containgBlockContentWidth - r - FrameBox::width(),
-                        absX);
-                applyHorizontalMargin(direction == LtrDirectionValue);
-            } else {
-                bool isOpposite = false;
-                if (marginLeft.isAuto() && marginRight.isAuto()) {
-                    LayoutUnit l =
-                        left.specifiedValue(containgBlockContentWidth);
-                    LayoutUnit r =
-                        right.specifiedValue(containgBlockContentWidth);
-                    computeHorizontalMargin(containgBlockContentWidth - l - r);
-                } else if (marginRight.isAuto() &&
-                           direction == RtlDirectionValue) {
-                    isOpposite = true;
-                } else if (marginLeft.isAuto() &&
-                           direction == LtrDirectionValue) {
-                    isOpposite = true;
+                if (parentDirection == LtrDirectionValue) {
+                    moveX(FrameBox::marginLeft());
+                } else {
+                    // if the 'direction' property of the element establishing
+                    // the static-position containing block is 'ltr' set 'left'
+                    // to the static position, otherwise set 'right' to the
+                    // static position. Then solve for 'left' (if 'direction
+                    // is 'rtl') or 'right' (if 'direction' is 'ltr').
+                    moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
-                if ((direction == LtrDirectionValue && !isOpposite) ||
-                    (direction == RtlDirectionValue && isOpposite)) {
+            } else if (!left.isAuto() && !right.isAuto()) {
+                LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
+                LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
+                bool flag = false;
+
+                if (marginLeft.isAuto() && marginRight.isAuto()) {
+                    // If at this point both 'margin-left' and 'margin-right'
+                    // are still 'auto', solve the equation under the extra
+                    // constraint that the two margins must get equal values,
+                    // unless this would make them negative, in which case when
+                    // the direction of the containing block is 'ltr' ('rtl'),
+                    // set 'margin-left' ('margin-right') to zero and solve
+                    // for 'margin-right' ('margin-left').
+                    computeHorizontalMargin(containgBlockContentWidth - l - r);
+                    flag = parentDirection == DirectionValue::LtrDirectionValue;
+                } else if (marginLeft.isAuto()) {
+                    flag = false;
+                } else if (marginRight.isAuto()) {
+                    flag = true;
+                } else {
+                    flag = parentDirection == DirectionValue::LtrDirectionValue;
+                }
+
+                if (flag) {
+                    setAbsX(l + FrameBox::marginLeft(), absX);
+                } else {
+                    setAbsX(containgBlockContentWidth - FrameBox::width() - r -
+                                FrameBox::marginRight(),
+                            absX);
+                }
+            } else {
+                // If 'left' or 'right' are 'auto', replace any 'auto' on
+                // 'margin-left' or 'margin-right' with '0'.
+                if (marginLeft.isAuto()) {
+                    setMarginLeft(0);
+                }
+                if (marginRight.isAuto()) {
+                    setMarginRight(0);
+                }
+
+                if (left.isSpecified()) {
                     LayoutUnit l =
                         left.specifiedValue(containgBlockContentWidth);
-                    setAbsX(l, absX);
+                    setAbsX(l + FrameBox::marginLeft(), absX);
                 } else {
                     LayoutUnit r =
                         right.specifiedValue(containgBlockContentWidth);
-                    setAbsX(containgBlockContentWidth - FrameBox::width() - r,
+                    setAbsX(containgBlockContentWidth - r - FrameBox::width() -
+                                FrameBox::marginRight(),
                             absX);
                 }
-                applyHorizontalMargin(isOpposite);
-            }
-
-            if (left.isAuto() && right.isAuto() &&
-                parentDirection == RtlDirectionValue) {
-                moveX(-FrameBox::width());
             }
         } else {
             LayoutUnit parentHeight;
@@ -423,7 +442,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 setAbsY(t, absY);
             }
 
-            applyVerticalMargin();
+            applyVerticalMarginForAbsoluteBox();
         }
     }
 }
