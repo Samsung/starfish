@@ -63,4 +63,21 @@ void HTMLTableCellElement::setBgColor(String* bgColor)
 {
     setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
+
+String* HTMLTableCellElement::ch()
+{
+    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    if (ret.hasValue()) {
+        return ret.getValue();
+    }
+    // TODO : Set defualt Value that is the decimal point character for the
+    // current language as set by the lang attribute
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::createASCIIString(".");
+}
+
+void HTMLTableCellElement::setCh(String* ch)
+{
+    setAttribute(starFish()->staticStrings()->m_char, ch);
+}
 }

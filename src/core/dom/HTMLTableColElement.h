@@ -39,6 +39,10 @@ public:
 
     void setSpan(uint32_t span);
     uint32_t span();
+
+    // only for DOM conformance test
+    String* ch();
+    void setCh(String* ch);
 };
 }
 

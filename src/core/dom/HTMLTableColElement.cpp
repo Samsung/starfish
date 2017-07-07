@@ -35,4 +35,21 @@ uint32_t HTMLTableColElement::span()
     String* spanAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_span);
     return String::parseInt(spanAttr);
 }
+
+String* HTMLTableColElement::ch()
+{
+    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    if (ret.hasValue()) {
+        return ret.getValue();
+    }
+    // TODO : Set defualt Value that is the decimal point character for the
+    // current language as set by the lang attribute
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::createASCIIString(".");
+}
+
+void HTMLTableColElement::setCh(String* ch)
+{
+    setAttribute(starFish()->staticStrings()->m_char, ch);
+}
 }

@@ -9,7 +9,7 @@ interface HTMLTableSectionElement : HTMLElement {
   // also has obsolete members
   // https://html.spec.whatwg.org/#HTMLTableSectionElement-partial
   [Unimplemented, CEReactions] attribute DOMString align;
-  [Unimplemented, CEReactions] attribute DOMString ch;
+  [CEReactions] attribute DOMString ch;
   [Unimplemented, CEReactions] attribute DOMString chOff;
   [Unimplemented, CEReactions] attribute DOMString vAlign;
 };

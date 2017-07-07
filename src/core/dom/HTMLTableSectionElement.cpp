@@ -16,16 +16,11 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
-#include "core/dom/HTMLTableRowElement.h"
+#include "core/dom/HTMLTableSectionElement.h"
 
 namespace StarFish {
 
-QualifiedName HTMLTableRowElement::name()
-{
-    return starFish()->staticStrings()->m_trTagName;
-}
-
-String* HTMLTableRowElement::ch()
+String* HTMLTableSectionElement::ch()
 {
     Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
     if (ret.hasValue()) {
@@ -37,7 +32,7 @@ String* HTMLTableRowElement::ch()
     return String::createASCIIString(".");
 }
 
-void HTMLTableRowElement::setCh(String* ch)
+void HTMLTableSectionElement::setCh(String* ch)
 {
     setAttribute(starFish()->staticStrings()->m_char, ch);
 }
