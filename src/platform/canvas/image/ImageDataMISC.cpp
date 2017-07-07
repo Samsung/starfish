@@ -132,8 +132,8 @@ private:
             return imageFormat;
         }
 
-        unsigned char* buf = new unsigned char[4];
-        fgets((char*)buf, 4, fp);
+        unsigned char* buf = new unsigned char[11];
+        fgets((char*)buf, 11, fp);
 
         if (isPNGFormat(buf)) {
             imageFormat = ImageFormat::PNG;
@@ -146,7 +146,7 @@ private:
         }
 
         rewind(fp);
-        delete buf;
+        delete[] buf;
         return imageFormat;
     }
 
