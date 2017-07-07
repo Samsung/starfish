@@ -66,6 +66,9 @@ public:
     unsigned long height();
     void setHeight(unsigned long height);
 
+    String* nameAttr();
+    void setNameAttr(String* name);
+
     ImageData* imageData()
     {
         return m_imageData;

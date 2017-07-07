@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Text.h"
+#include "core/dom/DOMException.h"
 
 namespace StarFish {
 
@@ -30,10 +31,40 @@ String* Text::localName()
     return starFish()->staticStrings()->m_textLocalName;
 }
 
-// Text* Text::splitText(unsigned long offset)
-// {
-//    return nullptr;
-// }
+Text* Text::splitText(unsigned long offset)
+{
+    // INDEX_SIZE_ERR
+    // Raised if the specified offset is negative or greater than
+    // the number of 16-bit units in data.
+    if (offset < 0 || offset > data()->length()) {
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
+    }
+    String* oldValue = data();
+    String* newA = String::emptyString;
+    String* newB = String::emptyString;
+    size_t aBegin = 0;
+    size_t aCount = offset;
+    size_t bBegin = offset;
+    size_t bCount = data()->length() - offset;
+    if (aCount == 0) {
+        newB = oldValue;
+    } else if (bCount == 0) {
+        newA = oldValue;
+    } else {
+        newA = oldValue->substring(aBegin, aCount);
+        newB = oldValue->substring(bBegin, bCount);
+    }
+    setData(newA);
+    Text* result = new Text(document(), newB);
+    if (parentNode()) {
+        if (nextSibling()) {
+            parentNode()->insertBefore(result, nextSibling());
+        } else {
+            parentNode()->appendChild(result);
+        }
+    }
+    return result;
+}
 
 String* Text::wholeText()
 {
