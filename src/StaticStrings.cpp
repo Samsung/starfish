@@ -23,6 +23,14 @@ StaticStrings::StaticStrings(StarFish* sf)
     : m_starFish(sf)
     , m_xhtmlNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
+    // https://infra.spec.whatwg.org/#xml-namespace
+    , m_xmlNamespaceURI(AtomicString::createAtomicString(
+          sf, "http://www.w3.org/XML/1998/namespace"))
+    // https://infra.spec.whatwg.org/#xmlns-namespace
+    , m_xmlnsNamespaceURI(
+          AtomicString::createAtomicString(sf, "http://www.w3.org/2000/xmlns/"))
+    , m_xml(AtomicString::createAtomicString(sf, "xml"))
+    , m_xmlns(AtomicString::createAtomicString(sf, "xmlns"))
     , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
     , m_documentFragmentLocalName(
           AtomicString::createAtomicString(sf, "#document-fragment"))

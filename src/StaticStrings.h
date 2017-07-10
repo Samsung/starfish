@@ -163,6 +163,10 @@ public:
     StaticStrings(StarFish* sf);
     StarFish* m_starFish;
     AtomicString m_xhtmlNamespaceURI;
+    AtomicString m_xmlNamespaceURI;
+    AtomicString m_xmlnsNamespaceURI;
+    AtomicString m_xml;
+    AtomicString m_xmlns;
     AtomicString m_documentLocalName;
     AtomicString m_documentFragmentLocalName;
     AtomicString m_textLocalName;
