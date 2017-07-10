@@ -31,7 +31,7 @@ FrameBlockBox* LayoutContext::blockContainer(Frame* currentFrame)
 {
     Frame* f = currentFrame->layoutParent();
 
-    if (!f) {
+    if (!f || currentFrame->isFrameDocument()) {
         STARFISH_ASSERT(currentFrame->isFrameDocument());
         return currentFrame->asFrameBlockBox();
     }
