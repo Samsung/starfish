@@ -643,18 +643,6 @@ public:
                 }
             }
         }
-        if (isImage && (lastState().m_opacity != 1)) {
-            Evas_Object* ceo = evas_object_rectangle_add(m_canvas);
-            const int c = 255 * lastState().m_opacity;
-            evas_object_color_set(ceo, c, c, c, c);
-            evas_object_move(ceo, 0, 0);
-            evas_object_resize(ceo, m_width, m_height);
-            evas_object_show(ceo);
-            if (m_objList) {
-                m_objList->push_back(ceo);
-            }
-            evas_object_clip_set(eo, ceo);
-        }
     }
 
     virtual void setColor(const Unit::Color& clr_)
