@@ -330,7 +330,7 @@ void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
         childFrame =
             FrameTableTreeBuilder::buildFrameTableTree(child, ctx, force);
         STARFISH_ASSERT(childFrame->isFrameTableSectionBox());
-        if (!childFrame->parent()) {
+        if (childFrame && !childFrame->parent()) {
             ctx.currentBlockContainer()->appendChild(childFrame);
             STARFISH_ASSERT(childFrame->parent());
         }
