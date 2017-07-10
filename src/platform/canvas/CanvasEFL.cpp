@@ -89,9 +89,9 @@ Unit::Rect boundingRect(const ClipperLib::Path& path)
 
     if (path.size()) {
         minX = path[0].X;
-        minY = path[0].X;
+        minY = path[0].Y;
         maxX = path[0].X;
-        maxY = path[0].X;
+        maxY = path[0].Y;
     }
 
     for (size_t i = 1; i < path.size(); i++) {
@@ -101,7 +101,7 @@ Unit::Rect boundingRect(const ClipperLib::Path& path)
         maxX = std::max((int)path[i].Y, maxY);
     }
 
-    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+    return Unit::Rect(minX, minY, std::abs(maxX - minX), std::abs(maxY - minY));
 }
 
 class CanvasEFL : public Canvas {
@@ -266,7 +266,7 @@ public:
         m_state.erase(m_state.end() - 1);
     }
 
-    virtual void assureMapMode()
+    void assureMapMode()
     {
         if (lastState().m_mapMode) {
             return;
@@ -349,22 +349,14 @@ public:
                                           SkFloatToScalar((float)rt.y()),
                                           SkFloatToScalar((float)rt.width()),
                                           SkFloatToScalar((float)rt.height()));
-            if (!shouldApplyEvasMap()) {
-                lastState().m_matrix.mapRect(&sss);
-            }
+            lastState().m_matrix.mapRect(&sss);
             xx = sss.x();
             yy = sss.y();
             ww = sss.width();
             hh = sss.height();
         } else {
-            if (!shouldApplyEvasMap()) {
-                xx = lastState().m_baseX + rt.x();
-                yy = lastState().m_baseY + rt.y();
-            } else {
-                xx = rt.x();
-                yy = rt.y();
-            }
-
+            xx = lastState().m_baseX + rt.x();
+            yy = lastState().m_baseY + rt.y();
             ww = rt.width();
             hh = rt.height();
         }
@@ -398,6 +390,7 @@ public:
 
     virtual void clip(const Unit::Rect& rt)
     {
+        lastState().m_didClip = true;
         if (lastState().m_hasPathClip) {
             ClipperLib::Clipper clipper;
 
@@ -430,7 +423,8 @@ public:
 
             lastState().m_clipPath = result;
             lastState().m_clipper = NULL;
-        } else if (hasValidMatrixValue()) {
+            return;
+        } else if (!isMatrixRemainsRectangle() || lastState().m_hasPathClip) {
             ClipperLib::Path path;
 
             path.emplace_back(lastState().m_clipRect.x(),
@@ -479,44 +473,40 @@ public:
             lastState().m_clipPath = result;
             lastState().m_clipper = NULL;
             lastState().m_hasPathClip = true;
-        } else {
-            SkRect sss;
-
-            // assureMapMode();
-            if (lastState().m_mapMode) {
-                STARFISH_ASSERT(!hasValidMatrixValue());
-                sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
-                                       SkFloatToScalar((float)rt.y()),
-                                       SkFloatToScalar((float)rt.width()),
-                                       SkFloatToScalar((float)rt.height()));
-                lastState().m_matrix.mapRect(&sss);
-            } else {
-                sss = SkRect::MakeXYWH(
-                    SkFloatToScalar((float)rt.x() + lastState().m_baseX),
-                    SkFloatToScalar((float)rt.y() + lastState().m_baseY),
-                    SkFloatToScalar((float)rt.width()),
-                    SkFloatToScalar((float)rt.height()));
-            }
-
-            if (!SkRect::Intersects(lastState().m_clipRect, sss)) {
-                lastState().m_clipRect.setEmpty();
-                lastState().m_clipper = NULL;
-            } else {
-                lastState().m_clipRect.sort();
-                sss.sort();
-
-                SkRect tmp;
-                tmp.fLeft = std::max(lastState().m_clipRect.fLeft, sss.fLeft);
-                tmp.fRight =
-                    std::min(lastState().m_clipRect.fRight, sss.fRight);
-                tmp.fTop = std::max(lastState().m_clipRect.fTop, sss.fTop);
-                tmp.fBottom =
-                    std::min(lastState().m_clipRect.fBottom, sss.fBottom);
-                lastState().m_clipRect = tmp;
-                lastState().m_clipper = NULL;
-            }
+            return;
         }
-        lastState().m_didClip = true;
+        SkRect sss;
+
+        // assureMapMode();
+        if (lastState().m_mapMode) {
+            sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
+                                   SkFloatToScalar((float)rt.y()),
+                                   SkFloatToScalar((float)rt.width()),
+                                   SkFloatToScalar((float)rt.height()));
+            lastState().m_matrix.mapRect(&sss);
+        } else {
+            sss = SkRect::MakeXYWH(
+                SkFloatToScalar((float)rt.x() + lastState().m_baseX),
+                SkFloatToScalar((float)rt.y() + lastState().m_baseY),
+                SkFloatToScalar((float)rt.width()),
+                SkFloatToScalar((float)rt.height()));
+        }
+
+        if (!SkRect::Intersects(lastState().m_clipRect, sss)) {
+            lastState().m_clipRect.setEmpty();
+            lastState().m_clipper = NULL;
+        } else {
+            lastState().m_clipRect.sort();
+            sss.sort();
+
+            SkRect tmp;
+            tmp.fLeft = std::max(lastState().m_clipRect.fLeft, sss.fLeft);
+            tmp.fRight = std::min(lastState().m_clipRect.fRight, sss.fRight);
+            tmp.fTop = std::max(lastState().m_clipRect.fTop, sss.fTop);
+            tmp.fBottom = std::min(lastState().m_clipRect.fBottom, sss.fBottom);
+            lastState().m_clipRect = tmp;
+            lastState().m_clipper = NULL;
+        }
     }
 
     Evas_Object* createPathClipper(float o = 1.0)
@@ -600,7 +590,7 @@ public:
         return nullptr;
     }
 
-    void applyClippers(Evas_Object* eo)
+    void applyClippers(Evas_Object* eo, bool isImage = false)
     {
         if (lastState().m_didClip) {
             if (lastState().m_hasPathClip) {
@@ -608,7 +598,8 @@ public:
                     const ClipperLib::Paths& clipPaths = lastState().m_clipPath;
 
                     if (clipPaths.size() > 0) {
-                        Evas_Object* cl = createPathClipper();
+                        Evas_Object* cl =
+                            createPathClipper(lastState().m_opacity);
                         if (cl) {
                             lastState().m_clipper = cl;
                             if (m_objList) {
@@ -621,21 +612,48 @@ public:
                     evas_object_clip_set(eo, lastState().m_clipper);
                 }
             } else {
-                if (!lastState().m_clipper) {
-                    Evas_Object* eo = evas_object_rectangle_add(m_canvas);
-                    evas_object_color_set(eo, 255, 255, 255, 255);
-                    evas_object_move(eo, lastState().m_clipRect.x(),
+                if (isImage) {
+                    Evas_Object* ceo = evas_object_rectangle_add(m_canvas);
+                    int c = 255 * lastState().m_opacity;
+                    evas_object_color_set(ceo, c, c, c, c);
+                    evas_object_move(ceo, lastState().m_clipRect.x(),
                                      lastState().m_clipRect.y());
-                    evas_object_resize(eo, lastState().m_clipRect.width(),
+                    evas_object_resize(ceo, lastState().m_clipRect.width(),
                                        lastState().m_clipRect.height());
-                    evas_object_show(eo);
-                    lastState().m_clipper = eo;
+                    evas_object_show(ceo);
                     if (m_objList) {
-                        m_objList->push_back(lastState().m_clipper);
+                        m_objList->push_back(ceo);
                     }
+                    evas_object_clip_set(eo, ceo);
+                } else {
+                    if (!lastState().m_clipper) {
+                        Evas_Object* eo = evas_object_rectangle_add(m_canvas);
+                        evas_object_color_set(eo, 255, 255, 255, 255);
+                        evas_object_move(eo, lastState().m_clipRect.x(),
+                                         lastState().m_clipRect.y());
+                        evas_object_resize(eo, lastState().m_clipRect.width(),
+                                           lastState().m_clipRect.height());
+                        evas_object_show(eo);
+                        lastState().m_clipper = eo;
+                        if (m_objList) {
+                            m_objList->push_back(lastState().m_clipper);
+                        }
+                    }
+                    evas_object_clip_set(eo, lastState().m_clipper);
                 }
-                evas_object_clip_set(eo, lastState().m_clipper);
             }
+        }
+        if (isImage && (lastState().m_opacity != 1)) {
+            Evas_Object* ceo = evas_object_rectangle_add(m_canvas);
+            const int c = 255 * lastState().m_opacity;
+            evas_object_color_set(ceo, c, c, c, c);
+            evas_object_move(ceo, 0, 0);
+            evas_object_resize(ceo, m_width, m_height);
+            evas_object_show(ceo);
+            if (m_objList) {
+                m_objList->push_back(ceo);
+            }
+            evas_object_clip_set(eo, ceo);
         }
     }
 
@@ -1233,7 +1251,7 @@ public:
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
 
-        applyClippers(eo);
+        applyClippers(eo, true);
         applyEvasMapIfNeeded(eo, dst, true);
         evas_object_show(eo);
 
@@ -1523,7 +1541,6 @@ public:
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
         if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasValidMatrixValue());
             SkPoint point = SkPoint::Make((float)lp.x(), (float)lp.y());
             lastState().m_matrix.mapPoints(&point, 1);
             lp.setX(point.x());
@@ -1537,7 +1554,6 @@ public:
     virtual void applyMatrixTo(LayoutRect& lp)
     {
         if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasValidMatrixValue());
             SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)lp.x()),
                                           SkFloatToScalar((float)lp.y()),
                                           SkFloatToScalar((float)lp.width()),
@@ -1565,20 +1581,19 @@ public:
         return m_state[m_state.size() - 1];
     }
 
-    bool hasValidMatrixValue()
+    // no rotate, no skew
+    bool isMatrixRemainsRectangle()
     {
-        return lastState().m_matrix.getType() &
-               (SkMatrix::TypeMask::kTranslate_Mask |
-                SkMatrix::TypeMask::kScale_Mask |
-                SkMatrix::TypeMask::kAffine_Mask);
+        if (lastState().m_matrix.isScaleTranslate() ||
+            lastState().m_matrix.isIdentity()) {
+            return true;
+        }
+        return false;
     }
 
     bool shouldApplyEvasMap()
     {
-        if (lastState().m_opacity != 1) {
-            return true;
-        }
-        return hasValidMatrixValue();
+        return lastState().m_mapMode && !lastState().m_matrix.isIdentity();
     }
 
     void applyEvasMapIfNeeded(Evas_Object* eo, const LayoutRect& dst,
