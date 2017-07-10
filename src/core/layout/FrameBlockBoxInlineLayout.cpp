@@ -1152,7 +1152,7 @@ bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent()
 bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes()
 {
     if (m_boxes.size() == 0) {
-        return false;
+        return true;
     }
 
     auto iter = m_boxes.rbegin();
@@ -2962,7 +2962,9 @@ bool LineFormattingContext::removeLastLineBoxIfNeeds()
 
     back->removeDanglingSpace(this);
     if (back->containOnlyEmptyInlineNonReplacedBoxes()) {
-        if (back->absolutePositionedBoxLayoutParentCnt() == 0) {
+        if (m_pendingFloatingBoxes.size() == 0 &&
+            m_pendingInlineBoxes.size() == 0 &&
+            back->absolutePositionedBoxLayoutParentCnt() == 0) {
             m_block->m_lineBoxes.erase(m_block->m_lineBoxes.end() - 1);
             return true;
         } else {
