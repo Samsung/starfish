@@ -666,12 +666,14 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
                 MouseData data(button, buttons, posX, posY);
                 Event* e = createMouseEvent(document(), name, data);
                 Node* t = oldTarget->nearestParentElement();
+                t = t ? t : document();
                 document()->window()->dispatchEvent(t ? t : document(), e);
             }
             String* name = starFish()->staticStrings()->m_mouseover.localName();
             MouseData data(button, buttons, posX, posY);
             Event* e = createMouseEvent(document(), name, data);
             Node* t = newTarget->nearestParentElement();
+            t = t ? t : document();
             document()->window()->dispatchEvent(t ? t : document(), e);
         }
     }
