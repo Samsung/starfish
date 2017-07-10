@@ -416,7 +416,7 @@ unsigned long Node::childElementCount()
 Node* Node::nearestParentElement()
 {
     Node* t = this;
-    while (!t->isHTMLElement() && !t->isDocument()) {
+    while (t && !t->isHTMLElement() && !t->isDocument()) {
         t = t->parentNode();
     }
 
