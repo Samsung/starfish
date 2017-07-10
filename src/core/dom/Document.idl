@@ -54,7 +54,7 @@ interface Document : Node {
   [Unimplemented, CEReactions] Node adoptNode(Node node);
 
   [NewObject, RaisesException] Attr createAttribute(DOMString localName);
-  [Unimplemented, NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
+  [NewObject, RaisesException] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
 
   [RaisesException, NewObject] Event createEvent(DOMString type);
 

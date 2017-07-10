@@ -143,6 +143,7 @@ public:
 
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);
+    Attr* createAttributeNS(Nullable<String*> ns, String* name);
     QualifiedName createAttributeName(String* name);
 
     DOMImplementation* implementation();

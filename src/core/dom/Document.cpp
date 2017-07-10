@@ -471,6 +471,60 @@ Attr* Document::createAttribute(QualifiedName localName)
     return new Attr(this, localName);
 }
 
+Attr* Document::createAttributeNS(Nullable<String*> ns, String* name)
+{
+    if (!QualifiedName::checkNameProductionRule(name)) {
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+    }
+    AtomicString localName;
+    AtomicString nsURI;
+    if (ns.hasValue() && ns.getValue()->length() != 0) {
+        nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
+    }
+    // If qualifiedName contains a ":" (U+003E), then split the string on it
+    // and set prefix to the part before and localName to the part after.
+    GCVector<String*> tokens;
+    name->split(':', tokens);
+    if (tokens.size() > 2) {
+        throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+    } else if (tokens.size() == 2) {
+        if (tokens[0]->length() == 0) {
+            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        }
+        AtomicString prefix =
+            AtomicString::createAtomicString(starFish(), tokens[0]);
+        // If prefix is non-null and namespace is null,
+        // then throw a NamespaceError.
+        if (nsURI.string()->length() == 0 || tokens[1]->length() == 0) {
+            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        }
+        // If prefix is "xml" and namespace is not the XML namespace,
+        // then throw a NamespaceError.
+        if (prefix == starFish()->staticStrings()->m_xml &&
+            nsURI != starFish()->staticStrings()->m_xmlNamespaceURI) {
+            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        }
+        // If prefix is "xmlns" and namespace is not the XMLNS namespace,
+        // then throw a NamespaceError.
+        // If namespace is the XMLNS namespace and prefix is not "xmlns",
+        // then throw a NamespaceError.
+        bool pfXmlns = (prefix == starFish()->staticStrings()->m_xmlns);
+        bool nsXmlns =
+            (nsURI == starFish()->staticStrings()->m_xmlnsNamespaceURI);
+        if (pfXmlns ^ nsXmlns) {
+            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        }
+        QualifiedName qname = QualifiedName(
+            prefix, nsURI,
+            AtomicString::createAttrAtomicString(starFish(), tokens[1]));
+        return new Attr(this, qname);
+    } else {
+        QualifiedName qname = QualifiedName(
+            nsURI, AtomicString::createAttrAtomicString(starFish(), name));
+        return new Attr(this, qname);
+    }
+}
+
 HTMLHtmlElement* Document::rootElement()
 {
     // root element of html document is HTMLHtmlElement

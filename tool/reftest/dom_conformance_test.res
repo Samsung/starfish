@@ -226,9 +226,9 @@ test/reftest/dom-conformance-test/html/level1/core/hc_textsplittextthree.html
 test/reftest/dom-conformance-test/html/level1/core/hc_textsplittexttwo.html
 test/reftest/dom-conformance-test/html/level1/core/hc_textwithnomarkup.html
 test/reftest/dom-conformance-test/html/level1/core/nodedocumenttypenodevalue.html
-#test/reftest/dom-conformance-test/html/level2/core/createAttributeNS06.html
+test/reftest/dom-conformance-test/html/level2/core/createAttributeNS06.html
 test/reftest/dom-conformance-test/html/level2/core/createDocument08.html
-#test/reftest/dom-conformance-test/html/level2/core/createDocumentType04.html
+test/reftest/dom-conformance-test/html/level2/core/createDocumentType04.html
 test/reftest/dom-conformance-test/html/level2/core/hc_namednodemapinvalidtype1.html
 #test/reftest/dom-conformance-test/html/level2/core/hc_nodedocumentfragmentnormalize1.html
 #test/reftest/dom-conformance-test/html/level2/core/hc_nodedocumentfragmentnormalize2.html
