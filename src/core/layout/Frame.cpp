@@ -124,11 +124,8 @@ void LayoutContext::registerFloatingBox(FrameBox* box)
 void LayoutContext::unregisterFloatingBoxes(size_t from)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-
-    auto iter = c.m_floatBoxes->begin() + from;
-    while (iter != c.m_floatBoxes->end()) {
-        iter = c.m_floatBoxes->erase(iter);
-    }
+    c.m_floatBoxes->erase(c.m_floatBoxes->begin() + from,
+                          c.m_floatBoxes->end());
 }
 
 static bool floatAffected(LayoutUnit yPosition, LayoutUnit height,
@@ -529,7 +526,6 @@ void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)
     FrameBlockBox* cb = containingFrameBlockBox(box);
     m_absolutePositionedBoxes.emplace(cb, std::vector<FrameBox*>());
     auto& vec = m_absolutePositionedBoxes[cb];
-    STARFISH_ASSERT(std::find(vec.begin(), vec.end(), box) == vec.end());
     vec.push_back(box);
 }
 
