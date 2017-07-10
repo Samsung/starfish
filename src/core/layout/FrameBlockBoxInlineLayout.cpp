@@ -2288,6 +2288,10 @@ static void nextToken(std::vector<int32_t>::iterator& iter, int32_t& cur,
     cur = next;
 }
 
+int utf32ToUtf16(char32_t i, char16_t* u);
+size_t utf16ToUtf32(const char16_t* UTF16, const char16_t* bufferEnd,
+                    char32_t& uc);
+
 template <typename Context>
 static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
 {
@@ -2301,13 +2305,40 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
         icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
     std::vector<int32_t> locs;
 
-    breaker->setText(txt->toUnicodeString());
+    icu::UnicodeString str = txt->toUnicodeString();
+    breaker->setText(str);
 
     int32_t cur = 0;
     int32_t next = 0;
 
-    while ((next = breaker->next()) != icu::BreakIterator::DONE) {
-        locs.push_back(next);
+    StringBufferAccessData data = txt->bufferAccessData();
+    if (data.hasASCIIContent) {
+        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
+            locs.push_back(next);
+        }
+    } else {
+        const char16_t* buffer = (const char16_t*)str.getBuffer();
+        int32_t offset = 0, len = str.length();
+        char32_t c0, c1;
+        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
+            if (next == len) {
+                locs.push_back(txt->length());
+            } else {
+                int32_t prev = str.getChar32Start(next - 1);
+                utf16ToUtf32(buffer + prev, buffer + len, c0);
+                utf16ToUtf32(buffer + next, buffer + len, c1);
+                int32_t to = str.getChar32Start(next);
+                while (offset < to) {
+                    char32_t d0 = txt->charAt(offset);
+                    char32_t d1 = txt->charAt(offset + 1);
+                    if (c0 != 0xFFFD && c1 != 0xFFFD && c0 == d0 && c1 == d1) {
+                        locs.push_back(++offset);
+                        break;
+                    }
+                    offset++;
+                }
+            }
+        }
     }
 
     cur = 0;

@@ -173,6 +173,7 @@ size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 
     return tRequiredSize;
 }
+
 size_t utf32ToUtf8(char32_t uc, char* UTF8)
 {
     size_t tRequiredSize = 0;
@@ -1030,10 +1031,16 @@ GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
     return result;
 }
 
-static int utf32ToUtf16(char32_t i, char16_t* u)
+int utf32ToUtf16(char32_t i, char16_t* u)
 {
-    if (i < 0xffff) {
-        *u = (char16_t)(i & 0xffff);
+    if (i <= 0xffff) {
+        if (i >= 0xd800 && i <= 0xdfff) {
+            // illegal conversion
+            *u = 0xFFFD;
+        } else {
+            // normal case
+            *u = (char16_t)(i & 0xffff);
+        }
         return 1;
     } else if (i < 0x10ffff) {
         i -= 0x10000;
@@ -1046,6 +1053,38 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
         *u = 0xFFFD;
         return 1;
     }
+}
+
+size_t utf16ToUtf32(const char16_t* UTF16, const char16_t* bufferEnd,
+                    char32_t& uc)
+{
+    size_t tRequiredSize = 0;
+
+    uc = 0x00000000;
+
+    if (UTF16[0] >= 0xd800 && UTF16[0] <= 0xdbff) {
+        if (UTF16 + 1 < bufferEnd) {
+            if (UTF16[1] >= 0xdc00 && UTF16[1] <= 0xdfff) {
+                uc += (UTF16[0] - 0xdb800) << 10;
+                uc += (UTF16[1] - 0xdc00) + 0x10000UL;
+                tRequiredSize = 2;
+            } else {
+                uc = 0xFFFD;
+                tRequiredSize = 1;
+            }
+        } else {
+            uc = 0xFFFD;
+            tRequiredSize = 1;
+        }
+    } else if (UTF16[0] >= 0xdc00 && UTF16[0] <= 0xdfff) {
+        uc = 0xFFFD;
+        tRequiredSize = 1;
+    } else {
+        uc = UTF16[0];
+        tRequiredSize = 1;
+    }
+
+    return tRequiredSize;
 }
 
 UTF8String String::toUTF8String()
