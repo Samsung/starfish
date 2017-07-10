@@ -107,7 +107,9 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             ctx.mergeTextDecorationData(currentFrame->style());
             currentFrame->addChild(current, ctx, force);
         } else {
-            STARFISH_ASSERT_NOT_REACHED();
+            // If the frame-tree-building state get here, I think somthing wrong
+            // Therefore, I write the following to recognize the situation.
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
 
