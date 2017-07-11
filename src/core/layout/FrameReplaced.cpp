@@ -232,7 +232,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                         applyMinMaxValueIfNeeds(
                             width.specifiedValue(cb->contentWidth()),
                             intrinsicHeight, parentContentWidth, parentHeight,
-                            true, false);
+                            false);
                     }
                 }
             }
@@ -331,7 +331,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 setContentHeight(0);
             } else if (width.isAuto() && style()->height().isAuto()) {
                 applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
-                                        parentContentWidth, parentHeight, true,
+                                        parentContentWidth, parentHeight,
                                         parentHasFixedHeight);
             } else if (style()->width().isSpecified() &&
                        style()->height().isAuto()) {
@@ -345,7 +345,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 }
 
                 applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight,
-                                        true, parentHasFixedHeight);
+                                        parentHasFixedHeight);
             } else if (style()->width().isAuto() &&
                        style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
@@ -358,11 +358,10 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     }
 
                     applyMinMaxValueIfNeeds(w, h, parentContentWidth,
-                                            parentHeight, true,
-                                            parentHasFixedHeight);
+                                            parentHeight, parentHasFixedHeight);
                 } else {
                     STARFISH_ASSERT(style()->height().isPercent());
-                    if (ctx.parentHasFixedHeight(this)) {
+                    if (parentHasFixedHeight) {
                         LayoutUnit h = style()->height().percent() *
                                        ctx.parentFixedHeight(this);
                         LayoutUnit w;
@@ -376,7 +375,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     } else {
                         applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
                                                 parentContentWidth,
-                                                parentHeight, true, false);
+                                                parentHeight, false);
                     }
                 }
             } else {
@@ -386,9 +385,9 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 if (height.isFixed()) {
                     applyMinMaxValueIfNeeds(w, height.fixed(),
                                             parentContentWidth, parentHeight,
-                                            true, parentHasFixedHeight);
+                                            parentHasFixedHeight);
                 } else {
-                    if (ctx.parentHasFixedHeight(this)) {
+                    if (parentHasFixedHeight) {
                         applyMinMaxValueIfNeeds(
                             w, height.percent() * ctx.parentFixedHeight(this),
                             parentContentWidth, parentHeight);
@@ -401,7 +400,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                         }
 
                         applyMinMaxValueIfNeeds(w, h, parentContentWidth,
-                                                parentHeight, true, false);
+                                                parentHeight, false);
                     }
                 }
             }

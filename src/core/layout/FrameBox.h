@@ -136,11 +136,9 @@ public:
         m_frameRect.setHeight(height);
     }
 
-    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth,
-                                 bool parentHasFixedValue = true)
+    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth)
     {
-        setContentWidth(
-            minMaxWidthAppliedIfNeeds(width, parentWidth, parentHasFixedValue));
+        setContentWidth(minMaxWidthAppliedIfNeeds(width, parentWidth));
     }
 
     void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight,
@@ -478,8 +476,7 @@ public:
 
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width,
-                                         LayoutUnit parentWidth,
-                                         bool parentHasFixedValue);
+                                         LayoutUnit parentWidth);
 
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,

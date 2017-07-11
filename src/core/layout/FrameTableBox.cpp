@@ -37,38 +37,6 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
 {
 }
 
-void FrameTableBox::layout(LayoutContext& ctx,
-                           Frame::LayoutWantToResolve resolveWhat)
-{
-    // This method is called by FrameBlockBox::layout() to do table layout.
-    // Table starts its own layout algorithm that has minimum interaction with
-    // the existing layout algorithm.
-    // In brief,
-    // after establishes a table context, we calculate the width of the table,
-    // and place cells in rows and columns. To do so, we calculate x positions
-    // of cells first, and then calculate the y positions of cells.
-    TableFormattingContextBlock context(this, ctx);
-
-    if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        calCellWidth(ctx);
-        calCellWidthsWithColspans();
-        LayoutUnit top = paddingTop() + borderTop();
-        LayoutUnit bottom = paddingBottom() + borderBottom();
-        MarginInfo marginInfo(top, bottom, true, style()->height());
-        setMarginInfo(&marginInfo);
-        layoutWidth(ctx);
-    }
-    if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
-        LayoutUnit top = paddingTop() + borderTop();
-        LayoutUnit bottom = paddingBottom() + borderBottom();
-        // The table always establishes block formatting context,
-        // so set the third argument to true
-        MarginInfo marginInfo(top, bottom, true, style()->height());
-        setMarginInfo(&marginInfo);
-        layoutHeight(ctx);
-    }
-}
-
 FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
 {
     // There are more cells in the following rows than the first row
@@ -731,7 +699,6 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
         tableWidth = m_candidateWidth;
     }
     setWidth(tableWidth + paddingWidth() + borderWidth());
-    computeBorderMarginPadding(width());
 }
 
 void FrameTableBox::layoutHeight(LayoutContext& ctx)
@@ -744,6 +711,10 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     //    If there are multiple captions, place them in document order
 
     LayoutUnit ySoFar = 0;
+    LayoutUnit top = paddingTop() + borderTop();
+    LayoutUnit bottom = paddingBottom() + borderBottom();
+    MarginInfo marginInfo(top, bottom, true, style()->height());
+    setMarginInfo(&marginInfo);
 
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {
