@@ -204,6 +204,26 @@ void HTMLElement::setDir(String* dir)
     setAttribute(starFish()->staticStrings()->m_dir, dir);
 }
 
+String* HTMLElement::title()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_title);
+}
+
+void HTMLElement::setTitle(String* title)
+{
+    setAttribute(starFish()->staticStrings()->m_title, title);
+}
+
+String* HTMLElement::lang()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_lang);
+}
+
+void HTMLElement::setLang(String* lang)
+{
+    setAttribute(starFish()->staticStrings()->m_lang, lang);
+}
+
 void HTMLElement::click()
 {
     String* eventType = starFish()->staticStrings()->m_click.localName();
