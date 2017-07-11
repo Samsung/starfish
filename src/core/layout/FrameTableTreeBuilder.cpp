@@ -38,7 +38,8 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         parent->style()->display(), current->style()->display());
 
     if (isProperChild) {
-        if (current->needsFrameTreeBuild() && !current->frame()) {
+        if (force || (current->needsFrameTreeBuild() && !current->frame())) {
+            force = true;
             currentFrame = createFrameTableObjectBox(current);
             current->setFrame(currentFrame);
         } else {
@@ -53,15 +54,17 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
 
-        if (current->childNeedsFrameTreeBuild() || force) {
-            for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            if (force || c->needsFrameTreeBuild() ||
+                c->childNeedsFrameTreeBuild()) {
                 currentFrame->addChild(c, ctx, force);
             }
         }
         current->clearNeedsFrameTreeBuild();
         current->clearChildNeedsFrameTreeBuild();
     } else {
-        if (current->needsFrameTreeBuild()) {
+        if (current->needsFrameTreeBuild() || force) {
+            force = true;
             // If the current node is not a table wrapper node, make either
             // * an anonymous table wrapper box, or
             // * use the last anonymous wrapper box if it has already been
@@ -434,6 +437,6 @@ void FrameTableColBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
 void FrameTableCellBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
                                  bool force)
 {
-    FrameTreeBuilder::buildTree(child, ctx, false);
+    FrameTreeBuilder::buildTree(child, ctx, force);
 }
 }

@@ -1289,9 +1289,8 @@ void Node::setNeedsFrameTreeBuild()
             parent = document()->frame();
         } else {
             while (parent) {
-                if (!parent->isAnonymous() && parent->isFrameBlockBox() &&
-                    !ComputedStyle::isDisplayTableValueType(
-                        parent->style()->display())) {
+                if (!parent->isAnonymous() &&
+                    (parent->isBlockLevel() || parent->isFrameTableCellBox())) {
                     break;
                 }
                 parent = parent->parent();

@@ -492,7 +492,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if ((current->needsFrameTreeBuild() || force) || isTableType) {
-        force = true;
+        if (current->needsFrameTreeBuild() || force) {
+            force = true;
+        }
 
         Frame* currentFrame;
         DisplayValue display = current->style()->display();
@@ -635,6 +637,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);
         current->clearNeedsFrameTreeBuild();
+    } else {
+        shouldSkipChildren =
+            current->frame() && (current->frame()->isFrameReplaced() ||
+                                 current->frame()->isFrameLineBreak());
     }
 
     Frame* currentFrame = current->frame();
