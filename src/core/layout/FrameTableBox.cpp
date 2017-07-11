@@ -712,6 +712,10 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
                 ctx, Frame::LayoutWantToResolve::ResolveWidth);
             c->asFrameTableCaptionBox()->setX(
                 c->asFrameTableCaptionBox()->marginLeft());
+            if (c->asFrameBox()->style()->width().isFixed()) {
+                maxWidthSoFar =
+                    std::max(maxWidthSoFar, c->asFrameBox()->width());
+            }
         } else if (c->isFrameTableColBox()) {
             // The FrameTableColBox must not be laid out.
         } else {
