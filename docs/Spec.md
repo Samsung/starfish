@@ -150,9 +150,6 @@ This section describes the complete list of supported HTML tags and attributes b
 | | method | ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data) | Return a new ProcessingInstruction node, with target set to target, data set to data |
 |  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
 |  | method | Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName) | Creates an attribute of the given qualified name and namespace URI. |
-
-[NewObject, RaisesException] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
-
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
