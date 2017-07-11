@@ -58,7 +58,8 @@ class StarFish : public gc {
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h,
-             float defaultFontSizeMultiplier, ScreenInfo& info);
+             float defaultFontSizeMultiplier, ScreenInfo& info,
+             String* localStorageFilePath);
     ~StarFish();
     void run();
 
@@ -144,6 +145,11 @@ public:
         return m_screenInfo;
     }
 
+    String* localStorageFilePath()
+    {
+        return m_localStorageFilePath;
+    }
+
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG
@@ -191,6 +197,7 @@ protected:
 #endif
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
+    String* m_localStorageFilePath;
 #ifdef PORT_GRAPHIC_BACKEND_DALI
     int m_width;
     int m_height;

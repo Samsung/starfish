@@ -28,7 +28,8 @@ StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
     : m_storageType(storageType)
     , m_storageManager(nullptr)
 {
-    if (storageType == StorageType::Local) {
+    if (storageType == StorageType::Local &&
+        localStoragePath != String::emptyString) {
         m_storageManager = new StorageManager(localStoragePath);
     }
 }

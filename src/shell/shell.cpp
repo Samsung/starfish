@@ -376,9 +376,10 @@ int main(int argc, char* argv[])
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
 
-    StarFish::StarFish* sf =
-        new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                               "Asia/Seoul", nullptr, width, height, 1, info);
+    String* localStorageFilePath = String::emptyString;
+    StarFish::StarFish* sf = new StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
+        width, height, 1, info, localStorageFilePath);
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

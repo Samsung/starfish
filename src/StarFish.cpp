@@ -171,7 +171,8 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
-                   float defaultFontSizeMultiplier, ScreenInfo& info)
+                   float defaultFontSizeMultiplier, ScreenInfo& info,
+                   String* localStorageFilePath)
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
@@ -181,6 +182,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     , m_enterCount(0)
     , m_screenInfo(info)
+    , m_localStorageFilePath(localStorageFilePath)
 {
 #ifdef PORT_GRAPHIC_BACKEND_DALI
     m_width = w;

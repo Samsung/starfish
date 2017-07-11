@@ -91,8 +91,8 @@ WebView::WebView(StarFish* starFish)
 void WebView::initStorage()
 {
     // TODO: The name of disk storage file name should be auto-generated
-    m_storageNamespaceProvider = WebStorageNamespaceProvider::create(
-        String::createASCIIString("./cache/cache.db"));
+    m_storageNamespaceProvider =
+        WebStorageNamespaceProvider::create(m_starFish->localStorageFilePath());
     m_localStorageNamespace =
         m_storageNamespaceProvider->createLocalStorageNamespace();
     m_sessionStorageNamespace =
