@@ -23,6 +23,7 @@
 
 #include <png.h>
 #include <turbojpeg.h>
+#include <gif_lib.h>
 
 namespace StarFish {
 
@@ -31,14 +32,14 @@ public:
     ImageDataMISC(String* localImageSrc)
     {
         FILE* fp = fopen(localImageSrc->utf8Data(), "rb");
-        decodeImage(fp, nullptr, 0);
+        decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
     }
 
     ImageDataMISC(const char* buf, size_t len)
     {
         if (buf && len != 0)
-            decodeImage(nullptr, buf, len);
+            decodeImage(nullptr, nullptr, buf, len);
     }
 
     virtual size_t bufferSize()
@@ -146,7 +147,7 @@ private:
         }
 
         rewind(fp);
-        delete[] buf;
+        delete buf;
         return imageFormat;
     }
 
@@ -383,7 +384,123 @@ private:
         }
     }
 
-    void decodeImage(FILE* fp, const char* buf, size_t len)
+    void readGIFFile(String* localImageSrc)
+    {
+        int row = 0, col = 0;
+        int width = 0, height = 0;
+        int extCode = 0;
+        int i = 0, j = 0;
+        unsigned int imageNum = 0;
+        unsigned long size = 0;
+
+        GifRecordType recordType;
+        GifRowType* screenBuffer = nullptr;
+        GifFileType* GifFile = nullptr;
+        ColorMapObject* ColorMap = nullptr;
+
+        if (localImageSrc) {
+            GifFile = DGifOpenFileName(localImageSrc->utf8Data());
+        }
+
+        m_width = GifFile->SWidth;
+        m_height = GifFile->SHeight;
+
+        screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
+
+        size = m_width * sizeof(GifPixelType);
+        screenBuffer[0] = (GifRowType)calloc(1, size);
+
+        for (i = 0; i < (int)(m_width); i++) {
+            screenBuffer[0][i] = GifFile->SBackGroundColor;
+        }
+
+        for (i = 1; i < (int)(m_height); i++) {
+            screenBuffer[i] = (GifRowType)calloc(1, size);
+            memcpy(screenBuffer[i], screenBuffer[0], size);
+        }
+
+        do {
+            DGifGetRecordType(GifFile, &recordType);
+            switch (recordType) {
+            case IMAGE_DESC_RECORD_TYPE:
+                DGifGetImageDesc(GifFile);
+
+                row = GifFile->Image.Top;
+                col = GifFile->Image.Left;
+                width = GifFile->Image.Width;
+                height = GifFile->Image.Height;
+
+                imageNum++;
+
+                if (GifFile->Image.Interlace) {
+                    int interlacedOffset[] = { 0, 4, 2, 1 };
+                    int interlacedJumps[] = { 8, 8, 4, 2 };
+                    for (i = 0; i < 4; i++)
+                        for (j = row + interlacedOffset[i]; j < row + height;
+                             j += interlacedJumps[i]) {
+                            DGifGetLine(GifFile, &screenBuffer[j][col], width);
+                        }
+                } else {
+                    for (i = 0; i < height; i++) {
+                        DGifGetLine(GifFile, &screenBuffer[row++][col], width);
+                    }
+                }
+                break;
+            case EXTENSION_RECORD_TYPE: {
+                GifByteType* extension = nullptr;
+                DGifGetExtension(GifFile, &extCode, &extension);
+                while (extension != nullptr) {
+                    DGifGetExtensionNext(GifFile, &extension);
+                }
+            } break;
+            case TERMINATE_RECORD_TYPE:
+                break;
+            default:
+                break;
+            }
+            if (imageNum > 0) {
+                break;
+            }
+        } while (recordType != TERMINATE_RECORD_TYPE);
+
+        ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap
+                                            : GifFile->SColorMap);
+
+        // Convert GIF to RGBA
+        GifRowType gifRow;
+        GifColorType* colorMapEntry = nullptr;
+        GifByteType* buffer = nullptr;
+
+        m_image = (void*)malloc(m_width * m_height * 4);
+        buffer = (GifByteType*)m_image;
+        for (unsigned long h = 0; h < m_height; h++) {
+            gifRow = screenBuffer[h];
+            for (unsigned long w = 0; w < m_width; w++) {
+                colorMapEntry = &ColorMap->Colors[gifRow[w]];
+                *buffer++ = colorMapEntry->Blue;
+                *buffer++ = colorMapEntry->Green;
+                *buffer++ = colorMapEntry->Red;
+                *buffer++ = 255;
+            }
+        }
+
+        if (screenBuffer) {
+            if (screenBuffer[0]) {
+                free(screenBuffer[0]);
+            }
+            for (i = 1; i < (int)(m_height); i++) {
+                if (screenBuffer[i]) {
+                    free(screenBuffer[i]);
+                }
+            }
+            free(screenBuffer);
+        }
+
+        DGifCloseFile(GifFile);
+    }
+
+    void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
+                     size_t len)
     {
         ImageFormat imageFormat;
         if (fp) {
@@ -403,7 +520,11 @@ private:
             }
             break;
         case ImageFormat::GIF:
-            // TODO
+            if (localImageSrc) {
+                readGIFFile(localImageSrc);
+            } else {
+                // TODO
+            }
             break;
         default:
             // TODO ERROR
