@@ -147,7 +147,7 @@ private:
         }
 
         rewind(fp);
-        delete buf;
+        delete[] buf;
         return imageFormat;
     }
 
