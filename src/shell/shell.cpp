@@ -195,7 +195,6 @@ public:
         // &DaliShellController::OnIdle));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::TouchEventHandler);
-
         Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
             this, &DaliShellController::HoverEventHandler);
         m_sf->run();
@@ -212,9 +211,9 @@ public:
             // Single touch event
 
             Dali::PointState::Type pointState = data.GetState(0);
+            const Dali::Vector2& screen = data.GetScreenPosition(0);
             if (pointState == Dali::PointState::DOWN) {
                 StarFishEnterer enter(m_sf);
-                const Dali::Vector2& screen = data.GetScreenPosition(0);
                 MouseData data(MouseData::MouseButtonValue::LeftButton,
                                MouseData::MouseButtonsValue::LeftButtonDown,
                                screen.x, screen.y);
@@ -224,7 +223,6 @@ public:
                 m_isMouseLbuttonDown = true;
             } else if (pointState == Dali::PointState::UP) {
                 StarFishEnterer enter(m_sf);
-                const Dali::Vector2& screen = data.GetScreenPosition(0);
                 StarFish::MouseData data(
                     MouseData::MouseButtonValue::NoButton,
                     MouseData::MouseButtonsValue::NoButtonDown, screen.x,
@@ -233,6 +231,15 @@ public:
                 m_sf->platformWindow()->dispatchMouseEvent(
                     PlatformWindow::MouseEventUp, data);
                 m_isMouseLbuttonDown = false;
+            } else {
+                StarFishEnterer enter(m_sf);
+                unsigned char buttons =
+                    m_isMouseLbuttonDown
+                        ? MouseData::MouseButtonsValue::LeftButtonDown
+                        : 0;
+                StarFish::MouseData data(0, buttons, screen.x, screen.y);
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    PlatformWindow::MouseEventMove, data);
             }
         }
         return true;
