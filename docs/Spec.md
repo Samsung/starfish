@@ -292,6 +292,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
 | [HTMLElement 1](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
 |  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
+|  | attribute | title | Reflects the "title" content attribute of HTMLElement. |
+|  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | method | void focus() | When an element is focused, key events received by the document must be targeted at that element. |
 | [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |

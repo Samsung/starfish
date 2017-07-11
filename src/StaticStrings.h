@@ -234,6 +234,7 @@ public:
     QualifiedName m_disabled;
     QualifiedName m_media;
     QualifiedName m_value;
+    QualifiedName m_title;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

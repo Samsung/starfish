@@ -60,6 +60,12 @@ public:
     String* innerText();
     void setInnerText(String* text);
 
+    String* title();
+    void setTitle(String* title);
+
+    String* lang();
+    void setLang(String* lang);
+
     String* dir();
     void setDir(String* dir);
 
