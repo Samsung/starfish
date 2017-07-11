@@ -2317,26 +2317,12 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
             locs.push_back(next);
         }
     } else {
-        const char16_t* buffer = (const char16_t*)str.getBuffer();
-        int32_t offset = 0, len = str.length();
-        char32_t c0, c1;
+        int32_t len = str.length();
         while ((next = breaker->next()) != icu::BreakIterator::DONE) {
             if (next == len) {
                 locs.push_back(txt->length());
             } else {
-                int32_t prev = str.getChar32Start(next - 1);
-                utf16ToUtf32(buffer + prev, buffer + len, c0);
-                utf16ToUtf32(buffer + next, buffer + len, c1);
-                int32_t to = str.getChar32Start(next);
-                while (offset < to) {
-                    char32_t d0 = txt->charAt(offset);
-                    char32_t d1 = txt->charAt(offset + 1);
-                    if (c0 != 0xFFFD && c1 != 0xFFFD && c0 == d0 && c1 == d1) {
-                        locs.push_back(++offset);
-                        break;
-                    }
-                    offset++;
-                }
+                locs.push_back(str.getChar32Start(next));
             }
         }
     }
