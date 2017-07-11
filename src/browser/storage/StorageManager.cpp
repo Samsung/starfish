@@ -22,6 +22,7 @@
 #include "../third_party/rapidjson/include/rapidjson/document.h"
 #include "../third_party/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../third_party/rapidjson/include/rapidjson/writer.h"
+#include "../third_party/rapidjson/include/rapidjson/encodings.h"
 
 #define LOCALSTORAGE "localstorage"
 #define PROTOCOL "protocol"
@@ -31,22 +32,27 @@
 #define KEY "key"
 #define VALUE "value"
 
+typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<>> JosnStringBuffer;
+typedef rapidjson::GenericDocument<rapidjson::UTF8<>> JsonDocument;
+typedef rapidjson::GenericValue<rapidjson::UTF8<>> JsonValue;
+
 namespace StarFish {
 
-rapidjson::Value::ValueIterator jsonGetSecurity(
-    rapidjson::Value& root, SecurityOriginData* securityOriginData);
-rapidjson::Value::ValueIterator jsonGetItems(
-    rapidjson::Value::ValueIterator& root, String* key);
-rapidjson::Value jsonMakeItem(rapidjson::Document::AllocatorType& alloactor,
-                              String* key, String* value);
-rapidjson::Value jsonMakeSecurity(rapidjson::Document::AllocatorType& alloactor,
-                                  SecurityOriginData* securityOriginData);
+JsonValue::ValueIterator jsonGetSecurity(
+    JsonValue& root, SecurityOriginData* securityOriginData);
+JsonValue::ValueIterator jsonGetItem(JsonValue::ValueIterator& root,
+                                     String* key);
+
+JsonValue jsonMakeItem(JsonDocument::AllocatorType& alloactor, String* key,
+                       String* value);
+JsonValue jsonMakeSecurity(JsonDocument::AllocatorType& alloactor,
+                           SecurityOriginData* securityOriginData);
 
 StorageManager::StorageManager(String* localStoragePath)
     : m_localStoragePath(localStoragePath)
 {
     m_jsonHolder.m_ptr = nullptr;
-    m_jsonHolder.m_ptr = new rapidjson::Document();
+    m_jsonHolder.m_ptr = new JsonDocument();
     jsonDocumentRead();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
                                    [](void* obj, void* cd) {
@@ -56,10 +62,9 @@ StorageManager::StorageManager(String* localStoragePath)
                                        mgr->jsonDocumentWrite();
                                        mgr = nullptr;
 
-                                       rapidjson::Document* document =
-                                           ((rapidjson::Document*)cd);
-                                       document->RemoveAllMembers();
-                                       free(document);
+                                       JsonDocument* document =
+                                           ((JsonDocument*)cd);
+                                       delete (document);
                                    },
                                    m_jsonHolder.m_ptr, NULL, NULL);
 }
@@ -67,12 +72,12 @@ StorageManager::StorageManager(String* localStoragePath)
 Nullable<String*> StorageManager::key(SecurityOriginData* securityOriginData,
                                       unsigned long index)
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return nullptr;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return nullptr;
@@ -86,17 +91,17 @@ Nullable<String*> StorageManager::key(SecurityOriginData* securityOriginData,
 Nullable<String*> StorageManager::getItem(
     SecurityOriginData* securityOriginData, String* key)
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return nullptr;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return nullptr;
     }
-    rapidjson::Value::ValueIterator itrItem = jsonGetItems(itrSecurity, key);
+    JsonValue::ValueIterator itrItem = jsonGetItem(itrSecurity, key);
     if (itrItem == (*itrSecurity)[ITEMS].End()) {
         return nullptr;
     }
@@ -108,12 +113,12 @@ GCUnorderedMap<String*, String*>* StorageManager::getItems(
 {
     GCUnorderedMap<String*, String*>* ret =
         new (GC) GCUnorderedMap<String*, String*>();
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return ret;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return ret;
@@ -130,39 +135,37 @@ GCUnorderedMap<String*, String*>* StorageManager::getItems(
 void StorageManager::setItem(SecurityOriginData* securityOriginData,
                              String* key, String* value)
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
-    rapidjson::Document::AllocatorType& alloactor = document->GetAllocator();
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
+    JsonDocument::AllocatorType& alloactor = document->GetAllocator();
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         document->SetObject();
-        rapidjson::Value items = jsonMakeItem(alloactor, key, value);
-        rapidjson::Value items_ary(rapidjson::kArrayType);
-        items_ary.PushBack(items, alloactor);
-        rapidjson::Value security =
-            jsonMakeSecurity(alloactor, securityOriginData);
-        security.AddMember(ITEMS, items_ary, alloactor);
-        rapidjson::Value securtiy_ary(rapidjson::kArrayType);
-        securtiy_ary.PushBack(security, alloactor);
-        (*document).AddMember(LOCALSTORAGE, securtiy_ary, alloactor);
+        JsonValue item = jsonMakeItem(alloactor, key, value);
+        JsonValue itemArray(rapidjson::kArrayType);
+        itemArray.PushBack(item, alloactor);
+        JsonValue security = jsonMakeSecurity(alloactor, securityOriginData);
+        security.AddMember(ITEMS, itemArray, alloactor);
+        JsonValue securtiyArray(rapidjson::kArrayType);
+        securtiyArray.PushBack(security, alloactor);
+        (*document).AddMember(LOCALSTORAGE, securtiyArray, alloactor);
         jsonDocumentWrite();
         return;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
-        rapidjson::Value items = jsonMakeItem(alloactor, key, value);
-        rapidjson::Value items_ary(rapidjson::kArrayType);
-        items_ary.PushBack(items, alloactor);
-        rapidjson::Value security =
-            jsonMakeSecurity(alloactor, securityOriginData);
-        security.AddMember(ITEMS, items_ary, alloactor);
+        JsonValue item = jsonMakeItem(alloactor, key, value);
+        JsonValue itemArray(rapidjson::kArrayType);
+        itemArray.PushBack(item, alloactor);
+        JsonValue security = jsonMakeSecurity(alloactor, securityOriginData);
+        security.AddMember(ITEMS, itemArray, alloactor);
         root.PushBack(security, alloactor);
         jsonDocumentWrite();
         return;
     }
-    rapidjson::Value::ValueIterator itrItem = jsonGetItems(itrSecurity, key);
+    JsonValue::ValueIterator itrItem = jsonGetItem(itrSecurity, key);
     if (itrItem == (*itrSecurity)[ITEMS].End()) {
-        rapidjson::Value json_item = jsonMakeItem(alloactor, key, value);
+        JsonValue json_item = jsonMakeItem(alloactor, key, value);
         (*itrSecurity)[ITEMS].PushBack(json_item, alloactor);
         jsonDocumentWrite();
         return;
@@ -175,17 +178,17 @@ void StorageManager::setItem(SecurityOriginData* securityOriginData,
 void StorageManager::removeItem(SecurityOriginData* securityOriginData,
                                 String* key)
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return;
     }
-    rapidjson::Value::ValueIterator itrItem = jsonGetItems(itrSecurity, key);
+    JsonValue::ValueIterator itrItem = jsonGetItem(itrSecurity, key);
     if (itrItem == (*itrSecurity)[ITEMS].End()) {
         return;
     }
@@ -194,12 +197,12 @@ void StorageManager::removeItem(SecurityOriginData* securityOriginData,
 
 void StorageManager::clear(SecurityOriginData* securityOriginData)
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return;
@@ -209,12 +212,12 @@ void StorageManager::clear(SecurityOriginData* securityOriginData)
 
 unsigned long StorageManager::length(SecurityOriginData* securityOriginData)
 {
-    rapidjson::Document* document = (rapidjson::Document*)m_jsonHolder.m_ptr;
+    JsonDocument* document = (JsonDocument*)m_jsonHolder.m_ptr;
     if (!(document->IsObject() && document->HasMember(LOCALSTORAGE))) {
         return 0;
     }
-    rapidjson::Value& root = (*document)[LOCALSTORAGE];
-    rapidjson::Value::ValueIterator itrSecurity =
+    JsonValue& root = (*document)[LOCALSTORAGE];
+    JsonValue::ValueIterator itrSecurity =
         jsonGetSecurity(root, securityOriginData);
     if (itrSecurity == root.End()) {
         return 0;
@@ -224,10 +227,10 @@ unsigned long StorageManager::length(SecurityOriginData* securityOriginData)
 
 void StorageManager::jsonDocumentRead()
 {
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     document->SetObject();
     FileIO* m_fileIO = FileIO::create();
-    bool canLoad = m_fileIO->open(m_localStoragePath, Read);
+    bool canLoad = m_fileIO->open(m_localStoragePath, ReadWrite);
     if (canLoad == true) {
         String* filedata = m_fileIO->readAll();
         m_fileIO->close();
@@ -240,58 +243,56 @@ void StorageManager::jsonDocumentRead()
 
 void StorageManager::jsonDocumentWrite()
 {
-    rapidjson::StringBuffer buffer;
+    JosnStringBuffer buffer;
     buffer.Clear();
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    rapidjson::Document* document = ((rapidjson::Document*)m_jsonHolder.m_ptr);
+    rapidjson::Writer<JosnStringBuffer> writer(buffer);
+    JsonDocument* document = ((JsonDocument*)m_jsonHolder.m_ptr);
     document->Accept(writer);
 
     FileIO* m_fileIO = FileIO::create();
-    m_fileIO->open(m_localStoragePath, Write);
-    m_fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
-    m_fileIO->close();
+    bool canLoad = m_fileIO->open(m_localStoragePath, Write);
+    if (canLoad == true) {
+        m_fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
+        m_fileIO->close();
+    }
 }
 
-rapidjson::Value jsonMakeItem(rapidjson::Document::AllocatorType& alloactor,
-                              String* key, String* value)
+JsonValue jsonMakeItem(JsonDocument::AllocatorType& alloactor, String* key,
+                       String* value)
 {
-    rapidjson::Value ret(rapidjson::kObjectType);
-    ret.AddMember(
-        KEY, rapidjson::Value(key->toUTF8NonGCString().data(), key->length()),
-        alloactor);
-    ret.AddMember(VALUE, rapidjson::Value(value->toUTF8NonGCString().data(),
-                                          value->length()),
-                  alloactor);
+    JsonValue ret(rapidjson::kObjectType);
+    JsonValue v1, v2;
+    auto v = key->toUTF8NonGCString();
+    v1.SetString(v.data(), v.length(), alloactor);
+    ret.AddMember(KEY, v1, alloactor);
+    v = value->toUTF8NonGCString();
+    v2.SetString(v.data(), v.length(), alloactor);
+    ret.AddMember(VALUE, v2, alloactor);
     return ret;
 }
 
-rapidjson::Value jsonMakeSecurity(rapidjson::Document::AllocatorType& alloactor,
-                                  SecurityOriginData* securityOriginData)
+JsonValue jsonMakeSecurity(JsonDocument::AllocatorType& alloactor,
+                           SecurityOriginData* securityOriginData)
 {
-    rapidjson::Value ret(rapidjson::kObjectType);
-    ret.AddMember(
-        PROTOCOL,
-        rapidjson::Value(
-            securityOriginData->protocol()->toUTF8NonGCString().data(),
-            securityOriginData->protocol()->length()),
-        alloactor);
-    ret.AddMember(
-        HOST,
-        rapidjson::Value(securityOriginData->host()->toUTF8NonGCString().data(),
-                         securityOriginData->host()->length()),
-        alloactor);
+    JsonValue ret(rapidjson::kObjectType);
+    JsonValue v1, v2;
+    auto v = securityOriginData->protocol()->toUTF8NonGCString();
+    v1.SetString(v.data(), v.length(), alloactor);
+    ret.AddMember(PROTOCOL, v1, alloactor);
+    v = securityOriginData->host()->toUTF8NonGCString();
+    v2.SetString(v.data(), v.length(), alloactor);
+    ret.AddMember(HOST, v2, alloactor);
     ret.AddMember(PORT, securityOriginData->port(), alloactor);
     return ret;
 }
 
-rapidjson::Value::ValueIterator jsonGetSecurity(
-    rapidjson::Value& root, SecurityOriginData* securityOriginData)
+JsonValue::ValueIterator jsonGetSecurity(JsonValue& root,
+                                         SecurityOriginData* securityOriginData)
 {
     for (auto itr = root.Begin(); itr != root.End(); ++itr) {
-        if ((*itr)[PROTOCOL] ==
-                securityOriginData->protocol()->toUTF8NonGCString().data() &&
-            (*itr)[HOST] ==
-                securityOriginData->host()->toUTF8NonGCString().data() &&
+        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
+        auto v2 = securityOriginData->host()->toUTF8NonGCString();
+        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
             (*itr)[PORT] == securityOriginData->port()) {
             return itr;
         }
@@ -299,12 +300,13 @@ rapidjson::Value::ValueIterator jsonGetSecurity(
     return root.End();
 }
 
-rapidjson::Value::ValueIterator jsonGetItems(
-    rapidjson::Value::ValueIterator& root, String* key)
+JsonValue::ValueIterator jsonGetItem(JsonValue::ValueIterator& root,
+                                     String* key)
 {
     for (auto itr = (*root)[ITEMS].Begin(); itr != (*root)[ITEMS].End();
          ++itr) {
-        if ((*itr)[KEY] == key->toUTF8NonGCString().data()) {
+        auto v = key->toUTF8NonGCString();
+        if ((*itr)[KEY] == v.data()) {
             return itr;
         }
     }
