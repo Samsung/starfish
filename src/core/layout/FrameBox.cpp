@@ -551,23 +551,16 @@ void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
 }
 
 LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
-                                               LayoutUnit parentWidth,
-                                               bool parentHasFixedValue)
+                                               LayoutUnit parentWidth)
 {
     ComputedStyle* style = Frame::style();
     if (style->minWidth().isSpecified()) {
-        if (!parentHasFixedValue && style->minWidth().isPercent()) {
-            return width;
-        }
         LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
         if (minWidth > width) {
             return minWidth;
         }
     }
     if (style->maxWidth().isSpecified()) {
-        if (!parentHasFixedValue && style->maxWidth().isPercent()) {
-            return width;
-        }
         LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
         if (maxWidth < width) {
             return maxWidth;

@@ -769,6 +769,7 @@ protected:
     LayoutUnit layoutInline(LayoutContext& ctx);
     void computeContentWidth(LayoutContext& ctx,
                              LayoutUnit containgBlockContentWidth);
+    void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
     GCVector<LineBox*> m_lineBoxes;
     MarginInfo* m_marginInfo;

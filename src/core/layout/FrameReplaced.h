@@ -91,11 +91,9 @@ public:
     void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height,
                                  LayoutUnit parentWidth,
                                  LayoutUnit parentHeight,
-                                 bool parentWidthHasFixedValue = true,
                                  bool parentHeightHasFixedValue = true)
     {
-        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(
-            width, parentWidth, parentWidthHasFixedValue);
+        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(width, parentWidth);
         LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(
             height, parentWidth, parentHeightHasFixedValue);
         if (width != newWidth || height != newHeight) {

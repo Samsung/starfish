@@ -57,28 +57,109 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
     Length right = style()->right();
     Length width = style()->width();
 
-    if (width.isAuto()) {
-        STARFISH_ASSERT(!isNormalFlow());
-        if (style()->position() == AbsolutePositionValue) {
-            if (left.isSpecified() && right.isSpecified()) {
-                LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
-                LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
-                LayoutUnit w =
-                    std::max(LayoutUnit(0),
-                             containgBlockContentWidth - l - r - mbpWidth());
-                applyMinMaxWidthIfNeeds(w, containgBlockContentWidth);
-                return;
+    LayoutUnit contentWidth;
+    if (isFrameTableBox()) {
+        // Table starts its own layout algorithm that has minimum
+        // interaction with the existing layout algorithm.
+        // In brief, after establishes a table context, we calculate
+        // the width of the table, and place cells in rows and columns.
+        // To do so, we calculate x positions of cells first, and then
+        // calculate the y positions of cells.
+        FrameTableBox* tableBox = asFrameTableBox();
+        tableBox->calCellWidth(ctx);
+        tableBox->calCellWidthsWithColspans();
+        tableBox->layoutWidth(ctx);
+        contentWidth = FrameBox::contentWidth();
+    } else if (width.isAuto()) {
+        if (isNormalFlow() && style()->display() != InlineBlockDisplayValue) {
+            // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
+            // width of containing block =
+            //     'margin-left' + 'border-left-width' + 'padding-left' +
+            //     'width' + 'padding-right' + 'border-right-width' +
+            //     'margin-right'
+            contentWidth =
+                std::max(containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
+        } else if (style()->position() == AbsolutePositionValue &&
+                   left.isSpecified() && right.isSpecified()) {
+            LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
+            LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
+            LayoutUnit w = std::max(LayoutUnit(0), containgBlockContentWidth -
+                                                       l - r - mbpWidth());
+            contentWidth = w;
+        } else {
+            PreferredWidthContext p(ctx,
+                                    containgBlockContentWidth - mbpWidth());
+            computePreferredWidth(p);
+            contentWidth = p.preferredWidth();
+        }
+    } else if (width.isFixed()) {
+        contentWidth = width.fixed();
+    } else {
+        STARFISH_ASSERT(width.isPercent());
+        contentWidth = containgBlockContentWidth * width.percent();
+    }
+
+    applyMinMaxWidthIfNeeds(contentWidth, containgBlockContentWidth);
+}
+
+void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
+{
+    LayoutUnit contentHeight;
+    LayoutUnit parentHeight;
+    Length height = style()->height();
+
+    if (isFrameTableBox()) {
+        asFrameTableBox()->layoutHeight(ctx);
+        contentHeight = FrameBox::contentHeight();
+    } else {
+        if (hasBlockFlow()) {
+            contentHeight = layoutBlock(ctx);
+        } else {
+            contentHeight = layoutInline(ctx);
+        }
+    }
+
+    // The contentHeight is used when table cell contents are vertically aligned
+    // in the table row.
+    if (isFrameTableCellBox()) {
+        asFrameTableCellBox()->setActualContentHeight(contentHeight);
+    }
+
+    if (style()->position() == AbsolutePositionValue) {
+        parentHeight = cb->contentHeight() + cb->paddingWidth();
+        if (height.isAuto()) {
+            Length top = style()->top();
+            Length bottom = style()->bottom();
+            if (top.isSpecified() && bottom.isSpecified()) {
+                LayoutUnit t = top.specifiedValue(parentHeight);
+                LayoutUnit b = bottom.specifiedValue(parentHeight);
+                contentHeight =
+                    parentHeight - t - b - paddingHeight() - borderHeight();
+            }
+        } else {
+            contentHeight = height.specifiedValue(parentHeight);
+        }
+
+        applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
+    } else {
+        bool parentHasFixedValue = ctx.parentHasFixedHeight(this);
+
+        if (parentHasFixedValue) {
+            parentHeight = ctx.parentFixedHeight(this);
+        } else {
+            parentHeight = contentHeight;
+        }
+
+        if (!isFrameTableBox()) {
+            if (height.isFixed()) {
+                contentHeight = height.fixed();
+            } else if (height.isPercent() && parentHasFixedValue) {
+                contentHeight = height.specifiedValue(parentHeight);
             }
         }
 
-        PreferredWidthContext p(ctx, containgBlockContentWidth - mbpWidth());
-        computePreferredWidth(p);
-        applyMinMaxWidthIfNeeds(p.preferredWidth(), containgBlockContentWidth);
-    } else if (width.isFixed()) {
-        applyMinMaxWidthIfNeeds(width.fixed(), containgBlockContentWidth);
-    } else if (width.isPercent()) {
-        applyMinMaxWidthIfNeeds(containgBlockContentWidth * width.percent(),
-                                containgBlockContentWidth);
+        applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
+                                 parentHasFixedValue);
     }
 }
 
@@ -183,56 +264,19 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
-
+    FrameBox* cb = ctx.containingBlock(this);
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
+        LayoutUnit parentContentWidth = cb->contentWidth();
+        computeBorderMarginPadding(parentContentWidth);
+
         if (isNormalFlow()) {
-            // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
-            FrameBlockBox* cb = ctx.blockContainer(this);
-            LayoutUnit parentContentWidth = cb->contentWidth();
-            computeBorderMarginPadding(parentContentWidth);
-
-            // width of containing block =
-            //     'margin-left' + 'border-left-width' + 'padding-left' +
-            //     'width' + 'padding-right' + 'border-right-width' +
-            //     'margin-right'
-            Length width = style()->width();
-            Length marginLeft = style()->marginLeft();
-            Length marginRight = style()->marginRight();
-
-            if (width.isAuto()) {
-                LayoutUnit remainedWidth = parentContentWidth - mbpWidth();
-                if (style()->display() == InlineBlockDisplayValue) {
-                    PreferredWidthContext p(ctx, remainedWidth);
-                    computePreferredWidth(p);
-                    applyMinMaxWidthIfNeeds(p.preferredWidth(),
-                                            parentContentWidth);
-                } else {
-                    if (remainedWidth < 0) {
-                        remainedWidth = 0;
-                    }
-                    applyMinMaxWidthIfNeeds(remainedWidth, parentContentWidth);
-                }
-            } else if (width.isFixed()) {
-                if (cb->style()->width().isFixed()) {
-                    applyMinMaxWidthIfNeeds(width.fixed(), parentContentWidth);
-                } else {
-                    applyMinMaxWidthIfNeeds(width.fixed(), width.fixed());
-                }
-            } else {
-                STARFISH_ASSERT(width.isPercent());
-                applyMinMaxWidthIfNeeds(parentContentWidth * width.percent(),
-                                        parentContentWidth);
-            }
-
-            if (style()->display() == BlockDisplayValue) {
+            computeContentWidth(ctx, parentContentWidth);
+            if (isBlockLevel()) {
                 computeHorizontalMargin(parentContentWidth);
             }
         } else if (style()->position() ==
                    PositionValue::AbsolutePositionValue) {
-            FrameBox* cb = ctx.containingBlock(this);
-            computeBorderMarginPadding(cb->contentWidth());
-
             STARFISH_ASSERT(!isAnonymous());
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
             DirectionValue parentDirection =
@@ -266,9 +310,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             Length left = style()->left();
             Length right = style()->right();
             Length width = style()->width();
-
-            LayoutUnit containgBlockContentWidth =
-                cb->contentWidth() + cb->paddingWidth();
+            parentContentWidth += cb->paddingWidth();
 
             if (left.isAuto() && right.isAuto()) {
                 if (width.isAuto()) {
@@ -283,13 +325,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     }
 
                     if (parentDirection == LtrDirectionValue) {
-                        computeContentWidth(ctx, containgBlockContentWidth -
-                                                     absX - x());
+                        computeContentWidth(ctx,
+                                            parentContentWidth - absX - x());
                     } else {
                         computeContentWidth(ctx, x() + absX);
                     }
                 } else {
-                    computeContentWidth(ctx, containgBlockContentWidth);
+                    computeContentWidth(ctx, parentContentWidth);
                 }
 
                 if (parentDirection == LtrDirectionValue) {
@@ -304,12 +346,11 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
-                computeContentWidth(ctx, containgBlockContentWidth);
+                computeContentWidth(ctx, parentContentWidth);
                 if (width.isAuto()) {
                     // 'width' is 'auto', 'left' and 'right' are not 'auto',
                     // then solve for 'width'
-                    LayoutUnit l =
-                        left.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit l = left.specifiedValue(parentContentWidth);
                     setAbsX(l + FrameBox::marginLeft(), absX);
                 } else {
                     // If none of the three is 'auto':
@@ -326,14 +367,12 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     // the containing block is 'rtl') or 'right' (in case
                     // 'direction' is 'ltr') and solve for that value.
                     if (parentDirection == DirectionValue::LtrDirectionValue) {
-                        LayoutUnit l =
-                            left.specifiedValue(containgBlockContentWidth);
+                        LayoutUnit l = left.specifiedValue(parentContentWidth);
                         setAbsX(l + FrameBox::marginLeft(), absX);
                     } else {
-                        LayoutUnit r =
-                            right.specifiedValue(containgBlockContentWidth);
-                        setAbsX(containgBlockContentWidth - FrameBox::width() -
-                                    r - FrameBox::marginRight(),
+                        LayoutUnit r = right.specifiedValue(parentContentWidth);
+                        setAbsX(parentContentWidth - FrameBox::width() - r -
+                                    FrameBox::marginRight(),
                                 absX);
                     }
                 }
@@ -352,31 +391,27 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 LayoutUnit r(0);
 
                 if (left.isSpecified()) {
-                    l = left.specifiedValue(containgBlockContentWidth);
+                    l = left.specifiedValue(parentContentWidth);
                 } else {
-                    r = right.specifiedValue(containgBlockContentWidth);
+                    r = right.specifiedValue(parentContentWidth);
                 }
 
                 if (width.isAuto()) {
-                    computeContentWidth(ctx, containgBlockContentWidth - l - r);
+                    computeContentWidth(ctx, parentContentWidth - l - r);
                 } else {
-                    computeContentWidth(ctx, containgBlockContentWidth);
+                    computeContentWidth(ctx, parentContentWidth);
                 }
 
                 if (left.isSpecified()) {
                     setAbsX(l + FrameBox::marginLeft(), absX);
                 } else {
-                    setAbsX(containgBlockContentWidth - r - FrameBox::width() -
+                    setAbsX(parentContentWidth - r - FrameBox::width() -
                                 FrameBox::marginRight(),
                             absX);
                 }
             }
         } else {
             // 10.3.5 Floating, non-replaced elements
-            FrameBox* cb = ctx.blockContainer(this);
-            LayoutUnit containgBlockContentWidth = cb->contentWidth();
-            computeBorderMarginPadding(containgBlockContentWidth);
-
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
 
@@ -387,7 +422,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 setMarginRight(0);
             }
 
-            computeContentWidth(ctx, containgBlockContentWidth);
+            computeContentWidth(ctx, parentContentWidth);
         }
     }
 
@@ -395,26 +430,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         return;
     }
 
-    LayoutUnit contentHeight;
-
-    if (hasBlockFlow()) {
-        contentHeight = layoutBlock(ctx);
-    } else {
-        contentHeight = layoutInline(ctx);
-    }
-
-    // The contentHeight is used when table cell contents are vertically aligned
-    // in the table row.
-    if (style()->display() == TableCellDisplayValue) {
-        this->asFrameTableCellBox()->setActualContentHeight(contentHeight);
-    }
+    computeContentHeight(ctx, cb);
 
     // Now the intrinsic height of the object is known because the children are
     // placed
 
     // Determine the final height
     if (style()->position() == PositionValue::AbsolutePositionValue) {
-        FrameBox* cb = ctx.containingBlock(this);
         FrameBox* parent = Frame::layoutParent()->asFrameBox();
 
         LayoutLocation l1, l2;
@@ -457,7 +479,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // the height is based on the content per 10.6.7 set 'auto' values
             // for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
             LayoutUnit b = bottom.specifiedValue(parentHeight);
-            applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
             setAbsY(parentHeight - asFrameBox()->contentHeight() -
                         paddingHeight() - borderHeight() - b,
                     absY);
@@ -483,10 +504,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 'auto' values for 'margin-top' and 'margin-bottom' are set to 0
             // and solve for 'height'
             LayoutUnit t = top.specifiedValue(parentHeight);
-            LayoutUnit b = bottom.specifiedValue(parentHeight);
-            height =
-                Length(Length::Fixed,
-                       parentHeight - t - b - paddingHeight() - borderHeight());
             setAbsY(t, absY);
         } else {
             // 'bottom' is 'auto', 'top' and 'height' are not 'auto', then set
@@ -497,44 +514,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             setAbsY(top.specifiedValue(parentHeight), absY);
         }
 
-        if (height.isAuto()) {
-            applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
-        } else {
-            applyMinMaxHeightIfNeeds(height.specifiedValue(parentHeight),
-                                     parentHeight);
-        }
-
         applyVerticalMarginForAbsoluteBox();
-    } else {
-        // Normal Flow or Float box
-        // 10.6.6 Complicated cases
-        Length height = style()->height();
-        if (height.isAuto()) {
-            if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(contentHeight,
-                                         ctx.parentFixedHeight(this));
-            } else {
-                applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
-            }
-        } else if (height.isFixed()) {
-            if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(height.fixed(),
-                                         ctx.parentFixedHeight(this));
-            } else {
-                applyMinMaxHeightIfNeeds(height.fixed(), contentHeight, false);
-            }
-        } else {
-            if (ctx.parentHasFixedHeight(this)) {
-                applyMinMaxHeightIfNeeds(height.percent() *
-                                             ctx.parentFixedHeight(this),
-                                         ctx.parentFixedHeight(this));
-            } else {
-                applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
-            }
-        }
-    }
-
-    if (style()->position() == PositionValue::RelativePositionValue) {
+    } else if (style()->position() == PositionValue::RelativePositionValue) {
         ctx.registerRelativePositionedBox(this, true);
     }
 

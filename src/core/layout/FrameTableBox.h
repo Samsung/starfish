@@ -25,7 +25,6 @@ class FrameTableCaptionBox;
 class FrameTableCellBox;
 class FrameTableColBox;
 class FrameTreeBuilderContext;
-class TableFormattingContextBlock;
 
 // Table has the following table structure
 //
@@ -43,29 +42,6 @@ class TableFormattingContextBlock;
 //
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
-
-class TableFormattingContextBlock {
-public:
-    TableFormattingContextBlock(Frame* frm, LayoutContext& ctx)
-        : m_ctx(ctx)
-        , m_needs(false)
-    {
-        if (frm->isEstablishesBlockFormattingContext()) {
-            m_needs = true;
-            m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
-        }
-    }
-
-    ~TableFormattingContextBlock()
-    {
-        if (m_needs) {
-            m_ctx.removeBlockFormattingContext();
-        }
-    }
-
-    LayoutContext& m_ctx;
-    bool m_needs;
-};
 
 class ColSizeStruct {
 public:
@@ -106,8 +82,6 @@ class FrameTableBox : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
-    virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
                           bool force);
@@ -145,6 +119,10 @@ public:
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
+    void calCellWidth(LayoutContext& ctx);
+    void calCellWidthsWithColspans();
     LayoutUnit calBaseline();
 
     // This function return nullptr if there is no valid column object
@@ -164,10 +142,6 @@ public:
     }
 
 private:
-    void layoutWidth(LayoutContext& ctx);
-    void layoutHeight(LayoutContext& ctx);
-    void calCellWidth(LayoutContext& ctx);
-    void calCellWidthsWithColspans();
     void setCandidateCellWidthsAndReturnCellInfo(
         LayoutUnit tableWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,

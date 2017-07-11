@@ -3378,7 +3378,6 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.breakLine(true);
     }
 
-    TableFormattingContextBlock context(this, ctx.layoutContext());
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
@@ -3387,7 +3386,7 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit tablePreferredWidth = 0;
     LayoutUnit tablePreferredMinWidth = 0;
     if (style()->width().isAuto()) {
-        calCellWidth(context.m_ctx);
+        calCellWidth(ctx.layoutContext());
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
 

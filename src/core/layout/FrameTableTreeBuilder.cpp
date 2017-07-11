@@ -110,7 +110,8 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             ctx.mergeTextDecorationData(currentFrame->style());
             currentFrame->addChild(current, ctx, force);
         } else {
-            // If the frame-tree-building state get here, I think somthing wrong
+            // If the frame-tree-building state get here, I think something
+            // wrong
             // Therefore, I write the following to recognize the situation.
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }

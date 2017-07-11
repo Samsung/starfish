@@ -25,10 +25,4 @@ FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
 }
-
-void FrameTableCaptionBox::layout(LayoutContext& ctx,
-                                  Frame::LayoutWantToResolve resolveWhat)
-{
-    FrameBlockBox::layout(ctx, resolveWhat);
-}
 }
