@@ -24,6 +24,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
@@ -2786,8 +2787,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
     ComputedStyle* style = new ComputedStyle(parent);
 
     if (element->isHTMLElement()) {
-        if (element->asHTMLElement()->hasDirAttribute()) {
-            String* str = element->asHTMLElement()->getAttributeOrEmpty(
+        HTMLElement* elem = element->asHTMLElement();
+        if (elem->hasDirAttribute()) {
+            String* str = elem->getAttributeOrEmpty(
                 element->starFish()->staticStrings()->m_dir);
             str = str->toLower();
             if (str->equals("ltr")) {
@@ -2803,6 +2805,13 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
             } else {
                 style->m_inheritedStyles.m_direction =
                     DirectionValue::LtrDirectionValue;
+            }
+        } else if (elem->isHTMLFontElement()) {
+            if (elem->asHTMLFontElement()->hasColorAttribute()) {
+                Unit::Color color;
+                if (elem->asHTMLFontElement()->colorFromAttribute(&color)) {
+                    style->setColor(color);
+                }
             }
         }
     }

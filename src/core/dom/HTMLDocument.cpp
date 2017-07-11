@@ -22,6 +22,7 @@
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLHeadElement.h"
 #include "core/dom/HTMLHeadingElement.h"
@@ -140,6 +141,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLLabelElement(document);
     } else if (name == str->m_titleTagName.localNameAtomic()) {
         return new HTMLTitleElement(document);
+    } else if (name == str->m_fontTagName.localNameAtomic()) {
+        return new HTMLFontElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
