@@ -1720,7 +1720,7 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    AtomicString& selectorText()
+    const AtomicString& selectorText()
     {
         return m_selectorText;
     }

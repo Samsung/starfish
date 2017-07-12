@@ -76,6 +76,13 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_width(initialWidth)
     , m_height(initialHeight)
 {
+    /*
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) { STARFISH_LOG_INFO("Window::~Window\n"); },
+            NULL, NULL, NULL);
+    */
+
     m_scriptBindingInstance = new ScriptBindingInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
     initFlags();

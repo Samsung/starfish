@@ -205,7 +205,7 @@ AtomicString AtomicString::emptyAtomicString()
     return AtomicString(String::emptyString);
 }
 
-bool AtomicString::isEmptyAtomicString()
+bool AtomicString::isEmptyAtomicString() const
 {
     return m_string == String::emptyString;
 }

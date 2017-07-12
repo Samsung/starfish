@@ -42,6 +42,15 @@ using namespace Escargot;
 ScriptBindingInstance::ScriptBindingInstance(
     ScriptEngineInstance* engineInstance, Window* ownerWindow)
 {
+    /*
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                STARFISH_LOG_INFO(
+                    "ScriptBindingInstance::~ScriptBindingInstance\n");
+            },
+            NULL, NULL, NULL);
+    */
     m_scriptContext = ContextRef::create(engineInstance->engineInstance());
     m_ownerWindow = ownerWindow;
     m_ownerDocument = nullptr;
