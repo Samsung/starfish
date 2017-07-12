@@ -28,6 +28,8 @@ class FrameTreeBuilderContext;
 
 // Table has the following table structure
 //
+//               FrameTableObjectBox
+//                       |
 //                 FrameTableBox
 //                 |         |
 //   FrameTableCaptionBox  FrameTableSectionBox

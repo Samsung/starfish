@@ -23,6 +23,19 @@ namespace StarFish {
 
 FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
+    , m_minCaptionWidth(0)
+    , m_maxCaptionWidth(0)
 {
+}
+
+void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
+{
+    layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+
+    PreferredWidthContext p(ctx, LayoutUnit::max());
+    computePreferredWidth(p);
+    p.finishLine(false);
+    m_minCaptionWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
+    m_maxCaptionWidth = p.preferredWidth() + borderWidth() + paddingWidth();
 }
 }
