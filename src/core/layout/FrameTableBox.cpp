@@ -670,14 +670,17 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // The width of the caption is limited by the max width of the
     // FrameTableSection. Hence, captions can only be placed after calculating
     // the width of the table, which has already been done by calContentWidth()
+    LayoutUnit minCaptionWidthSoFar = 0;
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
             c->asFrameTableSectionBox()->layoutWidth(ctx);
             maxWidthSoFar = std::max(maxWidthSoFar, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
-            c->asFrameTableCaptionBox()->layout(
-                ctx, Frame::LayoutWantToResolve::ResolveWidth);
+            c->asFrameTableCaptionBox()->layoutWidth(ctx);
+            minCaptionWidthSoFar =
+                std::max(minCaptionWidthSoFar,
+                         c->asFrameTableCaptionBox()->minCaptionWidth());
             c->asFrameTableCaptionBox()->setX(
                 c->asFrameTableCaptionBox()->marginLeft());
             if (c->asFrameBox()->style()->width().isFixed()) {
@@ -695,9 +698,9 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // so getting the max width should be the same as the width of
     // any table sections.
     LayoutUnit tableWidth = maxWidthSoFar;
-    if (m_candidateWidth > tableWidth) {
-        tableWidth = m_candidateWidth;
-    }
+    tableWidth = std::max(tableWidth, minCaptionWidthSoFar);
+    tableWidth = std::max(tableWidth, m_candidateWidth);
+
     setWidth(tableWidth + paddingWidth() + borderWidth());
 }
 

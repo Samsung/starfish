@@ -39,7 +39,21 @@ public:
         return true;
     }
 
+    void layoutWidth(LayoutContext& ctx);
+
+    LayoutUnit minCaptionWidth()
+    {
+        return m_minCaptionWidth;
+    }
+
+    LayoutUnit maxCaptionWidth()
+    {
+        return m_maxCaptionWidth;
+    }
+
 private:
+    LayoutUnit m_minCaptionWidth;
+    LayoutUnit m_maxCaptionWidth;
 };
 }
 

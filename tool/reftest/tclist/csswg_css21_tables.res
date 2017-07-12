@@ -511,9 +511,9 @@ test/reftest/csswg-test/css21_original/tables/border-spacing-values-001.htm
 #test/reftest/csswg-test/css21_original/tables/border-style-outset-002.htm
 test/reftest/csswg-test/css21_original/tables/caption-position-001.htm
 test/reftest/csswg-test/css21_original/tables/caption-position-001-ref.htm
-#test/reftest/csswg-test/css21_original/tables/caption-side-001.htm
-#test/reftest/csswg-test/css21_original/tables/caption-side-002.htm
-#test/reftest/csswg-test/css21_original/tables/caption-side-003.htm
+test/reftest/csswg-test/css21_original/tables/caption-side-001.htm
+test/reftest/csswg-test/css21_original/tables/caption-side-002.htm
+test/reftest/csswg-test/css21_original/tables/caption-side-003.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-001.htm
 test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-002.htm
 #test/reftest/csswg-test/css21_original/tables/caption-side-applies-to-003.htm
