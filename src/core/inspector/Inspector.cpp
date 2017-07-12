@@ -264,7 +264,6 @@ Inspector::~Inspector()
         return;
     }
     m_zmqSocket.close();
-    m_zmqContext.close();
 }
 }
 #endif

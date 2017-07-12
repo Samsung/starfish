@@ -654,7 +654,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
 PlatformWindow::~PlatformWindow()
 {
-    STARFISH_LOG_INFO("Window::~Window\n");
+    STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 

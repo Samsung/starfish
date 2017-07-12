@@ -127,7 +127,7 @@ LayoutRect HTMLElement::offsetRect()
                 if (nearestFrameBox) {
                     Node* offsetParentNode = frameObject->offsetParent();
                     FrameBox* offsetParent;
-                    if (!offsetParent) {
+                    if (!offsetParentNode) {
                         offsetParent = document()->frame()->asFrameBox();
                     } else if (offsetParentNode->frame()->isFrameBox()) {
                         offsetParent = offsetParentNode->frame()->asFrameBox();

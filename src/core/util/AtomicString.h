@@ -57,7 +57,7 @@ public:
     static AtomicString createAttrAtomicString(StarFish* sf, char32_t str);
     static AtomicString emptyAtomicString();
 
-    bool isEmptyAtomicString();
+    bool isEmptyAtomicString() const;
 
     String* string() const
     {

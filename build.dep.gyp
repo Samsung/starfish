@@ -329,7 +329,7 @@
         },
         {
             'target_name': 'gc.x64.release',
-            'type': 'none',
+            'type': '<(dep_lib)',
             'copies': [
                 {
                     'files': [
@@ -339,6 +339,12 @@
                     ],
                     'destination': '<(PRODUCT_DIR)/lib/release',
                 },
+            ],
+            'include_dirs': [
+                'third_party/GCutil/bdwgc/include/',
+            ],
+            'sources': [
+                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
@@ -352,7 +358,7 @@
         },
         {
             'target_name': 'gc.x64.debug',
-            'type': 'none',
+            'type': '<(dep_lib)',
             'copies': [
                 {
                     'files': [
@@ -362,6 +368,12 @@
                     ],
                     'destination': '<(PRODUCT_DIR)/lib/debug',
                 },
+            ],
+            'include_dirs': [
+                'third_party/GCutil/bdwgc/include/',
+            ],
+            'sources': [
+                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'direct_dependent_settings': {
                 'include_dirs': [

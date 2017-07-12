@@ -27,11 +27,11 @@ class HTTPHeaderMap;
 class HTTPTransaction;
 
 struct NetworkURLWorkerData {
+    bool isAborted;
+    long lastTransactionResponseCode;
     ResourceRequest* request;
     NetworkURLWorkerHelper* networkWorker;
     std::unique_ptr<HTTPTransaction> httpTransaction;
-    bool isAborted;
-    long lastTransactionResponseCode;
 };
 
 class NetworkURLWorkerHelper : public gc {

@@ -19,7 +19,7 @@
 
 namespace StarFish {
 
-class TextContentData {
+class TextContentData : public gc {
 public:
     TextContentData(String* text)
         : m_text(text)
@@ -40,7 +40,7 @@ private:
     String* m_text;
 };
 
-class ImageContentData {
+class ImageContentData : public gc {
 public:
     ImageContentData(String* image)
         : m_image(image)

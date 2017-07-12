@@ -269,6 +269,12 @@ private:
 };
 #endif
 
+template <const int siz>
+inline void __attribute__((optimize("O0"))) clearStack()
+{
+    volatile char a[siz] = { 0 };
+}
+
 int main(int argc, char* argv[])
 {
 #ifndef NDEBUG
@@ -439,8 +445,22 @@ int main(int argc, char* argv[])
 
     // sf->messageLoop()->addIdler(test, sf);
     sf->run();
-// delete sf;
 #endif
+
+    delete sf;
+    sf = nullptr;
+
+    elm_shutdown();
+
+#ifndef NDEBUG
+    clearStack<10240>();
+#endif
+
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
 
     return 0;
 }

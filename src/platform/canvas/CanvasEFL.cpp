@@ -194,7 +194,7 @@ public:
                        evas_object_image_stride_get(m_image));
     }
 
-    ~CanvasEFL()
+    virtual ~CanvasEFL()
     {
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
@@ -210,6 +210,9 @@ public:
             evas_render(m_canvas);
             evas_free(m_canvas);
         }
+
+        m_state.clear();
+        m_state.shrink_to_fit();
     }
 
     virtual void clearColor(const Unit::Color& clr)
@@ -641,6 +644,19 @@ public:
                     }
                     evas_object_clip_set(eo, lastState().m_clipper);
                 }
+            }
+        } else {
+            if (isImage && lastState().m_opacity != 1) {
+                Evas_Object* ceo = evas_object_rectangle_add(m_canvas);
+                int c = 255 * lastState().m_opacity;
+                evas_object_color_set(ceo, c, c, c, c);
+                evas_object_move(ceo, 0, 0);
+                evas_object_resize(ceo, m_width, m_height);
+                evas_object_show(ceo);
+                if (m_objList) {
+                    m_objList->push_back(ceo);
+                }
+                evas_object_clip_set(eo, ceo);
             }
         }
     }
