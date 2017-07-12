@@ -137,9 +137,11 @@ public:
         info.availableRect.setWidth(width);
         info.availableRect.setHeight(height);
 
-        m_sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag,
-                                      "ko-KR", "Asia/Seoul", &application,
-                                      width, height, 1, info);
+        String* localStorageFilePath = String::emptyString;
+        m_sf = new StarFish::StarFish(
+            (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
+            &application, width, height, 1, info, localStorageFilePath);
+
         m_sf->loadHTMLDocument(String::createASCIIString(url));
 
         pthread_t t;
