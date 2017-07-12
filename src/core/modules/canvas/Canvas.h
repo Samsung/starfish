@@ -19,8 +19,33 @@
 
 namespace StarFish {
 
+class Frame;
 class ImageData;
 class PlatformWindow;
+
+class CanvasState {
+public:
+    Unit::Color m_color;
+    float m_opacity;
+    Font* m_font;
+    LayoutUnit m_baseX;
+    LayoutUnit m_baseY;
+    Unit::Color m_underLineColor;
+    Unit::Color m_lineThroughColor;
+
+    bool m_visible;
+    bool m_hasUnderLine;
+    bool m_hasLineThrough;
+
+    CanvasState()
+    {
+        m_opacity = 1;
+        m_font = nullptr;
+        m_visible = true;
+        m_hasUnderLine = false;
+        m_hasLineThrough = false;
+    }
+};
 
 class CanvasSurface : public gc {
 protected:
@@ -60,6 +85,9 @@ public:
     // state
     virtual void save() = 0;    // push state on state stack
     virtual void restore() = 0; // pop state stack and restore state
+    virtual void saveByFrame(Frame* f) = 0;
+    virtual CanvasState* getByFrame(Frame* f) = 0;
+    virtual void replace(CanvasState* state) = 0;
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
     virtual void scale(double x, double y, double ox, double oy) = 0;
