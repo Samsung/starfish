@@ -96,7 +96,20 @@ void FrameTableCellBox::layout(LayoutContext& ctx,
 
 bool FrameTableCellBox::emptyContent()
 {
-    return firstChild() == nullptr;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameText()) {
+            if (c->asFrameText()->text()->trim()->equals(String::emptyString)) {
+                if ((style()->whiteSpace() ==
+                     WhiteSpaceValue::NormalWhiteSpaceValue) ||
+                    (style()->whiteSpace() ==
+                     WhiteSpaceValue::NoWrapWhiteSpaceValue)) {
+                    continue;
+                }
+            }
+        }
+        return false;
+    }
+    return true;
 }
 
 // Table draws the border around the TableFrameSections
