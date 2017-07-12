@@ -390,6 +390,7 @@ private:
         int width = 0, height = 0;
         int extCode = 0;
         int i = 0, j = 0;
+        int errorCode = 0;
         unsigned int imageNum = 0;
         unsigned long size = 0;
 
@@ -399,7 +400,7 @@ private:
         ColorMapObject* ColorMap = nullptr;
 
         if (localImageSrc) {
-            GifFile = DGifOpenFileName(localImageSrc->utf8Data());
+            GifFile = DGifOpenFileName(localImageSrc->utf8Data(), &errorCode);
         }
 
         m_width = GifFile->SWidth;
@@ -496,7 +497,7 @@ private:
             free(screenBuffer);
         }
 
-        DGifCloseFile(GifFile);
+        DGifCloseFile(GifFile, &errorCode);
     }
 
     void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
