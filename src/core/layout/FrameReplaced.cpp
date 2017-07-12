@@ -20,6 +20,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameDocument.h"
+#include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -382,8 +383,10 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
 
 void FrameReplaced::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext())
+    if (isEstablishesStackingContext()) {
+        ctx.m_canvas->saveByFrame(this);
         return;
+    }
 
     if (isPositioned()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {

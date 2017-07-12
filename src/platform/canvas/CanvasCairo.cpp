@@ -37,27 +37,11 @@ namespace StarFish {
 
 extern bool g_enablePixelTest;
 
-class CanvasState {
+class CanvasStateCairo : public CanvasState {
 public:
-    Unit::Color m_color;
-    float m_opacity;
-    Font* m_font;
-    LayoutUnit m_baseX;
-    LayoutUnit m_baseY;
-    Unit::Color m_underLineColor;
-    Unit::Color m_lineThroughColor;
-
-    bool m_visible;
-    bool m_hasUnderLine;
-    bool m_hasLineThrough;
-
-    CanvasState()
+    CanvasStateCairo()
+        : CanvasState()
     {
-        m_opacity = 1;
-        m_font = nullptr;
-        m_visible = true;
-        m_hasUnderLine = false;
-        m_hasLineThrough = false;
     }
 };
 
@@ -130,7 +114,7 @@ public:
     // state
     virtual void save()
     {
-        CanvasState state;
+        CanvasStateCairo state;
         if (m_state.size()) {
             state.m_color = lastState().m_color;
             state.m_opacity = lastState().m_opacity;
@@ -654,14 +638,14 @@ public:
         return NULL;
     }
 
-    CanvasState& lastState()
+    CanvasStateCairo& lastState()
     {
         STARFISH_ASSERT(m_state.size());
         return m_state[m_state.size() - 1];
     }
 
 protected:
-    std::vector<CanvasState> m_state;
+    std::vector<CanvasStateCairo> m_state;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
     bool m_directDraw;

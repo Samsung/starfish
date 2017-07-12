@@ -48,38 +48,24 @@ Evas* internalCanvas()
     return g_internalCanvas;
 }
 
-class CanvasState {
+class CanvasStateEFL : public CanvasState {
 public:
     SkMatrix m_matrix;
-    Unit::Color m_color;
     Evas_Object* m_clipper;
     SkRect m_clipRect;
     ClipperLib::Paths m_clipPath;
-    float m_opacity;
-    Font* m_font;
-    LayoutUnit m_baseX;
-    LayoutUnit m_baseY;
-    Unit::Color m_underLineColor;
-    Unit::Color m_lineThroughColor;
 
     bool m_mapMode;
     bool m_didClip;
     bool m_hasPathClip;
-    bool m_visible;
-    bool m_hasUnderLine;
-    bool m_hasLineThrough;
 
-    CanvasState()
+    CanvasStateEFL()
+        : CanvasState()
     {
         m_clipper = NULL;
-        m_opacity = 1;
-        m_font = nullptr;
         m_mapMode = false;
         m_didClip = false;
         m_hasPathClip = false;
-        m_visible = true;
-        m_hasUnderLine = false;
-        m_hasLineThrough = false;
     }
 };
 
@@ -198,6 +184,7 @@ public:
     {
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
+        m_statePerFrame.clear();
         if (m_image && m_buffer) {
             evas_object_image_data_set(m_image, m_buffer);
             // evas_object_image_data_update_add(m_image, 0, 0, m_width,
@@ -235,7 +222,7 @@ public:
     // state
     virtual void save()
     {
-        CanvasState state;
+        CanvasStateEFL state;
         if (m_state.size()) {
             state.m_matrix = lastState().m_matrix;
             state.m_clipRect = lastState().m_clipRect;
@@ -267,6 +254,42 @@ public:
     virtual void restore()
     {
         m_state.erase(m_state.end() - 1);
+    }
+
+    virtual void saveByFrame(Frame* f)
+    {
+        m_statePerFrame.emplace(f, lastState());
+    }
+
+    virtual CanvasState* getByFrame(Frame* f)
+    {
+        auto it = m_statePerFrame.find(f);
+        if (it == m_statePerFrame.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
+    virtual void replace(CanvasState* state)
+    {
+        CanvasStateEFL* eflState = (CanvasStateEFL*)state;
+        lastState().m_matrix = eflState->m_matrix;
+        lastState().m_clipRect = eflState->m_clipRect;
+        lastState().m_clipPath = eflState->m_clipPath;
+        lastState().m_clipper = eflState->m_clipper;
+        lastState().m_color = eflState->m_color;
+        lastState().m_opacity = eflState->m_opacity;
+        lastState().m_baseX = eflState->m_baseX;
+        lastState().m_baseY = eflState->m_baseY;
+        lastState().m_font = eflState->m_font;
+        lastState().m_mapMode = eflState->m_mapMode;
+        lastState().m_visible = eflState->m_visible;
+        lastState().m_didClip = eflState->m_didClip;
+        lastState().m_hasPathClip = eflState->m_hasPathClip;
+        lastState().m_hasUnderLine = eflState->m_hasUnderLine;
+        lastState().m_hasLineThrough = eflState->m_hasLineThrough;
+        lastState().m_underLineColor = eflState->m_underLineColor;
+        lastState().m_lineThroughColor = eflState->m_lineThroughColor;
     }
 
     void assureMapMode()
@@ -384,7 +407,7 @@ public:
             SkFloatToScalar(0), SkFloatToScalar(0), SkFloatToScalar(m_width),
             SkFloatToScalar(m_height));
 
-        if (SkRect::Intersects(absRect, lastState().m_clipRect)) {
+        if (SkRect::Intersects(absRect, screenRect)) {
             return false;
         }
 
@@ -739,6 +762,7 @@ public:
         if (canSkipPainting(rt)) {
             return;
         }
+
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
@@ -770,9 +794,10 @@ public:
     // NOTE punchHole && Evas can not apply clip
     virtual void punchHole(const Unit::Rect& rt)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(rt)) {
             return;
         }
+
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
@@ -839,7 +864,10 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3, LayoutLocation p4)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(
+                Unit::Rect(std::min(p1.x(), p4.x()), std::min(p1.y(), p2.y()),
+                           std::max(p3.x() - p4.x(), p2.x() - p1.x()),
+                           std::max(p3.y() - p2.y(), p4.y() - p1.y())))) {
             return;
         }
 
@@ -1282,7 +1310,7 @@ public:
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat, bool isRootElement)
     {
-        if (!lastState().m_visible) {
+        if (canSkipPainting(Unit::Rect(0, 0, dst.width(), dst.height()))) {
             return;
         }
 
@@ -1579,7 +1607,7 @@ public:
         return NULL;
     }
 
-    CanvasState& lastState()
+    CanvasStateEFL& lastState()
     {
         STARFISH_ASSERT(m_state.size());
         return m_state[m_state.size() - 1];
@@ -1694,7 +1722,8 @@ public:
     }
 
 protected:
-    std::vector<CanvasState> m_state;
+    std::vector<CanvasStateEFL> m_state;
+    std::unordered_map<Frame*, CanvasStateEFL> m_statePerFrame;
     Evas* m_canvas;
     bool m_directDraw;
     Evas_Object* m_image;

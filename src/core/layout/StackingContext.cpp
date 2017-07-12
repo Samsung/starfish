@@ -225,8 +225,13 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
-                LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
-                canvas->translate(l.x(), l.y());
+                CanvasState* state = canvas->getByFrame(sCtx->owner());
+                if (state == nullptr) {
+                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+                    canvas->translate(l.x(), l.y());
+                } else {
+                    canvas->replace(state);
+                }
                 sCtx->paintStackingContext(canvas);
 
                 canvas->restore();
@@ -250,8 +255,14 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
-                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
-                    canvas->translate(l.x(), l.y());
+                    CanvasState* state = canvas->getByFrame(sCtx->owner());
+                    if (state == nullptr) {
+                        LayoutLocation l =
+                            sCtx->owner()->absolutePoint(m_owner);
+                        canvas->translate(l.x(), l.y());
+                    } else {
+                        canvas->replace(state);
+                    }
                     sCtx->paintStackingContext(canvas);
 
                     canvas->restore();

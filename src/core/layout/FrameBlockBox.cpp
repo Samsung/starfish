@@ -701,6 +701,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 void FrameBlockBox::paint(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
+        ctx.m_canvas->saveByFrame(this);
         return;
     }
 
@@ -771,15 +772,13 @@ void FrameBlockBox::paint(PaintingContext& ctx)
     } else {
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
-            if (overflowApplied) {
-                ctx.m_canvas->clip(Unit::Rect(
-                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                    contentWidth(), contentHeight() + paddingBottom()));
-            }
-            paintChildrenWith(ctx);
-        } else {
-            paintChildrenWith(ctx);
         }
+        if (overflowApplied) {
+            ctx.m_canvas->clip(Unit::Rect(
+                borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                contentWidth(), contentHeight() + paddingBottom()));
+        }
+        paintChildrenWith(ctx);
     }
 
     ctx.m_canvas->restore();
