@@ -490,6 +490,7 @@ void WebView::rendering()
               ->document()
               ->resourceLoader()
               .documentOpenTime()) < 1000)) {
+        STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
         m_needsRendering = false;
         starFish()->timer()->addTimer(
             0.01, mainBrowsingContext()->window(),
@@ -502,6 +503,7 @@ void WebView::rendering()
 #ifndef STARFISH_TIZEN
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
+        delete canvas;
         return;
     }
 

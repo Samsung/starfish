@@ -73,7 +73,6 @@ public:
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
-        m_renderingIdlerData = nullptr;
         m_isMouseLbuttonDown = false;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -151,7 +150,6 @@ public:
                                       void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
-    IdlerData* m_renderingIdlerData;
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
@@ -698,32 +696,25 @@ PlatformWindow::~PlatformWindow()
 #endif
 }
 
-void WebView::setNeedsRenderingSlowCase()
+void WebView::setNeedsRendering()
 {
-    STARFISH_ASSERT(!m_needsRendering);
+    WindowImplEFL* wnd = (WindowImplEFL*)starFish()->platformWindow();
+
+    // refresh rendering animator
+    if (wnd->m_renderingAnimator) {
+        ecore_animator_del(wnd->m_renderingAnimator);
+    }
+
     m_needsRendering = true;
-
-    IdlerData* id = new (NoGC) IdlerData;
-    id->m_fn = [](void* data) -> void {
-        PlatformWindow* wnd = (PlatformWindow*)data;
-        wnd->rendering();
-    };
-    id->m_data = starFish()->platformWindow();
-
-    ((WindowImplEFL*)starFish()->platformWindow())->m_renderingIdlerData = id;
-    ((WindowImplEFL*)starFish()->platformWindow())->m_renderingAnimator =
-        ecore_animator_add(
-            [](void* data) -> Eina_Bool {
-                IdlerData* id = (IdlerData*)data;
-                PlatformWindow* wnd = (PlatformWindow*)id->m_data;
-                StarFishEnterer enter(wnd->starFish());
-                id->m_fn(id->m_data);
-                ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
-                ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
-                GC_FREE(id);
-                return ECORE_CALLBACK_CANCEL;
-            },
-            id);
+    wnd->m_renderingAnimator = ecore_animator_add(
+        [](void* data) -> Eina_Bool {
+            PlatformWindow* wnd = (PlatformWindow*)data;
+            StarFishEnterer enter(wnd->starFish());
+            wnd->rendering();
+            ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
+            return ECORE_CALLBACK_CANCEL;
+        },
+        starFish()->platformWindow());
 }
 
 Canvas* WindowImplEFL::preparePainting(bool forPainting)
@@ -787,7 +778,6 @@ void WindowImplEFL::clearResources()
 {
     if (m_renderingAnimator) {
         ecore_animator_del(m_renderingAnimator);
-        GC_FREE(m_renderingIdlerData);
     }
 
     webView()->clearStackingContext(false);
