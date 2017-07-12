@@ -22,6 +22,7 @@
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/HTMLFieldSetElement.h"
 #include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLHeadElement.h"
@@ -30,6 +31,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLLabelElement.h"
+#include "core/dom/HTMLLegendElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLLIElement.h"
 #include "core/dom/HTMLMetaElement.h"
@@ -143,6 +145,10 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTitleElement(document);
     } else if (name == str->m_fontTagName.localNameAtomic()) {
         return new HTMLFontElement(document);
+    } else if (name == str->m_fieldsetTagName.localNameAtomic()) {
+        return new HTMLFieldSetElement(document);
+    } else if (name == str->m_legendTagName.localNameAtomic()) {
+        return new HTMLLegendElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {

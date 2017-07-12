@@ -1,0 +1,6 @@
+// https://html.spec.whatwg.org/#the-legend-element
+
+[HTMLConstructor]
+interface HTMLLegendElement : HTMLElement {
+  [Unimplemented] readonly attribute HTMLFormElement? form;
+};
