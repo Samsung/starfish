@@ -143,6 +143,7 @@ public:
     }
 
 protected:
+    void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
 };
 }
 

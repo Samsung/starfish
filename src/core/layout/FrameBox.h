@@ -29,6 +29,38 @@ struct MarginCollapseResult {
     LayoutUnit m_normalFlowHeightAdvance;
 };
 
+struct HorizontalDataLocToContainingBlock {
+    LayoutUnit m_contentWidth;
+    LayoutUnit m_absX;
+    LayoutUnit m_left;
+    LayoutUnit m_right;
+
+    HorizontalDataLocToContainingBlock(LayoutUnit contentWidth, LayoutUnit absX,
+                                       LayoutUnit left, LayoutUnit right)
+        : m_contentWidth(contentWidth)
+        , m_absX(absX)
+        , m_left(left)
+        , m_right(right)
+    {
+    }
+};
+
+struct VerticalDataLocToContainingBlock {
+    LayoutUnit m_contentHeight;
+    LayoutUnit m_absY;
+    LayoutUnit m_top;
+    LayoutUnit m_bottom;
+
+    VerticalDataLocToContainingBlock(LayoutUnit contentHeight, LayoutUnit absY,
+                                     LayoutUnit top, LayoutUnit bottom)
+        : m_contentHeight(contentHeight)
+        , m_absY(absY)
+        , m_top(top)
+        , m_bottom(bottom)
+    {
+    }
+};
+
 class FrameBox : public Frame {
 public:
     FrameBox(Node* node, ComputedStyle* style)
@@ -104,16 +136,6 @@ public:
     void setY(LayoutUnit y)
     {
         m_frameRect.setY(y);
-    }
-
-    void setAbsX(LayoutUnit x, LayoutUnit absX)
-    {
-        m_frameRect.setX(x - absX);
-    }
-
-    void setAbsY(LayoutUnit y, LayoutUnit absY)
-    {
-        m_frameRect.setY(y - absY);
     }
 
     void moveX(LayoutUnit t)
@@ -332,6 +354,11 @@ public:
     {
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
+
+    HorizontalDataLocToContainingBlock computeHorizontalDataToContainingBlock(
+        LayoutContext& ctx, FrameBox* cb);
+    VerticalDataLocToContainingBlock computeVerticalDataToContainingBlock(
+        LayoutContext& ctx, FrameBox* cb);
 
     LayoutUnit boxWidth() const
     {
