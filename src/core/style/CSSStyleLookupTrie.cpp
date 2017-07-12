@@ -306,7 +306,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             break;
         case 'c':
-            if (memcmp(data, "caption-sidet", 12) == 0) {
+            if (memcmp(data, "caption-side", 12) == 0) {
                 return CSSStyleKind::CaptionSide;
             }
             break;
