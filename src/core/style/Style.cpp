@@ -3744,6 +3744,25 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].captionSideValue();
             }
             break;
+        case CSSStyleValuePair::KeyKind::EmptyCells:
+            // show | hide | initial | inherit
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->m_inheritedStyles.m_emptyCells =
+                    parentStyle->m_inheritedStyles.m_emptyCells;
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->m_inheritedStyles.m_emptyCells =
+                    EmptyCellsValue::ShowEmptyCellsValue;
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::EmptyCellsValueKind ==
+                    cssValues[k].valueKind());
+                style->m_inheritedStyles.m_emptyCells =
+                    cssValues[k].emptyCellsValue();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::LineHeight:
             // <normal> | number | length | percentage | inherit
             if (cssValues[k].valueKind() ==
@@ -6219,6 +6238,24 @@ bool CSSStyleValuePair::updateValueCaptionSide(const CSSTokenVector& tokens)
         m_value.m_captionSide = CaptionSideValue::TopCaptionSideValue;
     } else if (STRING_VALUE_IS_STRING("bottom")) {
         m_value.m_captionSide = CaptionSideValue::BottomCaptionSideValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueEmptyCells(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::EmptyCellsValueKind;
+    if (STRING_VALUE_IS_STRING("show")) {
+        m_value.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
+    } else if (STRING_VALUE_IS_STRING("hide")) {
+        m_value.m_emptyCells = EmptyCellsValue::HideEmptyCellsValue;
     } else {
         return false;
     }

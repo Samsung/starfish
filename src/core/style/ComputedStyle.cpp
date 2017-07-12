@@ -458,6 +458,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->m_inheritedStyles.m_emptyCells !=
+        oldStyle->m_inheritedStyles.m_emptyCells) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->m_display != oldStyle->m_display) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);

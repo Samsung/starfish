@@ -94,10 +94,22 @@ void FrameTableCellBox::layout(LayoutContext& ctx,
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+bool FrameTableCellBox::emptyContent()
+{
+    return firstChild() == nullptr;
+}
+
 // Table draws the border around the TableFrameSections
 void FrameTableCellBox::paintBackgroundAndBorders(Canvas* canvas)
 {
-    // Do not print borders and background if the cell width is 0
+    // Do not print borders and background if "emptyCells: hide", and
+    // there's no content
+    if (style()->emptyCells() == EmptyCellsValue::HideEmptyCellsValue &&
+        emptyContent()) {
+        return;
+    }
+
+    // Print borders and background if the cell width is > 0
     if (width() > 0) {
         Unit::Color bgColor;
         if (bgColorFromAttribute(&bgColor)) {

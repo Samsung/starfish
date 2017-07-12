@@ -1,4 +1,4 @@
-#test/reftest/csswg-test/css21_original/tables/anonymous-table-box-width-001.htm
+test/reftest/csswg-test/css21_original/tables/anonymous-table-box-width-001.htm
 test/reftest/csswg-test/css21_original/tables/background-table-001.htm
 test/reftest/csswg-test/css21_original/tables/background-table-002.htm
 test/reftest/csswg-test/css21_original/tables/background-table-003.htm
@@ -582,8 +582,8 @@ test/reftest/csswg-test/css21_original/tables/data-alignment-002.htm
 test/reftest/csswg-test/css21_original/tables/data-alignment-003.htm
 test/reftest/csswg-test/css21_original/tables/data-alignment-004.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-001.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-002.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-003.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-002.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-003.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-004.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-005.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-006.htm
@@ -607,7 +607,7 @@ test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-010.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-011.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-012.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-013.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-014.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-014.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-015.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-016.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-017.htm
@@ -616,7 +616,7 @@ test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-002.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-003.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-004.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-in-collapsed-border-model-001.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-inherited-001.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-inherited-001.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-initial-001.htm
 test/reftest/csswg-test/css21_original/tables/empty-cell-visibility-hidden-001.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-001.htm
@@ -785,11 +785,11 @@ test/reftest/csswg-test/css21_original/tables/table-001.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-block-003.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-004.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-block-005.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-block-005.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-block-006.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-007.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-block-008.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-block-009.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-block-008.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-block-009.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-block-010.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-011.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-012.htm
@@ -1122,7 +1122,7 @@ test/reftest/csswg-test/css21_original/tables/table-layer-transparency-011.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-001.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-002.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-003.htm
-#test/reftest/csswg-test/css21_original/tables/table-layout-applies-to-001.htm
+test/reftest/csswg-test/css21_original/tables/table-layout-applies-to-001.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-applies-to-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-layout-applies-to-003.htm
 #test/reftest/csswg-test/css21_original/tables/table-layout-applies-to-005.htm
