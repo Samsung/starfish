@@ -140,112 +140,102 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     return result;
 }
 
-void FrameReplaced::layout(LayoutContext& ctx,
-                           Frame::LayoutWantToResolve resolveWhat)
+void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
+                                                 FrameBox* cb)
 {
     Length width = style()->width();
     Length height = style()->height();
-    Length left = style()->left();
-    Length right = style()->right();
-    Length marginLeft = style()->marginLeft();
-    Length marginRight = style()->marginRight();
-    DirectionValue direction = style()->direction();
+    LayoutUnit intrinsicWidth, intrinsicHeight;
+    LayoutUnit parentContentWidth, parentContentHeight;
+    Length parentHeightLength;
+    bool parentHasFixedHeight;
+    bool hasAspectRatio;
 
+    if (style()->position() == AbsolutePositionValue) {
+        parentContentWidth = cb->contentWidth() + cb->paddingWidth();
+        parentHasFixedHeight = true;
+        parentContentHeight = cb->contentHeight() + cb->paddingHeight();
+    } else {
+        parentContentWidth = cb->contentWidth();
+        parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        if (parentHasFixedHeight) {
+            parentContentHeight = ctx.parentFixedHeight(this);
+        }
+    }
+
+    if (parentHasFixedHeight) {
+        parentHeightLength = Length(Length::Fixed, parentContentHeight);
+    } else {
+        parentHeightLength = Length(Length::Auto);
+    }
+
+    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, hasAspectRatio,
+                         parentContentWidth, parentHeightLength);
+
+    LayoutUnit w, h;
+
+    if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
+        (width.isAuto() || height.isAuto())) {
+        setContentWidth(0);
+        setContentHeight(0);
+        return;
+    } else if (width.isAuto() && height.isAuto()) {
+        w = intrinsicWidth;
+        h = intrinsicHeight;
+    } else if (height.isAuto()) {
+        w = width.specifiedValue(parentContentWidth);
+        if (hasAspectRatio) {
+            h = w * (intrinsicHeight / intrinsicWidth);
+        } else {
+            h = intrinsicHeight;
+        }
+    } else if (width.isAuto()) {
+        if (height.isFixed() || parentHasFixedHeight) {
+            h = height.specifiedValue(parentContentHeight);
+            if (hasAspectRatio) {
+                w = h * (intrinsicWidth / intrinsicHeight);
+            } else {
+                w = intrinsicWidth;
+            }
+        } else {
+            w = intrinsicWidth;
+            h = intrinsicHeight;
+        }
+    } else {
+        STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
+        w = width.specifiedValue(parentContentWidth);
+        if (height.isFixed() || parentHasFixedHeight) {
+            h = height.specifiedValue(parentContentHeight);
+        } else {
+            if (hasAspectRatio) {
+                h = w * (intrinsicHeight / intrinsicWidth);
+            } else {
+                h = intrinsicHeight;
+            }
+        }
+    }
+
+    applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentContentHeight,
+                            parentHasFixedHeight);
+}
+
+void FrameReplaced::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
+{
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        LayoutUnit parentContentWidth =
-            ctx.containingFrameBlockBox(this)->contentWidth();
-        LayoutUnit intrinsicWidth, intrinsicHeight;
-        bool hasAspectRatio;
+        FrameBox* cb = ctx.containingBlock(this);
+        LayoutUnit parentContentWidth = cb->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
+        computeContentWidthAndHeight(ctx, cb);
 
         if (style()->position() == AbsolutePositionValue) {
-            FrameBox* cb = ctx.containingBlock(this);
-            LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
-
-            Length parentContentHeight = Length(Length::Fixed, parentHeight);
-            computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
-                                 hasAspectRatio, parentContentWidth,
-                                 parentContentHeight);
-
-            computeBorderMarginPadding(cb->contentWidth());
-
             DirectionValue parentDirection =
                 ctx.blockContainer(this)->style()->direction();
+            HorizontalDataLocToContainingBlock data =
+                computeHorizontalDataToContainingBlock(ctx, cb);
+            Length left = style()->left();
+            Length right = style()->right();
 
-            FrameBox* parent = Frame::layoutParent()->asFrameBox();
-
-            LayoutLocation l1, l2;
-            if (cb->isAncestorOf(parent)) {
-                l2 = parent->absolutePoint(cb);
-            } else {
-                l1 = cb->absolutePoint(ctx.frameDocument());
-                l2 = parent->absolutePoint(ctx.frameDocument());
-            }
-            LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
-
-            LayoutUnit absX = absLoc.x() - cb->borderLeft();
-
-            // 10.3.8 Absolutely positioned, replaced elements
-            // 'left' + 'margin-left' + 'border-left-width' + 'padding-left' +
-            // 'width' + 'padding-right' + 'border-right-width' + 'margin-right'
-            // + 'right' = width of containing block
-
-            if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
-                (width.isAuto() || height.isAuto())) {
-                setContentWidth(0);
-                setContentHeight(0);
-            } else if (width.isAuto() && height.isAuto()) {
-                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
-                                        parentContentWidth, parentHeight);
-            } else if (width.isSpecified() && height.isAuto()) {
-                LayoutUnit w = width.specifiedValue(cb->contentWidth());
-                LayoutUnit h;
-                if (hasAspectRatio) {
-                    h = w * (intrinsicHeight / intrinsicWidth);
-                } else {
-                    h = intrinsicHeight;
-                }
-                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
-            } else if (width.isAuto() && height.isSpecified()) {
-                LayoutUnit h = height.specifiedValue(cb->contentHeight());
-                LayoutUnit w;
-
-                if (hasAspectRatio) {
-                    w = h * (intrinsicWidth / intrinsicHeight);
-                } else {
-                    w = intrinsicWidth;
-                }
-                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
-            } else {
-                STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
-                if (height.isFixed()) {
-                    applyMinMaxValueIfNeeds(
-                        width.specifiedValue(cb->contentWidth()),
-                        height.fixed(), parentContentWidth, parentHeight);
-                } else {
-                    if (ctx.parentHasFixedHeight(this)) {
-                        applyMinMaxValueIfNeeds(
-                            width.specifiedValue(cb->contentWidth()),
-                            height.specifiedValue(cb->contentHeight()),
-                            parentContentWidth, parentHeight);
-                    } else {
-                        applyMinMaxValueIfNeeds(
-                            width.specifiedValue(cb->contentWidth()),
-                            intrinsicHeight, parentContentWidth, parentHeight,
-                            false);
-                    }
-                }
-            }
-
-            LayoutUnit containgBlockContentWidth =
-                cb->contentWidth() + cb->paddingWidth();
-
-            // If 'margin-left' or 'margin-right' is specified as 'auto' its
-            // used value is determined by the rules below. If both 'left' and
-            // 'right' have the value 'auto' then if the 'direction' property
-            // of the element establishing the static-position containing block
-            // is 'ltr', set 'left' to the static position; else if 'direction'
-            // is 'rtl', set 'right' to the static position.
             if (left.isAuto() && right.isAuto()) {
                 // static location computed in normal flow processing
                 if (parentDirection == LtrDirectionValue) {
@@ -259,9 +249,9 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
-                LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
-                LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
-                bool flag = false;
+                Length marginLeft = style()->marginLeft();
+                Length marginRight = style()->marginRight();
+                bool relativeToLeft = false;
 
                 if (marginLeft.isAuto() && marginRight.isAuto()) {
                     // If at this point both 'margin-left' and 'margin-right'
@@ -271,174 +261,56 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     // the direction of the containing block is 'ltr' ('rtl'),
                     // set 'margin-left' ('margin-right') to zero and solve
                     // for 'margin-right' ('margin-left').
-                    computeHorizontalMargin(containgBlockContentWidth - l - r);
-                    flag = parentDirection == DirectionValue::LtrDirectionValue;
+                    computeHorizontalMargin(data.m_contentWidth - data.m_left -
+                                            data.m_right);
+                    relativeToLeft =
+                        parentDirection == DirectionValue::LtrDirectionValue;
                 } else if (marginLeft.isAuto()) {
-                    flag = false;
+                    relativeToLeft = false;
                 } else if (marginRight.isAuto()) {
-                    flag = true;
+                    relativeToLeft = true;
                 } else {
-                    flag = parentDirection == DirectionValue::LtrDirectionValue;
+                    relativeToLeft =
+                        parentDirection == DirectionValue::LtrDirectionValue;
                 }
 
-                if (flag) {
-                    setAbsX(l + FrameBox::marginLeft(), absX);
+                if (relativeToLeft) {
+                    setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
                 } else {
-                    setAbsX(containgBlockContentWidth - FrameBox::width() - r -
-                                FrameBox::marginRight(),
-                            absX);
+                    setX(data.m_contentWidth - FrameBox::width() -
+                         data.m_right - FrameBox::marginRight() - data.m_absX);
                 }
             } else {
-                // If 'left' or 'right' are 'auto', replace any 'auto' on
-                // 'margin-left' or 'margin-right' with '0'.
-                if (marginLeft.isAuto()) {
-                    setMarginLeft(0);
-                }
-                if (marginRight.isAuto()) {
-                    setMarginRight(0);
-                }
-
                 if (left.isSpecified()) {
-                    LayoutUnit l =
-                        left.specifiedValue(containgBlockContentWidth);
-                    setAbsX(l + FrameBox::marginLeft(), absX);
+                    setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
                 } else {
-                    LayoutUnit r =
-                        right.specifiedValue(containgBlockContentWidth);
-                    setAbsX(containgBlockContentWidth - r - FrameBox::width() -
-                                FrameBox::marginRight(),
-                            absX);
+                    setX(data.m_contentWidth - data.m_right -
+                         FrameBox::width() - FrameBox::marginRight() -
+                         data.m_absX);
                 }
             }
-        } else {
-            LayoutUnit parentHeight;
-            Length parentContentHeight;
-            bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
-            if (parentHasFixedHeight) {
-                parentContentHeight =
-                    Length(Length::Fixed, ctx.parentFixedHeight(this));
-                parentHeight = ctx.parentFixedHeight(this);
-            } else {
-                parentContentHeight = Length(Length::Auto);
-            }
-            computeIntrinsicSize(intrinsicWidth, intrinsicHeight,
-                                 hasAspectRatio, parentContentWidth,
-                                 parentContentHeight);
-
-            if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
-                (width.isAuto() || height.isAuto())) {
-                setContentWidth(0);
-                setContentHeight(0);
-            } else if (width.isAuto() && style()->height().isAuto()) {
-                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
-                                        parentContentWidth, parentHeight,
-                                        parentHasFixedHeight);
-            } else if (style()->width().isSpecified() &&
-                       style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(
-                    ctx.parentContentWidth(this));
-                LayoutUnit h;
-                if (hasAspectRatio) {
-                    h = w * (intrinsicHeight / intrinsicWidth);
-                } else {
-                    h = intrinsicHeight;
-                }
-
-                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight,
-                                        parentHasFixedHeight);
-            } else if (style()->width().isAuto() &&
-                       style()->height().isSpecified()) {
-                if (style()->height().isFixed()) {
-                    LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w;
-                    if (hasAspectRatio) {
-                        w = h * (intrinsicWidth / intrinsicHeight);
-                    } else {
-                        w = intrinsicWidth;
-                    }
-
-                    applyMinMaxValueIfNeeds(w, h, parentContentWidth,
-                                            parentHeight, parentHasFixedHeight);
-                } else {
-                    STARFISH_ASSERT(style()->height().isPercent());
-                    if (parentHasFixedHeight) {
-                        LayoutUnit h = style()->height().percent() *
-                                       ctx.parentFixedHeight(this);
-                        LayoutUnit w;
-                        if (hasAspectRatio) {
-                            w = h * (intrinsicWidth / intrinsicHeight);
-                        } else {
-                            w = intrinsicWidth;
-                        }
-                        applyMinMaxValueIfNeeds(w, h, parentContentWidth,
-                                                parentHeight);
-                    } else {
-                        applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight,
-                                                parentContentWidth,
-                                                parentHeight, false);
-                    }
-                }
-            } else {
-                STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
-                LayoutUnit w =
-                    width.specifiedValue(ctx.parentContentWidth(this));
-                if (height.isFixed()) {
-                    applyMinMaxValueIfNeeds(w, height.fixed(),
-                                            parentContentWidth, parentHeight,
-                                            parentHasFixedHeight);
-                } else {
-                    if (parentHasFixedHeight) {
-                        applyMinMaxValueIfNeeds(
-                            w, height.percent() * ctx.parentFixedHeight(this),
-                            parentContentWidth, parentHeight);
-                    } else {
-                        LayoutUnit h;
-                        if (hasAspectRatio) {
-                            h = w * (intrinsicHeight / intrinsicWidth);
-                        } else {
-                            h = intrinsicHeight;
-                        }
-
-                        applyMinMaxValueIfNeeds(w, h, parentContentWidth,
-                                                parentHeight, false);
-                    }
-                }
-            }
-
-            if (isNormalFlow() && style()->display() == BlockDisplayValue) {
-                computeHorizontalMargin(parentContentWidth);
-            }
+        } else if (isNormalFlow() && isBlockLevel()) {
+            computeHorizontalMargin(parentContentWidth);
         }
     }
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
-        if (style() && style()->position() == AbsolutePositionValue) {
+        if (style()->position() == AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this);
-            FrameBox* parent = Frame::layoutParent()->asFrameBox();
-            LayoutLocation l1, l2;
-            if (cb->isAncestorOf(parent)) {
-                l2 = parent->absolutePoint(cb);
-            } else {
-                l1 = cb->absolutePoint(ctx.frameDocument());
-                l2 = parent->absolutePoint(ctx.frameDocument());
-            }
-
-            LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
+            VerticalDataLocToContainingBlock data =
+                computeVerticalDataToContainingBlock(ctx, cb);
             Length top = style()->top();
             Length bottom = style()->bottom();
-
-            LayoutUnit absY = l2.y() - l1.y() - cb->borderTop();
 
             if (top.isAuto() && bottom.isAuto()) {
                 // static location computed in normal flow processing
             } else if (!top.isAuto() && bottom.isAuto()) {
-                setAbsY(top.specifiedValue(parentHeight), absY);
+                setY(data.m_top - data.m_absY);
             } else if (top.isAuto() && !bottom.isAuto()) {
-                LayoutUnit b = bottom.specifiedValue(parentHeight);
-                setAbsY(parentHeight - b - FrameBox::height(), absY);
+                setY(data.m_contentHeight - data.m_bottom - FrameBox::height() -
+                     data.m_absY);
             } else {
-                LayoutUnit t = top.specifiedValue(parentHeight);
-                setAbsY(t, absY);
+                setY(data.m_top - data.m_absY);
             }
 
             applyVerticalMarginForAbsoluteBox();

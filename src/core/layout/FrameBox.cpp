@@ -20,6 +20,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/ImageData.h"
@@ -231,6 +233,75 @@ void FrameBox::computeBorderMarginPadding(LayoutUnit parentContentWidth)
     } else {
         setMarginBottom(0);
     }
+}
+
+HorizontalDataLocToContainingBlock
+FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
+                                                 FrameBox* cb)
+{
+    STARFISH_ASSERT(cb);
+    DirectionValue parentDirection =
+        ctx.blockContainer(this)->style()->direction();
+
+    FrameBox* parent = Frame::layoutParent()->asFrameBox();
+
+    LayoutLocation l1, l2;
+    if (cb->isAncestorOf(parent)) {
+        l2 = parent->absolutePoint(cb);
+    } else {
+        l1 = cb->absolutePoint(ctx.frameDocument());
+        l2 = parent->absolutePoint(ctx.frameDocument());
+    }
+    LayoutUnit absX = l2.x() - l1.x() - cb->borderLeft();
+
+    LayoutUnit containgBlockContentWidth =
+        cb->contentWidth() + cb->paddingWidth();
+
+    LayoutUnit l, r;
+    Length left = style()->left();
+    Length right = style()->right();
+    if (left.isSpecified()) {
+        l = left.specifiedValue(containgBlockContentWidth);
+    }
+
+    if (right.isSpecified()) {
+        r = right.specifiedValue(containgBlockContentWidth);
+    }
+
+    return HorizontalDataLocToContainingBlock(containgBlockContentWidth, absX,
+                                              l, r);
+}
+
+VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
+    LayoutContext& ctx, FrameBox* cb)
+{
+    STARFISH_ASSERT(cb);
+    FrameBox* parent = Frame::layoutParent()->asFrameBox();
+    LayoutLocation l1, l2;
+    if (cb->isAncestorOf(parent)) {
+        l2 = parent->absolutePoint(cb);
+    } else {
+        l1 = cb->absolutePoint(ctx.frameDocument());
+        l2 = parent->absolutePoint(ctx.frameDocument());
+    }
+    LayoutUnit containgBlockContentHeight =
+        cb->contentHeight() + cb->paddingHeight();
+
+    LayoutUnit absY = l2.y() - l1.y() - cb->borderTop();
+
+    LayoutUnit t, b;
+    Length top = style()->top();
+    Length bottom = style()->bottom();
+    if (top.isSpecified()) {
+        t = top.specifiedValue(containgBlockContentHeight);
+    }
+
+    if (bottom.isSpecified()) {
+        b = bottom.specifiedValue(containgBlockContentHeight);
+    }
+
+    return VerticalDataLocToContainingBlock(containgBlockContentHeight, absY, t,
+                                            b);
 }
 
 void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth)
