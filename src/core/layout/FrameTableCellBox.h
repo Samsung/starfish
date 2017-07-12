@@ -87,6 +87,7 @@ public:
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
+    bool emptyContent();
 
     unsigned m_absoluteColumnIndex; // starts with 0
     LayoutUnit m_minCellWidth;

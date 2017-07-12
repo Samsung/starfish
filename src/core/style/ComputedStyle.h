@@ -974,6 +974,11 @@ public:
         return m_inheritedStyles.m_captionSide;
     }
 
+    EmptyCellsValue emptyCells()
+    {
+        return m_inheritedStyles.m_emptyCells;
+    }
+
     void setTableLayout(TableLayoutValue value)
     {
         m_tableLayout = value;
@@ -1064,6 +1069,7 @@ protected:
         Length m_horizontalBorderSpacing;         // table
         Length m_verticalBorderSpacing;           // table
         CaptionSideValue m_captionSide : 1;       // table
+        EmptyCellsValue m_emptyCells : 1;         // table
     } m_inheritedStyles;
 
     FloatValue m_float : 2;

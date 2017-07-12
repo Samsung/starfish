@@ -244,12 +244,17 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding-Top
         // Margin-Left
         // Text-Indent
+        // Empty-Cells
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
                 return CSSStyleKind::BorderLeft;
             }
             break;
+        case 'e':
+            if (memcmp(data, "empty-cells", 11) == 0) {
+                return CSSStyleKind::EmptyCells;
+            }
         case 'f':
             if (memcmp(data, "font-weight", 11) == 0) {
                 return CSSStyleKind::FontWeight;
@@ -716,6 +721,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "marginLeft", 10) == 0) {
                 return CSSStyleKind::MarginLeft;
+            }
+            break;
+        case 'e':
+            if (memcmp(data, "EmptyCells", 10) == 0) {
+                return CSSStyleKind::EmptyCells;
             }
             break;
         }

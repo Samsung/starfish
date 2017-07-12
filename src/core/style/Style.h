@@ -589,6 +589,11 @@ enum TableLayoutValue {
     FixedTableLayoutValue,
 };
 
+enum EmptyCellsValue {
+    ShowEmptyCellsValue,
+    HideEmptyCellsValue,
+};
+
 enum TextDecorationValue {
     NoneTextDecorationValue,
     UnderLineTextDecorationValue,
@@ -759,6 +764,7 @@ class CSSStyleDeclaration;
     F(BorderCollapse, borderCollapse, "border-collapse")                 \
     F(BorderSpacing, borderSpacing, "border-spacing")                    \
     F(CaptionSide, CaptionSide, "caption-side")                          \
+    F(EmptyCells, EmptyCells, "empty-cells")                             \
     F(TextAlign, textAlign, "text-align")                                \
     F(TextIndent, textIndent, "text-indent")                             \
     F(Transform, transform, "transform")                                 \
@@ -961,6 +967,7 @@ public:
         BorderCollapseValueKind,
         CaptionSideValueKind,
         TableLayoutValueKind,
+        EmptyCellsValueKind,
 
         OverflowValueKind,
         TextDecorationValueKind,
@@ -1230,6 +1237,12 @@ public:
         return m_value.m_captionSide;
     }
 
+    EmptyCellsValue emptyCellsValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == EmptyCellsValueKind);
+        return m_value.m_emptyCells;
+    }
+
     TableLayoutValue tableLayoutValue() const
     {
         STARFISH_ASSERT(m_valueKind == TableLayoutValueKind);
@@ -1285,6 +1298,7 @@ public:
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
+        EmptyCellsValue m_emptyCells;
         TransitionPropertyValue m_transitionProperty;
         TransitionTimingFunctionValue m_transitionTimingFunction;
         CSSTime m_time;
@@ -1403,6 +1417,10 @@ public:
         ValueData(CaptionSideValue v)
         {
             m_captionSide = v;
+        }
+        ValueData(EmptyCellsValue v)
+        {
+            m_emptyCells = v;
         }
         ValueData(TableLayoutValue v)
         {
