@@ -172,7 +172,8 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
                    float defaultFontSizeMultiplier, ScreenInfo& info,
-                   String* localStorageFilePath)
+                   const char* localStorageFilePath,
+                   const char* cookieStoreFilePath)
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
@@ -182,7 +183,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     , m_enterCount(0)
     , m_screenInfo(info)
-    , m_localStorageFilePath(localStorageFilePath)
+    , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
+    , m_cookieStoreFilePath(String::fromUTF8(cookieStoreFilePath))
 {
 #ifdef PORT_GRAPHIC_BACKEND_DALI
     m_width = w;
@@ -459,8 +461,12 @@ void StarFish::setupInspector(uint32_t portNumber)
 void StarFish::initCookieSession()
 {
     // NetworkSharedResourceManager is singleton, So do not hold the instance.
-    NetworkSharedResourceManager::getInstance()
-        ->enableToStoreCookiesJarAsFile();
+    if (m_cookieStoreFilePath) {
+        // Disable to store cookies as a file If m_cookieStoreFilePath is
+        // nullptr or empty string
+        NetworkSharedResourceManager::getInstance()->setCookieStoreFilePath(
+            m_cookieStoreFilePath->toUTF8NonGCString());
+    }
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
 }

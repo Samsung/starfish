@@ -59,7 +59,8 @@ public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h,
              float defaultFontSizeMultiplier, ScreenInfo& info,
-             String* localStorageFilePath);
+             const char* localStorageFilePath,
+             const char* m_cookieStoreFilePath);
     ~StarFish();
     void run();
 
@@ -198,6 +199,7 @@ protected:
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
+    String* m_cookieStoreFilePath;
 #ifdef PORT_GRAPHIC_BACKEND_DALI
     int m_width;
     int m_height;
