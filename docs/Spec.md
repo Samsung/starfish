@@ -60,6 +60,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  | &lt;object&gt;&lt;/object&gt; |  |
 |  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  | &lt;h1&gt;Chapter 1: &lt;strong&gt;The Praxis&lt;/strong&gt;&lt;/h1&gt; |  |
 |  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) |  |  | &lt;ul&gt;SAMSUNG&lt;/ul&gt; |  |
+|  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  | &lt;fieldset&gt;&lt;legend&gt;Card&lt;/legend&gt;&lt;/fieldset&gt; |  |
+|  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  | &lt;legend&gt;Display&lt;/legend&gt; |  |
 |  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
 ## DOM
@@ -298,6 +300,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | void focus() | When an element is focused, key events received by the document must be targeted at that element. |
 | [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |
 | | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element |
+| [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
@@ -310,6 +313,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
+| [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |

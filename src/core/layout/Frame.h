@@ -593,73 +593,7 @@ public:
                    : style()->overflow() != OverflowValue::VisibleOverflow;
     }
 
-    virtual void computeStyleFlags()
-    {
-        ComputedStyle* style = Frame::style();
-        if (!style) {
-            return;
-        }
-
-        // TODO add condition
-        // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
-        // Block formatting context is established when the element is either
-        // float, absolute positioned, block containers (such as inline-blocks,
-        // table-cells, and table-captions) that are not block boxes,
-        // or block boxes with 'overflow' other than 'visible'.
-        // Especially, the last condition should be met another requirement,
-        // which is, the overflow should not be propagated to viewport.
-        // There are 2 possible cases that overflow property can propagate to
-        // viewport, in other words, containing block is viewport.
-        // 1. By giving a position of absoulte value, which is already included
-        // as one of forming block formatting context conditions.
-        // 2. <html> and <body> element, so we should check first overflow
-        // values of <head> and <body> are equal.
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (shouldApplyOverflow());
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->position() == PositionValue::AbsolutePositionValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->floating() != FloatValue::NoneFloatValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::TableCellDisplayValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() ==
-             DisplayValue::TableCaptionDisplayValue);
-
-        // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
-        // The table wrapper box establishes a block formatting context
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::TableDisplayValue);
-        m_flags.m_isEstablishesBlockFormattingContext |=
-            (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
-
-        m_flags.m_isPositioned =
-            (style->position() != PositionValue::StaticPositionValue);
-
-        // TODO add condition
-        // NOTE
-        // https://www.w3.org/TR/CSS2/zindex.html
-        // Appendix E. Elaborate description of Stacking Contexts
-        // All positioned descendants with 'z-index: auto' or 'z-index: 0', in
-        // tree order. For those with 'z-index: auto', treat the element as if
-        // it created a new stacking context,
-        m_flags.m_isEstablishesStackingContext |= m_flags.m_isPositioned;
-        m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
-        m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
-
-        // TODO add condition
-        m_flags.m_needsGraphicsBuffer |= (style->hasComplexTransforms(this));
-
-        if ((style->position() == PositionValue::AbsolutePositionValue) ||
-            (style->floating() != FloatValue::NoneFloatValue)) {
-            m_flags.m_isNormalFlow = false;
-        }
-
-        m_flags.m_isFloating =
-            (style->floating() != FloatValue::NoneFloatValue);
-    }
+    virtual void computeStyleFlags();
 
     virtual ~Frame()
     {

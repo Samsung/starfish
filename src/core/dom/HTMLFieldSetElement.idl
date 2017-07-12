@@ -1,0 +1,19 @@
+// https://html.spec.whatwg.org/#the-fieldset-element
+
+[HTMLConstructor]
+interface HTMLFieldSetElement : HTMLElement {
+  [Unimplemented, CEReactions] attribute boolean disabled;
+  [Unimplemented] readonly attribute HTMLFormElement? form;
+  [Unimplemented, CEReactions] attribute DOMString name;
+
+  [Unimplemented] readonly attribute DOMString type;
+
+  [Unimplemented, SameObject] readonly attribute HTMLCollection elements;
+
+  [Unimplemented] readonly attribute boolean willValidate;
+  [Unimplemented, SameObject] readonly attribute ValidityState validity;
+  [Unimplemented] readonly attribute DOMString validationMessage;
+  [Unimplemented] boolean checkValidity();
+  [Unimplemented] boolean reportValidity();
+  [Unimplemented] void setCustomValidity(DOMString error);
+};

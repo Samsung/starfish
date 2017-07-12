@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/dom/Node.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameInline.h"
@@ -87,14 +88,16 @@ static void marginCollapse(Frame* f, LayoutContext& ctx, MarginInfo& marginInfo,
     }
 }
 
-static bool shouldAvoidFlaots(Frame* f)
+static bool shouldAvoidFloatingBox(Frame* f)
 {
-    return f->isFrameReplaced() || f->isEstablishesBlockFormattingContext();
+    return f->isFrameReplaced() ||
+           (f->node() && f->node()->isHTMLLegendElement()) ||
+           f->isEstablishesBlockFormattingContext();
 }
 
 static bool shouldStretchWidth(Frame* f)
 {
-    STARFISH_ASSERT(shouldAvoidFlaots(f));
+    STARFISH_ASSERT(shouldAvoidFloatingBox(f));
     return f->style()->width().isAuto() && !f->isFrameReplaced() &&
            !f->isFrameTableBox();
 }
@@ -243,7 +246,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        if (shouldAvoidFlaots(child)) {
+        if (shouldAvoidFloatingBox(child)) {
             bool hasToStretchWidth = shouldStretchWidth(child);
             reLayoutNeeded = false;
             floatAffected = false;
