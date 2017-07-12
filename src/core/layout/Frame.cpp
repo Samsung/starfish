@@ -580,11 +580,23 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
 }
 
 Frame::Frame(Node* node, ComputedStyle* s)
-    : m_node(node)
-    , m_styleWhenNodeIsAnonymous(s)
 {
+    bool isAnonymous;
+    if (node) {
+        m_node = node;
+        isAnonymous = false;
+    } else if (s) {
+        STARFISH_ASSERT(node == nullptr);
+        m_styleWhenNodeIsAnonymous = s;
+        isAnonymous = true;
+    } else {
+        m_node = nullptr;
+        isAnonymous = true;
+    }
+
     m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
     m_flags.m_needsLayout = true;
+    m_flags.m_isAnonymous = isAnonymous;
 
     bool isRootElement = node && node->isHTMLHtmlElement();
     m_flags.m_isRootElement = isRootElement;
@@ -604,7 +616,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
 
 bool Frame::isOverflowPropagatedToViewPort()
 {
-    if (m_node && m_node->isHTMLHtmlElement()) {
+    if (!isAnonymous() && m_node->isHTMLHtmlElement()) {
         HTMLElement* bodyElement = m_node->document()->body();
         if (bodyElement && bodyElement->style()) {
             return bodyElement->style()->overflow() != style()->overflow();
@@ -612,7 +624,7 @@ bool Frame::isOverflowPropagatedToViewPort()
         return style()->overflow() != OverflowValue::VisibleOverflow;
     }
 
-    if (m_node && m_node->isHTMLBodyElement() &&
+    if (!isAnonymous() && m_node->isHTMLBodyElement() &&
         m_node->document()->rootElement()) {
         HTMLHtmlElement* rootElement = m_node->document()->rootElement();
         return rootElement->style()->overflow() != style()->overflow();
@@ -654,7 +666,7 @@ void Frame::computeStyleFlags()
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCaptionDisplayValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
-        (m_node && m_node->isHTMLFieldSetElement());
+        (!isAnonymous() && m_node->isHTMLFieldSetElement());
 
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
     // The table wrapper box establishes a block formatting context
@@ -854,7 +866,6 @@ ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
 void Frame::updateComputedStyle(Node* refNode)
 {
     STARFISH_ASSERT(isAnonymous());
-    STARFISH_ASSERT(m_styleWhenNodeIsAnonymous);
     ComputedStyle* newStyle = new ComputedStyle(refNode->style());
     newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
     newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
@@ -864,12 +875,13 @@ void Frame::updateComputedStyle(Node* refNode)
 
 bool Frame::isDocumentElement() const
 {
-    return m_node->document() == m_node;
+    return !isAnonymous() && m_node->document() == m_node;
 }
 
 Element* Frame::offsetParent()
 {
-    if (isDocumentElement() || m_node->isHTMLBodyElement()) {
+    if (isDocumentElement() ||
+        (!isAnonymous() && m_node->isHTMLBodyElement())) {
         return nullptr;
     }
 
@@ -896,7 +908,7 @@ Element* Frame::offsetParent()
 
 Document* Frame::document()
 {
-    STARFISH_ASSERT(m_node || parent());
-    return m_node ? m_node->document() : parent()->document();
+    STARFISH_ASSERT(node() || parent());
+    return isAnonymous() ? parent()->document() : m_node->document();
 }
 }

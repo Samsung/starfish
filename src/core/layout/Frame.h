@@ -822,7 +822,11 @@ public:
 
     Node* node()
     {
-        return m_node;
+        if (isAnonymous()) {
+            return nullptr;
+        } else {
+            return m_node;
+        }
     }
 
     virtual LayoutUnit leftMBPWidth()
@@ -1114,7 +1118,7 @@ public:
 
     bool isAnonymous() const
     {
-        return m_node == nullptr;
+        return m_flags.m_isAnonymous;
     }
 
     bool isBlockLevel()
@@ -1179,6 +1183,7 @@ public:
 protected:
     struct {
         bool m_needsLayout : 1;
+        bool m_isAnonymous : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
         // Floats, absolutely positioned elements, block containers (such as
@@ -1215,9 +1220,10 @@ protected:
     } m_flags;
 
 private:
-    Node* m_node;
-    // TODO implement FrameRareData
-    ComputedStyle* m_styleWhenNodeIsAnonymous;
+    union {
+        Node* m_node;
+        ComputedStyle* m_styleWhenNodeIsAnonymous;
+    };
 
     Frame* m_parent;
     Frame* m_layoutParent;

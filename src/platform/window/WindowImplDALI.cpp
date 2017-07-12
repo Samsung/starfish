@@ -232,9 +232,16 @@ PlatformWindow::~PlatformWindow()
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 }
 
-void WebView::setNeedsRenderingSlowCase()
+void WebView::setNeedsRendering()
 {
-    STARFISH_ASSERT(!m_needsRendering);
+    WindowImplDALI* wnd = (WindowImplDALI*)starFish()->platformWindow();
+
+    // refresh rendering animator
+    if (m_needsRendering) {
+        starFish()->messageLoop()->removeIdler(wnd->m_renderingAnimator);
+        GC_FREE(wnd->m_renderingIdlerData);
+    }
+
     m_needsRendering = true;
 
     IdlerData* id = new (NoGC) IdlerData;
@@ -244,21 +251,20 @@ void WebView::setNeedsRenderingSlowCase()
     };
     id->m_data = starFish()->platformWindow();
 
-    ((WindowImplDALI*)id->m_data)->m_renderingIdlerData = id;
-    ((WindowImplDALI*)id->m_data)->m_renderingAnimator =
-        starFish()->messageLoop()->addIdler(
-            mainBrowsingContext(),
-            [](size_t handle, void* data) {
-                IdlerData* id = (IdlerData*)data;
-                PlatformWindow* wnd = (PlatformWindow*)id->m_data;
-                StarFishEnterer enter(wnd->starFish());
-                id->m_fn(id->m_data);
-                ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
-                ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
-                ((WindowImplDALI*)wnd)->m_daliBuffer.Update();
-                GC_FREE(id);
-            },
-            id);
+    wnd->m_renderingIdlerData = id;
+    wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
+        mainBrowsingContext(),
+        [](size_t handle, void* data) {
+            IdlerData* id = (IdlerData*)data;
+            PlatformWindow* wnd = (PlatformWindow*)id->m_data;
+            StarFishEnterer enter(wnd->starFish());
+            id->m_fn(id->m_data);
+            ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
+            ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
+            ((WindowImplDALI*)wnd)->m_daliBuffer.Update();
+            GC_FREE(id);
+        },
+        id);
 }
 
 Canvas* WindowImplDALI::preparePainting(bool forPainting)

@@ -124,13 +124,7 @@ private:
 
     void initRenderingFlags();
     void rendering();
-    void setNeedsRendering()
-    {
-        if (m_needsRendering) {
-            return;
-        }
-        setNeedsRenderingSlowCase();
-    }
+    void setNeedsRendering();
     void setNeedsPainting()
     {
         if (!m_needsPainting) {
@@ -154,7 +148,6 @@ private:
         }
     }
 
-    void setNeedsRenderingSlowCase();
     void initStorage();
 
     BrowsingContext* m_mainBrowsingContext;
