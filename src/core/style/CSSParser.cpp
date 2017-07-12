@@ -928,7 +928,7 @@ CSSSelector* CSSParser::getPseudoSelector()
         if (selector->pseudoType() == CSSSelector::PseudoNone) {
             return nullptr;
         }
-        token = getToken(true, true);
+        token = getToken(false, true);
         return selector;
     }
 
@@ -936,7 +936,7 @@ CSSSelector* CSSParser::getPseudoSelector()
         return nullptr;
     }
 
-    getToken(true, true);
+    getToken(false, true);
 
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot: {
