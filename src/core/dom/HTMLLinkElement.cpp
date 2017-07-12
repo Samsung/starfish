@@ -118,7 +118,7 @@ void HTMLLinkElement::checkLoadStyleSheet()
     if (((type.hasValue() &&
           isCSSType(type.getValue()->toLower()->utf8Data())) ||
          !type.hasValue()) &&
-        href.hasValue() && rel.hasValue() &&
+        href.hasValue() && !href.getValue()->isEmpty() && rel.hasValue() &&
         rel.getValue()->toLower()->equals("stylesheet")) {
         loadStyleSheet();
     } else {
