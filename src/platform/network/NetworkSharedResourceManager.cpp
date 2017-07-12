@@ -21,29 +21,10 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 
-#ifdef STARFISH_SSLBACKEND_GNU_TLS
-#include <gcrypt.h>
-#include <errno.h>
-#endif
-
-#ifdef STARFISH_SSLBACKEND_OPENSSL
 #include <openssl/crypto.h>
-#endif
 
 namespace StarFish {
 
-#ifdef STARFISH_SSLBACKEND_GNU_TLS
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-
-void initSSLLocks(void)
-{
-    gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-}
-
-#define removeSSLLocks() // Do nohting
-#endif
-
-#ifdef STARFISH_SSLBACKEND_OPENSSL
 static pthread_mutex_t* sslLockarray;
 
 static void sslLockCallback(int mode, int type, const char* file, int line)
@@ -83,7 +64,6 @@ static void removeSSLLocks(void)
 
     OPENSSL_free(sslLockarray);
 }
-#endif
 
 static NetworkSharedResourceManager* instance = nullptr;
 
@@ -261,12 +241,11 @@ void NetworkSharedResourceManager::close()
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()
     : m_curlShareHandle(nullptr)
-    , m_cookieJarFileName("/tmp/StarFish_Cookies.txt") // Temporary name
+    , m_cookieStoreFilePath("")
     , m_cookieMutex(new (NoGC) Mutex())
     , m_sslMutex(new (NoGC) Mutex())
     , m_dnsMutex(new (NoGC) Mutex())
     , m_shareMutex(new (NoGC) Mutex())
-    , m_storeCookieFile(false)
 {
     initSSLLocks();
 
@@ -301,14 +280,15 @@ CURLSH* NetworkSharedResourceManager::curlShareHandle() const
     return m_curlShareHandle;
 }
 
-std::string NetworkSharedResourceManager::cookieJarFileName() const
+std::string NetworkSharedResourceManager::cookieStoreFilePath() const
 {
-    return m_cookieJarFileName;
+    return m_cookieStoreFilePath;
 }
 
-void NetworkSharedResourceManager::setCookieJarFileName(const std::string& name)
+void NetworkSharedResourceManager::setCookieStoreFilePath(
+    const std::string& name)
 {
-    m_cookieJarFileName = name;
+    m_cookieStoreFilePath = name;
 }
 
 void NetworkSharedResourceManager::initCookieSession()
@@ -321,9 +301,10 @@ void NetworkSharedResourceManager::initCookieSession()
     }
 
     curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-    if (m_storeCookieFile) {
-        curl_easy_setopt(curl, CURLOPT_COOKIEFILE, m_cookieJarFileName.data());
-        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieJarFileName.data());
+    if (m_cookieStoreFilePath.compare("") != 0) {
+        curl_easy_setopt(curl, CURLOPT_COOKIEFILE,
+                         m_cookieStoreFilePath.data());
+        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieStoreFilePath.data());
     }
     curl_easy_setopt(curl, CURLOPT_COOKIESESSION, 1);
     curl_easy_cleanup(curl);
@@ -344,16 +325,6 @@ Mutex* NetworkSharedResourceManager::resourceMutex(curl_lock_data data)
         STARFISH_ASSERT_NOT_REACHED();
         return nullptr;
     }
-}
-
-void NetworkSharedResourceManager::enableToStoreCookiesJarAsFile()
-{
-    m_storeCookieFile = true;
-}
-
-void NetworkSharedResourceManager::disableToStoreCookiesJarAsFile()
-{
-    m_storeCookieFile = false;
 }
 
 String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
@@ -392,9 +363,11 @@ void NetworkSharedResourceManager::setCookies(Document* document,
     if (!curl) {
         return;
     }
-    curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieJarFileName.data());
     curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
 
+    if (m_cookieStoreFilePath.compare("") != 0) {
+        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieStoreFilePath.data());
+    }
     String* cookie = transformetoNetscapeCookieFormat(document, url, value);
     STARFISH_ASSERT(cookie->containsOnlyASCIIChars());
     STARFISH_ASSERT(cookie->bufferAccessData().isNullTerminated);

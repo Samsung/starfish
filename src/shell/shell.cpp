@@ -383,11 +383,9 @@ int main(int argc, char* argv[])
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
-
-    String* localStorageFilePath = String::emptyString;
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, 1, info, localStorageFilePath);
+        width, height, 1, info, "", "/tmp/StarFish_Cookies.txt");
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

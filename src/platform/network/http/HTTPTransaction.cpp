@@ -127,14 +127,16 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
     curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
 
-    if (NetworkSharedResourceManager::getInstance()->storeCookieFile()) {
+    if (NetworkSharedResourceManager::getInstance()
+            ->cookieStoreFilePath()
+            .compare("") != 0) {
         curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE,
                          NetworkSharedResourceManager::getInstance()
-                             ->cookieJarFileName()
+                             ->cookieStoreFilePath()
                              .data());
         curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
                          NetworkSharedResourceManager::getInstance()
-                             ->cookieJarFileName()
+                             ->cookieStoreFilePath()
                              .data());
     }
 

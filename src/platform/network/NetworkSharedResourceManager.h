@@ -32,17 +32,10 @@ public:
     static void close();
 
     CURLSH* curlShareHandle() const; // Do not free
-    std::string cookieJarFileName() const;
-    void setCookieJarFileName(const std::string& name);
+    std::string cookieStoreFilePath() const;
+    void setCookieStoreFilePath(const std::string& name);
     Mutex* resourceMutex(curl_lock_data data);
 
-    void enableToStoreCookiesJarAsFile();
-    void disableToStoreCookiesJarAsFile();
-
-    bool storeCookieFile() const
-    {
-        return m_storeCookieFile;
-    }
     void initCookieSession();
 
     // for document.cookie
@@ -54,12 +47,11 @@ private:
     ~NetworkSharedResourceManager();
 
     CURLSH* m_curlShareHandle;
-    std::string m_cookieJarFileName;
+    std::string m_cookieStoreFilePath;
     Mutex* m_cookieMutex;
     Mutex* m_sslMutex;
     Mutex* m_dnsMutex;
     Mutex* m_shareMutex;
-    bool m_storeCookieFile;
 };
 }
 
