@@ -316,83 +316,74 @@ Element* Document::createElement(String* localName)
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-static QualifiedName validateAndExtract(Document* document,
-                                        Nullable<String*> namespaceString,
-                                        String* qualifiedName)
+QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
+                                                        String* qualifiedName)
 {
     // If namespace is the empty string, set it to null.
-    if (namespaceString.hasValue() && !namespaceString.getValue()->length()) {
-        namespaceString = Nullable<String*>();
+    if (ns.hasValue() && !ns.getValue()->length()) {
+        ns = Nullable<String*>();
     }
     // Validate qualifiedName.
     if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
-        throw new DOMException(
-            document, DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
     }
-
     // Let prefix be null.
-    Nullable<String*> prefix;
-    // Let localName be qualifiedName.
-    String* localName = qualifiedName;
+    Nullable<AtomicString> prefix;
+    AtomicString localName;
     // If qualifiedName contains a ":" (U+003E), then split the string on it and
     // set prefix to the part before and localName to the part after.
-    size_t colIndex = qualifiedName->indexOf(':');
-    if (colIndex != SIZE_MAX) {
-        prefix = Nullable<String*>(qualifiedName->substring(0, colIndex));
-        localName = qualifiedName->substring(
-            colIndex + 1, qualifiedName->length() - colIndex - 1);
+    // + It is not valid if qualifiedName has multiple ":" characters.
+    // + It is not valid if it has 0-length prefix or localName part.
+    GCVector<String*> tokens;
+    qualifiedName->split(':', tokens);
+    if (tokens.size() > 2) {
+        throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+    } else if (tokens.size() == 2) {
+        if (tokens[0]->length() == 0 || tokens[1]->length() == 0) {
+            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        }
+        prefix = AtomicString::createAtomicString(starFish(), tokens[0]);
+        localName = AtomicString::createAtomicString(starFish(), tokens[1]);
+    } else {
+        localName = AtomicString::createAtomicString(starFish(), qualifiedName);
     }
 
     // If prefix is non-null and namespace is null, then throw a NamespaceError.
-    if (prefix.hasValue() && namespaceString.hasValue()) {
-        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+    if (prefix.hasValue() && !ns.hasValue()) {
+        throw new DOMException(this, DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
+    AtomicString nsURI;
+    if (ns.hasValue()) {
+        nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
+    }
+    StaticStrings* strs = starFish()->staticStrings();
     // If prefix is "xml" and namespace is not the XML namespace, then throw a
     // NamespaceError.
-    if (prefix.hasValue() && prefix.getValue()->equals("xml") &&
-        (!namespaceString.hasValue() ||
-         !namespaceString.getValue()->equals(XML_NAMESPACE))) {
-        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+    if (prefix.hasValue() && prefix.getValue() == strs->m_xml &&
+        nsURI != strs->m_xmlNamespaceURI) {
+        throw new DOMException(this, DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
     // If either qualifiedName or prefix is "xmlns" and namespace is not the
     // XMLNS namespace, then throw a NamespaceError.
-    if (qualifiedName->equals(XMLNS_NAMESPACE) ||
-        (prefix.hasValue() && prefix.getValue()->equals("xmlns"))) {
-        if (!namespaceString.hasValue() ||
-            namespaceString.getValue()->equals(XMLNS_NAMESPACE)) {
-            throw new DOMException(document, DOMException::NAMESPACE_ERR,
-                                   "Provided namespace is wrong");
-        }
-    }
-
     // If namespace is the XMLNS namespace and neither qualifiedName nor prefix
     // is "xmlns", then throw a NamespaceError.
-    if ((namespaceString.hasValue() &&
-         namespaceString.getValue()->equals(XMLNS_NAMESPACE)) &&
-        (qualifiedName->equals("xmlns") ||
-         (prefix.hasValue() && prefix.getValue()->equals("xmlns")))) {
-        throw new DOMException(document, DOMException::NAMESPACE_ERR,
+    bool qnameXmlns = !prefix.hasValue() && (localName == strs->m_xmlns);
+    bool prefixXmlns =
+        prefix.hasValue() && (prefix.getValue() == strs->m_xmlns);
+    bool nsXmlns = (nsURI == strs->m_xmlnsNamespaceURI);
+    if ((qnameXmlns || prefixXmlns) ^ nsXmlns) {
+        throw new DOMException(this, DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
-    AtomicString ns;
-    if (namespaceString.hasValue()) {
-        ns = AtomicString::createAtomicString(document->starFish(),
-                                              namespaceString.getValue());
-    }
-
     if (prefix.hasValue()) {
-        return QualifiedName(AtomicString::createAtomicString(
-                                 document->starFish(), prefix.getValue()),
-                             ns, AtomicString::createAtomicString(
-                                     document->starFish(), qualifiedName));
+        return QualifiedName(prefix.getValue(), nsURI, localName);
     } else {
-        return QualifiedName(ns, AtomicString::createAtomicString(
-                                     document->starFish(), qualifiedName));
+        return QualifiedName(nsURI, localName);
     }
 }
 
@@ -403,7 +394,7 @@ Element* Document::createElementNS(Nullable<String*> namespaceString,
         return createElement(qualifiedName);
     }
     QualifiedName name =
-        validateAndExtract(this, namespaceString, qualifiedName);
+        validateAndExtractQualifiedName(namespaceString, qualifiedName);
     if (!name.prefix().hasValue() && name.namespaceURI().hasValue() &&
         name.namespaceURI().getValue().string()->equals(HTML_NAMESPACE)) {
         return HTMLDocument::createHTMLElement(this, name.localNameAtomic());
@@ -481,48 +472,7 @@ Attr* Document::createAttributeNS(Nullable<String*> ns, String* name)
     if (ns.hasValue() && ns.getValue()->length() != 0) {
         nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
     }
-    // If qualifiedName contains a ":" (U+003E), then split the string on it
-    // and set prefix to the part before and localName to the part after.
-    GCVector<String*> tokens;
-    name->split(':', tokens);
-    if (tokens.size() > 2) {
-        throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
-    } else if (tokens.size() == 2) {
-        if (tokens[0]->length() == 0) {
-            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
-        }
-        AtomicString prefix =
-            AtomicString::createAtomicString(starFish(), tokens[0]);
-        // If prefix is non-null and namespace is null,
-        // then throw a NamespaceError.
-        if (nsURI.string()->length() == 0 || tokens[1]->length() == 0) {
-            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
-        }
-        // If prefix is "xml" and namespace is not the XML namespace,
-        // then throw a NamespaceError.
-        if (prefix == starFish()->staticStrings()->m_xml &&
-            nsURI != starFish()->staticStrings()->m_xmlNamespaceURI) {
-            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
-        }
-        // If prefix is "xmlns" and namespace is not the XMLNS namespace,
-        // then throw a NamespaceError.
-        // If namespace is the XMLNS namespace and prefix is not "xmlns",
-        // then throw a NamespaceError.
-        bool pfXmlns = (prefix == starFish()->staticStrings()->m_xmlns);
-        bool nsXmlns =
-            (nsURI == starFish()->staticStrings()->m_xmlnsNamespaceURI);
-        if (pfXmlns ^ nsXmlns) {
-            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
-        }
-        QualifiedName qname = QualifiedName(
-            prefix, nsURI,
-            AtomicString::createAttrAtomicString(starFish(), tokens[1]));
-        return new Attr(this, qname);
-    } else {
-        QualifiedName qname = QualifiedName(
-            nsURI, AtomicString::createAttrAtomicString(starFish(), name));
-        return new Attr(this, qname);
-    }
+    return new Attr(this, validateAndExtractQualifiedName(ns, name));
 }
 
 HTMLHtmlElement* Document::rootElement()
@@ -805,6 +755,18 @@ QualifiedName Document::createAttributeName(String* name)
             AtomicString::emptyAtomicString(),
             AtomicString::createAttrAtomicString(window()->starFish(), name));
     }
+}
+
+QualifiedName Document::createAttributeNameNS(Nullable<String*> ns,
+                                              String* localName)
+{
+    // Case sensitive
+    AtomicString nsURI =
+        ns.hasValue()
+            ? AtomicString::createAtomicString(starFish(), ns.getValue())
+            : AtomicString::emptyAtomicString();
+    return QualifiedName(nsURI, AtomicString::createAtomicString(
+                                    window()->starFish(), localName));
 }
 
 DOMImplementation* Document::implementation()

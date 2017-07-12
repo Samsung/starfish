@@ -110,20 +110,28 @@ public:
         return m_attributes[t].value();
     }
 
-    bool hasAttribute(String* name);
+    bool hasAttribute(String* qualifiedName);
     size_t hasAttribute(QualifiedName name);
+    bool hasAttributeNS(Nullable<String*> ns, String* localName);
+    size_t hasAttributeNS(QualifiedName name);
 
-    Nullable<String*> getAttribute(String* name);
+    Nullable<String*> getAttribute(String* qualifiedName);
     Nullable<String*> getAttribute(QualifiedName name);
+    Nullable<String*> getAttributeNS(Nullable<String*> ns, String* localName);
     Attr* getAttributeNode(String* localName);
     String* getAttributeOrEmpty(QualifiedName name);
 
-    void setAttribute(String* name, String* value);
+    void setAttribute(String* qualifiedName, String* value);
     void setAttribute(QualifiedName name, String* value);
+    void setAttributeNS(Nullable<String*> ns, String* qualifiedName,
+                        String* value);
+    void setAttributeNS(QualifiedName name, String* value);
     Attr* setAttributeNode(Attr* attrNode);
 
     void removeAttribute(String* name);
     void removeAttribute(QualifiedName name);
+    void removeAttributeNS(Nullable<String*> ns, String* localName);
+    void removeAttributeNS(QualifiedName name);
     Attr* removeAttributeNode(Attr* attr);
 
     // DO NOT MODIFY ATTRIBUTE
@@ -183,7 +191,9 @@ public:
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
-    Attr* replaceAttrAndReturnOld(Attr* attr);
+    size_t hasAttributeNode(const QualifiedName& name);
+    size_t hasAttributeNodeNS(const QualifiedName& name);
+
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
 

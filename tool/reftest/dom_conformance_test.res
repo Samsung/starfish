@@ -232,7 +232,7 @@ test/reftest/dom-conformance-test/html/level2/core/createDocumentType04.html
 test/reftest/dom-conformance-test/html/level2/core/hc_namednodemapinvalidtype1.html
 #test/reftest/dom-conformance-test/html/level2/core/hc_nodedocumentfragmentnormalize1.html
 #test/reftest/dom-conformance-test/html/level2/core/hc_nodedocumentfragmentnormalize2.html
-#test/reftest/dom-conformance-test/html/level2/core/setAttributeNS10.html
+test/reftest/dom-conformance-test/html/level2/core/setAttributeNS10.html
 test/reftest/dom-conformance-test/html/level2/events/createEvent01.html
 test/reftest/dom-conformance-test/html/level2/events/createEvent02.html
 test/reftest/dom-conformance-test/html/level2/events/createEvent03.html

@@ -66,6 +66,16 @@ public:
         return !operator==(src);
     }
 
+    bool equalsLocalName(const QualifiedName& src) const
+    {
+        return m_localName == src.m_localName;
+    }
+
+    bool equalsNamespace(const QualifiedName& src) const
+    {
+        return m_namespaceURI == src.m_namespaceURI;
+    }
+
     AtomicString localNameAtomic() const
     {
         return m_localName;
@@ -74,6 +84,11 @@ public:
     String* localName() const
     {
         return m_localName;
+    }
+
+    bool hasPrefix() const
+    {
+        return m_prefix.string() != nullptr;
     }
 
     Nullable<AtomicString> prefix() const
@@ -90,6 +105,11 @@ public:
             return Nullable<String*>();
         }
         return m_prefix.string();
+    }
+
+    void copyPrefixFrom(const QualifiedName& other)
+    {
+        m_prefix = other.m_prefix;
     }
 
     Nullable<AtomicString> namespaceURI() const
