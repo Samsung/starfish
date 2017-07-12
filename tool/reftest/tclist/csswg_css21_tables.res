@@ -594,7 +594,7 @@ test/reftest/csswg-test/css21_original/tables/empty-cells-010.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-011.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-012.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-013.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-014.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-014.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-001.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-002.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-003.htm
@@ -613,7 +613,7 @@ test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-016.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-applies-to-017.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-001.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-002.htm
-#test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-003.htm
+test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-003.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-exceptions-004.htm
 #test/reftest/csswg-test/css21_original/tables/empty-cells-in-collapsed-border-model-001.htm
 test/reftest/csswg-test/css21_original/tables/empty-cells-inherited-001.htm
@@ -1142,7 +1142,7 @@ test/reftest/csswg-test/css21_original/tables/table-layout-inherited-001.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-initial-001.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-property-001.htm
 test/reftest/csswg-test/css21_original/tables/table-layout-property-002.htm
-#test/reftest/csswg-test/css21_original/tables/table-margin-001.htm
+test/reftest/csswg-test/css21_original/tables/table-margin-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-margin-002.htm
 test/reftest/csswg-test/css21_original/tables/table-margin-003.htm
 test/reftest/csswg-test/css21_original/tables/table-margin-004.htm
