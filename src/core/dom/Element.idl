@@ -24,13 +24,13 @@ interface Element : Node {
   [SameObject] readonly attribute NamedNodeMap attributes;
   [Unimplemented] sequence<DOMString> getAttributeNames();
   DOMString? getAttribute(DOMString qualifiedName);
-  [Unimplemented] DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
+  DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
   [CEReactions, RaisesException] void setAttribute(DOMString qualifiedName, DOMString value);
-  [Unimplemented, CEReactions] void setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
+  [CEReactions, RaisesException] void setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
   [CEReactions] void removeAttribute(DOMString qualifiedName);
-  [Unimplemented, CEReactions] void removeAttributeNS(DOMString? namespace, DOMString localName);
+  [CEReactions] void removeAttributeNS(DOMString? namespace, DOMString localName);
   boolean hasAttribute(DOMString qualifiedName);
-  [Unimplemented] boolean hasAttributeNS(DOMString? namespace, DOMString localName);
+  boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
   Attr? getAttributeNode(DOMString qualifiedName);
   [Unimplemented] Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);

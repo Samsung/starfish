@@ -145,6 +145,7 @@ public:
     Attr* createAttribute(String* name);
     Attr* createAttributeNS(Nullable<String*> ns, String* name);
     QualifiedName createAttributeName(String* name);
+    QualifiedName createAttributeNameNS(Nullable<String*> ns, String* name);
 
     DOMImplementation* implementation();
 
@@ -339,6 +340,9 @@ public:
     /* Document-level focus APIs */
     Element* activeElement();
     bool hasFocus() const;
+
+    QualifiedName validateAndExtractQualifiedName(Nullable<String*> ns,
+                                                  String* qualifiedName);
 
 #define VIRTUAL
 #define OVERRIDE
