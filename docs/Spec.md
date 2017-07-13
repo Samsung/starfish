@@ -873,7 +873,8 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | method    | void open(ByteString method, DOMString url, boolean async = true, optional DOMString? username = null, optional DOMString? password = null)    | Sets the request method, request URL, and synchronous flag. Supported request method : GET, POST |
 | | method    | void setRequestHeader(ByteString name, ByteString value)    | Combines a header in author request headers. |
 | | method    | void send(optional DOMString? body = null)    | Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
-| | method    | void abort();    | Cancels any network activity. |
+| | method    | void abort()    | Cancels any network activity. |
+| | method    | ByteString getAllResponseHeaders()    | Returns a string that contains all response headers. |
 
 
 \* The readyState code are as follows.

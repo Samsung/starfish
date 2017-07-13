@@ -173,6 +173,11 @@ public:
         return m_url;
     }
 
+    bool isError()
+    {
+        return m_gotError;
+    }
+
     void setRequestHeader(String* h, String* c);
 
 protected:
