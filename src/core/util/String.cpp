@@ -1031,6 +1031,20 @@ GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
     return result;
 }
 
+bool StringUtils::equalsWithoutCase(const std::string& a, const std::string& b)
+{
+    unsigned int sz = a.size();
+    if (b.size() != sz) {
+        return false;
+    }
+    for (unsigned int i = 0; i < sz; ++i) {
+        if (tolower(a[i]) != tolower(b[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 int utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {

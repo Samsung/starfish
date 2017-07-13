@@ -404,18 +404,18 @@ String* XMLHttpRequest::getAllResponseHeaders()
     const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
 
     for (const auto& it : map) {
-        String* key = String::createASCIIStringWithNoGC(it.first.c_str());
-        String* value = String::createASCIIStringWithNoGC(it.second.c_str());
+        const auto& key = it.first;
+        const auto& value = it.second;
 
-        if (key->equalsWithoutCase("set-cookie") ||
-            key->equalsWithoutCase("set-cookie2")) {
+        if (StringUtils::equalsWithoutCase(key, std::string("set-cookie")) ||
+            StringUtils::equalsWithoutCase(key, std::string("set-cookie2"))) {
             continue;
         }
 
-        sb.appendString(key);
+        sb.appendString(key.c_str());
         sb.appendChar(':');
         sb.appendChar(' ');
-        sb.appendString(value);
+        sb.appendString(value.c_str());
         sb.appendChar('\r');
         sb.appendChar('\n');
     }

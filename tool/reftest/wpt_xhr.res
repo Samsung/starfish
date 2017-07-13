@@ -17,3 +17,4 @@ http://10.113.64.74:7000/XMLHttpRequest/open-user-password-non-same-origin.htm
 http://10.113.64.74:7000/XMLHttpRequest/responseText-status.html
 http://10.113.64.74:7000/XMLHttpRequest/timeout-sync.htm
 http://10.113.64.74:7000/XMLHttpRequest/xmlhttprequest-basic.htm
+http://10.113.64.74:7000/XMLHttpRequest/getallresponseheaders-status.htm
