@@ -120,6 +120,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "lang"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "colspan"));
+    m_cellspacing =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "cellspacing"));
     m_char = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "char"));
     m_rowspan = QualifiedName(AtomicString::emptyAtomicString(),

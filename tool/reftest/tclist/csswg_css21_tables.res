@@ -805,8 +805,8 @@ test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-000.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-003.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-004.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-005.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-006.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-005.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-006.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-007.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-008.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-009.htm

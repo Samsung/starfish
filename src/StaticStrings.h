@@ -226,6 +226,7 @@ public:
     QualifiedName m_content;
     QualifiedName m_lang;
     QualifiedName m_colspan;
+    QualifiedName m_cellspacing;
     QualifiedName m_char;
     QualifiedName m_rowspan;
     QualifiedName m_bgColor;

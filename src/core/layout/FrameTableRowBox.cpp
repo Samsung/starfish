@@ -67,8 +67,8 @@ ColSizeStruct* FrameTableRowBox::colWithColspanAt(unsigned id)
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        sectionBox()->tableBox()->style()->horizontalBorderSpacing().fixed());
+    LayoutUnit borderSpacing =
+        sectionBox()->tableBox()->calculatedHorizontalBorderSpacing();
 
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {

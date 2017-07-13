@@ -174,6 +174,9 @@ bool FrameTableTreeBuilder::isProperDescendantDisplayValueType(
     if (isTableCaptionDisplayValue(parent)) {
         return false;
     }
+    if (isTableColumnDisplayValue(child)) {
+        return isTableColumnGroupDisplayValue(parent);
+    }
     if (isTableColumnGroupDisplayValue(parent)) {
         return isTableColumnDisplayValue(child);
     }
