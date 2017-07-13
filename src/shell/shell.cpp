@@ -137,10 +137,10 @@ public:
         info.availableRect.setWidth(width);
         info.availableRect.setHeight(height);
 
-        String* localStorageFilePath = String::emptyString;
-        m_sf = new StarFish::StarFish(
-            (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
-            &application, width, height, 1, info, localStorageFilePath);
+        m_sf =
+            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
+                                   "Asia/Seoul", &application, width, height, 1,
+                                   info, "", "/tmp/StarFish_Cookies.txt");
 
         m_sf->loadHTMLDocument(String::createASCIIString(url));
 
@@ -443,10 +443,9 @@ int main(int argc, char* argv[])
 
     // sf->messageLoop()->addIdler(test, sf);
     sf->run();
-#endif
-
     delete sf;
     sf = nullptr;
+#endif
 
     elm_shutdown();
 

@@ -18,6 +18,8 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
+#define PNG_SKIP_SETJMP_CHECK
+
 #include "core/modules/canvas/image/ImageData.h"
 #include "platform/file/FileIO.h"
 
