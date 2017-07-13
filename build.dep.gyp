@@ -402,9 +402,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
+                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)','/usr/include/dali'
                 ],
                 'libraries': [
-                    '-ldali-core -ldali-adaptor -ldali-toolkit -luv',
+                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)','-ldali-core -ldali-adaptor -ldali-toolkit -luv -lturbojpeg -lgif'
                 ],
             },
         },

@@ -236,11 +236,7 @@ void WebView::setNeedsRendering()
 {
     WindowImplDALI* wnd = (WindowImplDALI*)starFish()->platformWindow();
 
-    // refresh rendering animator
-    if (m_needsRendering) {
-        starFish()->messageLoop()->removeIdler(wnd->m_renderingAnimator);
-        GC_FREE(wnd->m_renderingIdlerData);
-    }
+    // TODO: refresh rendering animator here.
 
     m_needsRendering = true;
 
@@ -303,6 +299,7 @@ void WindowImplDALI::clearResources()
 {
     if (m_renderingAnimator) {
         starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        m_renderingAnimator = 0;
         GC_FREE(m_renderingIdlerData);
     }
 

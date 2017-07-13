@@ -97,6 +97,7 @@ public:
     ~CanvasCairo()
     {
         restore();
+        m_statePerFrame.clear();
         STARFISH_ASSERT(m_state.size() == 0);
         cairo_destroy(m_canvas);
         cairo_surface_flush(m_surface);
@@ -136,6 +137,35 @@ public:
     {
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
+    }
+
+    virtual void saveByFrame(Frame* f)
+    {
+        m_statePerFrame.emplace(f, lastState());
+    }
+
+    virtual CanvasState* getByFrame(Frame* f)
+    {
+        auto it = m_statePerFrame.find(f);
+        if (it == m_statePerFrame.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
+    virtual void replace(CanvasState* state)
+    {
+        CanvasStateCairo* cairoState = (CanvasStateCairo*)state;
+        lastState().m_color = cairoState->m_color;
+        lastState().m_opacity = cairoState->m_opacity;
+        lastState().m_baseX = cairoState->m_baseX;
+        lastState().m_baseY = cairoState->m_baseY;
+        lastState().m_font = cairoState->m_font;
+        lastState().m_visible = cairoState->m_visible;
+        lastState().m_hasUnderLine = cairoState->m_hasUnderLine;
+        lastState().m_hasLineThrough = cairoState->m_hasLineThrough;
+        lastState().m_underLineColor = cairoState->m_underLineColor;
+        lastState().m_lineThroughColor = cairoState->m_lineThroughColor;
     }
 
     virtual void assureMapMode()
@@ -646,6 +676,7 @@ public:
 
 protected:
     std::vector<CanvasStateCairo> m_state;
+    std::unordered_map<Frame*, CanvasStateCairo> m_statePerFrame;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
     bool m_directDraw;
