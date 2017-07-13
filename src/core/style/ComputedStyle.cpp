@@ -351,8 +351,8 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                 newStyle->transitionDuration().value(), 0,
                 new CubicBeizer(0.25, 0.1, 0.25, 1)));
             // keep current computed style
+            newStyle->setHeight(from);
         }
-        newStyle->setHeight(from);
     } else if (newStyle->transitionProperty() ==
                TransitionPropertyValue::TransitionPropertyAllValue) {
     }
