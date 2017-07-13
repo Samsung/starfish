@@ -39,6 +39,7 @@ extern bool g_enablePixelTest;
 
 class CanvasStateCairo : public CanvasState {
 public:
+    cairo_matrix_t m_matrix;
     CanvasStateCairo()
         : CanvasState()
     {
@@ -141,6 +142,7 @@ public:
 
     virtual void saveByFrame(Frame* f)
     {
+        cairo_get_matrix(m_canvas, &lastState().m_matrix);
         m_statePerFrame.emplace(f, lastState());
     }
 
@@ -166,6 +168,7 @@ public:
         lastState().m_hasLineThrough = cairoState->m_hasLineThrough;
         lastState().m_underLineColor = cairoState->m_underLineColor;
         lastState().m_lineThroughColor = cairoState->m_lineThroughColor;
+        cairo_set_matrix(m_canvas, &cairoState->m_matrix);
     }
 
     virtual void assureMapMode()
