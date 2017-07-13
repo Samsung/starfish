@@ -301,6 +301,10 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
                                       document()->rootElement()->style(),
                                       imgRect, colorRect, true);
         } else {
+            if (!document()->rootElement()->body()) {
+                return;
+            }
+
             LayoutRect imgRect(0, 0, document()->window()->width(),
                                document()->window()->height());
             if (document()->rootElement()->body()->frame()) {
