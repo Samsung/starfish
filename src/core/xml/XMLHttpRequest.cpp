@@ -392,4 +392,34 @@ void XMLHttpRequest::onReadyStateChange(ResourceRequest* request,
         EventTarget::dispatchEvent(this, e);
     }
 }
+
+String* XMLHttpRequest::getAllResponseHeaders()
+{
+    if (readyState() < ResourceRequest::HEADERS_RECEIVED ||
+        m_resourceRequest->isError()) {
+        return String::emptyString;
+    }
+
+    StringBuilder sb;
+    const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
+
+    for (const auto& it : map) {
+        String* key = String::createASCIIStringWithNoGC(it.first.c_str());
+        String* value = String::createASCIIStringWithNoGC(it.second.c_str());
+
+        if (key->equalsWithoutCase("set-cookie") ||
+            key->equalsWithoutCase("set-cookie2")) {
+            continue;
+        }
+
+        sb.appendString(key);
+        sb.appendChar(':');
+        sb.appendChar(' ');
+        sb.appendString(value);
+        sb.appendChar('\r');
+        sb.appendChar('\n');
+    }
+
+    return sb.finalize();
+}
 }

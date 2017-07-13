@@ -95,6 +95,8 @@ public:
     virtual void onReadyStateChange(ResourceRequest* request,
                                     bool fromExplicit) override;
 
+    String* getAllResponseHeaders();
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(readystatechange);

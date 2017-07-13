@@ -56,7 +56,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute unsigned short status;
   [Unimplemented] readonly attribute ByteString statusText;
   [Unimplemented] ByteString? getResponseHeader(ByteString name);
-  [Unimplemented] ByteString getAllResponseHeaders();
+  ByteString getAllResponseHeaders();
   [Unimplemented] void overrideMimeType(DOMString mime);
   attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
