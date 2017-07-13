@@ -735,6 +735,7 @@ public:
     // token is only 1-byte char now.
     static GCVector<StringView> tokenize(String* src, const char* tokens,
                                          size_t tokensLength);
+    static bool equalsWithoutCase(const std::string& a, const std::string& b);
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX
