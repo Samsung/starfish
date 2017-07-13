@@ -2020,13 +2020,9 @@ StyleRuleMedia* CSSParser::parseMediaRule()
 
     GCVector<StyleRuleBase*> rootRule;
     if (token->isSymbol('{') && hasMediaRule) {
-        token = getToken(true, false);
-        if (token->isNotNull()) {
-            parseRules(token, rootRule, RuleListType::RegularRuleList);
-
-            forgetState();
-            return new StyleRuleMedia(mediaQuerySet, rootRule);
-        }
+        parseRules(token, rootRule, RuleListType::RegularRuleList);
+        forgetState();
+        return new StyleRuleMedia(mediaQuerySet, rootRule);
     }
 
     forgetState();
@@ -2142,7 +2138,7 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    unsigned nestingLevel = 1;
+    unsigned nestingLevel = 0;
     while (true) {
         if (!token->isNotNull()) {
             break;
@@ -2150,6 +2146,8 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
 
         if (token->isSymbol('{')) {
             nestingLevel++;
+            token = getToken(false, true);
+            continue;
         } else if (token->isSymbol('}')) {
             if (--nestingLevel == 0) {
                 break;
