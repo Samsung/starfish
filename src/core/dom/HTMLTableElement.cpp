@@ -44,4 +44,14 @@ void HTMLTableElement::setBgColor(String* bgColor)
 {
     setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
+
+String* HTMLTableElement::cellspacing()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
+}
+
+void HTMLTableElement::setCellspacing(String* cellspacing)
+{
+    setAttribute(starFish()->staticStrings()->m_cellspacing, cellspacing);
+}
 }

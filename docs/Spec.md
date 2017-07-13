@@ -34,6 +34,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | charset | UTF-8 | &lt;script charset="UTF-8"&gt;&lt;/script&gt; | Only UTF-8 is supported |
 |  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;table width="400"&gt;&lt;/table&gt; |  |
 |  | bgcolor | &lt;color&gt; | &lt;table bgcolor="blue"&gt;&lt;/table&gt; |  |
+|  | cellspacing | pixels | &lt;table cellspacing="2"&gt;&lt;/table&gt; |  |
 |  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  | &lt;caption&gt;SAMSUNG&lt;/caption&gt; |  |
 |  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  | &lt;colgroup&gt;&lt;/colgroup&gt; |  |
 |  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  | &lt;tbody&gt;&lt;/tbody&gt; |  |

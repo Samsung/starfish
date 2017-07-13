@@ -103,8 +103,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     //   * min/max table width
     //     - TODO: Need to consider caption widths too
     //   * collect auto and specified width cells for later calculation
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+    LayoutUnit borderSpacing = calculatedHorizontalBorderSpacing();
+
     LayoutUnit minTableWidth = 0;
     LayoutUnit maxTableWidth = 0;
     minTableWidth += mbpWidth();
@@ -551,8 +551,7 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfColWidths)
 {
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+    LayoutUnit borderSpacing = calculatedHorizontalBorderSpacing();
 
     for (auto& col : m_columnWidths) {
         STARFISH_ASSERT(col.id < m_columnWidths.size());
@@ -625,8 +624,7 @@ void FrameTableBox::calCellWidthsWithColspans()
         }
     }
 
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+    LayoutUnit borderSpacing = calculatedHorizontalBorderSpacing();
 
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
@@ -958,6 +956,62 @@ LayoutUnit FrameTableBox::widthFromAttribute(LayoutUnit parentContentWidth)
     // actual negative width, as negative width is invalid.
     // FYI, Blink and Firefox ignore a negative width for table
     return tableWidth;
+}
+
+LayoutUnit FrameTableBox::cellspacingFromAttribute()
+{
+    LayoutUnit ret = -1;
+    if (isAnonymous() || !node()->isHTMLTableElement()) {
+        return ret;
+    }
+
+    String* value = node()->asHTMLTableElement()->cellspacing();
+    if (value && !value->equals(String::emptyString)) {
+        // Use px as the default unit
+        if (!value->contains("px") && !value->contains("%")) {
+            value = value->concat(String::createASCIIString("px"));
+        }
+    }
+
+    CSSStyleValuePair pair;
+    CSSPropertyParser::parseLengthOrPercent(value->toUTF8String().data(), false,
+                                            &pair);
+    if (pair.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+        CSSLength len = pair.lengthValue();
+        ret = LayoutUnit::fromPixel(len.value());
+    } else {
+        ret = -1;
+    }
+
+    return ret;
+}
+
+LayoutUnit FrameTableBox::calculatedHorizontalBorderSpacing()
+{
+    LayoutUnit ret =
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+
+    if (!isAnonymous() && node()->isHTMLTableElement()) {
+        LayoutUnit cellspacingAttr = cellspacingFromAttribute();
+        if (cellspacingAttr >= 0) {
+            ret = cellspacingAttr;
+        }
+    }
+    return ret;
+}
+
+LayoutUnit FrameTableBox::calculatedVerticalBorderSpacing()
+{
+    LayoutUnit ret =
+        LayoutUnit::fromPixel(style()->verticalBorderSpacing().fixed());
+
+    if (!isAnonymous() && node()->isHTMLTableElement()) {
+        LayoutUnit cellspacingAttr = cellspacingFromAttribute();
+        if (cellspacingAttr >= 0) {
+            ret = cellspacingAttr;
+        }
+    }
+    return ret;
 }
 
 // Table draws the border around the TableFrameSections

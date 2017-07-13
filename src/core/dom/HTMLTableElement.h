@@ -41,6 +41,9 @@ public:
 
     String* bgColor();
     void setBgColor(String* bgColor);
+
+    String* cellspacing();
+    void setCellspacing(String* length);
 };
 }
 
