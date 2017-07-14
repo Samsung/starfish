@@ -38,10 +38,15 @@ public:
 
     size_t length();
     Attr* item(unsigned long index);
+
     Attr* getNamedItem(String* name);
-    Attr* getNamedItem(QualifiedName name);
+    Attr* getNamedItemNS(Nullable<String*> ns, String* localName);
+
     Attr* setNamedItem(Attr* attr);
+    Attr* setNamedItemNS(Attr* attr);
+
     Attr* removeNamedItem(String* name);
+    Attr* removeNamedItemNS(Nullable<String*> ns, String* localName);
 
     Element* element()
     {

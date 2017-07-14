@@ -22,6 +22,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/NamedNodeMap.h"
 #include "core/page/Window.h"
+#include "core/util/AttributeName.h"
 
 namespace StarFish {
 
@@ -47,17 +48,12 @@ Attr* NamedNodeMap::item(unsigned long index)
 
 Attr* NamedNodeMap::getNamedItem(String* name)
 {
-    return getNamedItem(element()->document()->createAttributeName(name));
+    return m_element->getAttributeNode(name);
 }
 
-Attr* NamedNodeMap::getNamedItem(QualifiedName name)
+Attr* NamedNodeMap::getNamedItemNS(Nullable<String*> ns, String* localName)
 {
-    size_t index = m_element->hasAttribute(name);
-    if (index < m_element->attributeCount()) {
-        return m_element->ensureAttr(name);
-    } else {
-        return nullptr;
-    }
+    return m_element->getAttributeNodeNS(ns, localName);
 }
 
 Attr* NamedNodeMap::setNamedItem(Attr* attr)
@@ -65,18 +61,28 @@ Attr* NamedNodeMap::setNamedItem(Attr* attr)
     return m_element->setAttributeNode(attr);
 }
 
+Attr* NamedNodeMap::setNamedItemNS(Attr* attr)
+{
+    return m_element->setAttributeNodeNS(attr);
+}
+
 Attr* NamedNodeMap::removeNamedItem(String* name)
 {
-    StarFish* starfish = element()->starFish();
-    QualifiedName qname(AtomicString::emptyAtomicString(),
-                        AtomicString::createAttrAtomicString(starfish, name));
-    Attr* old = getNamedItem(qname);
+    Attr* old = getNamedItem(name);
     if (old == nullptr) {
         throw new DOMException(element()->document(),
                                DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
-    Attr* toReturn = new Attr(old->document(), qname, old->value());
-    m_element->removeAttribute(qname);
-    return toReturn;
+    return m_element->removeAttributeNode(old);
+}
+
+Attr* NamedNodeMap::removeNamedItemNS(Nullable<String*> ns, String* localName)
+{
+    Attr* old = getNamedItemNS(ns, localName);
+    if (old == nullptr) {
+        throw new DOMException(element()->document(),
+                               DOMException::Code::NOT_FOUND_ERR, nullptr);
+    }
+    return m_element->removeAttributeNode(old);
 }
 }
