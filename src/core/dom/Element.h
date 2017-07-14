@@ -20,6 +20,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
 #include "core/style/Style.h"
+#include "core/util/AttributeName.h"
 
 namespace StarFish {
 
@@ -110,28 +111,28 @@ public:
         return m_attributes[t].value();
     }
 
+    size_t hasAttribute(const AttributeName& name);
     bool hasAttribute(String* qualifiedName);
-    size_t hasAttribute(QualifiedName name);
     bool hasAttributeNS(Nullable<String*> ns, String* localName);
-    size_t hasAttributeNS(QualifiedName name);
 
+    Nullable<String*> getAttribute(const AttributeName& name);
     Nullable<String*> getAttribute(String* qualifiedName);
-    Nullable<String*> getAttribute(QualifiedName name);
     Nullable<String*> getAttributeNS(Nullable<String*> ns, String* localName);
-    Attr* getAttributeNode(String* localName);
-    String* getAttributeOrEmpty(QualifiedName name);
+    Attr* getAttributeNode(const AttributeName& name);
+    Attr* getAttributeNode(String* qualifiedName);
+    Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
+    String* getAttributeOrEmpty(const AttributeName& name);
 
+    void setAttribute(const AttributeName& name, String* value);
     void setAttribute(String* qualifiedName, String* value);
-    void setAttribute(QualifiedName name, String* value);
     void setAttributeNS(Nullable<String*> ns, String* qualifiedName,
                         String* value);
-    void setAttributeNS(QualifiedName name, String* value);
     Attr* setAttributeNode(Attr* attrNode);
+    Attr* setAttributeNodeNS(Attr* attrNode);
 
+    void removeAttribute(const AttributeName& name);
     void removeAttribute(String* name);
-    void removeAttribute(QualifiedName name);
     void removeAttributeNS(Nullable<String*> ns, String* localName);
-    void removeAttributeNS(QualifiedName name);
     Attr* removeAttributeNode(Attr* attr);
 
     // DO NOT MODIFY ATTRIBUTE
@@ -191,8 +192,7 @@ public:
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
-    size_t hasAttributeNode(const QualifiedName& name);
-    size_t hasAttributeNodeNS(const QualifiedName& name);
+    size_t hasAttributeNode(const AttributeName& name);
 
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);

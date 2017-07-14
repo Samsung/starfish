@@ -83,59 +83,44 @@ String* Element::localName()
     return name().localName();
 }
 
-static bool equalsAttributeName(const QualifiedName& a, const QualifiedName& b)
+size_t Element::hasAttribute(const AttributeName& name)
 {
-    if (UNLIKELY(a.hasPrefix() || b.hasPrefix())) {
-        return a.toString()->equals(b.toString());
+    for (size_t i = 0; i < m_attributes.size(); i++) {
+        if (name.equals(m_attributes[i].name())) {
+            return i;
+        }
     }
-    return a.equalsLocalName(b);
-}
-
-static bool equalsAttributeNameNS(const QualifiedName& a,
-                                  const QualifiedName& b)
-{
-    return a.equalsNamespace(b) && a.equalsLocalName(b);
+    return SIZE_MAX;
 }
 
 bool Element::hasAttribute(String* name)
 {
-    QualifiedName qName = document()->createAttributeName(name);
-    return hasAttribute(qName) != SIZE_MAX;
-}
-
-size_t Element::hasAttribute(QualifiedName name)
-{
-    for (size_t i = 0; i < m_attributes.size(); i++) {
-        if (equalsAttributeName(m_attributes[i].name(), name)) {
-            return i;
-        }
-    }
-    return SIZE_MAX;
+    AttributeName attrName(document(), name);
+    return hasAttribute(attrName) != SIZE_MAX;
 }
 
 bool Element::hasAttributeNS(Nullable<String*> ns, String* localName)
 {
-    QualifiedName qName = document()->createAttributeNameNS(ns, localName);
-    return hasAttributeNS(qName) != SIZE_MAX;
+    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
+    return hasAttribute(attrName) != SIZE_MAX;
 }
 
-size_t Element::hasAttributeNS(QualifiedName name)
+size_t Element::hasAttributeNode(const AttributeName& name)
 {
-    for (size_t i = 0; i < m_attributes.size(); i++) {
-        if (equalsAttributeNameNS(m_attributes[i].name(), name)) {
-            return i;
+    if (hasRareMembers() && rareMembers()->isRareElementMembers() &&
+        rareMembers()->asRareElementMembers()->m_attrList) {
+        GCVector<Attr*>* l = rareMembers()->asRareElementMembers()->m_attrList;
+        size_t len = l->size();
+        for (size_t i = 0; i < len; i++) {
+            if (name.equals((*l)[i]->qname())) {
+                return i;
+            }
         }
     }
     return SIZE_MAX;
 }
 
-Nullable<String*> Element::getAttribute(String* name)
-{
-    QualifiedName qName = document()->createAttributeName(name);
-    return getAttribute(qName);
-}
-
-Nullable<String*> Element::getAttribute(QualifiedName name)
+Nullable<String*> Element::getAttribute(const AttributeName& name)
 {
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
@@ -144,32 +129,43 @@ Nullable<String*> Element::getAttribute(QualifiedName name)
     return Nullable<String*>(m_attributes[idx].value());
 }
 
+Nullable<String*> Element::getAttribute(String* name)
+{
+    AttributeName attrName(document(), name);
+    return getAttribute(attrName);
+}
+
 Nullable<String*> Element::getAttributeNS(Nullable<String*> ns,
                                           String* localName)
 {
-    size_t idx = hasAttributeNS(ns, localName);
-    if (idx == SIZE_MAX) {
-        return Nullable<String*>();
-    }
-    return Nullable<String*>(m_attributes[idx].value());
+    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
+    return getAttribute(attrName);
 }
 
-Attr* Element::getAttributeNode(String* localName)
+Attr* Element::getAttributeNode(const AttributeName& name)
 {
-    if (!hasRareMembers()) {
-        return nullptr;
-    }
-
-    QualifiedName qName = document()->createAttributeName(localName);
-    size_t idx = hasAttribute(qName);
+    size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         return nullptr;
     }
+    // NOTE Should use attribute's QualifiedName here
     const Attribute& attribute = m_attributes[idx];
     return ensureAttr(attribute.name());
 }
 
-String* Element::getAttributeOrEmpty(QualifiedName name)
+Attr* Element::getAttributeNode(String* qualifiedName)
+{
+    AttributeName attrName(document(), qualifiedName);
+    return getAttributeNode(attrName);
+}
+
+Attr* Element::getAttributeNodeNS(Nullable<String*> ns, String* localName)
+{
+    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
+    return getAttributeNode(attrName);
+}
+
+String* Element::getAttributeOrEmpty(const AttributeName& name)
 {
     Nullable<String*> result = getAttribute(name);
     if (result.hasValue()) {
@@ -178,27 +174,34 @@ String* Element::getAttributeOrEmpty(QualifiedName name)
     return String::emptyString;
 }
 
+void Element::setAttribute(const AttributeName& name, String* value)
+{
+    STARFISH_ASSERT(name.qname().localName()->length());
+    size_t idx = hasAttribute(name);
+    if (idx == SIZE_MAX) {
+        m_attributes.push_back(Attribute(name.qname(), value));
+        didAttributeChanged(name.qname(), String::emptyString, value, true,
+                            false);
+    } else {
+        if (name.isNamespaceAware()) {
+            // If an attribute with the same local name and namespace URI is
+            // already present on the element, its prefix is changed to be
+            // the prefix part of the qualifiedName.
+            m_attributes[idx].name().copyPrefixFrom(name.qname());
+        }
+        String* v = m_attributes[idx].value();
+        m_attributes[idx].setValue(value);
+        didAttributeChanged(name.qname(), v, value, false, false);
+    }
+}
+
 void Element::setAttribute(String* name, String* value)
 {
     if (!QualifiedName::checkNameProductionRule(name)) {
-        throw new DOMException(
-            document(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+        throw new DOMException(document(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
-    setAttribute(document()->createAttributeName(name), value);
-}
-
-void Element::setAttribute(QualifiedName name, String* value)
-{
-    STARFISH_ASSERT(name.localName()->length());
-    size_t idx = hasAttribute(name);
-    if (idx == SIZE_MAX) {
-        m_attributes.push_back(Attribute(name, value));
-        didAttributeChanged(name, String::emptyString, value, true, false);
-    } else {
-        String* v = m_attributes[idx].value();
-        m_attributes[idx].setValue(value);
-        didAttributeChanged(name, v, value, false, false);
-    }
+    setAttribute(AttributeName(document(), name), value);
 }
 
 void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
@@ -206,124 +209,70 @@ void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
 {
     QualifiedName qname =
         document()->validateAndExtractQualifiedName(ns, qualifiedName);
-    setAttributeNS(qname, value);
+    setAttribute(AttributeName(qname, AttributeName::MatchNS), value);
 }
 
-void Element::setAttributeNS(QualifiedName name, String* value)
+Attr* Element::setAttributeNode(Attr* newAttr)
 {
-    size_t idx = hasAttributeNS(name);
-    if (idx == SIZE_MAX) {
-        m_attributes.push_back(Attribute(name, value));
-        didAttributeChanged(name, String::emptyString, value, true, false);
-    } else {
-        // If an attribute with the same local name and namespace URI is
-        // already present on the element, its prefix is changed to be
-        // the prefix part of the qualifiedName, and its value is changed
-        // to be the value parameter.
-        m_attributes[idx].name().copyPrefixFrom(name);
-        String* v = m_attributes[idx].value();
-        m_attributes[idx].setValue(value);
-        didAttributeChanged(name, v, value, false, false);
-    }
-}
-
-Attr* Element::setAttributeNode(Attr* attrNode)
-{
-    Attr* oldAttrNode = attr(attrNode->qname());
-    if (oldAttrNode == attrNode) {
-        return attrNode;
-    }
-
-    if (attrNode->ownerElement()) {
-        throw new DOMException(document(), DOMException::INUSE_ATTRIBUTE_ERR,
-                               "The node provided is an attribute node that is "
-                               "already an attribute of another Element; "
-                               "attribute nodes must be explicitly cloned.");
-    }
-
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_attrList) {
         rareMembers->m_attrList = new (GC) GCVector<Attr*>();
     }
 
-    size_t idx = hasAttribute(attrNode->qname());
-    String* localName = String::emptyString;
-    if (idx != SIZE_MAX) {
-        const Attribute& attr = m_attributes[idx];
-        if (attr.name() != attrNode->qname()) {
-            localName = attr.name().localName();
-        }
-
-        if (oldAttrNode) {
-            oldAttrNode->detachFromElement(attr.value());
-            GCVector<Attr*>* list = rareMembers->m_attrList;
-            list->erase(
-                std::remove_if(list->begin(), list->end(),
-                               [attrNode](Attr* attr) {
-                                   if (equalsAttributeName(attr->qname(),
-                                                           attrNode->qname())) {
-                                       return true;
-                                   }
-                                   return false;
-                               }),
-                list->end());
-
-        } else {
-            oldAttrNode = new Attr(document(), attrNode->qname(), attr.value());
-        }
+    size_t attrIdx = hasAttributeNode(newAttr->qname());
+    Attr* oldAttr =
+        attrIdx == SIZE_MAX ? nullptr : (*rareMembers->m_attrList)[attrIdx];
+    if (oldAttr == newAttr) {
+        return newAttr;
     }
 
-    setAttribute(attrNode->qname(), attrNode->value());
-    attrNode->attachToElement(this, localName);
-    rareMembers->m_attrList->push_back(attrNode);
+    if (newAttr->ownerElement()) {
+        throw new DOMException(document(), DOMException::INUSE_ATTRIBUTE_ERR,
+                               "The node provided is an attribute node that is "
+                               "already an attribute of another Element; "
+                               "attribute nodes must be explicitly cloned.");
+    }
 
-    return oldAttrNode;
+    size_t idx = hasAttribute(newAttr->qname());
+    String* oldValue = String::emptyString;
+    String* newValue = newAttr->value();
+    if (idx != SIZE_MAX) {
+        Attribute& attribute = m_attributes[idx];
+        if (oldAttr) {
+            STARFISH_ASSERT(oldAttr->qname() == newAttr->qname());
+            oldAttr->detachFromElement(attribute.value());
+            (*rareMembers->m_attrList)[attrIdx] = newAttr;
+        } else {
+            oldAttr = new Attr(document(), newAttr->qname(), attribute.value());
+            rareMembers->m_attrList->push_back(newAttr);
+        }
+        oldValue = attribute.value();
+        attribute.setValue(newValue);
+    } else {
+        m_attributes.push_back(Attribute(newAttr->qname(), newValue));
+        rareMembers->m_attrList->push_back(newAttr);
+    }
+    didAttributeChanged(newAttr->qname(), oldValue, newValue, idx == SIZE_MAX,
+                        false);
+    newAttr->attachToElement(this, String::emptyString);
+    return oldAttr;
 }
 
-void Element::removeAttribute(String* name)
+Attr* Element::setAttributeNodeNS(Attr* attrNode)
 {
-    removeAttribute(document()->createAttributeName(name));
+    // Seem to have no difference.
+    return setAttributeNode(attrNode);
 }
 
-void Element::removeAttribute(QualifiedName name)
+void Element::removeAttribute(const AttributeName& name)
 {
     size_t idx = hasAttribute(name);
-    if (idx == SIZE_MAX) {
-    } else {
-        String* v = m_attributes[idx].value();
-        m_attributes.erase(m_attributes.begin() + idx);
-        Attr* attrNode = attr(name);
-        if (attrNode) {
-            attrNode->detachFromElement(v);
-            STARFISH_ASSERT(hasRareMembers());
-            STARFISH_ASSERT(rareMembers()->isRareElementMembers());
-            STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
-            auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
-            for (unsigned i = 0, size = attrList->size(); i < size; i++) {
-                if ((*attrList)[i] == attrNode) {
-                    attrList->erase(attrList->begin() + i);
-                    break;
-                }
-            }
-        }
-        didAttributeChanged(name, v, String::emptyString, false, true);
-    }
-}
-
-void Element::removeAttributeNS(Nullable<String*> ns, String* localName)
-{
-    removeAttributeNS(document()->createAttributeNameNS(ns, localName));
-}
-
-void Element::removeAttributeNS(QualifiedName name)
-{
-    size_t idx = hasAttributeNS(name);
     if (idx != SIZE_MAX) {
         String* v = m_attributes[idx].value();
         m_attributes.erase(m_attributes.begin() + idx);
         // Remove Attr if exist
-        size_t attrIdx = hasAttributeNodeNS(name);
+        size_t attrIdx = hasAttributeNode(name);
         if (attrIdx != SIZE_MAX) {
             STARFISH_ASSERT(hasRareMembers());
             STARFISH_ASSERT(rareMembers()->isRareElementMembers());
@@ -333,8 +282,18 @@ void Element::removeAttributeNS(QualifiedName name)
             attrNode->detachFromElement(v);
             l->erase(l->begin() + attrIdx);
         }
-        didAttributeChanged(name, v, String::emptyString, false, true);
+        didAttributeChanged(name.qname(), v, String::emptyString, false, true);
     }
+}
+
+void Element::removeAttribute(String* name)
+{
+    removeAttribute(AttributeName(document(), name));
+}
+
+void Element::removeAttributeNS(Nullable<String*> ns, String* localName)
+{
+    removeAttribute(AttributeName(document(), ns, localName));
 }
 
 Attr* Element::removeAttributeNode(Attr* attr)
@@ -345,28 +304,7 @@ Attr* Element::removeAttributeNode(Attr* attr)
             document(), DOMException::NOT_FOUND_ERR,
             "The node provided is owned by another element.");
     }
-    size_t idx = hasAttribute(attr->qname());
-    if (idx == SIZE_MAX) {
-        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
-                               "The attribute was not found on this element.");
-    }
-
-    const Attribute& attribute = m_attributes[idx];
-    STARFISH_ASSERT(equalsAttributeName(attribute.name(), attr->qname()));
-
-    attr->detachFromElement(attribute.value());
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    GCVector<Attr*>* attrList = rareMembers->m_attrList;
-
-    attrList->erase(
-        std::remove_if(attrList->begin(), attrList->end(),
-                       [attr](Attr* o) {
-                           if (equalsAttributeName(o->qname(), attr->qname())) {
-                               return true;
-                           }
-                           return false;
-                       }),
-        attrList->end());
+    STARFISH_ASSERT(hasAttribute(attr->qname()) != SIZE_MAX);
     removeAttribute(attr->qname());
 
     return attr;
@@ -810,36 +748,6 @@ RareElementMembers* Element::ensureRareElementMembers()
     return rareMembers->asRareElementMembers();
 }
 
-size_t Element::hasAttributeNode(const QualifiedName& name)
-{
-    if (hasRareMembers() && rareMembers()->isRareElementMembers() &&
-        rareMembers()->asRareElementMembers()->m_attrList) {
-        GCVector<Attr*>* l = rareMembers()->asRareElementMembers()->m_attrList;
-        size_t len = l->size();
-        for (size_t i = 0; i < len; i++) {
-            if (equalsAttributeName((*l)[i]->qname(), name)) {
-                return i;
-            }
-        }
-    }
-    return SIZE_MAX;
-}
-
-size_t Element::hasAttributeNodeNS(const QualifiedName& name)
-{
-    if (hasRareMembers() && rareMembers()->isRareElementMembers() &&
-        rareMembers()->asRareElementMembers()->m_attrList) {
-        GCVector<Attr*>* l = rareMembers()->asRareElementMembers()->m_attrList;
-        size_t len = l->size();
-        for (size_t i = 0; i < len; i++) {
-            if (equalsAttributeNameNS((*l)[i]->qname(), name)) {
-                return i;
-            }
-        }
-    }
-    return SIZE_MAX;
-}
-
 Attr* Element::attr(QualifiedName name)
 {
     STARFISH_ASSERT(
@@ -849,7 +757,7 @@ Attr* Element::attr(QualifiedName name)
         auto attrList = rareMembers()->asRareElementMembers()->m_attrList;
         for (Attr* item : *attrList) {
             STARFISH_ASSERT(item);
-            if (equalsAttributeName(item->qname(), name)) {
+            if (item->qname() == name) {
                 return item;
             }
         }

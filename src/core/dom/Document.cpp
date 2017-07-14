@@ -446,10 +446,7 @@ ProcessingInstruction* Document::createProcessingInstruction(String* target,
 
 Attr* Document::createAttribute(String* name)
 {
-    QualifiedName qname = QualifiedName(
-        AtomicString::emptyAtomicString(),
-        AtomicString::createAttrAtomicString(window()->starFish(), name));
-    return createAttribute(qname);
+    return createAttribute(createAttributeName(name));
 }
 
 Attr* Document::createAttribute(QualifiedName localName)
@@ -466,11 +463,6 @@ Attr* Document::createAttributeNS(Nullable<String*> ns, String* name)
 {
     if (!QualifiedName::checkNameProductionRule(name)) {
         throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
-    }
-    AtomicString localName;
-    AtomicString nsURI;
-    if (ns.hasValue() && ns.getValue()->length() != 0) {
-        nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
     }
     return new Attr(this, validateAndExtractQualifiedName(ns, name));
 }
