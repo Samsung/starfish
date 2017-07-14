@@ -193,6 +193,14 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
+    if (!owner()->isNormalFlow() ||
+        owner()->style()->display() == InlineBlockDisplayValue ||
+        owner()->style()->display() == InlineTableDisplayValue) {
+        canvas->resetTextDecorationData();
+    } else {
+        canvas->mergeTextDecorationData(owner()->style());
+    }
+
     if (owner()->style()->visibility() ==
         VisibilityValue::HiddenVisibilityValue) {
         canvas->setVisible(false);

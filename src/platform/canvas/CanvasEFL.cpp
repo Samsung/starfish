@@ -242,10 +242,7 @@ public:
             state.m_visible = last.m_visible;
             state.m_didClip = last.m_didClip;
             state.m_hasPathClip = last.m_hasPathClip;
-            state.m_hasUnderLine = last.m_hasUnderLine;
-            state.m_hasLineThrough = last.m_hasLineThrough;
-            state.m_underLineColor = last.m_underLineColor;
-            state.m_lineThroughColor = last.m_lineThroughColor;
+            state.m_textDecorationData = last.m_textDecorationData;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
@@ -276,24 +273,23 @@ public:
 
     virtual void replace(CanvasState* state)
     {
+        auto& lastState = m_state.back();
+
         CanvasStateEFL* eflState = (CanvasStateEFL*)state;
-        lastState().m_matrix = eflState->m_matrix;
-        lastState().m_clipRect = eflState->m_clipRect;
-        lastState().m_clipPath = eflState->m_clipPath;
-        lastState().m_clipper = eflState->m_clipper;
-        lastState().m_color = eflState->m_color;
-        lastState().m_opacity = eflState->m_opacity;
-        lastState().m_baseX = eflState->m_baseX;
-        lastState().m_baseY = eflState->m_baseY;
-        lastState().m_font = eflState->m_font;
-        lastState().m_mapMode = eflState->m_mapMode;
-        lastState().m_visible = eflState->m_visible;
-        lastState().m_didClip = eflState->m_didClip;
-        lastState().m_hasPathClip = eflState->m_hasPathClip;
-        lastState().m_hasUnderLine = eflState->m_hasUnderLine;
-        lastState().m_hasLineThrough = eflState->m_hasLineThrough;
-        lastState().m_underLineColor = eflState->m_underLineColor;
-        lastState().m_lineThroughColor = eflState->m_lineThroughColor;
+        lastState.m_matrix = eflState->m_matrix;
+        lastState.m_clipRect = eflState->m_clipRect;
+        lastState.m_clipPath = eflState->m_clipPath;
+        lastState.m_clipper = eflState->m_clipper;
+        lastState.m_color = eflState->m_color;
+        lastState.m_opacity = eflState->m_opacity;
+        lastState.m_baseX = eflState->m_baseX;
+        lastState.m_baseY = eflState->m_baseY;
+        lastState.m_font = eflState->m_font;
+        lastState.m_mapMode = eflState->m_mapMode;
+        lastState.m_visible = eflState->m_visible;
+        lastState.m_didClip = eflState->m_didClip;
+        lastState.m_hasPathClip = eflState->m_hasPathClip;
+        lastState.m_textDecorationData = eflState->m_textDecorationData;
     }
 
     void assureMapMode()
@@ -718,24 +714,14 @@ public:
         lastState().m_font = font;
     }
 
-    virtual void setNeedsUnderline(bool b)
+    virtual void resetTextDecorationData()
     {
-        lastState().m_hasUnderLine = b;
+        lastState().m_textDecorationData.reset();
     }
 
-    virtual void setNeedsLineThrough(bool b)
+    virtual void mergeTextDecorationData(ComputedStyle* style)
     {
-        lastState().m_hasLineThrough = b;
-    }
-
-    virtual void setUnderlineColor(Unit::Color clr)
-    {
-        lastState().m_underLineColor = clr;
-    }
-
-    virtual void setLineThroughColor(Unit::Color clr)
-    {
-        lastState().m_lineThroughColor = clr;
+        lastState().m_textDecorationData.merge(style);
     }
 
     void drawEvasRect(int xx, int yy, int ww, int hh, const Unit::Rect& rt,
@@ -989,7 +975,8 @@ public:
 
         // FIXME: evas textblock doesn't render 1 length space char
         bool isSpace = false;
-        if (!lastState().m_hasUnderLine && !lastState().m_hasLineThrough) {
+        if (!lastState().m_textDecorationData.hasUnderLine() &&
+            !lastState().m_textDecorationData.hasLineThrough()) {
             if (sv.length() == 1 &&
                 sv.originalString()->charAt(sv.start()) == ' ') {
                 return;
@@ -1159,23 +1146,25 @@ public:
             }
 
             const char* underlineMode =
-                lastState().m_hasUnderLine ? "on" : "off";
+                lastState().m_textDecorationData.hasUnderLine() ? "on" : "off";
             const char* lineThroughMode =
-                lastState().m_hasLineThrough ? "on" : "off";
+                lastState().m_textDecorationData.hasLineThrough() ? "on"
+                                                                  : "off";
 
             char underlineColor[128];
             char lineThroughColor[128];
-            snprintf(underlineColor, sizeof(underlineColor),
-                     "#%02x%02x%02x%02x", (int)lastState().m_underLineColor.r(),
-                     (int)lastState().m_underLineColor.g(),
-                     (int)lastState().m_underLineColor.b(),
-                     (int)lastState().m_underLineColor.a());
-            snprintf(lineThroughColor, sizeof(lineThroughColor),
-                     "#%02x%02x%02x%02x",
-                     (int)lastState().m_lineThroughColor.r(),
-                     (int)lastState().m_lineThroughColor.g(),
-                     (int)lastState().m_lineThroughColor.b(),
-                     (int)lastState().m_lineThroughColor.a());
+            snprintf(
+                underlineColor, sizeof(underlineColor), "#%02x%02x%02x%02x",
+                (int)lastState().m_textDecorationData.underLineColor().r(),
+                (int)lastState().m_textDecorationData.underLineColor().g(),
+                (int)lastState().m_textDecorationData.underLineColor().b(),
+                (int)lastState().m_textDecorationData.underLineColor().a());
+            snprintf(
+                lineThroughColor, sizeof(lineThroughColor), "#%02x%02x%02x%02x",
+                (int)lastState().m_textDecorationData.lineThroughColor().r(),
+                (int)lastState().m_textDecorationData.lineThroughColor().g(),
+                (int)lastState().m_textDecorationData.lineThroughColor().b(),
+                (int)lastState().m_textDecorationData.lineThroughColor().a());
 
             snprintf(buf, sizeof(buf),
                      "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x "
@@ -1250,7 +1239,7 @@ public:
         // NOTE
         // we don't need to check `!shouldApplyEvasMap()` here
         // but, `evas_object_image_source_set(eo, imgData) + evas_map` gives
-        // segfault or uncorrect result.....
+        // segfault or incorrect result.....
         if (evas_object_evas_get(imgData) == evas_object_evas_get(eo) &&
             !shouldApplyEvasMap()) {
             evas_object_image_source_set(eo, imgData);

@@ -48,7 +48,6 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         }
 
         ctx.setCurrentBlockContainer(currentFrame);
-        ctx.mergeTextDecorationData(currentFrame->style());
 
         FrameTreeBuilder::createPseudoElementIfNeeded(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
@@ -95,7 +94,6 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
                     parent, current);
             }
             ctx.setCurrentBlockContainer(currentFrame);
-            ctx.mergeTextDecorationData(currentFrame->style());
             currentFrame->addChild(current, ctx, force);
         } else if (current->childNeedsFrameTreeBuild()) {
             for (Frame* f = current->frame(); f; f = f->parent()) {
@@ -107,7 +105,6 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
                 }
             }
             ctx.setCurrentBlockContainer(currentFrame);
-            ctx.mergeTextDecorationData(currentFrame->style());
             currentFrame->addChild(current, ctx, force);
         } else {
             // If the frame-tree-building state get here, I think something

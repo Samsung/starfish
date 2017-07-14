@@ -14,8 +14,10 @@
  *    limitations under the License.
  */
 
-#ifndef __Canvas__
-#define __Canvas__
+#ifndef __StarFishCanvas__
+#define __StarFishCanvas__
+
+#include "core/modules/canvas/TextDecorationData.h"
 
 namespace StarFish {
 
@@ -30,20 +32,15 @@ public:
     Font* m_font;
     LayoutUnit m_baseX;
     LayoutUnit m_baseY;
-    Unit::Color m_underLineColor;
-    Unit::Color m_lineThroughColor;
+    TextDecorationData m_textDecorationData;
 
     bool m_visible;
-    bool m_hasUnderLine;
-    bool m_hasLineThrough;
 
     CanvasState()
     {
         m_opacity = 1;
         m_font = nullptr;
         m_visible = true;
-        m_hasUnderLine = false;
-        m_hasLineThrough = false;
     }
 };
 
@@ -103,10 +100,8 @@ public:
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
-    virtual void setNeedsUnderline(bool b) = 0;
-    virtual void setNeedsLineThrough(bool b) = 0;
-    virtual void setUnderlineColor(Unit::Color clr) = 0;
-    virtual void setLineThroughColor(Unit::Color clr) = 0;
+    virtual void resetTextDecorationData() = 0;
+    virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
 
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;

@@ -49,7 +49,6 @@ FrameTreeBuilderContext::FrameTreeBuilderContext(
 {
     m_isInFrameInlineFlow = false;
     setCurrentBlockContainer(currentBlockContainer);
-    computeTextDecorationData(currentBlockContainer->style());
 }
 
 void FrameTreeBuilderContext::setCurrentBlockContainer(
@@ -58,56 +57,9 @@ void FrameTreeBuilderContext::setCurrentBlockContainer(
     m_currentBlockContainer = blockContainer;
 }
 
-void FrameTreeBuilderContext::setCurrentTextDecorationData(
-    FrameTextTextDecorationData* deco)
-{
-    m_currentDecorationData = deco;
-}
-
 FrameBlockBox* FrameTreeBuilderContext::currentBlockContainer()
 {
     return m_currentBlockContainer;
-}
-
-void FrameTreeBuilderContext::computeTextDecorationData(ComputedStyle* style)
-{
-    if (style->textDecoration() != NoneTextDecorationValue) {
-        m_currentDecorationData = new FrameTextTextDecorationData;
-        m_currentDecorationData->m_hasUnderLine = false;
-        m_currentDecorationData->m_hasLineThrough = false;
-        if (style->textDecoration() == UnderLineTextDecorationValue) {
-            m_currentDecorationData->m_hasUnderLine = true;
-            m_currentDecorationData->m_underLineColor = style->color();
-        } else if (style->textDecoration() == LineThroughTextDecorationValue) {
-            m_currentDecorationData->m_hasLineThrough = true;
-            m_currentDecorationData->m_lineThroughColor = style->color();
-        }
-    } else {
-        m_currentDecorationData = nullptr;
-    }
-}
-
-void FrameTreeBuilderContext::mergeTextDecorationData(ComputedStyle* style)
-{
-    if (style->textDecoration() != NoneTextDecorationValue) {
-        if (!m_currentDecorationData) {
-            m_currentDecorationData = new FrameTextTextDecorationData;
-            m_currentDecorationData->m_hasUnderLine = false;
-            m_currentDecorationData->m_hasLineThrough = false;
-        }
-        if (style->textDecoration() == UnderLineTextDecorationValue) {
-            m_currentDecorationData->m_hasUnderLine = true;
-            m_currentDecorationData->m_underLineColor = style->color();
-        } else if (style->textDecoration() == LineThroughTextDecorationValue) {
-            m_currentDecorationData->m_hasLineThrough = true;
-            m_currentDecorationData->m_lineThroughColor = style->color();
-        }
-    }
-}
-
-FrameTextTextDecorationData* FrameTreeBuilderContext::currentDecorationData()
-{
-    return m_currentDecorationData;
 }
 
 std::unordered_map<Node*, FrameInline*>&
@@ -340,8 +292,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         letter->setStyle(letterStyle);
         letter->setParentNode(pseudoElement);
         letter->clearNeedsStyleRecalc();
-        FrameText* letterFrameText =
-            new FrameText(letter, letterStyle, ctx.currentDecorationData());
+        FrameText* letterFrameText = new FrameText(letter, letterStyle);
         letter->setFrame(letterFrameText);
         pseudoFrame->appendChild(letterFrameText);
 
@@ -351,8 +302,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         remainingText->setStyle(originalFrameText->style());
         remainingText->setParentNode(parent);
         FrameText* remainingFrameText =
-            new FrameText(remainingText, originalFrameText->style(),
-                          ctx.currentDecorationData());
+            new FrameText(remainingText, originalFrameText->style());
         remainingText->setFrame(remainingFrameText);
 
         pseudoParentFrame->insertBefore(originalFrameText, remainingFrameText);
@@ -452,8 +402,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                                                                 ctx, true);
                 } else {
                     FrameText* contentTextFrame =
-                        new FrameText(contentText, contentTextStyle,
-                                      ctx.currentDecorationData());
+                        new FrameText(contentText, contentTextStyle);
                     contentText->setFrame(contentTextFrame);
                     pseudoFrame->appendChild(contentTextFrame);
                 }
@@ -477,14 +426,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     bool isTableType = false;
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
-    FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
-    FrameTextTextDecorationData* textDecoBack = new FrameTextTextDecorationData;
-    if (curDeco) {
-        textDecoBack->m_hasLineThrough = curDeco->m_hasLineThrough;
-        textDecoBack->m_hasUnderLine = curDeco->m_hasUnderLine;
-        textDecoBack->m_lineThroughColor = curDeco->m_lineThroughColor;
-        textDecoBack->m_underLineColor = curDeco->m_underLineColor;
-    }
 
     if (current->style() &&
         ComputedStyle::isDisplayTableValueType(current->style()->display())) {
@@ -550,8 +491,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             } else if (display == DisplayValue::InlineDisplayValue) {
                 if (current->isCharacterData() &&
                     current->asCharacterData()->isText()) {
-                    currentFrame = new FrameText(current, current->style(),
-                                                 ctx.currentDecorationData());
+                    currentFrame = new FrameText(current, current->style());
                 } else if (current->isComment()) {
                     FrameTreeBuilder::clearTree(current);
                     return nullptr;
@@ -650,13 +590,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         return nullptr;
     }
 
-    if (currentFrame->style()->display() == InlineBlockDisplayValue ||
-        !currentFrame->isNormalFlow()) {
-        ctx.computeTextDecorationData(currentFrame->style());
-    } else {
-        ctx.mergeTextDecorationData(currentFrame->style());
-    }
-
     createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementBefore, ctx);
 
@@ -709,7 +642,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         ctx.setCurrentBlockContainer(originalFrameBlockBox);
     }
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
-    ctx.setCurrentTextDecorationData(textDecoBack);
 
     createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,

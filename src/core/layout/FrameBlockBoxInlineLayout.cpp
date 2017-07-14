@@ -3472,14 +3472,6 @@ void InlineTextBox::paint(PaintingContext& ctx)
                 ctx.m_canvas->setVisible(true);
             }
 
-            if (m_textRun.m_frameText->textDecorationData()) {
-                auto data = m_textRun.m_frameText->textDecorationData();
-                ctx.m_canvas->setNeedsLineThrough(data->m_hasLineThrough);
-                ctx.m_canvas->setNeedsUnderline(data->m_hasUnderLine);
-                ctx.m_canvas->setLineThroughColor(data->m_lineThroughColor);
-                ctx.m_canvas->setUnderlineColor(data->m_underLineColor);
-            }
-
             ctx.m_canvas->setFont(style()->font());
             ctx.m_canvas->setColor(style()->color());
             ctx.m_canvas->drawText(0, 0, contentWidth(),
@@ -3522,6 +3514,14 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         ctx.m_canvas->saveByFrame(this);
         return;
     }
+
+    if (!isNormalFlow() || style()->display() == InlineBlockDisplayValue ||
+        style()->display() == InlineTableDisplayValue) {
+        ctx.m_canvas->resetTextDecorationData();
+    } else {
+        ctx.m_canvas->mergeTextDecorationData(style());
+    }
+
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
     if (isPositioned()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {
