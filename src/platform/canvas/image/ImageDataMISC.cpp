@@ -403,6 +403,10 @@ private:
 
         if (localImageSrc) {
             GifFile = DGifOpenFileName(localImageSrc->utf8Data(), &errorCode);
+            if (!GifFile) {
+                STARFISH_LOG_ERROR("Gif Open File Error, %d\n", errorCode);
+                return;
+            }
         }
 
         m_width = GifFile->SWidth;
