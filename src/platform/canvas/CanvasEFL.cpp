@@ -139,7 +139,18 @@ class CanvasEFL : public Canvas {
         m_canvas = canvas;
         m_buffer = buffer;
 
-        save();
+        initState();
+    }
+
+    void initState()
+    {
+        m_stateSize = 1;
+        m_state.push_back(CanvasStateEFL());
+
+        lastState().m_matrix.reset();
+        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
+                                       SkFloatToScalar((float)m_height));
+        lastState().m_clipper = NULL;
     }
 
 public:
@@ -164,7 +175,7 @@ public:
         m_objList = d->objList;
         m_surfaceList = d->surfaceList;
 
-        save();
+        initState();
     }
 
     CanvasEFL(CanvasSurface* data)
@@ -183,7 +194,7 @@ public:
     virtual ~CanvasEFL()
     {
         restore();
-        STARFISH_ASSERT(m_state.size() == 0);
+        STARFISH_ASSERT(m_stateSize == 0);
         m_statePerFrame.clear();
         if (m_image && m_buffer) {
             evas_object_image_data_set(m_image, m_buffer);
@@ -222,16 +233,18 @@ public:
     // state
     virtual void save()
     {
-        size_t size = m_state.size();
-        m_state.push_back(CanvasStateEFL());
-        auto& state = m_state.back();
-
-        if (size) {
+        size_t size = m_stateSize++;
+        if (m_state.size() < m_stateSize) {
             auto& last = m_state[size - 1];
+            m_state.push_back(last);
+            return;
+        }
+        auto& state = m_state[size];
+        auto& last = m_state[size - 1];
+        if (UNLIKELY(last.m_clipPath.size())) {
             state.m_matrix = last.m_matrix;
             state.m_clipRect = last.m_clipRect;
-            if (last.m_hasPathClip)
-                state.m_clipPath = last.m_clipPath;
+            state.m_clipPath = last.m_clipPath;
             state.m_clipper = last.m_clipper;
             state.m_color = last.m_color;
             state.m_opacity = last.m_opacity;
@@ -244,16 +257,14 @@ public:
             state.m_hasPathClip = last.m_hasPathClip;
             state.m_textDecorationData = last.m_textDecorationData;
         } else {
-            state.m_matrix.reset();
-            state.m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
-                                     SkFloatToScalar((float)m_height));
-            state.m_clipper = NULL;
+            memcpy(&state, &last, sizeof(CanvasStateEFL));
         }
     }
 
     // pop state stack and restore state
     virtual void restore()
     {
+        m_stateSize--;
         m_state.erase(m_state.end() - 1);
     }
 
@@ -1602,8 +1613,8 @@ public:
 
     CanvasStateEFL& lastState()
     {
-        STARFISH_ASSERT(m_state.size());
-        return m_state[m_state.size() - 1];
+        STARFISH_ASSERT(m_stateSize);
+        return m_state[m_stateSize - 1];
     }
 
     // no rotate, no skew
@@ -1716,6 +1727,7 @@ public:
 
 protected:
     std::vector<CanvasStateEFL> m_state;
+    size_t m_stateSize;
     std::unordered_map<Frame*, CanvasStateEFL> m_statePerFrame;
     Evas* m_canvas;
     bool m_directDraw;

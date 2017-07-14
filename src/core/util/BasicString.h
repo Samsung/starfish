@@ -328,6 +328,18 @@ public:
     int compare(const BasicString<T, Allocator>& other) const;
     int compare(const T* s) const;
 
+    T* takeBuffer()
+    {
+        T* buffer = m_buffer;
+        AllocInfo<T> allocInfo = allocate(1);
+        m_buffer = allocInfo.m_buffer;
+        m_buffer[0] = 0;
+        m_size = 0;
+        m_capacity = 1;
+
+        return buffer;
+    }
+
 protected:
     void makeEmpty()
     {
