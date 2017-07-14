@@ -32,6 +32,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLFieldSetElement() const override;
 
+    HTMLFormElement* form();
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 };
