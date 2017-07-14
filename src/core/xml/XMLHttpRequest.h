@@ -46,9 +46,9 @@ public:
 #undef OVERRIDE
 };
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget,
-                       public ResourceRequestClient {
+class XMLHttpRequest : public XMLHttpRequestEventTarget {
     friend class XMLHttpRequestEventEmitter;
+    friend class XMLHttpRequestResourceRequestClient;
 
 public:
     XMLHttpRequest(::StarFish::Document* document);
@@ -89,11 +89,6 @@ public:
     uint32_t timeout() const;
     void setTimeout(uint32_t timeout);
     void setRequestHeader(String* h, String* c);
-
-    virtual void onProgressEvent(ResourceRequest* request,
-                                 bool isExplicitAction) override;
-    virtual void onReadyStateChange(ResourceRequest* request,
-                                    bool fromExplicit) override;
 
     String* getAllResponseHeaders();
 
