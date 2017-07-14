@@ -150,14 +150,29 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
     }
 
-Font::FontMetrics loadFontMetrics(String* familyName, double size)
+static Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
-    FcConfig* config = FcInitLoadConfigAndFonts();
+    typedef std::unordered_map<std::string,
+                               std::pair<double, Font::FontMetrics>>
+        MetricsMap;
+    static MetricsMap metricsMap;
+    static FcConfig* config = FcInitLoadConfigAndFonts();
 
-    FcPattern* pattern = FcNameParse((const FcChar8*)(familyName->utf8Data()));
+    std::string u8FontName = familyName->toUTF8NonGCString();
 
-    // TODO : need to fallback font
-    // FcPattern* pattern = FcNameParse((const FcChar8*)("NanumGothic"));
+    auto iter = metricsMap.find(u8FontName);
+    if (iter != metricsMap.end()) {
+        double factor = size / iter->second.first;
+
+        Font::FontMetrics met;
+        met.m_ascender = iter->second.second.m_ascender * factor;
+        met.m_descender = iter->second.second.m_descender * factor;
+        met.m_fontHeight = iter->second.second.m_fontHeight * factor;
+        met.m_xheightRate = iter->second.second.m_xheightRate * factor;
+        return met;
+    }
+
+    FcPattern* pattern = FcNameParse((const FcChar8*)(u8FontName.data()));
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
@@ -181,15 +196,13 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
     FcFontSetDestroy(set);
     FcPatternDestroy(pattern);
-    FcConfigDestroy(config);
 
     FT_Library library;
-    FT_Face face;
     FT_Error error;
     error = FT_Init_FreeType(&library);
     CHECK_ERROR;
 
-    // FT_Face face;
+    FT_Face face;
     error = FT_New_Face(library, fontPath.data(), 0, &face);
     CHECK_ERROR;
 
@@ -207,9 +220,10 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-    met.m_FTFace = face;
-    met.m_FTFaceLib = library;
+    FT_Done_Face(face);
+    FT_Done_FreeType(library);
 
+    metricsMap[u8FontName] = std::make_pair(size, met);
     return met;
 }
 

@@ -207,11 +207,29 @@ protected:
         STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
     }
 
-Font::FontMetrics loadFontMetrics(String* familyName, double size)
+static Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
-    FcConfig* config = FcInitLoadConfigAndFonts();
+    typedef std::unordered_map<std::string,
+                               std::pair<double, Font::FontMetrics>>
+        MetricsMap;
+    static MetricsMap metricsMap;
+    static FcConfig* config = FcInitLoadConfigAndFonts();
 
-    FcPattern* pattern = FcNameParse((const FcChar8*)(familyName->utf8Data()));
+    std::string u8FontName = familyName->toUTF8NonGCString();
+
+    auto iter = metricsMap.find(u8FontName);
+    if (iter != metricsMap.end()) {
+        double factor = size / iter->second.first;
+
+        Font::FontMetrics met;
+        met.m_ascender = iter->second.second.m_ascender * factor;
+        met.m_descender = iter->second.second.m_descender * factor;
+        met.m_fontHeight = iter->second.second.m_fontHeight * factor;
+        met.m_xheightRate = iter->second.second.m_xheightRate * factor;
+        return met;
+    }
+
+    FcPattern* pattern = FcNameParse((const FcChar8*)(u8FontName.data()));
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
@@ -235,7 +253,6 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
     FcFontSetDestroy(set);
     FcPatternDestroy(pattern);
-    FcConfigDestroy(config);
 
     FT_Library library;
     FT_Error error;
@@ -262,6 +279,8 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
     FT_Done_Face(face);
     FT_Done_FreeType(library);
+
+    metricsMap[u8FontName] = std::make_pair(size, met);
     return met;
 }
 

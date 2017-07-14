@@ -61,8 +61,8 @@ public:
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->node(), frame->style())
         , m_textRun(run)
-        , m_isFirstLine(isFirstLine)
     {
+        m_flags.m_isFirstLine = isFirstLine;
     }
 
     virtual bool isInlineBox() const
@@ -126,14 +126,14 @@ public:
 
     void unmarkFirstLine()
     {
-        m_isFirstLine = false;
+        m_flags.m_isFirstLine = false;
         setWidth(style()->font()->measureText(textRun().m_stringView));
         setHeight(style()->font()->metrics().m_fontHeight);
     }
 
     bool isFirstLine()
     {
-        return m_isFirstLine;
+        return m_flags.m_isFirstLine;
     }
 
     ComputedStyle* style()
@@ -143,7 +143,7 @@ public:
             parent = parent->layoutParent();
         }
 
-        return Frame::style(parent, parent->style(), m_isFirstLine);
+        return Frame::style(parent, parent->style(), m_flags.m_isFirstLine);
     }
 
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
@@ -158,7 +158,6 @@ public:
 
 protected:
     TextRun m_textRun;
-    bool m_isFirstLine;
 };
 
 class InlineBoxLayoutParentBox : public FrameBox {
@@ -341,7 +340,7 @@ public:
 
     ComputedStyle* style()
     {
-        return Frame::style(this, Frame::style(), m_isFirstLine);
+        return Frame::style(this, Frame::style(), m_flags.m_isFirstLine);
     }
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
@@ -456,15 +455,14 @@ protected:
     FrameInline* m_origin;
     unsigned* m_mbpStatus;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
-    bool m_isFirstLine;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin, bool isFirstLine)
         : InlineBoxLayoutParentBox(frame)
         , m_isCollapsed(false)
         , m_origin(origin)
         , m_mbpStatus(nullptr)
-        , m_isFirstLine(isFirstLine)
     {
+        m_flags.m_isFirstLine = isFirstLine;
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
         }
@@ -524,121 +522,6 @@ public:
     }
 };
 
-class MarginInfo {
-public:
-    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding,
-               bool isNewContext, Length height)
-    {
-        m_canCollapseWithChildren = !isNewContext;
-        m_canCollapseTopWithChildren =
-            m_canCollapseWithChildren && !topBorderPadding;
-        m_canCollapseBottomWithChildren = m_canCollapseWithChildren &&
-                                          !bottomBorderPadding &&
-                                          height.isAuto();
-        m_atTopSideOfBlock = true;
-    }
-
-    void setMaxPositiveMarginTop(LayoutUnit m)
-    {
-        m_maxPositiveMarginTop = m;
-    }
-
-    LayoutUnit maxPositiveMarginTop() const
-    {
-        return m_maxPositiveMarginTop;
-    }
-
-    void setMaxNegativeMarginTop(LayoutUnit m)
-    {
-        m_maxNegativeMarginTop = m;
-    }
-
-    LayoutUnit maxNegativeMarginTop() const
-    {
-        return m_maxNegativeMarginTop;
-    }
-
-    void setPositiveMargin(LayoutUnit m)
-    {
-        m_positiveMargin = m;
-    }
-
-    LayoutUnit positiveMargin() const
-    {
-        return m_positiveMargin;
-    }
-
-    void setNegativeMargin(LayoutUnit m)
-    {
-        m_negativeMargin = m;
-    }
-
-    LayoutUnit negativeMargin() const
-    {
-        return m_negativeMargin;
-    }
-
-    void setMargin(LayoutUnit pos, LayoutUnit neg)
-    {
-        STARFISH_ASSERT(pos >= 0 && neg >= 0);
-        m_positiveMargin = pos;
-        m_negativeMargin = neg;
-    }
-
-    void setMargin(LayoutUnit val)
-    {
-        if (val >= 0) {
-            setMargin(val, 0);
-        } else {
-            setMargin(0, -val);
-        }
-    }
-
-    bool canCollapseTopWithChildren() const
-    {
-        return m_canCollapseTopWithChildren;
-    }
-
-    void setAtTopSideOfBlock(bool b)
-    {
-        m_atTopSideOfBlock = b;
-    }
-
-    bool atTopSideOfBlock() const
-    {
-        return m_atTopSideOfBlock;
-    }
-
-    bool canCollapseWithMarginTop() const
-    {
-        return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
-    }
-
-    bool canCollapseWithMarginBottom() const
-    {
-        return m_canCollapseBottomWithChildren;
-    }
-
-    bool canCollapseBottomWithChildren() const
-    {
-        return m_canCollapseBottomWithChildren;
-    }
-
-    void setCanCollapseBottomWithChildren(bool v)
-    {
-        m_canCollapseBottomWithChildren = v;
-    }
-
-    bool m_canCollapseWithChildren;
-    bool m_canCollapseTopWithChildren;
-    bool m_canCollapseBottomWithChildren;
-    bool m_atTopSideOfBlock;
-    LayoutUnit m_maxPositiveMarginTop;
-    LayoutUnit m_maxNegativeMarginTop;
-    LayoutUnit m_positiveMargin;
-    LayoutUnit m_negativeMargin;
-};
-
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
@@ -647,8 +530,6 @@ class FrameBlockBox : public FrameBox {
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
-        , m_marginInfo(nullptr)
-        , m_heightComputed(false)
     {
         STARFISH_ASSERT((node == nullptr && style != nullptr) ||
                         (node != nullptr && style == nullptr));
@@ -693,24 +574,14 @@ public:
         return true;
     }
 
-    void setMarginInfo(MarginInfo* marginInfo)
-    {
-        m_marginInfo = marginInfo;
-    }
-
-    MarginInfo* marginInfo()
-    {
-        return m_marginInfo;
-    }
-
     void markHeightComputed(bool b)
     {
-        m_heightComputed = b;
+        m_flags.m_heightComputed = b;
     }
 
     bool heightComputed() const
     {
-        return m_heightComputed;
+        return m_flags.m_heightComputed;
     }
 
     virtual void layout(LayoutContext& ctx,
@@ -772,8 +643,6 @@ protected:
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
     GCVector<LineBox*> m_lineBoxes;
-    MarginInfo* m_marginInfo;
-    bool m_heightComputed;
 };
 
 struct FloatingBoxLayoutContext {
@@ -1009,6 +878,20 @@ public:
 
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;
+    std::unordered_map<FrameBox*, size_t> m_inlineBoxIndexes;
+
+    void setInlineBoxIndex(FrameBox* f, size_t inlineBoxIdx)
+    {
+        m_inlineBoxIndexes[f] = inlineBoxIdx;
+    }
+
+    size_t inlineBoxIndex(FrameBox* f)
+    {
+        auto iter = m_inlineBoxIndexes.find(f);
+        if (iter == m_inlineBoxIndexes.end())
+            return SIZE_MAX;
+        return iter->second;
+    }
 };
 }
 

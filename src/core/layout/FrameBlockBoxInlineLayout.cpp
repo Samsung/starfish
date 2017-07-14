@@ -496,10 +496,15 @@ static CharDirection charDirFromICUDir(UBiDiDirection dir)
 
 static UBiDiDirection getTextDir(const StringView& sv, size_t start, size_t end)
 {
-    UTF16StringDataNonGCStd str =
-        sv.originalString()->toUTF16NonGCString(start, end);
-    UBiDiDirection dir =
-        ubidi_getBaseDirection((const UChar*)str.data(), str.length());
+    UBiDiDirection dir;
+    StringView(sv.string(), start, end)
+        .peekUTF16Buffer(
+            [](const char16_t* buf, size_t len, void* data) -> size_t {
+                *((UBiDiDirection*)data) =
+                    ubidi_getBaseDirection((const UChar*)buf, len);
+                return 0;
+            },
+            &dir);
     return dir;
 }
 
@@ -621,8 +626,9 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
                                 AbsolutePositionValue);
                             newBox->markAbsolutePositionedBoxLayoutParent();
                         }
-                        newBox->setInlineBoxIndex(
-                            boxesToCopy[j]->inlineBoxIndex());
+
+                        setInlineBoxIndex(newBox,
+                                          inlineBoxIndex(boxesToCopy[j]));
                         newBox->setLayoutParent(inrb->layoutParent());
                         boxes.insert(boxes.begin() + insertPos++, newBox);
                     }
@@ -1225,7 +1231,7 @@ void InlineBoxLayoutParentBox::moveToNewLineBox(FrameBox* box, LineBox* lineBox)
 
 void LineFormattingContext::markInlineBoxIndex(FrameBox* box)
 {
-    box->setInlineBoxIndex(m_inlineBoxIndex);
+    setInlineBoxIndex(box, m_inlineBoxIndex);
     m_inlineBoxIndex++;
 }
 
@@ -1323,7 +1329,7 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
     FrameBox* firstInlineBox = lineBox->firstInlineBox();
     size_t nextInlineBoxIndex = SIZE_MAX;
     if (m_pendingInlineBoxes.size() > 0) {
-        nextInlineBoxIndex = (*m_pendingInlineBoxes.begin())->inlineBoxIndex();
+        nextInlineBoxIndex = inlineBoxIndex((*m_pendingInlineBoxes.begin()));
     }
 
     auto iter = m_absolutePositionedBoxes.begin();
@@ -1332,7 +1338,7 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
         FrameBox* box = *iter;
 
         if (nextInlineBoxIndex != SIZE_MAX) {
-            if (nextInlineBoxIndex < box->inlineBoxIndex()) {
+            if (nextInlineBoxIndex < inlineBoxIndex(box)) {
                 // Absolute positioned box can be located on the same line box
                 // if it appeared earlier than the first inline box of
                 // pending inline boxes.
@@ -1348,7 +1354,7 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
             }
 
             if (firstInlineBox) {
-                if (firstInlineBox->inlineBoxIndex() < box->inlineBoxIndex()) {
+                if (inlineBoxIndex(firstInlineBox) < inlineBoxIndex(box)) {
                     box->setY(lineBox->height());
                 } else {
                     box->setY(0);
@@ -1577,8 +1583,8 @@ LayoutUnit LineFormattingContext::distanceToNextLineBox(FrameLineBreak* br,
 template <typename Iter>
 void LineFormattingContext::sortInlineBoxes(Iter& iter)
 {
-    std::sort(iter.begin(), iter.end(), [](FrameBox* a, FrameBox* b) {
-        return a->inlineBoxIndex() > b->inlineBoxIndex();
+    std::sort(iter.begin(), iter.end(), [&](FrameBox* a, FrameBox* b) {
+        return inlineBoxIndex(a) > inlineBoxIndex(b);
     });
 }
 
@@ -1632,15 +1638,15 @@ void LineFormattingContext::removeAllInlineBoxes()
     // Pending inline boxes should be put by the order as they were initially
     // inserted into the line box.
     size_t lastInlineboxIndex = SIZE_MAX;
-    STARFISH_ASSERT(
-        std::all_of(m_pendingInlineBoxes.begin(), m_pendingInlineBoxes.end(),
-                    [&lastInlineboxIndex](FrameBox* box) {
-                        if (lastInlineboxIndex != SIZE_MAX) {
-                            return box->inlineBoxIndex() > lastInlineboxIndex;
-                        }
-                        lastInlineboxIndex = box->inlineBoxIndex();
-                        return true;
-                    }));
+    STARFISH_ASSERT(std::all_of(m_pendingInlineBoxes.begin(),
+                                m_pendingInlineBoxes.end(), [&](FrameBox* box) {
+                                    if (lastInlineboxIndex != SIZE_MAX) {
+                                        return inlineBoxIndex(box) >
+                                               lastInlineboxIndex;
+                                    }
+                                    lastInlineboxIndex = inlineBoxIndex(box);
+                                    return true;
+                                }));
 #endif
 }
 
@@ -3023,7 +3029,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() ||
                                            isFrameDocument(),
                           style()->height());
-    setMarginInfo(&marginInfo);
+    ctx.setMarginInfo(this, &marginInfo);
     LineFormattingContext lineFormattingContext(this, ctx);
 
     // compute directions

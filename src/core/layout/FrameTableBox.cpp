@@ -715,7 +715,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
     MarginInfo marginInfo(top, bottom, true, style()->height());
-    setMarginInfo(&marginInfo);
+    ctx.setMarginInfo(this, &marginInfo);
 
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {

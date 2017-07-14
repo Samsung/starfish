@@ -243,7 +243,7 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
     DirectionValue parentDirection =
         ctx.blockContainer(this)->style()->direction();
 
-    FrameBox* parent = Frame::layoutParent()->asFrameBox();
+    FrameBox* parent = layoutParent()->asFrameBox();
 
     LayoutLocation l1, l2;
     if (cb->isAncestorOf(parent)) {
@@ -276,7 +276,7 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
     LayoutContext& ctx, FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
-    FrameBox* parent = Frame::layoutParent()->asFrameBox();
+    FrameBox* parent = layoutParent()->asFrameBox();
     LayoutLocation l1, l2;
     if (cb->isAncestorOf(parent)) {
         l2 = parent->absolutePoint(cb);

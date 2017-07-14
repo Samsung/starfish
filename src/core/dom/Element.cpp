@@ -979,6 +979,7 @@ String* Element::getLaunguage()
         } else if (n->isDocument()) {
             // TODO: checking the MIME content-language
             // value = document()->contentLanguage();
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
 
         n = n->parentNode();
@@ -997,6 +998,7 @@ void Element::setFocus(bool flag)
     // TODO: Style should be recalculated when we implement :focus selector or
     // apply visual effects for focusable elements.
     // setNeedsStyleRecalc();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 bool Element::supportsFocus()
@@ -1018,11 +1020,11 @@ bool Element::isFocusable()
 
 void Element::focus()
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void Element::blur()
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 }

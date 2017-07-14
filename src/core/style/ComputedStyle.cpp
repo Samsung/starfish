@@ -560,7 +560,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newStyle->m_opacity != oldStyle->m_opacity) {
         if ((newStyle->m_opacity) < 1 && (oldStyle->m_opacity < 1)) {
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         } else {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);

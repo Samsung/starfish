@@ -325,7 +325,12 @@ public:
     // const char* buffer ends with '\0'
     size_t peekUTF8Buffer(size_t (*)(const char* buffer, size_t len,
                                      void* data),
-                          void* data);
+                          void* data) const;
+    // this is fastest version of view utf16 data of string
+    // const char16_t* buffer ends with '\0'
+    size_t peekUTF16Buffer(size_t (*)(const char16_t* buffer, size_t len,
+                                      void* data),
+                           void* data) const;
     const char* utf8Data();                    // TODO remove this method
     const char* utf8DataIgnoreZeroWidthChar(); // TODO remove this method
 

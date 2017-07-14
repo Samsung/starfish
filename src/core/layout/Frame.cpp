@@ -89,8 +89,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     while (parent) {
         if (!parent->isAnonymous() && parent->isBlockLevel()) {
             m_canLayoutParentCollapseWithMarginTop =
-                parent->asFrameBlockBox()
-                    ->marginInfo()
+                ctx->marginInfo(parent->asFrameBlockBox())
                     ->canCollapseWithMarginTop();
             break;
         }
@@ -610,6 +609,8 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_needsGraphicsBuffer = false;
     m_flags.m_isNormalFlow = true;
     m_flags.m_isFloating = false;
+    m_flags.m_heightComputed = false;
+    m_flags.m_isFirstLine = false;
 
     computeStyleFlags();
 }

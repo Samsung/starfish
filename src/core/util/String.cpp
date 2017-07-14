@@ -1603,7 +1603,7 @@ bool String::contains(String* str, bool caseSensitive)
 
 size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
                                            void* data),
-                              void* data)
+                              void* data) const
 {
     auto bufData = bufferAccessData();
     if (bufData.isNullTerminated) {
@@ -1639,6 +1639,32 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
             STARFISH_ASSERT(realUsage <= (bufData.length * 6) + 1);
             return cb(buf, realUsage, data);
         }
+    }
+}
+
+// this is fastest version of view utf16 data of string
+// const char16_t* buffer ends with '\0'
+size_t String::peekUTF16Buffer(size_t (*cb)(const char16_t* buffer, size_t len,
+                                            void* data),
+                               void* data) const
+{
+    auto bufData = bufferAccessData();
+    if (bufData.hasASCIIContent) {
+        char16_t* buf = ALLOCA((bufData.length * 2) + 2, char16_t);
+        for (size_t i = 0; i < bufData.length; i++) {
+            buf[i] = bufData.asciiData()[i];
+        }
+        buf[bufData.length] = 0;
+        return cb(buf, bufData.length, data);
+    } else {
+        char16_t* buf = ALLOCA((bufData.length * 2) + 2, char16_t);
+        size_t realUsage = 0;
+        for (size_t i = 0; i < bufData.length; i++) {
+            char32_t ch = bufData.utf32Data()[i];
+            realUsage += utf32ToUtf16(ch, buf + realUsage);
+        }
+        buf[realUsage] = 0;
+        return cb(buf, realUsage, data);
     }
 }
 
