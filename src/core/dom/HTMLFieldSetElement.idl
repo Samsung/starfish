@@ -3,7 +3,7 @@
 [HTMLConstructor]
 interface HTMLFieldSetElement : HTMLElement {
   [Unimplemented, CEReactions] attribute boolean disabled;
-  [Unimplemented] readonly attribute HTMLFormElement? form;
+  readonly attribute HTMLFormElement? form;
   [Unimplemented, CEReactions] attribute DOMString name;
 
   [Unimplemented] readonly attribute DOMString type;
