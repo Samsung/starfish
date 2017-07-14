@@ -80,6 +80,126 @@ class MarginInfo;
 class FloatingBoxInfo;
 class TextToken;
 
+struct MarginCollapseResult {
+    LayoutUnit m_advanceY;
+    LayoutUnit m_normalFlowHeightAdvance;
+};
+
+class MarginInfo {
+public:
+    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding,
+               bool isNewContext, Length height)
+    {
+        m_canCollapseWithChildren = !isNewContext;
+        m_canCollapseTopWithChildren =
+            m_canCollapseWithChildren && !topBorderPadding;
+        m_canCollapseBottomWithChildren = m_canCollapseWithChildren &&
+                                          !bottomBorderPadding &&
+                                          height.isAuto();
+        m_atTopSideOfBlock = true;
+    }
+
+    void setMaxPositiveMarginTop(LayoutUnit m)
+    {
+        m_maxPositiveMarginTop = m;
+    }
+
+    LayoutUnit maxPositiveMarginTop() const
+    {
+        return m_maxPositiveMarginTop;
+    }
+
+    void setMaxNegativeMarginTop(LayoutUnit m)
+    {
+        m_maxNegativeMarginTop = m;
+    }
+
+    LayoutUnit maxNegativeMarginTop() const
+    {
+        return m_maxNegativeMarginTop;
+    }
+
+    void setPositiveMargin(LayoutUnit m)
+    {
+        m_positiveMargin = m;
+    }
+
+    LayoutUnit positiveMargin() const
+    {
+        return m_positiveMargin;
+    }
+
+    void setNegativeMargin(LayoutUnit m)
+    {
+        m_negativeMargin = m;
+    }
+
+    LayoutUnit negativeMargin() const
+    {
+        return m_negativeMargin;
+    }
+
+    void setMargin(LayoutUnit pos, LayoutUnit neg)
+    {
+        STARFISH_ASSERT(pos >= 0 && neg >= 0);
+        m_positiveMargin = pos;
+        m_negativeMargin = neg;
+    }
+
+    void setMargin(LayoutUnit val)
+    {
+        if (val >= 0) {
+            setMargin(val, 0);
+        } else {
+            setMargin(0, -val);
+        }
+    }
+
+    bool canCollapseTopWithChildren() const
+    {
+        return m_canCollapseTopWithChildren;
+    }
+
+    void setAtTopSideOfBlock(bool b)
+    {
+        m_atTopSideOfBlock = b;
+    }
+
+    bool atTopSideOfBlock() const
+    {
+        return m_atTopSideOfBlock;
+    }
+
+    bool canCollapseWithMarginTop() const
+    {
+        return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
+    }
+
+    bool canCollapseWithMarginBottom() const
+    {
+        return m_canCollapseBottomWithChildren;
+    }
+
+    bool canCollapseBottomWithChildren() const
+    {
+        return m_canCollapseBottomWithChildren;
+    }
+
+    void setCanCollapseBottomWithChildren(bool v)
+    {
+        m_canCollapseBottomWithChildren = v;
+    }
+
+    bool m_canCollapseWithChildren;
+    bool m_canCollapseTopWithChildren;
+    bool m_canCollapseBottomWithChildren;
+    bool m_atTopSideOfBlock;
+    LayoutUnit m_maxPositiveMarginTop;
+    LayoutUnit m_maxNegativeMarginTop;
+    LayoutUnit m_positiveMargin;
+    LayoutUnit m_negativeMargin;
+};
+
 class LayoutContext {
 public:
     LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
@@ -189,42 +309,24 @@ public:
 
     void layoutRegisteredRelativePositionedBoxes(FrameBlockBox* containgBlock);
 
-    void propagatePositionedBoxes(LayoutContext& to)
+    void setMarginCollapseResult(FrameBox* f, const MarginCollapseResult& r)
     {
-        {
-            auto iter = m_absolutePositionedBoxes.begin();
+        m_marginCollapseResult[f] = r;
+    }
 
-            while (iter != m_absolutePositionedBoxes.end()) {
-                auto iter2 = to.m_absolutePositionedBoxes.find(iter->first);
-                if (iter2 == to.m_absolutePositionedBoxes.end()) {
-                    to.m_absolutePositionedBoxes.insert(*iter);
-                } else {
-                    iter2->second.insert(iter2->second.end(),
-                                         iter->second.begin(),
-                                         iter->second.end());
-                }
-                iter++;
-            }
+    const MarginCollapseResult& marginCollapseResult(FrameBox* f)
+    {
+        return m_marginCollapseResult[f];
+    }
 
-            m_absolutePositionedBoxes.clear();
-        }
-        {
-            auto iter = m_relativePositionedBoxes.begin();
+    void setMarginInfo(FrameBox* f, MarginInfo* marginInfo)
+    {
+        m_marginInfo[f] = marginInfo;
+    }
 
-            while (iter != m_relativePositionedBoxes.end()) {
-                auto iter2 = to.m_relativePositionedBoxes.find(iter->first);
-                if (iter2 == to.m_relativePositionedBoxes.end()) {
-                    to.m_relativePositionedBoxes.insert(*iter);
-                } else {
-                    iter2->second.insert(iter2->second.end(),
-                                         iter->second.begin(),
-                                         iter->second.end());
-                }
-                iter++;
-            }
-
-            m_relativePositionedBoxes.clear();
-        }
+    MarginInfo* marginInfo(FrameBox* f)
+    {
+        return m_marginInfo[f];
     }
 
     void setMaxPositiveMarginTop(LayoutUnit m)
@@ -320,6 +422,9 @@ private:
     std::map<FrameBlockBox*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
     std::map<FrameBlockBox*, std::vector<std::pair<FrameBox*, bool>>>
         m_relativePositionedBoxes;
+    // TODO move these maps into BlockFormattingContext
+    std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
+    std::unordered_map<FrameBox*, MarginInfo*> m_marginInfo;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -881,14 +986,9 @@ public:
         return w;
     }
 
-    void setParent(Frame* f)
+    virtual void setParent(Frame* f)
     {
-        m_layoutParent = m_parent = f;
-    }
-
-    void setLayoutParent(Frame* f)
-    {
-        m_layoutParent = f;
+        m_parent = f;
     }
 
     Frame* parent() const
@@ -896,9 +996,9 @@ public:
         return m_parent;
     }
 
-    Frame* layoutParent() const
+    virtual Frame* layoutParent() const
     {
-        return m_layoutParent;
+        return m_parent;
     }
 
     Frame* next() const
@@ -1181,7 +1281,7 @@ public:
     Document* document();
 
 protected:
-    struct {
+    struct FrameFlags {
         bool m_needsLayout : 1;
         bool m_isAnonymous : 1;
 
@@ -1217,7 +1317,15 @@ protected:
         bool m_isRightMBPCleared : 1;
 
         bool m_isFloating : 1;
+
+        // special flag for FrameBlockBox
+        bool m_heightComputed : 1;
+        // special flag for InlineBox
+        bool m_isFirstLine : 1;
     } m_flags;
+
+    STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(size_t),
+                            "keep FrameFlags small");
 
 private:
     union {
@@ -1226,7 +1334,6 @@ private:
     };
 
     Frame* m_parent;
-    Frame* m_layoutParent;
 
     Frame* m_previous;
     Frame* m_next;

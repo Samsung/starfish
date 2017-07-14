@@ -31,7 +31,7 @@ static std::pair<LayoutUnit, LayoutUnit> estimateLogicalPosition(
         return std::make_pair(0, 0);
     }
 
-    f->asFrameBox()->setMarginCollapseResult(MarginCollapseResult());
+    ctx.setMarginCollapseResult(f->asFrameBox(), MarginCollapseResult());
     LayoutUnit posTop = marginInfo.positiveMargin(),
                negTop = marginInfo.negativeMargin();
 
@@ -58,9 +58,9 @@ static std::pair<LayoutUnit, LayoutUnit> estimateLogicalPosition(
         marginInfo.setMaxPositiveMarginTop(posTop);
         marginInfo.setMaxNegativeMarginTop(negTop);
     } else {
-        MarginCollapseResult r = f->asFrameBox()->marginCollapseResult();
+        MarginCollapseResult r = ctx.marginCollapseResult(f->asFrameBox());
         r.m_advanceY += topPosition;
-        f->asFrameBox()->setMarginCollapseResult(r);
+        ctx.setMarginCollapseResult(f->asFrameBox(), r);
     }
 
     return std::make_pair(posTop, negTop);
@@ -135,7 +135,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() ||
                                            isFrameDocument(),
                           style()->height());
-    setMarginInfo(&marginInfo);
+    ctx.setMarginInfo(this, &marginInfo);
 
     if (!marginInfo.canCollapseTopWithChildren()) {
         ctx.setMaxMarginTop(0, 0);
@@ -156,7 +156,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         estimateLogicalPosition(child, ctx, marginInfo, isSelfCollapsing,
                                 false);
         LayoutUnit advanceY =
-            child->asFrameBox()->marginCollapseResult().m_advanceY;
+            ctx.marginCollapseResult(child->asFrameBox()).m_advanceY;
 
         Length marginLeft = child->style()->marginLeft();
         Length marginRight = child->style()->marginRight();
@@ -182,11 +182,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     marginInfo.setMaxNegativeMarginTop(oldMaxNegativeMarginTop);
                 }
                 MarginCollapseResult r =
-                    child->asFrameBox()->marginCollapseResult();
+                    ctx.marginCollapseResult(child->asFrameBox());
                 r.m_advanceY = clearedDistanceToFloatBottom;
-                child->asFrameBox()->setMarginCollapseResult(r);
-                advanceY =
-                    child->asFrameBox()->marginCollapseResult().m_advanceY;
+                ctx.setMarginCollapseResult(child->asFrameBox(), r);
+                advanceY = r.m_advanceY;
             }
         }
 
@@ -212,25 +211,23 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         std::pair<LayoutUnit, LayoutUnit> tops = estimateLogicalPosition(
             child, ctx, marginInfo, isSelfCollapsing, ignoreMarginCollapse);
-        if (advanceY !=
-            child->asFrameBox()->marginCollapseResult().m_advanceY) {
+
+        MarginCollapseResult r = ctx.marginCollapseResult(child->asFrameBox());
+        if (advanceY != r.m_advanceY) {
             if (clearAffected && !ignoreMarginCollapse) {
                 // Already advanceY is calculated considering clearance, if the
                 // real margin collapsed y position is less than advanceY,
                 // this position repeatedly is pulled down to the advanceY.
                 // Therefore, in this case, relayout should not happen.
-                if (advanceY <
-                    child->asFrameBox()->marginCollapseResult().m_advanceY) {
+                if (advanceY < r.m_advanceY) {
                     reLayoutNeeded |= clearedDistanceToFloatBottom > 0;
-                    advanceY =
-                        child->asFrameBox()->marginCollapseResult().m_advanceY;
+                    advanceY = r.m_advanceY;
                 } else {
                     reLayoutNeeded = false;
                 }
             } else {
                 reLayoutNeeded |= clearedDistanceToFloatBottom > 0;
-                advanceY =
-                    child->asFrameBox()->marginCollapseResult().m_advanceY;
+                advanceY = r.m_advanceY;
             }
 
             if (reLayoutNeeded) {
@@ -414,8 +411,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     ctx.setMaxMarginBottom(marginInfo.positiveMargin(),
                            marginInfo.negativeMargin());
     if (!marginInfo.canCollapseWithMarginBottom()) {
-        m_marginCollapseResult.m_normalFlowHeightAdvance =
+        auto r = ctx.marginCollapseResult(this);
+        r.m_normalFlowHeightAdvance =
             ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
+        ctx.setMarginCollapseResult(this, r);
         ctx.setMaxMarginBottom(0, 0);
     }
 
@@ -427,8 +426,11 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         }
     }
 
-    normalFlowHeight = maxNormalFlowBottom - top +
-                       m_marginCollapseResult.m_normalFlowHeightAdvance;
+    {
+        auto r = ctx.marginCollapseResult(this);
+        normalFlowHeight =
+            maxNormalFlowBottom - top + r.m_normalFlowHeightAdvance;
+    }
 
     return normalFlowHeight;
 }

@@ -66,6 +66,7 @@ void FrameReplacedIFrame::establishesStackingContextIfNeeds()
                 ->window()
                 ->document()
                 ->frame()
+                ->asFrameBox()
                 ->setLayoutParent(this);
         }
     }

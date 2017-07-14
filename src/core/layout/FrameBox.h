@@ -24,11 +24,6 @@ namespace StarFish {
 class Canvas;
 class LineBox;
 
-struct MarginCollapseResult {
-    LayoutUnit m_advanceY;
-    LayoutUnit m_normalFlowHeightAdvance;
-};
-
 struct HorizontalDataLocToContainingBlock {
     LayoutUnit m_contentWidth;
     LayoutUnit m_absX;
@@ -65,13 +60,12 @@ class FrameBox : public Frame {
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
+        , m_layoutParent(nullptr)
         , m_frameRect(0, 0, 0, 0)
         , m_padding()
         , m_border()
         , m_margin()
-        , m_marginCollapseResult()
         , m_stackingContext(nullptr)
-        , m_inlineBoxIndex(SIZE_MAX)
     {
     }
 
@@ -380,16 +374,6 @@ public:
 
     LayoutUnit lineHeight();
 
-    void setMarginCollapseResult(const MarginCollapseResult& r)
-    {
-        m_marginCollapseResult = r;
-    }
-
-    const MarginCollapseResult& marginCollapseResult()
-    {
-        return m_marginCollapseResult;
-    }
-
     virtual void paintChildrenWith(PaintingContext& ctx);
 
     static void paintBackground(Canvas* canvas, ComputedStyle* style,
@@ -481,16 +465,6 @@ public:
     {
     }
 
-    void setInlineBoxIndex(size_t inlineBoxIdx)
-    {
-        m_inlineBoxIndex = inlineBoxIdx;
-    }
-
-    size_t inlineBoxIndex()
-    {
-        return m_inlineBoxIndex;
-    }
-
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
@@ -501,6 +475,22 @@ public:
         }
     }
 
+    virtual void setParent(Frame* f)
+    {
+        Frame::setParent(f);
+        m_layoutParent = f;
+    }
+
+    void setLayoutParent(Frame* f)
+    {
+        m_layoutParent = f;
+    }
+
+    virtual Frame* layoutParent() const
+    {
+        return m_layoutParent;
+    }
+
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width,
                                          LayoutUnit parentWidth);
@@ -508,14 +498,13 @@ protected:
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,
                                           bool parentHasFixedValue);
+    Frame* m_layoutParent;
+
     // content + padding + border
     LayoutRect m_frameRect;
 
     LayoutBoxSurroundData m_padding, m_border, m_margin;
-    MarginCollapseResult m_marginCollapseResult;
     StackingContext* m_stackingContext;
-
-    size_t m_inlineBoxIndex;
 };
 }
 

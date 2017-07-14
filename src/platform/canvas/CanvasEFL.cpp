@@ -222,32 +222,36 @@ public:
     // state
     virtual void save()
     {
-        CanvasStateEFL state;
-        if (m_state.size()) {
-            state.m_matrix = lastState().m_matrix;
-            state.m_clipRect = lastState().m_clipRect;
-            state.m_clipPath = lastState().m_clipPath;
-            state.m_clipper = lastState().m_clipper;
-            state.m_color = lastState().m_color;
-            state.m_opacity = lastState().m_opacity;
-            state.m_baseX = lastState().m_baseX;
-            state.m_baseY = lastState().m_baseY;
-            state.m_font = lastState().m_font;
-            state.m_mapMode = lastState().m_mapMode;
-            state.m_visible = lastState().m_visible;
-            state.m_didClip = lastState().m_didClip;
-            state.m_hasPathClip = lastState().m_hasPathClip;
-            state.m_hasUnderLine = lastState().m_hasUnderLine;
-            state.m_hasLineThrough = lastState().m_hasLineThrough;
-            state.m_underLineColor = lastState().m_underLineColor;
-            state.m_lineThroughColor = lastState().m_lineThroughColor;
+        size_t size = m_state.size();
+        m_state.push_back(CanvasStateEFL());
+        auto& state = m_state.back();
+
+        if (size) {
+            auto& last = m_state[size - 1];
+            state.m_matrix = last.m_matrix;
+            state.m_clipRect = last.m_clipRect;
+            if (last.m_hasPathClip)
+                state.m_clipPath = last.m_clipPath;
+            state.m_clipper = last.m_clipper;
+            state.m_color = last.m_color;
+            state.m_opacity = last.m_opacity;
+            state.m_baseX = last.m_baseX;
+            state.m_baseY = last.m_baseY;
+            state.m_font = last.m_font;
+            state.m_mapMode = last.m_mapMode;
+            state.m_visible = last.m_visible;
+            state.m_didClip = last.m_didClip;
+            state.m_hasPathClip = last.m_hasPathClip;
+            state.m_hasUnderLine = last.m_hasUnderLine;
+            state.m_hasLineThrough = last.m_hasLineThrough;
+            state.m_underLineColor = last.m_underLineColor;
+            state.m_lineThroughColor = last.m_lineThroughColor;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
                                      SkFloatToScalar((float)m_height));
             state.m_clipper = NULL;
         }
-        m_state.push_back(state);
     }
 
     // pop state stack and restore state
