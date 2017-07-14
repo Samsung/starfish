@@ -1693,7 +1693,7 @@ void LineFormattingContext::resetLineBox()
             m_pendingFloatingBoxes.size();
     }
     m_isPendingBreakLine = false;
-    m_isHyphenAtLast = false;
+    m_isSoftHyphenAtLast = false;
     m_isWhiteSpaceAtLast = true;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
 }
@@ -1924,20 +1924,25 @@ bool LineFormattingContext::dontBreakLine(Frame* f, LayoutUnit width)
 
 void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)
 {
+    if (!m_isSoftHyphenAtLast) {
+        return;
+    }
+
     // It can behave different depending on the language.
     // Please refer to http://unicode.org/reports/tr14/#SoftHyphen
-    InlineTextBox* itb = nullptr;
+    InlineBoxLayoutParentBox* parent;
     if (isWordProcessing()) {
-        itb = (*m_word.boxes().begin())->asInlineTextBox();
+        parent = (*m_word.boxes().begin())
+                     ->layoutParent()
+                     ->asInlineBoxLayoutParentBox();
     } else {
-        itb = (*m_currentLayoutParent->boxes().rbegin())->asInlineTextBox();
+        parent = m_currentLayoutParent;
     }
+    InlineTextBox* itb = (*parent->boxes().rbegin())->asInlineTextBox();
     const StringView& sv = itb->textRun().m_stringView;
     size_t start = sv.start();
     size_t end = sv.end();
-    if (!isSoftHyphen(sv.originalString()->charAt(end - 1))) {
-        return;
-    }
+    STARFISH_ASSERT(isSoftHyphen(sv.originalString()->charAt(end - 1)));
     StringBuilder builder;
     builder.appendSubString(sv.originalString(), start, end - 1);
     if (hyphenateOnLine) {
@@ -1950,20 +1955,18 @@ void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)
         itb->asInlineTextBox()->textRun().m_stringView));
     itb->setHeight(itb->style()->font()->metrics().m_fontHeight);
     m_currentLineWidth += itb->width() - width;
-    m_isHyphenAtLast = false;
+    m_isSoftHyphenAtLast = false;
 }
 
 void LineFormattingContext::insertWord(Frame* next)
 {
     if (!isWordProcessing()) {
-        m_isHyphenAtLast = false;
+        handleSoftHyphenate(false);
         return;
     }
 
     if (dontBreakLine(m_word.boxes()[0], m_word.width())) {
-        if (m_isHyphenAtLast) {
-            handleSoftHyphenate(false);
-        }
+        handleSoftHyphenate(false);
         auto& boxes = m_word.boxes();
         auto iter = boxes.begin();
         m_currentLayoutParent =
@@ -2029,7 +2032,6 @@ void LineFormattingContext::insertWord(Frame* next)
         }
 
         m_word.clear();
-        m_isHyphenAtLast = false;
     } else {
         if (isFirstLineBox() && m_block->node() &&
             m_block->node()->asElement()->hasPseudoElement(
@@ -2037,9 +2039,7 @@ void LineFormattingContext::insertWord(Frame* next)
             m_word.unmarkFirstLine();
         }
 
-        if (m_isHyphenAtLast) {
-            handleSoftHyphenate(true);
-        }
+        handleSoftHyphenate(true);
 
         auto& boxes = m_word.boxes();
         m_currentLayoutParent =
@@ -2281,7 +2281,7 @@ void LineFormattingContext::handleTextToken(TextToken& token)
 
     if (isHyphenAtLast) {
         insertWord(token.m_frameText);
-        m_isHyphenAtLast = isHyphenAtLast;
+        m_isSoftHyphenAtLast = isSoftHyphen(c);
     }
 }
 
@@ -2473,9 +2473,8 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
     // There are different policies between browsers. In chrome, soft hyphen
     // isn't visible when FrameInline comes next, not in fire-fox, though.
     // Here we follow the policy of chrome.
-    if (ctx.m_isHyphenAtLast) {
-        ctx.handleSoftHyphenate(false);
-    }
+    ctx.handleSoftHyphenate(false);
+
     InlineNonReplacedBox* inlineBox =
         new InlineNonReplacedBox(this, ctx.isFirstLineBox());
 
@@ -2866,9 +2865,7 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
     if (isLastNode) {
         self->processStartingMBP(this);
         self->processEndingMBP(this);
-        if (m_isHyphenAtLast) {
-            handleSoftHyphenate(false);
-        }
+        handleSoftHyphenate(false);
     }
 
     InlineNonReplacedBox* current = self;
