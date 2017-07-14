@@ -34,6 +34,130 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, load);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 
+class XMLHttpRequestResourceRequestClient : public ResourceRequestClient {
+public:
+    XMLHttpRequestResourceRequestClient(XMLHttpRequest* xhr)
+        : m_xhr(xhr)
+    {
+    }
+    void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
+    {
+        String* eventName = String::emptyString;
+        ResourceRequest::ProgressState progState = request->progressState();
+        if (progState == ResourceRequest::PROGRESS) {
+            eventName =
+                request->starFish()->staticStrings()->m_progress.localName();
+        } else if (progState == ResourceRequest::ERROR) {
+            eventName =
+                request->starFish()->staticStrings()->m_error.localName();
+            if (!m_xhr->m_resourceRequest->url()->isFileURL() &&
+                !m_xhr->m_resourceRequest->url()->isDataURL() &&
+                request->isSync()) {
+                throw new DOMException(
+                    m_xhr->scriptBindingInstance()->ownerDocument(),
+                    DOMException::NETWORK_ERR, "NetworkError");
+            }
+        } else if (progState == ResourceRequest::ABORT) {
+            if (isExplicitAction) {
+                return;
+            }
+            eventName =
+                request->starFish()->staticStrings()->m_abort.localName();
+        } else if (progState == ResourceRequest::TIMEOUT) {
+            eventName =
+                request->starFish()->staticStrings()->m_timeout.localName();
+        } else if (progState == ResourceRequest::LOAD) {
+            eventName =
+                request->starFish()->staticStrings()->m_load.localName();
+        } else if (progState == ResourceRequest::LOADEND) {
+            eventName =
+                request->starFish()->staticStrings()->m_loadend.localName();
+        } else if (progState == ResourceRequest::LOADSTART) {
+            eventName =
+                request->starFish()->staticStrings()->m_loadstart.localName();
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        ProgressEvent* pe = new ProgressEvent(
+            m_xhr->scriptBindingInstance()->ownerDocument(), eventName);
+        pe->setLengthComputable(request->total() > 0);
+        pe->setLoaded(request->loaded());
+        pe->setTotal(request->total());
+        m_xhr->EventTarget::dispatchEvent(m_xhr, pe);
+    }
+
+    void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
+    {
+        if (fromExplicit) {
+            if (request->readyState() == ResourceRequest::ReadyState::DONE) {
+                if (m_xhr->m_responseType ==
+                        XMLHttpRequest::ResponseType::Unspecified ||
+                    m_xhr->m_responseType ==
+                        XMLHttpRequest::ResponseType::Text) {
+                    TextConverter textConverter(
+                        m_xhr->m_resourceRequest->responseMimeType(),
+                        String::fromUTF8("UTF-8"),
+                        m_xhr->m_resourceRequest->response().data(),
+                        m_xhr->m_resourceRequest->response().size());
+                    m_xhr->m_responseText = textConverter.convert(
+                        m_xhr->m_resourceRequest->response().data(),
+                        m_xhr->m_resourceRequest->response().size(), true);
+                    m_xhr->m_resourceRequest->response().clear();
+                } else if (m_xhr->m_responseType ==
+                           XMLHttpRequest::ResponseType::Json) {
+                    TextConverter cvt(
+                        m_xhr->m_resourceRequest->responseMimeType(),
+                        String::fromUTF8("UTF-8"),
+                        m_xhr->m_resourceRequest->response().data(),
+                        m_xhr->m_resourceRequest->response().size());
+                    String* text = cvt.convert(
+                        m_xhr->m_resourceRequest->response().data(),
+                        m_xhr->m_resourceRequest->response().size(), true);
+                    m_xhr->m_responseJsonObject =
+                        parseJSON(m_xhr->scriptBindingInstance(), text);
+                } else if (m_xhr->m_responseType ==
+                           XMLHttpRequest::ResponseType::Blob) {
+                    void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
+                        m_xhr->m_resourceRequest->response().size());
+                    memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
+                           m_xhr->m_resourceRequest->response().size());
+                    m_xhr->m_responseBlob = new ::StarFish::Blob(
+                        m_xhr->scriptBindingInstance()->ownerDocument(),
+                        m_xhr->m_resourceRequest->response().size(),
+                        m_xhr->m_resourceRequest->responseMimeType(), buffer,
+                        false, false);
+                    m_xhr->m_resourceRequest->response().clear();
+                    m_xhr->m_resourceRequest->response().shrink_to_fit();
+                } else if (m_xhr->m_responseType ==
+                           XMLHttpRequest::ResponseType::ArrayBuffer) {
+                    void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
+                        m_xhr->m_resourceRequest->response().size());
+                    memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
+                           m_xhr->m_resourceRequest->response().size());
+                    m_xhr->m_responseArrayBuffer = createArrayBuffer(
+                        m_xhr->scriptBindingInstance(), buffer,
+                        m_xhr->m_resourceRequest->response().size());
+                    m_xhr->m_resourceRequest->response().clear();
+                    m_xhr->m_resourceRequest->response().shrink_to_fit();
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+            }
+
+            String* eventType = request->starFish()
+                                    ->staticStrings()
+                                    ->m_readystatechange.localName();
+            Event* e =
+                new Event(m_xhr->scriptBindingInstance()->ownerDocument(),
+                          eventType, EventInit(true, true));
+            m_xhr->EventTarget::dispatchEvent(m_xhr, e);
+        }
+    }
+
+    XMLHttpRequest* m_xhr;
+};
+
 XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_resourceRequest(new ResourceRequest(document))
@@ -46,7 +170,8 @@ XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
 
     m_responseType = ResponseType::Unspecified;
     initResponseData();
-    m_resourceRequest->addResourceRequestClient(this);
+    m_resourceRequest->addResourceRequestClient(
+        new XMLHttpRequestResourceRequestClient(this));
 }
 
 void XMLHttpRequest::initResponseData()
@@ -289,108 +414,6 @@ void XMLHttpRequest::setRequestHeader(String* h, String* c)
                                DOMException::SYNTAX_ERR, "InvalidStateError");
     }
     m_resourceRequest->setRequestHeader(h, c);
-}
-
-void XMLHttpRequest::onProgressEvent(ResourceRequest* request,
-                                     bool isExplicitAction)
-{
-    String* eventName = String::emptyString;
-    ResourceRequest::ProgressState progState = request->progressState();
-    if (progState == ResourceRequest::PROGRESS) {
-        eventName =
-            request->starFish()->staticStrings()->m_progress.localName();
-    } else if (progState == ResourceRequest::ERROR) {
-        eventName = request->starFish()->staticStrings()->m_error.localName();
-        if (!m_resourceRequest->url()->isFileURL() &&
-            !m_resourceRequest->url()->isDataURL() && request->isSync()) {
-            throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                                   DOMException::NETWORK_ERR, "NetworkError");
-        }
-    } else if (progState == ResourceRequest::ABORT) {
-        if (isExplicitAction) {
-            return;
-        }
-        eventName = request->starFish()->staticStrings()->m_abort.localName();
-    } else if (progState == ResourceRequest::TIMEOUT) {
-        eventName = request->starFish()->staticStrings()->m_timeout.localName();
-    } else if (progState == ResourceRequest::LOAD) {
-        eventName = request->starFish()->staticStrings()->m_load.localName();
-    } else if (progState == ResourceRequest::LOADEND) {
-        eventName = request->starFish()->staticStrings()->m_loadend.localName();
-    } else if (progState == ResourceRequest::LOADSTART) {
-        eventName =
-            request->starFish()->staticStrings()->m_loadstart.localName();
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    ProgressEvent* pe =
-        new ProgressEvent(scriptBindingInstance()->ownerDocument(), eventName);
-    pe->setLengthComputable(request->total() > 0);
-    pe->setLoaded(request->loaded());
-    pe->setTotal(request->total());
-    EventTarget::dispatchEvent(this, pe);
-}
-
-void XMLHttpRequest::onReadyStateChange(ResourceRequest* request,
-                                        bool fromExplicit)
-{
-    if (fromExplicit) {
-        if (request->readyState() == ResourceRequest::ReadyState::DONE) {
-            if (m_responseType == ResponseType::Unspecified ||
-                m_responseType == ResponseType::Text) {
-                TextConverter textConverter(
-                    m_resourceRequest->responseMimeType(),
-                    String::fromUTF8("UTF-8"),
-                    m_resourceRequest->response().data(),
-                    m_resourceRequest->response().size());
-                m_responseText = textConverter.convert(
-                    m_resourceRequest->response().data(),
-                    m_resourceRequest->response().size(), true);
-                m_resourceRequest->response().clear();
-            } else if (m_responseType == ResponseType::Json) {
-                TextConverter cvt(m_resourceRequest->responseMimeType(),
-                                  String::fromUTF8("UTF-8"),
-                                  m_resourceRequest->response().data(),
-                                  m_resourceRequest->response().size());
-                String* text =
-                    cvt.convert(m_resourceRequest->response().data(),
-                                m_resourceRequest->response().size(), true);
-                m_responseJsonObject = parseJSON(scriptBindingInstance(), text);
-            } else if (m_responseType == ResponseType::Blob) {
-                void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_resourceRequest->response().size());
-                memcpy(buffer, m_resourceRequest->response().data(),
-                       m_resourceRequest->response().size());
-                m_responseBlob = new ::StarFish::Blob(
-                    scriptBindingInstance()->ownerDocument(),
-                    m_resourceRequest->response().size(),
-                    m_resourceRequest->responseMimeType(), buffer, false,
-                    false);
-                m_resourceRequest->response().clear();
-                m_resourceRequest->response().shrink_to_fit();
-            } else if (m_responseType == ResponseType::ArrayBuffer) {
-                void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                    m_resourceRequest->response().size());
-                memcpy(buffer, m_resourceRequest->response().data(),
-                       m_resourceRequest->response().size());
-                m_responseArrayBuffer =
-                    createArrayBuffer(scriptBindingInstance(), buffer,
-                                      m_resourceRequest->response().size());
-                m_resourceRequest->response().clear();
-                m_resourceRequest->response().shrink_to_fit();
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        }
-
-        String* eventType = request->starFish()
-                                ->staticStrings()
-                                ->m_readystatechange.localName();
-        Event* e = new Event(scriptBindingInstance()->ownerDocument(),
-                             eventType, EventInit(true, true));
-        EventTarget::dispatchEvent(this, e);
-    }
 }
 
 String* XMLHttpRequest::getAllResponseHeaders()
