@@ -20,6 +20,7 @@
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLBRElement.h"
+#include "core/dom/HTMLButtonElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLFieldSetElement.h"
@@ -159,6 +160,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTrackElement(document);
     } else if (name == str->m_sourceTagName.localNameAtomic()) {
         return new HTMLSourceElement(document);
+    } else if (name == str->m_buttonTagName.localNameAtomic()) {
+        return new HTMLButtonElement(document);
     }
 #endif
 
