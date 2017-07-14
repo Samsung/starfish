@@ -6,9 +6,9 @@ interface NamedNodeMap {
   readonly attribute unsigned long length;
   getter Attr? item(unsigned long index);
   [NotEnumerable] getter Attr? getNamedItem(DOMString qualifiedName);
-  [Unimplemented] Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
+  Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
   [CEReactions, RaisesException] Attr? setNamedItem(Attr attr);
-  [Unimplemented, CEReactions] Attr? setNamedItemNS(Attr attr);
+  [CEReactions, RaisesException] Attr? setNamedItemNS(Attr attr);
   [CEReactions, RaisesException] Attr removeNamedItem(DOMString qualifiedName);
-  [Unimplemented, CEReactions] Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
+  [CEReactions, RaisesException] Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
 };

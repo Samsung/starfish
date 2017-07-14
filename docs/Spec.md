@@ -259,7 +259,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | void removeAttribute(DOMString qualifiedName) | Removes the first attribute from the context object whose name is name, if any. |
 |  | method | boolean hasAttribute(DOMString qualifiedName) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
 |  | method | Attr? getAttributeNode(DOMString qualifiedName) | Returns the specified attribute of the specified element, as an Attr node. |
+|  | method | Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName) | Retrieves an Attr node by local name and namespace URI. |
 |  | method | Attr? setAttributeNode(Attr attr) | Adds a new Attr node to the specified element. If the attribute named already exists on the element, that attribute is replaced with the new one and the replaced one is returned. |
+|  | method | Attr? setAttributeNodeNS(Attr attr) | Adds a new Attr node. If an attribute with that local name and that namespace URI is already present in the element, it is replaced by the new one. |
 |  | method | Attr removeAttributeNode(Attr attr) | Removes the specified attribute from the current element. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
@@ -411,8 +413,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | length | Return the attribute list’s size. |
 |  | method | Attr? item(unsigned long index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
 |  | method | Attr? getNamedItem(DOMString qualifiedName) | Return the result of getting an attribute given qualifiedName and element. |
+|  | method | Attr? getNamedItemNS(DOMString? namespace, DOMString localName) | Retrieves a node specified by local name and namespace URI. |
 |  | method | Attr? setNamedItem(Attr attr) | Return the result of setting an attribute given attr and element. |
+|  | method | Attr? setNamedItemNS(Attr attr) | Return the result of setting an attribute given attr and element. |
 |  | method | Attr removeNamedItem(DOMString qualifiedName) | Remove the attribute identified by the given map. |
+|  | method | Attr removeNamedItemNS(DOMString? namespace, DOMString localName) | Removes a node specified by local name and namespace URI. |
 | [Node](https://dom.spec.whatwg.org/#interface-node) | interface | Node | Node is an abstract interface and does not exist as node. It is used by all nodes (Document, DocumentType, DocumentFragment, Element, Text, ProcessingInstruction, and Comment). |
 |  | constant | ELEMENT_NODE | Node is an element. |
 |  | constant | ATTRIBUTE_NODE | Node is an attribute |
