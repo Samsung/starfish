@@ -554,7 +554,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
     if (newStyle->m_textDecoration != oldStyle->m_textDecoration) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->m_opacity != oldStyle->m_opacity) {

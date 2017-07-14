@@ -29,7 +29,6 @@ class FrameBlockBox;
 class FrameInline;
 class FrameTableCaptionBox;
 class FrameTableCellBox;
-class FrameTextTextDecorationData;
 class Node;
 class StyleResolver;
 
@@ -37,11 +36,7 @@ class FrameTreeBuilderContext {
 public:
     FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer);
     void setCurrentBlockContainer(FrameBlockBox* blockContainer);
-    void setCurrentTextDecorationData(FrameTextTextDecorationData* deco);
     FrameBlockBox* currentBlockContainer();
-    void computeTextDecorationData(ComputedStyle* style);
-    void mergeTextDecorationData(ComputedStyle* style);
-    FrameTextTextDecorationData* currentDecorationData();
     std::unordered_map<Node*, FrameInline*>& frameInlineItem();
     bool isInFrameInlineFlow();
     void setIsInFrameInlineFlow(bool b);
@@ -49,7 +44,6 @@ public:
 protected:
     bool m_isInFrameInlineFlow;
     FrameBlockBox* m_currentBlockContainer;
-    FrameTextTextDecorationData* m_currentDecorationData;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
         m_frameInlineItem;

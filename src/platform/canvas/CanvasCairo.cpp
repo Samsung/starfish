@@ -117,17 +117,15 @@ public:
     virtual void save()
     {
         CanvasStateCairo state;
+        auto& lastState = m_state.back();
         if (m_state.size()) {
-            state.m_color = lastState().m_color;
-            state.m_opacity = lastState().m_opacity;
-            state.m_baseX = lastState().m_baseX;
-            state.m_baseY = lastState().m_baseY;
-            state.m_font = lastState().m_font;
-            state.m_visible = lastState().m_visible;
-            state.m_hasUnderLine = lastState().m_hasUnderLine;
-            state.m_hasLineThrough = lastState().m_hasLineThrough;
-            state.m_underLineColor = lastState().m_underLineColor;
-            state.m_lineThroughColor = lastState().m_lineThroughColor;
+            state.m_color = lastState.m_color;
+            state.m_opacity = lastState.m_opacity;
+            state.m_baseX = lastState.m_baseX;
+            state.m_baseY = lastState.m_baseY;
+            state.m_font = lastState.m_font;
+            state.m_visible = lastState.m_visible;
+            state.m_textDecorationData = lastState.m_textDecorationData;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -158,16 +156,14 @@ public:
     virtual void replace(CanvasState* state)
     {
         CanvasStateCairo* cairoState = (CanvasStateCairo*)state;
-        lastState().m_color = cairoState->m_color;
-        lastState().m_opacity = cairoState->m_opacity;
-        lastState().m_baseX = cairoState->m_baseX;
-        lastState().m_baseY = cairoState->m_baseY;
-        lastState().m_font = cairoState->m_font;
-        lastState().m_visible = cairoState->m_visible;
-        lastState().m_hasUnderLine = cairoState->m_hasUnderLine;
-        lastState().m_hasLineThrough = cairoState->m_hasLineThrough;
-        lastState().m_underLineColor = cairoState->m_underLineColor;
-        lastState().m_lineThroughColor = cairoState->m_lineThroughColor;
+        auto& lastState = m_state.back();
+        lastState.m_color = cairoState->m_color;
+        lastState.m_opacity = cairoState->m_opacity;
+        lastState.m_baseX = cairoState->m_baseX;
+        lastState.m_baseY = cairoState->m_baseY;
+        lastState.m_font = cairoState->m_font;
+        lastState.m_visible = cairoState->m_visible;
+        lastState.m_textDecorationData = cairoState->m_textDecorationData;
         cairo_set_matrix(m_canvas, &cairoState->m_matrix);
     }
 
@@ -242,24 +238,14 @@ public:
         lastState().m_font = font;
     }
 
-    virtual void setNeedsUnderline(bool b)
+    virtual void resetTextDecorationData()
     {
-        lastState().m_hasUnderLine = b;
+        lastState().m_textDecorationData.reset();
     }
 
-    virtual void setNeedsLineThrough(bool b)
+    virtual void mergeTextDecorationData(ComputedStyle* style)
     {
-        lastState().m_hasLineThrough = b;
-    }
-
-    virtual void setUnderlineColor(Unit::Color clr)
-    {
-        lastState().m_underLineColor = clr;
-    }
-
-    virtual void setLineThroughColor(Unit::Color clr)
-    {
-        lastState().m_lineThroughColor = clr;
+        lastState().m_textDecorationData.merge(style);
     }
 
     virtual void punchHole(const Unit::Rect& rt)

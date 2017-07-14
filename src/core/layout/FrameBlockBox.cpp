@@ -707,6 +707,13 @@ void FrameBlockBox::paint(PaintingContext& ctx)
 
     ctx.m_canvas->save();
 
+    if (!isNormalFlow() || style()->display() == InlineBlockDisplayValue ||
+        style()->display() == InlineTableDisplayValue) {
+        ctx.m_canvas->resetTextDecorationData();
+    } else {
+        ctx.m_canvas->mergeTextDecorationData(style());
+    }
+
     bool overflowApplied = shouldApplyOverflow();
     if (overflowApplied) {
         ctx.m_canvas->clip(Unit::Rect(0, 0, width(), height()));
