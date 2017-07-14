@@ -32,12 +32,12 @@ HTMLButtonElement::HTMLButtonElement(Document* document)
 
 String* HTMLButtonElement::localName()
 {
-    return starFish()->staticStrings()->m_formTagName.localName();
+    return starFish()->staticStrings()->m_buttonTagName.localName();
 }
 
 QualifiedName HTMLButtonElement::name()
 {
-    return starFish()->staticStrings()->m_formTagName;
+    return starFish()->staticStrings()->m_buttonTagName;
 }
 
 String* HTMLButtonElement::domName()
