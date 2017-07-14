@@ -859,7 +859,7 @@ public:
     InlineBoxLayoutParentBox* m_currentLayoutParent;
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;
-    bool m_isHyphenAtLast;
+    bool m_isSoftHyphenAtLast;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
