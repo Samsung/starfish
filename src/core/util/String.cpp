@@ -351,7 +351,7 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
         src += utf8ToUtf32(src, end, c);
         data[i++] = c;
     }
-    m_data = data;
+    m_data = SimpleStringBufferHolder<char32_t>(data.takeBuffer(), utf32Length);
 }
 
 // TODO use BufferAccessData for performance

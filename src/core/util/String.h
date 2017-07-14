@@ -445,18 +445,70 @@ protected:
     bool isASCIIStringData(const char* str);
 };
 
+template <typename T>
+class SimpleStringBufferHolder : public gc {
+public:
+    SimpleStringBufferHolder()
+    {
+        m_buffer = nullptr;
+        m_length = 0;
+    }
+
+    SimpleStringBufferHolder(const T* buffer, size_t length)
+    {
+        copyFrom(buffer, length);
+    }
+
+    enum TakeBuffer { TakeBufferValue };
+
+    // buffer length is must lager of equal than length + 1
+    SimpleStringBufferHolder(T* buffer, size_t length, TakeBuffer)
+    {
+        if (buffer[length] == 0) {
+            m_buffer = buffer;
+            m_length = length;
+        } else {
+            copyFrom(buffer, length);
+        }
+    }
+
+    const T* data() const
+    {
+        return m_buffer;
+    }
+
+    size_t length() const
+    {
+        return m_length;
+    }
+
+private:
+    void copyFrom(const T* buffer, size_t length)
+    {
+        m_buffer =
+            (T*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(sizeof(T) * (length + 1));
+        memcpy(m_buffer, buffer, sizeof(T) * length);
+        m_buffer[length] = 0;
+        m_length = length;
+    }
+    T* m_buffer;
+    size_t m_length;
+};
+
 class StringDataASCII : public String {
 public:
     StringDataASCII(ASCIIString&& str)
         : String()
-        , m_data(str)
     {
-        str.clear();
+        size_t length = str.length();
+        m_data = SimpleStringBufferHolder<char>(
+            str.takeBuffer(), length,
+            SimpleStringBufferHolder<char>::TakeBufferValue);
     }
 
     StringDataASCII(const char* str)
         : String()
-        , m_data(str)
+        , m_data(str, strlen(str))
     {
     }
 
@@ -473,7 +525,7 @@ public:
 
     virtual char32_t charAt(const size_t& idx) const override
     {
-        return m_data[idx];
+        return m_data.data()[idx];
     }
 
     virtual StringBufferAccessData bufferAccessData() const override
@@ -487,7 +539,7 @@ public:
     }
 
 protected:
-    ASCIIString m_data;
+    SimpleStringBufferHolder<char> m_data;
 };
 
 // WARNING: this class does not copy buffer
@@ -572,22 +624,27 @@ public:
 
     StringDataUTF32(const UTF32String& str)
         : String()
-        , m_data(str)
+        , m_data(str.data(), str.length())
     {
     }
 
     StringDataUTF32(UTF32String&& str)
         : String()
-        , m_data(str)
     {
-        str.clear();
+        size_t length = str.length();
+        m_data = SimpleStringBufferHolder<char32_t>(
+            str.takeBuffer(), length,
+            SimpleStringBufferHolder<char32_t>::TakeBufferValue);
     }
 
     StringDataUTF32(const char* src, size_t len);
     StringDataUTF32(const char32_t* str)
         : String()
-        , m_data(str)
     {
+        size_t length = 0;
+        while (!str[length++]) {
+        }
+        m_data = SimpleStringBufferHolder<char32_t>(str, length);
     }
 
     virtual size_t length() const override
@@ -597,7 +654,7 @@ public:
 
     virtual char32_t charAt(const size_t& idx) const override
     {
-        return m_data[idx];
+        return m_data.data()[idx];
     }
 
     virtual StringBufferAccessData bufferAccessData() const override
@@ -611,7 +668,7 @@ public:
     }
 
 protected:
-    UTF32String m_data;
+    SimpleStringBufferHolder<char32_t> m_data;
 };
 
 // WARNING: this class does not copy buffer

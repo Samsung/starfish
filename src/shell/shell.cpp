@@ -269,12 +269,6 @@ private:
 };
 #endif
 
-template <const int siz>
-inline void __attribute__((optimize("O0"))) clearStack()
-{
-    volatile char a[siz] = { 0 };
-}
-
 int main(int argc, char* argv[])
 {
 #ifndef NDEBUG
@@ -450,7 +444,7 @@ int main(int argc, char* argv[])
     elm_shutdown();
 
 #ifndef NDEBUG
-    clearStack<10240>();
+    clearStack<102400>();
 #endif
 
     GC_gcollect_and_unmap();
