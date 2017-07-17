@@ -152,7 +152,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     bool parentHasFixedHeight;
     bool hasAspectRatio;
 
-    if (style()->position() == AbsolutePositionValue) {
+    if (isAbsolutePositioned()) {
         parentContentWidth = cb->contentWidth() + cb->paddingWidth();
         parentHasFixedHeight = true;
         parentContentHeight = cb->contentHeight() + cb->paddingHeight();
@@ -229,7 +229,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
         computeBorderMarginPadding(parentContentWidth);
         computeContentWidthAndHeight(ctx, cb);
 
-        if (style()->position() == AbsolutePositionValue) {
+        if (isAbsolutePositioned()) {
             DirectionValue parentDirection =
                 ctx.blockContainer(this)->style()->direction();
             HorizontalDataLocToContainingBlock data =
@@ -296,7 +296,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
     }
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
-        if (style()->position() == AbsolutePositionValue) {
+        if (isAbsolutePositioned()) {
             FrameBox* cb = ctx.containingBlock(this);
             VerticalDataLocToContainingBlock data =
                 computeVerticalDataToContainingBlock(ctx, cb);

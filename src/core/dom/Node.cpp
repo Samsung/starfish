@@ -1840,6 +1840,8 @@ void Node::dumpStyle()
         printf("position: relative, ");
     } else if (m_style->position() == AbsolutePositionValue) {
         printf("position: absolute, ");
+    } else if (m_style->position() == FixedPositionValue) {
+        printf("position: fixed, ");
     }
 
     // width

@@ -282,11 +282,8 @@ public:
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
     FrameBlockBox* blockContainer(Frame* currentFrame);
-    FrameBlockBox* containingFrameBlockBox(
-        Frame* currentFrame); // this function returns the nearest
-                              // blockContainer
-    FrameBox* containingBlock(
-        Frame* currentFrame); // this function returns real containing block
+    FrameBlockBox* containingFrameBlockBox(Frame* currentFrame);
+    FrameBox* containingBlock(Frame* currentFrame);
 
     void pushInlineBlockBox(FrameBlockBox* blockBox)
     {
@@ -304,11 +301,13 @@ public:
         FrameBlockBox* box);
     void registerAbsolutePositionedBox(FrameBox* box);
 
-    void layoutRegisteredAbsolutePositionedBoxes(FrameBlockBox* containgBlock);
+    void layoutRegisteredAbsolutePositionedBoxes(
+        FrameBlockBox* containingBlock);
 
     void registerRelativePositionedBox(FrameBox* box, bool dueToSelf);
 
-    void layoutRegisteredRelativePositionedBoxes(FrameBlockBox* containgBlock);
+    void layoutRegisteredRelativePositionedBoxes(
+        FrameBlockBox* containingBlock);
 
     void setMarginCollapseResult(FrameBox* f, const MarginCollapseResult& r)
     {
@@ -1221,6 +1220,11 @@ public:
         return m_flags.m_needsGraphicsBuffer;
     }
 
+    bool isAbsolutePositioned()
+    {
+        return m_flags.m_isAbsolutePositioned;
+    }
+
     bool isFloating() const
     {
         return m_flags.m_isFloating;
@@ -1328,6 +1332,7 @@ protected:
         bool m_isLeftMBPCleared : 1;
         bool m_isRightMBPCleared : 1;
 
+        bool m_isAbsolutePositioned : 1;
         bool m_isFloating : 1;
 
         // special flag for FrameBlockBox
