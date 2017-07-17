@@ -1861,7 +1861,8 @@ public:
         PseudoElementFirstLetter = 1 << 1,
         PseudoElementBefore = 1 << 2,
         PseudoElementAfter = 1 << 3,
-        PseudoElementFirstLineInherited = 1 << 4
+        PseudoElementFirstLineInherited = 1 << 4,
+        PseudoElementFormOnly = 1 << 5,
     };
 
     enum Match {

@@ -39,6 +39,7 @@ class FrameTableCellBox;
 class FrameTableColBox;
 class FrameTableRowBox;
 class FrameTableSectionBox;
+class FrameInputBox;
 class FrameText;
 class InlineTextBox;
 class InlineNonReplacedBox;
@@ -799,6 +800,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameInputBox()
+    {
+        return false;
+    }
+
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());
@@ -900,6 +906,12 @@ public:
     {
         STARFISH_ASSERT(isFrameTableColBox());
         return (FrameTableColBox*)this;
+    }
+
+    FrameInputBox* asFrameInputBox()
+    {
+        STARFISH_ASSERT(isFrameInputBox());
+        return (FrameInputBox*)this;
     }
 
     bool isDirectDescendantOfTableCellBox()

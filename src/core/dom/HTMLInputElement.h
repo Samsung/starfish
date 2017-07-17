@@ -20,7 +20,7 @@
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
-
+class Event;
 class HTMLInputElement : public HTMLElement {
 public:
     HTMLInputElement(Document* document);
@@ -41,6 +41,11 @@ public:
 
     String* value();
     void setValue(String* value);
+
+    HTMLFormElement* form();
+
+    // Other methods
+    void handleDefaultEvent(Event* event);
 };
 }
 

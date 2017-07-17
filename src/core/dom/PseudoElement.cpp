@@ -62,7 +62,6 @@ QualifiedName PseudoElement::pseudoElementTagName(
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(
                                                  sf, "pseudo:first-letter"));
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
     }
     return QualifiedName(AtomicString(),
