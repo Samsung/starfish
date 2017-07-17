@@ -25,12 +25,21 @@ class HTMLTableElement : public HTMLElement {
 public:
     HTMLTableElement(Document* document)
         : HTMLElement(document)
+        , m_hasCellPaddingAttribute(false)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTableElement() const override;
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+    bool hasCellPaddingAttribute()
+    {
+        return m_hasCellPaddingAttribute;
+    }
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
@@ -43,7 +52,13 @@ public:
     void setBgColor(String* bgColor);
 
     String* cellspacing();
-    void setCellspacing(String* length);
+    void setCellspacing(String* cellspacing);
+
+    String* cellpadding();
+    void setCellpadding(String* cellpadding);
+
+private:
+    bool m_hasCellPaddingAttribute;
 };
 }
 

@@ -17,8 +17,22 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableCellElement.h"
-
+#include "core/dom/HTMLTableElement.h"
 namespace StarFish {
+
+HTMLTableElement* HTMLTableCellElement::tableElement()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (!(p->isHTMLTableElement() || p->isHTMLTableSectionElement() ||
+              p->isHTMLTableRowElement())) {
+            return nullptr;
+        }
+        if (p->isHTMLTableElement()) {
+            return p->asHTMLTableElement();
+        }
+    }
+    return nullptr;
+}
 
 uint32_t HTMLTableCellElement::colSpan()
 {

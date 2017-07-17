@@ -20,6 +20,26 @@
 
 namespace StarFish {
 
+void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+    if (name == starFish()->staticStrings()->m_cellpadding) {
+        if (attributeCreated) {
+            m_hasCellPaddingAttribute = true;
+        }
+        if (attributeRemoved) {
+            m_hasCellPaddingAttribute = false;
+        }
+        if (!old->equals(value)) {
+            setAttribute(starFish()->staticStrings()->m_cellpadding, value);
+            setNeedsStyleRecalc();
+        }
+    }
+}
+
 QualifiedName HTMLTableElement::name()
 {
     return starFish()->staticStrings()->m_tableTagName;
@@ -53,5 +73,15 @@ String* HTMLTableElement::cellspacing()
 void HTMLTableElement::setCellspacing(String* cellspacing)
 {
     setAttribute(starFish()->staticStrings()->m_cellspacing, cellspacing);
+}
+
+String* HTMLTableElement::cellpadding()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
+}
+
+void HTMLTableElement::setCellpadding(String* cellpadding)
+{
+    setAttribute(starFish()->staticStrings()->m_cellpadding, cellpadding);
 }
 }

@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class HTMLTableElement;
+
 class HTMLTableCellElement : public HTMLElement {
 public:
     HTMLTableCellElement(Document* document)
@@ -31,6 +33,8 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTableCellElement() const override;
+
+    HTMLTableElement* tableElement();
 
     // 4.4 Interface Node
     virtual QualifiedName name() = 0;
