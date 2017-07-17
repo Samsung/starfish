@@ -214,7 +214,7 @@ void Document::notifyDomContentLoaded()
     // Trigger HTMLMediaElement's preload
     // FIXME : Should consider detached HTMLMediaElements as well
     GCVector<Element*> mediaElements;
-    Traverse::getherDescendant(
+    Traverse::collectDescendants(
         mediaElements, this,
         [&](Element* element) { return element->isHTMLMediaElement(); }, false);
     for (size_t i = 0; i < mediaElements.size(); i++) {

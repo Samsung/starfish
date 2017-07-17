@@ -340,14 +340,14 @@ void BrowsingContext::iterateChildContext(
     const std::function<void(BrowsingContext*)>& fn)
 {
     GCVector<Element*> col;
-    Traverse::getherDescendant(col, document(),
-                               [](Node* nd) -> bool {
-                                   if (nd->isHTMLIFrameElement()) {
-                                       return true;
-                                   }
-                                   return false;
-                               },
-                               false);
+    Traverse::collectDescendants(col, document(),
+                                 [](Node* nd) -> bool {
+                                     if (nd->isHTMLIFrameElement()) {
+                                         return true;
+                                     }
+                                     return false;
+                                 },
+                                 false);
 
     for (size_t i = 0; i < col.size(); i++) {
         if (col[i]->asHTMLIFrameElement()->browsingContext()) {

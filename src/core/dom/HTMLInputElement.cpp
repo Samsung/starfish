@@ -90,7 +90,7 @@ void HTMLInputElement::handleDefaultEvent(Event* event)
             GCVector<Element*> inputNodes;
             HTMLFormElement* formNode = form();
             if (formNode) {
-                Traverse::getherDescendant(
+                Traverse::collectDescendants(
                     inputNodes, formNode->asNode(),
                     [](Node* node) -> bool {
                         return node->isHTMLInputElement();
