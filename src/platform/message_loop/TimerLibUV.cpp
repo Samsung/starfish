@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
@@ -28,7 +28,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
 
-#include <dali-toolkit/dali-toolkit.h>
+#include <uv.h>
 
 namespace StarFish {
 
@@ -40,84 +40,22 @@ Timer::Timer(StarFish* sf)
     m_AnimationCounter = 0;
 }
 
-class AnimationTickData : public Dali::ConnectionTracker, public gc {
-public:
-    AnimationTickData()
-    {
-    }
-
+struct AnimationTickData {
     Timer* m_timer;
     int32_t m_id;
-    Dali::Timer m_native_timer;
+    uv_timer_t m_timerID;
     void* m_data;
     GenericAnimationHandler m_handler;
     Window* m_window;
-
-    bool AnimationTick()
-    {
-        StarFishEnterer enter(m_timer->m_starFish);
-        auto a = m_timer->m_animationHandler.find(m_id);
-        if (m_handler(m_data)) {
-            return true;
-        }
-        a = m_timer->m_animationHandler.find(m_id);
-        if (m_timer->m_animationHandler.end() != a) {
-            m_timer->m_animationHandler.erase(a);
-        }
-        GC_FREE(this);
-        return false;
-    }
 };
 
-class TimeoutData : public Dali::ConnectionTracker, public gc {
-public:
-    TimeoutData()
-    {
-    }
-
+struct TimeoutData {
     Timer* m_timer;
     int32_t m_id;
-    Dali::Timer m_native_timer;
+    uv_timer_t m_timerID;
+    Window* m_window;
     void* m_data;
     WindowSetTimeoutHandler m_handler;
-    Window* m_window;
-
-    bool OnceTick()
-    {
-        StarFishEnterer enter(m_timer->m_starFish);
-        Timer* timer = m_timer;
-        int32_t id = m_id;
-        m_handler(m_window, m_data);
-        auto iter = timer->m_timeoutHandler.find(id);
-        if (iter != timer->m_timeoutHandler.end()) {
-            timer->m_timeoutHandler.erase(iter);
-            GC_FREE(this);
-        }
-        return false;
-    }
-
-    bool OnTick()
-    {
-        StarFishEnterer enter(m_timer->m_starFish);
-        Timer* timer = m_timer;
-        auto a = timer->m_timeoutHandler.find(m_id);
-        m_handler(m_window, m_data);
-        return true;
-    }
-
-    bool AnimationTick()
-    {
-        StarFishEnterer enter(m_timer->m_starFish);
-        Timer* timer = m_timer;
-        auto a = timer->m_requestAnimationFrameHandler.find(m_id);
-        m_handler(m_window, m_data);
-        a = timer->m_requestAnimationFrameHandler.find(m_id);
-        if (timer->m_requestAnimationFrameHandler.end() != a) {
-            timer->m_requestAnimationFrameHandler.erase(a);
-        }
-        GC_FREE(this);
-        return false;
-    }
 };
 
 size_t Timer::addTimer(double delay, Window* window,
@@ -125,22 +63,43 @@ size_t Timer::addTimer(double delay, Window* window,
                        bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
-
-    TimeoutData* td = new (NoGC) TimeoutData();
+    TimeoutData* td = new (NoGC) TimeoutData;
     td->m_timer = this;
     int32_t id = ++m_timeoutCounter;
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
     td->m_window = window;
-    td->m_native_timer = Dali::Timer::New((unsigned)delay);
+    uv_timer_init(uv_default_loop(), &td->m_timerID);
+    td->m_timerID.data = td;
     if (repetitive) {
-        td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnTick);
+        uv_timer_start(&td->m_timerID,
+                       [](uv_timer_t* handle) -> void {
+                           TimeoutData* td = (TimeoutData*)handle->data;
+                           StarFishEnterer enter(td->m_timer->m_starFish);
+                           auto a =
+                               td->m_timer->m_timeoutHandler.find(td->m_id);
+                           td->m_handler(td->m_window, td->m_data);
+                       },
+                       0, delay);
     } else {
-        td->m_native_timer.TickSignal().Connect(td, &TimeoutData::OnceTick);
+        uv_timer_start(&td->m_timerID,
+                       [](uv_timer_t* handle) -> void {
+                           TimeoutData* td = (TimeoutData*)handle->data;
+                           StarFishEnterer enter(td->m_timer->m_starFish);
+                           Timer* timer = td->m_timer;
+                           int32_t id = td->m_id;
+                           td->m_handler(td->m_window, td->m_data);
+                           auto iter = timer->m_timeoutHandler.find(id);
+                           if (iter != timer->m_timeoutHandler.end()) {
+                               timer->m_timeoutHandler.erase(iter);
+                               GC_FREE(td);
+                           }
+                           uv_timer_stop(handle);
+                       },
+                       delay, 0);
     }
     m_timeoutHandler.insert(std::make_pair(id, td));
-    td->m_native_timer.Start();
     return id;
 }
 
@@ -150,7 +109,7 @@ void Timer::removeTimer(size_t reqID)
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        td->m_native_timer.Stop();
+        uv_timer_stop(&td->m_timerID);
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
     }
@@ -160,17 +119,30 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
                           void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    TimeoutData* td = new (NoGC) TimeoutData();
+    TimeoutData* td = new (NoGC) TimeoutData;
     td->m_timer = this;
     int32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
     td->m_window = window;
     td->m_data = data;
     td->m_handler = handler;
-    td->m_native_timer = Dali::Timer::New(0);
-    td->m_native_timer.TickSignal().Connect(td, &TimeoutData::AnimationTick);
+    uv_timer_init(uv_default_loop(), &td->m_timerID);
+    td->m_timerID.data = td;
+    uv_timer_start(
+        &td->m_timerID,
+        [](uv_timer_t* handle) -> void {
+            TimeoutData* td = (TimeoutData*)handle->data;
+            StarFishEnterer enter(td->m_timer->m_starFish);
+            auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
+            td->m_handler(td->m_window, td->m_data);
+            a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
+            if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
+                td->m_timer->m_requestAnimationFrameHandler.erase(a);
+            }
+            GC_FREE(td);
+        },
+        0, 0);
     m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
-    td->m_native_timer.Start();
     return id;
 }
 
@@ -178,17 +150,31 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                           void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    AnimationTickData* ad = new (NoGC) AnimationTickData();
+    AnimationTickData* ad = new (NoGC) AnimationTickData;
     ad->m_timer = this;
     int32_t id = ++m_AnimationCounter;
     ad->m_data = data;
     ad->m_window = window;
     ad->m_handler = handler;
-    ad->m_native_timer = Dali::Timer::New(0);
-    ad->m_native_timer.TickSignal().Connect(ad,
-                                            &AnimationTickData::AnimationTick);
+    uv_timer_init(uv_default_loop(), &ad->m_timerID);
+    ad->m_timerID.data = ad;
+    uv_timer_start(&ad->m_timerID,
+                   [](uv_timer_t* handle) -> void {
+                       AnimationTickData* ad = (AnimationTickData*)handle->data;
+                       StarFishEnterer enter(ad->m_timer->m_starFish);
+                       auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
+                       if (ad->m_handler(ad->m_data)) {
+                           return;
+                       }
+                       a = ad->m_timer->m_animationHandler.find(ad->m_id);
+                       if (ad->m_timer->m_animationHandler.end() != a) {
+                           ad->m_timer->m_animationHandler.erase(a);
+                       }
+                       GC_FREE(ad);
+                       uv_timer_stop(handle);
+                   },
+                   0, 1);
     m_animationHandler.insert(std::make_pair(id, ad));
-    ad->m_native_timer.Start();
     return id;
 }
 
@@ -200,7 +186,7 @@ void Timer::removeWindowAnimator(size_t reqID)
 
     if (handlerData != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        td->m_native_timer.Stop();
+        uv_timer_stop(&td->m_timerID);
         GC_FREE(td);
         m_requestAnimationFrameHandler.erase(handlerData);
     }
@@ -213,7 +199,7 @@ void Timer::removeGenericAnimator(size_t reqID)
     auto handlerData = m_animationHandler.find(reqID);
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
-        ad->m_native_timer.Stop();
+        uv_timer_stop(&ad->m_timerID);
         GC_FREE(ad);
         m_animationHandler.erase(handlerData);
     }
@@ -225,7 +211,7 @@ void Timer::clear(BrowsingContext* ctx)
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
         if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
-            td->m_native_timer.Stop();
+            uv_timer_stop(&td->m_timerID);
             GC_FREE(td);
             m_timeoutHandler.erase(timerIter++);
         } else {
@@ -237,7 +223,7 @@ void Timer::clear(BrowsingContext* ctx)
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
         if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
-            td->m_native_timer.Stop();
+            uv_timer_stop(&td->m_timerID);
             GC_FREE(td);
             m_requestAnimationFrameHandler.erase(aniIter++);
         } else {
@@ -249,7 +235,7 @@ void Timer::clear(BrowsingContext* ctx)
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
         if (ad->m_window->browsingContext() == ctx || ctx == nullptr) {
-            ad->m_native_timer.Stop();
+            uv_timer_stop(&ad->m_timerID);
             GC_FREE(ad);
             m_animationHandler.erase(aniIter2++);
         } else {

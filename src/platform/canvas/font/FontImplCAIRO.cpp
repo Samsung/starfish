@@ -169,6 +169,9 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
         met.m_descender = iter->second.second.m_descender * factor;
         met.m_fontHeight = iter->second.second.m_fontHeight * factor;
         met.m_xheightRate = iter->second.second.m_xheightRate * factor;
+
+        met.m_FTFace = iter->second.second.m_FTFace;
+        met.m_FTFaceLib = iter->second.second.m_FTFaceLib;
         return met;
     }
 
@@ -220,8 +223,11 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-    FT_Done_Face(face);
-    FT_Done_FreeType(library);
+    met.m_FTFace = face;
+    met.m_FTFaceLib = library;
+
+    // FT_Done_Face(face);
+    // FT_Done_FreeType(library);
 
     metricsMap[u8FontName] = std::make_pair(size, met);
     return met;

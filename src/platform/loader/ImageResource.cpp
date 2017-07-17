@@ -26,7 +26,8 @@
 
 namespace StarFish {
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 void ImageResource::doLoadFile(void* data)
 {
     Resource* res = (Resource*)data;
@@ -59,7 +60,8 @@ void ImageResource::doLoadFile(void* data)
 
 void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 {
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     if (m_url->isFileURL()) {
         if (!loader()->requestResourcePreprocess(this, syncLevel)) {
             // cache miss
@@ -86,7 +88,8 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 
 void ImageResource::didLoadFinished()
 {
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     if (!m_url->isFileURL()) {
         m_imageData = ImageData::create(m_resourceRequest->response().data(),
                                         m_resourceRequest->response().size());

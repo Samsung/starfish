@@ -26,10 +26,6 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_DALI)
-#include <dali-toolkit/dali-toolkit.h>
-#endif
-
 #include <EscargotPublic.h>
 using namespace Escargot;
 
@@ -39,14 +35,6 @@ void customExit(int returnCode, Window* window)
 {
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
     exit(returnCode);
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
-    Dali::Application* app =
-        (Dali::Application*)window->starFish()->nativeHandle();
-    if (app) {
-        app->Quit();
-    } else {
-        exit(returnCode);
-    }
 #endif
 }
 

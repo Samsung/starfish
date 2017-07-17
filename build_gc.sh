@@ -31,8 +31,11 @@ if [[ $INCREMENTAL == false ]]; then
 fi
 
 # Common flags --------------------------------------------
-
-GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-parallel-mark --disable-threads " # --enable-large-config --enable-cplusplus"
+if [[ $1 == STARFISH_EFL ]]; then
+    GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-parallel-mark --disable-threads " # --enable-large-config --enable-cplusplus"
+else
+    GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-parallel-mark " # --enable-large-config --enable-cplusplus"
+fi
 CFLAGS_COMMON=" -g3 "
 CFLAGS_COMMON+=" -DESCARGOT "
 CFLAGS_COMMON+=" -fdata-sections -ffunction-sections " # To exclude unused code from final binary

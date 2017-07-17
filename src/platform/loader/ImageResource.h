@@ -59,7 +59,8 @@ public:
         m_imageData = cache->asImageResource()->m_imageData;
         Resource::didLoadFinished();
     }
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     static void doLoadFile(void*);
 #endif
 protected:

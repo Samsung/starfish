@@ -16,7 +16,8 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_DALI) && defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER) && \
+    defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules//canvas/font/Font.h"
@@ -29,7 +30,6 @@
 
 #include <cairo.h>
 #include <cairo/cairo-ft.h>
-#include <dali-toolkit/dali-toolkit.h>
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
 
@@ -65,17 +65,17 @@ public:
         m_buffer = NULL;
         m_directDraw = true;
         struct dummy {
-            Dali::BufferImage image;
+            void* image;
             int w;
             int h;
+            int stride;
         };
         dummy* d = (dummy*)data;
         m_width = d->w;
         m_height = d->h;
         {
-            m_buffer = (void*)d->image.GetBuffer();
-            initFromBuffer(m_buffer, m_width, m_height,
-                           d->image.GetBufferStride());
+            m_buffer = d->image;
+            initFromBuffer(m_buffer, m_width, m_height, d->stride);
         }
 
         save();
