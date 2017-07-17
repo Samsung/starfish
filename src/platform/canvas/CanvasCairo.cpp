@@ -117,8 +117,8 @@ public:
     virtual void save()
     {
         CanvasStateCairo state;
-        auto& lastState = m_state.back();
         if (m_state.size()) {
+            auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
             state.m_opacity = lastState.m_opacity;
             state.m_baseX = lastState.m_baseX;
