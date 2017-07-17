@@ -468,6 +468,7 @@ enum PositionValue {
     StaticPositionValue,
     RelativePositionValue,
     AbsolutePositionValue,
+    FixedPositionValue,
 };
 
 enum FloatValue {

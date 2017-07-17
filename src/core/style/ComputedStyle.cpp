@@ -239,19 +239,38 @@ void ComputedStyle::loadResources(
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
                                        Node* current)
 {
-    if (current != nullptr && current->isHTMLHtmlElement()) {
-        if (m_display == DisplayValue::InlineDisplayValue ||
-            m_display == DisplayValue::InlineBlockDisplayValue) {
-            m_display = DisplayValue::BlockDisplayValue;
-        }
-    }
     // 9.7 Relationships between 'display', 'position', and 'float'
     m_originalDisplay = m_display;
     if (m_originalDisplay != DisplayValue::NoneDisplayValue) {
-        if (position() == AbsolutePositionValue) {
-            m_display = DisplayValue::BlockDisplayValue;
-        } else if (m_float != FloatValue::NoneFloatValue) {
-            m_display = DisplayValue::BlockDisplayValue;
+        bool isAbsolutePositioned =
+            position() == PositionValue::AbsolutePositionValue ||
+            position() == PositionValue::FixedPositionValue;
+
+        if (isAbsolutePositioned) {
+            m_float = FloatValue::NoneFloatValue;
+        }
+
+        if (isAbsolutePositioned || m_float != FloatValue::NoneFloatValue ||
+            (current && current->isHTMLHtmlElement())) {
+            switch (m_display) {
+            case DisplayValue::InlineTableDisplayValue:
+                m_display = DisplayValue::TableDisplayValue;
+                break;
+            case DisplayValue::InlineDisplayValue:
+            case DisplayValue::TableRowGroupDisplayValue:
+            case DisplayValue::TableColumnDisplayValue:
+            case DisplayValue::TableColumnGroupDisplayValue:
+            case DisplayValue::TableHeaderGroupDisplayValue:
+            case DisplayValue::TableFooterGroupDisplayValue:
+            case DisplayValue::TableRowDisplayValue:
+            case DisplayValue::TableCellDisplayValue:
+            case DisplayValue::TableCaptionDisplayValue:
+            case DisplayValue::InlineBlockDisplayValue:
+                m_display = DisplayValue::BlockDisplayValue;
+                break;
+            default:
+                break;
+            }
         }
     }
 

@@ -330,7 +330,7 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth)
 
 void FrameBox::applyVerticalMarginForAbsoluteBox()
 {
-    STARFISH_ASSERT(style()->position() == AbsolutePositionValue);
+    STARFISH_ASSERT(isAbsolutePositioned());
     Length marginTop = style()->marginTop();
     Length marginBottom = style()->marginBottom();
 

@@ -52,6 +52,8 @@ FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
             blockBox = blockContainer(blockBox);
         }
         return blockBox;
+    } else if (currentFrame->style()->position() == FixedPositionValue) {
+        return frameDocument()->asFrameBlockBox();
     } else {
         return blockBox;
     }
@@ -74,6 +76,8 @@ FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
             FrameInline* in = f->asFrameInline();
             return c->firstInlineNonReplacedBox(in);
         }
+    } else if (currentFrame->style()->position() == FixedPositionValue) {
+        return frameDocument()->asFrameBlockBox();
     } else {
         FrameBlockBox* blockBox = blockContainer(currentFrame);
         return blockBox;
@@ -442,15 +446,13 @@ LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 {
     FrameBlockBox* container = blockContainer(currentFrame);
-    if (currentFrame->style()->position() ==
-        PositionValue::AbsolutePositionValue) {
+    if (currentFrame->isAbsolutePositioned()) {
         return true;
     }
     while (container) {
         if (container->style()->height().isFixed()) {
             return true;
-        } else if (container->style()->position() ==
-                       PositionValue::AbsolutePositionValue &&
+        } else if (container->isAbsolutePositioned() &&
                    container->style()->height().isPercent()) {
             return true;
         } else if (container->style()->height().isAuto()) {
@@ -471,8 +473,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         if (container->style()->height().isFixed()) {
             reverse.push_back(container->style()->height());
             break;
-        } else if (container->style()->position() ==
-                       PositionValue::AbsolutePositionValue &&
+        } else if (container->isAbsolutePositioned() &&
                    container->style()->height().isPercent()) {
             reverse.emplace_back(
                 Length::Fixed,
@@ -529,9 +530,9 @@ void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)
 }
 
 void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
-    FrameBlockBox* containgBlock)
+    FrameBlockBox* containingBlock)
 {
-    auto iter = m_absolutePositionedBoxes.find(containgBlock);
+    auto iter = m_absolutePositionedBoxes.find(containingBlock);
     if (iter == m_absolutePositionedBoxes.end()) {
         return;
     } else {
@@ -554,9 +555,9 @@ void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
 }
 
 void LayoutContext::layoutRegisteredRelativePositionedBoxes(
-    FrameBlockBox* containgBlock)
+    FrameBlockBox* containingBlock)
 {
-    auto iter = m_relativePositionedBoxes.find(containgBlock);
+    auto iter = m_relativePositionedBoxes.find(containingBlock);
     if (iter == m_relativePositionedBoxes.end()) {
         return;
     } else {
@@ -641,6 +642,17 @@ void Frame::computeStyleFlags()
         return;
     }
 
+    m_flags.m_isPositioned =
+        (style->position() != PositionValue::StaticPositionValue);
+    m_flags.m_isAbsolutePositioned |=
+        (style->position() == PositionValue::AbsolutePositionValue);
+    m_flags.m_isAbsolutePositioned |=
+        (style->position() == PositionValue::FixedPositionValue);
+    m_flags.m_isFloating = (style->floating() != FloatValue::NoneFloatValue);
+
+    m_flags.m_isNormalFlow = !m_flags.m_isAbsolutePositioned;
+    m_flags.m_isNormalFlow &= !m_flags.m_isFloating;
+
     // TODO add condition
     // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
     // Block formatting context is established when the element is either
@@ -651,21 +663,21 @@ void Frame::computeStyleFlags()
     // which is, the overflow should not be propagated to viewport.
     // There are 2 possible cases that overflow property can propagate to
     // viewport, in other words, containing block is viewport.
-    // 1. By giving a position of absoulte value, which is already included
+    // 1. By giving a position of absolute value, which is already included
     // as one of forming block formatting context conditions.
     // 2. <html> and <body> element, so we should check first overflow
     // values of <head> and <body> are equal.
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
     m_flags.m_isEstablishesBlockFormattingContext |=
+        m_flags.m_isAbsolutePositioned;
+    m_flags.m_isEstablishesBlockFormattingContext |= m_flags.m_isFloating;
+    m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
-        (style->position() == PositionValue::AbsolutePositionValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
-        (style->floating() != FloatValue::NoneFloatValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCellDisplayValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCaptionDisplayValue);
+    // https://www.w3.org/TR/html5/rendering.html#the-fieldset-and-legend-elements
     m_flags.m_isEstablishesBlockFormattingContext |=
         (!isAnonymous() && m_node->isHTMLFieldSetElement());
 
@@ -675,9 +687,6 @@ void Frame::computeStyleFlags()
         (style->originalDisplay() == DisplayValue::TableDisplayValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
-
-    m_flags.m_isPositioned =
-        (style->position() != PositionValue::StaticPositionValue);
 
     // TODO add condition
     // NOTE
@@ -692,13 +701,6 @@ void Frame::computeStyleFlags()
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer |= (style->hasComplexTransforms(this));
-
-    if ((style->position() == PositionValue::AbsolutePositionValue) ||
-        (style->floating() != FloatValue::NoneFloatValue)) {
-        m_flags.m_isNormalFlow = false;
-    }
-
-    m_flags.m_isFloating = (style->floating() != FloatValue::NoneFloatValue);
 }
 
 ComputedStyle* Frame::style()

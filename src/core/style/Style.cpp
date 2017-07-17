@@ -1351,6 +1351,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("relative");
         case PositionValue::AbsolutePositionValue:
             return String::fromUTF8("absolute");
+        case PositionValue::FixedPositionValue:
+            return String::fromUTF8("fixed");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -6082,6 +6084,8 @@ bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
         m_value.m_position = PositionValue::RelativePositionValue;
     } else if (STRING_VALUE_IS_STRING("absolute")) {
         m_value.m_position = PositionValue::AbsolutePositionValue;
+    } else if (STRING_VALUE_IS_STRING("fixed")) {
+        m_value.m_position = PositionValue::FixedPositionValue;
     } else {
         return false;
     }

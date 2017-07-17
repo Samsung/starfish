@@ -1035,6 +1035,8 @@ protected:
     void initNonInheritedStyles()
     {
         m_display = DisplayValue::InlineDisplayValue;
+        m_float = FloatValue::NoneFloatValue;
+        m_clear = ClearValue::NoneClearValue;
         m_opacity = 1;
         m_zIndex = 0;
         m_zIndexSpecifiedByUser = false;

@@ -79,8 +79,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
             //     'margin-right'
             contentWidth =
                 std::max(containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
-        } else if (style()->position() == AbsolutePositionValue &&
-                   left.isSpecified() && right.isSpecified()) {
+        } else if (isAbsolutePositioned() && left.isSpecified() &&
+                   right.isSpecified()) {
             LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
             LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
             LayoutUnit w = std::max(LayoutUnit(0), containgBlockContentWidth -
@@ -104,8 +104,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
 
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
-    STARFISH_ASSERT(style()->position() == AbsolutePositionValue ||
-                    cb == nullptr);
+    STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
     LayoutUnit contentHeight;
     LayoutUnit parentHeight;
     Length height = style()->height();
@@ -127,7 +126,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         asFrameTableCellBox()->setActualContentHeight(contentHeight);
     }
 
-    if (style()->position() == AbsolutePositionValue) {
+    if (isAbsolutePositioned()) {
         parentHeight = cb->contentHeight() + cb->paddingWidth();
         if (height.isAuto()) {
             Length top = style()->top();
@@ -197,9 +196,9 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
         } else {
             x = -right.specifiedValue(parentSize.height());
         }
-    } else if (!left.isAuto() && right.isAuto()) {
+    } else if (!left.isAuto()) {
         x = left.specifiedValue(parentSize.width());
-    } else if (left.isAuto() && !right.isAuto()) {
+    } else if (!right.isAuto()) {
         x = -right.specifiedValue(parentSize.height());
     }
 
@@ -223,9 +222,9 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
 
     if (!top.isAuto() && !bottom.isAuto()) {
         y = specifiedVerticalPosition(ctx, f, top);
-    } else if (!top.isAuto() && bottom.isAuto()) {
+    } else if (!top.isAuto()) {
         y = specifiedVerticalPosition(ctx, f, top);
-    } else if (top.isAuto() && !bottom.isAuto()) {
+    } else if (!bottom.isAuto()) {
         y = -specifiedVerticalPosition(ctx, f, bottom);
     }
 
@@ -234,9 +233,9 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
 
 void LayoutContext::applyRelativePosition(FrameBox* box)
 {
-    FrameBlockBox* cb = containingFrameBlockBox(box);
-    LayoutUnit parentWidth = cb->contentWidth();
-    LayoutUnit parentHeight = cb->contentHeight();
+    FrameBox* bc = blockContainer(box);
+    LayoutUnit parentWidth = bc->contentWidth();
+    LayoutUnit parentHeight = bc->contentHeight();
 
     LayoutLocation loc =
         relativeLocation(*this, box, LayoutSize(parentWidth, parentHeight));
@@ -245,14 +244,15 @@ void LayoutContext::applyRelativePosition(FrameBox* box)
     box->moveY(loc.y());
 }
 
-void LayoutContext::applyRelativePositionInlineCase(Frame* refF, FrameBox* box)
+void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
+                                                    FrameBox* box)
 {
-    FrameBox* cb = containingBlock(refF);
-    LayoutUnit parentWidth = cb->contentWidth();
-    LayoutUnit parentHeight = cb->contentHeight();
+    FrameBox* bc = blockContainer(origin);
+    LayoutUnit parentWidth = bc->contentWidth();
+    LayoutUnit parentHeight = bc->contentHeight();
 
     LayoutLocation loc =
-        relativeLocation(*this, refF, LayoutSize(parentWidth, parentHeight));
+        relativeLocation(*this, origin, LayoutSize(parentWidth, parentHeight));
 
     if (box->style()->left().isAuto() && box->style()->right().isAuto()) {
         box->moveX(loc.x());
@@ -272,7 +272,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         LayoutUnit parentContentWidth = cb->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
 
-        if (style()->position() == PositionValue::AbsolutePositionValue) {
+        if (isAbsolutePositioned()) {
             // 10.3.7 Absolutely positioned, non-replaced elements
             STARFISH_ASSERT(!isAnonymous());
             DirectionValue parentDirection =
@@ -365,7 +365,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     FrameBox* cb = nullptr;
-    if (style()->position() == PositionValue::AbsolutePositionValue) {
+    if (isAbsolutePositioned()) {
         cb = ctx.containingBlock(this);
     }
     computeContentHeight(ctx, cb);
@@ -374,7 +374,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     // placed
 
     // Determine the final height
-    if (style()->position() == PositionValue::AbsolutePositionValue) {
+    if (isAbsolutePositioned()) {
         VerticalDataLocToContainingBlock data =
             computeVerticalDataToContainingBlock(ctx, cb);
 

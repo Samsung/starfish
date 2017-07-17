@@ -622,8 +622,7 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
                             newBox->setHeight(inrb->height());
                         } else {
                             STARFISH_ASSERT(
-                                boxesToCopy[j]->style()->position() ==
-                                AbsolutePositionValue);
+                                boxesToCopy[j]->isAbsolutePositioned());
                             newBox->markAbsolutePositionedBoxLayoutParent();
                         }
 
@@ -1189,7 +1188,7 @@ LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(LayoutUnit start)
         if (childBox->isNormalFlow()) {
             childBox->setX(x + childBox->marginLeft());
             x += childBox->boxWidth();
-        } else if (childBox->style()->position() == AbsolutePositionValue) {
+        } else if (childBox->isAbsolutePositioned()) {
             childBox->setX(x);
         }
     }
@@ -1598,13 +1597,10 @@ void LineFormattingContext::removeAllInlineBoxes()
 
     while (iter != lineBox->boxes().end()) {
         FrameBox* box = *iter;
-        if (box->isFloating() &&
-            box->style()->position() != AbsolutePositionValue) {
+        if (box->isFloating()) {
             iter++;
             continue;
-        }
-
-        if (box->style()->position() == AbsolutePositionValue) {
+        } else if (box->isAbsolutePositioned()) {
             lineBox->unMarkAbsolutePositionedBoxLayoutParent();
         }
 
@@ -1656,13 +1652,12 @@ void LineFormattingContext::insertPendingInlineBoxes()
 
     while (iter != m_pendingInlineBoxes.end()) {
         FrameBox* box = *iter;
-        STARFISH_ASSERT(box->isNormalFlow() ||
-                        box->style()->position() == AbsolutePositionValue);
+        STARFISH_ASSERT(box->isNormalFlow() || box->isAbsolutePositioned());
 
         if (!(m_currentLineWidth == 0 && isCollapsibleWhiteSpace(box))) {
             // TODO: consider if continuous box can form a word, these
             // should be on the same line
-            if (box->style()->position() == AbsolutePositionValue) {
+            if (box->isAbsolutePositioned()) {
                 handleAbsoluteBox(box, true, false);
             } else {
                 if (!dontBreakLine(box, box->boxWidth())) {
@@ -1708,7 +1703,7 @@ void LineFormattingContext::reCacheFloatingBoxes(LayoutUnit xDiff)
         FrameBox* childBox = back->boxes()[i];
         if (childBox->isNormalFlow()) {
             continue;
-        } else if (childBox->style()->position() == AbsolutePositionValue) {
+        } else if (childBox->isAbsolutePositioned()) {
             continue;
         } else {
             STARFISH_ASSERT(childBox->isFloating());
@@ -1725,8 +1720,7 @@ bool LineFormattingContext::isAnyOfInlineBoxesCollidedWithFloatingBoxes()
     auto iter = lineBox->boxes().begin();
 
     while (iter != lineBox->boxes().end()) {
-        if ((*iter)->isFloating() &&
-            (*iter)->style()->position() != AbsolutePositionValue) {
+        if ((*iter)->isFloating()) {
             iter++;
             continue;
         }
@@ -1903,7 +1897,6 @@ bool LineFormattingContext::canInsertToLineBox(Frame* f, LayoutUnit width)
 bool LineFormattingContext::hasFloatingBoxAlreadyInLineBox(Frame* f)
 {
     if (f->isFloating()) {
-        STARFISH_ASSERT(f->style()->position() != AbsolutePositionValue);
         FloatingBoxLayoutContext& fbCtx =
             (*m_floatingBoxLayoutContexts.rbegin());
         return fbCtx.m_hasFloat != HasNone;
@@ -2020,7 +2013,7 @@ void LineFormattingContext::insertWord(Frame* next)
                 }
                 m_currentLayoutParent = box->asInlineBoxLayoutParentBox();
             } else {
-                if (box->style()->position() == AbsolutePositionValue) {
+                if (box->isAbsolutePositioned()) {
                     handleAbsoluteBox(box, true, true);
                 } else {
                     insertInlineBox(box);
@@ -2494,6 +2487,7 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
                         ctx.m_unprocessedStartingMBPWidth == 0);
         ctx.m_currentLayoutParent =
             ctx.m_currentLayoutParent->layoutParent()->asLineBox();
+
     } else {
         inlineBox->layoutInline(ctx);
         ctx.m_currentLayoutParent =
@@ -2508,7 +2502,7 @@ void LineFormattingContext::layoutInline(Frame* origin)
         // Don't put any inline box leaving pending inline boxes ahead.
         STARFISH_ASSERT(m_pendingInlineBoxes.size() == 0);
 
-        if (f->style()->position() == PositionValue::AbsolutePositionValue) {
+        if (f->isAbsolutePositioned()) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
             }
@@ -3202,7 +3196,7 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 {
     Frame* f = parent->firstChild();
     while (f) {
-        if (f->style()->position() == AbsolutePositionValue) {
+        if (f->isAbsolutePositioned()) {
             f = f->next();
             continue;
         }
