@@ -113,6 +113,7 @@ public:
         Locker<Mutex> l(*m_frameBufferSwitchMutex);
         memcpy(m_starFish->frameBuffer(), m_internalBuffer,
                m_width * m_height * sizeof(uint32_t));
+        m_starFish->setNeedsUpdate();
     }
 
     virtual void clearResources();

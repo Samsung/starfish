@@ -23,7 +23,7 @@
 #include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
 #include "core/page/Window.h"
-
+#include "core/page/WebView.h"
 #include <pthread.h>
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
@@ -127,7 +127,9 @@ public:
 
     bool updateTick()
     {
-        m_daliBuffer.Update();
+        if (m_sf->needsUpdate()) {
+            m_daliBuffer.Update();
+        }
         return true;
     }
     void Create(Application& application)
@@ -167,60 +169,64 @@ public:
                 app->m_sf->registerFrameBuffer(
                     (void*)app->m_daliBuffer.GetBuffer());
                 app->m_sf->loadHTMLDocument(String::createASCIIString(url));
+
+                pthread_t t;
+                pthread_attr_t attr;
+                pthread_attr_init(&attr);
+                pthread_create(
+                    &t, &attr,
+                    [](void* data) -> void* {
+                        char buf[1024];
+                        sleep(1);
+                        while (1) {
+                            fgets(buf, 1024, stdin);
+                            struct Pass {
+                                StarFish::StarFish* sf;
+                                char* buf;
+                            };
+                            char* b = new char[1024];
+                            Pass* pass = new Pass;
+                            pass->buf = b;
+                            pass->sf = (StarFish::StarFish*)data;
+                            memcpy(b, buf, sizeof buf);
+
+                            pass->sf->messageLoop()
+                                ->addIdlerWithNoGCRootingInOtherThread(
+                                    pass->sf->platformWindow()
+                                        ->webView()
+                                        ->mainBrowsingContext(),
+                                    [](size_t, void* data) {
+                                        Pass* p = (Pass*)data;
+
+                                        if (strncmp(p->buf, "!exit", 5) == 0) {
+                                            delete p->sf;
+
+                                            GC_gcollect_and_unmap();
+                                            GC_gcollect_and_unmap();
+                                            GC_gcollect_and_unmap();
+                                            GC_gcollect_and_unmap();
+                                            exit(-1);
+                                        }
+
+                                        StarFishEnterer enter(p->sf);
+                                        String* str = p->sf->evaluate(
+                                            String::fromUTF8(p->buf));
+                                        puts(str->utf8Data());
+
+                                        delete[] p->buf;
+                                        delete p;
+                                    },
+                                    pass);
+                        }
+                        return NULL;
+                    },
+                    app->m_sf);
+
                 app->m_sf->run();
 
                 return NULL;
             },
             this);
-
-        pthread_t t;
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_create(&t, &attr,
-                       [](void* data) -> void* {
-                           char buf[1024];
-                           sleep(1);
-                           while (1) {
-                               fgets(buf, 1024, stdin);
-                               struct Pass {
-                                   StarFish::StarFish* sf;
-                                   char* buf;
-                               };
-                               char* b = new char[1024];
-                               Pass* pass = new Pass;
-                               pass->buf = b;
-                               pass->sf = (StarFish::StarFish*)data;
-                               memcpy(b, buf, sizeof buf);
-                               ecore_thread_main_loop_begin();
-                               ecore_animator_add(
-                                   [](void* data) -> Eina_Bool {
-                                       Pass* p = (Pass*)data;
-
-                                       if (strncmp(p->buf, "!exit", 5) == 0) {
-                                           delete p->sf;
-
-                                           GC_gcollect_and_unmap();
-                                           GC_gcollect_and_unmap();
-                                           GC_gcollect_and_unmap();
-                                           GC_gcollect_and_unmap();
-                                           exit(-1);
-                                       }
-
-                                       StarFishEnterer enter(p->sf);
-                                       String* str = p->sf->evaluate(
-                                           String::fromUTF8(p->buf));
-                                       puts(str->utf8Data());
-
-                                       delete[] p->buf;
-                                       delete p;
-                                       return ECORE_CALLBACK_CANCEL;
-                                   },
-                                   pass);
-                               ecore_thread_main_loop_end();
-                           }
-                           return NULL;
-                       },
-                       m_sf);
 
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::TouchEventHandler);
@@ -235,12 +241,16 @@ public:
 
     bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
     {
-        // TODO
-        return true;
-
         size_t pointCount = data.GetPointCount();
         if (pointCount == 1) {
             // Single touch event
+
+            struct dummy {
+                StarFish::StarFish* starfish;
+                StarFish::MouseData data;
+            };
+            dummy* d = new dummy;
+            d->starfish = m_sf;
 
             Dali::PointState::Type pointState = data.GetState(0);
             const Dali::Vector2& screen = data.GetScreenPosition(0);
@@ -249,9 +259,18 @@ public:
                 MouseData data(MouseData::MouseButtonValue::LeftButton,
                                MouseData::MouseButtonsValue::LeftButtonDown,
                                screen.x, screen.y);
-
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    PlatformWindow::MouseEventDown, data);
+                d->data = data;
+                m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_sf->platformWindow()->webView()->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            PlatformWindow::MouseEventDown, mouseData);
+                        delete d;
+                    },
+                    d);
                 m_isMouseLbuttonDown = true;
             } else if (pointState == Dali::PointState::UP) {
                 StarFishEnterer enter(m_sf);
@@ -259,9 +278,18 @@ public:
                     MouseData::MouseButtonValue::NoButton,
                     MouseData::MouseButtonsValue::NoButtonDown, screen.x,
                     screen.y);
-
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    PlatformWindow::MouseEventUp, data);
+                d->data = data;
+                m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_sf->platformWindow()->webView()->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            PlatformWindow::MouseEventUp, mouseData);
+                        delete d;
+                    },
+                    d);
                 m_isMouseLbuttonDown = false;
             } else {
                 StarFishEnterer enter(m_sf);
@@ -270,17 +298,25 @@ public:
                         ? MouseData::MouseButtonsValue::LeftButtonDown
                         : 0;
                 StarFish::MouseData data(0, buttons, screen.x, screen.y);
-                m_sf->platformWindow()->dispatchMouseEvent(
-                    PlatformWindow::MouseEventMove, data);
+
+                d->data = data;
+                m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_sf->platformWindow()->webView()->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            PlatformWindow::MouseEventMove, mouseData);
+                        delete d;
+                    },
+                    d);
             }
         }
         return true;
     }
     bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
     {
-        // TODO
-        return true;
-
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFishEnterer enter(m_sf);
         unsigned char buttons =
@@ -288,8 +324,25 @@ public:
                                  : 0;
         StarFish::MouseData data(0, buttons, point.x, point.y);
 
-        m_sf->platformWindow()->dispatchMouseEvent(
-            PlatformWindow::MouseEventMove, data);
+        struct dummy {
+            StarFish::StarFish* starfish;
+            StarFish::MouseData data;
+        };
+        dummy* d = new dummy;
+        d->starfish = m_sf;
+        d->data = data;
+        m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            m_sf->platformWindow()->webView()->mainBrowsingContext(),
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* m_sf = d->starfish;
+                StarFish::MouseData mouseData = d->data;
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    PlatformWindow::MouseEventMove, mouseData);
+                delete d;
+            },
+            d);
+
         return true;
     }
 

@@ -141,7 +141,7 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
             }
             GC_FREE(td);
         },
-        0, 0);
+        10, 0);
     m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
     return id;
 }
@@ -173,7 +173,7 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                        GC_FREE(ad);
                        uv_timer_stop(handle);
                    },
-                   0, 1);
+                   10, 10);
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }
