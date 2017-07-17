@@ -180,6 +180,18 @@ public:
     {
         return m_frameBufffer;
     }
+    void setNeedsUpdate()
+    {
+        m_needsUpdate = true;
+    }
+    bool needsUpdate()
+    {
+        if (m_needsUpdate) {
+            m_needsUpdate = false;
+            return true;
+        }
+        return false;
+    }
 #endif
 protected:
     void enter();
@@ -215,6 +227,7 @@ protected:
     int m_width;
     int m_height;
     void* m_frameBufffer;
+    bool m_needsUpdate;
 #endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;

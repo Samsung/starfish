@@ -185,6 +185,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;
     m_height = h;
+    m_needsUpdate = false;
 #endif
     registerMainThread();
     if (!g_starFishGlobalInit) {

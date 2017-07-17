@@ -29,17 +29,23 @@
 
 namespace StarFish {
 
+uv_signal_t g_sigterm;
+uv_signal_t g_sigint;
+
+void uv_term_cb(uv_signal_t* handle, int signum)
+{
+    exit(0);
+}
+
 MessageLoop::MessageLoop(StarFish* sf)
     : m_starFish(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
 {
-    uv_signal_t sigterm;
-    uv_signal_init(uv_default_loop(), &sigterm);
-    uv_signal_start(&sigterm, nullptr, SIGTERM);
+    uv_signal_init(uv_default_loop(), &g_sigterm);
+    uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
 
-    uv_signal_t sigint;
-    uv_signal_init(uv_default_loop(), &sigint);
-    uv_signal_start(&sigint, nullptr, SIGINT);
+    uv_signal_init(uv_default_loop(), &g_sigint);
+    uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
 }
 
 void MessageLoop::run()
@@ -150,7 +156,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     return (size_t)id;
 }
 
-void uv_clouse_cb(uv_handle_t* handle)
+void uv_close_cb(uv_handle_t* handle)
 {
     delete (IdlerDataAsync*)handle->data;
 }
@@ -182,7 +188,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
             StarFishEnterer enter(id->m_ml->m_starFish);
             id->m_fn((size_t)id, id->m_data);
         }
-        uv_close((uv_handle_t*)handle, &uv_clouse_cb);
+        uv_close((uv_handle_t*)handle, &uv_close_cb);
     });
     id->m_idler_uv.data = id;
     uv_async_send(&id->m_idler_uv);
@@ -218,7 +224,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
             ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                        id->m_data1);
         }
-        uv_close((uv_handle_t*)handle, &uv_clouse_cb);
+        uv_close((uv_handle_t*)handle, &uv_close_cb);
     });
     id->m_idler_uv.data = id;
     uv_async_send(&id->m_idler_uv);
