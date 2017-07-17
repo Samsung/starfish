@@ -147,12 +147,12 @@ void SelectorQuery::collectElementsById(Node& rootNode, const String* id,
                                         GCVector<Element*>& collection,
                                         bool shouldOnlyMatchFirstElement)
 {
-    Traverse::getherDescendant(collection, &rootNode,
-                               [&](Element* element) {
-                                   return element->hasId() &&
-                                          element->id()->equals(id);
-                               },
-                               shouldOnlyMatchFirstElement);
+    Traverse::collectDescendants(collection, &rootNode,
+                                 [&](Element* element) {
+                                     return element->hasId() &&
+                                            element->id()->equals(id);
+                                 },
+                                 shouldOnlyMatchFirstElement);
 }
 
 void SelectorQuery::collectElementsByClassName(Node& rootNode,
@@ -160,13 +160,13 @@ void SelectorQuery::collectElementsByClassName(Node& rootNode,
                                                GCVector<Element*>& collection,
                                                bool shouldOnlyMatchFirstElement)
 {
-    Traverse::getherDescendant(collection, &rootNode,
-                               [&](Element* element) {
-                                   return element->hasClass() &&
-                                          contains(element->classNames(),
-                                                   className);
-                               },
-                               shouldOnlyMatchFirstElement);
+    Traverse::collectDescendants(collection, &rootNode,
+                                 [&](Element* element) {
+                                     return element->hasClass() &&
+                                            contains(element->classNames(),
+                                                     className);
+                                 },
+                                 shouldOnlyMatchFirstElement);
 }
 
 void SelectorQuery::collectElementsByTagName(Node& rootNode,
@@ -174,13 +174,13 @@ void SelectorQuery::collectElementsByTagName(Node& rootNode,
                                              GCVector<Element*>& collection,
                                              bool shouldOnlyMatchFirstElement)
 {
-    Traverse::getherDescendant(collection, &rootNode,
-                               [&](Element* element) {
-                                   return tagName->equals(
-                                              String::fromUTF8("*")) ||
-                                          element->tagName()->equals(tagName);
-                               },
-                               shouldOnlyMatchFirstElement);
+    Traverse::collectDescendants(collection, &rootNode,
+                                 [&](Element* element) {
+                                     return tagName->equals(
+                                                String::fromUTF8("*")) ||
+                                            element->tagName()->equals(tagName);
+                                 },
+                                 shouldOnlyMatchFirstElement);
 }
 
 void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
@@ -188,12 +188,12 @@ void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
                                         GCVector<Element*>& collection,
                                         bool shouldOnlyMatchFirstElement)
 {
-    Traverse::getherDescendant(collection, traverseRoot,
-                               [&](Element* element) {
-                                   return selectorMatches(selectors, element,
-                                                          rootNode);
-                               },
-                               shouldOnlyMatchFirstElement);
+    Traverse::collectDescendants(collection, traverseRoot,
+                                 [&](Element* element) {
+                                     return selectorMatches(selectors, element,
+                                                            rootNode);
+                                 },
+                                 shouldOnlyMatchFirstElement);
 }
 
 bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element,
@@ -379,7 +379,7 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element)
 void SelectorQuery::executeSlow(Node& rootNode, GCVector<Element*>& collection,
                                 bool shouldOnlyMatchFirstElement)
 {
-    Traverse::getherDescendant(
+    Traverse::collectDescendants(
         collection, &rootNode,
         [&](Node* child) {
             if (child->isElement() &&

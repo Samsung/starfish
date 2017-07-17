@@ -43,8 +43,9 @@ public:
     }
 
     template <typename Func>
-    static bool getherDescendant(GCVector<Element*>& collection, Node* root,
-                                 Func filter, bool shouldOnlyMatchFirstElement)
+    static bool collectDescendants(GCVector<Element*>& collection, Node* root,
+                                   Func filter,
+                                   bool shouldOnlyMatchFirstElement)
     {
         Node* child = root->firstChild();
         while (child) {
@@ -58,8 +59,8 @@ public:
                 }
             }
 
-            if (getherDescendant(collection, child, filter,
-                                 shouldOnlyMatchFirstElement)) {
+            if (collectDescendants(collection, child, filter,
+                                   shouldOnlyMatchFirstElement)) {
                 return true;
             }
             child = child->nextSibling();
