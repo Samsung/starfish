@@ -27,6 +27,8 @@
 #include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
+#include "core/dom/HTMLTableElement.h"
+#include "core/dom/HTMLTableCellElement.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -2786,6 +2788,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 {
     ComputedStyle* style = new ComputedStyle(parent);
 
+    // FIXME : move below block into matchAllRules
     if (element->isHTMLElement()) {
         HTMLElement* elem = element->asHTMLElement();
         if (elem->hasDirAttribute()) {
@@ -2811,6 +2814,30 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
                 Unit::Color color;
                 if (elem->asHTMLFontElement()->colorFromAttribute(&color)) {
                     style->setColor(color);
+                }
+            }
+        } else if (elem->isHTMLTableCellElement()) {
+            HTMLTableElement* table =
+                elem->asHTMLTableCellElement()->tableElement();
+
+            if (table && table->hasCellPaddingAttribute()) {
+                String* value = table->cellpadding();
+                if (value && !value->equals(String::emptyString)) {
+                    // Use px as the default unit
+                    if (!value->contains("px") && !value->contains("%")) {
+                        value = value->concat(String::createASCIIString("px"));
+                    }
+                }
+                CSSStyleValuePair pair;
+                CSSPropertyParser::parseLengthOrPercent(value->utf8Data(),
+                                                        false, &pair);
+                Length len =
+                    convertValueToLength(pair.valueKind(), pair.value());
+                if (len.isPositiveOrZero()) {
+                    style->setPaddingTop(len);
+                    style->setPaddingRight(len);
+                    style->setPaddingBottom(len);
+                    style->setPaddingLeft(len);
                 }
             }
         }
