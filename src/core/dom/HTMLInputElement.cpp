@@ -20,6 +20,10 @@
 #include "core/dom/HTMLInputElement.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
+#include "core/dom/HTMLFormElement.h"
+#include "core/dom/Node.h"
+#include "core/dom/Traverse.h"
 
 namespace StarFish {
 
@@ -62,5 +66,46 @@ String* HTMLInputElement::value()
 void HTMLInputElement::setValue(String* value)
 {
     setAttribute(starFish()->staticStrings()->m_value, value);
+}
+
+HTMLFormElement* HTMLInputElement::form()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p == nullptr) {
+            break;
+        } else if (p->isHTMLIFrameElement()) {
+            return nullptr;
+        } else if (p->isHTMLFormElement()) {
+            return p->asHTMLFormElement();
+        }
+    }
+    return nullptr;
+}
+
+void HTMLInputElement::handleDefaultEvent(Event* event)
+{
+    if (((event->isMouseEvent() || event->isTouchEvent())) &&
+        event->type()->equalsWithoutCase("click")) {
+        if (type()->equalsWithoutCase("submit")) {
+            GCVector<Element*> inputNodes;
+            HTMLFormElement* formNode = form();
+            if (formNode) {
+                Traverse::getherDescendant(
+                    inputNodes, formNode->asNode(),
+                    [](Node* node) -> bool {
+                        return node->isHTMLInputElement();
+                    },
+                    false);
+
+                for (Element* node : inputNodes) {
+                    STARFISH_ASSERT(node->isHTMLInputElement());
+                    if (node->asHTMLInputElement()->type()->equalsWithoutCase(
+                            "text")) {
+                        // TODO: send (name, value) pairs to the POST module
+                    }
+                }
+            }
+        }
+    }
 }
 }

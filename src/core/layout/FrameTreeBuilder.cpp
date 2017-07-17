@@ -33,6 +33,7 @@
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/layout/FrameInputBox.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/layout/FrameReplacedVideo.h"
 #endif
@@ -484,6 +485,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 ctx.setIsInFrameInlineFlow(false);
             }
             shouldSkipChildren = true;
+        } else if (current->isHTMLInputElement()) {
+            currentFrame = FrameInputBox::buildFrameTree(current, ctx, force);
+            shouldSkipChildren = true;
         } else {
             if (display == DisplayValue::BlockDisplayValue ||
                 display == DisplayValue::InlineBlockDisplayValue) {
@@ -580,7 +584,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     } else {
         shouldSkipChildren =
             current->frame() && (current->frame()->isFrameReplaced() ||
-                                 current->frame()->isFrameLineBreak());
+                                 current->frame()->isFrameLineBreak() ||
+                                 current->frame()->isFrameInputBox());
     }
 
     Frame* currentFrame = current->frame();
