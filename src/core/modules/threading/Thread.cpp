@@ -35,7 +35,12 @@ void registerMainThread()
 
 bool isMainThread()
 {
-    return getpid() == main_tid;
+#ifdef SYS_gettid
+    return syscall(SYS_gettid) == main_tid;
+#else
+    return gettid() == main_tid;
+#endif
+    return true;
 }
 
 Thread::Thread()

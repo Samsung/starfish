@@ -26,7 +26,7 @@
 
 #include <pthread.h>
 
-#if defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 #include <dali-toolkit/dali-toolkit.h>
 #include "platform/window/PlatformWindow.h"
 
@@ -105,7 +105,7 @@ static void printMemps(
 }
 #endif
 
-#ifdef PORT_GRAPHIC_BACKEND_DALI
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
 using namespace Dali;
 
 char* url = nullptr;
@@ -124,25 +124,54 @@ public:
     ~DaliShellController()
     {
     }
+
+    bool updateTick()
+    {
+        m_daliBuffer.Update();
+        return true;
+    }
     void Create(Application& application)
     {
         int width = m_width, height = m_height;
-        int flag = 0;
+
+        m_daliBuffer =
+            Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+        m_mainView = Dali::Toolkit::ImageView::New(m_daliBuffer);
+        m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+        m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+        m_mainView.SetPosition(0, 0);
+        Dali::Stage::GetCurrent().Add(m_mainView);
 
         // TODO: Need to get screen info from X11.
         // Temporally, rect's width and height are set to window size.
-        ScreenInfo info;
-        info.rect.setWidth(width);
-        info.rect.setHeight(height);
-        info.availableRect.setWidth(width);
-        info.availableRect.setHeight(height);
 
-        m_sf =
-            new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                                   "Asia/Seoul", &application, width, height, 1,
-                                   info, "", "/tmp/StarFish_Cookies.txt");
+        pthread_t t2;
+        pthread_attr_t attr2;
+        pthread_attr_init(&attr2);
+        pthread_create(
+            &t2, &attr2,
+            [](void* data) -> void* {
+                int flag = 0;
+                DaliShellController* app = (DaliShellController*)data;
 
-        m_sf->loadHTMLDocument(String::createASCIIString(url));
+                ScreenInfo info;
+                info.rect.setWidth(app->m_width);
+                info.rect.setHeight(app->m_height);
+                info.availableRect.setWidth(app->m_width);
+                info.availableRect.setHeight(app->m_height);
+
+                app->m_sf = new StarFish::StarFish(
+                    (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
+                    app, app->m_width, app->m_height, 1, info, "",
+                    "/tmp/StarFish_Cookies.txt");
+                app->m_sf->registerFrameBuffer(
+                    (void*)app->m_daliBuffer.GetBuffer());
+                app->m_sf->loadHTMLDocument(String::createASCIIString(url));
+                app->m_sf->run();
+
+                return NULL;
+            },
+            this);
 
         pthread_t t;
         pthread_attr_t attr;
@@ -193,21 +222,22 @@ public:
                        },
                        m_sf);
 
-        // mApplication.AddIdle(MakeCallback(this,
-        // &DaliShellController::OnIdle));
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::TouchEventHandler);
         Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
             this, &DaliShellController::HoverEventHandler);
-        m_sf->run();
+
+        m_timer = Dali::Timer::New(20);
+        m_timer.TickSignal().Connect(this, &DaliShellController::updateTick);
+
+        m_timer.Start();
     }
-    void OnIdle()
-    {
-        m_sf->run();
-        mApplication.AddIdle(MakeCallback(this, &DaliShellController::OnIdle));
-    }
+
     bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
     {
+        // TODO
+        return true;
+
         size_t pointCount = data.GetPointCount();
         if (pointCount == 1) {
             // Single touch event
@@ -248,6 +278,9 @@ public:
     }
     bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
     {
+        // TODO
+        return true;
+
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFishEnterer enter(m_sf);
         unsigned char buttons =
@@ -260,12 +293,14 @@ public:
         return true;
     }
 
-private:
     bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
     StarFish::StarFish* m_sf;
     Application& mApplication;
+    Dali::BufferImage m_daliBuffer;
+    Dali::Toolkit::ImageView m_mainView;
+    Dali::Timer m_timer;
 };
 #endif
 
@@ -337,7 +372,7 @@ int main(int argc, char* argv[])
         setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
     }
 
-#if defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 
     url = argv[1];
     Application application = Application::New(&argc, &argv);

@@ -56,9 +56,8 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Elementary.h>
 extern Evas_Object* g_imgBufferForScreehShot;
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 #include <cairo.h>
-#include <dali-toolkit/dali-toolkit.h>
 extern unsigned char* g_imgBufferForScreehShot;
 #endif
 #endif
@@ -676,7 +675,7 @@ void WebView::rendering()
                 exit(0);
             }
 
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
             cairo_surface_t* png_buffer;
             png_buffer = cairo_image_surface_create_for_data(
                 g_imgBufferForScreehShot, CAIRO_FORMAT_ARGB32,
@@ -691,13 +690,7 @@ void WebView::rendering()
 
             if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                 strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                Dali::Application* app =
-                    (Dali::Application*)starFish()->nativeHandle();
-                if (app) {
-                    app->Quit();
-                } else {
-                    exit(0);
-                }
+                exit(0);
             }
 
 #endif

@@ -15,7 +15,8 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) && defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) && \
+    defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 
 #include "StarFish.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -25,45 +26,20 @@
 #include "core/page/Window.h"
 
 #include <uv.h>
-#include <dali-toolkit/dali-toolkit.h>
 
 namespace StarFish {
-
-// TODO: Should pause idler when there is no task on it's queue.
-class DaliIdler : public Dali::ConnectionTracker, public gc {
-public:
-    const int IdlerInterval = 20; // ms(unit)
-    DaliIdler(MessageLoop* loop)
-        : m_messageLoop(loop)
-        , m_isActive(false)
-    {
-        m_native_timer = Dali::Timer::New(IdlerInterval);
-        m_native_timer.TickSignal().Connect(this, &DaliIdler::IdleTick);
-        m_native_timer.Start();
-    }
-
-    bool isRunning()
-    {
-        return m_isActive;
-    }
-
-    bool IdleTick()
-    {
-        m_messageLoop->run();
-        return true;
-    }
-
-private:
-    Dali::Timer m_native_timer;
-    MessageLoop* m_messageLoop;
-    bool m_isActive;
-};
 
 MessageLoop::MessageLoop(StarFish* sf)
     : m_starFish(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
 {
-    loop_handle = new (NoGC) DaliIdler(this);
+    uv_signal_t sigterm;
+    uv_signal_init(uv_default_loop(), &sigterm);
+    uv_signal_start(&sigterm, nullptr, SIGTERM);
+
+    uv_signal_t sigint;
+    uv_signal_init(uv_default_loop(), &sigint);
+    uv_signal_start(&sigint, nullptr, SIGINT);
 }
 
 void MessageLoop::run()
@@ -77,6 +53,18 @@ struct IdlerData {
     void* m_data1;
     void* m_data2;
     uv_idle_t m_idler_uv;
+    MessageLoop* m_ml;
+    BrowsingContext* m_ctx;
+    volatile bool m_shouldExecute;
+    bool m_isMainThreadData;
+};
+
+struct IdlerDataAsync {
+    void (*m_fn)(size_t, void*);
+    void* m_data;
+    void* m_data1;
+    void* m_data2;
+    uv_async_t m_idler_uv;
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
     volatile bool m_shouldExecute;
@@ -162,10 +150,15 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     return (size_t)id;
 }
 
+void uv_clouse_cb(uv_handle_t* handle)
+{
+    delete (IdlerDataAsync*)handle->data;
+}
+
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
 {
-    IdlerData* id = new IdlerData;
+    IdlerDataAsync* id = new IdlerDataAsync;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
     id->m_fn = fn;
@@ -178,10 +171,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
+    uv_async_init(uv_default_loop(), &id->m_idler_uv, [](uv_async_t* handle) {
+        IdlerDataAsync* id = (IdlerDataAsync*)handle->data;
         {
             Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
             id->m_ml->m_idlersFromOtherThread.erase(
@@ -191,9 +182,10 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
             StarFishEnterer enter(id->m_ml->m_starFish);
             id->m_fn((size_t)id, id->m_data);
         }
-        uv_idle_stop(handle);
-        delete id;
+        uv_close((uv_handle_t*)handle, &uv_clouse_cb);
     });
+    id->m_idler_uv.data = id;
+    uv_async_send(&id->m_idler_uv);
     return (size_t)id;
 }
 
@@ -201,7 +193,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
-    IdlerData* id = new IdlerData;
+    IdlerDataAsync* id = new IdlerDataAsync;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
     id->m_fn = (void (*)(size_t, void*))fn;
@@ -214,10 +206,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
         m_idlersFromOtherThread.insert((size_t)id);
     }
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
+    uv_async_init(uv_default_loop(), &id->m_idler_uv, [](uv_async_t* handle) {
+        IdlerDataAsync* id = (IdlerDataAsync*)handle->data;
         {
             Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
             id->m_ml->m_idlersFromOtherThread.erase(
@@ -228,9 +218,10 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
             ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                        id->m_data1);
         }
-        uv_idle_stop(handle);
-        delete id;
+        uv_close((uv_handle_t*)handle, &uv_clouse_cb);
     });
+    id->m_idler_uv.data = id;
+    uv_async_send(&id->m_idler_uv);
     return (size_t)id;
 }
 

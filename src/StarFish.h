@@ -170,6 +170,17 @@ public:
 
     void setupInspector(uint32_t portNumber = 23888);
 #endif
+
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+    void registerFrameBuffer(void* framBuffer)
+    {
+        m_frameBufffer = framBuffer;
+    }
+    void* frameBuffer()
+    {
+        return m_frameBufffer;
+    }
+#endif
 protected:
     void enter();
     void exit();
@@ -200,9 +211,10 @@ protected:
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
     String* m_cookieStoreFilePath;
-#ifdef PORT_GRAPHIC_BACKEND_DALI
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
     int m_height;
+    void* m_frameBufffer;
 #endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;

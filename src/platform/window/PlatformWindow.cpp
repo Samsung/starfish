@@ -37,7 +37,7 @@ bool g_forceRendering = false;
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <Elementary.h>
 Evas_Object* g_imgBufferForScreehShot;
-#elif defined(PORT_GRAPHIC_BACKEND_DALI)
+#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
 unsigned char* g_imgBufferForScreehShot;
 #endif
 #endif

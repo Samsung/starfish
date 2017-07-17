@@ -50,10 +50,6 @@
 extern Evas* g_internalCanvas;
 #endif
 
-#ifdef PORT_GRAPHIC_BACKEND_DALI
-#include <dali-toolkit/dali-toolkit.h>
-#endif
-
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <tizen.h>
 #endif
@@ -186,7 +182,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
     , m_cookieStoreFilePath(String::fromUTF8(cookieStoreFilePath))
 {
-#ifdef PORT_GRAPHIC_BACKEND_DALI
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;
     m_height = h;
 #endif
@@ -366,7 +362,7 @@ void StarFish::loadHTMLDocument(String* filePath)
     int width;
     int height;
 
-#if defined(PORT_GRAPHIC_BACKEND_DALI)
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     width = m_width;
     height = m_height;
 #elif defined(PORT_GRAPHIC_BACKEND_EFL)

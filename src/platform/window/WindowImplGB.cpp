@@ -15,16 +15,16 @@
  */
 
 #include "StarFishConfig.h"
-#ifdef PORT_GRAPHIC_BACKEND_DALI
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
 
 #include "StarFish.h"
-#include <dali-toolkit/dali-toolkit.h>
-// #include <dali/devel-api/adaptor-framework/window-devel.h>
+#include <cairo.h>
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/threading/Locker.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "core/page/BrowsingContext.h"
@@ -52,22 +52,19 @@ public:
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
+        , m_internalBuffer(nullptr)
+        , m_frameBufferSwitchMutex(new Mutex())
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
-
-        m_daliBuffer =
-            Dali::BufferImage::New(m_width, m_height, Dali::Pixel::BGRA8888);
-        m_mainView = Dali::Toolkit::ImageView::New(m_daliBuffer);
-        m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
-        m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
-        m_mainView.SetPosition(0, 0);
-        Dali::Stage::GetCurrent().Add(m_mainView);
+        initBuffer();
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
                 STARFISH_LOG_INFO("WindowImplDALI::~WindowImplDALI\n");
+                WindowImplDALI* s = (WindowImplDALI*)obj;
+                free(s->m_internalBuffer);
             },
             NULL, NULL, NULL);
     }
@@ -96,12 +93,26 @@ public:
 
     virtual void resizeTo(int w, int h)
     {
-        m_mainView.SetSize(w, h);
+        // TODO
     }
 
     virtual void* unwrap()
     {
+        // return getCompletedBuffer();
         return nullptr;
+    }
+
+    void initBuffer()
+    {
+        m_internalBuffer = (void*)malloc(m_width * m_height * sizeof(uint32_t));
+        m_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, m_width);
+    }
+
+    void flushBuffer()
+    {
+        Locker<Mutex> l(*m_frameBufferSwitchMutex);
+        memcpy(m_starFish->frameBuffer(), m_internalBuffer,
+               m_width * m_height * sizeof(uint32_t));
     }
 
     virtual void clearResources();
@@ -112,8 +123,10 @@ public:
     size_t m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
     float m_lastMouseX, m_lastMouseY;
-    Dali::BufferImage m_daliBuffer;
-    Dali::Toolkit::ImageView m_mainView;
+
+    void* m_internalBuffer;
+    size_t m_stride;
+    Mutex* m_frameBufferSwitchMutex;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -257,7 +270,7 @@ void WebView::setNeedsRendering()
             id->m_fn(id->m_data);
             ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
             ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
-            ((WindowImplDALI*)wnd)->m_daliBuffer.Update();
+            ((WindowImplDALI*)wnd)->flushBuffer();
             GC_FREE(id);
         },
         id);
@@ -279,16 +292,17 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
 #endif
 
     struct dummy {
-        Dali::BufferImage image;
+        void* image;
         int w;
         int h;
+        int stride;
     };
 
     dummy* d = new dummy;
     d->w = m_width;
     d->h = m_height;
-    d->image = m_daliBuffer;
-
+    d->image = m_internalBuffer;
+    d->stride = m_stride;
     Canvas* canvas = Canvas::createDirect(d);
     delete d;
 

@@ -61,7 +61,6 @@ public:
     void run();
 
 protected:
-    void* loop_handle;
     StarFish* m_starFish;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
