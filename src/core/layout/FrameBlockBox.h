@@ -29,15 +29,13 @@ class FrameBlockBox;
 class LineFormattingContext;
 
 struct TextRun {
-    FrameText* m_frameText;
     StringView m_stringView;
     CharDirection m_direction;
 
-    TextRun(FrameText* frameText, String* str, size_t startPosition,
-            size_t endPosition, CharDirection dir)
+    TextRun(String* str, size_t startPosition, size_t endPosition,
+            CharDirection dir)
         : m_stringView(StringView(str, startPosition, endPosition))
     {
-        m_frameText = frameText;
         m_direction = dir;
     }
 #ifndef NDEBUG
@@ -60,9 +58,10 @@ class InlineTextBox : public FrameBox {
 public:
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->node(), frame->style())
-        , m_textRun(run)
+        , m_text(run.m_stringView)
     {
         m_flags.m_isFirstLine = isFirstLine;
+        m_flags.m_direction = run.m_direction;
     }
 
     virtual bool isInlineBox() const
@@ -89,9 +88,8 @@ public:
     {
         FrameBox::dump(depth);
         printf(" [(%s), dir: %d, start: %d, end %d] ",
-               m_textRun.m_stringView.substring()->utf8Data(),
-               (int)charDirection(), (int)m_textRun.m_stringView.start(),
-               (int)m_textRun.m_stringView.end());
+               m_text.substring()->utf8Data(), (int)charDirection(),
+               (int)m_text.start(), (int)m_text.end());
     }
 #endif
     virtual const char* name()
@@ -101,27 +99,25 @@ public:
 
     void setText(String* t)
     {
-        m_textRun.m_stringView = StringView(t, 0, t->length());
+        m_text = StringView(t, 0, t->length());
     }
 
     CharDirection charDirection()
     {
-        return m_textRun.m_direction;
+        return m_flags.m_direction;
     }
 
     void setCharDirection(CharDirection dir)
     {
-        m_textRun.m_direction = dir;
+        m_flags.m_direction = dir;
     }
 
-    FrameText* origin()
-    {
-        return m_textRun.m_frameText;
-    }
+    FrameText* origin();
 
-    const TextRun& textRun()
+    TextRun textRun()
     {
-        return m_textRun;
+        return TextRun(m_text.string(), m_text.start(), m_text.end(),
+                       charDirection());
     }
 
     void unmarkFirstLine()
@@ -157,7 +153,7 @@ public:
     }
 
 protected:
-    TextRun m_textRun;
+    StringView m_text;
 };
 
 class InlineBoxLayoutParentBox : public FrameBox {
@@ -223,8 +219,8 @@ public:
     FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
     void removeDanglingSpace(LineFormattingContext* ctx);
-    bool containOnlyEmptyInlineNonReplacedBoxes();
-    bool isAbsolutePositionedBoxLayoutParent();
+    bool containOnlyEmptyInlineNonReplacedBoxes(LineFormattingContext* ctx);
+    bool isAbsolutePositionedBoxLayoutParent(LineFormattingContext* ctx);
 
     void insertInlineBox(FrameBox* box)
     {
@@ -234,23 +230,8 @@ public:
     LayoutUnit layoutInlineBoxes(LayoutUnit start);
     void registerRelativePositionedBoxes(LayoutContext& ctx);
 
-    size_t absolutePositionedBoxLayoutParentCnt() const
-    {
-        return m_absolutePositionedLayoutParentCnt;
-    }
-
-    void markAbsolutePositionedBoxLayoutParent()
-    {
-        m_absolutePositionedLayoutParentCnt++;
-    }
-
-    void unMarkAbsolutePositionedBoxLayoutParent()
-    {
-        STARFISH_ASSERT(m_absolutePositionedLayoutParentCnt != 0);
-        m_absolutePositionedLayoutParentCnt--;
-    }
-
-    void moveToNewLineBox(FrameBox* box, LineBox* lineBox);
+    void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
+                          LineBox* lineBox);
 
     void setLeftMBPs();
     void setRightMBPs();
@@ -267,13 +248,11 @@ protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     GCVector<FrameBox*> m_boxes;
-    size_t m_absolutePositionedLayoutParentCnt;
 
     InlineBoxLayoutParentBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
         , m_ascender(0)
         , m_descender(0)
-        , m_absolutePositionedLayoutParentCnt(0)
     {
     }
 };
@@ -299,9 +278,14 @@ public:
         m_ascender = inlineBox->m_ascender;
         m_descender = inlineBox->m_descender;
 
-        m_margin = inlineBox->m_margin;
-        m_border = inlineBox->m_border;
-        m_padding = inlineBox->m_padding;
+        if (inlineBox->hasRareData()) {
+            ensureFrameBoxRareData()->m_margin =
+                inlineBox->frameBoxRareData()->m_margin;
+            ensureFrameBoxRareData()->m_border =
+                inlineBox->frameBoxRareData()->m_border;
+            ensureFrameBoxRareData()->m_padding =
+                inlineBox->frameBoxRareData()->m_padding;
+        }
 
         m_orgMargin = inlineBox->m_orgMargin;
         m_orgBorder = inlineBox->m_orgBorder;
@@ -379,12 +363,12 @@ public:
 
     bool isCollapsed() const
     {
-        return m_isCollapsed;
+        return m_flags.m_isCollapsed;
     }
 
     void markCollapsed()
     {
-        m_isCollapsed = true;
+        m_flags.m_isCollapsed = true;
     }
 
     bool isProcessedStartingMBP() const
@@ -438,30 +422,29 @@ public:
 
     void unsetLeftMBP()
     {
-        m_margin.setLeft(0);
-        m_border.setLeft(0);
-        m_padding.setLeft(0);
+        setMarginLeft(0);
+        setBorderLeft(0);
+        setPaddingLeft(0);
     }
 
     void unsetRightMBP()
     {
-        m_margin.setRight(0);
-        m_border.setRight(0);
-        m_padding.setRight(0);
+        setMarginRight(0);
+        setBorderRight(0);
+        setPaddingRight(0);
     }
 
 protected:
-    bool m_isCollapsed;
     FrameInline* m_origin;
     unsigned* m_mbpStatus;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin, bool isFirstLine)
         : InlineBoxLayoutParentBox(frame)
-        , m_isCollapsed(false)
         , m_origin(origin)
         , m_mbpStatus(nullptr)
     {
+        m_flags.m_isCollapsed = false;
         m_flags.m_isFirstLine = isFirstLine;
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared();
@@ -480,22 +463,22 @@ protected:
 
     void setTopBottomOrgMBP()
     {
-        m_orgMargin.setTop(m_margin.top());
-        m_orgMargin.setBottom(m_margin.bottom());
-        m_orgBorder.setTop(m_border.top());
-        m_orgBorder.setBottom(m_border.bottom());
-        m_orgPadding.setTop(m_padding.top());
-        m_orgPadding.setBottom(m_padding.bottom());
+        m_orgMargin.setTop(marginTop());
+        m_orgMargin.setBottom(marginBottom());
+        m_orgBorder.setTop(borderTop());
+        m_orgBorder.setBottom(borderBottom());
+        m_orgPadding.setTop(paddingTop());
+        m_orgPadding.setBottom(paddingBottom());
     }
 
     void unsetTopBottomMBP()
     {
-        m_margin.setTop(0);
-        m_margin.setBottom(0);
-        m_border.setTop(0);
-        m_border.setBottom(0);
-        m_padding.setTop(0);
-        m_padding.setBottom(0);
+        setMarginTop(0);
+        setMarginBottom(0);
+        setBorderTop(0);
+        setBorderBottom(0);
+        setPaddingTop(0);
+        setPaddingBottom(0);
     }
 };
 
@@ -841,6 +824,32 @@ public:
         m_inlineBlockAscender[box] = ascender;
     }
 
+    size_t absolutePositionedBoxLayoutParentCnt(
+        InlineBoxLayoutParentBox* box) const
+    {
+        auto iter = m_absolutePositionedLayoutParentCnt.find(box);
+        if (iter != m_absolutePositionedLayoutParentCnt.end()) {
+            return iter->second;
+        }
+        return 0;
+    }
+
+    void markAbsolutePositionedBoxLayoutParent(InlineBoxLayoutParentBox* box)
+    {
+        auto iter = m_absolutePositionedLayoutParentCnt.find(box);
+        if (iter == m_absolutePositionedLayoutParentCnt.end()) {
+            m_absolutePositionedLayoutParentCnt[box] = 1;
+        } else {
+            iter->second++;
+        }
+    }
+
+    void unMarkAbsolutePositionedBoxLayoutParent(InlineBoxLayoutParentBox* box)
+    {
+        STARFISH_ASSERT(absolutePositionedBoxLayoutParentCnt(box) != 0);
+        m_absolutePositionedLayoutParentCnt[box]--;
+    }
+
     bool dontBreakLine(Frame* f, LayoutUnit width);
 
     void computeDirection(Frame* parent, DirectionValue direction);
@@ -879,6 +888,9 @@ public:
     std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;
     std::unordered_map<FrameBox*, size_t> m_inlineBoxIndexes;
+
+    std::unordered_map<InlineBoxLayoutParentBox*, size_t>
+        m_absolutePositionedLayoutParentCnt;
 
     void setInlineBoxIndex(FrameBox* f, size_t inlineBoxIdx)
     {

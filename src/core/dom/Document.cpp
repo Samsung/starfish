@@ -141,11 +141,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     auto df = new FrameDocument(this);
     setFrame(df);
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) { STARFISH_LOG_INFO("Document::~Document\n"); },
-        NULL, NULL, NULL);
 }
 
 BrowsingContext* Document::browsingContext()

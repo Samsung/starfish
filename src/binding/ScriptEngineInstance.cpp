@@ -48,4 +48,9 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
             window);
     });
 }
+
+void ScriptEngineInstance::close()
+{
+    m_engineInstance->destroy();
+}
 }

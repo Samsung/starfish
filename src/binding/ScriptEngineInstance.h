@@ -36,6 +36,8 @@ public:
         return m_engineInstance;
     }
 
+    void close();
+
 protected:
     ScriptEngine m_engineInstance;
 };

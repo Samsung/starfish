@@ -73,6 +73,7 @@ class WebView : public StarFishHoldable, public gc {
 
 public:
     static WebView* create(StarFish* starFish);
+    void close();
 
     BrowsingContext* mainBrowsingContext()
     {
