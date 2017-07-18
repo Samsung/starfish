@@ -401,7 +401,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // We further reduce column widths if all columns with
             // "width: auto" are reduced to their min preferred widths and
             // the columns other than "width: auto" still have rooms to reduce.
-            if (numOfReducedToMinWidths == cellsWithAutoWidths.size()) {
+            if ((numOfReducedToMinWidths == cellsWithAutoWidths.size()) ||
+                (columnsMayNeedToAdjustWidths.size() > 0)) {
                 LayoutUnit remainingWidth = tableWidth;
                 remainingWidth -= borderWidth() + paddingWidth();
                 remainingWidth -=
