@@ -17,14 +17,18 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/resource_request/ResourceRequest.h"
-#include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
-#include "core/modules/threading/ThreadPool.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPRequest.h"
 #include "platform/network/http/HTTPResponse.h"
 #include "platform/network/http/HTTPTransaction.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
+#include "platform/network/NetworkSharedResourceManager.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/message_loop/Timer.h"
+
+#define CURL_HANDLE_DATA_CLEAR_TIME 30000.0
 
 namespace StarFish {
 
@@ -115,6 +119,24 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         requestData->request->handleError(ResourceRequest::ERROR);
     }
 
+    if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
+        SIZE_MAX) {
+        requestData->request->starFish()->timer()->removeTimer(
+            NetworkSharedResourceManager::getInstance()->cacheClearTimerID());
+    }
+
+    size_t timerID = requestData->request->starFish()->timer()->addTimer(
+        CURL_HANDLE_DATA_CLEAR_TIME, requestData->request->document()->window(),
+        [](Window* wnd, void* data) {
+            NetworkSharedResourceManager::getInstance()
+                ->clearAllCurlHandleDataCach();
+            NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
+                0);
+        },
+        nullptr, false);
+
+    NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(timerID);
+
     requestData->request->m_activeNetworkURLWorkerData = nullptr;
     requestData->~NetworkURLWorkerData();
     GC_FREE(requestData);
@@ -146,7 +168,9 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 
 void NetworkURLResourceRequestJobDelegate::send(String* body)
 {
+    STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
+
     NetworkURLWorkerData* data = new (NoGC) NetworkURLWorkerData();
     data->request = m_orgProxy;
     data->isAborted = false;
@@ -178,8 +202,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     fillHeadersWithResourceRequestHeader(headers);
 
     data->httpTransaction->setHTTPRequest(
-        HTTPRequest::create(m_orgProxy->m_url->urlString()->utf8Data(), method,
-                            headers, body->utf8Data()));
+        HTTPRequest::create(m_orgProxy->m_url->urlString()->toUTF8NonGCString(),
+                            m_orgProxy->m_url->host()->toUTF8NonGCString(),
+                            method, headers, body->toUTF8NonGCString()));
 
     data->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));

@@ -20,10 +20,12 @@
 
 namespace StarFish {
 
-HTTPRequest::HTTPRequest(const std::string& url, const std::string& method,
+HTTPRequest::HTTPRequest(const std::string& url, const std::string& baseURL,
+                         const std::string& method,
                          const HTTPHeaderMap& headers,
                          const std::string& entityBody)
     : m_url(url)
+    , m_baseURL(baseURL)
     , m_method(method)
     , m_headers(headers)
     , m_entityBody(entityBody)
