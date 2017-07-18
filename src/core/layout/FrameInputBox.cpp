@@ -60,14 +60,16 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
             parent->document(),
             StyleResolver::PseudoElementType::PseudoElementFormOnly);
         textElement->setParentNode(current);
-        textElement->setStyle(current->style());
+        ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
+        textElement->setStyle(pseudoStyle);
 
         String* userVal = current->asHTMLInputElement()->value();
         Text* textNode = new Text(current->document(), userVal);
-        textNode->setStyle(current->style());
         textNode->setParentNode(textElement);
+        ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
+        textNode->setStyle(textStyle);
 
-        FrameText* frameText = new FrameText(textNode, current->style());
+        FrameText* frameText = new FrameText(textNode, textStyle);
         textNode->setFrame(frameText);
         currentFrame->appendChild(frameText);
     }
@@ -76,5 +78,14 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 
     STARFISH_ASSERT(currentFrame);
     return currentFrame;
+}
+
+ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
+{
+    ComputedStyle* childStyle = new ComputedStyle(parent->style());
+    childStyle->loadResources(parent);
+    childStyle->arrangeStyleValues(parent->style());
+    childStyle->setDisplay(DisplayValue::InlineDisplayValue);
+    return childStyle;
 }
 }

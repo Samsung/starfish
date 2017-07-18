@@ -22,6 +22,7 @@
 namespace StarFish {
 
 class FrameTreeBuilderContext;
+class ComputedStyle;
 
 class FrameInputBox : public FrameBlockBox {
 public:
@@ -41,6 +42,7 @@ public:
     }
 
 private:
+    static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };
 }
 
