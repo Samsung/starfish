@@ -67,7 +67,7 @@ void PlatformWindow::resume()
 
 void PlatformWindow::close()
 {
-    webView()->mainBrowsingContext()->close();
+    webView()->close();
 }
 
 void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,

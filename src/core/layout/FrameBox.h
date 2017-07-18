@@ -56,16 +56,27 @@ struct VerticalDataLocToContainingBlock {
     }
 };
 
+#define FRAMEBOX_RAREDATA_TAG 0x3
+struct FrameBoxRareData : public gc {
+    size_t m_frameBoxRareDataTag;
+    Frame* m_layoutParent;
+    LayoutBoxSurroundData m_padding, m_border, m_margin;
+    StackingContext* m_stackingContext;
+
+    FrameBoxRareData(Frame* layoutParent)
+        : m_frameBoxRareDataTag(FRAMEBOX_RAREDATA_TAG)
+        , m_layoutParent(layoutParent)
+        , m_stackingContext(nullptr)
+    {
+    }
+};
+
 class FrameBox : public Frame {
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
         , m_layoutParent(nullptr)
         , m_frameRect(0, 0, 0, 0)
-        , m_padding()
-        , m_border()
-        , m_margin()
-        , m_stackingContext(nullptr)
     {
     }
 
@@ -94,7 +105,9 @@ public:
 
     StackingContext* stackingContext()
     {
-        return m_stackingContext;
+        if (hasRareData())
+            return frameBoxRareData()->m_stackingContext;
+        return nullptr;
     }
 
     const LayoutRect& frameRect()
@@ -176,162 +189,270 @@ public:
 
     void setPaddingTop(LayoutUnit t)
     {
-        m_padding.setTop(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_padding.setTop(t);
     }
 
     void setPaddingRight(LayoutUnit t)
     {
-        m_padding.setRight(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_padding.setRight(t);
     }
 
     void setPaddingBottom(LayoutUnit t)
     {
-        m_padding.setBottom(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_padding.setBottom(t);
     }
 
     void setPaddingLeft(LayoutUnit t)
     {
-        m_padding.setLeft(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_padding.setLeft(t);
     }
 
     LayoutUnit paddingTop() const
     {
-        return m_padding.top();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.top();
+        }
+        return 0;
     }
 
     LayoutUnit paddingRight() const
     {
-        return m_padding.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.right();
+        }
+        return 0;
     }
 
     LayoutUnit paddingBottom() const
     {
-        return m_padding.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.bottom();
+        }
+        return 0;
     }
 
     LayoutUnit paddingLeft() const
     {
-        return m_padding.left();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.left();
+        }
+        return 0;
     }
 
     void setBorderTop(LayoutUnit t)
     {
-        m_border.setTop(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_border.setTop(t);
     }
 
     void setBorderRight(LayoutUnit t)
     {
-        m_border.setRight(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_border.setRight(t);
     }
 
     void setBorderBottom(LayoutUnit t)
     {
-        m_border.setBottom(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_border.setBottom(t);
     }
 
     void setBorderLeft(LayoutUnit t)
     {
-        m_border.setLeft(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_border.setLeft(t);
     }
 
     LayoutUnit borderTop() const
     {
-        return m_border.top();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.top();
+        }
+        return 0;
     }
 
     LayoutUnit borderRight() const
     {
-        return m_border.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.right();
+        }
+        return 0;
     }
 
     LayoutUnit borderBottom() const
     {
-        return m_border.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.bottom();
+        }
+        return 0;
     }
 
     LayoutUnit borderLeft() const
     {
-        return m_border.left();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.left();
+        }
+        return 0;
     }
 
     void setMarginTop(LayoutUnit t)
     {
-        m_margin.setTop(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_margin.setTop(t);
     }
 
     void setMarginRight(LayoutUnit t)
     {
-        m_margin.setRight(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_margin.setRight(t);
     }
 
     void setMarginBottom(LayoutUnit t)
     {
-        m_margin.setBottom(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_margin.setBottom(t);
     }
 
     void setMarginLeft(LayoutUnit t)
     {
-        m_margin.setLeft(t);
+        if (!hasRareData() && t == 0) {
+            return;
+        }
+        ensureFrameBoxRareData()->m_margin.setLeft(t);
     }
 
     LayoutUnit marginTop() const
     {
-        return m_margin.top();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.top();
+        }
+        return 0;
     }
 
     LayoutUnit marginRight() const
     {
-        return m_margin.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.right();
+        }
+        return 0;
     }
 
     LayoutUnit marginBottom() const
     {
-        return m_margin.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.bottom();
+        }
+        return 0;
     }
 
     LayoutUnit marginLeft() const
     {
-        return m_margin.left();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.left();
+        }
+        return 0;
     }
 
     LayoutUnit paddingWidth() const
     {
-        return m_padding.left() + m_padding.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.left() +
+                   frameBoxRareData()->m_padding.right();
+        }
+        return 0;
     }
 
     LayoutUnit paddingHeight() const
     {
-        return m_padding.top() + m_padding.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_padding.top() +
+                   frameBoxRareData()->m_padding.bottom();
+        }
+        return 0;
     }
 
     LayoutUnit borderWidth() const
     {
-        return m_border.left() + m_border.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.left() +
+                   frameBoxRareData()->m_border.right();
+        }
+        return 0;
     }
 
     LayoutUnit borderHeight() const
     {
-        return m_border.top() + m_border.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_border.top() +
+                   frameBoxRareData()->m_border.bottom();
+        }
+        return 0;
     }
 
     LayoutUnit marginWidth() const
     {
-        return m_margin.left() + m_margin.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.left() +
+                   frameBoxRareData()->m_margin.right();
+        }
+        return 0;
     }
 
     LayoutUnit marginHeight() const
     {
-        return m_margin.top() + m_margin.bottom();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.top() +
+                   frameBoxRareData()->m_margin.bottom();
+        }
+        return 0;
     }
 
     virtual LayoutUnit leftMBPWidth()
     {
-        return m_margin.left() + m_border.left() + m_padding.left();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.left() +
+                   frameBoxRareData()->m_border.left() +
+                   frameBoxRareData()->m_padding.left();
+        } else {
+            return 0;
+        }
     }
 
     virtual LayoutUnit rightMBPWidth()
     {
-        return m_margin.right() + m_border.right() + m_padding.right();
+        if (hasRareData()) {
+            return frameBoxRareData()->m_margin.right() +
+                   frameBoxRareData()->m_border.right() +
+                   frameBoxRareData()->m_padding.right();
+        } else {
+            return 0;
+        }
     }
 
     LayoutUnit mbpWidth()
@@ -478,16 +599,23 @@ public:
     virtual void setParent(Frame* f)
     {
         Frame::setParent(f);
-        m_layoutParent = f;
+        setLayoutParent(f);
     }
 
     void setLayoutParent(Frame* f)
     {
-        m_layoutParent = f;
+        if (hasRareData()) {
+            frameBoxRareData()->m_layoutParent = f;
+        } else {
+            m_layoutParent = f;
+        }
     }
 
     virtual Frame* layoutParent() const
     {
+        if (hasRareData()) {
+            return frameBoxRareData()->m_layoutParent;
+        }
         return m_layoutParent;
     }
 
@@ -498,13 +626,35 @@ protected:
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,
                                           bool parentHasFixedValue);
+
+    bool hasRareData() const
+    {
+        size_t* ptr = (size_t*)m_layoutParent;
+        if (ptr && *ptr == FRAMEBOX_RAREDATA_TAG) {
+            return true;
+        }
+        return false;
+    }
+
+    FrameBoxRareData* ensureFrameBoxRareData()
+    {
+        if (hasRareData()) {
+            return (FrameBoxRareData*)m_layoutParent;
+        }
+        m_layoutParent = (Frame*)(new FrameBoxRareData(m_layoutParent));
+        return (FrameBoxRareData*)m_layoutParent;
+    }
+
+    FrameBoxRareData* frameBoxRareData() const
+    {
+        STARFISH_ASSERT(hasRareData());
+        return (FrameBoxRareData*)m_layoutParent;
+    }
+
     Frame* m_layoutParent;
 
     // content + padding + border
     LayoutRect m_frameRect;
-
-    LayoutBoxSurroundData m_padding, m_border, m_margin;
-    StackingContext* m_stackingContext;
 };
 }
 

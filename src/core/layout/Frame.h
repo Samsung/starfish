@@ -1339,6 +1339,10 @@ protected:
         bool m_heightComputed : 1;
         // special flag for InlineBox
         bool m_isFirstLine : 1;
+        // special flag for InlineTextBox
+        CharDirection m_direction : 2;
+        // special flag for InlineNonReplacedBox
+        bool m_isCollapsed : 1;
     } m_flags;
 
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(size_t),

@@ -623,7 +623,7 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
                         } else {
                             STARFISH_ASSERT(
                                 boxesToCopy[j]->isAbsolutePositioned());
-                            newBox->markAbsolutePositionedBoxLayoutParent();
+                            markAbsolutePositionedBoxLayoutParent(newBox);
                         }
 
                         setInlineBoxIndex(newBox,
@@ -1131,16 +1131,17 @@ void InlineBoxLayoutParentBox::removeDanglingSpace(LineFormattingContext* ctx)
     }
 }
 
-bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent()
+bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent(
+    LineFormattingContext* ctx)
 {
-    if (absolutePositionedBoxLayoutParentCnt() == 0) {
+    if (ctx->absolutePositionedBoxLayoutParentCnt(this) == 0) {
         auto iter = m_boxes.begin();
 
         while (iter != m_boxes.end()) {
             FrameBox* box = *iter;
             if (box->isInlineNonReplacedBox()) {
                 if (!box->asInlineNonReplacedBox()
-                         ->isAbsolutePositionedBoxLayoutParent()) {
+                         ->isAbsolutePositionedBoxLayoutParent(ctx)) {
                     return false;
                 }
             }
@@ -1154,7 +1155,8 @@ bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent()
     return false;
 }
 
-bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes()
+bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
+    LineFormattingContext* ctx)
 {
     if (m_boxes.size() == 0) {
         return true;
@@ -1168,7 +1170,7 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes()
             InlineNonReplacedBox* inrb = last->asInlineNonReplacedBox();
             if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
                 inrb->marginRight() == 0 &&
-                inrb->isAbsolutePositionedBoxLayoutParent()) {
+                inrb->isAbsolutePositionedBoxLayoutParent(ctx)) {
                 iter++;
                 continue;
             }
@@ -1217,15 +1219,16 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxes(
     }
 }
 
-void InlineBoxLayoutParentBox::moveToNewLineBox(FrameBox* box, LineBox* lineBox)
+void InlineBoxLayoutParentBox::moveToNewLineBox(LineFormattingContext* ctx,
+                                                FrameBox* box, LineBox* lineBox)
 {
     LayoutLocation loc = box->absolutePoint(lineBox);
     m_boxes.erase(std::find(m_boxes.begin(), m_boxes.end(), box));
     box->setX(loc.x());
     box->setY(0);
-    unMarkAbsolutePositionedBoxLayoutParent();
+    ctx->unMarkAbsolutePositionedBoxLayoutParent(this);
     lineBox->insertInlineBox(box);
-    lineBox->markAbsolutePositionedBoxLayoutParent();
+    ctx->markAbsolutePositionedBoxLayoutParent(lineBox);
 }
 
 void LineFormattingContext::markInlineBoxIndex(FrameBox* box)
@@ -1362,10 +1365,10 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
                 box->setY(0);
             }
             lineBox->insertInlineBox(box);
-            lineBox->markAbsolutePositionedBoxLayoutParent();
+            markAbsolutePositionedBoxLayoutParent(lineBox);
         } else {
             box->layoutParent()->asInlineBoxLayoutParentBox()->moveToNewLineBox(
-                box, lineBox);
+                this, box, lineBox);
         }
 
         iter = m_absolutePositionedBoxes.erase(iter);
@@ -1601,7 +1604,7 @@ void LineFormattingContext::removeAllInlineBoxes()
             iter++;
             continue;
         } else if (box->isAbsolutePositioned()) {
-            lineBox->unMarkAbsolutePositionedBoxLayoutParent();
+            unMarkAbsolutePositionedBoxLayoutParent(lineBox);
         }
 
         // already its x, y positions are somehow determined, so we have to
@@ -2144,8 +2147,8 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
             source = String::emptyString;
             start = end = 0;
         }
-        InlineTextBox* ib = new InlineTextBox(
-            f, TextRun(f, source, start, end, dir), isFirstLine);
+        InlineTextBox* ib =
+            new InlineTextBox(f, TextRun(source, start, end, dir), isFirstLine);
         ib->setLayoutParent(m_currentLayoutParent);
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
@@ -2185,7 +2188,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 }
 
                 InlineTextBox* ib = new InlineTextBox(
-                    f, TextRun(f, srcTxt, start, end, dir), isFirstLine);
+                    f, TextRun(srcTxt, start, end, dir), isFirstLine);
                 ib->setLayoutParent(m_currentLayoutParent);
                 ib->setWidth(style->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
@@ -2205,7 +2208,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                     }
                 }
                 InlineTextBox* ib = new InlineTextBox(
-                    f, TextRun(f, srcTxt, end, nextOffset, dir), isFirstLine);
+                    f, TextRun(srcTxt, end, nextOffset, dir), isFirstLine);
                 ib->setLayoutParent(m_currentLayoutParent);
                 ib->setWidth(style->font()->measureText(
                     ib->asInlineTextBox()->textRun().m_stringView));
@@ -2222,7 +2225,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                 }
             }
             InlineTextBox* ib = new InlineTextBox(
-                f, TextRun(f, srcTxt, offset, nextOffset, dir), isFirstLine);
+                f, TextRun(srcTxt, offset, nextOffset, dir), isFirstLine);
             ib->setLayoutParent(m_currentLayoutParent);
             ib->setWidth(textWidth);
             ib->setHeight(f->style()->font()->metrics().m_fontHeight);
@@ -2243,7 +2246,7 @@ void LineFormattingContext::handleAbsoluteBox(FrameBox* box, bool canInsert,
             m_currentLayoutParent->insertInlineBox(box);
         }
 
-        m_currentLayoutParent->markAbsolutePositionedBoxLayoutParent();
+        markAbsolutePositionedBoxLayoutParent(m_currentLayoutParent);
     } else {
         box->setLayoutParent(m_currentLayoutParent);
         m_word.concat(box);
@@ -2548,16 +2551,14 @@ static void breakTextRun(std::vector<TextRun>& runs, size_t breakRunIndex,
     size_t start = target.m_stringView.start();
     size_t end = breakTextIndex + 1;
     runs.insert(runs.begin() + breakRunIndex++,
-                TextRun(target.m_frameText,
-                        target.m_stringView.originalString(), start, end,
+                TextRun(target.m_stringView.originalString(), start, end,
                         charDirFromICUDir(
                             getTextDir(target.m_stringView, start, end))));
 
     start = breakTextIndex + 1;
     end = target.m_stringView.end();
     runs.insert(runs.begin() + breakRunIndex,
-                TextRun(target.m_frameText,
-                        target.m_stringView.originalString(), start, end,
+                TextRun(target.m_stringView.originalString(), start, end,
                         charDirFromICUDir(
                             getTextDir(target.m_stringView, start, end))));
 }
@@ -2581,8 +2582,8 @@ static void textBidiResolver(FrameText* frameText,
         UBiDiDirection dir = getTextDir(
             StringView(frameText->text(), 0, frameText->text()->length()), 0,
             frameText->text()->length());
-        runs.emplace_back(frameText, frameText->text(), 0,
-                          frameText->text()->length(), charDirFromICUDir(dir));
+        runs.emplace_back(frameText->text(), 0, frameText->text()->length(),
+                          charDirFromICUDir(dir));
     } else {
         int32_t start = 0;
         int32_t end;
@@ -2600,8 +2601,8 @@ static void textBidiResolver(FrameText* frameText,
                 utf32Len++;
             }
 
-            runs.emplace_back(frameText, frameText->text(), utf32Pos,
-                              utf32Pos + utf32Len, charDirFromICUDir(dir));
+            runs.emplace_back(frameText->text(), utf32Pos, utf32Pos + utf32Len,
+                              charDirFromICUDir(dir));
             utf32Pos += utf32Len;
 
             start = end;
@@ -2648,7 +2649,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
     DirectionValue currentDirection = direction;
     bool everMeetNonNeutralThing = false;
     std::vector<Frame*> pendingNeutralFrames;
-    std::vector<TextRun> pendingTextRuns;
+    std::vector<std::pair<TextRun, FrameText*>> pendingTextRuns;
     DirectionValue directionWhenNeutralMeets = direction;
 
     auto putOffNeutral = [&](Frame* f) {
@@ -2684,10 +2685,12 @@ void LineFormattingContext::computeDirection(Frame* parent,
             (result == DirectionValue::LtrDirectionValue ? CharDirection::Ltr
                                                          : CharDirection::Rtl);
         for (size_t i = 0; i < pendingTextRuns.size(); i++) {
-            TextRun run = pendingTextRuns[i];
-            m_textRunsPerFrameText[run.m_frameText].emplace_back(
-                run.m_frameText, run.m_stringView.originalString(),
-                run.m_stringView.start(), run.m_stringView.end(), ch);
+            TextRun run = pendingTextRuns[i].first;
+            FrameText* origin = pendingTextRuns[i].second;
+            TextRun newRun(run.m_stringView.originalString(),
+                           run.m_stringView.start(), run.m_stringView.end(),
+                           ch);
+            m_textRunsPerFrameText[origin].emplace_back(newRun);
         }
 
         pendingNeutralFrames.clear();
@@ -2713,7 +2716,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
                     //
                     // NOTE: textBidiResolver() guarantees that
                     // single TextRun with newline-char has length of 1.
-                    if (!run.m_frameText->shouldIgnoreNewlineChar() &&
+                    if (!f->asFrameText()->shouldIgnoreNewlineChar() &&
                         startsWithNewlineChar(run.m_stringView)) {
                         STARFISH_ASSERT(run.m_stringView.length() == 1);
                         everMeetNonNeutralThing = true;
@@ -2723,13 +2726,14 @@ void LineFormattingContext::computeDirection(Frame* parent,
                     if (pendingTextRuns.size() == 0) {
                         directionWhenNeutralMeets = currentDirection;
                     }
-                    pendingTextRuns.push_back(run);
+                    pendingTextRuns.push_back(
+                        std::make_pair(run, f->asFrameText()));
                 } else {
                     STARFISH_ASSERT(run.m_direction == CharDirection::Ltr ||
                                     run.m_direction == CharDirection::Rtl);
                     everMeetNonNeutralThing = true;
                     m_textRunsPerFrameText[f->asFrameText()].emplace_back(
-                        f->asFrameText(), run.m_stringView.originalString(),
+                        run.m_stringView.originalString(),
                         run.m_stringView.start(), run.m_stringView.end(),
                         run.m_direction);
                     flushNeutral(run.m_direction == CharDirection::Ltr
@@ -2770,14 +2774,14 @@ void LineFormattingContext::computeDirection(Frame* parent,
 
 void InlineNonReplacedBox::setOrgLeftMBP()
 {
-    m_orgMargin.setLeft(m_margin.left());
-    m_orgBorder.setLeft(m_border.left());
-    m_orgPadding.setLeft(m_padding.left());
+    m_orgMargin.setLeft(marginLeft());
+    m_orgBorder.setLeft(borderLeft());
+    m_orgPadding.setLeft(paddingLeft());
 
     LayoutUnit w;
-    moveX(m_margin.left());
-    LayoutUnit bp = m_border.left() + m_padding.left();
-    w += m_margin.left() + bp;
+    moveX(marginLeft());
+    LayoutUnit bp = borderLeft() + paddingLeft();
+    w += marginLeft() + bp;
     if (boxes().size()) {
         STARFISH_ASSERT(boxes().size() == 1);
         boxes()[0]->moveX(bp);
@@ -2797,12 +2801,12 @@ void InlineNonReplacedBox::setOrgLeftMBP()
 
 void InlineNonReplacedBox::setOrgRightMBP()
 {
-    m_orgMargin.setRight(m_margin.right());
-    m_orgBorder.setRight(m_border.right());
-    m_orgPadding.setRight(m_padding.right());
+    m_orgMargin.setRight(marginRight());
+    m_orgBorder.setRight(borderRight());
+    m_orgPadding.setRight(paddingRight());
 
-    LayoutUnit w = m_margin.right();
-    LayoutUnit bp = m_border.right() + m_padding.right();
+    LayoutUnit w = marginRight();
+    LayoutUnit bp = borderRight() + paddingRight();
     w += bp;
     setWidth(width() + bp);
 
@@ -2944,10 +2948,10 @@ bool LineFormattingContext::removeLastLineBoxIfNeeds()
     LineBox* back = currentLine();
 
     back->removeDanglingSpace(this);
-    if (back->containOnlyEmptyInlineNonReplacedBoxes()) {
+    if (back->containOnlyEmptyInlineNonReplacedBoxes(this)) {
         if (m_pendingFloatingBoxes.size() == 0 &&
             m_pendingInlineBoxes.size() == 0 &&
-            back->absolutePositionedBoxLayoutParentCnt() == 0) {
+            absolutePositionedBoxLayoutParentCnt(back) == 0) {
             m_block->m_lineBoxes.erase(m_block->m_lineBoxes.end() - 1);
             return true;
         } else {
@@ -3455,6 +3459,11 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
     }
 }
 
+FrameText* InlineTextBox::origin()
+{
+    return node()->frame()->asFrameText();
+}
+
 void InlineTextBox::paint(PaintingContext& ctx)
 {
     if (ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
@@ -3468,8 +3477,7 @@ void InlineTextBox::paint(PaintingContext& ctx)
 
             ctx.m_canvas->setFont(style()->font());
             ctx.m_canvas->setColor(style()->color());
-            ctx.m_canvas->drawText(0, 0, contentWidth(),
-                                   m_textRun.m_stringView);
+            ctx.m_canvas->drawText(0, 0, contentWidth(), m_text);
         }
     }
 }
@@ -3478,12 +3486,22 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     if (!isCollapsed()) {
         LayoutRect frameRectBack = m_frameRect;
-        LayoutBoxSurroundData paddingBack = m_padding, borderBack = m_border,
-                              marginBack = m_margin;
-
-        m_padding = m_orgPadding;
-        m_margin = m_orgMargin;
-        m_border = m_orgBorder;
+        LayoutBoxSurroundData paddingBack, borderBack, marginBack;
+        FrameBoxRareData fakeRareData(layoutParent());
+        bool hasRareDataBefore = hasRareData();
+        if (hasRareDataBefore) {
+            paddingBack = frameBoxRareData()->m_padding;
+            borderBack = frameBoxRareData()->m_border;
+            marginBack = frameBoxRareData()->m_margin;
+            frameBoxRareData()->m_padding = m_orgPadding;
+            frameBoxRareData()->m_margin = m_orgMargin;
+            frameBoxRareData()->m_border = m_orgBorder;
+        } else {
+            m_layoutParent = (Frame*)&fakeRareData;
+            fakeRareData.m_padding = m_orgPadding;
+            fakeRareData.m_margin = m_orgMargin;
+            fakeRareData.m_border = m_orgBorder;
+        }
 
         canvas->save();
         canvas->translate(LayoutUnit(0),
@@ -3496,9 +3514,13 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
         canvas->restore();
 
         m_frameRect = frameRectBack;
-        m_padding = paddingBack;
-        m_border = borderBack;
-        m_margin = marginBack;
+        if (hasRareDataBefore) {
+            frameBoxRareData()->m_padding = paddingBack;
+            frameBoxRareData()->m_border = borderBack;
+            frameBoxRareData()->m_margin = marginBack;
+        } else {
+            m_layoutParent = fakeRareData.m_layoutParent;
+        }
     }
 }
 

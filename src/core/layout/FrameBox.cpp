@@ -546,7 +546,7 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
 void FrameBox::establishesStackingContextIfNeeds()
 {
     if (isEstablishesStackingContext()) {
-        STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
+        STARFISH_ASSERT(isRootElement() || stackingContext() == nullptr);
         if (!isRootElement() ||
             (isRootElement() &&
              !node()->document()->browsingContext()->isMainBrowsingContext())) {
@@ -583,9 +583,11 @@ void FrameBox::establishesStackingContextIfNeeds()
                 }
                 p = p->layoutParent()->asFrameBox();
             }
-            m_stackingContext = new StackingContext(this, p->stackingContext());
+            ensureFrameBoxRareData()->m_stackingContext =
+                new StackingContext(this, p->stackingContext());
         } else {
-            m_stackingContext = new StackingContext(this, nullptr);
+            ensureFrameBoxRareData()->m_stackingContext =
+                new StackingContext(this, nullptr);
         }
     }
 }
@@ -615,9 +617,9 @@ void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
 
 void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
 {
-    if (m_stackingContext) {
-        m_stackingContext->clearOwnBuffer(shouldDetachNativeBuffer);
-        m_stackingContext = nullptr;
+    if (stackingContext()) {
+        stackingContext()->clearOwnBuffer(shouldDetachNativeBuffer);
+        frameBoxRareData()->m_stackingContext = nullptr;
     }
 }
 

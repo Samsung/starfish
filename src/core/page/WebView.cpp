@@ -87,6 +87,12 @@ WebView::WebView(StarFish* starFish)
     initStorage();
 }
 
+void WebView::close()
+{
+    mainBrowsingContext()->close();
+    m_scriptEngineInstance->close();
+}
+
 void WebView::initStorage()
 {
     // TODO: The name of disk storage file name should be auto-generated

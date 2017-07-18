@@ -82,7 +82,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
             [](void* obj, void* cd) { STARFISH_LOG_INFO("Window::~Window\n"); },
             NULL, NULL, NULL);
     */
-
     m_scriptBindingInstance = new ScriptBindingInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
     initFlags();
