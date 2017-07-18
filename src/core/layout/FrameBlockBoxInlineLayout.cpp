@@ -982,8 +982,8 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir,
         }
     }
 
-    currentLine()->setLeftMBPs();
-    currentLine()->setRightMBPs();
+    m_currentLayoutParent->setLeftMBPs();
+    m_currentLayoutParent->setRightMBPs();
 }
 
 static void removeBoxFromLine(FrameBox* box)
@@ -2917,7 +2917,11 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
     if (self->boxes().size() == 0 && self->layoutParent()->isLineBox()) {
         auto& boxes = currentLine()->boxes();
         boxes.erase(std::find(boxes.begin(), boxes.end(), self));
+
+        m_currentLayoutParent = currentLine();
         breakLineForLineBox(br, false, false);
+        m_currentLayoutParent = self;
+
         currentLine()->insertInlineBox(self);
         return;
     }
@@ -2935,8 +2939,8 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
         parent = parent->layoutParent()->asFrameBox();
     }
 
+    m_currentLayoutParent = currentLine();
     breakLineForLineBox(br, false, false);
-
     m_currentLayoutParent = newSelf;
 
     currentLine()->insertInlineBox(current);
