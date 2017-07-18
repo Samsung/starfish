@@ -22,6 +22,7 @@ namespace StarFish {
 class BrowsingContext;
 
 typedef bool (*GenericAnimationHandler)(void* data);
+typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Timer : public gc {
     friend class StarFish;

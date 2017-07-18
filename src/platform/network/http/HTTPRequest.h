@@ -24,12 +24,13 @@ class HTTPHeaderMap;
 class HTTPRequest {
 public:
     static std::unique_ptr<HTTPRequest> create(const std::string& url,
+                                               const std::string& baseURL,
                                                const std::string& method,
                                                const HTTPHeaderMap& headers,
                                                const std::string& entityBody)
     {
         return std::unique_ptr<HTTPRequest>(
-            new HTTPRequest(url, method, headers, entityBody));
+            new HTTPRequest(url, baseURL, method, headers, entityBody));
     }
 
     ~HTTPRequest();
@@ -39,14 +40,19 @@ public:
         return m_headers;
     }
 
-    std::string method()
+    std::string method() const
     {
         return m_method;
     }
 
-    std::string url()
+    std::string url() const
     {
         return m_url;
+    }
+
+    std::string baseURL() const
+    {
+        return m_baseURL;
     }
 
     std::string entityBody()
@@ -55,10 +61,12 @@ public:
     }
 
 private:
-    HTTPRequest(const std::string& url, const std::string& method,
-                const HTTPHeaderMap& headers, const std::string& entityBody);
+    HTTPRequest(const std::string& url, const std::string& baseURL,
+                const std::string& method, const HTTPHeaderMap& headers,
+                const std::string& entityBody);
     // Use std::string because it does not inherit gc
     std::string m_url;
+    std::string m_baseURL;
     std::string m_method;
     HTTPHeaderMap m_headers;
     std::string m_entityBody;

@@ -241,12 +241,11 @@ void NetworkSharedResourceManager::close()
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()
     : m_curlShareHandle(nullptr)
+    , m_CurlHandleDataCache()
+    , m_cacheClearTimerID(SIZE_MAX)
     , m_cookieStoreFilePath("")
-    , m_cookieMutex(new (NoGC) Mutex())
-    , m_sslMutex(new (NoGC) Mutex())
-    , m_dnsMutex(new (NoGC) Mutex())
-    , m_shareMutex(new (NoGC) Mutex())
 {
+    initMutexes();
     initSSLLocks();
 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -264,15 +263,26 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
 
 NetworkSharedResourceManager::~NetworkSharedResourceManager()
 {
+    clearAllCurlHandleDataCach();
     curl_share_cleanup(m_curlShareHandle);
     curl_global_cleanup();
 
     removeSSLLocks();
+    removeMutexes();
+}
 
-    delete m_cookieMutex;
-    delete m_sslMutex;
-    delete m_dnsMutex;
-    delete m_shareMutex;
+void NetworkSharedResourceManager::initMutexes()
+{
+    for (int i = 0; i < MutexKindMax; ++i) {
+        m_mutexes[i] = new (NoGC) Mutex();
+    }
+}
+
+void NetworkSharedResourceManager::removeMutexes()
+{
+    for (int i = 0; i < MutexKindMax; ++i) {
+        delete m_mutexes[i];
+    }
 }
 
 CURLSH* NetworkSharedResourceManager::curlShareHandle() const
@@ -314,16 +324,57 @@ Mutex* NetworkSharedResourceManager::resourceMutex(curl_lock_data data)
 {
     switch (data) {
     case CURL_LOCK_DATA_COOKIE:
-        return m_cookieMutex;
+        return m_mutexes[CookieMutex];
     case CURL_LOCK_DATA_SSL_SESSION:
-        return m_sslMutex;
+        return m_mutexes[SSLMutex];
     case CURL_LOCK_DATA_DNS:
-        return m_dnsMutex;
+        return m_mutexes[DNSMutex];
     case CURL_LOCK_DATA_SHARE:
-        return m_shareMutex;
+        return m_mutexes[ShareMutex];
     default:
         STARFISH_ASSERT_NOT_REACHED();
         return nullptr;
+    }
+}
+
+CurlHandleData NetworkSharedResourceManager::getCurlHandleData(
+    const std::string& host)
+{
+    Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
+    CurlHandleData ret = { nullptr, 0 };
+    auto iter = m_CurlHandleDataCache.find(host);
+
+    if (iter != m_CurlHandleDataCache.end()) {
+        // cache hit
+        ret = iter->second;
+        m_CurlHandleDataCache.erase(iter);
+    } else {
+        ret.curl = curl_easy_init();
+    }
+    STARFISH_ASSERT(ret.curl);
+    return ret;
+}
+
+void NetworkSharedResourceManager::cachingCurlHandleData(
+    const std::string& host, CurlHandleData& cd)
+{
+    Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
+    prunningIfNeed();
+    m_CurlHandleDataCache.insert(
+        std::pair<std::string, CurlHandleData>(host, cd));
+}
+
+void NetworkSharedResourceManager::prunningIfNeed()
+{
+    // TODO
+}
+void NetworkSharedResourceManager::clearAllCurlHandleDataCach()
+{
+    Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
+    while (m_CurlHandleDataCache.size()) {
+        CurlHandleData cd = m_CurlHandleDataCache.begin()->second;
+        curl_easy_cleanup(cd.curl);
+        m_CurlHandleDataCache.erase(m_CurlHandleDataCache.begin());
     }
 }
 

@@ -116,7 +116,11 @@ void HTTPTransaction::start()
 {
     CURLSH* curlsh =
         NetworkSharedResourceManager::getInstance()->curlShareHandle();
-    m_curl = curl_easy_init();
+    CurlHandleData cd =
+        NetworkSharedResourceManager::getInstance()->getCurlHandleData(
+            m_httpRequest->baseURL());
+
+    m_curl = cd.curl;
     m_httpResponse = HTTPResponse::create();
 
     STARFISH_ASSERT(m_curl);
@@ -211,11 +215,11 @@ void HTTPTransaction::start()
     m_res = curl_easy_perform(m_curl);
 
     updateTransactionStatus();
-
-    // TODO : reuse curl for persistant conntection
-    curl_easy_cleanup(m_curl);
-    curl_slist_free_all(list);
     m_curl = nullptr;
+
+    NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
+        m_httpRequest->baseURL(), cd);
+    curl_slist_free_all(list);
 }
 
 void HTTPTransaction::didReceiveHeader(const std::string& header)

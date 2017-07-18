@@ -22,12 +22,30 @@
 namespace StarFish {
 
 class Document;
+class HTTPTransaction;
 class Mutex;
 class ResourceURL;
 class String;
 
+struct CurlHandleData {
+    CURL* curl;
+    uint64_t lastUsedTime;
+};
+
 class NetworkSharedResourceManager {
+    friend class HTTPTransaction;
+
 public:
+    typedef std::multimap<std::string, CurlHandleData> CurlHandleDataMultiMap;
+    enum MutexKind {
+        CookieMutex = 0,
+        SSLMutex,
+        DNSMutex,
+        ShareMutex,
+        CurlCacheMutex,
+        MutexKindMax
+    };
+
     static NetworkSharedResourceManager* getInstance();
     static void close();
 
@@ -36,22 +54,38 @@ public:
     void setCookieStoreFilePath(const std::string& name);
     Mutex* resourceMutex(curl_lock_data data);
 
+    CurlHandleData getCurlHandleData(const std::string& host);
+    void cachingCurlHandleData(const std::string& host, CurlHandleData& cd);
+    void clearAllCurlHandleDataCach();
+    void prunningIfNeed();
     void initCookieSession();
 
     // for document.cookie
     String* cookeis(ResourceURL* url);
     void setCookies(Document* document, ResourceURL* url, String* value);
 
+    size_t cacheClearTimerID()
+    {
+        return m_cacheClearTimerID;
+    }
+
+    void setCacheClearTimerID(size_t timerID)
+    {
+        m_cacheClearTimerID = timerID;
+    }
+
 private:
     NetworkSharedResourceManager();
     ~NetworkSharedResourceManager();
 
+    void initMutexes();
+    void removeMutexes();
+
     CURLSH* m_curlShareHandle;
+    CurlHandleDataMultiMap m_CurlHandleDataCache;
+    size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
-    Mutex* m_cookieMutex;
-    Mutex* m_sslMutex;
-    Mutex* m_dnsMutex;
-    Mutex* m_shareMutex;
+    Mutex* m_mutexes[MutexKindMax];
 };
 }
 
