@@ -585,7 +585,6 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
             *sumOfAutoCellPreferredWidths += col.cellWidth;
         } else {
             LayoutUnit specifiedWidth = 0;
-            col.cellWidth = col.maxSpecifiedWidth;
 
             if (cell->style()->width().isFixed()) {
                 specifiedWidth =
@@ -593,9 +592,10 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
                 specifiedWidth += cell->borderWidth() + cell->paddingWidth();
                 col.cellWidth = specifiedWidth;
             } else if (col.hasPercentageWidth()) {
-                specifiedWidth =
-                    remainingWidth.toInt() * col.maxPercentageWidth;
-                col.cellWidth = specifiedWidth;
+                // col.cellWidth has been already calculated in calCellWidth().
+                // So, we do nothing here.
+            } else {
+                col.cellWidth = col.maxSpecifiedWidth;
             }
 
             // A cell width cannot be smaller than the min width of the cell

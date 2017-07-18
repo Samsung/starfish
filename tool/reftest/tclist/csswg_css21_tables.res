@@ -786,7 +786,7 @@ test/reftest/csswg-test/css21_original/tables/table-anonymous-block-002.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-block-003.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-004.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-005.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-block-006.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-block-006.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-007.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-008.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-009.htm
@@ -1010,7 +1010,7 @@ test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-204.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-207.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-208.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-209.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-210.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-objects-210.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-whitespace-001.htm
 #test/reftest/csswg-test/css21_original/tables/table-background-edge-and-border-model-001.htm
 test/reftest/csswg-test/css21_original/tables/table-background-edge-and-border-model-002.htm
