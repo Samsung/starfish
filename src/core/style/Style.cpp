@@ -4344,6 +4344,45 @@ void StyleResolver::apply(Element* element,
     }
 }
 
+void StyleResolver::collectMatchingRulesForList(
+    std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
+    Element* element, AtomicString elementName, AtomicString elementId,
+    const GCVector<AtomicString>& elementClasses,
+    MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
+    PseudoElementType pseudoElementType)
+{
+    for (unsigned i = 0; i < ruleCount; ++i) {
+        StyleRule* rule = rules[i].first;
+        ResourceURL* url = rules[i].second;
+        const CSSSelectorList& selectorList = rule->selectorList();
+        MatchResult result;
+        if (matchSelector(element, elementName, elementId, elementClasses,
+                          selectorList, 0, result) == Match::SelectorMatches) {
+            if (result.pseudoType != PseudoElementType::PseudoElementNone) {
+                element->setPseudoElement(result.pseudoType);
+                if (result.pseudoType == pseudoElementType) {
+                    ret->setPseudoType(pseudoElementType);
+                    authorRules.push_back(std::make_pair(rule, url));
+                }
+            } else if (pseudoElementType ==
+                       PseudoElementType::PseudoElementNone) {
+                authorRules.push_back(std::make_pair(rule, url));
+            }
+        }
+    }
+}
+
+static bool comparingRules(std::pair<StyleRule*, ResourceURL*> r1,
+                           std::pair<StyleRule*, ResourceURL*> r2)
+{
+    if (r1.first->selectorList().specificity() ==
+        r2.first->selectorList().specificity()) {
+        return r1.first->order() < r2.first->order();
+    }
+    return r1.first->selectorList().specificity() <
+           r2.first->selectorList().specificity();
+}
+
 // We can use std::allocator here.
 // CSSStyleDeclaration* has strong reference on CSSStyleSheet already
 template <unsigned int InlineStorageSize>
@@ -4356,7 +4395,6 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
                                   PseudoElementType pseudoElementType)
 {
     MatchedDeclarations<6> userAgentDeclarations;
-    MatchedDeclarations<32> authorDeclarations;
 
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
@@ -4381,29 +4419,31 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         }
     }
 
+    MatchedStyleRules<32> authorRules;
     sheet = styleSheetWithStyleRules();
-    size_t ruleCount = sheet->rules().size();
-    auto ruleBuffer = sheet->rules().data();
-    for (unsigned j = 0; j < ruleCount; j++) {
-        StyleRule* rule = ruleBuffer[j].first;
-        ResourceURL* url = ruleBuffer[j].second;
-        const CSSSelectorList& selectorList = rule->selectorList();
-        MatchResult result;
-        if (matchSelector(element, elementName, elementId, elementClasses,
-                          selectorList, 0, result) == Match::SelectorMatches) {
-            if (result.pseudoType != PseudoElementType::PseudoElementNone) {
-                element->setPseudoElement(result.pseudoType);
-                if (result.pseudoType == pseudoElementType) {
-                    ret->setPseudoType(pseudoElementType);
-                    authorDeclarations.push_back(
-                        std::make_pair(rule->styleDeclaration(), url));
-                }
-            } else if (pseudoElementType ==
-                       PseudoElementType::PseudoElementNone) {
-                authorDeclarations.push_back(
-                    std::make_pair(rule->styleDeclaration(), url));
-            }
-        }
+    if (element->hasId()) {
+        collectMatchingRulesForList(sheet->idRules().data(),
+                                    sheet->idRules().size(), element,
+                                    elementName, elementId, elementClasses,
+                                    authorRules, ret, pseudoElementType);
+    }
+    if (element->hasClass()) {
+        collectMatchingRulesForList(sheet->classRules().data(),
+                                    sheet->classRules().size(), element,
+                                    elementName, elementId, elementClasses,
+                                    authorRules, ret, pseudoElementType);
+    }
+    collectMatchingRulesForList(sheet->tagRules().data(),
+                                sheet->tagRules().size(), element, elementName,
+                                elementId, elementClasses, authorRules, ret,
+                                pseudoElementType);
+    collectMatchingRulesForList(sheet->universalRules().data(),
+                                sheet->universalRules().size(), element,
+                                elementName, elementId, elementClasses,
+                                authorRules, ret, pseudoElementType);
+
+    if (authorRules.size() != 0) {
+        authorRules.sortVector(comparingRules);
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {
@@ -4411,9 +4451,9 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
               userAgentDeclarations[i].second, ret, parent, false);
     }
 
-    for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(element, authorDeclarations[i].first->m_cssValues,
-              authorDeclarations[i].second, ret, parent, false);
+    for (unsigned i = 0; i < authorRules.size(); i++) {
+        apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,
+              authorRules[i].second, ret, parent, false);
     }
 
     // inline style
@@ -4422,9 +4462,9 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
               element->document()->documentURI(), ret, parent, false);
     }
 
-    for (unsigned i = 0; i < authorDeclarations.size(); i++) {
-        apply(element, authorDeclarations[i].first->m_cssValues,
-              authorDeclarations[i].second, ret, parent, true);
+    for (unsigned i = 0; i < authorRules.size(); i++) {
+        apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,
+              authorRules[i].second, ret, parent, true);
     }
 
     for (unsigned i = 0; i < userAgentDeclarations.size(); i++) {

@@ -83,6 +83,60 @@ void CSSStyleSheet::addStyleRule(std::pair<StyleRule*, ResourceURL*> rule)
     m_styleRules.push_back(rule);
 }
 
+static void extractValuesforSelector(const CSSSelector* selector, bool& id,
+                                     bool& className, bool& tagName)
+{
+    switch (selector->type()) {
+    case CSSSelector::Id:
+        id = true;
+        break;
+    case CSSSelector::Class:
+        className = true;
+        break;
+    case CSSSelector::Tag:
+        if (selector->selectorText() != String::createASCIIString('*')) {
+            tagName = true;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void CSSStyleSheet::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
+{
+    auto selectorList = rule.first->selectorList();
+
+    bool id = false;
+    bool className = false;
+    bool tagName = false;
+
+    unsigned size = selectorList.size();
+    unsigned i = 0;
+    for (; i < size && selectorList[i]->relation() == CSSSelector::SubSelector;
+         ++i) {
+        extractValuesforSelector(selectorList[i], id, className, tagName);
+    }
+
+    if (i < size) {
+        extractValuesforSelector(selectorList[i], id, className, tagName);
+    }
+
+    if (id) {
+        m_idRules.push_back(rule);
+        return;
+    }
+    if (className) {
+        m_classRules.push_back(rule);
+        return;
+    }
+    if (tagName) {
+        m_tagRules.push_back(rule);
+        return;
+    }
+    m_universalRules.push_back(rule);
+}
+
 void CSSStyleSheet::addRule(StyleRuleBase* rule)
 {
     if (rule->isImportRule()) {
@@ -123,7 +177,7 @@ void CSSStyleSheet::parseSheetIfneeds()
 
 // http://www.w3.org/TR/css3-selectors/#specificity
 // We use 256 as the base of the specificity number system.
-static unsigned specificity(CSSSelectorList& selectorList)
+static unsigned calcSpecificity(CSSSelectorList& selectorList)
 {
     // Make sure the result doesn't overflow
     static const unsigned idMask =
@@ -171,8 +225,8 @@ static unsigned specificity(CSSSelectorList& selectorList)
 static bool compareSpecificity(std::pair<StyleRule*, ResourceURL*> r1,
                                std::pair<StyleRule*, ResourceURL*> r2)
 {
-    return specificity(r1.first->selectorList()) <
-           specificity(r2.first->selectorList());
+    return calcSpecificity(r1.first->selectorList()) <
+           calcSpecificity(r2.first->selectorList());
 }
 
 CSSStyleSheet* CSSStyleSheet::parentStyleSheet() const
@@ -184,6 +238,14 @@ void CSSStyleSheet::sortStyleRulesBySpecificity()
 {
     std::stable_sort(m_styleRules.begin(), m_styleRules.end(),
                      compareSpecificity);
+}
+
+unsigned CSSSelectorList::specificity()
+{
+    if (m_specificity == 0) {
+        m_specificity = calcSpecificity(*this);
+    }
+    return m_specificity;
 }
 
 bool CSSStyleSheet::matchesMediaQueries(

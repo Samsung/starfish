@@ -118,11 +118,22 @@ public:
         return m_styleDeclaration;
     }
 
+    int order()
+    {
+        return m_order;
+    }
+
+    void setOrder(int o)
+    {
+        m_order = o;
+    }
+
     void wrapperTakeSelectorList(CSSSelectorList& selectors);
 
 protected:
     CSSSelectorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
+    int m_order;
 };
 
 class StyleRuleGroup : public StyleRuleBase {

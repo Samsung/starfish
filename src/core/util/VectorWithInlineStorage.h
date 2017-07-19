@@ -41,38 +41,44 @@ public:
     void push_back(const T& decl)
     {
         if (m_size < InlineStorageSize) {
-            m_inlineStorage[m_size++] = decl;
+            m_inlineStorage[m_size] = decl;
+        } else if (m_size == InlineStorageSize) {
+            m_externalStorage.assign(m_inlineStorage, m_inlineStorage + m_size);
+            m_externalStorage.push_back(decl);
         } else {
-            m_size++;
             m_externalStorage.push_back(decl);
         }
+        m_size++;
     }
 
     void push_back(T&& decl)
     {
         if (m_size < InlineStorageSize) {
-            m_inlineStorage[m_size++] = std::move(decl);
+            m_inlineStorage[m_size] = std::move(decl);
+        } else if (m_size == InlineStorageSize) {
+            m_externalStorage.assign(m_inlineStorage, m_inlineStorage + m_size);
+            m_externalStorage.push_back(std::move(decl));
         } else {
-            m_size++;
             m_externalStorage.push_back(std::move(decl));
         }
+        m_size++;
     }
 
     T& operator[](const size_t& idx)
     {
-        if (idx < InlineStorageSize) {
+        if (m_size <= InlineStorageSize) {
             return m_inlineStorage[idx];
         } else {
-            return m_externalStorage[idx - InlineStorageSize];
+            return m_externalStorage[idx];
         }
     }
 
     const T& operator[](const size_t& idx) const
     {
-        if (idx < InlineStorageSize) {
+        if (m_size <= InlineStorageSize) {
             return m_inlineStorage[idx];
         } else {
-            return m_externalStorage[idx - InlineStorageSize];
+            return m_externalStorage[idx];
         }
     }
 
@@ -85,6 +91,18 @@ public:
     {
         m_size = 0;
         m_externalStorage.clear();
+    }
+
+    template <typename Func>
+    void sortVector(Func matchingRule)
+    {
+        if (m_size <= InlineStorageSize) {
+            std::stable_sort(m_inlineStorage, m_inlineStorage + m_size,
+                             matchingRule);
+        } else {
+            std::stable_sort(m_externalStorage.begin(), m_externalStorage.end(),
+                             matchingRule);
+        }
     }
 
 protected:

@@ -34,6 +34,7 @@
 #include "core/page/Location.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/StyleRule.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -195,16 +196,13 @@ bool BrowsingContext::layoutIfNeeds()
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {
+                    authorSheet->rules()[j].first->setOrder(j);
                     document()
                         ->styleResolver()
                         .styleSheetWithStyleRules()
-                        ->addStyleRule(authorSheet->rules()[j]);
+                        ->addToRuleSet(authorSheet->rules()[j]);
                 }
             }
-            document()
-                ->styleResolver()
-                .styleSheetWithStyleRules()
-                ->sortStyleRulesBySpecificity();
         }
 
 // resolve style
