@@ -49,6 +49,7 @@ void FrameDocument::paint(PaintingContext& ctx)
     if (!firstChild()) {
         return;
     }
+    ctx.m_canvas->saveByFrame(this);
     ctx.m_canvas->save();
     ctx.m_canvas->translate(firstChild()->asFrameBox()->x(),
                             firstChild()->asFrameBox()->y());

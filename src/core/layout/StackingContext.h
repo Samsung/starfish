@@ -78,6 +78,7 @@ public:
 
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
+    void replaceCanvasState(Canvas* canvas, StackingContext* sCtx);
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,

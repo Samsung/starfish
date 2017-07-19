@@ -282,25 +282,31 @@ public:
         return &it->second;
     }
 
-    virtual void replace(CanvasState* state)
+    virtual void replace(CanvasState* state, ReplaceFlag flag)
     {
         auto& lastState = m_state.back();
 
         CanvasStateEFL* eflState = (CanvasStateEFL*)state;
+
+        // FIXME: when the mapModes between last state and state to be changed,
+        // the coordinate should be corresponded to the one of the state to
+        // be changed.
         lastState.m_matrix = eflState->m_matrix;
         lastState.m_clipRect = eflState->m_clipRect;
         lastState.m_clipPath = eflState->m_clipPath;
         lastState.m_clipper = eflState->m_clipper;
-        lastState.m_color = eflState->m_color;
-        lastState.m_opacity = eflState->m_opacity;
-        lastState.m_baseX = eflState->m_baseX;
-        lastState.m_baseY = eflState->m_baseY;
-        lastState.m_font = eflState->m_font;
-        lastState.m_mapMode = eflState->m_mapMode;
-        lastState.m_visible = eflState->m_visible;
         lastState.m_didClip = eflState->m_didClip;
         lastState.m_hasPathClip = eflState->m_hasPathClip;
-        lastState.m_textDecorationData = eflState->m_textDecorationData;
+        if (flag == ReplaceFlag::All) {
+            lastState.m_color = eflState->m_color;
+            lastState.m_opacity = eflState->m_opacity;
+            lastState.m_baseX = eflState->m_baseX;
+            lastState.m_baseY = eflState->m_baseY;
+            lastState.m_font = eflState->m_font;
+            lastState.m_mapMode = eflState->m_mapMode;
+            lastState.m_visible = eflState->m_visible;
+            lastState.m_textDecorationData = eflState->m_textDecorationData;
+        }
     }
 
     void assureMapMode()
