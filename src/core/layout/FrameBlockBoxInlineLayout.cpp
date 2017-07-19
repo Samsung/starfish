@@ -611,8 +611,8 @@ void LineFormattingContext::splitInlineBoxes(GCVector<FrameBox*>& boxes)
                     size_t insertPos = i;
 
                     for (size_t j = 0; j < boxesToCopy.size(); j++) {
-                        InlineNonReplacedBox* newBox =
-                            new InlineNonReplacedBox(inrb, isFirstLineBox());
+                        InlineNonReplacedBox* newBox = new InlineNonReplacedBox(
+                            this, inrb, isFirstLineBox());
                         newBox->setX(boxesToCopy[j]->x() + inrb->x());
                         newBox->setY(inrb->y());
                         boxesToCopy[j]->setX(0);
@@ -678,25 +678,26 @@ CharDirection LineFormattingContext::contentDir(FrameBox* box)
     }
 }
 
-void InlineBoxLayoutParentBox::setLeftMBPs()
+void InlineBoxLayoutParentBox::setLeftMBPs(LineFormattingContext* ctx)
 {
     for (size_t i = 0; i < m_boxes.size(); i++) {
         FrameBox* box = m_boxes[i];
         if (box->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
             if (!hasIsolateBidiContent(inrb)) {
-                inrb->setLeftMBPs();
+                inrb->setLeftMBPs(ctx);
 
                 if (inrb->style()->direction() == LtrDirectionValue) {
-                    if (!inrb->isSetLeftMBP() &&
-                        inrb->isProcessedStartingMBP()) {
-                        inrb->setOrgLeftMBP();
+                    if (!ctx->isSetLeftMBP(inrb) &&
+                        ctx->isProcessedStartingMBP(inrb)) {
+                        inrb->setOrgLeftMBP(ctx);
                     } else {
                         inrb->unsetLeftMBP();
                     }
                 } else {
-                    if (!inrb->isSetLeftMBP() && inrb->isProcessedEndingMBP()) {
-                        inrb->setOrgLeftMBP();
+                    if (!ctx->isSetLeftMBP(inrb) &&
+                        ctx->isProcessedEndingMBP(inrb)) {
+                        inrb->setOrgLeftMBP(ctx);
                     } else {
                         inrb->unsetLeftMBP();
                     }
@@ -706,26 +707,26 @@ void InlineBoxLayoutParentBox::setLeftMBPs()
     }
 }
 
-void InlineBoxLayoutParentBox::setRightMBPs()
+void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
 {
     for (size_t i = m_boxes.size() - 1; i != SIZE_MAX; i--) {
         FrameBox* box = m_boxes[i];
         if (box->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
             if (!hasIsolateBidiContent(inrb)) {
-                inrb->setRightMBPs();
+                inrb->setRightMBPs(ctx);
 
                 if (inrb->style()->direction() == LtrDirectionValue) {
-                    if (!inrb->isSetRightMBP() &&
-                        inrb->isProcessedEndingMBP()) {
-                        inrb->setOrgRightMBP();
+                    if (!ctx->isSetRightMBP(inrb) &&
+                        ctx->isProcessedEndingMBP(inrb)) {
+                        inrb->setOrgRightMBP(ctx);
                     } else {
                         inrb->unsetRightMBP();
                     }
                 } else {
-                    if (!inrb->isSetRightMBP() &&
-                        inrb->isProcessedStartingMBP()) {
-                        inrb->setOrgRightMBP();
+                    if (!ctx->isSetRightMBP(inrb) &&
+                        ctx->isProcessedStartingMBP(inrb)) {
+                        inrb->setOrgRightMBP(ctx);
                     } else {
                         inrb->unsetRightMBP();
                     }
@@ -982,8 +983,8 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir,
         }
     }
 
-    m_currentLayoutParent->setLeftMBPs();
-    m_currentLayoutParent->setRightMBPs();
+    m_currentLayoutParent->setLeftMBPs(this);
+    m_currentLayoutParent->setRightMBPs(this);
 }
 
 static void removeBoxFromLine(FrameBox* box)
@@ -2471,7 +2472,7 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
     ctx.handleSoftHyphenate(false);
 
     InlineNonReplacedBox* inlineBox =
-        new InlineNonReplacedBox(this, ctx.isFirstLineBox());
+        new InlineNonReplacedBox(&ctx, this, ctx.isFirstLineBox());
 
     if (ctx.isWordProcessing()) {
         inlineBox->setLayoutParent(ctx.m_currentLayoutParent);
@@ -2771,11 +2772,57 @@ void LineFormattingContext::computeDirection(Frame* parent,
     flushNeutral(direction);
 }
 
-void InlineNonReplacedBox::setOrgLeftMBP()
+InlineNonReplacedBox::InlineNonReplacedBox(LineFormattingContext* ctx,
+                                           InlineNonReplacedBox* inlineBox,
+                                           bool isFirstLine)
+    : InlineNonReplacedBox(inlineBox, inlineBox->origin(), isFirstLine)
 {
-    m_orgMargin.setLeft(marginLeft());
-    m_orgBorder.setLeft(borderLeft());
-    m_orgPadding.setLeft(paddingLeft());
+    ctx->m_inlineNonReplacedBoxMBPStatus[this] =
+        ctx->m_inlineNonReplacedBoxMBPStatus[inlineBox];
+    m_ascender = inlineBox->m_ascender;
+    m_descender = inlineBox->m_descender;
+
+    if (inlineBox->hasRareData()) {
+        ensureFrameBoxRareData()->m_margin =
+            inlineBox->frameBoxRareData()->m_margin;
+        ensureFrameBoxRareData()->m_border =
+            inlineBox->frameBoxRareData()->m_border;
+        ensureFrameBoxRareData()->m_padding =
+            inlineBox->frameBoxRareData()->m_padding;
+    }
+
+    if (inlineBox->rareData() &&
+        (inlineBox->rareData()->m_orgBorder.hasNonZeroEdge() ||
+         inlineBox->rareData()->m_orgPadding.hasNonZeroEdge() ||
+         inlineBox->rareData()->m_orgMargin.hasNonZeroEdge())) {
+        m_rareData = new InlineNonReplacedBoxRareData(m_origin);
+        m_rareData->m_orgMargin = inlineBox->m_rareData->m_orgMargin;
+        m_rareData->m_orgBorder = inlineBox->m_rareData->m_orgBorder;
+        m_rareData->m_orgPadding = inlineBox->m_rareData->m_orgPadding;
+    }
+}
+
+InlineNonReplacedBox::InlineNonReplacedBox(LineFormattingContext* ctx,
+                                           FrameInline* frame, bool isFirstLine)
+    : InlineNonReplacedBox(frame, frame, isFirstLine)
+{
+    ctx->m_inlineNonReplacedBoxMBPStatus[this] =
+        adoptRef(new InlineNonReplacedBoxMBPStatusHolder());
+    m_ascender = 0;
+    m_descender = 0;
+}
+
+void InlineNonReplacedBox::setOrgLeftMBP(
+    LineFormattingContext* lineFormattingContext)
+{
+    if (rareData() || marginLeft() || borderLeft() || paddingLeft()) {
+        if (!rareData()) {
+            m_rareData = new InlineNonReplacedBoxRareData(m_origin);
+        }
+        m_rareData->m_orgMargin.setLeft(marginLeft());
+        m_rareData->m_orgBorder.setLeft(borderLeft());
+        m_rareData->m_orgPadding.setLeft(paddingLeft());
+    }
 
     LayoutUnit w;
     moveX(marginLeft());
@@ -2795,14 +2842,20 @@ void InlineNonReplacedBox::setOrgLeftMBP()
         }
     }
 
-    markSetLeftMBP();
+    lineFormattingContext->markSetLeftMBP(this);
 }
 
-void InlineNonReplacedBox::setOrgRightMBP()
+void InlineNonReplacedBox::setOrgRightMBP(
+    LineFormattingContext* lineFormattingContext)
 {
-    m_orgMargin.setRight(marginRight());
-    m_orgBorder.setRight(borderRight());
-    m_orgPadding.setRight(paddingRight());
+    if (rareData() || marginRight() || borderRight() || paddingRight()) {
+        if (!rareData()) {
+            m_rareData = new InlineNonReplacedBoxRareData(m_origin);
+        }
+        m_rareData->m_orgMargin.setRight(marginRight());
+        m_rareData->m_orgBorder.setRight(borderRight());
+        m_rareData->m_orgPadding.setRight(paddingRight());
+    }
 
     LayoutUnit w = marginRight();
     LayoutUnit bp = borderRight() + paddingRight();
@@ -2817,7 +2870,7 @@ void InlineNonReplacedBox::setOrgRightMBP()
         }
     }
 
-    markSetRightMBP();
+    lineFormattingContext->markSetRightMBP(this);
 }
 
 void InlineNonReplacedBox::processStartingMBP(
@@ -2825,14 +2878,14 @@ void InlineNonReplacedBox::processStartingMBP(
 {
     InlineNonReplacedBox* current = this;
     while (current) {
-        if (!current->isProcessedStartingMBP()) {
+        if (!lineFormattingContext->isProcessedStartingMBP(current)) {
             LayoutUnit unprocessedStartingMBPWidth =
                 current->startingMBPWidth();
             lineFormattingContext->m_currentLineWidth +=
                 unprocessedStartingMBPWidth;
             lineFormattingContext->m_unprocessedStartingMBPWidth -=
                 unprocessedStartingMBPWidth;
-            current->markProcessedStartingMBP();
+            lineFormattingContext->markProcessedStartingMBP(current);
         } else {
             break;
         }
@@ -2850,7 +2903,7 @@ void InlineNonReplacedBox::processEndingMBP(
 {
     LayoutUnit unprocessedEndingMBP = endingMBPWidth();
     lineFormattingContext->m_currentLineWidth += unprocessedEndingMBP;
-    markProcessedEndingMBP();
+    lineFormattingContext->markProcessedEndingMBP(this);
 }
 
 void LineFormattingContext::finishLineForInlineNonReplacedBox(
@@ -2870,7 +2923,7 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
         current->layoutParent()->asInlineBoxLayoutParentBox();
     while (current) {
         LayoutUnit w = current->width();
-        if (current->isProcessedStartingMBP()) {
+        if (isProcessedStartingMBP(current)) {
             if (current->style()->direction() == LtrDirectionValue) {
                 w += current->borderLeft() + current->paddingLeft();
             } else {
@@ -2878,7 +2931,7 @@ void LineFormattingContext::finishLineForInlineNonReplacedBox(
             }
         }
 
-        if (current->isProcessedEndingMBP()) {
+        if (isProcessedEndingMBP(current)) {
             if (current->style()->direction() == LtrDirectionValue) {
                 w += current->borderRight() + current->paddingRight();
             } else {
@@ -2927,12 +2980,12 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(self, false);
+    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(this, self, false);
     FrameBox* parent = self->layoutParent()->asFrameBox();
     InlineNonReplacedBox* current = newSelf;
     while (parent->isInlineNonReplacedBox()) {
-        InlineNonReplacedBox* newInrb =
-            new InlineNonReplacedBox(parent->asInlineNonReplacedBox(), false);
+        InlineNonReplacedBox* newInrb = new InlineNonReplacedBox(
+            this, parent->asInlineNonReplacedBox(), false);
         newInrb->insertInlineBox(current);
         current = newInrb;
         parent = parent->layoutParent()->asFrameBox();
@@ -3496,14 +3549,26 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
             paddingBack = frameBoxRareData()->m_padding;
             borderBack = frameBoxRareData()->m_border;
             marginBack = frameBoxRareData()->m_margin;
-            frameBoxRareData()->m_padding = m_orgPadding;
-            frameBoxRareData()->m_margin = m_orgMargin;
-            frameBoxRareData()->m_border = m_orgBorder;
+            if (rareData()) {
+                frameBoxRareData()->m_padding = m_rareData->m_orgPadding;
+                frameBoxRareData()->m_margin = m_rareData->m_orgMargin;
+                frameBoxRareData()->m_border = m_rareData->m_orgBorder;
+            } else {
+                frameBoxRareData()->m_padding = LayoutBoxSurroundData();
+                frameBoxRareData()->m_margin = LayoutBoxSurroundData();
+                frameBoxRareData()->m_border = LayoutBoxSurroundData();
+            }
         } else {
             m_layoutParent = (Frame*)&fakeRareData;
-            fakeRareData.m_padding = m_orgPadding;
-            fakeRareData.m_margin = m_orgMargin;
-            fakeRareData.m_border = m_orgBorder;
+            if (rareData()) {
+                fakeRareData.m_padding = m_rareData->m_orgPadding;
+                fakeRareData.m_margin = m_rareData->m_orgMargin;
+                fakeRareData.m_border = m_rareData->m_orgBorder;
+            } else {
+                fakeRareData.m_padding = LayoutBoxSurroundData();
+                fakeRareData.m_margin = LayoutBoxSurroundData();
+                fakeRareData.m_border = LayoutBoxSurroundData();
+            }
         }
 
         canvas->save();

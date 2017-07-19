@@ -1240,6 +1240,11 @@ public:
         m_left = v;
     }
 
+    bool hasNonZeroEdge()
+    {
+        return top() || right() || bottom() || left();
+    }
+
 protected:
     LayoutUnit m_top;
     LayoutUnit m_right;

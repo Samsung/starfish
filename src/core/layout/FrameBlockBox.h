@@ -22,6 +22,7 @@
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameLineBreak.h"
 #include "core/layout/FrameText.h"
+#include "core/util/RefPtr.h"
 
 namespace StarFish {
 
@@ -233,8 +234,8 @@ public:
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
                           LineBox* lineBox);
 
-    void setLeftMBPs();
-    void setRightMBPs();
+    void setLeftMBPs(LineFormattingContext* ctx);
+    void setRightMBPs(LineFormattingContext* ctx);
 
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
@@ -257,50 +258,52 @@ protected:
     }
 };
 
+struct InlineNonReplacedBoxRareData : public gc {
+    InlineNonReplacedBoxRareData(FrameInline* origin)
+        : m_tag(0x3)
+        , m_origin(origin)
+    {
+    }
+    void* operator new(size_t size)
+    {
+        // We can use atomic malloc
+        // because FrameTree already has reference of m_origin
+        return GC_MALLOC_ATOMIC(size);
+    }
+    void* operator new[](size_t size) = delete;
+
+    size_t m_tag;
+    FrameInline* m_origin;
+    LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+};
+
+enum InlineNonReplacedBoxMBPStatus {
+    MBPStatusNone = 0,
+    ProcessedStaringMBP = 1,
+    ProcessedEndingMBP = 2,
+    SetLeftMBP = 4,
+    SetRightMBP = 8,
+};
+
+class InlineNonReplacedBoxMBPStatusHolder
+    : public RefCounted<InlineNonReplacedBoxMBPStatusHolder> {
+public:
+    InlineNonReplacedBoxMBPStatusHolder()
+    {
+        m_status = 0;
+    }
+    int m_status;
+};
+
 class InlineNonReplacedBox : public InlineBoxLayoutParentBox {
     friend class FrameBlockBox;
     friend class LineFormattingContext;
 
-    enum MBPStatus {
-        None = 0,
-        ProcessedStaringMBP = 1,
-        ProcessedEndingMBP = 2,
-        SetLeftMBP = 4,
-        SetRightMBP = 8,
-    };
-
 public:
-    InlineNonReplacedBox(InlineNonReplacedBox* inlineBox, bool isFirstLine)
-        : InlineNonReplacedBox(inlineBox, inlineBox->origin(), isFirstLine)
-    {
-        m_mbpStatus = inlineBox->m_mbpStatus;
-
-        m_ascender = inlineBox->m_ascender;
-        m_descender = inlineBox->m_descender;
-
-        if (inlineBox->hasRareData()) {
-            ensureFrameBoxRareData()->m_margin =
-                inlineBox->frameBoxRareData()->m_margin;
-            ensureFrameBoxRareData()->m_border =
-                inlineBox->frameBoxRareData()->m_border;
-            ensureFrameBoxRareData()->m_padding =
-                inlineBox->frameBoxRareData()->m_padding;
-        }
-
-        m_orgMargin = inlineBox->m_orgMargin;
-        m_orgBorder = inlineBox->m_orgBorder;
-        m_orgPadding = inlineBox->m_orgPadding;
-    }
-
-    InlineNonReplacedBox(FrameInline* frame, bool isFirstLine)
-        : InlineNonReplacedBox(frame, frame, isFirstLine)
-    {
-        m_mbpStatus = new (UseGC) unsigned int;
-        *m_mbpStatus = 0;
-
-        m_ascender = 0;
-        m_descender = 0;
-    }
+    InlineNonReplacedBox(LineFormattingContext* ctx,
+                         InlineNonReplacedBox* inlineBox, bool isFirstLine);
+    InlineNonReplacedBox(LineFormattingContext* ctx, FrameInline* frame,
+                         bool isFirstLine);
 
     virtual bool isInlineBox() const
     {
@@ -358,6 +361,9 @@ public:
 
     FrameInline* origin()
     {
+        if (rareData()) {
+            return rareData()->m_origin;
+        }
         return m_origin;
     }
 
@@ -371,54 +377,10 @@ public:
         m_flags.m_isCollapsed = true;
     }
 
-    bool isProcessedStartingMBP() const
-    {
-        return ((*m_mbpStatus) & ProcessedStaringMBP) != 0;
-    }
-
-    void markProcessedStartingMBP()
-    {
-        STARFISH_ASSERT(!isProcessedStartingMBP());
-        (*m_mbpStatus) |= ProcessedStaringMBP;
-    }
-
-    bool isProcessedEndingMBP() const
-    {
-        return ((*m_mbpStatus) & ProcessedEndingMBP) != 0;
-    }
-
-    void markProcessedEndingMBP()
-    {
-        STARFISH_ASSERT(!isProcessedEndingMBP());
-        (*m_mbpStatus) |= ProcessedEndingMBP;
-    }
-
-    bool isSetLeftMBP() const
-    {
-        return ((*m_mbpStatus) & SetLeftMBP) != 0;
-    }
-
-    void markSetLeftMBP()
-    {
-        STARFISH_ASSERT(!isSetLeftMBP());
-        (*m_mbpStatus) |= SetLeftMBP;
-    }
-
-    bool isSetRightMBP() const
-    {
-        return ((*m_mbpStatus) & SetRightMBP) != 0;
-    }
-
-    void markSetRightMBP()
-    {
-        STARFISH_ASSERT(!isSetRightMBP());
-        (*m_mbpStatus) |= SetRightMBP;
-    }
-
     void processStartingMBP(LineFormattingContext* lineFormattingContext);
     void processEndingMBP(LineFormattingContext* lineFormattingContext);
-    void setOrgLeftMBP();
-    void setOrgRightMBP();
+    void setOrgLeftMBP(LineFormattingContext* lineFormattingContext);
+    void setOrgRightMBP(LineFormattingContext* lineFormattingContext);
 
     void unsetLeftMBP()
     {
@@ -435,14 +397,22 @@ public:
     }
 
 protected:
-    FrameInline* m_origin;
-    unsigned* m_mbpStatus;
-    LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+    union {
+        FrameInline* m_origin;
+        InlineNonReplacedBoxRareData* m_rareData;
+    };
+
+    InlineNonReplacedBoxRareData* rareData()
+    {
+        if (m_origin == nullptr || 0x3 != *((size_t*)m_origin)) {
+            return nullptr;
+        }
+        return m_rareData;
+    }
 
     InlineNonReplacedBox(Frame* frame, FrameInline* origin, bool isFirstLine)
         : InlineBoxLayoutParentBox(frame)
         , m_origin(origin)
-        , m_mbpStatus(nullptr)
     {
         m_flags.m_isCollapsed = false;
         m_flags.m_isFirstLine = isFirstLine;
@@ -463,12 +433,18 @@ protected:
 
     void setTopBottomOrgMBP()
     {
-        m_orgMargin.setTop(marginTop());
-        m_orgMargin.setBottom(marginBottom());
-        m_orgBorder.setTop(borderTop());
-        m_orgBorder.setBottom(borderBottom());
-        m_orgPadding.setTop(paddingTop());
-        m_orgPadding.setBottom(paddingBottom());
+        if (rareData() || marginTop() || marginBottom() || borderTop() ||
+            borderBottom() || paddingTop() || paddingBottom()) {
+            if (!rareData()) {
+                m_rareData = new InlineNonReplacedBoxRareData(m_origin);
+            }
+            m_rareData->m_orgMargin.setTop(marginTop());
+            m_rareData->m_orgMargin.setBottom(marginBottom());
+            m_rareData->m_orgBorder.setTop(borderTop());
+            m_rareData->m_orgBorder.setBottom(borderBottom());
+            m_rareData->m_orgPadding.setTop(paddingTop());
+            m_rareData->m_orgPadding.setBottom(paddingBottom());
+        }
     }
 
     void unsetTopBottomMBP()
@@ -891,6 +867,70 @@ public:
 
     std::unordered_map<InlineBoxLayoutParentBox*, size_t>
         m_absolutePositionedLayoutParentCnt;
+
+    std::unordered_map<InlineNonReplacedBox*,
+                       RefPtr<InlineNonReplacedBoxMBPStatusHolder>>
+        m_inlineNonReplacedBoxMBPStatus;
+
+    bool isProcessedStartingMBP(InlineNonReplacedBox* box)
+    {
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        return ((v->m_status) & ProcessedStaringMBP) != 0;
+    }
+
+    void markProcessedStartingMBP(InlineNonReplacedBox* box)
+    {
+        STARFISH_ASSERT(!isProcessedStartingMBP(box));
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        (v->m_status) |= ProcessedStaringMBP;
+    }
+
+    bool isProcessedEndingMBP(InlineNonReplacedBox* box)
+    {
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        return ((v->m_status) & ProcessedEndingMBP) != 0;
+    }
+
+    void markProcessedEndingMBP(InlineNonReplacedBox* box)
+    {
+        STARFISH_ASSERT(!isProcessedEndingMBP(box));
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        (v->m_status) |= ProcessedEndingMBP;
+    }
+
+    bool isSetLeftMBP(InlineNonReplacedBox* box)
+    {
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        return ((v->m_status) & SetLeftMBP) != 0;
+    }
+
+    void markSetLeftMBP(InlineNonReplacedBox* box)
+    {
+        STARFISH_ASSERT(!isSetLeftMBP(box));
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        (v->m_status) |= SetLeftMBP;
+    }
+
+    bool isSetRightMBP(InlineNonReplacedBox* box)
+    {
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        return ((v->m_status) & SetRightMBP) != 0;
+    }
+
+    void markSetRightMBP(InlineNonReplacedBox* box)
+    {
+        STARFISH_ASSERT(!isSetRightMBP(box));
+        RefPtr<InlineNonReplacedBoxMBPStatusHolder>& v =
+            m_inlineNonReplacedBoxMBPStatus[box];
+        (v->m_status) |= SetRightMBP;
+    }
 
     void setInlineBoxIndex(FrameBox* f, size_t inlineBoxIdx)
     {
