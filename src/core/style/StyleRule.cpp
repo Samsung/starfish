@@ -107,13 +107,11 @@ void StyleRule::wrapperTakeSelectorList(CSSSelectorList& selectors)
 StyleRuleGroup::StyleRuleGroup(RuleType type, GCVector<StyleRuleBase*>& rules)
     : StyleRuleBase(type)
 {
-    m_childRules.clear();
     m_childRules.assign(rules.begin(), rules.end());
 }
 StyleRuleGroup::StyleRuleGroup(StyleRuleGroup& o)
     : StyleRuleBase(o.type())
 {
-    m_childRules.clear();
     m_childRules.assign(o.childRules().begin(), o.childRules().end());
 }
 
@@ -159,7 +157,6 @@ StyleRuleMedia::StyleRuleMedia(StyleRuleMedia& o)
 {
     if (o.mediaQuerySet()) {
         m_mediaQuerySet = MediaQuerySet::create(o.mediaQuerySet()->document());
-        m_mediaQuerySet->queryVector().clear();
         m_mediaQuerySet->queryVector().assign(
             o.mediaQuerySet()->queryVector().begin(),
             o.mediaQuerySet()->queryVector().end());

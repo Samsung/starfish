@@ -1376,7 +1376,6 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             compoundPseudoElement =
                 simpleSelector->asCSSPseudoSelector()->pseudoType();
         }
-
         selectorList->push_back(simpleSelector);
     }
 
