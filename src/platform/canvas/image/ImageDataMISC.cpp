@@ -429,7 +429,11 @@ private:
         } else {
             readData.mem = (void*)bufferedInput;
             readData.size = 0;
-            gifFile = DGifOpen(&readData, gifRead, nullptr);
+            gifFile = DGifOpen(&readData, gifRead, &errorCode);
+            if (!gifFile) {
+                STARFISH_LOG_ERROR("Gif Open Error, %d\n", errorCode);
+                return;
+            }
         }
 
         m_width = gifFile->SWidth;
