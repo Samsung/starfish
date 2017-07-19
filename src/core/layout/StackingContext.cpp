@@ -488,7 +488,8 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
         }
     }
 
-    if (owner()->shouldApplyOverflow()) {
+    if (owner()->style()->overflowX() != OverflowValue::VisibleOverflow ||
+        owner()->style()->overflowY() != OverflowValue::VisibleOverflow) {
         if (owner()->FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
             return nullptr;
         }
