@@ -57,7 +57,7 @@ public:
     CurlHandleData getCurlHandleData(const std::string& host);
     void cachingCurlHandleData(const std::string& host, CurlHandleData& cd);
     void clearAllCurlHandleDataCach();
-    void prunningIfNeed();
+    void pruningIfNeed();
     void initCookieSession();
 
     // for document.cookie
@@ -82,7 +82,8 @@ private:
     void removeMutexes();
 
     CURLSH* m_curlShareHandle;
-    CurlHandleDataMultiMap m_CurlHandleDataCache;
+    CurlHandleDataMultiMap m_curlHandleDataCache;
+    uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
     Mutex* m_mutexes[MutexKindMax];

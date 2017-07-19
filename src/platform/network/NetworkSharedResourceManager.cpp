@@ -16,12 +16,16 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
+#include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
 #include "NetworkSharedResourceManager.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 
 #include <openssl/crypto.h>
+
+#define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 10
+#define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 15
 
 namespace StarFish {
 
@@ -241,7 +245,8 @@ void NetworkSharedResourceManager::close()
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()
     : m_curlShareHandle(nullptr)
-    , m_CurlHandleDataCache()
+    , m_curlHandleDataCache()
+    , m_lastCachePruneTime(0)
     , m_cacheClearTimerID(SIZE_MAX)
     , m_cookieStoreFilePath("")
 {
@@ -342,12 +347,12 @@ CurlHandleData NetworkSharedResourceManager::getCurlHandleData(
 {
     Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
     CurlHandleData ret = { nullptr, 0 };
-    auto iter = m_CurlHandleDataCache.find(host);
+    auto iter = m_curlHandleDataCache.find(host);
 
-    if (iter != m_CurlHandleDataCache.end()) {
+    if (iter != m_curlHandleDataCache.end()) {
         // cache hit
         ret = iter->second;
-        m_CurlHandleDataCache.erase(iter);
+        m_curlHandleDataCache.erase(iter);
     } else {
         ret.curl = curl_easy_init();
     }
@@ -359,22 +364,50 @@ void NetworkSharedResourceManager::cachingCurlHandleData(
     const std::string& host, CurlHandleData& cd)
 {
     Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
-    prunningIfNeed();
-    m_CurlHandleDataCache.insert(
+    pruningIfNeed();
+    cd.lastUsedTime = tickCount();
+    m_curlHandleDataCache.insert(
         std::pair<std::string, CurlHandleData>(host, cd));
 }
 
-void NetworkSharedResourceManager::prunningIfNeed()
+void NetworkSharedResourceManager::pruningIfNeed()
 {
-    // TODO
+    if ((tickCount() - m_lastCachePruneTime) >
+        (CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S * 1000)) {
+        uint64_t current = tickCount();
+        auto iter = m_curlHandleDataCache.begin();
+#ifdef STARFISH_ENABLE_TEST
+        size_t old = m_curlHandleDataCache.size();
+#endif
+        while (iter != m_curlHandleDataCache.end()) {
+            if ((current - iter->second.lastUsedTime) >
+                (CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S * 1000)) {
+                curl_easy_cleanup(iter->second.curl);
+                m_curlHandleDataCache.erase(iter++);
+            } else {
+                iter++;
+            }
+        }
+#ifdef STARFISH_ENABLE_TEST
+        STARFISH_LOG_INFO("prunning cached handles %zd => %zd \n", old,
+                          m_curlHandleDataCache.size());
+#endif
+        m_lastCachePruneTime = tickCount();
+    }
 }
+
 void NetworkSharedResourceManager::clearAllCurlHandleDataCach()
 {
+#ifdef STARFISH_ENABLE_TEST
+    STARFISH_LOG_INFO(
+        "NetworkSharedResourceManager::clearAllCurlHandleDataCach(size:%d)\n",
+        (int)m_curlHandleDataCache.size());
+#endif
     Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
-    while (m_CurlHandleDataCache.size()) {
-        CurlHandleData cd = m_CurlHandleDataCache.begin()->second;
+    while (m_curlHandleDataCache.size()) {
+        CurlHandleData cd = m_curlHandleDataCache.begin()->second;
         curl_easy_cleanup(cd.curl);
-        m_CurlHandleDataCache.erase(m_CurlHandleDataCache.begin());
+        m_curlHandleDataCache.erase(m_curlHandleDataCache.begin());
     }
 }
 
