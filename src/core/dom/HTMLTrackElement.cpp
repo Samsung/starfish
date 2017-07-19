@@ -147,9 +147,9 @@ void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLTrackElement::didNodeInsertedToDocumenTree()
+void HTMLTrackElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumenTree();
+    HTMLElement::didNodeInsertedToDocumentTree();
     m_live = true;
     if (m_hasPendingRequest) {
         load();
@@ -162,9 +162,9 @@ void HTMLTrackElement::didNodeInsertedToDocumenTree()
     }
 }
 
-void HTMLTrackElement::didNodeRemovedFromDocumenTree()
+void HTMLTrackElement::didNodeRemovedFromDocumentTree()
 {
-    HTMLElement::didNodeRemovedFromDocumenTree();
+    HTMLElement::didNodeRemovedFromDocumentTree();
     m_live = false;
     clearResource();
 }

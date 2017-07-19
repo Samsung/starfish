@@ -103,14 +103,14 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLMediaElement::didNodeInsertedToDocumenTree()
+void HTMLMediaElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumenTree();
+    HTMLElement::didNodeInsertedToDocumentTree();
 }
 
-void HTMLMediaElement::didNodeRemovedFromDocumenTree()
+void HTMLMediaElement::didNodeRemovedFromDocumentTree()
 {
-    HTMLElement::didNodeRemovedFromDocumenTree();
+    HTMLElement::didNodeRemovedFromDocumentTree();
     pause();
 }
 

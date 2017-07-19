@@ -43,8 +43,8 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
-    virtual void didNodeInsertedToDocumenTree();
-    virtual void didNodeRemovedFromDocumenTree();
+    virtual void didNodeInsertedToDocumentTree();
+    virtual void didNodeRemovedFromDocumentTree();
 
     void load();
     void load(String* srcURL);

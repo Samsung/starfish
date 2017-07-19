@@ -509,10 +509,10 @@ public:
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
 
     // These two callbacks are fired only document participate in rendering
-    virtual void didNodeInsertedToDocumenTree()
+    virtual void didNodeInsertedToDocumentTree()
     {
     }
-    virtual void didNodeRemovedFromDocumenTree()
+    virtual void didNodeRemovedFromDocumentTree()
     {
     }
 

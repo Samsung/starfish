@@ -798,7 +798,7 @@ static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
         node->didNodeAdopted();
     }
 
-    node->didNodeInsertedToDocumenTree();
+    node->didNodeInsertedToDocumentTree();
     Node* child = node->firstChild();
     while (child) {
         notifyNodeInsertedToDocumentTree(head, child);
@@ -1012,7 +1012,7 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
 
 void notifyNodeRemoveFromDocumentTree(Node* node)
 {
-    node->didNodeRemovedFromDocumenTree();
+    node->didNodeRemovedFromDocumentTree();
     Node* child = node->firstChild();
     while (child) {
         notifyNodeRemoveFromDocumentTree(child);
