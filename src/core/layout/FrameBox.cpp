@@ -576,8 +576,7 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (!p->isPositioned()) {
                         break;
-                    } else if (p->style()->overflow() !=
-                               OverflowValue::VisibleOverflow) {
+                    } else if (shouldApplyOverflow()) {
                         break;
                     }
                 }
@@ -604,10 +603,7 @@ bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
     r.setY(r.y() + loc.y());
     sCtx->unite(r);
 
-    if (style()->overflow() == OverflowValue::HiddenOverflow) {
-        return false;
-    }
-    return true;
+    return !shouldApplyOverflow();
 }
 
 void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)

@@ -1509,7 +1509,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
     ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
     ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
-    ADD_VALUE_PAIR(Overflow, OverflowValueKind, overflow)
+    ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)
+    ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
     ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
     ADD_VALUE_PAIR(Opacity, Number, opacity)
     ADD_VALUE_PAIR(ZIndex, Int32, zIndex)
@@ -2241,10 +2242,21 @@ void Node::dumpStyle()
     printf("opacity: %.1f, ", m_style->opacity());
 
     // overflow-x
-    if (m_style->overflow() == OverflowValue::VisibleOverflow) {
-        printf("overflow: visible, ");
+    if (m_style->overflowX() == OverflowValue::VisibleOverflow) {
+        printf("overflow-x: visible, ");
+    } else if (m_style->overflowX() == OverflowValue::HiddenOverflow) {
+        printf("overflow-x: hidden, ");
     } else {
-        printf("overflow: hidden, ");
+        printf("overflow-x: auto, ");
+    }
+
+    // overflow-y
+    if (m_style->overflowY() == OverflowValue::VisibleOverflow) {
+        printf("overflow-y: visible, ");
+    } else if (m_style->overflowY() == OverflowValue::HiddenOverflow) {
+        printf("overflow-y: hidden, ");
+    } else {
+        printf("overflow-y: auto, ");
     }
 
     // visibility

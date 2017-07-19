@@ -1551,6 +1551,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("visible");
         case OverflowValue::HiddenOverflow:
             return String::fromUTF8("hidden");
+        case OverflowValue::AutoOverflow:
+            return String::fromUTF8("auto");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2371,6 +2373,82 @@ String* CSSStyleDeclaration::Transition()
     String* property = TransitionProperty();
     String* duration = TransitionDuration();
     return createTransitionString(property, duration);
+}
+
+static void removeOverflowCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY);
+}
+
+static void addOverflowCSSValuePairs(CSSStyleDeclaration* target,
+                                     CSSStyleValuePair overflowX,
+                                     CSSStyleValuePair overflowY)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX, overflowX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY, overflowY);
+}
+
+static bool parseOverflowShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* overflowX,
+                                   CSSStyleValuePair* overflowY)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    overflowX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    overflowY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool isFirstTimeValue = true;
+    CSSStyleValuePair temp;
+
+    const CSSTokenValue& tok = tokens[0];
+
+    if (temp.updateValueUnitOverflowX(tokens[0])) {
+        *overflowX = temp;
+        *overflowY = temp;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeOverflowCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    // TODO comma separation
+    CSSStyleValuePair v, overflowX, overflowY;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, v, v);
+    } else if (parseOverflowShorthand(tokens, &overflowX, &overflowY)) {
+        overflowX.setFlagImportant(isImportant);
+        overflowY.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, overflowX, overflowY);
+    }
+}
+
+String* CSSStyleDeclaration::Overflow()
+{
+    // TODO: Should find the specific rule for composing overflow
+    String* overflowX = OverflowX();
+    String* overflowY = OverflowY();
+
+    if (overflowX->equals(overflowY)) {
+        return overflowX;
+    } else {
+        return String::createASCIIString("auto");
+    }
 }
 
 void CSSStyleDeclaration::setBackground(const char* value, size_t length,
@@ -3990,15 +4068,26 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
-        case CSSStyleValuePair::KeyKind::Overflow:
+        case CSSStyleValuePair::KeyKind::OverflowX:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_overflow = parentStyle->overflow();
+                style->m_overflowX = parentStyle->overflowX();
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_overflow = OverflowValue::VisibleOverflow;
+                style->m_overflowX = OverflowValue::VisibleOverflow;
             } else {
-                style->m_overflow = cssValues[k].overflowValue();
+                style->m_overflowX = cssValues[k].overflowValue();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::OverflowY:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_overflowY = parentStyle->overflowY();
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->m_overflowY = OverflowValue::VisibleOverflow;
+            } else {
+                style->m_overflowY = cssValues[k].overflowValue();
             }
             break;
         case CSSStyleValuePair::KeyKind::Visibility:
@@ -6049,19 +6138,50 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueOverflow(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOverflowX(const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
     }
 
-    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitOverflowX(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
+{
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (STRING_VALUE_IS_STRING("visible")) {
-        m_value.m_overflow = OverflowValue::VisibleOverflow;
+        m_value.m_overflowX = OverflowValue::VisibleOverflow;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
-        m_value.m_overflow = OverflowValue::HiddenOverflow;
+        m_value.m_overflowX = OverflowValue::HiddenOverflow;
+    } else if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_overflowX = OverflowValue::AutoOverflow;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueOverflowY(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    return updateValueUnitOverflowY(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitOverflowY(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
+
+    if (STRING_VALUE_IS_STRING("visible")) {
+        m_value.m_overflowY = OverflowValue::VisibleOverflow;
+    } else if (STRING_VALUE_IS_STRING("hidden")) {
+        m_value.m_overflowY = OverflowValue::HiddenOverflow;
+    } else if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_overflowY = OverflowValue::AutoOverflow;
     } else {
         return false;
     }

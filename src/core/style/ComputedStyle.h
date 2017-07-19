@@ -747,9 +747,14 @@ public:
         return m_surround;
     }
 
-    OverflowValue overflow()
+    OverflowValue overflowX()
     {
-        return m_overflow;
+        return m_overflowX;
+    }
+
+    OverflowValue overflowY()
+    {
+        return m_overflowY;
     }
 
     TransitionPropertyValue transitionProperty()
@@ -1042,7 +1047,8 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_background = nullptr;
         m_surround = nullptr;
-        m_overflow = OverflowValue::VisibleOverflow;
+        m_overflowX = OverflowValue::VisibleOverflow;
+        m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
         m_transforms = nullptr;
@@ -1080,7 +1086,8 @@ protected:
     DisplayValue m_originalDisplay : 13;
     PositionValue m_position : 2;
     VerticalAlignValue m_verticalAlign : 4;
-    OverflowValue m_overflow : 1;
+    OverflowValue m_overflowX : 2;
+    OverflowValue m_overflowY : 2;
     TextDecorationValue m_textDecoration : 3;
     UnicodeBidiValue m_unicodeBidi : 2;
     bool m_zIndexSpecifiedByUser : 1;

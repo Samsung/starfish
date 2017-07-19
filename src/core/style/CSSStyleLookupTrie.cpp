@@ -46,6 +46,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 5:
         // Color
+        // Float
         // Width
         // Right
         switch (data[0]) {
@@ -61,6 +62,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "float", 5) == 0) {
                 return CSSStyleKind::Float;
             }
+            break;
         case 'w':
             if (memcmp(data, "width", 5) == 0) {
                 return CSSStyleKind::Width;
@@ -114,6 +116,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "content", 7) == 0) {
                 return CSSStyleKind::Content;
             }
+            break;
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
                 return CSSStyleKind::Display;
@@ -139,6 +142,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 8:
         // Position
         // Overflow
+        // CSSFloat
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -161,6 +165,8 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Font-Size
         // Transform
         // Direction
+        // MaxWidth
+        // MaxHeight
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -193,9 +199,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Font-Style
         // Text-Align
         // Margin-Top
-        // Visibility
         // Max-Height
         // Min-Height
+        // Overflow-X
+        // Overflow-Y
+        // Visibility
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
@@ -229,6 +237,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::MinHeight;
             }
             break;
+        case 'o':
+            if (memcmp(data, "overflow-x", 10) == 0) {
+                return CSSStyleKind::OverflowX;
+            }
+            if (memcmp(data, "overflow-y", 10) == 0) {
+                return CSSStyleKind::OverflowY;
+            }
+            break;
         case 'v':
             if (memcmp(data, "visibility", 10) == 0) {
                 return CSSStyleKind::Visibility;
@@ -255,6 +271,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "empty-cells", 11) == 0) {
                 return CSSStyleKind::EmptyCells;
             }
+            break;
         case 'f':
             if (memcmp(data, "font-weight", 11) == 0) {
                 return CSSStyleKind::FontWeight;
@@ -284,6 +301,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "text-indent", 11) == 0) {
                 return CSSStyleKind::TextIndent;
             }
+            break;
         }
         break;
     case 12:
@@ -361,7 +379,6 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 14:
         // Vertical-Align
-        // Letter-Spacing
         // Padding-Bottom
         // Border-Spacing
         switch (data[0]) {
@@ -564,6 +581,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "color", 5) == 0) {
                 return CSSStyleKind::Color;
             }
+            if (memcmp(data, "clear", 5) == 0) {
+                return CSSStyleKind::Clear;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "float", 5) == 0) {
+                return CSSStyleKind::Float;
+            }
             break;
         case 'w':
             if (memcmp(data, "width", 5) == 0) {
@@ -634,9 +659,22 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 8:
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "cssFloat", 8) == 0) {
+                return CSSStyleKind::Float;
+            }
+            break;
         case 'f':
             if (memcmp(data, "fontSize", 8) == 0) {
                 return CSSStyleKind::FontSize;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "maxWidth", 8) == 0) {
+                return CSSStyleKind::MaxWidth;
+            }
+            if (memcmp(data, "minHeight", 8) == 0) {
+                return CSSStyleKind::MinWidth;
             }
             break;
         case 'p':
@@ -679,6 +717,20 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "marginTop", 9) == 0) {
                 return CSSStyleKind::MarginTop;
+            }
+            if (memcmp(data, "maxHeight", 9) == 0) {
+                return CSSStyleKind::MaxHeight;
+            }
+            if (memcmp(data, "minHeight", 9) == 0) {
+                return CSSStyleKind::MinHeight;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "overflowX", 9) == 0) {
+                return CSSStyleKind::OverflowX;
+            }
+            if (memcmp(data, "overflowY", 9) == 0) {
+                return CSSStyleKind::OverflowY;
             }
             break;
         }
@@ -724,8 +776,16 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             break;
         case 'e':
-            if (memcmp(data, "EmptyCells", 10) == 0) {
+            if (memcmp(data, "emptyCells", 10) == 0) {
                 return CSSStyleKind::EmptyCells;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "transition", 10) == 0) {
+                return CSSStyleKind::Transition;
+            }
+            if (memcmp(data, "textIndent", 10) == 0) {
+                return CSSStyleKind::TextIndent;
             }
             break;
         }
