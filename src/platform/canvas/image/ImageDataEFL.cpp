@@ -37,8 +37,6 @@ public:
             m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(),
             NULL);
         evas_object_data_set(m_image, "local", "1");
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
-                                EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);
         if (err == EVAS_LOAD_ERROR_NONE) {
@@ -62,8 +60,6 @@ public:
         char format[4] = "";
         evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format,
                                       NULL);
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
-                                EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);
         if (err == EVAS_LOAD_ERROR_NONE) {
