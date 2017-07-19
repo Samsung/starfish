@@ -596,7 +596,7 @@ void FrameTableBox::calCellWidthsWithPercentageWidths(
     std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfPercentageWidth)
 {
-    bool secondRunOrMore = true;
+    bool secondRunOrMore = false;
     *sumOfPercentageWidth = 0;
     bool reducedToMinWidth = false;
     do {
