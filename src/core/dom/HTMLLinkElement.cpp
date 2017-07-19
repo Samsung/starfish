@@ -92,15 +92,15 @@ ResourceURL* HTMLLinkElement::url()
                            document()->documentURI()->baseURI());
 }
 
-void HTMLLinkElement::didNodeInsertedToDocumenTree()
+void HTMLLinkElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumenTree();
+    HTMLElement::didNodeInsertedToDocumentTree();
     checkLoadStyleSheet();
 }
 
-void HTMLLinkElement::didNodeRemovedFromDocumenTree()
+void HTMLLinkElement::didNodeRemovedFromDocumentTree()
 {
-    HTMLElement::didNodeRemovedFromDocumenTree();
+    HTMLElement::didNodeRemovedFromDocumentTree();
     unloadStyleSheetIfExists();
 }
 

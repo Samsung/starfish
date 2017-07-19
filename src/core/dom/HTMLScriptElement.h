@@ -63,7 +63,7 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    virtual void didNodeInsertedToDocumenTree();
+    virtual void didNodeInsertedToDocumentTree();
     virtual Node* clone();
     void markParserInserted()
     {

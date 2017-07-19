@@ -49,12 +49,12 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLMetaElement::didNodeInsertedToDocumenTree()
+void HTMLMetaElement::didNodeInsertedToDocumentTree()
 {
     checkPlatformFlags();
 }
 
-void HTMLMetaElement::didNodeRemovedFromDocumenTree()
+void HTMLMetaElement::didNodeRemovedFromDocumentTree()
 {
     checkPlatformFlags();
 }

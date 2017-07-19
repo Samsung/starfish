@@ -172,9 +172,9 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLScriptElement::didNodeInsertedToDocumenTree()
+void HTMLScriptElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumenTree();
+    HTMLElement::didNodeInsertedToDocumentTree();
     executeScript();
 }
 

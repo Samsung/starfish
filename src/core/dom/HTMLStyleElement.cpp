@@ -93,16 +93,16 @@ void HTMLStyleElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
-void HTMLStyleElement::didNodeInsertedToDocumenTree()
+void HTMLStyleElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumenTree();
+    HTMLElement::didNodeInsertedToDocumentTree();
     generateStyleSheet();
     dispatchLoadEvent();
 }
 
-void HTMLStyleElement::didNodeRemovedFromDocumenTree()
+void HTMLStyleElement::didNodeRemovedFromDocumentTree()
 {
-    HTMLElement::didNodeRemovedFromDocumenTree();
+    HTMLElement::didNodeRemovedFromDocumentTree();
     removeStyleSheet();
 }
 
