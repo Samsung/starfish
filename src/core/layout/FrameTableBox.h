@@ -154,6 +154,11 @@ private:
         std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfColWidths);
 
+    void calCellWidthsWithPercentageWidths(
+        LayoutUnit remainingWidth,
+        std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+        LayoutUnit* sumOfPercentageWidth);
+
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
                              GCVector<ColSizeStruct>& columnWidths);
 
