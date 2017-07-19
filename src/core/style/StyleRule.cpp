@@ -86,6 +86,7 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
 StyleRule::StyleRule(CSSSelector::Type type, AtomicString selectorText)
     : StyleRuleBase(StyleRuleBase::STYLE_RULE)
     , m_styleDeclaration(new CSSStyleDeclaration())
+    , m_order(0)
 {
     CSSSelector* selector =
         new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
@@ -96,6 +97,7 @@ StyleRule::StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl)
     : StyleRuleBase(StyleRuleBase::STYLE_RULE)
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)
+    , m_order(0)
 {
 }
 

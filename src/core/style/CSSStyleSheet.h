@@ -44,6 +44,7 @@ public:
 
     void addStyleRule(std::pair<StyleRule*, ResourceURL*> rule);
     void addRule(StyleRuleBase* rule);
+    void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
 
     ResourceURL* url();
     Node* origin()
@@ -82,6 +83,18 @@ public:
     {
         m_styleRules.clear();
         m_styleRules.shrink_to_fit();
+
+        m_idRules.clear();
+        m_idRules.shrink_to_fit();
+
+        m_classRules.clear();
+        m_classRules.shrink_to_fit();
+
+        m_tagRules.clear();
+        m_tagRules.shrink_to_fit();
+
+        m_universalRules.clear();
+        m_universalRules.shrink_to_fit();
     }
 
     void setOwnerRule(CSSRule* ownerRule);
@@ -132,6 +145,26 @@ public:
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
 
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& idRules()
+    {
+        return m_idRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& classRules()
+    {
+        return m_classRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& tagRules()
+    {
+        return m_tagRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& universalRules()
+    {
+        return m_universalRules;
+    }
+
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
@@ -146,6 +179,11 @@ protected:
     GCVector<StyleRuleImport*> m_importRules;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<CSSRule*> m_childRuleWrappers;
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_idRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_classRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_tagRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_universalRules;
 };
 
 } /* namespace StarFish */

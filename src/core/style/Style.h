@@ -1609,14 +1609,23 @@ class CSSPseudoSelector;
 
 class CSSSelectorList : public GCVector<CSSSelector*>, public gc {
 public:
+    CSSSelectorList()
+        : m_specificity(0)
+    {
+    }
+
     void push_front(CSSSelector* s)
     {
         GCVector<CSSSelector*>::insert(begin(), s);
     }
 
+    unsigned specificity();
     String* selectorText();
     static String* selectorText(CSSSelectorList* list, unsigned idx,
                                 String* rightSide);
+
+private:
+    unsigned m_specificity;
 };
 
 class CSSSelector : public gc {
@@ -1740,7 +1749,7 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    const AtomicString& selectorText()
+    const AtomicString& selectorText() const
     {
         return m_selectorText;
     }
@@ -1872,6 +1881,11 @@ protected:
 
 using Declarations = GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>>;
 
+template <unsigned int InlineStorageSize>
+using MatchedStyleRules = VectorWithInlineStorage<
+    InlineStorageSize, std::pair<StyleRule*, ResourceURL*>,
+    std::allocator<std::pair<StyleRule*, ResourceURL*>>>;
+
 class CSSStyleSheet;
 class StyleResolver : public DocumentHoldable {
 public:
@@ -1947,6 +1961,12 @@ public:
                         const GCVector<AtomicString>& elementClasses,
                         const CSSSelectorList& selectorList, unsigned idx,
                         MatchResult& result, bool isQueryingSelector = false);
+    void collectMatchingRulesForList(
+        std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
+        Element* element, AtomicString elementName, AtomicString elementId,
+        const GCVector<AtomicString>& elementClasses,
+        MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
+        PseudoElementType pseudoElementType);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
 
