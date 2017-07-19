@@ -1961,11 +1961,16 @@ public:
                         const GCVector<AtomicString>& elementClasses,
                         const CSSSelectorList& selectorList, unsigned idx,
                         MatchResult& result, bool isQueryingSelector = false);
-    void collectMatchingRulesForList(
+    void collectMatchingRulesFromUASheet(
         std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
         Element* element, AtomicString elementName, AtomicString elementId,
         const GCVector<AtomicString>& elementClasses,
-        MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
+        MatchedStyleRules<6>& authorRules);
+    void collectMatchingRulesFromAuthorSheet(
+        std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
+        Element* element, AtomicString elementName, AtomicString elementId,
+        const GCVector<AtomicString>& elementClasses,
+        MatchedStyleRules<16>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
