@@ -274,6 +274,17 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         }
     }
 
+    // https://www.w3.org/TR/css-overflow-3/#overflow-properties
+    // visible is computed to 'auto' if either one of 'overflow-x' or
+    // 'overflow-y'
+    if (m_overflowX == OverflowValue::VisibleOverflow &&
+        m_overflowY != OverflowValue::VisibleOverflow) {
+        m_overflowX = OverflowValue::AutoOverflow;
+    } else if (m_overflowY == OverflowValue::VisibleOverflow &&
+               m_overflowX != OverflowValue::VisibleOverflow) {
+        m_overflowY = OverflowValue::AutoOverflow;
+    }
+
     if (lineHeight().isPercent()) {
         if (lineHeight().percent() == -100) {
         } else {
@@ -553,9 +564,31 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_overflow != oldStyle->m_overflow) {
+    if (newStyle->m_overflowX != oldStyle->m_overflowX &&
+        newStyle->m_overflowY != oldStyle->m_overflowY) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    } else if (newStyle->m_overflowX != oldStyle->m_overflowX) {
+        if (oldStyle->m_overflowX == OverflowValue::AutoOverflow &&
+            newStyle->m_overflowX == OverflowValue::VisibleOverflow &&
+            oldStyle->m_overflowY != OverflowValue::VisibleOverflow) {
+        } else {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+    } else if (newStyle->m_overflowY != oldStyle->m_overflowY) {
+        if (oldStyle->m_overflowY == OverflowValue::AutoOverflow &&
+            newStyle->m_overflowY == OverflowValue::VisibleOverflow &&
+            oldStyle->m_overflowX != OverflowValue::VisibleOverflow) {
+        } else {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+    }
+
+    if (newStyle->m_overflowY != oldStyle->m_overflowY) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_tableLayout != oldStyle->m_tableLayout) {

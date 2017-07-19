@@ -548,6 +548,7 @@ enum WhiteSpaceValue {
 enum OverflowValue {
     VisibleOverflow,
     HiddenOverflow,
+    AutoOverflow,
 };
 
 enum BorderImageRepeatValue {
@@ -771,7 +772,8 @@ class CSSStyleDeclaration;
     F(Transform, transform, "transform")                                 \
     F(TransformOrigin, transformOrigin, "transform-origin")              \
     F(Visibility, visibility, "visibility")                              \
-    F(Overflow, overflow, "overflow")                                    \
+    F(OverflowX, overflowX, "overflow-x")                                \
+    F(OverflowY, overflowY, "overflow-x")                                \
     F(ZIndex, zIndex, "z-index")                                         \
     F(VerticalAlign, verticalAlign, "vertical-align")                    \
     F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")       \
@@ -805,6 +807,7 @@ class CSSStyleDeclaration;
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
+    F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")
 
 #define GEN_FOURSIDE(F) \
@@ -1203,6 +1206,18 @@ public:
         return m_value.m_overflow;
     }
 
+    OverflowValue overflowXValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == OverflowValueKind);
+        return m_value.m_overflowX;
+    }
+
+    OverflowValue overflowYValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == OverflowValueKind);
+        return m_value.m_overflowY;
+    }
+
     VisibilityValue visibility() const
     {
         STARFISH_ASSERT(m_valueKind == VisibilityValueKind);
@@ -1290,6 +1305,8 @@ public:
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
         OverflowValue m_overflow;
+        OverflowValue m_overflowX;
+        OverflowValue m_overflowY;
         VisibilityValue m_visibility;
         UnicodeBidiValue m_unicodeBidi;
         TextDecorationValue m_textDecoration;
@@ -1543,6 +1560,8 @@ public:
     bool updateValueUnitTransitionProperty(const CSSTokenValue& value);
     bool updateValueUnitTransitionTimingFunction(const CSSTokenValue& value);
     bool updateValueUnitTransitionTime(const CSSTokenValue& value);
+    bool updateValueUnitOverflowX(const CSSTokenValue& value);
+    bool updateValueUnitOverflowY(const CSSTokenValue& value);
 
 protected:
     KeyKind m_keyKind : 8;

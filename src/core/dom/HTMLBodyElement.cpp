@@ -42,10 +42,6 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
     } else {
         document()->browsingContext()->m_hasBodyElementBackground = false;
     }
-
-    if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
-        document()->setNeedsFrameTreeBuild();
-    }
 }
 
 void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,

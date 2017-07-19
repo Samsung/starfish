@@ -609,6 +609,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_isEstablishesStackingContext = isRootElement;
     m_flags.m_needsGraphicsBuffer = false;
     m_flags.m_isNormalFlow = true;
+    m_flags.m_isAbsolutePositioned = false;
     m_flags.m_isFloating = false;
     m_flags.m_heightComputed = false;
     m_flags.m_isFirstLine = false;
@@ -616,23 +617,23 @@ Frame::Frame(Node* node, ComputedStyle* s)
     computeStyleFlags();
 }
 
-bool Frame::isOverflowPropagatedToViewPort()
+bool Frame::shouldApplyOverflow()
 {
-    if (!isAnonymous() && m_node->isHTMLHtmlElement()) {
-        HTMLElement* bodyElement = m_node->document()->body();
-        if (bodyElement && bodyElement->style()) {
-            return bodyElement->style()->overflow() != style()->overflow();
+    if (!isAnonymous()) {
+        if (m_node->isHTMLHtmlElement()) {
+            return false;
+        } else if (m_node->isHTMLBodyElement()) {
+            HTMLHtmlElement* html =
+                m_node->parentElement()->asHTMLHtmlElement();
+            if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
+                html->style()->overflowY() == OverflowValue::VisibleOverflow) {
+                return false;
+            }
         }
-        return style()->overflow() != OverflowValue::VisibleOverflow;
     }
 
-    if (!isAnonymous() && m_node->isHTMLBodyElement() &&
-        m_node->document()->rootElement()) {
-        HTMLHtmlElement* rootElement = m_node->document()->rootElement();
-        return rootElement->style()->overflow() != style()->overflow();
-    }
-
-    return false;
+    return (style()->overflowX() != OverflowValue::VisibleOverflow) ||
+           (style()->overflowY() != OverflowValue::VisibleOverflow);
 }
 
 void Frame::computeStyleFlags()

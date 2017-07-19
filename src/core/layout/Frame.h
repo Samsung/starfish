@@ -689,14 +689,7 @@ class Frame : public gc {
 public:
     Frame(Node* node, ComputedStyle* s);
 
-    bool isOverflowPropagatedToViewPort();
-
-    bool shouldApplyOverflow()
-    {
-        return isOverflowPropagatedToViewPort()
-                   ? false
-                   : style()->overflow() != OverflowValue::VisibleOverflow;
-    }
+    bool shouldApplyOverflow();
 
     virtual void computeStyleFlags();
 

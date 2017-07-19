@@ -2435,8 +2435,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
         } else {
             std::pair<bool, LayoutUnit> p =
                 ctx.m_layoutContext.registeredLastLineBoxYPosition(this);
-            if (p.first &&
-                style()->overflow() == OverflowValue::VisibleOverflow) {
+            if (p.first && !shouldApplyOverflow()) {
                 ascender = p.second;
             } else {
                 ascender = height();
