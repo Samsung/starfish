@@ -86,6 +86,14 @@ public:
         Attribute()
         {
         }
+
+        Attribute(const Attribute& src)
+        {
+            nameRange = src.nameRange;
+            valueRange = src.valueRange;
+            name = src.name;
+            value = src.value;
+        }
         class Range {
         public:
             int start;

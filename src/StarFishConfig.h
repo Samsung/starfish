@@ -267,43 +267,6 @@ inline void __attribute__((optimize("O0"))) clearStack()
 
 #include "StarFishExport.h"
 
-// typedef of GC-aware vector
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCVector = std::vector<T, Allocator>;
-
-// typedef of GC-aware vector with atomic contents
-template <typename T, typename Allocator =
-                          GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
-using GCAtomicVector = std::vector<T, Allocator>;
-
-// typedef of GC-aware list
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCList = std::list<T, Allocator>;
-
-// typedef of GC-aware deque
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCDeque = std::deque<T, Allocator>;
-
-// typedef of GC-aware unordered_map
-template <typename Key, typename Value, typename Hasher = std::hash<Key>,
-          typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
-using GCUnorderedMap =
-    std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
-
-// typedef of GC-aware map
-template <typename Key, typename Value, typename Comparator,
-          typename Allocator =
-              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
-using GCMap = std::map<Key, Value, Comparator, Allocator>;
-
-// typedef of GC-aware unordered_set
-template <typename T, typename Hasher = std::hash<T>,
-          typename Predicate = std::equal_to<T>,
-          typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
-
 template <typename T>
 struct Nullable {
 public:
@@ -382,6 +345,45 @@ inline bool operator!=(const T& a, const Nullable<T>& b)
 {
     return b != a;
 }
+
+#include "core/util/Vector.h"
+
+// typedef of GC-aware vector
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+using GCVector = StarFish::Vector<T, Allocator>;
+
+// typedef of GC-aware vector with atomic contents
+template <typename T, typename Allocator =
+                          GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
+using GCAtomicVector = StarFish::Vector<T, Allocator>;
+
+// typedef of GC-aware list
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+using GCList = std::list<T, Allocator>;
+
+// typedef of GC-aware deque
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+using GCDeque = std::deque<T, Allocator>;
+
+// typedef of GC-aware unordered_map
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+using GCUnorderedMap =
+    std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
+
+// typedef of GC-aware map
+template <typename Key, typename Value, typename Comparator,
+          typename Allocator =
+              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+using GCMap = std::map<Key, Value, Comparator, Allocator>;
+
+// typedef of GC-aware unordered_set
+template <typename T, typename Hasher = std::hash<T>,
+          typename Predicate = std::equal_to<T>,
+          typename Allocator = gc_allocator_ignore_off_page<T>>
+using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
 
 #include "core/layout/LayoutUtil.h"
 #include "core/util/String.h"
