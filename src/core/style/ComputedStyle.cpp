@@ -586,11 +586,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
-    if (newStyle->m_overflowY != oldStyle->m_overflowY) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
-    }
-
     if (newStyle->m_tableLayout != oldStyle->m_tableLayout) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);

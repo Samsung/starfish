@@ -576,7 +576,10 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (!p->isPositioned()) {
                         break;
-                    } else if (shouldApplyOverflow()) {
+                    } else if (p->style()->overflowX() !=
+                                   OverflowValue::VisibleOverflow ||
+                               p->style()->overflowY() !=
+                                   OverflowValue::VisibleOverflow) {
                         break;
                     }
                 }
