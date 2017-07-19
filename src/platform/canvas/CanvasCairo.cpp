@@ -153,18 +153,21 @@ public:
         return &it->second;
     }
 
-    virtual void replace(CanvasState* state)
+    virtual void replace(CanvasState* state, ReplaceFlag flag)
     {
         CanvasStateCairo* cairoState = (CanvasStateCairo*)state;
         auto& lastState = m_state.back();
-        lastState.m_color = cairoState->m_color;
-        lastState.m_opacity = cairoState->m_opacity;
-        lastState.m_baseX = cairoState->m_baseX;
-        lastState.m_baseY = cairoState->m_baseY;
-        lastState.m_font = cairoState->m_font;
-        lastState.m_visible = cairoState->m_visible;
-        lastState.m_textDecorationData = cairoState->m_textDecorationData;
         cairo_set_matrix(m_canvas, &cairoState->m_matrix);
+
+        if (flag == ReplaceFlag::All) {
+            lastState.m_color = cairoState->m_color;
+            lastState.m_opacity = cairoState->m_opacity;
+            lastState.m_baseX = cairoState->m_baseX;
+            lastState.m_baseY = cairoState->m_baseY;
+            lastState.m_font = cairoState->m_font;
+            lastState.m_visible = cairoState->m_visible;
+            lastState.m_textDecorationData = cairoState->m_textDecorationData;
+        }
     }
 
     virtual void assureMapMode()

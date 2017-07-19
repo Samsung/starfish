@@ -729,9 +729,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Unit::Rect(
-                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                    contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
+                                              width() - borderWidth(),
+                                              height() - borderHeight()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -747,9 +747,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Unit::Rect(
-                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                    contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
+                                              width() - borderWidth(),
+                                              height() - borderHeight()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -764,9 +764,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
-                ctx.m_canvas->clip(Unit::Rect(
-                    borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                    contentWidth(), contentHeight() + paddingBottom()));
+                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
+                                              width() - borderWidth(),
+                                              height() - borderHeight()));
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -781,9 +781,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
         }
         if (overflowApplied) {
-            ctx.m_canvas->clip(Unit::Rect(
-                borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                contentWidth(), contentHeight() + paddingBottom()));
+            ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
+                                          width() - borderWidth(),
+                                          height() - borderHeight()));
         }
         paintChildrenWith(ctx);
     }

@@ -70,6 +70,8 @@ protected:
     }
 
 public:
+    enum ReplaceFlag { All, MatrixOnly };
+
     static Canvas* createDirect(void* data);
     static Canvas* create(CanvasSurface* data);
 
@@ -84,7 +86,7 @@ public:
     virtual void restore() = 0; // pop state stack and restore state
     virtual void saveByFrame(Frame* f) = 0;
     virtual CanvasState* getByFrame(Frame* f) = 0;
-    virtual void replace(CanvasState* state) = 0;
+    virtual void replace(CanvasState* state, ReplaceFlag flag) = 0;
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
     virtual void scale(double x, double y, double ox, double oy) = 0;

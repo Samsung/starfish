@@ -106,6 +106,41 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     return m_needsOwnBuffer;
 }
 
+void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
+{
+    CanvasState* state = canvas->getByFrame(sCtx->owner());
+    if (state == nullptr) {
+        LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+        canvas->translate(l.x(), l.y());
+    } else {
+        canvas->replace(state, Canvas::ReplaceFlag::All);
+        if (sCtx->owner()->isAbsolutePositioned()) {
+            bool isFixed =
+                sCtx->owner()->style()->position() == FixedPositionValue;
+            Frame* parent = sCtx->owner()->parent();
+            while (!parent->style()->hasTransforms(parent) &&
+                   !parent->isFrameDocument() &&
+                   (isFixed || !parent->isPositioned())) {
+                parent = parent->parent();
+            }
+            CanvasState* parentState = canvas->getByFrame(parent);
+            if (parentState == nullptr) {
+                return;
+            }
+
+            // FIXME: Currently, clipping doesn't work if parent
+            // has transform.
+            canvas->replace(parentState, Canvas::ReplaceFlag::MatrixOnly);
+
+            if (parent->shouldApplyOverflow()) {
+                FrameBox* box = parent->asFrameBox();
+                canvas->clip(Unit::Rect(0, 0, box->contentWidth(),
+                                        box->contentHeight()));
+            }
+        }
+    }
+}
+
 void StackingContext::paintStackingContext(Canvas* canvas)
 {
     Canvas* oldCanvas = nullptr;
@@ -233,13 +268,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
-                CanvasState* state = canvas->getByFrame(sCtx->owner());
-                if (state == nullptr) {
-                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
-                    canvas->translate(l.x(), l.y());
-                } else {
-                    canvas->replace(state);
-                }
+                replaceCanvasState(canvas, sCtx);
+
                 sCtx->paintStackingContext(canvas);
 
                 canvas->restore();
@@ -263,14 +293,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
-                    CanvasState* state = canvas->getByFrame(sCtx->owner());
-                    if (state == nullptr) {
-                        LayoutLocation l =
-                            sCtx->owner()->absolutePoint(m_owner);
-                        canvas->translate(l.x(), l.y());
-                    } else {
-                        canvas->replace(state);
-                    }
+                    replaceCanvasState(canvas, sCtx);
                     sCtx->paintStackingContext(canvas);
 
                     canvas->restore();
