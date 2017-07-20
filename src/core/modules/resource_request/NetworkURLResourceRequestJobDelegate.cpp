@@ -28,7 +28,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 
-#define CURL_HANDLE_DATA_CLEAR_TIME 30000.0
+#define CURL_HANDLE_DATA_CLEAR_TIME_S 3
 
 namespace StarFish {
 
@@ -126,7 +126,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     }
 
     size_t timerID = requestData->request->starFish()->timer()->addTimer(
-        CURL_HANDLE_DATA_CLEAR_TIME, requestData->request->document()->window(),
+        CURL_HANDLE_DATA_CLEAR_TIME_S * 1000,
+        requestData->request->document()->window(),
         [](Window* wnd, void* data) {
             NetworkSharedResourceManager::getInstance()
                 ->clearAllCurlHandleDataCach();

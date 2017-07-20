@@ -24,8 +24,9 @@
 
 #include <openssl/crypto.h>
 
-#define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 10
-#define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 15
+#define CURLHANDLE_CACHE_PRUNE_MINIMUM_SIZE 12
+#define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 1
+#define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.5
 
 namespace StarFish {
 
@@ -366,14 +367,16 @@ void NetworkSharedResourceManager::cachingCurlHandleData(
     Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);
     pruningIfNeed();
     cd.lastUsedTime = tickCount();
+
     m_curlHandleDataCache.insert(
         std::pair<std::string, CurlHandleData>(host, cd));
 }
 
 void NetworkSharedResourceManager::pruningIfNeed()
 {
-    if ((tickCount() - m_lastCachePruneTime) >
-        (CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S * 1000)) {
+    if ((m_curlHandleDataCache.size() > CURLHANDLE_CACHE_PRUNE_MINIMUM_SIZE) ||
+        (tickCount() - m_lastCachePruneTime) >
+            (CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S * 1000)) {
         uint64_t current = tickCount();
         auto iter = m_curlHandleDataCache.begin();
 #ifdef STARFISH_ENABLE_TEST
