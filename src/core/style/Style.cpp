@@ -4126,6 +4126,7 @@ void StyleResolver::apply(Element* element,
                            CSSStyleValuePair::ValueKind::Initial ||
                        cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::None) {
+                style->m_transforms = nullptr;
             } else {
                 STARFISH_ASSERT(
                     cssValues[k].valueKind() ==

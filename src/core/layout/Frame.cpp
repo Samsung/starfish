@@ -47,13 +47,14 @@ FrameBlockBox* LayoutContext::blockContainer(Frame* currentFrame)
 FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
 {
     FrameBlockBox* blockBox = blockContainer(currentFrame);
-    if (currentFrame->style()->position() == AbsolutePositionValue) {
-        while (!blockBox->isFrameDocument() && !blockBox->isPositioned()) {
+    if (currentFrame->isAbsolutePositioned()) {
+        bool isFixed = currentFrame->style()->position() == FixedPositionValue;
+        while (!blockBox->isFrameDocument() &&
+               (isFixed || !blockBox->isPositioned()) &&
+               !blockBox->style()->hasTransforms(blockBox)) {
             blockBox = blockContainer(blockBox);
         }
         return blockBox;
-    } else if (currentFrame->style()->position() == FixedPositionValue) {
-        return frameDocument()->asFrameBlockBox();
     } else {
         return blockBox;
     }
@@ -62,9 +63,11 @@ FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
 FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
 {
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
-    if (currentFrame->style()->position() == AbsolutePositionValue) {
+    if (currentFrame->isAbsolutePositioned()) {
+        bool isFixed = currentFrame->style()->position() == FixedPositionValue;
         Frame* f = currentFrame->parent();
-        while (!f->isFrameDocument() && !f->isPositioned()) {
+        while (!f->isFrameDocument() && (isFixed || !f->isPositioned()) &&
+               !f->style()->hasTransforms(f)) {
             f = f->parent();
         }
 
@@ -76,8 +79,6 @@ FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
             FrameInline* in = f->asFrameInline();
             return c->firstInlineNonReplacedBox(in);
         }
-    } else if (currentFrame->style()->position() == FixedPositionValue) {
-        return frameDocument()->asFrameBlockBox();
     } else {
         FrameBlockBox* blockBox = blockContainer(currentFrame);
         return blockBox;
@@ -671,14 +672,6 @@ void Frame::computeStyleFlags()
     // float, absolute positioned, block containers (such as inline-blocks,
     // table-cells, and table-captions) that are not block boxes,
     // or block boxes with 'overflow' other than 'visible'.
-    // Especially, the last condition should be met another requirement,
-    // which is, the overflow should not be propagated to viewport.
-    // There are 2 possible cases that overflow property can propagate to
-    // viewport, in other words, containing block is viewport.
-    // 1. By giving a position of absolute value, which is already included
-    // as one of forming block formatting context conditions.
-    // 2. <html> and <body> element, so we should check first overflow
-    // values of <head> and <body> are equal.
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
     m_flags.m_isEstablishesBlockFormattingContext |=
         m_flags.m_isAbsolutePositioned;
