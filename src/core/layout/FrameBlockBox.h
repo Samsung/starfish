@@ -146,11 +146,6 @@ public:
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
-        Frame* box = firstChild();
-        while (box) {
-            box->asFrameBox()->iterateChildFrameBox(fn);
-            box = box->next();
-        }
     }
 
 protected:
@@ -226,6 +221,22 @@ public:
         for (size_t i = 0; i < m_boxes.size(); i++) {
             m_boxes[i]->iterateChildFrameBox(fn);
         }
+    }
+
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
+                                       HitTestStage stage)
+    {
+        Frame* result = nullptr;
+        for (size_t i = 0; i < m_boxes.size(); i++) {
+            Frame* child = m_boxes[m_boxes.size() - 1 - i];
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
+            result = child->hitTest(cx, cy, stage);
+            if (result) {
+                return result;
+            }
+        }
+        return result;
     }
 
 protected:
@@ -447,7 +458,7 @@ public:
     LineBox(Frame* parent)
         : InlineBoxLayoutParentBox()
     {
-        setParent(parent);
+        setLayoutParent(parent);
     }
 
     virtual bool isLineBox()
@@ -581,6 +592,17 @@ protected:
                              LayoutUnit containgBlockContentWidth);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
+    virtual bool hasFrameTreeItemModel()
+    {
+        return true;
+    }
+
+    virtual FrameTreeItemModel* frameTreeItemModel()
+    {
+        return &m_treeItemModel;
+    }
+
+    FrameTreeItemModel m_treeItemModel;
     GCVector<LineBox*> m_lineBoxes;
 };
 

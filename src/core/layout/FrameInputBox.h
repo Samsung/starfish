@@ -41,6 +41,19 @@ public:
         return true;
     }
 
+protected:
+    virtual bool hasFrameTreeItemModel()
+    {
+        return true;
+    }
+
+    virtual FrameTreeItemModel* frameTreeItemModel()
+    {
+        return &m_treeItemModel;
+    }
+
+    FrameTreeItemModel m_treeItemModel;
+
 private:
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };

@@ -606,7 +606,6 @@ Frame::Frame(Node* node, ComputedStyle* s)
         isAnonymous = true;
     }
 
-    m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
     m_flags.m_needsLayout = true;
     m_flags.m_isAnonymous = isAnonymous;
 
