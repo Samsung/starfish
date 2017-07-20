@@ -4,5 +4,5 @@
 interface HTMLHeadingElement : HTMLElement {
   // also has obsolete members
 
-  [Unimplemented, CEReactions] attribute DOMString align;
+  [CEReactions] attribute DOMString align;
 };

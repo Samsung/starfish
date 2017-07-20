@@ -34,6 +34,50 @@ class StyleRuleBase;
 class StyleRuleImport;
 class URL;
 
+class RuleSet : public gc {
+public:
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& idRules()
+    {
+        return m_idRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& classRules()
+    {
+        return m_classRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& tagRules()
+    {
+        return m_tagRules;
+    }
+
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& universalRules()
+    {
+        return m_universalRules;
+    }
+
+    void clear()
+    {
+        m_idRules.clear();
+        m_idRules.shrink_to_fit();
+
+        m_classRules.clear();
+        m_classRules.shrink_to_fit();
+
+        m_tagRules.clear();
+        m_tagRules.shrink_to_fit();
+
+        m_universalRules.clear();
+        m_universalRules.shrink_to_fit();
+    }
+
+private:
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_idRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_classRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_tagRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_universalRules;
+};
+
 class CSSStyleSheet : public StyleSheet {
 public:
     CSSStyleSheet(Node* origin, String* str);
@@ -84,17 +128,9 @@ public:
         m_styleRules.clear();
         m_styleRules.shrink_to_fit();
 
-        m_idRules.clear();
-        m_idRules.shrink_to_fit();
-
-        m_classRules.clear();
-        m_classRules.shrink_to_fit();
-
-        m_tagRules.clear();
-        m_tagRules.shrink_to_fit();
-
-        m_universalRules.clear();
-        m_universalRules.shrink_to_fit();
+        if (m_ruleSet) {
+            m_ruleSet->clear();
+        }
     }
 
     void setOwnerRule(CSSRule* ownerRule);
@@ -138,32 +174,20 @@ public:
         return m_mediaQuerySet;
     }
 
+    RuleSet* ruleSet()
+    {
+        if (!m_ruleSet) {
+            m_ruleSet = new RuleSet();
+        }
+        return m_ruleSet;
+    }
+
     void setMediaQuerySet(MediaQuerySet* mediaQuerySet);
     MediaList* media();
 
     CSSRuleList* cssRules();
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
-
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& idRules()
-    {
-        return m_idRules;
-    }
-
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& classRules()
-    {
-        return m_classRules;
-    }
-
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& tagRules()
-    {
-        return m_tagRules;
-    }
-
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& universalRules()
-    {
-        return m_universalRules;
-    }
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
@@ -179,11 +203,7 @@ protected:
     GCVector<StyleRuleImport*> m_importRules;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<CSSRule*> m_childRuleWrappers;
-
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_idRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_classRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_tagRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_universalRules;
+    RuleSet* m_ruleSet;
 };
 
 } /* namespace StarFish */
