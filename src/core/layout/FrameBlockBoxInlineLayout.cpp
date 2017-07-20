@@ -92,8 +92,10 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             }
 
             if (va == VerticalAlignValue::BaselineVAlignValue) {
-                maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
-                maxDescenderSoFar = std::min(rb->decender(), maxDescenderSoFar);
+                maxAscenderSoFar = std::max(LineFormattingContext::ascender(rb),
+                                            maxAscenderSoFar);
+                maxDescenderSoFar = std::min(
+                    LineFormattingContext::descender(rb), maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TopVAlignValue) {
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::BottomVAlignValue) {
@@ -110,22 +112,26 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                 maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight),
                                              maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
-                rb->setY(descender + rb->ascender());
+                rb->setY(descender + LineFormattingContext::ascender(rb));
                 maxAscenderSoFar =
-                    std::max(descender + rb->ascender(), maxAscenderSoFar);
+                    std::max(descender + LineFormattingContext::ascender(rb),
+                             maxAscenderSoFar);
                 maxDescenderSoFar =
-                    std::min(descender + rb->decender(), maxDescenderSoFar);
+                    std::min(descender + LineFormattingContext::descender(rb),
+                             maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
                 // Placing a superscript is font and browser dependent.
                 // We place superscript above the baseline by 1/2 of
                 // ascender (following blink)
                 // (i.e, the baseline of superscript is aligned with 1/2 of
                 // the ascender)
-                rb->setY(ascender / 2 + rb->ascender());
+                rb->setY(ascender / 2 + LineFormattingContext::ascender(rb));
                 maxAscenderSoFar =
-                    std::max(ascender / 2 + rb->ascender(), maxAscenderSoFar);
-                maxDescenderSoFar =
-                    std::min(ascender / 2 + rb->decender(), maxDescenderSoFar);
+                    std::max(ascender / 2 + LineFormattingContext::ascender(rb),
+                             maxAscenderSoFar);
+                maxDescenderSoFar = std::min(
+                    ascender / 2 + LineFormattingContext::descender(rb),
+                    maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 maxDescenderSoFar =
                     std::min(ascender - rb->height(), maxDescenderSoFar);
@@ -136,9 +142,11 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit y;
                 if (len.isPercent()) {
-                    y = rb->ascender() + box->lineHeight() * len.percent();
+                    y = LineFormattingContext::ascender(rb) +
+                        box->lineHeight() * len.percent();
                 } else if (len.isFixed()) {
-                    y = rb->ascender() + LayoutUnit::fromPixel(len.fixed());
+                    y = LineFormattingContext::ascender(rb) +
+                        LayoutUnit::fromPixel(len.fixed());
                 }
                 maxAscenderSoFar = std::max(y, maxAscenderSoFar);
                 maxDescenderSoFar =
@@ -269,18 +277,18 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         LineBox* lineBox = parentBox->asLineBox();
         if (!hasNormalFlowChild) {
             if (dueToBr) {
-                lineBox->setAscDescender(
-                    parentStyle->font()->metrics().m_ascender,
+                LineFormattingContext::setAscDescender(
+                    lineBox, parentStyle->font()->metrics().m_ascender,
                     parentStyle->font()->metrics().m_descender);
                 return;
             }
 
-            lineBox->setAscDescender(0, 0);
+            LineFormattingContext::setAscDescender(lineBox, 0, 0);
             return;
         }
 
         if (!hasBoxOtherThanCollapsedInlineNonReplacedBox) {
-            lineBox->setAscDescender(0, 0);
+            LineFormattingContext::setAscDescender(lineBox, 0, 0);
             return;
         }
     }
@@ -353,7 +361,8 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             if (inrb->width() == 0 && inrb->marginLeft() == 0 &&
                 inrb->marginRight() == 0) {
                 inrb->markCollapsed();
-                inrb->setAscDescender(maxAscender, maxDescender);
+                LineFormattingContext::setAscDescender(inrb, maxAscender,
+                                                       maxDescender);
                 return;
             }
         }
@@ -408,7 +417,8 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             if (va == VerticalAlignValue::BaselineVAlignValue) {
                 if (f->isInlineNonReplacedBox()) {
                     f->setY(height + maxDescender - f->height() -
-                            f->asInlineNonReplacedBox()->decender());
+                            LineFormattingContext::descender(
+                                f->asInlineNonReplacedBox()));
                 } else if (f->isFrameReplaced()) {
                     // TODO use this code for when replaced content does not
                     // have content
@@ -460,8 +470,8 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         }
     }
 
-    parentBox->asInlineBoxLayoutParentBox()->setAscDescender(maxAscender,
-                                                             maxDescender);
+    LineFormattingContext::setAscDescender(
+        parentBox->asInlineBoxLayoutParentBox(), maxAscender, maxDescender);
 }
 
 static char charDirection(char32_t c)
@@ -1038,7 +1048,7 @@ void LineFormattingContext::registerInlineContent()
             }
         }
         if (hasNormalFlowContent) {
-            m_layoutContext.registerYPositionPerVAInlineBlock(lb);
+            m_layoutContext.registerYPositionPerVAInlineBlock(lb, ascender(lb));
         }
     }
 }
@@ -2779,8 +2789,8 @@ InlineNonReplacedBox::InlineNonReplacedBox(LineFormattingContext* ctx,
 {
     ctx->m_inlineNonReplacedBoxMBPStatus[this] =
         ctx->m_inlineNonReplacedBoxMBPStatus[inlineBox];
-    m_ascender = inlineBox->m_ascender;
-    m_descender = inlineBox->m_descender;
+    ctx->setAscDescender(this, ctx->ascender(inlineBox),
+                         ctx->descender(inlineBox));
 
     if (inlineBox->hasRareData()) {
         ensureFrameBoxRareData()->m_margin =
@@ -2808,8 +2818,6 @@ InlineNonReplacedBox::InlineNonReplacedBox(LineFormattingContext* ctx,
 {
     ctx->m_inlineNonReplacedBoxMBPStatus[this] =
         adoptRef(new InlineNonReplacedBoxMBPStatusHolder());
-    m_ascender = 0;
-    m_descender = 0;
 }
 
 void InlineNonReplacedBox::setOrgLeftMBP(
@@ -3055,6 +3063,12 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
         }
 
         riter++;
+    }
+
+    if (!m_block->m_lineBoxes.empty()) {
+        // register ascender of first line for table-layout
+        m_layoutContext.registerFirstLineAscender(
+            m_block->m_lineBoxes[0], ascender(m_block->m_lineBoxes[0]));
     }
 
     if (m_block->isEstablishesBlockFormattingContext()) {

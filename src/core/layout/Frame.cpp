@@ -496,14 +496,14 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     return result;
 }
 
-void LayoutContext::registerYPositionPerVAInlineBlock(LineBox* lb)
+void LayoutContext::registerYPositionPerVAInlineBlock(LineBox* lb,
+                                                      LayoutUnit ascender)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
         (*c.m_registeredYPositionPerVAInlineBlock)[(
             *c.m_inlineBlockBoxStack)[i]] =
-            lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() +
-            lb->ascender();
+            lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + ascender;
     }
 }
 
@@ -577,6 +577,17 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
         }
         m_relativePositionedBoxes.erase(iter);
     }
+}
+
+void LayoutContext::registerFirstLineAscender(LineBox* l, LayoutUnit a)
+{
+    m_firstLineAscender[l] = a;
+}
+
+LayoutUnit LayoutContext::firstLineAscender(LineBox* l)
+{
+    STARFISH_ASSERT(m_firstLineAscender.find(l) != m_firstLineAscender.end());
+    return m_firstLineAscender[l];
 }
 
 Frame::Frame(Node* node, ComputedStyle* s)

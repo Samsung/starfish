@@ -81,8 +81,8 @@ public:
 
     void paintBackgroundAndBorders(Canvas* canvas);
 
-    void applyVerticalAlign();
-    LayoutUnit calBaseline();
+    void applyVerticalAlign(LayoutContext& ctx);
+    LayoutUnit calBaseline(LayoutContext& ctx);
 
 private:
     virtual void layout(LayoutContext& ctx,

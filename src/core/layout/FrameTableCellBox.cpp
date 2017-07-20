@@ -133,7 +133,7 @@ void FrameTableCellBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 }
 
-void FrameTableCellBox::applyVerticalAlign()
+void FrameTableCellBox::applyVerticalAlign(LayoutContext& ctx)
 {
     // 1. Cal the content height of all child boxes
     //    Also calculate the ascender of the first line. It is used
@@ -160,7 +160,7 @@ void FrameTableCellBox::applyVerticalAlign()
     case VerticalAlignValue::TextTopVAlignValue:
     case VerticalAlignValue::TextBottomVAlignValue:
     case VerticalAlignValue::NumericVAlignValue:
-        yPosOffset = rowBox()->baseline() - calBaseline();
+        yPosOffset = rowBox()->baseline() - calBaseline(ctx);
         break;
     default:
         break;
@@ -180,7 +180,7 @@ void FrameTableCellBox::applyVerticalAlign()
     }
 }
 
-LayoutUnit FrameTableCellBox::calBaseline()
+LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
 {
     // To reduce unneeded computation, baseline is only calculated when
     // this cell has "vertical-align: baseline" or equivalent
@@ -193,7 +193,7 @@ LayoutUnit FrameTableCellBox::calBaseline()
     case VerticalAlignValue::NumericVAlignValue: {
         LineBox* flb = firstLineBox();
         if (flb) {
-            return flb->absolutePoint(this).y() + flb->ascender();
+            return flb->absolutePoint(this).y() + ctx.firstLineAscender(flb);
         }
         break;
     }
