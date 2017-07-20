@@ -959,6 +959,16 @@ public:
         return m_unicodeBidi;
     }
 
+    void setBoxSizing(BoxSizingValue value)
+    {
+        m_boxSizing = value;
+    }
+
+    BoxSizingValue boxSizing()
+    {
+        return m_boxSizing;
+    }
+
     Length horizontalBorderSpacing()
     {
         return m_inheritedStyles.m_horizontalBorderSpacing;
@@ -1054,6 +1064,7 @@ protected:
         m_transforms = nullptr;
         m_transformOrigin = nullptr;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
+        m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
     }
 
@@ -1090,6 +1101,7 @@ protected:
     OverflowValue m_overflowY : 2;
     TextDecorationValue m_textDecoration : 3;
     UnicodeBidiValue m_unicodeBidi : 2;
+    BoxSizingValue m_boxSizing : 1;
     bool m_zIndexSpecifiedByUser : 1;
 
     TableLayoutValue m_tableLayout : 1; // table

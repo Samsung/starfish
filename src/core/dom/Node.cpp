@@ -1514,6 +1514,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
     ADD_VALUE_PAIR(Opacity, Number, opacity)
     ADD_VALUE_PAIR(ZIndex, Int32, zIndex)
+    ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
 #undef ADD_VALUE_PAIR
 
 // length properties

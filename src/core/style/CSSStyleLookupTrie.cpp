@@ -204,6 +204,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Overflow-X
         // Overflow-Y
         // Visibility
+        // Box-Sizing
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
@@ -211,6 +212,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-top", 10) == 0) {
                 return CSSStyleKind::BorderTop;
+            }
+            if (memcmp(data, "box-sizing", 10) == 0) {
+                return CSSStyleKind::BoxSizing;
             }
             break;
         case 'f':
@@ -694,6 +698,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "borderTop", 9) == 0) {
                 return CSSStyleKind::BorderTop;
+            }
+            if (memcmp(data, "boxSizing", 9) == 0) {
+                return CSSStyleKind::BoxSizing;
             }
             break;
         case 't':

@@ -1721,6 +1721,15 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
+        switch (boxSizingValue()) {
+        case ContentBoxBoxSizingValue:
+            return String::fromUTF8("content-box");
+        case BorderBoxSizingValue:
+            return String::fromUTF8("border-box");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -4237,6 +4246,20 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::BoxSizing:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_boxSizing = parentStyle->m_boxSizing;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::BoxSizingValueKind) {
+                style->setBoxSizing(cssValues[k].boxSizingValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Content:
             // Initial value is normal and it computes to 'none' for the
             // :before and :after pseudo-elements.
@@ -6438,6 +6461,24 @@ bool CSSStyleValuePair::updateValueTransitionTimingFunction(
 bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BoxSizingValueKind;
+    if (STRING_VALUE_IS_STRING("content-box")) {
+        m_value.m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
+    } else if (STRING_VALUE_IS_STRING("border-box")) {
+        m_value.m_boxSizing = BoxSizingValue::BorderBoxSizingValue;
+    } else {
+        return false;
+    }
     return true;
 }
 
