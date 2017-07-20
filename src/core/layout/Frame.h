@@ -296,7 +296,7 @@ public:
         m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->pop_back();
     }
 
-    void registerYPositionPerVAInlineBlock(LineBox* lb);
+    void registerYPositionPerVAInlineBlock(LineBox* lb, LayoutUnit ascender);
     std::pair<bool, LayoutUnit> registeredLastLineBoxYPosition(
         FrameBlockBox* box);
     void registerAbsolutePositionedBox(FrameBox* box);
@@ -385,6 +385,9 @@ public:
 
     bool canFloatCollapseWithMarginTop(size_t idx);
 
+    void registerFirstLineAscender(LineBox* l, LayoutUnit a);
+    LayoutUnit firstLineAscender(LineBox* l);
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow, bool isRoot,
@@ -425,6 +428,7 @@ private:
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBox*, MarginInfo*> m_marginInfo;
+    std::unordered_map<LineBox*, LayoutUnit> m_firstLineAscender;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);

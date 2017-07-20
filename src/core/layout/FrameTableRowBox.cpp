@@ -146,21 +146,22 @@ void FrameTableRowBox::increaseCellHeightBy(LayoutUnit cellHeightOffset)
     setHeight(height() + cellHeightOffset);
 }
 
-void FrameTableRowBox::applyVerticalAlign()
+void FrameTableRowBox::applyVerticalAlign(LayoutContext& ctx)
 {
-    m_baseline = calBaseline();
+    m_baseline = calBaseline(ctx);
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
-        c->asFrameTableCellBox()->applyVerticalAlign();
+        c->asFrameTableCellBox()->applyVerticalAlign(ctx);
     }
 }
 
-LayoutUnit FrameTableRowBox::calBaseline()
+LayoutUnit FrameTableRowBox::calBaseline(LayoutContext& ctx)
 {
     LayoutUnit maxSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
-        maxSoFar = std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline());
+        maxSoFar =
+            std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline(ctx));
     }
 
     return maxSoFar;

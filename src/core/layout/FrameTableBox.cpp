@@ -834,7 +834,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     // 4. Apply vertical-align to each cell
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->applyVerticalAlign();
+            c->asFrameTableSectionBox()->applyVerticalAlign(ctx);
         }
     }
 }

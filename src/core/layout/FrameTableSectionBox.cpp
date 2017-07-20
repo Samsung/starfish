@@ -259,11 +259,11 @@ void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)
     setHeight(height() + extraHeight);
 }
 
-void FrameTableSectionBox::applyVerticalAlign()
+void FrameTableSectionBox::applyVerticalAlign(LayoutContext& ctx)
 {
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableRowBox());
-        c->asFrameTableRowBox()->applyVerticalAlign();
+        c->asFrameTableRowBox()->applyVerticalAlign(ctx);
     }
 }
 

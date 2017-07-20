@@ -174,23 +174,6 @@ public:
         return true;
     }
 
-    LayoutUnit ascender() const
-    {
-        return m_ascender;
-    }
-
-    LayoutUnit decender() const
-    {
-        return m_descender;
-    }
-
-    void setAscDescender(LayoutUnit ascender, LayoutUnit descender)
-    {
-        m_ascender = ascender;
-        m_descender = descender;
-        setHeight(m_ascender - m_descender);
-    }
-
     GCVector<FrameBox*>& boxes()
     {
         return m_boxes;
@@ -246,14 +229,10 @@ public:
     }
 
 protected:
-    LayoutUnit m_ascender;
-    LayoutUnit m_descender;
     GCVector<FrameBox*> m_boxes;
 
     InlineBoxLayoutParentBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
-        , m_ascender(0)
-        , m_descender(0)
     {
     }
 };
@@ -401,6 +380,7 @@ protected:
         FrameInline* m_origin;
         InlineNonReplacedBoxRareData* m_rareData;
     };
+    LayoutUnit m_ascender;
 
     InlineNonReplacedBoxRareData* rareData()
     {
@@ -830,47 +810,26 @@ public:
 
     void computeDirection(Frame* parent, DirectionValue direction);
 
-    LayoutUnit m_leftBoundary;
-    LayoutUnit m_rightBoundary;
-    LayoutLocation m_absPosition;
-    LayoutUnit m_lineBoxX;
-    LayoutUnit m_lineBoxY;
-    LayoutUnit m_currentLineWidth;
-    LayoutUnit m_textIndentWidth;
-    LayoutUnit m_lineBoxWidth;
-    LayoutUnit m_unprocessedStartingMBPWidth;
-    FrameBlockBox* m_block;
-    LayoutContext& m_layoutContext;
-    InlineBoxLayoutParentBox* m_currentLayoutParent;
-    bool m_isPendingBreakLine;
-    bool m_isWhiteSpaceAtLast;
-    bool m_isSoftHyphenAtLast;
-    size_t m_inlineBoxIndex;
-    size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
-    size_t m_floatingBoxesSizeBeforeCurrentLine;
+    LayoutUnit ascender(InlineBoxLayoutParentBox* box)
+    {
+        return m_ascenderDescenderOfInlineBoxLayoutParentBox[box].first;
+    }
 
-    // std::set<size_t> m_breakedLinesSet;
+    LayoutUnit descender(InlineBoxLayoutParentBox* box)
+    {
+        return m_ascenderDescenderOfInlineBoxLayoutParentBox[box].second;
+    }
 
-    // we don't need gc_allocater here
-    // frame tree has strong reference already
-    std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
-
-    std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
-    std::vector<FrameBox*> m_absolutePositionedBoxes;
-    std::vector<FrameBox*> m_pendingFloatingBoxes;
-    GCVector<FrameBox*> m_pendingInlineBoxes;
-    Word m_word;
-
-    std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
-    std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;
-    std::unordered_map<FrameBox*, size_t> m_inlineBoxIndexes;
-
-    std::unordered_map<InlineBoxLayoutParentBox*, size_t>
-        m_absolutePositionedLayoutParentCnt;
-
-    std::unordered_map<InlineNonReplacedBox*,
-                       RefPtr<InlineNonReplacedBoxMBPStatusHolder>>
-        m_inlineNonReplacedBoxMBPStatus;
+    void setAscDescender(InlineBoxLayoutParentBox* box, LayoutUnit ascender,
+                         LayoutUnit descender)
+    {
+        if (box->isInlineNonReplacedBox()) {
+            box->asInlineNonReplacedBox()->m_ascender = ascender;
+        }
+        m_ascenderDescenderOfInlineBoxLayoutParentBox[box] =
+            std::make_pair(ascender, descender);
+        box->setHeight(ascender - descender);
+    }
 
     bool isProcessedStartingMBP(InlineNonReplacedBox* box)
     {
@@ -944,6 +903,52 @@ public:
             return SIZE_MAX;
         return iter->second;
     }
+
+    LayoutUnit m_leftBoundary;
+    LayoutUnit m_rightBoundary;
+    LayoutLocation m_absPosition;
+    LayoutUnit m_lineBoxX;
+    LayoutUnit m_lineBoxY;
+    LayoutUnit m_currentLineWidth;
+    LayoutUnit m_textIndentWidth;
+    LayoutUnit m_lineBoxWidth;
+    LayoutUnit m_unprocessedStartingMBPWidth;
+    FrameBlockBox* m_block;
+    LayoutContext& m_layoutContext;
+    InlineBoxLayoutParentBox* m_currentLayoutParent;
+    bool m_isPendingBreakLine;
+    bool m_isWhiteSpaceAtLast;
+    bool m_isSoftHyphenAtLast;
+    size_t m_inlineBoxIndex;
+    size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
+    size_t m_floatingBoxesSizeBeforeCurrentLine;
+
+    // std::set<size_t> m_breakedLinesSet;
+
+    // we don't need gc_allocater here
+    // frame tree has strong reference already
+    std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
+
+    std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
+    std::vector<FrameBox*> m_absolutePositionedBoxes;
+    std::vector<FrameBox*> m_pendingFloatingBoxes;
+    GCVector<FrameBox*> m_pendingInlineBoxes;
+    Word m_word;
+
+    std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
+    std::unordered_map<FrameText*, std::vector<TextRun>> m_textRunsPerFrameText;
+    std::unordered_map<FrameBox*, size_t> m_inlineBoxIndexes;
+
+    std::unordered_map<InlineBoxLayoutParentBox*, size_t>
+        m_absolutePositionedLayoutParentCnt;
+
+    std::unordered_map<InlineNonReplacedBox*,
+                       RefPtr<InlineNonReplacedBoxMBPStatusHolder>>
+        m_inlineNonReplacedBoxMBPStatus;
+
+    std::unordered_map<InlineBoxLayoutParentBox*,
+                       std::pair<LayoutUnit, LayoutUnit>>
+        m_ascenderDescenderOfInlineBoxLayoutParentBox;
 };
 }
 

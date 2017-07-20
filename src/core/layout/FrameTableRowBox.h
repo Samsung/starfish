@@ -43,7 +43,7 @@ public:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
     void increaseCellHeightBy(LayoutUnit cellHeightOffset);
-    void applyVerticalAlign();
+    void applyVerticalAlign(LayoutContext& ctx);
 
     GCVector<ColSizeStruct>& colsWithColspans()
     {
@@ -52,7 +52,7 @@ public:
 
     ColSizeStruct* colWithColspanAt(unsigned id);
 
-    LayoutUnit calBaseline();
+    LayoutUnit calBaseline(LayoutContext& ctx);
 
     LayoutUnit baseline()
     {
