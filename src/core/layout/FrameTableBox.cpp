@@ -231,97 +231,91 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         }
 
         if (sumOfSpecifiedCellWidths + LayoutUnit::epsilon() >=
-            availableWidth) {
+                availableWidth &&
+            style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue) {
             // Set the widths of all cells with "width: auto" to 0, if any
             for (auto& c : cellsWithAutoWidths) {
                 ColSizeStruct& col = *c;
                 col.cellWidth = 0;
             }
         } else {
+            // Adjust cell widths to fit into the specified widths.
+            // At this stage, the sum of all specified cell widths can be
+            // smaller or bigger than the specified widths.
+            // * Also, there may be cells with "width: auto" that have no widths
+            //   calculated yet
+
             LayoutUnit remainingWidth = tableWidth - sumOfSpecifiedCellWidths;
             remainingWidth -=
                 (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
-            // Specified table width is bigger than the sum of all specified
-            // cell widths, if
-            // * the sum of all actual specified cell widths is smaller than
-            //   the specified table width OR
-            // * there are cells with "width: auto" that have no widths
-            //   calculated yet
-            if (remainingWidth > 0) {
-                // All cells have fixed width. In this case, distribute
-                // available spaces among cells. The extra space for each cell
-                // is proportional to the width of each cell.
-                if (cellsWithAutoWidths.empty()) {
-                    for (auto& col : m_columnWidths) {
-                        FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+            // All cells have fixed width. In this case, distribute
+            // available spaces among cells. The extra space for each cell
+            // is proportional to the width of each cell.
+            if (cellsWithAutoWidths.empty()) {
+                for (auto& col : m_columnWidths) {
+                    FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
 
-                        if (cell->style()->width().isFixed()) {
-                            LayoutUnit cellWidth =
-                                cell->style()->width().fixed();
+                    if (cell->style()->width().isFixed()) {
+                        LayoutUnit cellWidth = cell->style()->width().fixed();
+                        cellWidth += cell->borderWidth() + cell->paddingWidth();
 
-                            cellWidth +=
-                                cell->borderWidth() + cell->paddingWidth();
-
-                            LayoutUnit extraCellWidth =
-                                LayoutUnit(cellWidth.toDouble() /
-                                           sumOfSpecifiedCellWidths.toDouble() *
-                                           remainingWidth.toDouble());
-                            col.cellWidth += extraCellWidth;
-                        }
+                        LayoutUnit extraCellWidth =
+                            LayoutUnit(cellWidth.toDouble() /
+                                       sumOfSpecifiedCellWidths.toDouble() *
+                                       remainingWidth.toDouble());
+                        col.cellWidth += extraCellWidth;
+                    }
+                }
+            } else {
+                if (style()->tableLayout() ==
+                    TableLayoutValue::FixedTableLayoutValue) {
+                    // Distribute available spaces equally among cells with
+                    // "table-layout: fixed"
+                    LayoutUnit newCellWidth = LayoutUnit(
+                        remainingWidth.toDouble() / cellsWithAutoWidths.size());
+                    for (auto& c : cellsWithAutoWidths) {
+                        ColSizeStruct& col = *c;
+                        col.cellWidth = newCellWidth;
                     }
                 } else {
-                    if (style()->tableLayout() ==
-                        TableLayoutValue::FixedTableLayoutValue) {
-                        // Distribute available spaces equally among cells with
-                        // "layout-layout: fixed"
-                        LayoutUnit newCellWidth =
-                            LayoutUnit(remainingWidth.toDouble() /
-                                       cellsWithAutoWidths.size());
-                        for (auto& c : cellsWithAutoWidths) {
-                            ColSizeStruct& col = *c;
-                            col.cellWidth = newCellWidth;
-                        }
-                    } else {
-                        // Adjust cell width in proportion to its preferred
-                        // width
-                        LayoutUnit newEqualCellWidth =
-                            LayoutUnit(remainingWidth.toDouble() /
-                                       cellsWithAutoWidths.size());
+                    // Adjust cell width in proportion to its preferred
+                    // width
+                    LayoutUnit newEqualCellWidth = LayoutUnit(
+                        remainingWidth.toDouble() / cellsWithAutoWidths.size());
 
-                        LayoutUnit sumOfAutoCellWidths = 0;
-                        for (auto& c : cellsWithAutoWidths) {
-                            ColSizeStruct& col = *c;
-                            LayoutUnit newCellWidth = 0;
-                            if (col.isEmptyCell()) {
-                                newCellWidth = newEqualCellWidth;
-                            } else {
-                                newCellWidth = LayoutUnit(
-                                    col.maxCellWidth.toDouble() /
-                                    sumOfAutoCellPreferredWidths.toDouble() *
-                                    remainingWidth.toDouble());
-                            }
-
-                            col.cellWidth =
-                                std::max(col.minCellWidth, newCellWidth);
-                            sumOfAutoCellWidths += col.cellWidth;
+                    LayoutUnit sumOfAutoCellWidths = 0;
+                    for (auto& c : cellsWithAutoWidths) {
+                        ColSizeStruct& col = *c;
+                        LayoutUnit newCellWidth = 0;
+                        if (col.isEmptyCell()) {
+                            newCellWidth = newEqualCellWidth;
+                        } else {
+                            newCellWidth = LayoutUnit(
+                                col.maxCellWidth.toDouble() /
+                                sumOfAutoCellPreferredWidths.toDouble() *
+                                remainingWidth.toDouble());
                         }
 
-                        // After adjusting the widths of cells with
-                        // "width: auto", the sum of each col width could be
-                        // greater than the specified table width. In this case,
-                        // the size of cells are adjusted once more.
-                        if (sumOfAutoCellWidths > remainingWidth) {
-                            remainingWidth = tableWidth - sumOfAutoCellWidths;
-                            remainingWidth -=
-                                (borderSpacing * m_columnWidths.size()) +
-                                borderSpacing;
+                        col.cellWidth =
+                            std::max(col.minCellWidth, newCellWidth);
+                        sumOfAutoCellWidths += col.cellWidth;
+                    }
 
-                            LayoutUnit sumOfPercentageWidth = 0;
-                            calCellWidthsWithPercentageWidths(
-                                remainingWidth, columnsMayNeedToAdjustWidths,
-                                &sumOfPercentageWidth);
-                        }
+                    // After adjusting the widths of cells with
+                    // "width: auto", the sum of each col width could be
+                    // greater than the specified table width. In this case,
+                    // the size of cells are adjusted once more.
+                    if (sumOfAutoCellWidths > remainingWidth) {
+                        remainingWidth = tableWidth - sumOfAutoCellWidths;
+                        remainingWidth -=
+                            (borderSpacing * m_columnWidths.size()) +
+                            borderSpacing;
+
+                        LayoutUnit sumOfPercentageWidth = 0;
+                        calCellWidthsWithPercentageWidths(
+                            remainingWidth, columnsMayNeedToAdjustWidths,
+                            &sumOfPercentageWidth);
                     }
                 }
             }
