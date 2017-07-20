@@ -687,6 +687,22 @@ public:
     PaintingInlineStage m_paintingInlineStage;
 };
 
+class FrameTreeItemModel {
+public:
+    FrameTreeItemModel()
+    {
+        m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
+    }
+
+    Frame* m_parent;
+
+    Frame* m_previous;
+    Frame* m_next;
+
+    Frame* m_firstChild;
+    Frame* m_lastChild;
+};
+
 class Frame : public gc {
     friend class LayoutContext;
 
@@ -996,37 +1012,37 @@ public:
 
     virtual void setParent(Frame* f)
     {
-        m_parent = f;
+        frameTreeItemModel()->m_parent = f;
     }
 
     Frame* parent() const
     {
-        return m_parent;
+        return frameTreeItemModel()->m_parent;
     }
 
     virtual Frame* layoutParent() const
     {
-        return m_parent;
+        return parent();
     }
 
     Frame* next() const
     {
-        return m_next;
+        return frameTreeItemModel()->m_next;
     }
 
     Frame* previous() const
     {
-        return m_previous;
+        return frameTreeItemModel()->m_previous;
     }
 
     Frame* firstChild() const
     {
-        return m_firstChild;
+        return frameTreeItemModel()->m_firstChild;
     }
 
     Frame* lastChild() const
     {
-        return m_lastChild;
+        return frameTreeItemModel()->m_lastChild;
     }
 
     void appendChild(Frame* newChild)
@@ -1037,13 +1053,13 @@ public:
         Frame* lChild = lastChild();
 
         if (lChild) {
-            newChild->m_previous = lChild;
-            lChild->m_next = newChild;
+            newChild->frameTreeItemModel()->m_previous = lChild;
+            lChild->frameTreeItemModel()->m_next = newChild;
         } else {
-            m_firstChild = newChild;
+            frameTreeItemModel()->m_firstChild = newChild;
         }
 
-        m_lastChild = newChild;
+        frameTreeItemModel()->m_lastChild = newChild;
     }
 
     void insertBefore(Frame* nextChild, Frame* newChild)
@@ -1055,16 +1071,16 @@ public:
             return;
         }
 
-        Frame* prev = nextChild->m_previous;
+        Frame* prev = nextChild->frameTreeItemModel()->m_previous;
         if (prev) {
-            prev->m_next = newChild;
+            prev->frameTreeItemModel()->m_next = newChild;
         } else {
-            m_firstChild = newChild;
+            frameTreeItemModel()->m_firstChild = newChild;
         }
         newChild->setParent(this);
-        newChild->m_previous = prev;
-        newChild->m_next = nextChild;
-        nextChild->m_previous = newChild;
+        newChild->frameTreeItemModel()->m_previous = prev;
+        newChild->frameTreeItemModel()->m_next = nextChild;
+        nextChild->frameTreeItemModel()->m_previous = newChild;
     }
 
     void removeChild(Frame* oldChild)
@@ -1072,22 +1088,26 @@ public:
         STARFISH_ASSERT(oldChild);
         STARFISH_ASSERT(oldChild->parent() == this);
 
-        if (oldChild->m_previous) {
-            oldChild->m_previous->m_next = oldChild->next();
+        if (oldChild->frameTreeItemModel()->m_previous) {
+            oldChild->frameTreeItemModel()
+                ->m_previous->frameTreeItemModel()
+                ->m_next = oldChild->next();
         }
-        if (oldChild->m_next) {
-            oldChild->m_next->m_previous = oldChild->previous();
-        }
-
-        if (m_firstChild == oldChild) {
-            m_firstChild = oldChild->next();
-        }
-        if (m_lastChild == oldChild) {
-            m_lastChild = oldChild->previous();
+        if (oldChild->frameTreeItemModel()->m_next) {
+            oldChild->frameTreeItemModel()
+                ->m_next->frameTreeItemModel()
+                ->m_previous = oldChild->previous();
         }
 
-        oldChild->m_previous = nullptr;
-        oldChild->m_next = nullptr;
+        if (frameTreeItemModel()->m_firstChild == oldChild) {
+            frameTreeItemModel()->m_firstChild = oldChild->next();
+        }
+        if (frameTreeItemModel()->m_lastChild == oldChild) {
+            frameTreeItemModel()->m_lastChild = oldChild->previous();
+        }
+
+        oldChild->frameTreeItemModel()->m_previous = nullptr;
+        oldChild->frameTreeItemModel()->m_next = nullptr;
         oldChild->setParent(nullptr);
     }
 #ifdef STARFISH_ENABLE_TEST
@@ -1294,6 +1314,21 @@ public:
     Document* document();
 
 protected:
+    virtual bool hasFrameTreeItemModel()
+    {
+        return false;
+    }
+
+    virtual FrameTreeItemModel* frameTreeItemModel()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    const FrameTreeItemModel* frameTreeItemModel() const
+    {
+        return const_cast<Frame*>(this)->frameTreeItemModel();
+    }
+
     struct FrameFlags {
         bool m_needsLayout : 1;
         bool m_isAnonymous : 1;
@@ -1350,14 +1385,6 @@ private:
         Node* m_node;
         ComputedStyle* m_styleWhenNodeIsAnonymous;
     };
-
-    Frame* m_parent;
-
-    Frame* m_previous;
-    Frame* m_next;
-
-    Frame* m_firstChild;
-    Frame* m_lastChild;
 };
 }
 

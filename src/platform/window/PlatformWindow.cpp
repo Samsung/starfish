@@ -183,8 +183,8 @@ void PlatformWindow::onResize()
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     m_virtualCursorX = width() / 2;
     m_virtualCursorY = height() / 2;
-    webView()->mainBrowsingContext()->window()->resize(width(), height());
 #endif
+    webView()->mainBrowsingContext()->window()->resize(width(), height());
 }
 
 void PlatformWindow::screenShot(std::string filePath)

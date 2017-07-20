@@ -70,6 +70,18 @@ public:
         printf("text-> %s", str.data());
     }
 #endif
+protected:
+    virtual bool hasFrameTreeItemModel()
+    {
+        return true;
+    }
+
+    virtual FrameTreeItemModel* frameTreeItemModel()
+    {
+        return &m_treeItemModel;
+    }
+
+    FrameTreeItemModel m_treeItemModel;
 };
 }
 
