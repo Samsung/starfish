@@ -682,6 +682,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     // The style for the 'content' property is computed when we build the frame
     // tree if it is needed.
     if (newStyle->m_content != oldStyle->m_content) {

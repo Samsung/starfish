@@ -697,6 +697,8 @@ enum TransitionTimingFunctionValue {
     TransitionTimingFunctionCubicBezierValue
 };
 
+enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxSizingValue };
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -789,7 +791,8 @@ class CSSStyleDeclaration;
     F(TransitionDuration, transitionDuration, "transitionDuration")      \
     F(TransitionTimingFunction, transitionTimingFunction,                \
       "transitionTimingFunction")                                        \
-    F(TransitionDelay, transitionDelay, "transitionDelay")
+    F(TransitionDelay, transitionDelay, "transitionDelay")               \
+    F(BoxSizing, boxSizing, "box-sizing")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
@@ -977,6 +980,7 @@ public:
         TextDecorationValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
+        BoxSizingValueKind,
 
         // transform
         TransformFunctions,
@@ -1277,6 +1281,12 @@ public:
         return m_value.m_transitionTimingFunction;
     }
 
+    BoxSizingValue boxSizingValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BoxSizingValueKind);
+        return m_value.m_boxSizing;
+    }
+
     String* attrValue() const
     {
         STARFISH_ASSERT(m_valueKind == Attr);
@@ -1319,6 +1329,7 @@ public:
         EmptyCellsValue m_emptyCells;
         TransitionPropertyValue m_transitionProperty;
         TransitionTimingFunctionValue m_transitionTimingFunction;
+        BoxSizingValue m_boxSizing;
         CSSTime m_time;
         ValueData(int v)
         {
@@ -1455,6 +1466,10 @@ public:
         ValueData(TransitionTimingFunctionValue v)
         {
             m_transitionTimingFunction = v;
+        }
+        ValueData(BoxSizingValue v)
+        {
+            m_boxSizing = v;
         }
     };
 
