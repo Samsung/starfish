@@ -33,7 +33,7 @@ fi
 # Common flags --------------------------------------------
 if [[ $1 == STARFISH_EFL ]]; then
     GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-parallel-mark --disable-threads " # --enable-large-config --enable-cplusplus"
-else
+elif [[ $1 == STARFISH_DALI ]]; then
     GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-parallel-mark " # --enable-large-config --enable-cplusplus"
 fi
 CFLAGS_COMMON=" -g3 "
