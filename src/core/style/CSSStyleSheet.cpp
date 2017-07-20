@@ -70,6 +70,7 @@ CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     , m_ruleList(nullptr)
     , m_mediaQuerySet(nullptr)
     , m_mediaWrapper(nullptr)
+    , m_ruleSet(nullptr)
 {
 }
 
@@ -123,18 +124,18 @@ void CSSStyleSheet::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
     }
 
     if (id) {
-        m_idRules.push_back(rule);
+        ruleSet()->idRules().push_back(rule);
         return;
     }
     if (className) {
-        m_classRules.push_back(rule);
+        ruleSet()->classRules().push_back(rule);
         return;
     }
     if (tagName) {
-        m_tagRules.push_back(rule);
+        ruleSet()->tagRules().push_back(rule);
         return;
     }
-    m_universalRules.push_back(rule);
+    ruleSet()->universalRules().push_back(rule);
 }
 
 void CSSStyleSheet::addRule(StyleRuleBase* rule)

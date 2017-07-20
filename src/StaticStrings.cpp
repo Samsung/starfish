@@ -103,6 +103,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                           AtomicString::createAtomicString(sf, "dir"));
     m_title = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "title"));
+    m_align = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "align"));
     m_disabled =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "disabled"));

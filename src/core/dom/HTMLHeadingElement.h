@@ -35,6 +35,9 @@ public:
         return m_name;
     }
 
+    String* align();
+    void setAlign(String* align);
+
 protected:
     QualifiedName m_name;
 };

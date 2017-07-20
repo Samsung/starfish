@@ -4362,24 +4362,24 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     sheet = styleSheetWithStyleRules();
     if (element->hasId()) {
         collectMatchingRulesFromAuthorSheet(
-            sheet->idRules().data(), sheet->idRules().size(), element,
-            elementName, elementId, elementClasses, authorRules, ret,
-            pseudoElementType);
+            sheet->ruleSet()->idRules().data(),
+            sheet->ruleSet()->idRules().size(), element, elementName, elementId,
+            elementClasses, authorRules, ret, pseudoElementType);
     }
     if (element->hasClass()) {
         collectMatchingRulesFromAuthorSheet(
-            sheet->classRules().data(), sheet->classRules().size(), element,
-            elementName, elementId, elementClasses, authorRules, ret,
-            pseudoElementType);
+            sheet->ruleSet()->classRules().data(),
+            sheet->ruleSet()->classRules().size(), element, elementName,
+            elementId, elementClasses, authorRules, ret, pseudoElementType);
     }
-    collectMatchingRulesFromAuthorSheet(sheet->tagRules().data(),
-                                        sheet->tagRules().size(), element,
-                                        elementName, elementId, elementClasses,
-                                        authorRules, ret, pseudoElementType);
-    collectMatchingRulesFromAuthorSheet(sheet->universalRules().data(),
-                                        sheet->universalRules().size(), element,
-                                        elementName, elementId, elementClasses,
-                                        authorRules, ret, pseudoElementType);
+    collectMatchingRulesFromAuthorSheet(
+        sheet->ruleSet()->tagRules().data(),
+        sheet->ruleSet()->tagRules().size(), element, elementName, elementId,
+        elementClasses, authorRules, ret, pseudoElementType);
+    collectMatchingRulesFromAuthorSheet(
+        sheet->ruleSet()->universalRules().data(),
+        sheet->ruleSet()->universalRules().size(), element, elementName,
+        elementId, elementClasses, authorRules, ret, pseudoElementType);
     if (authorRules.size() != 0) {
         authorRules.sortVector(comparingRules);
     }

@@ -24,4 +24,14 @@ HTMLHeadingElement::HTMLHeadingElement(Document* document, AtomicString name)
     , m_name(starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
 {
 }
+
+String* HTMLHeadingElement::align()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+}
+
+void HTMLHeadingElement::setAlign(String* align)
+{
+    setAttribute(starFish()->staticStrings()->m_align, align);
+}
 }
