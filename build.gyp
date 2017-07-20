@@ -5,9 +5,7 @@
         'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n',
         'defines_x64': [
             'STARFISH_ENABLE_MULTIMEDIA',
-            'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_INSPECTOR',
-            'STARFISH_ENABLE_MULTIPAGE',
             'STARFISH_ENABLE_DOMPARSER',
         ],
         'defines_extra': [
