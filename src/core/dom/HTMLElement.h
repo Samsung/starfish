@@ -38,10 +38,8 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    bool hasDirAttribute()
-    {
-        return m_hasDirAttribute;
-    }
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues);
 
     int tabIndex();
     bool supportsFocus();

@@ -46,24 +46,19 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-bool HTMLFontElement::colorFromAttribute(Unit::Color* color)
+void HTMLFontElement::styleForPresentationAttribute(
+    GCVector<CSSStyleValuePair>& cssValues)
 {
-    CSSStyleValuePair pair;
-    String* c = getAttributeOrEmpty(starFish()->staticStrings()->m_color);
-    auto utf8Str = c->toNullableUTF8String();
-    if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
-        switch (pair.valueKind()) {
-        case CSSStyleValuePair::ValueKind::ColorValueKind:
-            *color = pair.colorValue();
-            break;
-        case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-            *color = NamedColor::namedColorToColor(pair.namedColorValue());
-            break;
-        default:
-            STARFISH_ASSERT_NOT_REACHED();
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    if (m_hasColorAttribute) {
+        CSSStyleValuePair pair;
+        String* c = getAttributeOrEmpty(starFish()->staticStrings()->m_color);
+        auto utf8Str = c->toNullableUTF8String();
+        if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Color);
+            cssValues.push_back(pair);
         }
-        return true;
     }
-    return false;
 }
 }

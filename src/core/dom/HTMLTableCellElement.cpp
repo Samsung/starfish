@@ -18,7 +18,39 @@
 #include "StarFish.h"
 #include "core/dom/HTMLTableCellElement.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/style/CSSParser.h"
+
 namespace StarFish {
+
+void HTMLTableCellElement::styleForPresentationAttribute(
+    GCVector<CSSStyleValuePair>& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    HTMLTableElement* table = tableElement();
+    if (table->hasCellPaddingAttribute()) {
+        String* value = table->cellpadding();
+        if (value && !value->equals(String::emptyString)) {
+            // Use px as the default unit
+            if (!value->contains("px") && !value->contains("%")) {
+                value = value->concat(String::createASCIIString("px"));
+            }
+        }
+
+        CSSStyleValuePair pair;
+        if (CSSPropertyParser::parseLengthOrPercent(value->utf8Data(), false,
+                                                    &pair)) {
+            pair.setKeyKind(CSSStyleValuePair::PaddingTop);
+            cssValues.push_back(pair);
+            pair.setKeyKind(CSSStyleValuePair::PaddingRight);
+            cssValues.push_back(pair);
+            pair.setKeyKind(CSSStyleValuePair::PaddingBottom);
+            cssValues.push_back(pair);
+            pair.setKeyKind(CSSStyleValuePair::PaddingLeft);
+            cssValues.push_back(pair);
+        }
+    }
+}
 
 HTMLTableElement* HTMLTableCellElement::tableElement()
 {

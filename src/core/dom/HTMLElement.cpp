@@ -92,6 +92,45 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+void HTMLElement::styleForPresentationAttribute(
+    GCVector<CSSStyleValuePair>& cssValues)
+{
+    if (m_hasDirAttribute) {
+        CSSStyleValuePair pair;
+        String* str = getAttributeOrEmpty(starFish()->staticStrings()->m_dir);
+        str = str->toLower();
+        if (str->equals("ltr")) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Direction);
+            pair.setValueKind(CSSStyleValuePair::ValueKind::DirectionValueKind);
+            pair.setValue(DirectionValue::LtrDirectionValue);
+            cssValues.push_back(pair);
+
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::UnicodeBidi);
+            pair.setValueKind(
+                CSSStyleValuePair::ValueKind::UnicodeBidiValueKind);
+            pair.setValue(UnicodeBidiValue::IsolateUnicodeBidiValue);
+            cssValues.push_back(pair);
+        } else if (str->equals("rtl")) {
+            CSSStyleValuePair pair;
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Direction);
+            pair.setValueKind(CSSStyleValuePair::ValueKind::DirectionValueKind);
+            pair.setValue(DirectionValue::RtlDirectionValue);
+            cssValues.push_back(pair);
+
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::UnicodeBidi);
+            pair.setValueKind(
+                CSSStyleValuePair::ValueKind::UnicodeBidiValueKind);
+            pair.setValue(UnicodeBidiValue::IsolateUnicodeBidiValue);
+            cssValues.push_back(pair);
+        } else {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Direction);
+            pair.setValueKind(CSSStyleValuePair::ValueKind::DirectionValueKind);
+            pair.setValue(DirectionValue::LtrDirectionValue);
+            cssValues.push_back(pair);
+        }
+    }
+}
+
 int HTMLElement::tabIndex()
 {
     if (supportsFocus()) {

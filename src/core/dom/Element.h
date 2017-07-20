@@ -25,9 +25,9 @@
 namespace StarFish {
 
 class Attr;
-class NamedNodeMap;
-class HTMLElement;
 class CSSStyleDeclaration;
+class HTMLElement;
+class NamedNodeMap;
 class PseudoElement;
 class PseudoElementData;
 
@@ -144,6 +144,12 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues)
+    {
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
