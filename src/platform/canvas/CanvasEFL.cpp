@@ -287,11 +287,6 @@ public:
         auto& lastState = m_state.back();
 
         CanvasStateEFL* eflState = (CanvasStateEFL*)state;
-
-        // FIXME: when the mapModes between last state and state to be changed,
-        // the coordinate should be corresponded to the one of the state to
-        // be changed.
-        lastState.m_matrix = eflState->m_matrix;
         lastState.m_clipRect = eflState->m_clipRect;
         lastState.m_clipPath = eflState->m_clipPath;
         lastState.m_clipper = eflState->m_clipper;
@@ -299,6 +294,7 @@ public:
         lastState.m_hasPathClip = eflState->m_hasPathClip;
         if (flag == ReplaceFlag::All) {
             lastState.m_color = eflState->m_color;
+            lastState.m_matrix = eflState->m_matrix;
             lastState.m_opacity = eflState->m_opacity;
             lastState.m_baseX = eflState->m_baseX;
             lastState.m_baseY = eflState->m_baseY;
@@ -467,7 +463,7 @@ public:
             lastState().m_clipPath = result;
             lastState().m_clipper = NULL;
             return;
-        } else if (!isMatrixRemainsRectangle() || lastState().m_hasPathClip) {
+        } else if (!isMatrixRemainsRectangle()) {
             ClipperLib::Path path;
 
             path.emplace_back(lastState().m_clipRect.x(),

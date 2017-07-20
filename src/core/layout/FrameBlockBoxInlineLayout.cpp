@@ -3620,6 +3620,12 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         ctx.m_canvas->mergeTextDecorationData(style());
     }
 
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        ctx.m_canvas->setVisible(false);
+    } else {
+        ctx.m_canvas->setVisible(true);
+    }
+
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
     if (isPositioned()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {

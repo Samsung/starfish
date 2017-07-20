@@ -108,16 +108,17 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
 void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
 {
-    CanvasState* state = canvas->getByFrame(sCtx->owner());
+    FrameBox* self = sCtx->owner();
+    CanvasState* state = canvas->getByFrame(self);
     if (state == nullptr) {
-        LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+        LayoutLocation l = self->absolutePoint(m_owner);
         canvas->translate(l.x(), l.y());
     } else {
         canvas->replace(state, Canvas::ReplaceFlag::All);
-        if (sCtx->owner()->isAbsolutePositioned()) {
-            bool isFixed =
-                sCtx->owner()->style()->position() == FixedPositionValue;
-            Frame* parent = sCtx->owner()->parent();
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        if (self->isAbsolutePositioned()) {
+            bool isFixed = self->style()->position() == FixedPositionValue;
+            Frame* parent = self->parent();
             while (!parent->style()->hasTransforms(parent) &&
                    !parent->isFrameDocument() &&
                    (isFixed || !parent->isPositioned())) {
@@ -128,16 +129,17 @@ void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
                 return;
             }
 
-            // FIXME: Currently, clipping doesn't work if parent
-            // has transform.
-            canvas->replace(parentState, Canvas::ReplaceFlag::MatrixOnly);
+            canvas->replace(parentState, Canvas::ReplaceFlag::ClippingOnly);
 
             if (parent->shouldApplyOverflow()) {
                 FrameBox* box = parent->asFrameBox();
+                canvas->translate(-self->x(), -self->y());
                 canvas->clip(Unit::Rect(0, 0, box->contentWidth(),
                                         box->contentHeight()));
+                canvas->translate(self->x(), self->y());
             }
         }
+#endif
     }
 }
 

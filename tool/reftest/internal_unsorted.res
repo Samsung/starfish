@@ -231,3 +231,5 @@
 363;test/internal-test/css/position2/replaced-left-margin-auto-right-margin-auto-width-auto.html
 362;test/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-auto.html
 262;test/internal-test/css/overflow/absolute-positioned-box-with-overflow.html
+256;test/internal-test/css/overflow/absolute-positioned-box-with-transform.html
+

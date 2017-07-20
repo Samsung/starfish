@@ -70,7 +70,7 @@ protected:
     }
 
 public:
-    enum ReplaceFlag { All, MatrixOnly };
+    enum ReplaceFlag { All, ClippingOnly };
 
     static Canvas* createDirect(void* data);
     static Canvas* create(CanvasSurface* data);

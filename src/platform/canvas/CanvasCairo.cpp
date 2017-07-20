@@ -157,9 +157,11 @@ public:
     {
         CanvasStateCairo* cairoState = (CanvasStateCairo*)state;
         auto& lastState = m_state.back();
-        cairo_set_matrix(m_canvas, &cairoState->m_matrix);
+
+        // FIXME: Should replace clipping information here!
 
         if (flag == ReplaceFlag::All) {
+            cairo_set_matrix(m_canvas, &cairoState->m_matrix);
             lastState.m_color = cairoState->m_color;
             lastState.m_opacity = cairoState->m_opacity;
             lastState.m_baseX = cairoState->m_baseX;
