@@ -27,7 +27,7 @@ class AnimationExecutor;
 class Canvas;
 class Node;
 class WebView;
-
+class ImageData;
 class MouseData;
 class TouchData;
 class KeyboardData;
@@ -65,8 +65,8 @@ public:
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
-    void dispatchMouseEvent(MouseEventKind kind, MouseData& data);
-    void dispatchKeyEvent(KeyEventKind kind, KeyboardData& data);
+    void dispatchMouseEvent(MouseEventKind kind, MouseData data);
+    void dispatchKeyEvent(KeyEventKind kind, KeyboardData data);
 
     void rendering();
     void pause();
@@ -74,7 +74,9 @@ public:
     void close();
 
     void paintWindowBackground(Canvas* canvas);
-
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+    void paintVirtualCursor(Canvas* canvas);
+#endif
     WebView* webView()
     {
         return m_webView;
@@ -94,6 +96,13 @@ protected:
 
     StarFish* m_starFish;
     WebView* m_webView;
+
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+    bool m_isButtonOfVirtualCursorClicked;
+    int m_virtualCursorX;
+    int m_virtualCursorY;
+    ImageData* m_virtualCursorImageData;
+#endif
 };
 }
 

@@ -428,7 +428,21 @@ static uint32_t ecoreEventKeyToKeyCode(Ecore_Event_Key* data)
         }
         return (uint32_t)(data->string[0] - '0') + 96;
     }
-    if (data->keycode < 150) {
+    if (strcmp("Left", data->key) == 0) {
+        return 37;
+    } else if (strcmp("Right", data->key) == 0) {
+        return 39;
+    } else if (strcmp("Up", data->key) == 0) {
+        return 38;
+    } else if (strcmp("Down", data->key) == 0) {
+        return 40;
+    } else if (strcmp("space", data->key) == 0) {
+        return 32;
+    } else if (strcmp("Return", data->key) == 0) {
+        return 13;
+    } else if (strcmp("BackSpace", data->key) == 0) {
+        return 8;
+    } else if (data->keycode < 150) {
         return keyCodeMap[data->keycode];
     }
     return 0;

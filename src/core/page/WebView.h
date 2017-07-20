@@ -120,6 +120,11 @@ public:
     void layoutIfNeeds();
     void clearStackingContext(bool backupBuffer);
 
+    bool didCompositeBefore()
+    {
+        return m_didCompositeBefore;
+    }
+
 private:
     WebView(StarFish* starFish);
 
@@ -171,6 +176,7 @@ private:
     bool m_needsRendering;
     bool m_needsPainting;
     bool m_needsComposite;
+    bool m_didCompositeBefore; // last state of enabling composite
 
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;

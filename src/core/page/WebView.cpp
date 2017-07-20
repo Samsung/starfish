@@ -81,6 +81,7 @@ WebView::WebView(StarFish* starFish)
     , m_needsRendering(false)
     , m_needsPainting(false)
     , m_needsComposite(false)
+    , m_didCompositeBefore(false)
 {
     m_scriptEngineInstance = new ScriptEngineInstance(starFish);
     initRenderingFlags();
@@ -545,6 +546,7 @@ void WebView::rendering()
 
         if (!m_needsComposite) {
             starFish()->platformWindow()->paintWindowBackground(canvas);
+            m_didCompositeBefore = false;
         }
 
         {
@@ -553,6 +555,12 @@ void WebView::rendering()
             mainBrowsingContext()->document()->frame()->paint(ctx);
         }
         m_needsPainting = false;
+
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+        if (!m_needsComposite) {
+            starFish()->platformWindow()->paintVirtualCursor(canvas);
+        }
+#endif
 
         delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -653,6 +661,10 @@ void WebView::rendering()
                 ->stackingContext()
                 ->compositeStackingContext(canvas);
 
+            m_didCompositeBefore = true;
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+            starFish()->platformWindow()->paintVirtualCursor(canvas);
+#endif
             delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE
             evas_object_raise(eflWindow->m_dummyBox);

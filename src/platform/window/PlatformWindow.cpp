@@ -22,10 +22,12 @@
 #include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
-
 #include "core/page/Window.h"
-
 #include "core/modules/canvas/Canvas.h"
+#include "platform/window/VirtualCursor.h"
+#include "core/modules/canvas/image/ImageData.h"
+#include "core/dom/KeyboardEvent.h"
+#include "core/dom/MouseEvent.h"
 
 #ifdef STARFISH_ENABLE_TEST
 StarFish::CanvasSurface* g_surfaceForScreehShot;
@@ -47,6 +49,12 @@ namespace StarFish {
 PlatformWindow::PlatformWindow(StarFish* starFish)
     : m_starFish(starFish)
     , m_webView(nullptr)
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+    , m_isButtonOfVirtualCursorClicked(false)
+    , m_virtualCursorX(0)
+    , m_virtualCursorY(0)
+    , m_virtualCursorImageData(nullptr)
+#endif
 {
 }
 
@@ -77,13 +85,64 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                                          touchCount);
 }
 
-void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData& data)
+void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
 }
 
-void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData& data)
+void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 {
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+    const int virtualCursorSpeed = 5;
+    MouseEventKind eventKind = MouseEventMove;
+#define DO_REDRAW_DISPATCH()                                         \
+    if (webView()->didCompositeBefore()) {                           \
+        webView()->setNeedsComposite();                              \
+    } else {                                                         \
+        webView()->setNeedsPainting();                               \
+    }                                                                \
+    dispatchMouseEvent(                                              \
+        eventKind,                                                   \
+        MouseData(MouseData::MouseButtonValue::LeftButton,           \
+                  m_isButtonOfVirtualCursorClicked                   \
+                      ? MouseData::MouseButtonsValue::LeftButtonDown \
+                      : MouseData::MouseButtonsValue::NoButtonDown,  \
+                  m_virtualCursorX, m_virtualCursorY));
+    if (KeyEventDown == kind) {
+        if (data.keyCode() == 37) {
+            // left
+            m_virtualCursorX -= virtualCursorSpeed;
+            DO_REDRAW_DISPATCH()
+        } else if (data.keyCode() == 38) {
+            // up
+            m_virtualCursorY -= virtualCursorSpeed;
+            DO_REDRAW_DISPATCH()
+        } else if (data.keyCode() == 39) {
+            // right
+            m_virtualCursorX += virtualCursorSpeed;
+            DO_REDRAW_DISPATCH()
+        } else if (data.keyCode() == 40) {
+            // down
+            m_virtualCursorY += virtualCursorSpeed;
+            DO_REDRAW_DISPATCH()
+        } else if (data.keyCode() == 32 || data.keyCode() == 13 ||
+                   data.keyCode() == 8) {
+            // click
+            eventKind = MouseEventDown;
+            m_isButtonOfVirtualCursorClicked = true;
+            DO_REDRAW_DISPATCH()
+        }
+    } else {
+        if (data.keyCode() == 32 || data.keyCode() == 13 ||
+            data.keyCode() == 8) {
+            // click
+            eventKind = MouseEventUp;
+            m_isButtonOfVirtualCursorClicked = false;
+            DO_REDRAW_DISPATCH()
+        }
+    }
+#undef DO_REDRAW_DISPATCH
+#endif
     webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
 }
 
@@ -96,6 +155,19 @@ void PlatformWindow::paintWindowBackground(Canvas* canvas)
 {
     webView()->mainBrowsingContext()->paintWindowBackground(canvas);
 }
+
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+void PlatformWindow::paintVirtualCursor(Canvas* canvas)
+{
+    if (!m_virtualCursorImageData) {
+        m_virtualCursorImageData = ImageData::create(
+            (const char*)g_virtualCursorPNGData, g_virtualCursorPNGDataSize);
+    }
+
+    canvas->drawImage(m_virtualCursorImageData,
+                      Unit::Rect(m_virtualCursorX, m_virtualCursorY, 25, 36));
+}
+#endif
 
 void PlatformWindow::screenShot(std::string filePath)
 {
