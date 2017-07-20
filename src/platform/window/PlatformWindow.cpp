@@ -93,7 +93,7 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 {
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    const int virtualCursorSpeed = 5;
+    const int virtualCursorSpeed = 10;
     MouseEventKind eventKind = MouseEventMove;
 #define DO_REDRAW_DISPATCH()                                         \
     if (webView()->didCompositeBefore()) {                           \
@@ -131,6 +131,15 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
             eventKind = MouseEventDown;
             m_isButtonOfVirtualCursorClicked = true;
             DO_REDRAW_DISPATCH()
+        } else if (data.keyCode() == 48) {
+            if (m_isButtonOfVirtualCursorClicked) {
+                eventKind = MouseEventUp;
+            } else {
+                eventKind = MouseEventDown;
+            }
+            DO_REDRAW_DISPATCH()
+            m_isButtonOfVirtualCursorClicked =
+                !m_isButtonOfVirtualCursorClicked;
         }
     } else {
         if (data.keyCode() == 32 || data.keyCode() == 13 ||
@@ -168,6 +177,15 @@ void PlatformWindow::paintVirtualCursor(Canvas* canvas)
                       Unit::Rect(m_virtualCursorX, m_virtualCursorY, 25, 36));
 }
 #endif
+
+void PlatformWindow::onResize()
+{
+#ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
+    m_virtualCursorX = width() / 2;
+    m_virtualCursorY = height() / 2;
+    webView()->mainBrowsingContext()->window()->resize(width(), height());
+#endif
+}
 
 void PlatformWindow::screenShot(std::string filePath)
 {
