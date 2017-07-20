@@ -24,11 +24,8 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLElement.h"
-#include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
-#include "core/dom/HTMLTableElement.h"
-#include "core/dom/HTMLTableCellElement.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -2867,64 +2864,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
                                            ComputedStyle* parent)
 {
     ComputedStyle* style = new ComputedStyle(parent);
-
-    // FIXME : move below block into matchAllRules
-    if (element->isHTMLElement()) {
-        HTMLElement* elem = element->asHTMLElement();
-        if (elem->hasDirAttribute()) {
-            String* str = elem->getAttributeOrEmpty(
-                element->starFish()->staticStrings()->m_dir);
-            str = str->toLower();
-            if (str->equals("ltr")) {
-                style->m_inheritedStyles.m_direction =
-                    DirectionValue::LtrDirectionValue;
-                style->setUnicodeBidi(
-                    UnicodeBidiValue::IsolateUnicodeBidiValue);
-            } else if (str->equals("rtl")) {
-                style->m_inheritedStyles.m_direction =
-                    DirectionValue::RtlDirectionValue;
-                style->setUnicodeBidi(
-                    UnicodeBidiValue::IsolateUnicodeBidiValue);
-            } else {
-                style->m_inheritedStyles.m_direction =
-                    DirectionValue::LtrDirectionValue;
-            }
-        } else if (elem->isHTMLFontElement()) {
-            if (elem->asHTMLFontElement()->hasColorAttribute()) {
-                Unit::Color color;
-                if (elem->asHTMLFontElement()->colorFromAttribute(&color)) {
-                    style->setColor(color);
-                }
-            }
-        } else if (elem->isHTMLTableCellElement()) {
-            HTMLTableElement* table =
-                elem->asHTMLTableCellElement()->tableElement();
-
-            if (table && table->hasCellPaddingAttribute()) {
-                String* value = table->cellpadding();
-                if (value && !value->equals(String::emptyString)) {
-                    // Use px as the default unit
-                    if (!value->contains("px") && !value->contains("%")) {
-                        value = value->concat(String::createASCIIString("px"));
-                    }
-                }
-                CSSStyleValuePair pair;
-                CSSPropertyParser::parseLengthOrPercent(value->utf8Data(),
-                                                        false, &pair);
-                Length len =
-                    convertValueToLength(pair.valueKind(), pair.value());
-                if (len.isPositiveOrZero()) {
-                    style->setPaddingTop(len);
-                    style->setPaddingRight(len);
-                    style->setPaddingBottom(len);
-                    style->setPaddingLeft(len);
-                }
-            }
-        }
-    }
-
     matchAllRules(element, style, parent);
-
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent);
     return style;
@@ -4448,6 +4388,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         apply(element, userAgentRules[i].first->styleDeclaration()->m_cssValues,
               userAgentRules[i].second, ret, parent, false);
     }
+
+    // Apply presentation attribute's style
+    GCVector<CSSStyleValuePair> cssValues;
+    element->styleForPresentationAttribute(cssValues);
+    apply(element, cssValues, nullptr, ret, parent, false);
 
     for (unsigned int i = 0; i < authorRules.size(); i++) {
         apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,

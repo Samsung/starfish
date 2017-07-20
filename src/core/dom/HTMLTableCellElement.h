@@ -34,6 +34,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTableCellElement() const override;
 
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues);
+
     HTMLTableElement* tableElement();
 
     // 4.4 Interface Node

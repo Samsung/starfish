@@ -38,12 +38,8 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
-    bool hasColorAttribute()
-    {
-        return m_hasColorAttribute;
-    }
-
-    bool colorFromAttribute(Unit::Color* color);
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues);
 
 private:
     bool m_hasColorAttribute;
