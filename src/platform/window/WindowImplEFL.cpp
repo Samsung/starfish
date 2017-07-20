@@ -259,8 +259,7 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
     ecore_animator_add(
         [](void* user_data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-            wnd->webView()->mainBrowsingContext()->window()->resize(
-                wnd->width(), wnd->height());
+            wnd->onResize();
             return ECORE_CALLBACK_CANCEL;
         },
         user_data);
@@ -442,6 +441,8 @@ static uint32_t ecoreEventKeyToKeyCode(Ecore_Event_Key* data)
         return 13;
     } else if (strcmp("BackSpace", data->key) == 0) {
         return 8;
+    } else if (strcmp("0", data->key) == 0) {
+        return 48;
     } else if (data->keycode < 150) {
         return keyCodeMap[data->keycode];
     }

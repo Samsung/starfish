@@ -88,8 +88,8 @@ public:
     }
 
     void setWebView(WebView* webView);
-
     void screenShot(std::string filePath);
+    void onResize();
 
 protected:
     PlatformWindow(StarFish* starFish);
