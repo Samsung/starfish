@@ -306,6 +306,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
 |  | attribute | form | Returns the element's form element, if any, or null otherwise. |
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |
+|  | attribute | color | Is a DOMString that reflects the color HTML attribute, containing either a named color or a color specified in the hexadecimal #RRGGBB format. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |
