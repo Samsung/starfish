@@ -2,7 +2,7 @@
 
 [HTMLConstructor]
 interface HTMLFontElement : HTMLElement {
-    [Unimplemented, CEReactions] attribute DOMString color;
+    [CEReactions] attribute DOMString color;
     [Unimplemented, CEReactions] attribute DOMString face;
     [Unimplemented, CEReactions] attribute DOMString size; 
 };

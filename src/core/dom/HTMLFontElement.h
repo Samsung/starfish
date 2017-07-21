@@ -41,6 +41,10 @@ public:
     virtual void styleForPresentationAttribute(
         GCVector<CSSStyleValuePair>& cssValues);
 
+    /* DOM APIs */
+    String* color();
+    void setColor(String* color);
+
 private:
     bool m_hasColorAttribute;
 };

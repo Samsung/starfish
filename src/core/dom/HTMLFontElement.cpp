@@ -55,10 +55,23 @@ void HTMLFontElement::styleForPresentationAttribute(
         CSSStyleValuePair pair;
         String* c = getAttributeOrEmpty(starFish()->staticStrings()->m_color);
         auto utf8Str = c->toNullableUTF8String();
+        // TODO: Some obsolete legacy attributes parse colors in a more
+        // complicated manner, using the rules for parsing a legacy color value.
+        // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-a-legacy-colour-value
         if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Color);
             cssValues.push_back(pair);
         }
     }
+}
+
+String* HTMLFontElement::color()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_color);
+}
+
+void HTMLFontElement::setColor(String* color)
+{
+    setAttribute(starFish()->staticStrings()->m_color, color);
 }
 }
