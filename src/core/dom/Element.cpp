@@ -359,8 +359,13 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             registerInlineStyleCallback();
         }
         inlineStyle()->clear();
-        CSSParser parser(document());
-        parser.parseStyleDeclaration(value, inlineStyle());
+
+        if (value->isEmpty()) {
+            setNeedsStyleRecalc();
+        } else {
+            CSSParser parser(document());
+            parser.parseStyleDeclaration(value, inlineStyle());
+        }
         m_didInlineStyleModifiedAfterAttributeSet = false;
     } else if (name == ss->m_name) {
         // TODO we should not always invalidate cache
