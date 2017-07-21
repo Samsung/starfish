@@ -9,6 +9,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | dir | ltr &#124; rtl | &lt;element dir="ltr"&gt; |  |
 |  | id | &lt;string&gt; | &lt;element id="id"&gt; |  |
 |  | style | &lt;css_styles&gt; | &lt;element style="css_styles"&gt; | &lt;css_styles&gt; must conform to the CSS section of this specification document. |
+|  | lang | Refer to [ISO639](https://en.wikipedia.org/wiki/ISO_639) | &lt;element lang="fr"&gt;Ceci est un paragraphe.&lt;/element&gt; |  |
 |  [html](https://www.w3.org/TR/html5/semantics.html#the-root-element)  |  |  | &lt;html&gt;&lt;/html&gt; |  |
 |  [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element)  |  |  | &lt;head&gt;SAMSUNG&lt;/head&gt; |  |
 |  [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element)  | rel | stylesheet | &lt;link rel="stylesheet"&gt; |  |
@@ -21,7 +22,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query | &lt;style type="text/css" media="screen"&gt;&lt;/style&gt; | |
 |  | type | text/css | &lt;style type="text/css"&gt;&lt;/style&gt; | Only "text/css" type is supported. |
 |  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
-|  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  |  |  | &lt;h1&gt;&lt;\h1&gt;, &lt;h2&gt;&lt;\h2&gt;, &lt;h3&gt;&lt;\h3&gt;, etc. |  |
+|  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  | align | left &#124; center &#124; right | &lt;h1 align="center"&gt;&lt;/h1&gt; | The align attribute's value of &lt;h1&gt; to &lt;h6&gt; can be only "left", "center" and "right". The attribute is not supported in HTML5. Use CSS instead. |
 |  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
 |  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  | &lt;div&gt;SAMSUNG&lt;/div&gt; |  |
 |  [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element)  |  |  | &lt;span&gt;SAMSUNG&lt;/span&gt; |  |
