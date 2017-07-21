@@ -37,6 +37,11 @@ public:
 
     String* align();
     void setAlign(String* align);
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues);
 
 protected:
     QualifiedName m_name;

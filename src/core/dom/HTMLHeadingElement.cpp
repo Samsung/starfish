@@ -34,4 +34,43 @@ void HTMLHeadingElement::setAlign(String* align)
 {
     setAttribute(starFish()->staticStrings()->m_align, align);
 }
+
+void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
+                                             String* value,
+                                             bool attributeCreated,
+                                             bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+
+    if (name == starFish()->staticStrings()->m_align) {
+        if (!old->equals(value)) {
+            setAttribute(starFish()->staticStrings()->m_align, value);
+            setNeedsStyleRecalc();
+        }
+    }
+}
+
+void HTMLHeadingElement::styleForPresentationAttribute(
+    GCVector<CSSStyleValuePair>& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    String* value = align()->toLower();
+    if (!value->isEmpty()) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+
+        if (value->equals("left")) {
+            pair.setValue(SideValue::LeftSideValue);
+        } else if (value->equals("center")) {
+            pair.setValue(SideValue::CenterSideValue);
+        } else if (value->equals("right")) {
+            pair.setValue(SideValue::RightSideValue);
+        }
+
+        cssValues.push_back(pair);
+    }
+}
 }
