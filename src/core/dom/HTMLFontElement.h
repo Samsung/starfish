@@ -26,6 +26,7 @@ public:
     HTMLFontElement(Document* document)
         : HTMLElement(document)
         , m_hasColorAttribute(false)
+        , m_hasSizeAttribute(false)
     {
     }
 
@@ -45,8 +46,12 @@ public:
     String* color();
     void setColor(String* color);
 
+    String* size();
+    void setSize(String* size);
+
 private:
     bool m_hasColorAttribute;
+    bool m_hasSizeAttribute;
 };
 }
 

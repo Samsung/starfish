@@ -3146,6 +3146,13 @@ void StyleResolver::apply(Element* element,
                     style->m_inheritedStyles.m_fontSize =
                         parseAbsoluteFontSize(6, this->m_mediumFontSize);
                 } else if (cssValues[k].fontSizeValue() ==
+                           FontSizeValue::XXXLargeFontSizeValue) {
+                    style->m_inheritedStyles.m_fontSize =
+                        Length(Length::Fixed,
+                               parseAbsoluteFontSize(6, this->m_mediumFontSize)
+                                       .fixed() *
+                                   1.5f);
+                } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::LargerFontSizeValue) {
                     style->m_inheritedStyles.m_fontSize = Length(
                         Length::Fixed,

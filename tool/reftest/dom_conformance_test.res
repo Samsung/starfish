@@ -511,7 +511,7 @@ test/reftest/dom-conformance-test/html/level2/html/HTMLFieldSetElement01.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLFieldSetElement02.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLFontElement01.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLFontElement02.html
-#test/reftest/dom-conformance-test/html/level2/html/HTMLFontElement03.html
+test/reftest/dom-conformance-test/html/level2/html/HTMLFontElement03.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLFormElement01.html
 #test/reftest/dom-conformance-test/html/level2/html/HTMLFormElement02.html
 test/reftest/dom-conformance-test/html/level2/html/HTMLFormElement03.html
