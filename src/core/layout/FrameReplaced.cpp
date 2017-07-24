@@ -20,6 +20,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
@@ -144,6 +145,7 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                                                  FrameBox* cb)
 {
+    STARFISH_ASSERT(cb);
     Length width = style()->width();
     Length height = style()->height();
     LayoutUnit intrinsicWidth, intrinsicHeight;
@@ -185,6 +187,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         h = intrinsicHeight;
     } else if (height.isAuto()) {
         w = width.specifiedValue(parentContentWidth);
+        w = widthApplyingBoxSizing(w);
         if (hasAspectRatio) {
             h = w * (intrinsicHeight / intrinsicWidth);
         } else {
@@ -193,6 +196,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else if (width.isAuto()) {
         if (height.isFixed() || parentHasFixedHeight) {
             h = height.specifiedValue(parentContentHeight);
+            h = heightApplyingBoxSizing(h);
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
             } else {
@@ -205,8 +209,10 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else {
         STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
         w = width.specifiedValue(parentContentWidth);
+        w = widthApplyingBoxSizing(w);
         if (height.isFixed() || parentHasFixedHeight) {
             h = height.specifiedValue(parentContentHeight);
+            h = heightApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio) {
                 h = w * (intrinsicHeight / intrinsicWidth);
@@ -383,7 +389,7 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
 
 void FrameReplaced::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (isEstablishesStackingContext() && stackingContext()->parent()) {
         ctx.m_canvas->saveByFrame(this);
         return;
     }

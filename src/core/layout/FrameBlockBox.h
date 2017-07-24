@@ -686,7 +686,7 @@ private:
 class LineFormattingContext {
 private:
     void resetLineBox();
-    void registerInlineContent();
+    void registerInlineContent(FrameLineBreak* br);
     LayoutUnit inlineBlockAscender(FrameBlockBox* box)
     {
         STARFISH_ASSERT(m_inlineBlockAscender.find(box) !=

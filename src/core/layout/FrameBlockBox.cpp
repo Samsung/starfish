@@ -53,11 +53,6 @@ public:
 void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                                         LayoutUnit containgBlockContentWidth)
 {
-    Length left = style()->left();
-    Length right = style()->right();
-    Length width = style()->width();
-
-    LayoutUnit contentWidth;
     if (isFrameTableBox()) {
         // Table starts its own layout algorithm that has minimum
         // interaction with the existing layout algorithm.
@@ -69,98 +64,112 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         tableBox->calCellWidth(ctx);
         tableBox->calCellWidthsWithColspans();
         tableBox->layoutWidth(ctx);
-        contentWidth = FrameBox::contentWidth();
-    } else if (width.isAuto()) {
-        if (isNormalFlow() && style()->display() != InlineBlockDisplayValue) {
-            // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
-            // width of containing block =
-            //     'margin-left' + 'border-left-width' + 'padding-left' +
-            //     'width' + 'padding-right' + 'border-right-width' +
-            //     'margin-right'
-            contentWidth =
-                std::max(containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
-        } else if (isAbsolutePositioned() && left.isSpecified() &&
-                   right.isSpecified()) {
-            LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
-            LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
-            LayoutUnit w = std::max(LayoutUnit(0), containgBlockContentWidth -
-                                                       l - r - mbpWidth());
-            contentWidth = w;
-        } else {
-            PreferredWidthContext p(ctx,
-                                    containgBlockContentWidth - mbpWidth());
-            computePreferredWidth(p);
-            contentWidth = p.preferredWidth();
-        }
-    } else if (width.isFixed()) {
-        contentWidth = width.fixed();
     } else {
-        STARFISH_ASSERT(width.isPercent());
-        contentWidth = containgBlockContentWidth * width.percent();
-    }
+        Length left = style()->left();
+        Length right = style()->right();
+        Length width = style()->width();
+        BoxSizingValue boxSizing = style()->boxSizing();
+        LayoutUnit contentWidth;
 
-    applyMinMaxWidthIfNeeds(contentWidth, containgBlockContentWidth);
+        if (width.isAuto()) {
+            if (isNormalFlow() &&
+                style()->display() != InlineBlockDisplayValue) {
+                // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
+                // width of containing block =
+                //     'margin-left' + 'border-left-width' + 'padding-left' +
+                //     'width' + 'padding-right' + 'border-right-width' +
+                //     'margin-right'
+                contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
+                                        LayoutUnit(0));
+            } else if (isAbsolutePositioned() && left.isSpecified() &&
+                       right.isSpecified()) {
+                LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
+                LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
+                LayoutUnit w =
+                    std::max(LayoutUnit(0),
+                             containgBlockContentWidth - l - r - mbpWidth());
+                contentWidth = w;
+            } else {
+                PreferredWidthContext p(ctx,
+                                        containgBlockContentWidth - mbpWidth());
+                computePreferredWidth(p);
+                contentWidth = p.preferredWidth();
+            }
+        } else {
+            if (width.isFixed()) {
+                contentWidth = width.fixed();
+            } else {
+                STARFISH_ASSERT(width.isPercent());
+                contentWidth = containgBlockContentWidth * width.percent();
+            }
+            contentWidth = widthApplyingBoxSizing(contentWidth);
+        }
+
+        applyMinMaxWidthIfNeeds(contentWidth, containgBlockContentWidth);
+    }
 }
 
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
-    LayoutUnit contentHeight;
-    LayoutUnit parentHeight;
-    Length height = style()->height();
 
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutHeight(ctx);
-        contentHeight = FrameBox::contentHeight();
     } else {
+        LayoutUnit contentHeight;
+        LayoutUnit parentHeight;
+        Length height = style()->height();
+        BoxSizingValue boxSizing = style()->boxSizing();
+
         if (hasBlockFlow()) {
             contentHeight = layoutBlock(ctx);
         } else {
             contentHeight = layoutInline(ctx);
         }
-    }
 
-    // The contentHeight is used when table cell contents are vertically aligned
-    // in the table row.
-    if (isFrameTableCellBox()) {
-        asFrameTableCellBox()->setActualContentHeight(contentHeight);
-    }
+        // The contentHeight is used when table cell contents are vertically
+        // aligned in the table row.
+        if (isFrameTableCellBox()) {
+            asFrameTableCellBox()->setActualContentHeight(contentHeight);
+        }
 
-    if (isAbsolutePositioned()) {
-        parentHeight = cb->contentHeight() + cb->paddingWidth();
-        if (height.isAuto()) {
-            Length top = style()->top();
-            Length bottom = style()->bottom();
-            if (top.isSpecified() && bottom.isSpecified()) {
-                LayoutUnit t = top.specifiedValue(parentHeight);
-                LayoutUnit b = bottom.specifiedValue(parentHeight);
-                contentHeight =
-                    parentHeight - t - b - paddingHeight() - borderHeight();
+        if (isAbsolutePositioned()) {
+            parentHeight = cb->contentHeight() + cb->paddingWidth();
+            if (height.isAuto()) {
+                Length top = style()->top();
+                Length bottom = style()->bottom();
+                if (top.isSpecified() && bottom.isSpecified()) {
+                    LayoutUnit t = top.specifiedValue(parentHeight);
+                    LayoutUnit b = bottom.specifiedValue(parentHeight);
+                    contentHeight =
+                        parentHeight - t - b - paddingHeight() - borderHeight();
+                }
+            } else {
+                contentHeight = height.specifiedValue(parentHeight);
+                contentHeight = heightApplyingBoxSizing(contentHeight);
             }
+
+            applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
         } else {
-            contentHeight = height.specifiedValue(parentHeight);
-        }
+            bool parentHasFixedValue = ctx.parentHasFixedHeight(this);
 
-        applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
-    } else {
-        bool parentHasFixedValue = ctx.parentHasFixedHeight(this);
+            if (parentHasFixedValue) {
+                parentHeight = ctx.parentFixedHeight(this);
+            } else {
+                parentHeight = contentHeight;
+            }
 
-        if (parentHasFixedValue) {
-            parentHeight = ctx.parentFixedHeight(this);
-        } else {
-            parentHeight = contentHeight;
-        }
-
-        if (!isFrameTableBox()) {
             if (height.isFixed()) {
                 contentHeight = height.fixed();
+                contentHeight = heightApplyingBoxSizing(contentHeight);
             } else if (height.isPercent() && parentHasFixedValue) {
                 contentHeight = height.specifiedValue(parentHeight);
+                contentHeight = heightApplyingBoxSizing(contentHeight);
             }
-        }
 
-        applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
-                                 parentHasFixedValue);
+            applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
+                                     parentHasFixedValue);
+        }
     }
 }
 
@@ -632,7 +641,7 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
 
 Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
+    if (isEstablishesStackingContext() && stackingContext()->parent()) {
         return nullptr;
     }
 
@@ -701,7 +710,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
 void FrameBlockBox::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (isEstablishesStackingContext() && stackingContext()->parent()) {
         ctx.m_canvas->saveByFrame(this);
         return;
     }
