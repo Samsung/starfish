@@ -250,18 +250,6 @@ bool BrowsingContext::layoutIfNeeds()
                                           ->asFrameDocument());
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
-
-#ifndef NDEBUG
-        {
-            LayoutContext ctx(starFish(), document()
-                                              ->frame()
-                                              ->asFrameBox()
-                                              ->asFrameBlockBox()
-                                              ->asFrameDocument());
-            document()->frame()->layout(ctx,
-                                        Frame::LayoutWantToResolve::ResolveAll);
-        }
-#endif
         m_needsLayout = false;
         return true;
     }
