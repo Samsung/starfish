@@ -175,21 +175,21 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #endif
 
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
 #define STARFISH_LOG_INFO(...) dlog_print(DLOG_INFO, "StarFish", __VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
 #define STARFISH_LOG_ERROR(...) dlog_print(DLOG_ERROR, "StarFish", __VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN
 #include <dlog.h>
 #define STARFISH_LOG_WARN(...) dlog_print(DLOG_WARN, "StarFish", __VA_ARGS__);

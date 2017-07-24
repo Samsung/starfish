@@ -236,6 +236,8 @@ endif
 ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += -Os -finline-limit=64
   CXXFLAGS += -DSTARFISH_TIZEN
+  #for DALi port
+  #CXXFLAGS += -DGC_THREADS
 
   #CXXFLAGS_DEBUG += -Wno-literal-suffix
 

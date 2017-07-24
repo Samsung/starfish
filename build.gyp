@@ -44,7 +44,7 @@
             }],
             ['backend=="dali"', {
                 'defines_extra': [
-                    'STARFISH_DALI',
+                    'STARFISH_DALI','GC_THREADS'
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.x64',

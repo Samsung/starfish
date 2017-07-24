@@ -25,6 +25,7 @@ extern "C" {
 
 typedef struct StarFishInstance {
     void* m_starfish;
+    void* m_data;
 } StarFishInstance;
 
 STARFISH_EXPORT StarFishInstance* starfishCreate(

@@ -231,9 +231,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_on_collection_event([](GC_EventType evtType) {
 
             if (GC_EVENT_RECLAIM_END == evtType) {
+#ifdef PORT_GRAPHIC_BACKEND_EFL
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
+#endif
             }
 
             auto iter = g_gcCollectionEventListenterList.begin();
@@ -376,7 +378,6 @@ void StarFish::loadHTMLDocument(String* filePath)
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);
-
     ResourceURL* url = new ResourceURL(String::fromUTF8(path.c_str()));
     webView->navigate(url, HistoryManager::Action::Add);
 }
