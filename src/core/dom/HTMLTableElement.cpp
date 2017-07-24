@@ -37,6 +37,41 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
             setAttribute(starFish()->staticStrings()->m_cellpadding, value);
             setNeedsStyleRecalc();
         }
+    } else if (name == starFish()->staticStrings()->m_cellspacing) {
+        if (attributeCreated) {
+            m_hasCellSpacingAttribute = true;
+        }
+        if (attributeRemoved) {
+            m_hasCellSpacingAttribute = false;
+        }
+        if (!old->equals(value)) {
+            setAttribute(starFish()->staticStrings()->m_cellspacing, value);
+            setNeedsStyleRecalc();
+        }
+    }
+}
+
+void HTMLTableElement::styleForPresentationAttribute(
+    GCVector<CSSStyleValuePair>& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    if (m_hasCellSpacingAttribute) {
+        String* value = cellspacing();
+        if (value && !value->equals(String::emptyString)) {
+            // Use px as the default unit
+            if (!value->contains("px") && !value->contains("%")) {
+                value = value->concat(String::createASCIIString("px"));
+            }
+        }
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = value->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueBorderSpacing(tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
+            cssValues.push_back(pair);
+        }
     }
 }
 

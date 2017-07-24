@@ -167,7 +167,8 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
 
 void FrameTableSectionBox::calCellWidthsWithColspans()
 {
-    LayoutUnit borderSpacing = tableBox()->calculatedHorizontalBorderSpacing();
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
+        tableBox()->style()->horizontalBorderSpacing().fixed());
 
     for (auto& rowStruct : grid()) {
         FrameTableRowBox* row = rowStruct.tableRow();
@@ -212,7 +213,8 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit borderSpacing = tableBox()->calculatedHorizontalBorderSpacing();
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
+        tableBox()->style()->horizontalBorderSpacing().fixed());
 
     LayoutUnit xSoFar = borderSpacing;
     LayoutUnit maxWidth = 0;
@@ -231,7 +233,8 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
-    LayoutUnit borderSpacing = tableBox()->calculatedVerticalBorderSpacing();
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
+        tableBox()->style()->verticalBorderSpacing().fixed());
 
     if (tableBox()->firstSectionBoxInVisualOrder() == this) {
         ySoFar += borderSpacing;
