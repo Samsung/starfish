@@ -137,9 +137,3 @@ Document implements GlobalEventHandlers; // [REF3]
 Document implements DocumentAndElementEventHandlers; // [REF3]
 Document implements NonElementParentNode; // [REF7]
 Document implements ParentNode; // [REF8]
-
-// [REF1]
-[Unimplemented]
-dictionary ElementCreationOptions {
-  DOMString is;
-};

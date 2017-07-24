@@ -60,7 +60,3 @@ interface Node : EventTarget {
   [CEReactions, RaisesException] Node removeChild(Node child);
 };
 
-[Unimplemented]
-dictionary GetRootNodeOptions {
-  boolean composed = false;
-};

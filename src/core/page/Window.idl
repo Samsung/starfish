@@ -149,16 +149,4 @@ interface WindowSessionStorage {
 };
 Window implements WindowSessionStorage;
 
-// https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface
-enum ScrollBehavior { "auto", "instant", "smooth" };
 
-[Unimplemented]
-dictionary ScrollOptions {
-    ScrollBehavior behavior = "auto";
-};
-
-[Unimplemented]
-dictionary ScrollToOptions : ScrollOptions {
-    unrestricted double left;
-    unrestricted double top;
-};
