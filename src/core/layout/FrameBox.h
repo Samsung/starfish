@@ -177,6 +177,26 @@ public:
                                                     parentHasFixedValue));
     }
 
+    LayoutUnit widthApplyingBoxSizing(LayoutUnit width)
+    {
+        if (style()->boxSizing() == BoxSizingValue::BorderBoxSizingValue) {
+            return std::max(width - paddingWidth() - borderWidth(),
+                            LayoutUnit(0));
+        }
+
+        return width;
+    }
+
+    LayoutUnit heightApplyingBoxSizing(LayoutUnit height)
+    {
+        if (style()->boxSizing() == BoxSizingValue::BorderBoxSizingValue) {
+            return std::max(height - paddingHeight() - borderHeight(),
+                            LayoutUnit(0));
+        }
+
+        return height;
+    }
+
     void setContentWidth(LayoutUnit width)
     {
         m_frameRect.setWidth(width + paddingWidth() + borderWidth());

@@ -54,6 +54,11 @@ public:
         return m_owner;
     }
 
+    StackingContext* parent()
+    {
+        return m_parent;
+    }
+
     bool needsOwnBuffer()
     {
         return m_needsOwnBuffer;

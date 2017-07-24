@@ -574,8 +574,6 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (p->style()->opacity() != 1) {
                         break;
-                    } else if (!p->isPositioned()) {
-                        break;
                     } else if (p->style()->overflowX() !=
                                    OverflowValue::VisibleOverflow ||
                                p->style()->overflowY() !=
@@ -628,13 +626,19 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
     ComputedStyle* style = Frame::style();
     if (style->minWidth().isSpecified()) {
         LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
+
+        minWidth = widthApplyingBoxSizing(minWidth);
+
         if (minWidth > width) {
             return minWidth;
         }
     }
     if (style->maxWidth().isSpecified()) {
         LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
-        if (maxWidth < width) {
+
+        maxWidth = widthApplyingBoxSizing(maxWidth);
+
+        if (maxWidth >= 0 && maxWidth < width) {
             return maxWidth;
         }
     }
@@ -650,7 +654,11 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
         if (!parentHasFixedValue && style->minHeight().isPercent()) {
             return height;
         }
+
         LayoutUnit minHeight = style->minHeight().specifiedValue(parentHeight);
+
+        minHeight = heightApplyingBoxSizing(minHeight);
+
         if (minHeight > height) {
             return minHeight;
         }
@@ -659,8 +667,12 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
         if (!parentHasFixedValue && style->maxHeight().isPercent()) {
             return height;
         }
+
         LayoutUnit maxHeight = style->maxHeight().specifiedValue(parentHeight);
-        if (maxHeight < height) {
+
+        maxHeight = heightApplyingBoxSizing(maxHeight);
+
+        if (maxHeight >= 0 && maxHeight < height) {
             return maxHeight;
         }
     }

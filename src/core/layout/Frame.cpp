@@ -472,14 +472,18 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     std::vector<Length> reverse;
     while (container) {
         if (container->style()->height().isFixed()) {
-            reverse.push_back(container->style()->height());
+            LayoutUnit height = container->heightApplyingBoxSizing(
+                container->style()->height().fixed());
+            reverse.emplace_back(Length::Fixed, height);
             break;
         } else if (container->isAbsolutePositioned() &&
                    container->style()->height().isPercent()) {
-            reverse.emplace_back(
-                Length::Fixed,
-                container->style()->height().specifiedValue(
-                    containingBlock(container)->contentHeight()));
+            LayoutUnit parentHeight =
+                containingBlock(container)->contentHeight();
+            LayoutUnit height =
+                container->style()->height().specifiedValue(parentHeight);
+            height = container->heightApplyingBoxSizing(height);
+            reverse.emplace_back(Length::Fixed, height);
             break;
         } else {
             STARFISH_ASSERT(container->style()->height().isPercent());
@@ -494,6 +498,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         reverse.pop_back();
     }
 
+    result = currentFrame->asFrameBox()->heightApplyingBoxSizing(result);
     return result;
 }
 

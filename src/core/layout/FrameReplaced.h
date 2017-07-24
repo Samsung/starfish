@@ -96,17 +96,6 @@ public:
         LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(width, parentWidth);
         LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(
             height, parentWidth, parentHeightHasFixedValue);
-        if (width != newWidth || height != newHeight) {
-            if (height == 0 || newHeight == 0) {
-                setContentWidth(newWidth);
-                return;
-            }
-            if (newWidth < newHeight) {
-                newHeight = newWidth * (height / width);
-            } else if (newWidth > newHeight) {
-                newWidth = newHeight * (width / height);
-            }
-        }
         setContentWidth(newWidth);
         setContentHeight(newHeight);
     }

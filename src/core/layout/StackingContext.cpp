@@ -118,11 +118,15 @@ void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
         if (self->isAbsolutePositioned()) {
             bool isFixed = self->style()->position() == FixedPositionValue;
-            Frame* parent = self->parent();
-            while (!parent->style()->hasTransforms(parent) &&
-                   !parent->isFrameDocument() &&
-                   (isFixed || !parent->isPositioned())) {
-                parent = parent->parent();
+            Frame* parent = self->layoutParent();
+            LayoutUnit offsetX = self->x(), offsetY = self->y();
+            while (
+                (!parent->style() || !parent->style()->hasTransforms(parent)) &&
+                !parent->isFrameDocument() &&
+                (isFixed || !parent->isPositioned())) {
+                offsetX += parent->asFrameBox()->x();
+                offsetY += parent->asFrameBox()->y();
+                parent = parent->layoutParent();
             }
             CanvasState* parentState = canvas->getByFrame(parent);
             if (parentState == nullptr) {
@@ -133,10 +137,11 @@ void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
 
             if (parent->shouldApplyOverflow()) {
                 FrameBox* box = parent->asFrameBox();
-                canvas->translate(-self->x(), -self->y());
-                canvas->clip(Unit::Rect(0, 0, box->contentWidth(),
-                                        box->contentHeight()));
-                canvas->translate(self->x(), self->y());
+                canvas->translate(-offsetX, -offsetY);
+                canvas->clip(Unit::Rect(box->borderLeft(), box->borderTop(),
+                                        box->width() - box->borderWidth(),
+                                        box->height() - box->borderHeight()));
+                canvas->translate(offsetX, offsetY);
             }
         }
 #endif

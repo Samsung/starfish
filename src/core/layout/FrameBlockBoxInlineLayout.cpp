@@ -1036,20 +1036,18 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     m_textIndentWidth = textIndent.specifiedValue(block->boxWidth());
 }
 
-void LineFormattingContext::registerInlineContent()
+void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
 {
-    if (m_block->m_lineBoxes.size()) {
-        LineBox* lb = m_block->m_lineBoxes.back();
-        bool hasNormalFlowContent = false;
-        for (size_t i = 0; i < lb->boxes().size(); i++) {
-            if (lb->boxes()[i]->isNormalFlow()) {
-                hasNormalFlowContent = true;
-                break;
-            }
+    LineBox* back = currentLine();
+    bool hasNormalFlowContent = br != nullptr;
+    for (size_t i = 0; i < back->boxes().size(); i++) {
+        if (back->boxes()[i]->isNormalFlow()) {
+            hasNormalFlowContent = true;
+            break;
         }
-        if (hasNormalFlowContent) {
-            m_layoutContext.registerYPositionPerVAInlineBlock(lb, ascender(lb));
-        }
+    }
+    if (hasNormalFlowContent) {
+        m_layoutContext.registerYPositionPerVAInlineBlock(back, ascender(back));
     }
 }
 
@@ -1790,7 +1788,7 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
     // removing white space from above function `removeDanglingSpaceFromLine`
     insertPendingFloatingBoxes();
     computeHorizontalProperties();
-    registerInlineContent();
+    registerInlineContent(br);
 
     if (m_layoutContext.isCollidedWithFloatingBoxes(
             LayoutLocation(m_absPosition.x() + m_lineBoxX,
@@ -3608,7 +3606,7 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 
 void InlineNonReplacedBox::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (isEstablishesStackingContext() && stackingContext()->parent()) {
         ctx.m_canvas->saveByFrame(this);
         return;
     }
@@ -3675,7 +3673,7 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
 Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,
                                      HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
+    if (isEstablishesStackingContext() && stackingContext()->parent()) {
         return nullptr;
     }
 
