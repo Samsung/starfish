@@ -532,6 +532,7 @@ enum FontSizeValue {
     LargeFontSizeValue,
     XLargeFontSizeValue,
     XXLargeFontSizeValue,
+    XXXLargeFontSizeValue, // This is a non-CSS value used a legacy font size.
     LargerFontSizeValue,
     SmallerFontSizeValue,
 };

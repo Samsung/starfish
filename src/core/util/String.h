@@ -334,6 +334,10 @@ public:
     const char* utf8Data();                    // TODO remove this method
     const char* utf8DataIgnoreZeroWidthChar(); // TODO remove this method
 
+    static inline bool isASCIIDigit(char32_t c)
+    {
+        return c >= '0' && c <= '9';
+    }
     static inline bool isASCIISpace(char32_t c)
     {
         return c <= ' ' && (c == ' ' || (c <= 0xD && c >= 0x9));

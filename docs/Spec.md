@@ -61,7 +61,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | type | MIME-type | &lt;source type="video/mp4"&gt; | Only video/mp4 and audio/mp4 are supported. |
 |  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  | &lt;object&gt;&lt;/object&gt; |  |
 |  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  | &lt;h1&gt;Chapter 1: &lt;strong&gt;The Praxis&lt;/strong&gt;&lt;/h1&gt; |  |
-|  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) |  |  | &lt;ul&gt;SAMSUNG&lt;/ul&gt; |  |
+|  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) | color |  | &lt;font color="red"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
+|  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | &lt;font size="+3"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
 |  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  | &lt;fieldset&gt;&lt;legend&gt;Card&lt;/legend&gt;&lt;/fieldset&gt; |  |
 |  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  | &lt;legend&gt;Display&lt;/legend&gt; |  |
 |  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
@@ -307,7 +308,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
 |  | attribute | form | Returns the element's form element, if any, or null otherwise. |
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |
-|  | attribute | color | Is a DOMString that reflects the color HTML attribute, containing either a named color or a color specified in the hexadecimal #RRGGBB format. |
+|  | attribute | color | This attribute sets the text color. |
+|  | attribute | size | This attribute sets the size of the font. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |

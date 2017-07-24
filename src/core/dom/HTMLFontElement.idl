@@ -4,5 +4,5 @@
 interface HTMLFontElement : HTMLElement {
     [CEReactions] attribute DOMString color;
     [Unimplemented, CEReactions] attribute DOMString face;
-    [Unimplemented, CEReactions] attribute DOMString size; 
+    [CEReactions] attribute DOMString size;
 };
