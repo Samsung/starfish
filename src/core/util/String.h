@@ -712,6 +712,7 @@ protected:
 };
 
 class StringView : public String {
+    friend class InlineTextBox; // for precise GC
 public:
     StringView()
         : m_string(String::emptyString)

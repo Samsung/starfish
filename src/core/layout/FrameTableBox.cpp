@@ -37,6 +37,39 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
 {
 }
 
+void* FrameTableBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_node));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_lineBoxes));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_captions));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colObjects));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_cellsInTheFirstRow));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_thead));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_tfoot));
+
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
 {
     // There are more cells in the following rows than the first row
@@ -837,8 +870,8 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 }
 
 void FrameTableBox::collectColumnWidths(
-    GCVector<ColSizeStruct>& columnWidthsSoFar,
-    GCVector<ColSizeStruct>& columnWidths)
+    GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
+    GCAtomicVector<ColSizeStruct>& columnWidths)
 {
     if (columnWidthsSoFar.empty()) {
         for (auto& col : columnWidths) {

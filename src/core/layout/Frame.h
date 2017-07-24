@@ -1379,8 +1379,6 @@ protected:
 
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(size_t),
                             "keep FrameFlags small");
-
-private:
     union {
         Node* m_node;
         ComputedStyle* m_styleWhenNodeIsAnonymous;

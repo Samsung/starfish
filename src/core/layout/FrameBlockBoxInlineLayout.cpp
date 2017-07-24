@@ -48,6 +48,21 @@ LayoutUnit FrameBox::lineHeight()
     return fontSize;
 }
 
+void* LineBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(LineBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LineBox, m_node));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LineBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LineBox, m_boxes));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(LineBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                                                       bool dueToBr)
 {
@@ -1049,6 +1064,25 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
     if (hasNormalFlowContent) {
         m_layoutContext.registerYPositionPerVAInlineBlock(back, ascender(back));
     }
+}
+
+void* InlineBoxLayoutParentBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(InlineBoxLayoutParentBox)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_boxes));
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(InlineBoxLayoutParentBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 void InlineBoxLayoutParentBox::computeVisibleRect(StackingContext* sCtx,
@@ -2780,6 +2814,24 @@ void LineFormattingContext::computeDirection(Frame* parent,
     flushNeutral(direction);
 }
 
+void* InlineNonReplacedBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(InlineNonReplacedBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineNonReplacedBox, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(InlineNonReplacedBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineNonReplacedBox, m_boxes));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineNonReplacedBox, m_origin));
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(InlineNonReplacedBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 InlineNonReplacedBox::InlineNonReplacedBox(LineFormattingContext* ctx,
                                            InlineNonReplacedBox* inlineBox,
                                            bool isFirstLine)
@@ -3526,6 +3578,21 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
             }
         }
     }
+}
+
+void* InlineTextBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(InlineTextBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_node));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_text.m_string));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(InlineTextBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 FrameText* InlineTextBox::origin()

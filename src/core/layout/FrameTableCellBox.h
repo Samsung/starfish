@@ -84,6 +84,9 @@ public:
     void applyVerticalAlign(LayoutContext& ctx);
     LayoutUnit calBaseline(LayoutContext& ctx);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);

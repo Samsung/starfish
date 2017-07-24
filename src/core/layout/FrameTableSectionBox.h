@@ -138,16 +138,19 @@ public:
         return m_grid;
     }
 
-    GCVector<ColSizeStruct>& columnWidths()
+    GCAtomicVector<ColSizeStruct>& columnWidths()
     {
         return m_columnWidths;
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 private:
     void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     // represent the logical table structure
     GCVector<RowStruct> m_grid;
-    GCVector<ColSizeStruct> m_columnWidths;
+    GCAtomicVector<ColSizeStruct> m_columnWidths;
 };
 }
 
