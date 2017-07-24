@@ -29,3 +29,4 @@ test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-con
 test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-context-inline.html
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers2.html
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers.html
+test/reftest/vendor/webkit/fast/css/getComputedStyle/getComputedStyle-border-box.html

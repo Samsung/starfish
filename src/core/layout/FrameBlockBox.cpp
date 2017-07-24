@@ -102,7 +102,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                 STARFISH_ASSERT(width.isPercent());
                 contentWidth = containgBlockContentWidth * width.percent();
             }
-            contentWidth = widthApplyingBoxSizing(contentWidth);
+            contentWidth = contentWidthApplyingBoxSizing(contentWidth);
         }
 
         applyMinMaxWidthIfNeeds(contentWidth, containgBlockContentWidth);
@@ -146,7 +146,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 }
             } else {
                 contentHeight = height.specifiedValue(parentHeight);
-                contentHeight = heightApplyingBoxSizing(contentHeight);
+                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             }
 
             applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
@@ -161,10 +161,10 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 
             if (height.isFixed()) {
                 contentHeight = height.fixed();
-                contentHeight = heightApplyingBoxSizing(contentHeight);
+                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             } else if (height.isPercent() && parentHasFixedValue) {
                 contentHeight = height.specifiedValue(parentHeight);
-                contentHeight = heightApplyingBoxSizing(contentHeight);
+                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             }
 
             applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
@@ -431,8 +431,12 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
             // solve for 'top'
             LayoutUnit h = height.specifiedValue(data.m_contentHeight);
-            setY(data.m_contentHeight - h - data.m_bottom - paddingHeight() -
-                 borderHeight() - data.m_absY);
+            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
+                setY(data.m_contentHeight - h - data.m_bottom - data.m_absY);
+            } else {
+                setY(data.m_contentHeight - h - data.m_bottom -
+                     paddingHeight() - borderHeight() - data.m_absY);
+            }
         } else if (height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
             // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then
             // 'auto' values for 'margin-top' and 'margin-bottom' are set to 0
@@ -641,7 +645,7 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
 
 Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
-    if (isEstablishesStackingContext() && stackingContext()->parent()) {
+    if (isEstablishesStackingContext()) {
         return nullptr;
     }
 
@@ -710,7 +714,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
 void FrameBlockBox::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext() && stackingContext()->parent()) {
+    if (isEstablishesStackingContext()) {
         ctx.m_canvas->saveByFrame(this);
         return;
     }

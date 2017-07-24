@@ -565,6 +565,8 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
+    static LayoutUnit computeMinimumHeightDueToBP(ComputedStyle* style);
+    static LayoutUnit computeMinimumWidthDueToBP(ComputedStyle* style);
     static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 

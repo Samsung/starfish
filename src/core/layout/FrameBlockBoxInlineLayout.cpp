@@ -3281,6 +3281,44 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
+LayoutUnit PreferredWidthContext::computeMinimumHeightDueToBP(
+    ComputedStyle* style)
+{
+    LayoutUnit minHeight;
+    if (style->borderTopWidth().isFixed()) {
+        minHeight += style->borderTopWidth().fixed();
+    }
+    if (style->borderBottomWidth().isFixed()) {
+        minHeight += style->borderBottomWidth().fixed();
+    }
+    if (style->paddingTop().isFixed()) {
+        minHeight += style->paddingTop().fixed();
+    }
+    if (style->paddingBottom().isFixed()) {
+        minHeight += style->paddingBottom().fixed();
+    }
+    return minHeight;
+}
+
+LayoutUnit PreferredWidthContext::computeMinimumWidthDueToBP(
+    ComputedStyle* style)
+{
+    LayoutUnit minWidth;
+    if (style->borderLeftWidth().isFixed()) {
+        minWidth += style->borderLeftWidth().fixed();
+    }
+    if (style->borderRightWidth().isFixed()) {
+        minWidth += style->borderRightWidth().fixed();
+    }
+    if (style->paddingLeft().isFixed()) {
+        minWidth += style->paddingLeft().fixed();
+    }
+    if (style->paddingRight().isFixed()) {
+        minWidth += style->paddingRight().fixed();
+    }
+    return minWidth;
+}
+
 LayoutUnit PreferredWidthContext::computeMinimumWidthDueToMBP(
     ComputedStyle* style)
 {
@@ -3326,6 +3364,10 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
         }
 
         if (f->isFrameBlockBox()) {
+            if (isPendingWrapLine()) {
+                breakLine(true);
+            }
+
             updateCurrentLineWidthByWordWidth();
 
             LayoutUnit w = preferredWidthWithNewContext(f);
@@ -3400,12 +3442,22 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     } else if (style()->width().isSpecified()) {
         if (style()->width().isFixed()) {
             w = style()->width().fixed();
+            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
+                LayoutUnit bp =
+                    PreferredWidthContext::computeMinimumWidthDueToBP(style());
+                w -= bp;
+            }
         } else {
             w = intrinsicWidth;
         }
     } else if (style()->height().isSpecified()) {
         if (style()->height().isFixed()) {
             LayoutUnit h = style()->height().fixed();
+            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
+                LayoutUnit bp =
+                    PreferredWidthContext::computeMinimumHeightDueToBP(style());
+                h -= bp;
+            }
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
             } else {
@@ -3450,35 +3502,31 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         return;
     }
 
-    if (ctx.isPendingWrapLine()) {
-        ctx.breakLine(true);
-    }
-
-    ctx.updateCurrentLineWidthByWordWidth();
-
-    LayoutUnit w;
     if (style()->width().isSpecified() && !isFrameTableCellBox()) {
+        LayoutUnit w;
         if (style()->width().isFixed()) {
             w = style()->width().fixed();
         } else {
-            LayoutUnit mbp =
-                PreferredWidthContext::computeMinimumWidthDueToMBP(style());
             LayoutUnit parentContentWidth =
                 ctx.layoutContext().parentContentWidth(this);
-            w = parentContentWidth * style()->width().percent() - mbp;
+            w = parentContentWidth * style()->width().percent();
+        }
+        if (style()->boxSizing() == BorderBoxBoxSizingValue) {
+            LayoutUnit bp =
+                PreferredWidthContext::computeMinimumWidthDueToBP(style());
+            w -= bp;
         }
 
         ctx.updatePreferredWidth(w);
     } else {
         if (hasBlockFlow()) {
+            LayoutUnit w;
             Frame* f = firstChild();
             while (f) {
                 STARFISH_ASSERT(f->isNormalFlow());
                 w = std::max(w, ctx.preferredWidthWithNewContext(f));
-
                 f = f->next();
             }
-
             ctx.updatePreferredWidth(w);
         } else {
             Length textIndent = style()->textIndent();
@@ -3487,18 +3535,13 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             ctx.setCurrentLineWidth(textIndentWidth);
             ctx.setTextIndentWidth(textIndentWidth);
             ctx.computePreferredWidthInline(this);
+            ctx.finishLine(false);
         }
     }
-
-    ctx.finishLine(false);
 }
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    if (ctx.isPendingWrapLine()) {
-        ctx.breakLine(true);
-    }
-
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
@@ -3549,9 +3592,7 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     ctx.updatePreferredMinWidth(tablePreferredMinWidth);
-    ctx.updateCurrentLineWidth(this, tablePreferredWidth +
-                                         ctx.unprocessedStartingMBPWidth());
-    ctx.finishLine(false);
+    ctx.updatePreferredWidth(tablePreferredWidth);
 }
 
 void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
@@ -3674,7 +3715,7 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 
 void InlineNonReplacedBox::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext() && stackingContext()->parent()) {
+    if (isEstablishesStackingContext()) {
         ctx.m_canvas->saveByFrame(this);
         return;
     }
@@ -3741,7 +3782,7 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
 Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,
                                      HitTestStage stage)
 {
-    if (isEstablishesStackingContext() && stackingContext()->parent()) {
+    if (isEstablishesStackingContext()) {
         return nullptr;
     }
 

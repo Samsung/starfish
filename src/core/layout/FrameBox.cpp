@@ -627,7 +627,7 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
     if (style->minWidth().isSpecified()) {
         LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
 
-        minWidth = widthApplyingBoxSizing(minWidth);
+        minWidth = contentWidthApplyingBoxSizing(minWidth);
 
         if (minWidth > width) {
             return minWidth;
@@ -636,7 +636,7 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
     if (style->maxWidth().isSpecified()) {
         LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
 
-        maxWidth = widthApplyingBoxSizing(maxWidth);
+        maxWidth = contentWidthApplyingBoxSizing(maxWidth);
 
         if (maxWidth >= 0 && maxWidth < width) {
             return maxWidth;
@@ -657,7 +657,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
 
         LayoutUnit minHeight = style->minHeight().specifiedValue(parentHeight);
 
-        minHeight = heightApplyingBoxSizing(minHeight);
+        minHeight = contentHeightApplyingBoxSizing(minHeight);
 
         if (minHeight > height) {
             return minHeight;
@@ -670,7 +670,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
 
         LayoutUnit maxHeight = style->maxHeight().specifiedValue(parentHeight);
 
-        maxHeight = heightApplyingBoxSizing(maxHeight);
+        maxHeight = contentHeightApplyingBoxSizing(maxHeight);
 
         if (maxHeight >= 0 && maxHeight < height) {
             return maxHeight;
