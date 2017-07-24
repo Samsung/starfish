@@ -34,7 +34,6 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
 
     PreferredWidthContext p(ctx, LayoutUnit::max());
     computePreferredWidth(p);
-    p.finishLine(false);
     m_minCaptionWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCaptionWidth = p.preferredWidth() + borderWidth() + paddingWidth();
 }

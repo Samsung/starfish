@@ -61,7 +61,6 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
         style()->width().isPercent()) {
         PreferredWidthContext p(ctx, LayoutUnit::max());
         computePreferredWidth(p);
-        p.finishLine(false);
         m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
         m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
     } else {

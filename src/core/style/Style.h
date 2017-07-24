@@ -698,7 +698,7 @@ enum TransitionTimingFunctionValue {
     TransitionTimingFunctionCubicBezierValue
 };
 
-enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxSizingValue };
+enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxBoxSizingValue };
 
 class ValueList;
 class CSSStyleDeclaration;

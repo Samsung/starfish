@@ -469,12 +469,10 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 {
     FrameBlockBox* container = blockContainer(currentFrame);
-    std::vector<Length> reverse;
+    std::vector<std::pair<FrameBox*, Length>> reverse;
     while (container) {
         if (container->style()->height().isFixed()) {
-            LayoutUnit height = container->heightApplyingBoxSizing(
-                container->style()->height().fixed());
-            reverse.emplace_back(Length::Fixed, height);
+            reverse.emplace_back(container, container->style()->height());
             break;
         } else if (container->isAbsolutePositioned() &&
                    container->style()->height().isPercent()) {
@@ -482,23 +480,23 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
                 containingBlock(container)->contentHeight();
             LayoutUnit height =
                 container->style()->height().specifiedValue(parentHeight);
-            height = container->heightApplyingBoxSizing(height);
-            reverse.emplace_back(Length::Fixed, height);
+            reverse.emplace_back(container, Length(Length::Fixed, height));
             break;
         } else {
             STARFISH_ASSERT(container->style()->height().isPercent());
-            reverse.push_back(container->style()->height());
+            reverse.emplace_back(container, container->style()->height());
             container = blockContainer(container);
         }
     }
-    LayoutUnit result = reverse.back().fixed();
+    LayoutUnit result = reverse.back().second.fixed();
+    result = reverse.back().first->contentHeightApplyingBoxSizing(result);
     reverse.pop_back();
     while (reverse.size()) {
-        result = result * reverse.back().percent();
+        result = result * reverse.back().second.percent();
+        result = reverse.back().first->contentHeightApplyingBoxSizing(result);
         reverse.pop_back();
     }
 
-    result = currentFrame->asFrameBox()->heightApplyingBoxSizing(result);
     return result;
 }
 

@@ -177,9 +177,9 @@ public:
                                                     parentHasFixedValue));
     }
 
-    LayoutUnit widthApplyingBoxSizing(LayoutUnit width)
+    LayoutUnit contentWidthApplyingBoxSizing(LayoutUnit width)
     {
-        if (style()->boxSizing() == BoxSizingValue::BorderBoxSizingValue) {
+        if (style()->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             return std::max(width - paddingWidth() - borderWidth(),
                             LayoutUnit(0));
         }
@@ -187,9 +187,9 @@ public:
         return width;
     }
 
-    LayoutUnit heightApplyingBoxSizing(LayoutUnit height)
+    LayoutUnit contentHeightApplyingBoxSizing(LayoutUnit height)
     {
-        if (style()->boxSizing() == BoxSizingValue::BorderBoxSizingValue) {
+        if (style()->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             return std::max(height - paddingHeight() - borderHeight(),
                             LayoutUnit(0));
         }

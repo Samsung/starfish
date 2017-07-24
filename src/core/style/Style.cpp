@@ -1725,7 +1725,7 @@ String* CSSStyleValuePair::toString() const
         switch (boxSizingValue()) {
         case ContentBoxBoxSizingValue:
             return String::fromUTF8("content-box");
-        case BorderBoxSizingValue:
+        case BorderBoxBoxSizingValue:
             return String::fromUTF8("border-box");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -6482,7 +6482,7 @@ bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)
     if (STRING_VALUE_IS_STRING("content-box")) {
         m_value.m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
     } else if (STRING_VALUE_IS_STRING("border-box")) {
-        m_value.m_boxSizing = BoxSizingValue::BorderBoxSizingValue;
+        m_value.m_boxSizing = BoxSizingValue::BorderBoxBoxSizingValue;
     } else {
         return false;
     }

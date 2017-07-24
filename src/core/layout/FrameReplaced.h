@@ -90,12 +90,88 @@ public:
 
     void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height,
                                  LayoutUnit parentWidth,
-                                 LayoutUnit parentHeight,
+                                 LayoutUnit parentHeight, bool hasAspectRatio,
                                  bool parentHeightHasFixedValue = true)
     {
-        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(width, parentWidth);
-        LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(
-            height, parentWidth, parentHeightHasFixedValue);
+        LayoutUnit newWidth = width;
+        LayoutUnit newHeight = height;
+        Length minWidth = style()->minWidth();
+        Length maxWidth = style()->maxWidth();
+        Length minHeight = style()->minHeight();
+        Length maxHeight = style()->maxHeight();
+        bool canApplyMinHeight =
+            minHeight.isFixed() ||
+            (minHeight.isPercent() && parentHeightHasFixedValue);
+        bool canApplyMaxHeight =
+            maxHeight.isFixed() ||
+            (maxHeight.isPercent() && parentHeightHasFixedValue);
+
+        if (minWidth.isSpecified()) {
+            newWidth = contentWidthApplyingBoxSizing(
+                minWidth.specifiedValue(parentWidth));
+            if (canApplyMinHeight) {
+                // in the case minWidth and minHeight, the one whose value
+                // is higher is applied.
+                newHeight = contentHeightApplyingBoxSizing(
+                    minHeight.specifiedValue(parentHeight));
+                if (hasAspectRatio) {
+                    if (newWidth > newHeight) {
+                        newHeight = newWidth * (height / width);
+                    } else if (newWidth < newHeight) {
+                        newWidth = newHeight * (width / height);
+                    }
+                }
+            } else if (canApplyMaxHeight) {
+                // in the case minWidth and maxHeight, then apply values
+                // respectively.
+                newHeight = contentHeightApplyingBoxSizing(
+                    maxHeight.specifiedValue(parentHeight));
+            } else {
+                if (hasAspectRatio) {
+                    newHeight = newWidth * (height / width);
+                }
+            }
+        } else if (maxWidth.isSpecified()) {
+            newWidth = contentWidthApplyingBoxSizing(
+                maxWidth.specifiedValue(parentWidth));
+            if (canApplyMinHeight) {
+                // in the case maxWidth and minHeight, then apply values
+                // respectively.
+                newHeight = contentHeightApplyingBoxSizing(
+                    minHeight.specifiedValue(parentHeight));
+            } else if (canApplyMaxHeight) {
+                // in the case maxWidth and maxHeight, the one whose value
+                // is lower is applied.
+                newHeight = contentHeightApplyingBoxSizing(
+                    maxHeight.specifiedValue(parentHeight));
+                if (hasAspectRatio) {
+                    if (newWidth > newHeight) {
+                        newWidth = newHeight * (width / height);
+                    } else if (newWidth < newHeight) {
+                        newHeight = newWidth * (height / width);
+                    }
+                }
+            } else {
+                if (hasAspectRatio) {
+                    newHeight = newWidth * (height / width);
+                }
+            }
+        } else {
+            if (canApplyMinHeight) {
+                newHeight = contentHeightApplyingBoxSizing(
+                    minHeight.specifiedValue(parentHeight));
+                if (hasAspectRatio) {
+                    newWidth = newHeight * (width / height);
+                }
+            } else if (canApplyMaxHeight) {
+                newHeight = contentHeightApplyingBoxSizing(
+                    maxHeight.specifiedValue(parentHeight));
+                if (hasAspectRatio) {
+                    newWidth = newHeight * (width / height);
+                }
+            }
+        }
+
         setContentWidth(newWidth);
         setContentHeight(newHeight);
     }

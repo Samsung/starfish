@@ -187,7 +187,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         h = intrinsicHeight;
     } else if (height.isAuto()) {
         w = width.specifiedValue(parentContentWidth);
-        w = widthApplyingBoxSizing(w);
+        w = contentWidthApplyingBoxSizing(w);
         if (hasAspectRatio) {
             h = w * (intrinsicHeight / intrinsicWidth);
         } else {
@@ -196,7 +196,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else if (width.isAuto()) {
         if (height.isFixed() || parentHasFixedHeight) {
             h = height.specifiedValue(parentContentHeight);
-            h = heightApplyingBoxSizing(h);
+            h = contentHeightApplyingBoxSizing(h);
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
             } else {
@@ -209,10 +209,10 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else {
         STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
         w = width.specifiedValue(parentContentWidth);
-        w = widthApplyingBoxSizing(w);
+        w = contentWidthApplyingBoxSizing(w);
         if (height.isFixed() || parentHasFixedHeight) {
             h = height.specifiedValue(parentContentHeight);
-            h = heightApplyingBoxSizing(h);
+            h = contentHeightApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio) {
                 h = w * (intrinsicHeight / intrinsicWidth);
@@ -223,7 +223,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     }
 
     applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentContentHeight,
-                            parentHasFixedHeight);
+                            hasAspectRatio, parentHasFixedHeight);
 }
 
 void FrameReplaced::layout(LayoutContext& ctx,
@@ -389,9 +389,15 @@ void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth,
 
 void FrameReplaced::paint(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext() && stackingContext()->parent()) {
+    if (isEstablishesStackingContext()) {
         ctx.m_canvas->saveByFrame(this);
         return;
+    }
+
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        ctx.m_canvas->setVisible(false);
+    } else {
+        ctx.m_canvas->setVisible(true);
     }
 
     if (isPositioned()) {

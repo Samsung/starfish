@@ -288,3 +288,14 @@ test/reftest/vendor/webkit_original/fast/block/float/previous-sibling-abspos-002
 test/reftest/vendor/webkit_original/fast/block/float/previous-sibling-float-001.html
 test/reftest/vendor/webkit_original/fast/block/float/previous-sibling-float-002.html
 #test/reftest/vendor/webkit_original/fast/block/float/shrink-to-fit-width.html
+test/reftest/vendor/webkit/fast/box-sizing/box-sizing.html
+test/reftest/vendor/webkit/fast/box-sizing/box-sizing-2.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/css-table-collapse.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/css-table-no-collapse.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/css-table-with-box-sizing.html
+test/reftest/vendor/webkit_original/fast/box-sizing/panels-one.html
+test/reftest/vendor/webkit_original/fast/box-sizing/panels-two.html
+test/reftest/vendor/webkit_original/fast/box-sizing/percentage-height.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/table-cell.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/table-collapse.html
+#test/reftest/vendor/webkit_original/fast/box-sizing/table-no-collapse.html
