@@ -38,4 +38,32 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
     m_minCaptionWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCaptionWidth = p.preferredWidth() + borderWidth() + paddingWidth();
 }
+
+void* FrameTableCaptionBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableCaptionBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableCaptionBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox,
+                                              m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox,
+                                              m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox,
+                                              m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox,
+                                              m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableCaptionBox,
+                                              m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableCaptionBox, m_lineBoxes));
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableCaptionBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 }

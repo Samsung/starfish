@@ -148,6 +148,9 @@ public:
         fn(this);
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     StringView m_text;
 };
@@ -238,6 +241,9 @@ public:
         }
         return result;
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     GCVector<FrameBox*> m_boxes;
@@ -386,6 +392,9 @@ public:
         setPaddingRight(0);
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     union {
         FrameInline* m_origin;
@@ -470,6 +479,9 @@ public:
     {
         return "LineBox";
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 };
 
 class FrameBlockBox : public FrameBox {
@@ -584,6 +596,9 @@ public:
             }
         }
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);

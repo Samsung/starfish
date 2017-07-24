@@ -45,7 +45,7 @@ public:
     void increaseCellHeightBy(LayoutUnit cellHeightOffset);
     void applyVerticalAlign(LayoutContext& ctx);
 
-    GCVector<ColSizeStruct>& colsWithColspans()
+    GCAtomicVector<ColSizeStruct>& colsWithColspans()
     {
         return m_colsWithColspans;
     }
@@ -85,6 +85,9 @@ public:
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
@@ -92,7 +95,7 @@ private:
     unsigned m_rowIndex;
     unsigned m_lastAbsoluteColumnIndex;
     LayoutUnit m_baseline;
-    GCVector<ColSizeStruct> m_colsWithColspans;
+    GCAtomicVector<ColSizeStruct> m_colsWithColspans;
 };
 }
 

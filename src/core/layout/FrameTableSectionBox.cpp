@@ -75,6 +75,37 @@ FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
 {
 }
 
+void* FrameTableSectionBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableSectionBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableSectionBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
+                                              m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
+                                              m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
+                                              m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
+                                              m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
+                                              m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableSectionBox, m_lineBoxes));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_grid));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableSectionBox, m_columnWidths));
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableSectionBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     for (auto& rowStruct : m_grid) {

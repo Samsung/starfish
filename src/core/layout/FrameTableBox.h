@@ -103,7 +103,7 @@ public:
         return true;
     }
 
-    GCVector<ColSizeStruct>& columnWidths()
+    GCAtomicVector<ColSizeStruct>& columnWidths()
     {
         return m_columnWidths;
     }
@@ -143,6 +143,9 @@ public:
         }
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 private:
     void setCandidateCellWidthsAndReturnCellInfo(
         LayoutUnit tableWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
@@ -156,8 +159,8 @@ private:
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfPercentageWidth);
 
-    void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
-                             GCVector<ColSizeStruct>& columnWidths);
+    void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
+                             GCAtomicVector<ColSizeStruct>& columnWidths);
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
@@ -171,7 +174,7 @@ private:
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;
-    GCVector<ColSizeStruct> m_columnWidths;
+    GCAtomicVector<ColSizeStruct> m_columnWidths;
 
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
 

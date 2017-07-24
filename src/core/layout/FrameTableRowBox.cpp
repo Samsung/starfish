@@ -31,6 +31,33 @@ FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
 {
 }
 
+void* FrameTableRowBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableRowBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableRowBox, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableRowBox, m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
+                                              m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableRowBox, m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
+                                              m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
+                                              m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableRowBox, m_colsWithColspans));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableRowBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width

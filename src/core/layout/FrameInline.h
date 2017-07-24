@@ -48,6 +48,9 @@ public:
     }
 #endif
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     virtual bool hasFrameTreeItemModel()
     {
