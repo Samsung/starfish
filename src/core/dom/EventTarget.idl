@@ -21,17 +21,6 @@ interface EventTarget {
 
 callback EventListener = void ();
 
-[Unimplemented]
-dictionary EventListenerOptions {
-  boolean capture = false;
-};
-
-[Unimplemented]
-dictionary AddEventListenerOptions : EventListenerOptions {
-  boolean passive = false;
-  boolean once = false;
-};
-
 // [REF2]----------------------------------------------------------------
 [TreatNonObjectAsNull]
 callback EventHandlerNonNull = any (Event event);

@@ -15,8 +15,3 @@ interface Blob {
             [Clamp] optional long long end,
             optional DOMString contentType);
 };
-
-[Unimplemented] dictionary BlobPropertyBag {
-  DOMString type = "";
-};
-

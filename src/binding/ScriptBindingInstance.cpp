@@ -222,6 +222,28 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
     STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
     STARFISH_ENUM_LAZY_BINDING_NICKNAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
+#define DECLARE_NAME_FOR_UNIMPL_BINDING(exportName)                            \
+    ObjectRef::NativeDataAccessorPropertyData* newData##exportName =           \
+        new ObjectRef::NativeDataAccessorPropertyData(                         \
+            true, false, true,                                                 \
+            [](ExecutionStateRef* state, ObjectRef* self,                      \
+               ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
+                STARFISH_BINDING_ASSERT_UNIMPLEMENTED(                         \
+                    "Unimplemented module \"%s\"\n", #exportName);             \
+                return ValueRef::createUndefined();                            \
+            },                                                                 \
+            [](ExecutionStateRef* state, ObjectRef* self,                      \
+               ObjectRef::NativeDataAccessorPropertyData* data,                \
+               ValueRef* setterInputData) -> bool {                            \
+                STARFISH_BINDING_ASSERT_UNIMPLEMENTED(                         \
+                    "Unimplemented module \"%s\"\n", #exportName);             \
+                return false;                                                  \
+            });                                                                \
+    globalObject->defineNativeDataAccessorProperty(                            \
+        state, ValueRef::create(StringRef::fromASCII(#exportName)),            \
+        newData##exportName);
+    STARFISH_ENUM_LAZY_BINDING_UNIMPL_NAMES(DECLARE_NAME_FOR_UNIMPL_BINDING)
+#undef DECLARE_NAME_FOR_UNIMPL_BINDING
 
     fnEventTarget();
     fnWindow();
