@@ -26,6 +26,7 @@ public:
     HTMLTableElement(Document* document)
         : HTMLElement(document)
         , m_hasCellPaddingAttribute(false)
+        , m_hasCellSpacingAttribute(false)
     {
     }
 
@@ -36,6 +37,10 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        GCVector<CSSStyleValuePair>& cssValues) override;
+
     bool hasCellPaddingAttribute()
     {
         return m_hasCellPaddingAttribute;
@@ -59,6 +64,7 @@ public:
 
 private:
     bool m_hasCellPaddingAttribute;
+    bool m_hasCellSpacingAttribute;
 };
 }
 

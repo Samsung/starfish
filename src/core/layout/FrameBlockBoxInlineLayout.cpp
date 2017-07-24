@@ -3447,7 +3447,8 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.breakLine(true);
     }
 
-    LayoutUnit borderSpacing = calculatedHorizontalBorderSpacing();
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
     LayoutUnit parentContentWidth =
         ctx.layoutContext().parentContentWidth(this);

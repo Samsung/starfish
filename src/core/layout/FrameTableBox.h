@@ -143,9 +143,6 @@ public:
         }
     }
 
-    LayoutUnit calculatedHorizontalBorderSpacing();
-    LayoutUnit calculatedVerticalBorderSpacing();
-
 private:
     void setCandidateCellWidthsAndReturnCellInfo(
         LayoutUnit tableWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
