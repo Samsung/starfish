@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
 */
-
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
 #include "StarFish.h"
@@ -26,7 +25,7 @@
 #include "core/page/WebView.h"
 #include <pthread.h>
 
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+#if defined(STARFISH_DALI)
 #include <dali-toolkit/dali-toolkit.h>
 #include "platform/window/PlatformWindow.h"
 
@@ -105,7 +104,7 @@ static void printMemps(
 }
 #endif
 
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
+#ifdef STARFISH_DALI
 using namespace Dali;
 
 char* url = nullptr;
@@ -116,8 +115,8 @@ public:
         : m_isMouseLbuttonDown(false)
         , m_width(width)
         , m_height(height)
+        , m_sf(nullptr)
         , mApplication(application)
-
     {
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
@@ -127,7 +126,7 @@ public:
 
     bool updateTick()
     {
-        if (m_sf->needsUpdate()) {
+        if (m_sf && m_sf->needsUpdate()) {
             m_daliBuffer.Update();
         }
         return true;
@@ -162,12 +161,18 @@ public:
                 info.availableRect.setWidth(app->m_width);
                 info.availableRect.setHeight(app->m_height);
 
+                GC_stack_base tmp;
+                tmp.mem_base = (void*)&flag;
+                GC_allow_register_threads();
+                GC_register_my_thread(&tmp);
+
                 app->m_sf = new StarFish::StarFish(
                     (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
-                    app, app->m_width, app->m_height, 1, info, "",
-                    "/tmp/StarFish_Cookies.txt");
+                    app, app->m_width, app->m_height, 1, info, "", "");
+
                 app->m_sf->registerFrameBuffer(
                     (void*)app->m_daliBuffer.GetBuffer());
+
                 app->m_sf->loadHTMLDocument(String::createASCIIString(url));
 
                 pthread_t t;
