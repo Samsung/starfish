@@ -1515,17 +1515,43 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(
 void LineFormattingContext::computeHorizontalProperties()
 {
     LineBox* back = m_block->m_lineBoxes.back();
+    DirectionValue direction = m_block->style()->direction();
 
-    resolveBidi(m_block->style()->direction(), back->boxes());
+    resolveBidi(direction, back->boxes());
 
     back->setX(m_lineBoxX);
     back->setWidth(m_lineBoxWidth);
-    LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(m_textIndentWidth);
+    LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(0);
 
     // text align
     if (m_block->style()->textAlign() == SideValue::LeftSideValue) {
+        LayoutUnit diff;
+        if (direction == LtrDirectionValue) {
+            diff = m_textIndentWidth;
+        } else {
+            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
+                diff = 0;
+            } else {
+                diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
+            }
+        }
+        for (size_t k = 0; k < back->m_boxes.size(); k++) {
+            FrameBox* childBox = back->m_boxes[k];
+            if (!childBox->isFloating()) {
+                childBox->moveX(diff);
+            }
+        }
     } else if (m_block->style()->textAlign() == SideValue::RightSideValue) {
-        LayoutUnit diff = (m_lineBoxWidth - inlineBoxesWidth);
+        LayoutUnit diff;
+        if (direction == LtrDirectionValue) {
+            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
+                diff = (m_lineBoxWidth - inlineBoxesWidth);
+            } else {
+                diff = m_textIndentWidth;
+            }
+        } else {
+            diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
+        }
         for (size_t k = 0; k < back->m_boxes.size(); k++) {
             FrameBox* childBox = back->m_boxes[k];
             if (!childBox->isFloating()) {
@@ -1573,13 +1599,27 @@ void LineFormattingContext::computeHorizontalProperties()
     } else {
         STARFISH_ASSERT(m_block->style()->textAlign() ==
                         SideValue::CenterSideValue);
-        LayoutUnit diff = (m_lineBoxWidth - inlineBoxesWidth) / 2;
-        if (diff > 0) {
-            for (size_t k = 0; k < back->m_boxes.size(); k++) {
-                FrameBox* childBox = back->m_boxes[k];
-                if (!childBox->isFloating()) {
-                    childBox->moveX(diff);
-                }
+        LayoutUnit diff;
+        if (direction == LtrDirectionValue) {
+            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
+                diff =
+                    (m_lineBoxWidth - inlineBoxesWidth + m_textIndentWidth) / 2;
+            } else {
+                diff = m_textIndentWidth;
+            }
+        } else {
+            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
+                diff =
+                    (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth) / 2;
+            } else {
+                diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
+            }
+        }
+
+        for (size_t k = 0; k < back->m_boxes.size(); k++) {
+            FrameBox* childBox = back->m_boxes[k];
+            if (!childBox->isFloating()) {
+                childBox->moveX(diff);
             }
         }
     }
