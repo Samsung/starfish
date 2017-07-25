@@ -1378,11 +1378,12 @@ protected:
         bool m_isFirstLine : 1;
         // special flag for InlineTextBox
         CharDirection m_direction : 2;
+        bool m_gotLongString : 1;
         // special flag for InlineNonReplacedBox
         bool m_isCollapsed : 1;
     } m_flags;
 
-    STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(size_t),
+    STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(uint32_t),
                             "keep FrameFlags small");
     union {
         Node* m_node;

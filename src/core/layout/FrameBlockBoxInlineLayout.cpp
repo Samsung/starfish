@@ -3695,7 +3695,7 @@ void* InlineTextBox::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(InlineTextBox)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_node));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_layoutParent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_text.m_string));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_text));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(InlineTextBox));
         typeInited = true;
     }
@@ -3720,7 +3720,7 @@ void InlineTextBox::paint(PaintingContext& ctx)
 
             ctx.m_canvas->setFont(style()->font());
             ctx.m_canvas->setColor(style()->color());
-            ctx.m_canvas->drawText(0, 0, contentWidth(), m_text);
+            ctx.m_canvas->drawText(0, 0, contentWidth(), text());
         }
     }
 }
