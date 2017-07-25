@@ -222,8 +222,9 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         }
     }
 
-    applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentContentHeight,
-                            hasAspectRatio, parentHasFixedHeight);
+    applyMinMaxWidthAndHeightIfNeeds(w, h, parentContentWidth,
+                                     parentContentHeight, hasAspectRatio,
+                                     parentHasFixedHeight);
 }
 
 void FrameReplaced::layout(LayoutContext& ctx,
