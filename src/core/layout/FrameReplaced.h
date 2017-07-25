@@ -88,13 +88,29 @@ public:
         return (FrameReplacedIFrame*)this;
     }
 
-    void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height,
-                                 LayoutUnit parentWidth,
-                                 LayoutUnit parentHeight, bool hasAspectRatio,
-                                 bool parentHeightHasFixedValue = true)
+    void applyMinMaxWidthAndHeightIfNeeds(LayoutUnit width, LayoutUnit height,
+                                          LayoutUnit parentWidth,
+                                          LayoutUnit parentHeight,
+                                          bool hasAspectRatio,
+                                          bool parentHeightHasFixedValue)
     {
-        LayoutUnit newWidth = width;
-        LayoutUnit newHeight = height;
+        auto widthAndHeight = minMaxWidthAndHeightAppliedIfNeeds(
+            width, height, parentWidth, parentHeight, hasAspectRatio,
+            parentHeightHasFixedValue);
+
+        setContentWidth(widthAndHeight.first);
+        setContentHeight(widthAndHeight.second);
+    }
+
+    std::pair<LayoutUnit, LayoutUnit> minMaxWidthAndHeightAppliedIfNeeds(
+        LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
+        LayoutUnit parentHeight, bool hasAspectRatio,
+        bool parentHeightHasFixedValue)
+    {
+        LayoutUnit newWidth = w;
+        LayoutUnit newHeight = h;
+        Length width = style()->width();
+        Length height = style()->height();
         Length minWidth = style()->minWidth();
         Length maxWidth = style()->maxWidth();
         Length minHeight = style()->minHeight();
@@ -107,73 +123,94 @@ public:
             (maxHeight.isPercent() && parentHeightHasFixedValue);
 
         if (minWidth.isSpecified()) {
-            newWidth = contentWidthApplyingBoxSizing(
-                minWidth.specifiedValue(parentWidth));
+            newWidth = std::max(w, contentWidthApplyingBoxSizing(
+                                       minWidth.specifiedValue(parentWidth)));
             if (canApplyMinHeight) {
-                // in the case minWidth and minHeight, the one whose value
-                // is higher is applied.
-                newHeight = contentHeightApplyingBoxSizing(
-                    minHeight.specifiedValue(parentHeight));
-                if (hasAspectRatio) {
-                    if (newWidth > newHeight) {
-                        newHeight = newWidth * (height / width);
-                    } else if (newWidth < newHeight) {
-                        newWidth = newHeight * (width / height);
+                newHeight =
+                    std::max(h, contentHeightApplyingBoxSizing(
+                                    minHeight.specifiedValue(parentHeight)));
+                if (width.isAuto() && height.isAuto()) {
+                    if (hasAspectRatio) {
+                        if (newWidth > newHeight) {
+                            newHeight = newWidth * (h / w);
+                        } else if (newWidth < newHeight) {
+                            newWidth = newHeight * (w / h);
+                        }
+                    }
+                } else if (width.isAuto()) {
+                    if (hasAspectRatio && newWidth < newHeight) {
+                        newWidth = newHeight * (w / h);
+                    }
+                } else if (height.isAuto()) {
+                    if (hasAspectRatio && newWidth > newHeight) {
+                        newHeight = newWidth * (h / w);
                     }
                 }
             } else if (canApplyMaxHeight) {
                 // in the case minWidth and maxHeight, then apply values
                 // respectively.
-                newHeight = contentHeightApplyingBoxSizing(
-                    maxHeight.specifiedValue(parentHeight));
+                newHeight =
+                    std::min(h, contentHeightApplyingBoxSizing(
+                                    maxHeight.specifiedValue(parentHeight)));
             } else {
-                if (hasAspectRatio) {
-                    newHeight = newWidth * (height / width);
+                if (hasAspectRatio && height.isAuto()) {
+                    newHeight = newWidth * (h / w);
                 }
             }
         } else if (maxWidth.isSpecified()) {
-            newWidth = contentWidthApplyingBoxSizing(
-                maxWidth.specifiedValue(parentWidth));
+            newWidth = std::min(w, contentWidthApplyingBoxSizing(
+                                       maxWidth.specifiedValue(parentWidth)));
             if (canApplyMinHeight) {
                 // in the case maxWidth and minHeight, then apply values
                 // respectively.
-                newHeight = contentHeightApplyingBoxSizing(
-                    minHeight.specifiedValue(parentHeight));
+                newHeight =
+                    std::max(h, contentHeightApplyingBoxSizing(
+                                    minHeight.specifiedValue(parentHeight)));
             } else if (canApplyMaxHeight) {
-                // in the case maxWidth and maxHeight, the one whose value
-                // is lower is applied.
-                newHeight = contentHeightApplyingBoxSizing(
-                    maxHeight.specifiedValue(parentHeight));
-                if (hasAspectRatio) {
-                    if (newWidth > newHeight) {
-                        newWidth = newHeight * (width / height);
-                    } else if (newWidth < newHeight) {
-                        newHeight = newWidth * (height / width);
+                newHeight =
+                    std::min(h, contentHeightApplyingBoxSizing(
+                                    maxHeight.specifiedValue(parentHeight)));
+                if (width.isAuto() && height.isAuto()) {
+                    if (hasAspectRatio) {
+                        if (newWidth > newHeight) {
+                            newWidth = newHeight * (w / h);
+                        } else if (newWidth < newHeight) {
+                            newHeight = newWidth * (h / w);
+                        }
+                    }
+                } else if (width.isAuto()) {
+                    if (hasAspectRatio && newWidth > newHeight) {
+                        newWidth = newHeight * (w / h);
+                    }
+                } else if (height.isAuto()) {
+                    if (hasAspectRatio && newWidth < newHeight) {
+                        newHeight = newWidth * (h / w);
                     }
                 }
             } else {
-                if (hasAspectRatio) {
-                    newHeight = newWidth * (height / width);
+                if (hasAspectRatio && height.isAuto()) {
+                    newHeight = newWidth * (h / w);
                 }
             }
         } else {
             if (canApplyMinHeight) {
-                newHeight = contentHeightApplyingBoxSizing(
-                    minHeight.specifiedValue(parentHeight));
-                if (hasAspectRatio) {
-                    newWidth = newHeight * (width / height);
+                newHeight =
+                    std::max(h, contentHeightApplyingBoxSizing(
+                                    minHeight.specifiedValue(parentHeight)));
+                if (hasAspectRatio && width.isAuto()) {
+                    newWidth = newHeight * (w / h);
                 }
             } else if (canApplyMaxHeight) {
-                newHeight = contentHeightApplyingBoxSizing(
-                    maxHeight.specifiedValue(parentHeight));
-                if (hasAspectRatio) {
-                    newWidth = newHeight * (width / height);
+                newHeight =
+                    std::min(h, contentHeightApplyingBoxSizing(
+                                    maxHeight.specifiedValue(parentHeight)));
+                if (hasAspectRatio && width.isAuto()) {
+                    newWidth = newHeight * (w / h);
                 }
             }
         }
 
-        setContentWidth(newWidth);
-        setContentHeight(newHeight);
+        return std::make_pair(newWidth, newHeight);
     }
 
     virtual const char* name()

@@ -3281,73 +3281,76 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
-LayoutUnit PreferredWidthContext::computeMinimumHeightDueToBP(
-    ComputedStyle* style)
+LayoutUnit PreferredWidthContext::computeMinimumHeightDueToMBP(
+    ComputedStyle* style, bool margin, bool border, bool padding)
 {
     LayoutUnit minHeight;
-    if (style->borderTopWidth().isFixed()) {
-        minHeight += style->borderTopWidth().fixed();
+    if (border) {
+        if (style->borderTopWidth().isFixed()) {
+            minHeight += style->borderTopWidth().fixed();
+        }
+        if (style->borderBottomWidth().isFixed()) {
+            minHeight += style->borderBottomWidth().fixed();
+        }
     }
-    if (style->borderBottomWidth().isFixed()) {
-        minHeight += style->borderBottomWidth().fixed();
+
+    if (padding) {
+        if (style->paddingTop().isFixed()) {
+            minHeight += style->paddingTop().fixed();
+        }
+        if (style->paddingBottom().isFixed()) {
+            minHeight += style->paddingBottom().fixed();
+        }
     }
-    if (style->paddingTop().isFixed()) {
-        minHeight += style->paddingTop().fixed();
-    }
-    if (style->paddingBottom().isFixed()) {
-        minHeight += style->paddingBottom().fixed();
+
+    if (margin) {
+        if (style->marginTop().isFixed()) {
+            minHeight += style->marginTop().fixed();
+        }
+        if (style->marginBottom().isFixed()) {
+            minHeight += style->marginBottom().fixed();
+        }
     }
     return minHeight;
 }
 
-LayoutUnit PreferredWidthContext::computeMinimumWidthDueToBP(
-    ComputedStyle* style)
-{
-    LayoutUnit minWidth;
-    if (style->borderLeftWidth().isFixed()) {
-        minWidth += style->borderLeftWidth().fixed();
-    }
-    if (style->borderRightWidth().isFixed()) {
-        minWidth += style->borderRightWidth().fixed();
-    }
-    if (style->paddingLeft().isFixed()) {
-        minWidth += style->paddingLeft().fixed();
-    }
-    if (style->paddingRight().isFixed()) {
-        minWidth += style->paddingRight().fixed();
-    }
-    return minWidth;
-}
-
 LayoutUnit PreferredWidthContext::computeMinimumWidthDueToMBP(
-    ComputedStyle* style)
+    ComputedStyle* style, bool margin, bool border, bool padding)
 {
     LayoutUnit minWidth;
-    if (style->borderLeftWidth().isFixed()) {
-        minWidth += style->borderLeftWidth().fixed();
+    if (border) {
+        if (style->borderLeftWidth().isFixed()) {
+            minWidth += style->borderLeftWidth().fixed();
+        }
+        if (style->borderRightWidth().isFixed()) {
+            minWidth += style->borderRightWidth().fixed();
+        }
     }
-    if (style->borderRightWidth().isFixed()) {
-        minWidth += style->borderRightWidth().fixed();
+
+    if (padding) {
+        if (style->paddingLeft().isFixed()) {
+            minWidth += style->paddingLeft().fixed();
+        }
+        if (style->paddingRight().isFixed()) {
+            minWidth += style->paddingRight().fixed();
+        }
     }
-    if (style->paddingLeft().isFixed()) {
-        minWidth += style->paddingLeft().fixed();
-    }
-    if (style->paddingRight().isFixed()) {
-        minWidth += style->paddingRight().fixed();
-    }
-    if (style->marginLeft().isFixed()) {
-        minWidth += style->marginLeft().fixed();
-    }
-    if (style->marginRight().isFixed()) {
-        minWidth += style->marginRight().fixed();
+
+    if (margin) {
+        if (style->marginLeft().isFixed()) {
+            minWidth += style->marginLeft().fixed();
+        }
+        if (style->marginRight().isFixed()) {
+            minWidth += style->marginRight().fixed();
+        }
     }
     return minWidth;
 }
 
 LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
 {
-    LayoutUnit mbp =
-        PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+    LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(
+        f->style(), true, true, true);
     PreferredWidthContext newCtx(m_layoutContext, m_remainedWidth - mbp);
     f->computePreferredWidth(newCtx);
 
@@ -3422,57 +3425,79 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
     ctx.updateCurrentLineWidthByWordWidth();
 
-    LayoutUnit parentContentWidth =
-        ctx.layoutContext().blockContainer(this)->contentWidth();
-    LayoutUnit intrinsicWidth, intrinsicHeight;
+    Length width = style()->width();
+    Length height = style()->height();
+    BoxSizingValue boxSizing = style()->boxSizing();
+    LayoutUnit intrinsicWidth, intrinsicHeight, w, h;
+    FrameBox* cb = ctx.layoutContext().containingBlock(this);
+    LayoutUnit parentContentWidth, parentContentHeight;
+    Length parentHeightLength;
+    bool parentHasFixedHeight;
     bool hasAspectRatio;
-    Length parentContentHeight;
-    if (ctx.layoutContext().parentHasFixedHeight(this)) {
-        parentContentHeight =
-            Length(Length::Fixed, ctx.layoutContext().parentFixedHeight(this));
-    } else {
-        parentContentHeight = Length(Length::Auto);
-    }
-    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, hasAspectRatio,
-                         parentContentWidth, parentContentHeight);
-    LayoutUnit w;
 
-    if (style()->width().isAuto() && style()->height().isAuto()) {
-        w = intrinsicWidth;
-    } else if (style()->width().isSpecified()) {
-        if (style()->width().isFixed()) {
-            w = style()->width().fixed();
-            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
+    parentContentWidth = cb->contentWidth();
+    parentHasFixedHeight = ctx.layoutContext().parentHasFixedHeight(this);
+
+    if (parentHasFixedHeight) {
+        parentContentHeight = ctx.layoutContext().parentFixedHeight(this);
+        parentHeightLength = Length(Length::Fixed, parentContentHeight);
+    } else {
+        parentHeightLength = Length(Length::Auto);
+    }
+
+    computeIntrinsicSize(intrinsicWidth, intrinsicHeight, hasAspectRatio,
+                         parentContentWidth, parentHeightLength);
+
+    if (width.isSpecified()) {
+        if (width.isFixed()) {
+            w = width.fixed();
+            if (boxSizing == BorderBoxBoxSizingValue) {
                 LayoutUnit bp =
-                    PreferredWidthContext::computeMinimumWidthDueToBP(style());
+                    PreferredWidthContext::computeMinimumWidthDueToMBP(
+                        style(), false, true, true);
                 w -= bp;
             }
         } else {
             w = intrinsicWidth;
         }
-    } else if (style()->height().isSpecified()) {
-        if (style()->height().isFixed()) {
-            LayoutUnit h = style()->height().fixed();
-            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
-                LayoutUnit bp =
-                    PreferredWidthContext::computeMinimumHeightDueToBP(style());
-                h -= bp;
-            }
-            if (hasAspectRatio) {
-                w = h * (intrinsicWidth / intrinsicHeight);
-            } else {
-                w = intrinsicWidth;
-            }
-        } else {
-            w = intrinsicWidth;
-        }
+
+        w = minMaxWidthAppliedIfNeeds(w, parentContentWidth);
     } else {
         w = intrinsicWidth;
+        h = intrinsicHeight;
+
+        if (height.isFixed() || (height.isPercent() && parentHasFixedHeight)) {
+            h = height.specifiedValue(parentContentHeight);
+
+            if (boxSizing == BorderBoxBoxSizingValue) {
+                LayoutUnit bp =
+                    PreferredWidthContext::computeMinimumHeightDueToMBP(
+                        style(), false, true, true);
+                h -= bp;
+            }
+
+            if (hasAspectRatio) {
+                w = h * (intrinsicWidth / intrinsicHeight);
+            }
+        }
+
+        auto widthAndHeight = minMaxWidthAndHeightAppliedIfNeeds(
+            w, h, parentContentWidth, parentContentHeight, hasAspectRatio,
+            parentHasFixedHeight);
+
+        w = widthAndHeight.first;
     }
 
-    LayoutUnit mbp =
-        PreferredWidthContext::computeMinimumWidthDueToMBP(style());
-    w += mbp;
+    if (boxSizing == BorderBoxBoxSizingValue) {
+        LayoutUnit m = PreferredWidthContext::computeMinimumWidthDueToMBP(
+            style(), true, false, false);
+        w += m;
+    } else {
+        LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(
+            style(), true, true, true);
+        w += mbp;
+    }
+
     ctx.updatePreferredMinWidth(w);
 
     if (isFloating()) {
@@ -3512,8 +3537,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             w = parentContentWidth * style()->width().percent();
         }
         if (style()->boxSizing() == BorderBoxBoxSizingValue) {
-            LayoutUnit bp =
-                PreferredWidthContext::computeMinimumWidthDueToBP(style());
+            LayoutUnit bp = PreferredWidthContext::computeMinimumWidthDueToMBP(
+                style(), false, true, true);
             w -= bp;
         }
 
@@ -3524,7 +3549,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             Frame* f = firstChild();
             while (f) {
                 STARFISH_ASSERT(f->isNormalFlow());
-                w = std::max(w, ctx.preferredWidthWithNewContext(f));
+                w = std::max(w,
+                             ctx.preferredWidthWithNewContext(f->asFrameBox()));
                 f = f->next();
             }
             ctx.updatePreferredWidth(w);

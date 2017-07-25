@@ -565,9 +565,12 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
-    static LayoutUnit computeMinimumHeightDueToBP(ComputedStyle* style);
-    static LayoutUnit computeMinimumWidthDueToBP(ComputedStyle* style);
-    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style);
+    static LayoutUnit computeMinimumHeightDueToMBP(ComputedStyle* style,
+                                                   bool margin, bool border,
+                                                   bool padding);
+    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style,
+                                                  bool margin, bool border,
+                                                  bool padding);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
