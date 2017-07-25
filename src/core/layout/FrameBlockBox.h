@@ -59,8 +59,9 @@ class InlineTextBox : public FrameBox {
 public:
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->node(), frame->style())
-        , m_text(run.m_stringView)
     {
+        setText(run.m_stringView.string(), run.m_stringView.start(),
+                run.m_stringView.end());
         m_flags.m_isFirstLine = isFirstLine;
         m_flags.m_direction = run.m_direction;
     }
@@ -88,9 +89,10 @@ public:
     virtual void dump(int depth)
     {
         FrameBox::dump(depth);
+        StringView tv = text();
         printf(" [(%s), dir: %d, start: %d, end %d] ",
-               m_text.substring()->utf8Data(), (int)charDirection(),
-               (int)m_text.start(), (int)m_text.end());
+               tv.substring()->utf8Data(), (int)charDirection(),
+               (int)tv.start(), (int)tv.end());
     }
 #endif
     virtual const char* name()
@@ -100,7 +102,7 @@ public:
 
     void setText(String* t)
     {
-        m_text = StringView(t, 0, t->length());
+        setText(t, 0, t->length());
     }
 
     CharDirection charDirection()
@@ -117,8 +119,17 @@ public:
 
     TextRun textRun()
     {
-        return TextRun(m_text.string(), m_text.start(), m_text.end(),
-                       charDirection());
+        StringView tv = text();
+        return TextRun(tv.string(), tv.start(), tv.end(), charDirection());
+    }
+
+    StringView text()
+    {
+        if (UNLIKELY(m_flags.m_gotLongString)) {
+            STARFISH_ASSERT(m_text->isStringView());
+            return *((StringView*)m_text);
+        }
+        return StringView(m_text, m_start, m_end);
     }
 
     void unmarkFirstLine()
@@ -152,7 +163,23 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    StringView m_text;
+    void setText(String* str, size_t start, size_t end)
+    {
+        STARFISH_ASSERT(str);
+        if (start < std::numeric_limits<uint16_t>::max() &&
+            end < std::numeric_limits<uint16_t>::max()) {
+            m_text = str;
+            m_start = start;
+            m_end = end;
+            m_flags.m_gotLongString = false;
+        } else {
+            m_text = new StringView(str, start, end);
+            m_flags.m_gotLongString = true;
+        }
+    }
+    String* m_text;
+    uint16_t m_start;
+    uint16_t m_end;
 };
 
 class InlineBoxLayoutParentBox : public FrameBox {

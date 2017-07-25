@@ -283,6 +283,12 @@ public:
     virtual size_t length() const = 0;
     virtual char32_t charAt(const size_t& idx) const = 0;
     virtual StringBufferAccessData bufferAccessData() const = 0;
+
+    virtual bool isStringView()
+    {
+        return false;
+    }
+
     bool isEmpty() const
     {
         return length() == 0;
@@ -790,6 +796,11 @@ public:
             data.buffer = ((char32_t*)srcData.buffer) + m_start;
         }
         return data;
+    }
+
+    virtual bool isStringView()
+    {
+        return true;
     }
 
 protected:
