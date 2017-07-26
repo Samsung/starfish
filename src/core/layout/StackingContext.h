@@ -43,8 +43,7 @@ class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
 
-    const GCMap<int32_t, StackingContextChild*, std::less<int32_t>>&
-    childContexts()
+    const GCVector<StackingContextChild*>& childContexts()
     {
         return m_childContexts;
     }
@@ -89,6 +88,11 @@ public:
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
 
+    int32_t zIndex();
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     bool m_needsOwnBuffer : 1;
 
@@ -99,7 +103,7 @@ protected:
 
     SkMatrix m_matrix;
 
-    GCMap<int32_t, StackingContextChild*, std::less<int32_t>> m_childContexts;
+    GCVector<StackingContextChild*> m_childContexts;
 };
 }
 

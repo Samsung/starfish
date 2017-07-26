@@ -38,16 +38,55 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     m_parent = parent;
     if (m_parent) {
         int32_t num = owner->style()->zIndex();
-        auto iter = m_parent->m_childContexts.find(num);
-        if (iter == m_parent->m_childContexts.end()) {
-            iter = m_parent->m_childContexts
-                       .insert(std::make_pair(num, new StackingContextChild()))
-                       .first;
+        auto iter = m_parent->m_childContexts.rbegin();
+        size_t idx = m_parent->m_childContexts.size();
+        StackingContextChild* target = nullptr;
+        while (iter != m_parent->m_childContexts.rend()) {
+            StackingContextChild* child = *iter;
+
+            if (child->at(0)->zIndex() == num) {
+                target = child;
+                break;
+            } else if (child->at(0)->zIndex() < num) {
+                target = new StackingContextChild();
+                m_parent->m_childContexts.insert(idx, target);
+                break;
+            }
+
+            idx--;
+            iter++;
         }
-        iter->second->push_back(this);
+        if (!target) {
+            target = new StackingContextChild();
+            m_parent->m_childContexts.insert(m_parent->m_childContexts.begin(),
+                                             target);
+        }
+        target->push_back(this);
     }
     m_needsOwnBuffer = false;
     m_buffer = nullptr;
+}
+
+int32_t StackingContext::zIndex()
+{
+    return m_owner->style()->zIndex();
+}
+
+void* StackingContext::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StackingContext)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_owner));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_parent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_buffer));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(StackingContext, m_childContexts));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StackingContext));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 VisibleRectContext::VisibleRectContext(FrameBox* box, LayoutLocation* loc)
@@ -79,8 +118,9 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     bool childNeedsBuffer = false;
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
-        auto iter2 = iter->second->begin();
-        while (iter2 != iter->second->end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->begin();
+        while (iter2 != child->end()) {
             childNeedsBuffer |=
                 (*iter2)->computeStackingContextProperties(childNeedsBuffer);
             iter2++;
@@ -266,12 +306,13 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num >= 0) {
                 break;
             }
-            auto iter2 = iter->second->begin();
-            while (iter2 != iter->second->end()) {
+            auto iter2 = child->begin();
+            while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
@@ -293,10 +334,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num >= 0) {
-                auto iter2 = iter->second->begin();
-                while (iter2 != iter->second->end()) {
+                auto iter2 = child->begin();
+                while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
@@ -399,12 +441,13 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num >= 0) {
                 break;
             }
-            auto iter2 = iter->second->begin();
-            while (iter2 != iter->second->end()) {
+            auto iter2 = child->begin();
+            while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
@@ -424,10 +467,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     {
         auto iter = childContexts().begin();
         while (iter != childContexts().end()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num >= 0) {
-                auto iter2 = iter->second->begin();
-                while (iter2 != iter->second->end()) {
+                auto iter2 = child->begin();
+                while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
@@ -508,12 +552,13 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num >= 0) {
-                auto iter2 = iter->second->rbegin();
+                auto iter2 = child->rbegin();
                 LayoutUnit oldX = x;
                 LayoutUnit oldY = y;
-                while (iter2 != iter->second->rend()) {
+                while (iter2 != child->rend()) {
                     StackingContext* sCtx = *iter2;
                     LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                     x -= l.x();
@@ -563,14 +608,15 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {
-            int32_t num = iter->first;
+            StackingContextChild* child = *iter;
+            int32_t num = child->at(0)->zIndex();
             if (num > 0) {
                 break;
             }
-            auto iter2 = iter->second->rbegin();
+            auto iter2 = child->rbegin();
             LayoutUnit oldX = x;
             LayoutUnit oldY = y;
-            while (iter2 != iter->second->rend()) {
+            while (iter2 != child->rend()) {
                 StackingContext* sCtx = *iter2;
 
                 LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
