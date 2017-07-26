@@ -402,6 +402,21 @@ private:
         return size;
     }
 
+    static void releaseGIFResource(GifFileType* gifFile,
+                                   GifRowType* screenBuffer, unsigned int size)
+    {
+        int errorCode = 0;
+        if (screenBuffer) {
+            for (unsigned int i = 0; i < size; i++) {
+                if (screenBuffer[i]) {
+                    free(screenBuffer[i]);
+                }
+            }
+            free(screenBuffer);
+        }
+        DGifCloseFile(gifFile, &errorCode);
+    }
+
     void readGIFFileOrBufferedInput(String* localImageSrc,
                                     const char* bufferedInput)
     {
@@ -500,6 +515,12 @@ private:
         colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
                                             : gifFile->SColorMap);
 
+        if (colorMap == nullptr) {
+            STARFISH_LOG_ERROR("Gif Image does not have a colormap\n");
+            releaseGIFResource(gifFile, screenBuffer, m_height);
+            return;
+        }
+
         // Convert GIF to RGBA
         GifRowType gifRow;
         GifColorType* colorMapEntry = nullptr;
@@ -518,19 +539,7 @@ private:
             }
         }
 
-        if (screenBuffer) {
-            if (screenBuffer[0]) {
-                free(screenBuffer[0]);
-            }
-            for (i = 1; i < (int)(m_height); i++) {
-                if (screenBuffer[i]) {
-                    free(screenBuffer[i]);
-                }
-            }
-            free(screenBuffer);
-        }
-
-        DGifCloseFile(gifFile, &errorCode);
+        releaseGIFResource(gifFile, screenBuffer, m_height);
     }
 
     void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
