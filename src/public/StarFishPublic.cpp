@@ -25,6 +25,7 @@
 #if defined(STARFISH_DALI)
 #include "core/dom/Document.h"
 
+#include "core/modules/threading/Locker.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
@@ -42,6 +43,7 @@ class StarFishController : public Dali::ConnectionTracker {
 public:
     StarFishController(StarFishInstance* instance)
         : m_isInit(false)
+        , m_InitMutex(new StarFish::Mutex())
     {
         m_instance = instance;
     }
@@ -83,10 +85,7 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        TO_STARFISH(m_instance)
-                            ->platformWindow()
-                            ->webView()
-                            ->mainBrowsingContext(),
+                        nullptr,
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -108,10 +107,7 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        TO_STARFISH(m_instance)
-                            ->platformWindow()
-                            ->webView()
-                            ->mainBrowsingContext(),
+                        nullptr,
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -135,10 +131,7 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        TO_STARFISH(m_instance)
-                            ->platformWindow()
-                            ->webView()
-                            ->mainBrowsingContext(),
+                        nullptr,
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -176,10 +169,7 @@ public:
         TO_STARFISH(m_instance)
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
-                TO_STARFISH(m_instance)
-                    ->platformWindow()
-                    ->webView()
-                    ->mainBrowsingContext(),
+                nullptr,
                 [](size_t, void* data) {
                     dummy* d = (dummy*)data;
                     StarFish::StarFish* m_sf = d->starfish;
@@ -193,14 +183,15 @@ public:
         return true;
     }
 
-    bool m_isMouseLbuttonDown;
     bool m_isInit;
+    bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
     StarFishInstance* m_instance;
     Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
+    StarFish::Mutex* m_InitMutex;
 };
 #define TO_CONTROLLER(instance) ((StarFishController*)instance->m_data)
 #endif
@@ -247,6 +238,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_width = width;
     starFishControl->m_height = height;
 
+    starFishControl->m_InitMutex->lock();
     pthread_t t2;
     pthread_attr_t attr2;
     pthread_attr_init(&attr2);
@@ -271,11 +263,11 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
                 nullptr, app->m_width, app->m_height, 1, info, "", "");
             starFish->registerFrameBuffer((void*)app->m_daliBuffer.GetBuffer());
-            starFish->loadHTMLDocument(String::fromUTF8("about:blank"));
             app->m_instance->m_starfish = starFish;
             app->m_isInit = true;
-            starFish->run();
+            app->m_InitMutex->unlock();
 
+            starFish->run();
             return NULL;
         },
         starFishControl);
@@ -289,6 +281,9 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_timer.TickSignal().Connect(
         starFishControl, &StarFishController::updateBuffer);
     starFishControl->m_timer.Start();
+    {
+        StarFish::Locker<Mutex> l(*TO_CONTROLLER(instance)->m_InitMutex);
+    }
 
     return instance;
 #else
@@ -327,29 +322,23 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
     StarFishInstance* instance, const char* path)
 {
 #if defined(STARFISH_DALI)
-    if (TO_STARFISH(instance) == nullptr || !TO_CONTROLLER(instance)->m_isInit)
-        return;
-
     struct dummy {
         StarFish::StarFish* starfish;
-        const char* data;
+        StarFish::String* data;
     };
     dummy* d = new dummy;
     d->starfish = TO_STARFISH(instance);
-    d->data = path;
+    d->data = StarFish::String::fromUTF8(path);
     TO_STARFISH(instance)
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
-            TO_STARFISH(instance)
-                ->platformWindow()
-                ->webView()
-                ->mainBrowsingContext(),
+            nullptr,
             [](size_t, void* data) {
                 dummy* d = (dummy*)data;
                 StarFish::StarFish* m_sf = d->starfish;
                 StarFishEnterer enter(m_sf);
 
-                m_sf->loadHTMLDocument(String::fromUTF8(d->data));
+                m_sf->loadHTMLDocument(d->data);
                 delete d;
             },
             d);
