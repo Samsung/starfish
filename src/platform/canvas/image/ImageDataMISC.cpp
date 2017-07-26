@@ -272,7 +272,6 @@ private:
         rewind(fp);
 
         if ((dHandle = tjInitDecompress()) == nullptr) {
-            fclose(fp);
             STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
                                __LINE__);
             return;
@@ -280,7 +279,6 @@ private:
 
         srcBuf = (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
         if (srcBuf == nullptr) {
-            fclose(fp);
             tjDestroy(dHandle);
             STARFISH_LOG_ERROR("%s %d\n : srcBuf is NULL", __FUNCTION__,
                                __LINE__);
@@ -289,7 +287,6 @@ private:
 
         readSize = fread(srcBuf, 1, jpegSize, fp);
         if (readSize <= 0) {
-            fclose(fp);
             tjDestroy(dHandle);
             tjFree(srcBuf);
             STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
@@ -314,6 +311,8 @@ private:
         if (!sf || !n) {
             STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
                                __LINE__);
+            tjDestroy(dHandle);
+            tjFree(srcBuf);
             return;
         }
 
@@ -365,6 +364,7 @@ private:
         if (!sf || !n) {
             STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
                                __LINE__);
+            tjDestroy(dHandle);
             return;
         }
 
