@@ -28,6 +28,28 @@
 
 namespace StarFish {
 
+void* ComputedStyle::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ComputedStyle)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_background));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_surround));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_transforms));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_transformOrigin));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_transition));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_content));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_cachedPseudoStyles));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 bool ComputedStyle::hasTransforms(Frame* frame)
 {
     return transforms(frame) != nullptr;

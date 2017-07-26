@@ -1046,6 +1046,9 @@ public:
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
     void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     void initNonInheritedStyles()
     {
