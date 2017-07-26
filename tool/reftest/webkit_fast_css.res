@@ -30,3 +30,10 @@ test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-con
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers2.html
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers.html
 test/reftest/vendor/webkit/fast/css/getComputedStyle/getComputedStyle-border-box.html
+#test/reftest/vendor/webkit_original/fast/css/negative-text-indent-in-inline-block.png
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-001.html
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-002.html
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-003.html
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-004.html
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-005.html
+test/reftest/vendor/webkit_original/fast/css/text-indent-first-line-006.html

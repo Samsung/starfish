@@ -299,3 +299,8 @@ test/reftest/vendor/webkit_original/fast/box-sizing/percentage-height.html
 #test/reftest/vendor/webkit_original/fast/box-sizing/table-cell.html
 #test/reftest/vendor/webkit_original/fast/box-sizing/table-collapse.html
 #test/reftest/vendor/webkit_original/fast/box-sizing/table-no-collapse.html
+test/reftest/vendor/webkit_original/fast/css3-text/css3-text-indent/text-indent-with-absolute-pos-child.html
+test/reftest/vendor/webkit_original/fast/css3-text/css3-text-indent/text-indent-each-line-hanging.html
+test/reftest/vendor/webkit_original/fast/block/float/floats-and-text-indent.html
+test/reftest/vendor/webkit_original/fast/block/float/floats-and-text-indent-rl.html
+#test/reftest/vendor/webkit_original/fast/block/float/022.html
