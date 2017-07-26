@@ -388,6 +388,8 @@ public:
     void registerFirstLineAscender(LineBox* l, LayoutUnit a);
     LayoutUnit firstLineAscender(LineBox* l);
 
+    bool checkIfThisIsFirstLineCandidate(Frame* parent, FrameBlockBox* child);
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow, bool isRoot,
@@ -429,6 +431,7 @@ private:
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBox*, MarginInfo*> m_marginInfo;
     std::unordered_map<LineBox*, LayoutUnit> m_firstLineAscender;
+    std::unordered_map<Frame*, FrameBlockBox*> m_firstLineCandidates;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -508,10 +511,11 @@ public:
         , m_unprocessedStartingMBPWidth(0)
         , m_lastWhiteSpaceWidth(0)
         , m_wordWidth(0)
-        , m_remainedWidth(lastKnownWidth)
+        , m_remainingWidth(std::max(lastKnownWidth, LayoutUnit(0)))
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
         , m_isPendingWrapLine(false)
+        , m_hasAppliedTextIndent(false)
     {
     }
 
@@ -545,14 +549,31 @@ public:
         m_currentLineWidth = w;
     }
 
+    LayoutUnit widthAppliedByTextIndent(LayoutUnit w)
+    {
+        if (m_textIndentWidth != 0) {
+            m_hasAppliedTextIndent |= true;
+        }
+
+        if (m_textIndentWidth >= 0 || -m_textIndentWidth < w) {
+            w += m_textIndentWidth;
+            m_textIndentWidth = 0;
+        } else {
+            m_textIndentWidth += w;
+            w = 0;
+        }
+
+        return w;
+    }
+
     void setTextIndentWidth(LayoutUnit w)
     {
         m_textIndentWidth = w;
     }
 
-    LayoutUnit remainedWidth() const
+    LayoutUnit remainingWidth() const
     {
-        return m_remainedWidth;
+        return m_remainingWidth;
     }
 
     LayoutUnit preferredMinWidth() const
@@ -565,12 +586,7 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
-    static LayoutUnit computeMinimumHeightDueToMBP(ComputedStyle* style,
-                                                   bool margin, bool border,
-                                                   bool padding);
-    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style,
-                                                  bool margin, bool border,
-                                                  bool padding);
+    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
@@ -603,10 +619,13 @@ public:
         return false;
     }
 
-    void breakLine(bool wrapped)
+    void breakLine(bool wrapped, bool dueToBr)
     {
         finishLine(wrapped);
         setIsWhiteSpaceAtLast(true, 0);
+        if (m_hasAppliedTextIndent || dueToBr) {
+            m_textIndentWidth = 0;
+        }
         m_currentLineWidth = 0;
         m_isPendingWrapLine = false;
     }
@@ -615,7 +634,8 @@ public:
     {
         if (wrapped) {
             removeDanglingSpace();
-            updatePreferredWidth(std::max(m_remainedWidth, m_currentLineWidth));
+            updatePreferredWidth(
+                std::max(m_remainingWidth, m_currentLineWidth));
         } else {
             updateCurrentLineWidthByWordWidth();
             removeDanglingSpace();
@@ -636,7 +656,7 @@ public:
         if (dontBreakLine(m_wordWidth)) {
             m_currentLineWidth += m_wordWidth;
         } else {
-            breakLine(true);
+            breakLine(true, false);
             m_currentLineWidth = m_wordWidth;
         }
         m_wordWidth = 0;
@@ -658,10 +678,11 @@ private:
     LayoutUnit m_unprocessedStartingMBPWidth;
     LayoutUnit m_lastWhiteSpaceWidth;
     LayoutUnit m_wordWidth;
-    LayoutUnit m_remainedWidth;
+    LayoutUnit m_remainingWidth;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
     bool m_isPendingWrapLine;
+    bool m_hasAppliedTextIndent;
 
     bool canInsertToLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox() const

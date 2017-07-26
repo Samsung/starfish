@@ -1034,7 +1034,8 @@ static void removeBoxFromLine(FrameBox* box)
 
 LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
                                              LayoutContext& ctx)
-    : m_unprocessedStartingMBPWidth(0)
+    : m_textIndentWidth(0)
+    , m_unprocessedStartingMBPWidth(0)
     , m_block(block)
     , m_layoutContext(ctx)
     , m_inlineBoxIndex(0)
@@ -1047,8 +1048,12 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     m_block->m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     resetLineBox();
-    Length textIndent = block->style()->textIndent();
-    m_textIndentWidth = textIndent.specifiedValue(block->boxWidth());
+    if ((!block->isAnonymous() && !block->hasBlockFlow()) ||
+        ctx.checkIfThisIsFirstLineCandidate(block->parent(), block)) {
+        Length textIndent = block->style()->textIndent();
+        FrameBox* cb = ctx.containingBlock(block);
+        m_textIndentWidth = textIndent.specifiedValue(cb->contentWidth());
+    }
 }
 
 void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
@@ -1765,9 +1770,6 @@ void LineFormattingContext::resetLineBox()
     m_block->m_lineBoxes.push_back(lineBox);
     m_floatingBoxLayoutContexts.clear();
     layoutLineBox(0, 0);
-    if (m_currentLineWidth > 0) {
-        m_textIndentWidth = 0;
-    }
     m_currentLineWidth = 0;
     if (m_pendingInlineBoxes.size() == 0) {
         m_pendingFloatingBoxNumsBeforeCurrentLine =
@@ -1903,16 +1905,13 @@ void LineFormattingContext::breakLineForLineBox(FrameLineBreak* br,
                                                 bool isLastLine,
                                                 bool skipFinishLine)
 {
-    /*
-    if (dueToBr == false) {
-        m_breakedLinesSet.insert(m_block->m_lineBoxes.size() - 1);
-    }
-    */
-
     if (!skipFinishLine) {
         finishLineForLineBox(br, isLastLine);
     }
 
+    if (m_currentLineWidth > 0 || br != nullptr) {
+        m_textIndentWidth = 0;
+    }
     resetLineBox();
     if (m_currentLayoutParent->isLineBox()) {
         m_currentLayoutParent = currentLine();
@@ -1935,8 +1934,10 @@ bool PreferredWidthContext::canInsertFloatingBox(Frame* f)
 
 bool PreferredWidthContext::canInsertToLineBox(LayoutUnit width)
 {
-    return width <= (m_remainedWidth - m_currentLineWidth -
-                     m_unprocessedStartingMBPWidth);
+    LayoutUnit remainingWidth =
+        (m_remainingWidth - m_currentLineWidth - m_unprocessedStartingMBPWidth -
+         m_textIndentWidth);
+    return width <= remainingWidth;
 }
 
 bool PreferredWidthContext::dontBreakLine(LayoutUnit width)
@@ -3234,7 +3235,7 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)
 void PreferredWidthContext::handleTextToken(TextToken& token)
 {
     if (m_isPendingWrapLine) {
-        breakLine(true);
+        breakLine(true, false);
     }
 
     if (token.m_type != WordType::General) {
@@ -3250,6 +3251,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     LayoutUnit w = token.width();
     if (token.m_type != WordType::CollapsibleWhiteSpace) {
         if (token.m_type == WordType::General) {
+            w = widthAppliedByTextIndent(w);
             updatePreferredMinWidth(w);
         }
         w += m_unprocessedStartingMBPWidth;
@@ -3272,11 +3274,11 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
             if (dontBreakLine(w)) {
                 m_currentLineWidth += w;
             } else {
-                breakLine(true);
+                breakLine(true, false);
                 m_currentLineWidth = w;
             }
         } else {
-            breakLine(false);
+            breakLine(false, false);
             m_hasFloat = HasNone;
             m_currentLineWidth = w;
         }
@@ -3284,9 +3286,10 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
         // In compute preferred width, even if trying break line here, it is
         // okay. Because we care only the longest width not the exact layout
         // result.
-        breakLine(false);
+        breakLine(false, false);
     } else if (f->shouldWrapLines() && !f->isDirectDescendantOfTableCellBox()) {
-        if (f->isFrameText() && type == WordType::General) {
+        if ((!m_hasAppliedTextIndent || hasFloatingBoxAlreadyInLineBox()) &&
+            f->isFrameText() && type == WordType::General) {
             m_wordWidth += w;
         } else if (dontBreakLine(w)) {
             m_currentLineWidth += w;
@@ -3295,7 +3298,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
                 m_currentLineWidth += w;
                 m_isPendingWrapLine = true;
             } else {
-                breakLine(true);
+                breakLine(true, false);
                 if (type == WordType::General) {
                     m_currentLineWidth = w;
                 }
@@ -3321,77 +3324,39 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
-LayoutUnit PreferredWidthContext::computeMinimumHeightDueToMBP(
-    ComputedStyle* style, bool margin, bool border, bool padding)
-{
-    LayoutUnit minHeight;
-    if (border) {
-        if (style->borderTopWidth().isFixed()) {
-            minHeight += style->borderTopWidth().fixed();
-        }
-        if (style->borderBottomWidth().isFixed()) {
-            minHeight += style->borderBottomWidth().fixed();
-        }
-    }
-
-    if (padding) {
-        if (style->paddingTop().isFixed()) {
-            minHeight += style->paddingTop().fixed();
-        }
-        if (style->paddingBottom().isFixed()) {
-            minHeight += style->paddingBottom().fixed();
-        }
-    }
-
-    if (margin) {
-        if (style->marginTop().isFixed()) {
-            minHeight += style->marginTop().fixed();
-        }
-        if (style->marginBottom().isFixed()) {
-            minHeight += style->marginBottom().fixed();
-        }
-    }
-    return minHeight;
-}
-
 LayoutUnit PreferredWidthContext::computeMinimumWidthDueToMBP(
-    ComputedStyle* style, bool margin, bool border, bool padding)
+    ComputedStyle* style)
 {
     LayoutUnit minWidth;
-    if (border) {
-        if (style->borderLeftWidth().isFixed()) {
-            minWidth += style->borderLeftWidth().fixed();
-        }
-        if (style->borderRightWidth().isFixed()) {
-            minWidth += style->borderRightWidth().fixed();
-        }
+    if (style->borderLeftWidth().isFixed()) {
+        minWidth += style->borderLeftWidth().fixed();
+    }
+    if (style->borderRightWidth().isFixed()) {
+        minWidth += style->borderRightWidth().fixed();
     }
 
-    if (padding) {
-        if (style->paddingLeft().isFixed()) {
-            minWidth += style->paddingLeft().fixed();
-        }
-        if (style->paddingRight().isFixed()) {
-            minWidth += style->paddingRight().fixed();
-        }
+    if (style->paddingLeft().isFixed()) {
+        minWidth += style->paddingLeft().fixed();
+    }
+    if (style->paddingRight().isFixed()) {
+        minWidth += style->paddingRight().fixed();
     }
 
-    if (margin) {
-        if (style->marginLeft().isFixed()) {
-            minWidth += style->marginLeft().fixed();
-        }
-        if (style->marginRight().isFixed()) {
-            minWidth += style->marginRight().fixed();
-        }
+    if (style->marginLeft().isFixed()) {
+        minWidth += style->marginLeft().fixed();
     }
+    if (style->marginRight().isFixed()) {
+        minWidth += style->marginRight().fixed();
+    }
+
     return minWidth;
 }
 
 LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
 {
-    LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(
-        f->style(), true, true, true);
-    PreferredWidthContext newCtx(m_layoutContext, m_remainedWidth - mbp);
+    LayoutUnit mbp =
+        PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+    PreferredWidthContext newCtx(m_layoutContext, m_remainingWidth - mbp);
     f->computePreferredWidth(newCtx);
 
     return newCtx.preferredWidth() + mbp;
@@ -3408,7 +3373,7 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 
         if (f->isFrameBlockBox()) {
             if (isPendingWrapLine()) {
-                breakLine(true);
+                breakLine(true, false);
             }
 
             updateCurrentLineWidthByWordWidth();
@@ -3416,8 +3381,11 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
             LayoutUnit w = preferredWidthWithNewContext(f);
 
             if (f->isFloating()) {
+                updatePreferredMinWidth(w);
                 handleFloatingBox(f, w);
             } else {
+                w = widthAppliedByTextIndent(w);
+                updatePreferredMinWidth(w);
                 setIsWhiteSpaceAtLast(false, 0);
                 updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth);
             }
@@ -3460,7 +3428,7 @@ void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
 void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 {
     if (ctx.isPendingWrapLine()) {
-        ctx.breakLine(true);
+        ctx.breakLine(true, false);
     }
 
     ctx.updateCurrentLineWidthByWordWidth();
@@ -3470,6 +3438,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     BoxSizingValue boxSizing = style()->boxSizing();
     LayoutUnit intrinsicWidth, intrinsicHeight, w, h;
     FrameBox* cb = ctx.layoutContext().containingBlock(this);
+    computeBorderMarginPadding(cb->contentWidth());
     LayoutUnit parentContentWidth, parentContentHeight;
     Length parentHeightLength;
     bool parentHasFixedHeight;
@@ -3491,12 +3460,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     if (width.isSpecified()) {
         if (width.isFixed()) {
             w = width.fixed();
-            if (boxSizing == BorderBoxBoxSizingValue) {
-                LayoutUnit bp =
-                    PreferredWidthContext::computeMinimumWidthDueToMBP(
-                        style(), false, true, true);
-                w -= bp;
-            }
+            w = contentWidthApplyingBoxSizing(w);
         } else {
             w = intrinsicWidth;
         }
@@ -3508,13 +3472,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
         if (height.isFixed() || (height.isPercent() && parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight);
-
-            if (boxSizing == BorderBoxBoxSizingValue) {
-                LayoutUnit bp =
-                    PreferredWidthContext::computeMinimumHeightDueToMBP(
-                        style(), false, true, true);
-                h -= bp;
-            }
+            h = contentHeightApplyingBoxSizing(h);
 
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
@@ -3529,20 +3487,17 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     if (boxSizing == BorderBoxBoxSizingValue) {
-        LayoutUnit m = PreferredWidthContext::computeMinimumWidthDueToMBP(
-            style(), true, false, false);
-        w += m;
+        w += marginWidth();
     } else {
-        LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(
-            style(), true, true, true);
-        w += mbp;
+        w += mbpWidth();
     }
 
-    ctx.updatePreferredMinWidth(w);
-
     if (isFloating()) {
+        ctx.updatePreferredMinWidth(w);
         ctx.handleFloatingBox(this, w);
     } else {
+        w = ctx.widthAppliedByTextIndent(w);
+        ctx.updatePreferredMinWidth(w);
         ctx.setIsWhiteSpaceAtLast(false, 0);
         ctx.updateCurrentLineWidth(this, w + ctx.unprocessedStartingMBPWidth());
     }
@@ -3554,10 +3509,10 @@ void FrameLineBreak::computePreferredWidth(PreferredWidthContext& ctx)
 
     if (ctx.isPendingWrapLine()) {
         if (dontClear(ctx.hasFloat(), this)) {
-            ctx.breakLine(true);
+            ctx.breakLine(true, true);
         }
     } else {
-        ctx.breakLine(false);
+        ctx.breakLine(false, true);
     }
 }
 
@@ -3566,6 +3521,9 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     if (!isNecessaryBlockBox()) {
         return;
     }
+
+    FrameBox* cb = ctx.layoutContext().containingBlock(this);
+    computeBorderMarginPadding(cb->contentWidth());
 
     if (style()->width().isSpecified() && !isFrameTableCellBox()) {
         LayoutUnit w;
@@ -3576,12 +3534,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.layoutContext().parentContentWidth(this);
             w = parentContentWidth * style()->width().percent();
         }
-        if (style()->boxSizing() == BorderBoxBoxSizingValue) {
-            LayoutUnit bp = PreferredWidthContext::computeMinimumWidthDueToMBP(
-                style(), false, true, true);
-            w -= bp;
-        }
 
+        w = contentWidthApplyingBoxSizing(w);
         ctx.updatePreferredWidth(w);
     } else {
         if (hasBlockFlow()) {
@@ -3595,10 +3549,14 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             }
             ctx.updatePreferredWidth(w);
         } else {
-            Length textIndent = style()->textIndent();
-            LayoutUnit textIndentWidth =
-                textIndent.specifiedValue(ctx.remainedWidth());
-            ctx.setCurrentLineWidth(textIndentWidth);
+            LayoutUnit textIndentWidth = LayoutUnit(0);
+            if ((!isAnonymous() && !hasBlockFlow()) ||
+                ctx.layoutContext().checkIfThisIsFirstLineCandidate(parent(),
+                                                                    this)) {
+                Length textIndent = style()->textIndent();
+                textIndentWidth =
+                    textIndent.specifiedValue(ctx.remainingWidth());
+            }
             ctx.setTextIndentWidth(textIndentWidth);
             ctx.computePreferredWidthInline(this);
             ctx.finishLine(false);
@@ -3657,6 +3615,8 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
+    tablePreferredMinWidth =
+        ctx.widthAppliedByTextIndent(tablePreferredMinWidth);
     ctx.updatePreferredMinWidth(tablePreferredMinWidth);
     ctx.updatePreferredWidth(tablePreferredWidth);
 }

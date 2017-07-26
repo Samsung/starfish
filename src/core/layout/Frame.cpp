@@ -594,6 +594,22 @@ LayoutUnit LayoutContext::firstLineAscender(LineBox* l)
     return m_firstLineAscender[l];
 }
 
+bool LayoutContext::checkIfThisIsFirstLineCandidate(Frame* parent,
+                                                    FrameBlockBox* child)
+{
+    if (!child->isNecessaryBlockBox()) {
+        return false;
+    }
+
+    auto it = m_firstLineCandidates.find(parent);
+    if (it == m_firstLineCandidates.end()) {
+        m_firstLineCandidates[parent] = child;
+        return true;
+    }
+
+    return (*it).second == child;
+}
+
 Frame::Frame(Node* node, ComputedStyle* s)
 {
     bool isAnonymous;

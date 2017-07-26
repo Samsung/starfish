@@ -798,13 +798,6 @@ public:
     void registerRelativePositionedBoxes();
     LayoutUnit contentHeightForBlock();
 
-    /*
-    bool isBreakedLineWithoutBR(size_t idx)
-    {
-        return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
-    }
-    */
-
     LineBox* currentLine()
     {
         return m_block->m_lineBoxes.back();
@@ -986,8 +979,6 @@ public:
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
-
-    // std::set<size_t> m_breakedLinesSet;
 
     // we don't need gc_allocater here
     // frame tree has strong reference already

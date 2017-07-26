@@ -275,3 +275,4 @@ test/reftest/vendor/blink/fast/dynamic/005.html
 test/reftest/vendor/blink/fast/block/available-width-changes-vertical.html
 test/reftest/vendor/blink/fast/block/positioning/border-change-relayout-test.html
 test/reftest/vendor/blink/fast/overflow/004.html
+#test/reftest/vendor/blink_original/fast/inline-block/002.html
