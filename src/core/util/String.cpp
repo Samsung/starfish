@@ -1716,6 +1716,45 @@ double String::parseDouble(String* s)
     return ret;
 }
 
+void* StringDataASCII::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataASCII)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataASCII, m_data));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StringDataASCII));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* StringDataUTF32::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataUTF32)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataUTF32, m_data));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StringDataUTF32));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* StringView::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StringView)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringView, m_string));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StringDataUTF32));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void StringBuilder::appendPiece(String* str, size_t s, size_t e)
 {
     if (e - s > 0) {

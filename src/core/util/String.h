@@ -548,6 +548,9 @@ public:
         return ret;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     SimpleStringBufferHolder<char> m_data;
 };
@@ -677,6 +680,9 @@ public:
         return ret;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     SimpleStringBufferHolder<char32_t> m_data;
 };
@@ -718,7 +724,6 @@ protected:
 };
 
 class StringView : public String {
-    friend class InlineTextBox; // for precise GC
 public:
     StringView()
         : m_string(String::emptyString)
@@ -801,6 +806,12 @@ public:
     virtual bool isStringView()
     {
         return true;
+    }
+
+    void* operator new(size_t size);
+    void* operator new(size_t size, StringView* sv)
+    {
+        return sv;
     }
 
 protected:
