@@ -1073,11 +1073,6 @@ protected:
     // property in [compareStyle function]
 
     struct InheritedStyles {
-        Unit::Color m_color;
-        Length m_fontSize;
-        Length m_letterSpacing;
-        Length m_lineHeight;
-        Length m_textIndent;
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
         SideValue m_textAlign : 3;
@@ -1085,16 +1080,22 @@ protected:
         WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;
         BorderCollapseValue m_borderCollapse : 1; // table
-        Length m_horizontalBorderSpacing;         // table
-        Length m_verticalBorderSpacing;           // table
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
+
+        Unit::Color m_color;
+        Length m_fontSize;
+        Length m_letterSpacing;
+        Length m_lineHeight;
+        Length m_textIndent;
+        Length m_horizontalBorderSpacing; // table
+        Length m_verticalBorderSpacing;   // table
     } m_inheritedStyles;
 
     FloatValue m_float : 2;
     ClearValue m_clear : 3;
-    DisplayValue m_display : 13;
-    DisplayValue m_originalDisplay : 13;
+    DisplayValue m_display : 4;
+    DisplayValue m_originalDisplay : 4;
     PositionValue m_position : 2;
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;
@@ -1103,7 +1104,6 @@ protected:
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
     bool m_zIndexSpecifiedByUser : 1;
-
     TableLayoutValue m_tableLayout : 1; // table
     StyleResolver::PseudoElementType m_pseudoId : 6;
 

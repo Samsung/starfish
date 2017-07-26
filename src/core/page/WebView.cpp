@@ -610,7 +610,8 @@ void WebView::rendering()
 
                     auto iter = ctx->childContexts().begin();
                     while (iter != ctx->childContexts().end()) {
-                        int32_t num = iter->first;
+                        StackingContextChild* child = *iter;
+                        int32_t num = child->at(0)->zIndex();
 
                         for (int i = 0; i < depth + 1; i++) {
                             printf("  ");
@@ -618,8 +619,8 @@ void WebView::rendering()
 
                         printf("z-index: %d\n", (int)num);
 
-                        auto iter2 = iter->second->begin();
-                        while (iter2 != iter->second->end()) {
+                        auto iter2 = child->begin();
+                        while (iter2 != child->end()) {
                             dumpSC(*iter2, depth + 2);
                             iter2++;
                         }
@@ -726,8 +727,9 @@ void WebView::clearStackingContext(bool backupBuffer)
                 }
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
+                    StackingContextChild* child = *iter;
+                    auto iter2 = child->begin();
+                    while (iter2 != child->end()) {
                         clearSC(*iter2);
                         iter2++;
                     }
