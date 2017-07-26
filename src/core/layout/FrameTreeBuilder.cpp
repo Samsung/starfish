@@ -661,12 +661,14 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
 
     Node* n = document->rootElement();
 
-    if (n->style()->display() != DisplayValue::NoneDisplayValue) {
-        FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
-        buildTree(n, ctx);
+    if (n) {
+        if (n->style()->display() != DisplayValue::NoneDisplayValue) {
+            FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
+            buildTree(n, ctx);
+        }
+        n->clearNeedsFrameTreeBuild();
+        n->clearChildNeedsFrameTreeBuild();
     }
-    n->clearNeedsFrameTreeBuild();
-    n->clearChildNeedsFrameTreeBuild();
 
     document->clearNeedsFrameTreeBuild();
     document->clearChildNeedsFrameTreeBuild();

@@ -107,15 +107,13 @@ void HTMLIFrameElement::didNodeAdopted()
 
 void HTMLIFrameElement::loadSrc()
 {
-    unloadSrc();
-    m_browsingContext = BrowsingContext::create(this);
     String* s = src();
     if (s->length()) {
-        m_browsingContext->navigateAsync(
-            new ResourceURL(s, document()->documentURI()->baseURI()));
+        navigate(new ResourceURL(s, document()->documentURI()->baseURI()),
+                 HistoryManager::Action::Add);
     } else {
-        m_browsingContext->navigateAsync(
-            new ResourceURL(String::createASCIIString("about:blank")));
+        navigate(new ResourceURL(String::createASCIIString("about:blank")),
+                 HistoryManager::Action::Add);
     }
 }
 
@@ -125,5 +123,12 @@ void HTMLIFrameElement::unloadSrc()
         m_browsingContext->close();
         m_browsingContext = nullptr;
     }
+}
+
+void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type)
+{
+    unloadSrc();
+    m_browsingContext = BrowsingContext::create(this);
+    m_browsingContext->navigateAsync(url, type);
 }
 }

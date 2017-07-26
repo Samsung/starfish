@@ -110,21 +110,11 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type)
     clearBlobURLStore();
     initRenderingFlags();
 
-    m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
-
-    switch (type) {
-    case HistoryManager::Action::Add:
-        m_historyManager->push(url);
-        break;
-    case HistoryManager::Action::Replace:
-        m_historyManager->replace(url);
-        break;
-    case HistoryManager::Action::Intact:
-    default:
-        break;
+    if (m_mainBrowsingContext) {
+        m_mainBrowsingContext->close();
     }
-
-    m_mainBrowsingContext->navigate(url);
+    m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
+    m_mainBrowsingContext->navigate(url, type);
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)

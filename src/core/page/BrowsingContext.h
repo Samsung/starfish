@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 
 #include "binding/StarFishHoldable.h"
+#include "browser/history/HistoryManager.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
@@ -76,8 +77,8 @@ public:
         return m_sourceElement;
     }
 
-    void navigate(ResourceURL* url);
-    void navigateAsync(ResourceURL* url);
+    void navigate(ResourceURL* url, HistoryManager::Action type);
+    void navigateAsync(ResourceURL* url, HistoryManager::Action type);
 
     void pause();
     void resume();
@@ -192,6 +193,7 @@ private:
 
     void setNeedsRendering();
     void registerNeedsLayoutInWebView();
+    void unRegisterNeedsLayoutInWebView();
 
     WebView* m_webView;
     Window* m_window;

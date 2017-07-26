@@ -23,6 +23,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/FocusEvent.h"
+#include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -98,7 +99,7 @@ void BrowsingContext::initFlags()
     m_pendingStyleSheetCount = 0;
 }
 
-void BrowsingContext::navigate(ResourceURL* url)
+void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type)
 {
     close();
     initFlags();
@@ -128,17 +129,40 @@ void BrowsingContext::navigate(ResourceURL* url)
         }
     }
 
+    switch (type) {
+    case HistoryManager::Action::Add:
+        webView()->historyManager()->push(url);
+        break;
+    case HistoryManager::Action::Replace:
+        webView()->historyManager()->replace(url);
+        break;
+    case HistoryManager::Action::Intact:
+    default:
+        break;
+    }
+
     m_window->document()->open();
 }
 
-void BrowsingContext::navigateAsync(ResourceURL* url)
+struct NavigateData : public gc {
+    ResourceURL* url;
+    HistoryManager::Action type;
+};
+
+void BrowsingContext::navigateAsync(ResourceURL* url,
+                                    HistoryManager::Action type)
 {
+    NavigateData* data = new NavigateData();
+    data->url = url;
+    data->type = type;
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
         this,
         [](size_t a, void* data, void* data2) {
-            ((BrowsingContext*)data)->navigate((ResourceURL*)data2);
+            ((BrowsingContext*)data)
+                ->navigate(((NavigateData*)data2)->url,
+                           ((NavigateData*)data2)->type);
         },
-        this, url);
+        this, data);
 }
 
 Document* BrowsingContext::document()
@@ -385,6 +409,7 @@ void BrowsingContext::close()
         m_starFish->timer()->clear(this);
         m_starFish->messageLoop()->clearPendingIdlers(this);
     }
+    unRegisterNeedsLayoutInWebView();
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -936,11 +961,25 @@ void BrowsingContext::setNeedsRendering()
 
 void BrowsingContext::registerNeedsLayoutInWebView()
 {
-    if (isMainBrowsingContext())
+    if (isMainBrowsingContext()) {
         return;
+    }
+
     auto& v = m_webView->m_browsingContextsNeedsLayout;
     if (v.end() == std::find(v.begin(), v.end(), this)) {
         v.push_back(this);
+    }
+}
+
+void BrowsingContext::unRegisterNeedsLayoutInWebView()
+{
+    if (isMainBrowsingContext()) {
+        return;
+    }
+    auto& v = m_webView->m_browsingContextsNeedsLayout;
+    auto iter = std::find(v.begin(), v.end(), this);
+    if (iter != v.end()) {
+        v.erase(iter);
     }
 }
 }

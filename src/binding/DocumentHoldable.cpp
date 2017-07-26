@@ -25,7 +25,7 @@ namespace StarFish {
 
 Window* DocumentHoldable::window() const
 {
-    return m_document->window();
+    return m_document->Document::window();
 }
 
 StarFish* DocumentHoldable::starFish() const
@@ -40,6 +40,6 @@ ScriptBindingInstance* DocumentHoldable::scriptBindingInstance() const
 
 WebView* DocumentHoldable::webView() const
 {
-    return window()->webView();
+    return document()->window()->browsingContext()->webView();
 }
 }
