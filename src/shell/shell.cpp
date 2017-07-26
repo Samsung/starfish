@@ -112,11 +112,13 @@ char* url = nullptr;
 class DaliShellController : public ConnectionTracker {
 public:
     DaliShellController(Application& application, int width, int height)
-        : m_isMouseLbuttonDown(false)
+        : m_isInit(false)
+        , m_isMouseLbuttonDown(false)
         , m_width(width)
         , m_height(height)
         , m_sf(nullptr)
         , mApplication(application)
+        , m_InitMutex(new StarFish::Mutex())
     {
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
@@ -145,7 +147,7 @@ public:
 
         // TODO: Need to get screen info from X11.
         // Temporally, rect's width and height are set to window size.
-
+        m_InitMutex->lock();
         pthread_t t2;
         pthread_attr_t attr2;
         pthread_attr_init(&attr2);
@@ -173,7 +175,8 @@ public:
                 app->m_sf->registerFrameBuffer(
                     (void*)app->m_daliBuffer.GetBuffer());
 
-                app->m_sf->loadHTMLDocument(String::createASCIIString(url));
+                app->m_isInit = true;
+                app->m_InitMutex->unlock();
 
                 pthread_t t;
                 pthread_attr_t attr;
@@ -242,10 +245,35 @@ public:
         m_timer.TickSignal().Connect(this, &DaliShellController::updateTick);
 
         m_timer.Start();
+        {
+            StarFish::Locker<Mutex> l(*m_InitMutex);
+        }
+
+        struct dummy {
+            StarFish::StarFish* starfish;
+            StarFish::String* data;
+        };
+        dummy* d = new dummy;
+        d->starfish = m_sf;
+        d->data = StarFish::String::fromUTF8(url);
+        m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* m_sf = d->starfish;
+                StarFishEnterer enter(m_sf);
+
+                m_sf->loadHTMLDocument(d->data);
+                delete d;
+            },
+            d);
     }
 
     bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
     {
+        if (!m_isInit)
+            return true;
+
         size_t pointCount = data.GetPointCount();
         if (pointCount == 1) {
             // Single touch event
@@ -322,6 +350,9 @@ public:
     }
     bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
     {
+        if (!m_isInit)
+            return true;
+
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFishEnterer enter(m_sf);
         unsigned char buttons =
@@ -351,6 +382,7 @@ public:
         return true;
     }
 
+    bool m_isInit;
     bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
@@ -359,6 +391,7 @@ public:
     Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
+    StarFish::Mutex* m_InitMutex;
 };
 #endif
 
