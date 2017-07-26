@@ -326,7 +326,8 @@ bool ResourceLoader::requestResourcePreprocess(
         res->isThisResourceDoesAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
-        res->addResourceClient(new ResourceAliveChecker(res));
+        auto it = res->m_resourceClients.begin();
+        res->m_resourceClients.insert(it, new ResourceAliveChecker(res));
     }
 
     // TODO cache every resource

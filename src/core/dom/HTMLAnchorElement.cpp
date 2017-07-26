@@ -19,9 +19,10 @@
 #include "core/dom/HTMLAnchorElement.h"
 
 #include "StarFish.h"
+#include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
-#include "core/page/BrowsingContext.h"
+#include "browser/history/HistoryManager.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -44,11 +45,12 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 } else {
                     window()->browsingContext()->navigateAsync(
-                        new ResourceURL(hrefStr, document()->urlString()));
+                        new ResourceURL(hrefStr, document()->urlString()),
+                        HistoryManager::Action::Add);
                 }
             } else {
                 window()->browsingContext()->navigateAsync(
-                    document()->documentURI());
+                    document()->documentURI(), HistoryManager::Action::Add);
             }
         }
     }

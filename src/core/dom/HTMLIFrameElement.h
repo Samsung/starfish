@@ -18,6 +18,7 @@
 #define __StarFishHTMLIFrameElement__
 
 #include "core/dom/HTMLElement.h"
+#include "browser/history/HistoryManager.h"
 
 #define STARFISH_DEFAULT_IFRAME_WIDTH 300
 #define STARFISH_DEFAULT_IFRAME_HEIGHT 150
@@ -64,6 +65,7 @@ public:
     {
         return m_browsingContext;
     }
+    void navigate(ResourceURL* url, HistoryManager::Action type);
 
 private:
     BrowsingContext* m_browsingContext;

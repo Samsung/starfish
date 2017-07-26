@@ -23,6 +23,7 @@
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
 #include "WebView.h"
+#include "core/dom/HTMLIFrameElement.h"
 
 namespace StarFish {
 
@@ -147,15 +148,25 @@ void Location::assign(String* url)
 
 void Location::assign(ResourceURL* url)
 {
-    starFish()->platformWindow()->webView()->navigate(
-        url, HistoryManager::Action::Add);
+    if (document()->browsingContext()->isMainBrowsingContext()) {
+        document()->browsingContext()->webView()->navigate(
+            url, HistoryManager::Action::Add);
+    } else {
+        document()->browsingContext()->sourceElement()->navigate(
+            url, HistoryManager::Action::Add);
+    }
 }
 
 void Location::replace(String* url)
 {
     if (isValidURL(url)) {
-        starFish()->platformWindow()->webView()->navigate(
-            new ResourceURL(url), HistoryManager::Action::Replace);
+        if (document()->browsingContext()->isMainBrowsingContext()) {
+            document()->browsingContext()->webView()->navigate(
+                new ResourceURL(url), HistoryManager::Action::Replace);
+        } else {
+            document()->browsingContext()->sourceElement()->navigate(
+                new ResourceURL(url), HistoryManager::Action::Replace);
+        }
     }
 }
 

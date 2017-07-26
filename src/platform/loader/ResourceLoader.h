@@ -69,6 +69,7 @@ public:
         cancelAllOfPendingRequests();
         m_imageResourceCache.clear();
         m_imageResourceCacheLRUList.clear();
+        m_isDocumentInOpenState = false;
     }
 
     void cachePruning();
