@@ -416,7 +416,7 @@ protected:
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_cookieURI));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_originURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
