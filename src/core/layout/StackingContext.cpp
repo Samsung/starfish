@@ -31,8 +31,30 @@
 
 namespace StarFish {
 
+StackingContextRareData::StackingContextRareData()
+    : m_needsOwnBuffer(false)
+    , m_visibleRect(0, 0, 0, 0)
+    , m_buffer(nullptr)
+{
+}
+
+void* StackingContextRareData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StackingContextRareData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(StackingContextRareData, m_buffer));
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(StackingContextRareData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
-    : m_visibleRect(0, 0, 0, 0)
+    : m_rareData(nullptr)
 {
     m_owner = owner;
     m_parent = parent;
@@ -63,13 +85,6 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
         }
         target->push_back(this);
     }
-    m_needsOwnBuffer = false;
-    m_buffer = nullptr;
-}
-
-int32_t StackingContext::zIndex()
-{
-    return m_owner->style()->zIndex();
 }
 
 void* StackingContext::operator new(size_t size)
@@ -80,13 +95,25 @@ void* StackingContext::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(StackingContext)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_owner));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_parent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_buffer));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(StackingContext, m_childContexts));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StackingContext));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+StackingContextRareData* StackingContext::ensureRareData()
+{
+    if (!m_rareData) {
+        m_rareData = new StackingContextRareData();
+    }
+    return m_rareData;
+}
+
+int32_t StackingContext::zIndex()
+{
+    return m_owner->style()->zIndex();
 }
 
 VisibleRectContext::VisibleRectContext(FrameBox* box, LayoutLocation* loc)
@@ -105,11 +132,11 @@ VisibleRectContext::~VisibleRectContext()
 
 void StackingContext::clearOwnBuffer(bool needsDetachNative)
 {
-    if (m_buffer) {
+    if (m_rareData && m_rareData->m_buffer) {
         if (needsDetachNative) {
-            m_buffer->detachNativeBuffer();
+            m_rareData->m_buffer->detachNativeBuffer();
         }
-        m_buffer = nullptr;
+        m_rareData->m_buffer = nullptr;
     }
 }
 
@@ -128,22 +155,30 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
         iter++;
     }
 
-    m_matrix.reset();
-    m_needsOwnBuffer =
-        forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
+    if (m_rareData) {
+        m_rareData->m_matrix.reset();
+    }
+    if (forceNeedsBuffer || childNeedsBuffer ||
+        m_owner->needsGraphicsBuffer()) {
+        ensureRareData()->m_needsOwnBuffer = true;
+    } else {
+        if (m_rareData) {
+            m_rareData->m_needsOwnBuffer = false;
+        }
+    }
 
-    if (m_needsOwnBuffer) {
+    if (needsOwnBuffer()) {
         LayoutLocation l(-m_owner->frameRect().location().x(),
                          -m_owner->frameRect().location().y());
 
         m_owner->computeVisibleRect(this, l);
 
-        if (m_visibleRect.isEmpty()) {
-            m_needsOwnBuffer = false;
+        if (m_rareData->m_visibleRect.isEmpty()) {
+            m_rareData->m_needsOwnBuffer = false;
         }
     }
 
-    return m_needsOwnBuffer;
+    return needsOwnBuffer();
 }
 
 void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
@@ -205,28 +240,29 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
-    bool hasStackingBuffer = m_needsOwnBuffer;
+    bool hasStackingBuffer = needsOwnBuffer();
 
     if (hasStackingBuffer) {
         // TODO treat when buffer is too large
-        if (!m_buffer || ((m_buffer->width() != bufferWidth) &&
-                          (m_buffer->height() != bufferHeight))) {
-            if (m_buffer) {
-                m_buffer->detachNativeBuffer();
+        if (!m_rareData->m_buffer ||
+            ((m_rareData->m_buffer->width() != bufferWidth) &&
+             (m_rareData->m_buffer->height() != bufferHeight))) {
+            if (m_rareData->m_buffer) {
+                m_rareData->m_buffer->detachNativeBuffer();
             }
-            m_buffer = CanvasSurface::create(
+            m_rareData->m_buffer = CanvasSurface::create(
                 m_owner->node()->window()->starFish()->platformWindow(),
                 bufferWidth, bufferHeight);
         }
 
-        m_buffer->clear();
+        m_rareData->m_buffer->clear();
         oldCanvas = canvas;
-        canvas = Canvas::create(m_buffer);
+        canvas = Canvas::create(m_rareData->m_buffer);
         canvas->translate(-minX, -minY);
     } else {
-        if (m_buffer) {
-            m_buffer->detachNativeBuffer();
-            m_buffer = nullptr;
+        if (m_rareData && m_rareData->m_buffer) {
+            m_rareData->m_buffer->detachNativeBuffer();
+            m_rareData->m_buffer = nullptr;
         }
     }
 
@@ -240,15 +276,17 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     canvas->save();
 
-    if (!m_needsOwnBuffer && owner()->style()->opacity() != 1)
+    if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity());
+    }
 
-    if (!m_needsOwnBuffer) {
-        m_matrix = m_owner->style()->transformsToMatrix(
+    if (!hasStackingBuffer) {
+        SkMatrix m = m_owner->style()->transformsToMatrix(
             m_owner->width(), m_owner->height(),
             m_owner->style()->hasTransforms(m_owner));
 
-        if (!m_matrix.isIdentity()) {
+        if (!m.isIdentity()) {
+            ensureRareData()->m_matrix = m;
             /*
             STARFISH_LOG_INFO("matrix\n[%f %f %f]\n[%f %f %f]\n[%f %f %f]\n"
                 , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
@@ -270,7 +308,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                          .specifiedValue(m_owner->height());
             }
             canvas->translate(ox, oy);
-            canvas->postMatrix(m_matrix);
+            canvas->postMatrix(m_rareData->m_matrix);
             canvas->translate(-ox, -oy);
         }
     }
@@ -353,8 +391,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
-    if (!m_needsOwnBuffer && owner()->style()->opacity() != 1)
+    if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
         canvas->endOpacityLayer();
+    }
 
     canvas->restore();
     if (hasStackingBuffer) {
@@ -368,7 +407,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
 
-    if (m_needsOwnBuffer) {
+    if (needsOwnBuffer()) {
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
@@ -386,11 +425,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
 
-        m_matrix = m_owner->style()->transformsToMatrix(
+        m_rareData->m_matrix = m_owner->style()->transformsToMatrix(
             m_owner->width(), m_owner->height(),
             ownerStyle->hasTransforms(m_owner));
 
-        if (!m_matrix.isIdentity()) {
+        if (!m_rareData->m_matrix.isIdentity()) {
             /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
                 , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
                 , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
@@ -410,7 +449,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                          .specifiedValue(m_owner->height());
             }
             canvas->translate(ox, oy);
-            canvas->postMatrix(m_matrix);
+            canvas->postMatrix(m_rareData->m_matrix);
             canvas->translate(-ox, -oy);
         }
 
@@ -419,7 +458,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
 
         owner()->willCompsiteStackingContext(canvas);
-        canvas->drawImage(m_buffer,
+        canvas->drawImage(m_rareData->m_buffer,
                           Unit::Rect(minX, minY, bufferWidth, bufferHeight));
         owner()->didCompsiteStackingContext(canvas);
 
@@ -487,7 +526,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
     }
 
-    if (m_needsOwnBuffer) {
+    if (needsOwnBuffer()) {
         if (ownerStyle->opacity() != 1) {
             canvas->endOpacityLayer();
         }
@@ -498,9 +537,9 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                                BrowsingContext* from)
 {
-    if (!m_matrix.isIdentity()) {
+    if (m_rareData && !m_rareData->m_matrix.isIdentity()) {
         SkMatrix invert;
-        if (!m_matrix.invert(&invert)) {
+        if (!m_rareData->m_matrix.invert(&invert)) {
             return nullptr;
         }
 
