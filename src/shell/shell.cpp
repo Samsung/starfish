@@ -32,6 +32,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
+#include <uv.h>
 #endif
 
 #include <Elementary.h>
@@ -109,6 +110,13 @@ using namespace Dali;
 
 char* url = nullptr;
 
+uv_signal_t sigterm;
+uv_signal_t sigint;
+
+void uv_term_cb(uv_signal_t* handle, int signum);
+bool needToInitMainThread();
+void initMainThread();
+
 class DaliShellController : public ConnectionTracker {
 public:
     DaliShellController(Application& application, int width, int height)
@@ -135,6 +143,10 @@ public:
     }
     void Create(Application& application)
     {
+        if (needToInitMainThread()) {
+            initMainThread();
+        }
+
         int width = m_width, height = m_height;
 
         m_daliBuffer =
@@ -148,93 +160,36 @@ public:
         // TODO: Need to get screen info from X11.
         // Temporally, rect's width and height are set to window size.
         m_InitMutex->lock();
-        pthread_t t2;
-        pthread_attr_t attr2;
-        pthread_attr_init(&attr2);
-        pthread_create(
-            &t2, &attr2,
-            [](void* data) -> void* {
-                int flag = 0;
-                DaliShellController* app = (DaliShellController*)data;
 
-                ScreenInfo info;
-                info.rect.setWidth(app->m_width);
-                info.rect.setHeight(app->m_height);
-                info.availableRect.setWidth(app->m_width);
-                info.availableRect.setHeight(app->m_height);
+        uv_async_init(uv_default_loop(), &m_uv_handle, [](uv_async_t* handle) {
+            int flag = 0;
+            DaliShellController* app = (DaliShellController*)handle->data;
 
-                GC_stack_base tmp;
-                tmp.mem_base = (void*)&flag;
-                GC_allow_register_threads();
-                GC_register_my_thread(&tmp);
+            ScreenInfo info;
+            info.rect.setWidth(app->m_width);
+            info.rect.setHeight(app->m_height);
+            info.availableRect.setWidth(app->m_width);
+            info.availableRect.setHeight(app->m_height);
 
-                app->m_sf = new StarFish::StarFish(
-                    (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
-                    app, app->m_width, app->m_height, 1, info, "", "");
+            GC_stack_base tmp;
+            tmp.mem_base = (void*)&flag;
+            GC_allow_register_threads();
+            GC_register_my_thread(&tmp);
 
-                app->m_sf->registerFrameBuffer(
-                    (void*)app->m_daliBuffer.GetBuffer());
+            app->m_sf = new StarFish::StarFish(
+                (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
+                app->m_width, app->m_height, 1, info, "", "");
 
-                app->m_isInit = true;
-                app->m_InitMutex->unlock();
+            app->m_sf->registerFrameBuffer(
+                (void*)app->m_daliBuffer.GetBuffer());
 
-                pthread_t t;
-                pthread_attr_t attr;
-                pthread_attr_init(&attr);
-                pthread_create(
-                    &t, &attr,
-                    [](void* data) -> void* {
-                        char buf[1024];
-                        sleep(1);
-                        while (1) {
-                            fgets(buf, 1024, stdin);
-                            struct Pass {
-                                StarFish::StarFish* sf;
-                                char* buf;
-                            };
-                            char* b = new char[1024];
-                            Pass* pass = new Pass;
-                            pass->buf = b;
-                            pass->sf = (StarFish::StarFish*)data;
-                            memcpy(b, buf, sizeof buf);
+            app->m_isInit = true;
+            app->m_InitMutex->unlock();
 
-                            pass->sf->messageLoop()
-                                ->addIdlerWithNoGCRootingInOtherThread(
-                                    pass->sf->platformWindow()
-                                        ->webView()
-                                        ->mainBrowsingContext(),
-                                    [](size_t, void* data) {
-                                        Pass* p = (Pass*)data;
-
-                                        if (strncmp(p->buf, "!exit", 5) == 0) {
-                                            delete p->sf;
-
-                                            GC_gcollect_and_unmap();
-                                            GC_gcollect_and_unmap();
-                                            GC_gcollect_and_unmap();
-                                            GC_gcollect_and_unmap();
-                                            exit(-1);
-                                        }
-
-                                        StarFishEnterer enter(p->sf);
-                                        String* str = p->sf->evaluate(
-                                            String::fromUTF8(p->buf));
-                                        puts(str->utf8Data());
-
-                                        delete[] p->buf;
-                                        delete p;
-                                    },
-                                    pass);
-                        }
-                        return NULL;
-                    },
-                    app->m_sf);
-
-                app->m_sf->run();
-
-                return NULL;
-            },
-            this);
+            uv_close((uv_handle_t*)handle, nullptr);
+        });
+        m_uv_handle.data = this;
+        uv_async_send(&m_uv_handle);
 
         Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
             this, &DaliShellController::TouchEventHandler);
@@ -392,6 +347,7 @@ public:
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
     StarFish::Mutex* m_InitMutex;
+    uv_async_t m_uv_handle;
 };
 #endif
 

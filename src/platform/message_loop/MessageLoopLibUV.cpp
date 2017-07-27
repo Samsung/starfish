@@ -29,28 +29,14 @@
 
 namespace StarFish {
 
-uv_signal_t g_sigterm;
-uv_signal_t g_sigint;
-
-void uv_term_cb(uv_signal_t* handle, int signum)
-{
-    exit(0);
-}
-
 MessageLoop::MessageLoop(StarFish* sf)
     : m_starFish(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
 {
-    uv_signal_init(uv_default_loop(), &g_sigterm);
-    uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
-
-    uv_signal_init(uv_default_loop(), &g_sigint);
-    uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
 }
 
 void MessageLoop::run()
 {
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 struct IdlerData {
