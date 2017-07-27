@@ -39,6 +39,18 @@ private:
     LayoutLocation* m_loc;
 };
 
+struct StackingContextRareData : public gc {
+    bool m_needsOwnBuffer;
+    LayoutRect m_visibleRect;
+    CanvasSurface* m_buffer;
+    SkMatrix m_matrix;
+
+    StackingContextRareData();
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+};
+
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
@@ -60,24 +72,25 @@ public:
 
     bool needsOwnBuffer()
     {
-        return m_needsOwnBuffer;
+        return m_rareData ? m_rareData->m_needsOwnBuffer : false;
     }
 
     void clearOwnBuffer(bool needsDetachNative = true);
 
     CanvasSurface* buffer()
     {
-        return m_buffer;
+        return m_rareData ? m_rareData->m_buffer : nullptr;
     }
 
-    const LayoutRect& visibleRect()
+    LayoutRect visibleRect()
     {
-        return m_visibleRect;
+        return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
     }
 
     void unite(const LayoutRect& other)
     {
-        m_visibleRect.unite(other);
+        STARFISH_ASSERT(m_rareData);
+        m_rareData->m_visibleRect.unite(other);
     }
 
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
@@ -94,16 +107,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    bool m_needsOwnBuffer : 1;
-
+    StackingContextRareData* ensureRareData();
     FrameBox* m_owner;
-    LayoutRect m_visibleRect;
     StackingContext* m_parent;
-    CanvasSurface* m_buffer;
-
-    SkMatrix m_matrix;
-
     GCVector<StackingContextChild*> m_childContexts;
+    StackingContextRareData* m_rareData;
 };
 }
 
