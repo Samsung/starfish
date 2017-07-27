@@ -28,6 +28,19 @@
 
 namespace StarFish {
 
+void* HTMLScriptElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLScriptElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLScriptElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 static bool isJavaScriptType(const char* type)
 {
     if (strcmp("", type) == 0) {

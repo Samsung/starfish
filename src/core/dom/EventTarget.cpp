@@ -90,7 +90,8 @@ bool EventTarget::addEventListener(const String* eventType,
     }
     if (!hasEvent) {
         v = new (GC) GCVector<EventListener*>();
-        m_eventListeners.insert(std::make_pair(type, v));
+        m_eventListeners.insert(m_eventListeners.end(),
+                                std::make_pair(type, v));
     }
 
     for (auto i = v->begin(); i != v->end(); i++) {

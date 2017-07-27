@@ -174,12 +174,12 @@ public:
 
     ResourceLoader& resourceLoader()
     {
-        return m_resourceLoader;
+        return *m_resourceLoader;
     }
 
     StyleResolver& styleResolver()
     {
-        return m_styleResolver;
+        return *m_styleResolver;
     }
 
     ScriptBindingInstance* scriptBindingInstance() const;
@@ -413,6 +413,27 @@ public:
 #undef OVERRIDE
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_cookieURI));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_originURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleResolver));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentBuilder));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_brokenImage));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_animationExecutor));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_scriptBindingInstance));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeResourceRequests));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document,
+                                        m_namedAccessActiveHTMLCollectionList));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
+    }
+
     // only used in html document builder
     friend class HTMLResourceClient;
     void setCharacterSet(String* s)
@@ -423,22 +444,22 @@ protected:
     bool m_didLoadBrokenImage : 1;
     bool m_isXMLDocument : 1;
     bool m_doesParticipateInRendering : 1;
+    CompatibilityMode m_compatibilityMode : 2;
+    VisibilityState m_pageVisibilityState : 2;
 
-    CompatibilityMode m_compatibilityMode;
     Window* m_window;
     ResourceURL* m_documentURI;
     ResourceURL* m_cookieURI;
     ResourceURL* m_originURL;
     String* m_characterSet;
     String* m_contentType;
-    ResourceLoader m_resourceLoader;
-    StyleResolver m_styleResolver;
+    ResourceLoader* m_resourceLoader;
+    StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;
     ImageData* m_brokenImage;
     AnimationExecutor* m_animationExecutor;
     ScriptBindingInstance* m_scriptBindingInstance;
-    VisibilityState m_pageVisibilityState;
     size_t m_domVersion;
     GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;

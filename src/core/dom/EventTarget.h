@@ -184,7 +184,7 @@ public:
     }
 
 protected:
-    GCUnorderedMap<String*, GCVector<EventListener*>*> m_eventListeners;
+    GCVector<std::pair<String*, GCVector<EventListener*>*>> m_eventListeners;
 };
 
 #define DECLARE_EVENT_LISTENER(EVENT)            \

@@ -35,6 +35,9 @@ public:
         return m_name;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     QualifiedName m_name;
 };

@@ -65,19 +65,19 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_didLoadBrokenImage(false)
     , m_doesParticipateInRendering(doesParticipateInRendering)
     , m_compatibilityMode(Document::NoQuirksMode)
+    , m_pageVisibilityState(VisibilityStateVisible)
     , m_window(window)
     , m_documentURI(uri)
     , m_cookieURI(uri)
     , m_originURL(uri)
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
-    , m_resourceLoader(this)
-    , m_styleResolver(this)
+    , m_resourceLoader(new ResourceLoader(this))
+    , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
     , m_brokenImage(nullptr)
     , m_animationExecutor(new AnimationExecutor(window))
-    , m_pageVisibilityState(VisibilityStateVisible)
     , m_domVersion(0)
     , m_implementation(nullptr)
 #ifdef STARFISH_TIZEN
@@ -124,7 +124,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     // The origin is a unique opaque origin assigned when the Document is
     // created.
 
-    setStyle(m_styleResolver.resolveDocumentStyle(this));
+    setStyle(m_styleResolver->resolveDocumentStyle(this));
     StaticStrings* sstrs = m_window->starFish()->staticStrings();
 
     const char* ua =
@@ -137,7 +137,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                                            userAgentStyleSheet->url());
     userAgentStyleSheet->sortStyleRulesBySpecificity();
 
-    m_styleResolver.addSheet(userAgentStyleSheet);
+    m_styleResolver->addSheet(userAgentStyleSheet);
 
     auto df = new FrameDocument(this);
     setFrame(df);
@@ -177,7 +177,7 @@ void Document::setCookie(String* cookie)
 
 void Document::open()
 {
-    m_resourceLoader.markDocumentOpenState();
+    m_resourceLoader->markDocumentOpenState();
 
     m_documentBuilder = new HTMLDocumentBuilder(this);
     m_documentBuilder->build(documentURI());
@@ -202,7 +202,7 @@ void Document::notifyDomContentLoaded()
     Event* e = new Event(this, eventType, EventInit(true, true));
     EventTarget::dispatchEvent(e);
 
-    m_resourceLoader.notifyEndParseDocument();
+    m_resourceLoader->notifyEndParseDocument();
     m_documentBuilder = nullptr;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA

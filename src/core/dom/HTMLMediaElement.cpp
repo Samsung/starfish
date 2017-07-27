@@ -62,6 +62,28 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
 {
 }
 
+void* HTMLMediaElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLMediaElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_mediaPlayer));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_textTracks));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentOperation));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_operationQueue));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLMediaElement, m_playOperationQueue));
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(HTMLMediaElement, m_resourceSelectionContext));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLMediaElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void HTMLMediaElement::onDOMContentLoaded()
 {
     if (!document()->inParsing() &&

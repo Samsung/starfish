@@ -41,6 +41,9 @@ public:
         m_contentType = String::createASCIIString("text/html");
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     Node* clone()
     {
         return new HTMLDocument(*this);

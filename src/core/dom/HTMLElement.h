@@ -28,6 +28,9 @@ public:
     {
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLElement() const override;
@@ -162,6 +165,12 @@ public:
 
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
     Element* offsetParent();
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Element::fillGCDescriptor(desc);
+    }
 };
 }
 

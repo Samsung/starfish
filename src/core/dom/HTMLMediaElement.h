@@ -220,6 +220,9 @@ public:
 
     HTMLMediaElement(Document* document);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLMediaElement() const override;

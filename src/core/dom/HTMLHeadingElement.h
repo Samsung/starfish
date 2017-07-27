@@ -25,6 +25,9 @@ class HTMLHeadingElement : public HTMLElement {
 public:
     HTMLHeadingElement(Document* document, AtomicString name);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLHeadingElement() const override;

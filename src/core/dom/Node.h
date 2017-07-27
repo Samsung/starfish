@@ -94,6 +94,7 @@ protected:
         , m_needsFrameTreeBuild(true)
         , m_childNeedsFrameTreeBuild(true)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
+        , m_tabIndexWasSetExplicitly(false)
         , m_hasDirAttribute(false)
         , m_state(NodeStateNormal)
         , m_restyleFlags(0)
@@ -571,6 +572,21 @@ private:
     void validateReplace(Node* child, Node* childToRemove);
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_object));   // ScriptWrappable
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_document)); // DocumentHoladable
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_eventListeners)); // EventTarget
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_rareNodeMembers));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_nextSibling));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_previousSibling));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_firstChild));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_lastChild));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_parentNode));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_style));
+        GC_set_bit(desc, GC_WORD_OFFSET(Node, m_frame));
+    }
+
     Node* getDoctypeChild();
     bool m_inParsing : 1;
     bool m_needsStyleRecalc : 1;
@@ -579,11 +595,12 @@ protected:
     bool m_childNeedsFrameTreeBuild : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
+    bool m_tabIndexWasSetExplicitly : 1;
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
 
-    int m_state;
-    int m_restyleFlags;
+    int m_state : 8;
+    int m_restyleFlags : 16;
 
     RareNodeMembers* m_rareNodeMembers;
 
