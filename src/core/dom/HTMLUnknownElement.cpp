@@ -27,4 +27,17 @@ HTMLUnknownElement::HTMLUnknownElement(Document* document,
              localName)
 {
 }
+
+void* HTMLUnknownElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLUnknownElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLUnknownElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 }

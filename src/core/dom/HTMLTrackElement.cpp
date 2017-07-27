@@ -121,6 +121,21 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     m_track->setTrackElement(this);
 }
 
+void* HTMLTrackElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLTrackElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLTrackElement, m_track));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLTrackElement, m_VTTFileResource));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLTrackElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLTrackElement::name()
 {
     return starFish()->staticStrings()->m_trackTagName;

@@ -17,10 +17,6 @@
 #ifndef __StarFishPlatformWindow__
 #define __StarFishPlatformWindow__
 
-#include "StarFishConfig.h"
-
-#include "PlatformWindow.h"
-
 namespace StarFish {
 
 class AnimationExecutor;

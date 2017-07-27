@@ -1903,7 +1903,7 @@ using MatchedStyleRules = VectorWithInlineStorage<
     std::allocator<std::pair<StyleRule*, ResourceURL*>>>;
 
 class CSSStyleSheet;
-class StyleResolver : public DocumentHoldable {
+class StyleResolver : public DocumentHoldable, public gc {
 public:
     enum PseudoElementType {
         PseudoElementNone = 0,

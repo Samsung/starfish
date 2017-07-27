@@ -24,6 +24,21 @@
 
 namespace StarFish {
 
+void* HTMLImageElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLImageElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLImageElement, m_imageResource));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLImageElement, m_imageData));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLImageElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 class ImageDownloadClient : public ResourceClient {
 public:
     ImageDownloadClient(HTMLImageElement* element, Resource* res)

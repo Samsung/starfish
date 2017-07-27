@@ -20,6 +20,19 @@
 
 namespace StarFish {
 
+void* HTMLFontElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLFontElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFontElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLFontElement::name()
 {
     return starFish()->staticStrings()->m_fontTagName;

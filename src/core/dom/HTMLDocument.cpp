@@ -68,6 +68,19 @@
 
 namespace StarFish {
 
+void* HTMLDocument::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLDocument)] = { 0 };
+        Document::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLDocument));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
 {
     StaticStrings* str = document->starFish()->staticStrings();

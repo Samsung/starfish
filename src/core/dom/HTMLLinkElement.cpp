@@ -33,6 +33,22 @@ namespace StarFish {
 
 bool isCSSType(const char* type);
 
+void* HTMLLinkElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLLinkElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLLinkElement, m_generatedSheet));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLLinkElement, m_styleSheetTextResource));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLLinkElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLLinkElement::name()
 {
     return starFish()->staticStrings()->m_linkTagName;

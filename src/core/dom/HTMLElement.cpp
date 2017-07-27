@@ -31,6 +31,19 @@
 
 namespace StarFish {
 
+void* HTMLElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
                                       String* value, bool attributeCreated,
                                       bool attributeRemoved)

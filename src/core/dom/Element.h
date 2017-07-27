@@ -56,9 +56,7 @@ public:
     Element(Document* document)
         : Node(document)
         , m_inlineStyle(nullptr)
-        , m_focused(false)
         , m_tabIndex(0)
-        , m_tabIndexWasSetExplicitly(false)
         , m_id(AtomicString::emptyAtomicString())
     {
     }
@@ -266,11 +264,7 @@ public:
     // FIXME: Use NodeState instead of this flag.
     bool focused() const
     {
-        return m_focused;
-    }
-    void setFocused(bool flag)
-    {
-        m_focused = flag;
+        return m_state & NodeStateFocused;
     }
     virtual void setFocus(bool flag);
 
@@ -316,6 +310,12 @@ public:
     }
 
 protected:
+    void setFocused(bool flag)
+    {
+        setState(Node::NodeStateFocused,
+                 Node::ChildrenOrSiblingsAffectedByFocus, flag);
+    }
+
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
     LayoutRect clientRect();
@@ -328,11 +328,16 @@ protected:
         return (GCVector<Attribute>*)&m_attributes;
     }
 
-    CSSStyleDeclaration* m_inlineStyle;
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(Element, m_inlineStyle));
+        GC_set_bit(desc, GC_WORD_OFFSET(Element, m_classNames));
+        GC_set_bit(desc, GC_WORD_OFFSET(Element, m_attributes));
+    }
 
-    bool m_focused;
+    CSSStyleDeclaration* m_inlineStyle;
     int m_tabIndex;
-    bool m_tabIndexWasSetExplicitly;
 
 private:
     AtomicString m_id;
