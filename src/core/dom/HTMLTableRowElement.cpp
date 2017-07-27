@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableRowElement.h"
+#include "core/dom/HTMLTableElement.h"
+#include "HTMLCollection.h"
 
 namespace StarFish {
 
@@ -40,5 +42,37 @@ String* HTMLTableRowElement::ch()
 void HTMLTableRowElement::setCh(String* ch)
 {
     setAttribute(starFish()->staticStrings()->m_char, ch);
+}
+
+inline HTMLTableElement* findTable(const HTMLTableRowElement& row)
+{
+    auto* parent = row.parentNode();
+    if (parent->isHTMLTableElement()) {
+        return parent->asHTMLTableElement();
+    }
+    if (parent->isHTMLTableSectionElement()) {
+        auto* grandparent = parent->parentNode();
+        if (grandparent->isHTMLTableElement()) {
+            return grandparent->asHTMLTableElement();
+        }
+    }
+    return nullptr;
+}
+
+int32_t HTMLTableRowElement::rowIndex()
+{
+    HTMLTableElement* table = findTable(*this);
+    if (!table) {
+        return -1;
+    }
+
+    HTMLCollection* rows = table->rows();
+    size_t length = rows->length();
+    for (size_t i = 0; i < length; i++) {
+        if (rows->item(i) == this) {
+            return i;
+        }
+    }
+    return -1;
 }
 }

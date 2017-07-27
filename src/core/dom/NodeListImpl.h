@@ -22,12 +22,13 @@ namespace StarFish {
 class Node;
 class Element;
 
-typedef bool (*NodeListFilterFunction)(Node*, void*);
-bool isChildNode(Node* node, void* data);
-bool isChildElement(Node* node, void* data);
-bool isSameTagName(Node* node, void* data);
-bool hasClassNames(Node* node, void* data);
-bool isSameNamedAccess(Node* node, void* data);
+typedef bool (*NodeListFilterFunction)(Node*, void*, GCVector<Node*>*);
+bool isChildNode(Node* node, void* data, GCVector<Node*>* collection);
+bool isChildElement(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection);
+bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
 
 class NodeListImpl : public gc {
 public:
@@ -37,7 +38,8 @@ public:
         ChildElementFilter,
         TagNameFilter,
         ClassNamesFilter,
-        NamedAccessFilter
+        NamedAccessFilter,
+        TableRowsFilter
     };
 
     NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
@@ -63,6 +65,9 @@ public:
             break;
         case NamedAccessFilter:
             m_filter = isSameNamedAccess;
+            break;
+        case TableRowsFilter:
+            m_filter = isSameTableElement;
             break;
         case None:
             STARFISH_ASSERT_NOT_REACHED();

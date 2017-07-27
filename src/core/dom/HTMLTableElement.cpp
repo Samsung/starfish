@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/dom/HTMLCollection.h"
 
 namespace StarFish {
 
@@ -131,5 +132,33 @@ String* HTMLTableElement::cellpadding()
 void HTMLTableElement::setCellpadding(String* cellpadding)
 {
     setAttribute(starFish()->staticStrings()->m_cellpadding, cellpadding);
+}
+
+struct TableRowsCollectionData : public gc {
+    Node* root;
+    Node* lastNode;
+    GCVector<GCVector<Node*>> tag;
+};
+
+HTMLCollection* HTMLTableElement::rows()
+{
+    if (m_rows) {
+        return m_rows;
+    }
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagName();
+
+    TableRowsCollectionData* data = new TableRowsCollectionData;
+    data->root = this;
+    data->lastNode = nullptr;
+    data->tag.resize(4);
+
+    m_rows =
+        new HTMLCollection(this, NodeListImpl::TableRowsFilter, data, false);
+
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists,
+                                                   this->localName(), m_rows);
+    return m_rows;
 }
 }

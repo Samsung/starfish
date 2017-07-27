@@ -2,7 +2,7 @@
 
 [HTMLConstructor]
 interface HTMLTableRowElement : HTMLElement {
-  [Unimplemented] readonly attribute long rowIndex;
+  readonly attribute long rowIndex;
   [Unimplemented] readonly attribute long sectionRowIndex;
   [Unimplemented, SameObject] readonly attribute HTMLCollection cells;
   [Unimplemented] HTMLTableCellElement insertCell(optional long index = -1);
