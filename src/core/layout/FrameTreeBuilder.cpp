@@ -310,6 +310,10 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         pseudoParentFrame->removeChild(originalFrameText);
     } else if (pseudoElement->isBeforePseudoElement() ||
                pseudoElement->isAfterPseudoElement()) {
+        if (!pseudoElement->style()->hasRareComputeStyleData()) {
+            return;
+        }
+
         DisplayValue contentDisplay = pseudoElement->style()->display();
         DisplayValue parentDisplay = parent->style()->display();
 

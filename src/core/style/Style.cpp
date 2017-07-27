@@ -2968,23 +2968,23 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::MaxWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_maxWidth = parentStyle->m_maxWidth;
+                style->setMaxWidth(parentStyle->maxWidth());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_maxWidth = Length();
+                style->setMaxWidth(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Auto) {
-                style->m_maxWidth = Length();
+                style->setMaxWidth(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->m_maxWidth = cssValues[k].lengthValue().toLength();
+                style->setMaxWidth(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_maxWidth =
-                    Length(Length::Percent, cssValues[k].percentageValue());
+                style->setMaxWidth(
+                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->m_maxHeight = Length();
+                style->setMaxWidth(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -2992,23 +2992,23 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::MinWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_minWidth = parentStyle->m_minWidth;
+                style->setMinWidth(parentStyle->minWidth());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_minWidth = Length();
+                style->setMinWidth(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Auto) {
-                style->m_minWidth = Length();
+                style->setMinWidth(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->m_minWidth = cssValues[k].lengthValue().toLength();
+                style->setMinWidth(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_minWidth =
-                    Length(Length::Percent, cssValues[k].percentageValue());
+                style->setMinWidth(
+                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->m_maxHeight = Length();
+                style->setMinWidth(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -3037,23 +3037,23 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::MaxHeight:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_maxHeight = parentStyle->m_maxHeight;
+                style->setMaxHeight(parentStyle->maxHeight());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_maxHeight = Length();
+                style->setMaxHeight(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Auto) {
-                style->m_maxHeight = Length();
+                style->setMaxHeight(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->m_maxHeight = cssValues[k].lengthValue().toLength();
+                style->setMaxHeight(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_maxHeight =
-                    Length(Length::Percent, cssValues[k].percentageValue());
+                style->setMaxHeight(
+                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->m_maxHeight = Length();
+                style->setMaxHeight(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -3061,23 +3061,23 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::MinHeight:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_minHeight = parentStyle->m_minHeight;
+                style->setMinHeight(parentStyle->minHeight());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_minHeight = Length();
+                style->setMinHeight(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Auto) {
-                style->m_minHeight = Length();
+                style->setMinHeight(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->m_minHeight = cssValues[k].lengthValue().toLength();
+                style->setMinHeight(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_minHeight =
-                    Length(Length::Percent, cssValues[k].percentageValue());
+                style->setMinHeight(
+                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->m_maxHeight = Length();
+                style->setMinHeight(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4077,12 +4077,14 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Transform:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_transforms = parentStyle->m_transforms;
+                style->setTransform(parentStyle->transforms());
             } else if (cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::Initial ||
                        cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::None) {
-                style->m_transforms = nullptr;
+                if (style->hasTransforms()) {
+                    style->setTransform(nullptr);
+                }
             } else {
                 STARFISH_ASSERT(
                     cssValues[k].valueKind() ==
@@ -4111,7 +4113,8 @@ void StyleResolver::apply(Element* element,
 
                         if (dValues[0] != dValues[3] || dValues[1] ||
                             dValues[2])
-                            style->m_transforms->m_hasComplexTransform = true;
+                            style->m_rareComputedStyleData->m_transforms
+                                ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);
@@ -4156,25 +4159,30 @@ void StyleResolver::apply(Element* element,
                         break;
                     case CSSTransformFunction::Kind::Rotate:
                         style->setTransformRotate(dValues[0]);
-                        style->m_transforms->m_hasComplexTransform = true;
+                        style->m_rareComputedStyleData->m_transforms
+                            ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Skew:
                         if (valueSize == 2) {
                             style->setTransformSkew(dValues[0], dValues[1]);
-                            style->m_transforms->m_hasComplexTransform = true;
+                            style->m_rareComputedStyleData->m_transforms
+                                ->m_hasComplexTransform = true;
                             break;
                         }
                     case CSSTransformFunction::Kind::SkewX:
                         style->setTransformSkew(dValues[0], 0);
-                        style->m_transforms->m_hasComplexTransform = true;
+                        style->m_rareComputedStyleData->m_transforms
+                            ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::SkewY:
                         style->setTransformSkew(0, dValues[0]);
-                        style->m_transforms->m_hasComplexTransform = true;
+                        style->m_rareComputedStyleData->m_transforms
+                            ->m_hasComplexTransform = true;
                         break;
                     default:
                         style->setTransformIfNeeded();
-                        style->m_transforms->m_hasComplexTransform = true;
+                        style->m_rareComputedStyleData->m_transforms
+                            ->m_hasComplexTransform = true;
                         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                     }
                 }
@@ -4183,7 +4191,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::TransformOrigin:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_transformOrigin = parentStyle->m_transformOrigin;
+                style->setTransformOrigin(parentStyle->transformOrigin());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setTransformOriginValue(Length(Length::Percent, 0.5f),
