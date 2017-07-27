@@ -39,6 +39,54 @@
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
 
+#include <uv.h>
+
+uv_signal_t g_sigterm;
+uv_signal_t g_sigint;
+
+void uv_term_cb(uv_signal_t* handle, int signum)
+{
+    exit(0);
+}
+bool needToInitMainThread()
+{
+    return !uv_loop_alive(uv_default_loop());
+}
+
+void* mainThread(void* data)
+{
+    uv_signal_init(uv_default_loop(), &g_sigterm);
+    uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
+
+    uv_signal_init(uv_default_loop(), &g_sigint);
+    uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
+
+    uv_idle_t idler;
+    idler.data = data;
+    uv_idle_init(uv_default_loop(), &idler);
+    uv_idle_start(&idler, [](uv_idle_t* handle) {
+        StarFish::Mutex* initMutext = (StarFish::Mutex*)handle->data;
+        initMutext->unlock();
+    });
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    return NULL;
+}
+
+void initMainThread()
+{
+    StarFish::Mutex* initMutex = new StarFish::Mutex();
+
+    initMutex->lock();
+    pthread_t t;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_create(&t, &attr, mainThread, initMutex);
+
+    {
+        StarFish::Locker<StarFish::Mutex> l(*initMutex);
+    }
+}
+
 class StarFishController : public Dali::ConnectionTracker {
 public:
     StarFishController(StarFishInstance* instance)
@@ -192,8 +240,39 @@ public:
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
     StarFish::Mutex* m_InitMutex;
+    uv_async_t m_uv_handle;
 };
 #define TO_CONTROLLER(instance) ((StarFishController*)instance->m_data)
+
+void starfishCreate_internal(uv_async_t* handle)
+{
+    volatile int flag = 0;
+    StarFishController* app = (StarFishController*)handle->data;
+
+    StarFish::ScreenInfo info;
+    info.rect.setWidth(app->m_width);
+    info.rect.setHeight(app->m_height);
+    info.availableRect.setWidth(app->m_width);
+    info.availableRect.setHeight(app->m_height);
+
+    GC_stack_base tmp;
+    tmp.mem_base = (void*)&flag;
+    GC_allow_register_threads();
+    GC_register_my_thread(&tmp);
+
+    StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
+        app->m_width, app->m_height, 1, info, "", "");
+    starFish->registerFrameBuffer((void*)app->m_daliBuffer.GetBuffer());
+    app->m_instance->m_starfish = starFish;
+    app->m_isInit = true;
+    app->m_InitMutex->unlock();
+
+    starFish->run();
+
+    uv_close((uv_handle_t*)handle, nullptr);
+}
+
 #endif
 
 using namespace StarFish;
@@ -218,6 +297,10 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     const char* timezoneID, float defaultFontSizeMultiplier)
 {
 #if defined(STARFISH_DALI)
+    if (needToInitMainThread()) {
+        initMainThread();
+    }
+
     int width = windowWidth, height = windowHeight;
 
     StarFishInstance* instance = new StarFishInstance;
@@ -239,38 +322,11 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_height = height;
 
     starFishControl->m_InitMutex->lock();
-    pthread_t t2;
-    pthread_attr_t attr2;
-    pthread_attr_init(&attr2);
-    pthread_create(
-        &t2, &attr2,
-        [](void* data) -> void* {
-            volatile int flag = 0;
-            StarFishController* app = (StarFishController*)data;
 
-            ScreenInfo info;
-            info.rect.setWidth(app->m_width);
-            info.rect.setHeight(app->m_height);
-            info.availableRect.setWidth(app->m_width);
-            info.availableRect.setHeight(app->m_height);
-
-            GC_stack_base tmp;
-            tmp.mem_base = (void*)&flag;
-            GC_allow_register_threads();
-            GC_register_my_thread(&tmp);
-
-            StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
-                (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul",
-                nullptr, app->m_width, app->m_height, 1, info, "", "");
-            starFish->registerFrameBuffer((void*)app->m_daliBuffer.GetBuffer());
-            app->m_instance->m_starfish = starFish;
-            app->m_isInit = true;
-            app->m_InitMutex->unlock();
-
-            starFish->run();
-            return NULL;
-        },
-        starFishControl);
+    uv_async_init(uv_default_loop(), &starFishControl->m_uv_handle,
+                  starfishCreate_internal);
+    starFishControl->m_uv_handle.data = starFishControl;
+    uv_async_send(&starFishControl->m_uv_handle);
 
     Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
         starFishControl, &StarFishController::TouchEventHandler);
