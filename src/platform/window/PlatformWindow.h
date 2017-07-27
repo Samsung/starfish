@@ -87,11 +87,14 @@ public:
     void screenShot(std::string filePath);
     void onResize();
 
+    void registerOrUpdateIdleTimeCleaner();
+
 protected:
     PlatformWindow(StarFish* starFish);
 
     StarFish* m_starFish;
     WebView* m_webView;
+    size_t m_idleCleanerTimerID;
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     bool m_isButtonOfVirtualCursorClicked;

@@ -28,6 +28,7 @@
 #include "core/modules/canvas/image/ImageData.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/MouseEvent.h"
+#include "core/modules/message_loop/Timer.h"
 
 #ifdef STARFISH_ENABLE_TEST
 StarFish::CanvasSurface* g_surfaceForScreehShot;
@@ -49,6 +50,7 @@ namespace StarFish {
 PlatformWindow::PlatformWindow(StarFish* starFish)
     : m_starFish(starFish)
     , m_webView(nullptr)
+    , m_idleCleanerTimerID(SIZE_MAX)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(0)
@@ -75,23 +77,30 @@ void PlatformWindow::resume()
 
 void PlatformWindow::close()
 {
+    if (m_idleCleanerTimerID != SIZE_MAX) {
+        starFish()->timer()->removeTimer(m_idleCleanerTimerID);
+    }
     webView()->close();
 }
 
 void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                         size_t touchCount)
 {
+    registerOrUpdateIdleTimeCleaner();
     webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
                                                          touchCount);
 }
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
+    registerOrUpdateIdleTimeCleaner();
     webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
 }
 
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 {
+    registerOrUpdateIdleTimeCleaner();
+
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     const int virtualCursorSpeed = 10;
     MouseEventKind eventKind = MouseEventMove;
@@ -185,6 +194,28 @@ void PlatformWindow::onResize()
     m_virtualCursorY = height() / 2;
 #endif
     webView()->mainBrowsingContext()->window()->resize(width(), height());
+}
+
+#define IDLE_TIMER_TIMEOUT 3000
+void PlatformWindow::registerOrUpdateIdleTimeCleaner()
+{
+    if (m_idleCleanerTimerID != SIZE_MAX) {
+        starFish()->timer()->removeTimer(m_idleCleanerTimerID);
+    }
+
+    m_idleCleanerTimerID = starFish()->timer()->addTimer(
+        IDLE_TIMER_TIMEOUT, nullptr,
+        [](Window* wnd, void* data) {
+            PlatformWindow* pwnd = (PlatformWindow*)data;
+
+            STARFISH_LOG_INFO("Do idle time GC\n");
+            GC_gcollect_and_unmap();
+            GC_gcollect_and_unmap();
+            GC_gcollect_and_unmap();
+
+            pwnd->registerOrUpdateIdleTimeCleaner();
+        },
+        this, false);
 }
 
 void PlatformWindow::screenShot(std::string filePath)

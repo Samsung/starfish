@@ -406,6 +406,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
     if (m_pendingResourceCountWhileDocumentOpening == 0 &&
         m_isDocumentInOpenState) {
         m_isDocumentInOpenState = false;
+        starFish()->platformWindow()->registerOrUpdateIdleTimeCleaner();
         starFish()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t handle, void* data) {
