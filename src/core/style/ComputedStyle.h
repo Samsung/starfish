@@ -1187,7 +1187,7 @@ protected:
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
         SideValue m_textAlign : 3;
-        DirectionValue m_direction : 2;
+        DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;
         BorderCollapseValue m_borderCollapse : 1; // table
@@ -1204,7 +1204,7 @@ protected:
     } m_inheritedStyles;
 
     FloatValue m_float : 2;
-    ClearValue m_clear : 3;
+    ClearValue m_clear : 2;
     DisplayValue m_display : 4;
     DisplayValue m_originalDisplay : 4;
     PositionValue m_position : 2;
