@@ -71,7 +71,7 @@ XMLDocument* DOMImplementation::createDocument(
     }
 
     // document’s origin is context object’s associated document’s origin.
-    document->setOriginURL(m_document->originURL());
+    document->setWebOrigin(m_document->webOrigin());
 
     // document’s content type is determined by namespace:
     if (namespaceParameter.hasValue()) {
@@ -119,7 +119,7 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     html->appendChild(new HTMLBodyElement(doc));
 
     // doc’s origin is context object’s associated document’s origin.
-    doc->setOriginURL(m_document->originURL());
+    doc->setWebOrigin(m_document->webOrigin());
     return doc;
 }
 }

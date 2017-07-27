@@ -20,8 +20,10 @@
 namespace StarFish {
 
 class Document;
+class WebOrigin;
 
 class ResourceURL : public gc {
+    friend WebOrigin;
     enum Protocol {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,

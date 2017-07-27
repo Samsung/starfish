@@ -42,6 +42,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
+#include "core/dom/WebOrigin.h"
 #include "core/layout/FrameDocument.h"
 #include "platform/loader/ImageResource.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -69,7 +70,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_window(window)
     , m_documentURI(uri)
     , m_cookieURI(uri)
-    , m_originURL(uri)
+    , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
     , m_resourceLoader(new ResourceLoader(this))
@@ -774,6 +775,32 @@ bool Document::hasFocus() const
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
+}
+
+String* Document::origin()
+{
+    STARFISH_ASSERT(m_webOrigin != nullptr);
+    return m_webOrigin->serialize();
+}
+
+// https://html.spec.whatwg.org/multipage/origin.html#dom-document-domain
+String* Document::domain()
+{
+    STARFISH_ASSERT(m_webOrigin != nullptr);
+    if (!browsingContext()) {
+        return String::emptyString;
+    }
+
+    Nullable<String*> effectiveDomain = m_webOrigin->domain();
+    if (effectiveDomain.hasValue()) {
+        return effectiveDomain.getValue();
+    }
+    return String::emptyString;
+}
+
+void Document::setDomain(String* domain)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 Event* Document::createEvent(String* type)
