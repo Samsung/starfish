@@ -40,6 +40,7 @@ class ResourceRequest;
 class StyleSheetList;
 class Text;
 class ResourceURL;
+class WebOrigin;
 class Window;
 class BrowsingContext;
 class AnimationExecutor;
@@ -241,6 +242,9 @@ public:
         m_inParsing = b;
     }
 
+    String* domain();
+    void setDomain(String* domain);
+
     String* urlString();
 
     ResourceURL* documentURI()
@@ -248,22 +252,16 @@ public:
         return m_documentURI;
     }
 
-    String* origin()
+    String* origin();
+
+    WebOrigin* webOrigin()
     {
-        if (m_originURL == nullptr) {
-            return String::emptyString;
-        }
-        return m_originURL->origin();
+        return m_webOrigin;
     }
 
-    ResourceURL* originURL()
+    void setWebOrigin(WebOrigin* webOrigin)
     {
-        return m_originURL;
-    }
-
-    void setOriginURL(ResourceURL* url)
-    {
-        m_originURL = url;
+        m_webOrigin = webOrigin;
     }
 
     void setDocumentURI(ResourceURL* newURL)
@@ -450,7 +448,7 @@ protected:
     Window* m_window;
     ResourceURL* m_documentURI;
     ResourceURL* m_cookieURI;
-    ResourceURL* m_originURL;
+    WebOrigin* m_webOrigin;
     String* m_characterSet;
     String* m_contentType;
     ResourceLoader* m_resourceLoader;
