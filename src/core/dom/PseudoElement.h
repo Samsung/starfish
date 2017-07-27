@@ -65,11 +65,7 @@ inline bool pseudoElementFrameIsNeeded(ComputedStyle* style)
     if (!style || style->display() == NoneDisplayValue) {
         return false;
     }
-    if (style->pseudoType() ==
-        StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
-        return true;
-    }
-    return style->content().size();
+    return true;
 }
 
 class FirstLetterPseudoElement : public PseudoElement {

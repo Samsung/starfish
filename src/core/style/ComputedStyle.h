@@ -39,6 +39,31 @@ enum ComputedStyleDamage {
     ComputedStyleDamageComposite = 1 << 4,
 };
 
+class RareComputedStyleData : public gc {
+public:
+    RareComputedStyleData()
+        : m_transforms(nullptr)
+        , m_transformOrigin(nullptr)
+        , m_transition(nullptr)
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    Length m_minWidth;
+    Length m_maxWidth;
+    Length m_minHeight;
+    Length m_maxHeight;
+
+    StyleTransformDataGroup* m_transforms;
+    StyleTransformOrigin* m_transformOrigin;
+    StyleTransitionData* m_transition;
+
+    ContentDataGroup m_content;
+    GCVector<ComputedStyle*> m_cachedPseudoStyles;
+};
+
 class ComputedStyle : public gc {
     friend class StyleResolver;
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
@@ -117,12 +142,18 @@ public:
 
     Length maxWidth()
     {
-        return m_maxWidth;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+        return m_rareComputedStyleData->m_maxWidth;
     }
 
     Length minWidth()
     {
-        return m_minWidth;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+        return m_rareComputedStyleData->m_minWidth;
     }
 
     void setWidth(const Length& l)
@@ -132,12 +163,14 @@ public:
 
     void setMaxWidth(const Length& l)
     {
-        m_maxWidth = l;
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_maxWidth = l;
     }
 
     void setMinWidth(const Length& l)
     {
-        m_minWidth = l;
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_minWidth = l;
     }
 
     Length height()
@@ -147,12 +180,18 @@ public:
 
     Length maxHeight()
     {
-        return m_maxHeight;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+        return m_rareComputedStyleData->m_maxHeight;
     }
 
     Length minHeight()
     {
-        return m_minHeight;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+        return m_rareComputedStyleData->m_minHeight;
     }
 
     void setHeight(const Length& l)
@@ -162,12 +201,14 @@ public:
 
     void setMaxHeight(const Length& l)
     {
-        m_maxHeight = l;
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_maxHeight = l;
     }
 
     void setMinHeight(const Length& l)
     {
-        m_minHeight = l;
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_minHeight = l;
     }
 
     void setColor(Unit::Color r)
@@ -265,7 +306,7 @@ public:
 
     void setBackgroundIfNeeded()
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             m_background = new StyleBackgroundData();
         }
     }
@@ -277,23 +318,36 @@ public:
         }
     }
 
+    bool hasTransition()
+    {
+        if (hasRareComputeStyleData() &&
+            m_rareComputedStyleData->m_transition) {
+            return true;
+        }
+        return false;
+    }
+
     void setTransitionIfNeeded()
     {
-        if (m_transition == nullptr) {
-            m_transition = new StyleTransitionData();
+        setRareComputedStyleDataIfNeeded();
+        if (m_rareComputedStyleData->m_transition == nullptr) {
+            m_rareComputedStyleData->m_transition = new StyleTransitionData();
         }
+    }
+
+    bool hasTransforms()
+    {
+        if (hasRareComputeStyleData() &&
+            m_rareComputedStyleData->m_transforms) {
+            return true;
+        }
+        return false;
     }
 
     bool hasTransforms(Frame* frame);
     bool hasComplexTransforms(Frame* frame);
 
-    // DO NOT USE THIS FUNCTION
-    StyleTransformDataGroup* uncheckedTransforms()
-    {
-        return m_transforms;
-    }
-
-    StyleTransformDataGroup* transforms(Frame* frame);
+    StyleTransformDataGroup* transforms(Frame* frame = nullptr);
 
     SkMatrix transformsToMatrix(LayoutUnit containerWidth,
                                 LayoutUnit containerHeight,
@@ -301,9 +355,17 @@ public:
 
     void setTransformIfNeeded()
     {
-        if (m_transforms == NULL) {
-            m_transforms = new StyleTransformDataGroup();
+        setRareComputedStyleDataIfNeeded();
+        if (m_rareComputedStyleData->m_transforms == nullptr) {
+            m_rareComputedStyleData->m_transforms =
+                new StyleTransformDataGroup();
         }
+    }
+
+    void setTransform(StyleTransformDataGroup* transform)
+    {
+        setTransformIfNeeded();
+        m_rareComputedStyleData->m_transforms = transform;
     }
 
     void setTransformMatrix(double a, double b, double c, double d, double e,
@@ -312,7 +374,7 @@ public:
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Matrix);
         t.setMatrix(a, b, c, d, e, f);
-        m_transforms->append(t);
+        m_rareComputedStyleData->m_transforms->append(t);
     }
 
     void setTransformScale(double a, double b)
@@ -320,7 +382,7 @@ public:
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Scale);
         t.setScale(a, b);
-        m_transforms->append(t);
+        m_rareComputedStyleData->m_transforms->append(t);
     }
 
     void setTransformRotate(double a)
@@ -328,7 +390,7 @@ public:
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Rotate);
         t.setRotate(a);
-        m_transforms->append(t);
+        m_rareComputedStyleData->m_transforms->append(t);
     }
 
     void setTransformSkew(double a, double b)
@@ -336,7 +398,7 @@ public:
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Skew);
         t.setSkew(a, b);
-        m_transforms->append(t);
+        m_rareComputedStyleData->m_transforms->append(t);
     }
 
     void setTransformTranslate(Length a, Length b)
@@ -344,19 +406,28 @@ public:
         setTransformIfNeeded();
         StyleTransformData t(StyleTransformData::OperationType::Translate);
         t.setTranslate(a, b);
-        m_transforms->append(t);
+        m_rareComputedStyleData->m_transforms->append(t);
     }
 
     void setTransformOriginIfNeeded()
     {
-        if (m_transformOrigin == NULL)
-            m_transformOrigin = new StyleTransformOrigin();
+        setRareComputedStyleDataIfNeeded();
+        if (m_rareComputedStyleData->m_transformOrigin == nullptr) {
+            m_rareComputedStyleData->m_transformOrigin =
+                new StyleTransformOrigin();
+        }
+    }
+
+    void setTransformOrigin(StyleTransformOrigin* transformOrigin)
+    {
+        setTransformOriginIfNeeded();
+        m_rareComputedStyleData->m_transformOrigin = transformOrigin;
     }
 
     void setTransformOriginValue(Length x, Length y, Length z)
     {
         setTransformOriginIfNeeded();
-        m_transformOrigin->setOriginValue(x, y, z);
+        m_rareComputedStyleData->m_transformOrigin->setOriginValue(x, y, z);
     }
 
     void setBackgroundColor(Unit::Color color)
@@ -423,7 +494,7 @@ public:
 
     unsigned int backgroundLayerSize()
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return 0;
         }
         return m_background->sizeOfLayers();
@@ -431,7 +502,7 @@ public:
 
     Unit::Color backgroundColor()
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return Unit::Color();
         }
         return m_background->bgColor();
@@ -439,7 +510,7 @@ public:
 
     String* backgroundImage(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return String::emptyString;
         }
         return m_background->bgImage(layer);
@@ -447,15 +518,15 @@ public:
 
     ImageData* backgroundImageData(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
-            return NULL;
+        if (m_background == nullptr) {
+            return nullptr;
         }
         return m_background->bgImageData(layer);
     }
 
     BackgroundRepeatValue backgroundRepeatX(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return BackgroundRepeatValue::RepeatRepeatValue;
         }
         return m_background->repeatX(layer);
@@ -463,7 +534,7 @@ public:
 
     BackgroundRepeatValue backgroundRepeatY(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return BackgroundRepeatValue::RepeatRepeatValue;
         }
         return m_background->repeatY(layer);
@@ -471,7 +542,7 @@ public:
 
     Length backgroundPositionX(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return Length(Length::Percent, 0.0f);
         }
         return m_background->positionX(layer);
@@ -479,7 +550,7 @@ public:
 
     Length backgroundPositionY(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return Length(Length::Percent, 0.0f);
         }
         return m_background->positionY(layer);
@@ -487,7 +558,7 @@ public:
 
     BackgroundSizeType bgSizeType(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return BackgroundSizeType::SizeValue;
         }
         return m_background->sizeType(layer);
@@ -495,7 +566,7 @@ public:
 
     LengthSize bgSizeValue(unsigned int layer = 0)
     {
-        if (m_background == NULL) {
+        if (m_background == nullptr) {
             return LengthSize();
         }
 
@@ -611,12 +682,17 @@ public:
 
     StyleTransformOrigin* transformOrigin()
     {
-        return m_transformOrigin;
+        STARFISH_ASSERT(hasRareComputeStyleData());
+        return m_rareComputedStyleData->m_transformOrigin;
     }
 
     bool hasTransformOrigin()
     {
-        return m_transformOrigin != nullptr;
+        if (hasRareComputeStyleData() &&
+            m_rareComputedStyleData->m_transformOrigin) {
+            return true;
+        }
+        return false;
     }
 
     void clearBorderTopColor()
@@ -759,30 +835,30 @@ public:
 
     TransitionPropertyValue transitionProperty()
     {
-        if (m_transition == nullptr) {
+        if (!hasTransition()) {
             return TransitionPropertyValue::TransitionPropertyAllValue;
         }
-        return m_transition->transitionProperty();
+        return m_rareComputedStyleData->m_transition->transitionProperty();
     }
 
     void setTransitionProperty(TransitionPropertyValue property)
     {
         setTransitionIfNeeded();
-        m_transition->setTransitionProperty(property);
+        m_rareComputedStyleData->m_transition->setTransitionProperty(property);
     }
 
     CSSTime transitionDuration()
     {
-        if (m_transition == nullptr) {
+        if (!hasTransition()) {
             return CSSTime(0);
         }
-        return m_transition->transitionDuration();
+        return m_rareComputedStyleData->m_transition->transitionDuration();
     }
 
     void setTransitionDuration(CSSTime duration)
     {
         setTransitionIfNeeded();
-        m_transition->setTransitionDuration(duration);
+        m_rareComputedStyleData->m_transition->setTransitionDuration(duration);
     }
 
 #define SET_SIDE(UPOS, ...)                 \
@@ -946,7 +1022,9 @@ public:
 
     void clearTransforms()
     {
-        m_transforms = nullptr;
+        if (hasRareComputeStyleData()) {
+            m_rareComputedStyleData->m_transforms = nullptr;
+        }
     }
 
     void setUnicodeBidi(UnicodeBidiValue value)
@@ -1004,28 +1082,42 @@ public:
         return m_tableLayout;
     }
 
+    bool hasContent()
+    {
+        if (hasRareComputeStyleData() &&
+            m_rareComputedStyleData->m_content.size()) {
+            return true;
+        }
+        return false;
+    }
+
     ContentDataGroup& content()
     {
-        return m_content;
+        STARFISH_ASSERT(hasRareComputeStyleData());
+        return m_rareComputedStyleData->m_content;
     }
 
     void clearContent()
     {
-        m_content.clear();
+        if (hasRareComputeStyleData()) {
+            m_rareComputedStyleData->m_content.clear();
+        }
     }
 
     void setContentText(String* text)
     {
         ContentData content(ContentData::ContentType::Text);
         content.setText(text);
-        m_content.push_back(content);
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_content.push_back(content);
     }
 
     void setContentImage(String* image)
     {
         ContentData content(ContentData::ContentType::Image);
         content.setImage(image);
-        m_content.push_back(content);
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->m_content.push_back(content);
     }
 
     void setPseudoType(StyleResolver::PseudoElementType id)
@@ -1040,11 +1132,29 @@ public:
 
     GCVector<ComputedStyle*>& cachedPseudoStyles()
     {
-        return m_cachedPseudoStyles;
+        setRareComputedStyleDataIfNeeded();
+        return m_rareComputedStyleData->m_cachedPseudoStyles;
     }
     ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pid);
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
     void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
+
+    bool hasRareComputeStyleData()
+    {
+        return m_rareComputedStyleData != nullptr;
+    }
+
+    RareComputedStyleData* rareComputedStyleData()
+    {
+        return m_rareComputedStyleData;
+    }
+
+    void setRareComputedStyleDataIfNeeded()
+    {
+        if (!m_rareComputedStyleData) {
+            m_rareComputedStyleData = new RareComputedStyleData();
+        }
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -1064,8 +1174,6 @@ protected:
         m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
-        m_transforms = nullptr;
-        m_transformOrigin = nullptr;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
@@ -1111,11 +1219,7 @@ protected:
     StyleResolver::PseudoElementType m_pseudoId : 6;
 
     Length m_width;
-    Length m_minWidth;
-    Length m_maxWidth;
     Length m_height;
-    Length m_minHeight;
-    Length m_maxHeight;
     Length m_verticalAlignLength;
 
     float m_opacity;
@@ -1123,11 +1227,8 @@ protected:
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
-    StyleTransformDataGroup* m_transforms;
-    StyleTransformOrigin* m_transformOrigin;
-    StyleTransitionData* m_transition;
-    ContentDataGroup m_content;
-    GCVector<ComputedStyle*> m_cachedPseudoStyles;
+
+    RareComputedStyleData* m_rareComputedStyleData;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,

@@ -1775,7 +1775,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
 
-        if (style->transformOrigin() == NULL) {
+        if (!style->hasTransformOrigin()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -2270,18 +2270,18 @@ void Node::dumpStyle()
     printf("z-index : %d, ", (int)m_style->zIndex());
 
     // transform
-    if (m_style->uncheckedTransforms() == NULL) {
-        printf("transform : none, ");
-    } else {
+    if (m_style->hasTransforms()) {
         printf("transform : %s, ",
-               m_style->uncheckedTransforms()->dumpString()->utf8Data());
+               m_style->transforms()->dumpString()->utf8Data());
+    } else {
+        printf("transform : none, ");
     }
 
-    if (m_style->transformOrigin() == NULL) {
-        printf("transform-origin : '', ");
-    } else {
+    if (m_style->hasTransformOrigin()) {
         printf("transform-origin : %s",
                m_style->transformOrigin()->dumpString()->utf8Data());
+    } else {
+        printf("transform-origin : '', ");
     }
 
     printf("}");

@@ -28,6 +28,29 @@
 
 namespace StarFish {
 
+void* RareComputedStyleData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(RareComputedStyleData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_transforms));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_transformOrigin));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_transition));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_content));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_cachedPseudoStyles));
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void* ComputedStyle::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -37,13 +60,8 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_background));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_surround));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_transforms));
         GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(ComputedStyle, m_transformOrigin));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_transition));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_content));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(ComputedStyle, m_cachedPseudoStyles));
+                   GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
         typeInited = true;
     }
@@ -67,11 +85,16 @@ bool ComputedStyle::hasComplexTransforms(Frame* frame)
 
 StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
 {
-    // https://www.w3.org/TR/css-transforms-1/#transformable-element
-    if (frame->isFrameInline() || frame->isInlineNonReplacedBox()) {
+    if (!hasRareComputeStyleData()) {
         return nullptr;
     }
-    return m_transforms;
+
+    // https://www.w3.org/TR/css-transforms-1/#transformable-element
+    if (frame && (frame->isFrameInline() || frame->isInlineNonReplacedBox())) {
+        return nullptr;
+    }
+
+    return m_rareComputedStyleData->m_transforms;
 }
 
 class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion
@@ -329,23 +352,29 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
         baseFontSize, font());
     m_width.changeToFixedIfNeeded(baseFontSize, font());
-    m_minWidth.changeToFixedIfNeeded(baseFontSize, font());
-    m_maxWidth.changeToFixedIfNeeded(baseFontSize, font());
     m_height.changeToFixedIfNeeded(baseFontSize, font());
-    m_minHeight.changeToFixedIfNeeded(baseFontSize, font());
-    m_maxHeight.changeToFixedIfNeeded(baseFontSize, font());
+    if (hasRareComputeStyleData()) {
+        m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(baseFontSize,
+                                                                  font());
+        m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(baseFontSize,
+                                                                  font());
+        m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(baseFontSize,
+                                                                   font());
+        m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(baseFontSize,
+                                                                   font());
+    }
     m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
-    if (m_transforms) {
-        size_t sz = m_transforms->size();
+    if (hasTransforms()) {
+        size_t sz = m_rareComputedStyleData->m_transforms->size();
         for (size_t i = 0; i < sz; i++) {
-            StyleTransformData std = m_transforms->at(i);
+            StyleTransformData std =
+                m_rareComputedStyleData->m_transforms->at(i);
             if (std.type() != StyleTransformData::OperationType::Translate) {
                 continue;
             }
             std.changeToFixedIfNeeded(baseFontSize, font());
         }
     }
-
     if (m_surround) {
         m_surround->margin.checkComputed(baseFontSize, font());
 
@@ -546,12 +575,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_minWidth != oldStyle->m_minWidth) {
+    if (newStyle->minWidth() != oldStyle->minWidth()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_maxWidth != oldStyle->m_maxWidth) {
+    if (newStyle->maxWidth() != oldStyle->maxWidth()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
@@ -561,12 +590,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_minHeight != oldStyle->m_minHeight) {
+    if (newStyle->minHeight() != oldStyle->minHeight()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_maxHeight != oldStyle->m_maxHeight) {
+    if (newStyle->maxHeight() != oldStyle->maxHeight()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
@@ -663,21 +692,21 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    bool oldComplex = oldStyle->m_transforms
-                          ? oldStyle->m_transforms->hasComplexTransform()
+    bool oldComplex = oldStyle->hasTransforms()
+                          ? oldStyle->m_rareComputedStyleData->m_transforms
+                                ->hasComplexTransform()
                           : false;
-    bool newComplex = newStyle->m_transforms
-                          ? newStyle->m_transforms->hasComplexTransform()
+    bool newComplex = newStyle->hasTransforms()
+                          ? newStyle->m_rareComputedStyleData->m_transforms
+                                ->hasComplexTransform()
                           : false;
     if (oldComplex != newComplex || (!oldComplex && !newComplex)) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->m_transforms == nullptr &&
-        oldStyle->m_transforms == nullptr) {
-    } else if (newStyle->m_transforms == nullptr ||
-               oldStyle->m_transforms == nullptr) {
+    if (!newStyle->hasTransforms() && !oldStyle->hasTransforms()) {
+    } else if (!newStyle->hasTransforms() || !oldStyle->hasTransforms()) {
         // if element has transform, we should re-layout for building
         // stacking-context
         damage = (ComputedStyleDamage)(
@@ -685,20 +714,21 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
-        if (*newStyle->m_transforms != *oldStyle->m_transforms) {
+        if (*newStyle->m_rareComputedStyleData->m_transforms !=
+            *oldStyle->m_rareComputedStyleData->m_transforms) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageComposite | damage);
         }
     }
 
-    if (newStyle->m_transformOrigin == nullptr &&
-        oldStyle->m_transformOrigin == nullptr) {
-    } else if (newStyle->m_transformOrigin == nullptr ||
-               oldStyle->m_transformOrigin == nullptr) {
+    if (!newStyle->hasTransformOrigin() && !oldStyle->hasTransformOrigin()) {
+    } else if (!newStyle->hasTransformOrigin() ||
+               !oldStyle->hasTransformOrigin()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageComposite | damage);
     } else {
-        if (!(*newStyle->m_transformOrigin == *oldStyle->m_transformOrigin)) {
+        if (!(*newStyle->m_rareComputedStyleData->m_transformOrigin ==
+              *oldStyle->m_rareComputedStyleData->m_transformOrigin)) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageComposite | damage);
         }
@@ -711,9 +741,16 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     // The style for the 'content' property is computed when we build the frame
     // tree if it is needed.
-    if (newStyle->m_content != oldStyle->m_content) {
+    if (!newStyle->hasContent() && !oldStyle->hasContent()) {
+    } else if (!newStyle->hasContent() || !oldStyle->hasContent()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    } else {
+        if (newStyle->m_rareComputedStyleData->m_content !=
+            oldStyle->m_rareComputedStyleData->m_content) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+        }
     }
 
     return damage;
@@ -730,11 +767,11 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
 {
     SkMatrix matrix;
     matrix.reset();
-    if (!m_transforms || !isTransformable) {
+    if (!hasTransforms() || !isTransformable) {
         return matrix;
     }
-    for (size_t i = 0; i < m_transforms->size(); i++) {
-        StyleTransformData t = m_transforms->at(i);
+    for (size_t i = 0; i < m_rareComputedStyleData->m_transforms->size(); i++) {
+        StyleTransformData t = m_rareComputedStyleData->m_transforms->at(i);
         if (t.type() == StyleTransformData::Matrix) {
             MatrixTransform* m = t.matrix();
             // [ a c e ]
@@ -774,17 +811,18 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
 ComputedStyle* ComputedStyle::cachedPseudoStyle(
     StyleResolver::PseudoElementType pid)
 {
-    if (pseudoType() != StyleResolver::PseudoElementType::PseudoElementNone) {
+    if (pseudoType() != StyleResolver::PseudoElementType::PseudoElementNone ||
+        !hasRareComputeStyleData()) {
         return nullptr;
     }
 
     auto it =
-        std::find_if(m_cachedPseudoStyles.begin(), m_cachedPseudoStyles.end(),
+        std::find_if(cachedPseudoStyles().begin(), cachedPseudoStyles().end(),
                      [&pid](ComputedStyle* pseudoStyle) {
                          return pseudoStyle->pseudoType() == pid;
                      });
 
-    if (it != m_cachedPseudoStyles.end()) {
+    if (it != cachedPseudoStyles().end()) {
         return *it;
     } else {
         return nullptr;
@@ -800,18 +838,22 @@ ComputedStyle* ComputedStyle::addCachedPseudoStyle(ComputedStyle* pseudoStyle)
     STARFISH_ASSERT(pseudoStyle->pseudoType() >
                     StyleResolver::PseudoElementType::PseudoElementNone);
 
-    m_cachedPseudoStyles.push_back(pseudoStyle);
+    cachedPseudoStyles().push_back(pseudoStyle);
     return pseudoStyle;
 }
 
 void ComputedStyle::removeCachedPseudoStyle(
     StyleResolver::PseudoElementType pid)
 {
-    m_cachedPseudoStyles.erase(
-        std::remove_if(m_cachedPseudoStyles.begin(), m_cachedPseudoStyles.end(),
+    if (!hasRareComputeStyleData()) {
+        return;
+    }
+
+    cachedPseudoStyles().erase(
+        std::remove_if(cachedPseudoStyles().begin(), cachedPseudoStyles().end(),
                        [&pid](ComputedStyle* pseudoStyle) {
                            return pseudoStyle->pseudoType() == pid;
                        }),
-        m_cachedPseudoStyles.end());
+        cachedPseudoStyles().end());
 }
 }
