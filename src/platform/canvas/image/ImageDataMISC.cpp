@@ -36,12 +36,15 @@ public:
         FILE* fp = fopen(localImageSrc->utf8Data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
+        reigsterFinalizer();
     }
 
     ImageDataMISC(const char* buf, size_t len)
     {
-        if (buf && len != 0)
+        if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len);
+            reigsterFinalizer();
+        }
     }
 
     virtual size_t bufferSize()
@@ -58,6 +61,7 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
+                                           free(cd);
                                        },
                                        m_image, NULL, NULL);
     }
