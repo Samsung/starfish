@@ -17,7 +17,7 @@ interface HTMLTableElement : HTMLElement {
   [Unimplemented, SameObject] readonly attribute HTMLCollection tBodies;
   [Unimplemented] HTMLTableSectionElement createTBody();
 
-  [Unimplemented, SameObject] readonly attribute HTMLCollection rows;
+  [SameObject] readonly attribute HTMLCollection rows;
   [Unimplemented] HTMLTableRowElement insertRow(optional long index = -1);
   [Unimplemented, CEReactions] void deleteRow(long index);
 

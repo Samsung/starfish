@@ -383,6 +383,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLStyleElement](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) | interface | HTMLStyleElement | The style element allows authors to embed style information in their documents. |
 |  | attribute | media | Applicable media. |
 |  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
+| [HTMLTableElement](https://html.spec.whatwg.org/#the-table-element) | interface | HTMLTableElement | The HTMLTableElement interface provides special properties and methods for manipulating the layout and presentation of tables in an HTML document. |
+|    | attribute |  rows  |  Returns a live HTMLCollection containing all the rows of the element, that is all &lt;tr&gt; that are a child of the element, or a child or one of its &lt;thead&gt;, &lt;tbody&gt; and &lt;tfoot&gt; children. |
+| [HTMLTableRowElement](https://html.spec.whatwg.org/#htmltablerowelement) | interface | HTMLTableRowElement | The HTMLTableRowElement interface provides special properties and methods for manipulating the layout and presentation of rows in an HTML table. |
+|    | attribute |  rowIndex  |  Returns a long value which gives the logical position of the row within the entire table. If the row is not part of a table, returns -1.  |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
 |    | attribute |  bgColor  |  bgcolor content attributes  |

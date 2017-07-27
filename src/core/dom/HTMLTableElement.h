@@ -21,12 +21,15 @@
 
 namespace StarFish {
 
+class HTMLCollection;
+
 class HTMLTableElement : public HTMLElement {
 public:
     HTMLTableElement(Document* document)
         : HTMLElement(document)
         , m_hasCellPaddingAttribute(false)
         , m_hasCellSpacingAttribute(false)
+        , m_rows(nullptr)
     {
     }
 
@@ -65,9 +68,12 @@ public:
     String* cellpadding();
     void setCellpadding(String* cellpadding);
 
+    HTMLCollection* rows();
+
 private:
     bool m_hasCellPaddingAttribute;
     bool m_hasCellSpacingAttribute;
+    HTMLCollection* m_rows;
 };
 }
 

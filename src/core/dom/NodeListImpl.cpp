@@ -23,19 +23,19 @@
 
 namespace StarFish {
 
-bool isChildNode(Node* node, void* data)
+bool isChildNode(Node* node, void* data, GCVector<Node*>* collection)
 {
     Node* parent = (Node*)data;
     return node->parentNode() == data;
 };
 
-bool isChildElement(Node* node, void* data)
+bool isChildElement(Node* node, void* data, GCVector<Node*>* collection)
 {
     Node* parent = (Node*)data;
     return node->parentNode() == parent && node->isElement();
 };
 
-bool isSameTagName(Node* node, void* data)
+bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* tagName = (QualifiedName*)data;
     if (node->isElement()) {
@@ -50,7 +50,7 @@ bool isSameTagName(Node* node, void* data)
     return false;
 };
 
-bool hasClassNames(Node* node, void* data)
+bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
 {
     String* classNames = (String*)data;
     if (node->isHTMLElement()) {
@@ -101,7 +101,7 @@ bool hasClassNames(Node* node, void* data)
 };
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
-bool isSameNamedAccess(Node* node, void* data)
+bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* namedAccess = (QualifiedName*)data;
 
@@ -145,13 +145,81 @@ bool isSameNamedAccess(Node* node, void* data)
     return false;
 };
 
+struct TableRowsCollectionData : public gc {
+    Node* root;
+    Node* lastNode;
+    GCVector<GCVector<Node*>> tag;
+};
+
+bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
+{
+    TableRowsCollectionData* tableData = (TableRowsCollectionData*)data;
+    if (tableData->lastNode == nullptr) {
+        for (Node* mv = node; mv; mv = mv->nextSibling()) {
+            if (mv->isHTMLTableRowElement()) {
+                tableData->lastNode = mv;
+            } else if (mv->isHTMLTableSectionElement()) {
+                tableData->lastNode = mv;
+            }
+        }
+        if (tableData->lastNode == nullptr) {
+            return false;
+        }
+        if (tableData->lastNode->isHTMLTableSectionElement()) {
+            for (Node* mv = tableData->lastNode->firstChild(); mv;
+                 mv = mv->nextSibling()) {
+                if (mv->isHTMLTableRowElement()) {
+                    tableData->lastNode = mv;
+                }
+            }
+        }
+    }
+
+    if (node->isEqualNode(tableData->lastNode)) {
+        tableData->tag[2].push_back(node);
+
+        collection->insert(collection->end(), tableData->tag[0].begin(),
+                           tableData->tag[0].end());
+        collection->insert(collection->end(), tableData->tag[1].begin(),
+                           tableData->tag[1].end());
+        collection->insert(collection->end(), tableData->tag[2].begin(),
+                           tableData->tag[2].end());
+        collection->insert(collection->end(), tableData->tag[3].begin(),
+                           tableData->tag[3].end());
+        tableData->tag[0].clear(); // thead tr
+        tableData->tag[1].clear(); // tbody tr
+        tableData->tag[2].clear(); // tr
+        tableData->tag[3].clear(); // tfoot tr
+        tableData->lastNode = nullptr;
+    } else if (node->isHTMLTableRowElement()) {
+        if (node->parentNode()->isHTMLTableSectionElement() &&
+            node->parentNode()->parentNode()->isEqualNode(tableData->root)) {
+            HTMLElement* htmlElement = node->parentNode()->asHTMLElement();
+            QualifiedName name = htmlElement->name();
+            StaticStrings* ss = node->starFish()->staticStrings();
+            if (name == ss->m_theadTagName) {
+                tableData->tag[0].push_back(node);
+            } else if (name == ss->m_tbodyTagName) {
+                tableData->tag[1].push_back(node);
+            } else if (name == ss->m_tfootTagName) {
+                tableData->tag[3].push_back(node);
+            }
+        } else if (node->parentNode()->isHTMLTableElement() &&
+                   node->parentNode()->isEqualNode(tableData->root)) {
+            tableData->tag[2].push_back(node);
+        }
+    }
+
+    return false;
+};
+
 void NodeListImpl::getherDescendant(GCVector<Node*>* collection,
                                     Node* root) const
 {
     STARFISH_ASSERT(m_filter);
     Node* child = root->firstChild();
     while (child) {
-        if (m_filter(child, m_data)) {
+        if (m_filter(child, m_data, collection)) {
             collection->push_back(child);
         }
 

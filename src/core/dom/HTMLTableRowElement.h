@@ -38,6 +38,8 @@ public:
     // only for DOM conformance test
     String* ch();
     void setCh(String* ch);
+
+    int32_t rowIndex();
 };
 }
 
