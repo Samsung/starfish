@@ -1246,6 +1246,27 @@ LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(LayoutUnit start)
     return x;
 }
 
+void InlineBoxLayoutParentBox::coordinateVerticalProperties(
+    LineFormattingContext* ctx, LayoutUnit yOffset)
+{
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        FrameBox* box = m_boxes[i];
+        if (box->isInlineNonReplacedBox()) {
+            LayoutUnit newYOffset =
+                ctx->ascender(box->asInlineNonReplacedBox()) -
+                box->style()->font()->metrics().m_ascender - box->borderTop() -
+                box->paddingTop();
+            box->moveY(-yOffset + newYOffset);
+            box->setContentHeight(box->style()->font()->metrics().m_ascender -
+                                  box->style()->font()->metrics().m_descender);
+            box->asInlineBoxLayoutParentBox()->coordinateVerticalProperties(
+                ctx, newYOffset);
+        } else {
+            box->moveY(-yOffset);
+        }
+    }
+}
+
 void InlineBoxLayoutParentBox::registerRelativePositionedBoxes(
     LayoutContext& ctx)
 {
@@ -1863,6 +1884,7 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
     // Should check if there has enough space for pending block box due to
     // removing white space from above function `removeDanglingSpaceFromLine`
     insertPendingFloatingBoxes();
+    back->coordinateVerticalProperties(this, 0);
     computeHorizontalProperties();
     registerInlineContent(br);
 
@@ -3221,7 +3243,6 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)
 
     computeBorderMarginPadding(inlineContentWidth);
     setTopBottomOrgMBP();
-    unsetTopBottomMBP();
     ctx.m_unprocessedStartingMBPWidth += startingMBPWidth();
 
     ctx.m_currentLayoutParent = this;
@@ -3719,12 +3740,6 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
         }
 
         canvas->save();
-        canvas->translate(LayoutUnit(0),
-                          m_ascender - (style()->font()->metrics().m_ascender) -
-                              borderTop() - paddingTop());
-        setContentHeight(style()->font()->metrics().m_ascender -
-                         style()->font()->metrics().m_descender);
-        setHeight(contentHeight() + paddingHeight() + borderHeight());
         FrameBox::paintBackgroundAndBorders(canvas);
         canvas->restore();
 
