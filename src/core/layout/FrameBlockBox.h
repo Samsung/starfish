@@ -237,6 +237,8 @@ public:
         box->setLayoutParent(this);
     }
     LayoutUnit layoutInlineBoxes(LayoutUnit start);
+    virtual void coordinateVerticalProperties(LineFormattingContext* ctx,
+                                              LayoutUnit yOffset);
     void registerRelativePositionedBoxes(LayoutContext& ctx);
 
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
@@ -427,7 +429,6 @@ protected:
         FrameInline* m_origin;
         InlineNonReplacedBoxRareData* m_rareData;
     };
-    LayoutUnit m_ascender;
 
     InlineNonReplacedBoxRareData* rareData()
     {
@@ -472,16 +473,6 @@ protected:
             m_rareData->m_orgPadding.setTop(paddingTop());
             m_rareData->m_orgPadding.setBottom(paddingBottom());
         }
-    }
-
-    void unsetTopBottomMBP()
-    {
-        setMarginTop(0);
-        setMarginBottom(0);
-        setBorderTop(0);
-        setBorderBottom(0);
-        setPaddingTop(0);
-        setPaddingBottom(0);
     }
 };
 
@@ -880,9 +871,6 @@ public:
     void setAscDescender(InlineBoxLayoutParentBox* box, LayoutUnit ascender,
                          LayoutUnit descender)
     {
-        if (box->isInlineNonReplacedBox()) {
-            box->asInlineNonReplacedBox()->m_ascender = ascender;
-        }
         m_ascenderDescenderOfInlineBoxLayoutParentBox[box] =
             std::make_pair(ascender, descender);
         box->setHeight(ascender - descender);
