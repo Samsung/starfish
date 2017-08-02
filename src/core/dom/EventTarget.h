@@ -140,8 +140,9 @@ public:
     bool removeEventListener(const String* eventType, EventListener* listener,
                              bool useCapture = false);
     bool dispatchEvent(Event* event);
-    virtual void handleDefaultEvent(Event* event)
+    virtual bool handleDefaultEvent(Event* event)
     {
+        return false;
     }
     bool dispatchEvent(EventTarget* origin, Event* event);
 

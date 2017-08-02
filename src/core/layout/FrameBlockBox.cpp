@@ -747,15 +747,15 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         return nullptr;
     }
 
-    x -= scrollLeft();
-    y -= scrollTop();
+    LayoutUnit childX = x + scrollLeft();
+    LayoutUnit childY = y + scrollTop();
 
     Frame* result = nullptr;
     if (isPositioned()) {
         if (stage == HitTestPositionedElements) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
-                result = hitTestChildrenWith(x, y, s);
+                result = hitTestChildrenWith(childX, childY, s);
                 if (result) {
                     return result;
                 }
@@ -767,7 +767,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         if (stage == HitTestNormalFlowInline) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
-                result = hitTestChildrenWith(x, y, s);
+                result = hitTestChildrenWith(childX, childY, s);
                 if (result) {
                     return result;
                 }
@@ -779,7 +779,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         if (stage == HitTestNonPositionedFloats) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
-                result = hitTestChildrenWith(x, y, s);
+                result = hitTestChildrenWith(childX, childY, s);
                 if (result) {
                     return result;
                 }
@@ -793,8 +793,8 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 Frame* result = nullptr;
                 Frame* child = lastChild();
                 while (child) {
-                    LayoutUnit cx = x - child->asFrameBox()->x();
-                    LayoutUnit cy = y - child->asFrameBox()->y();
+                    LayoutUnit cx = childX - child->asFrameBox()->x();
+                    LayoutUnit cy = childY - child->asFrameBox()->y();
                     result = child->hitTest(cx, cy, stage);
                     if (result) {
                         return result;
@@ -807,7 +807,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 return isAnonymous() ? nullptr : FrameBox::hitTest(x, y, stage);
             }
         } else {
-            return hitTestChildrenWith(x, y, stage);
+            return hitTestChildrenWith(childX, childY, stage);
         }
     }
     return nullptr;

@@ -32,9 +32,11 @@ QualifiedName HTMLAnchorElement::name()
     return starFish()->staticStrings()->m_aTagName;
 }
 
-void HTMLAnchorElement::handleDefaultEvent(Event* event)
+bool HTMLAnchorElement::handleDefaultEvent(Event* event)
 {
-    HTMLElement::handleDefaultEvent(event);
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
 
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equals("click")) {
@@ -50,12 +52,15 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
                         new ResourceURL(hrefStr, document()->urlString()),
                         HistoryManager::Action::Add);
                 }
+
             } else {
                 window()->browsingContext()->navigateAsync(
                     document()->documentURI(), HistoryManager::Action::Add);
             }
+            return true;
         }
     }
+    return false;
 }
 
 bool HTMLAnchorElement::supportsFocus() const

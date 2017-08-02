@@ -82,9 +82,11 @@ HTMLFormElement* HTMLInputElement::form()
     return nullptr;
 }
 
-void HTMLInputElement::handleDefaultEvent(Event* event)
+bool HTMLInputElement::handleDefaultEvent(Event* event)
 {
-    HTMLElement::handleDefaultEvent(event);
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
 
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equalsWithoutCase("click")) {
@@ -106,8 +108,10 @@ void HTMLInputElement::handleDefaultEvent(Event* event)
                         // TODO: send (name, value) pairs to the POST module
                     }
                 }
+                return true;
             }
         }
     }
+    return false;
 }
 }
