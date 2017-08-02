@@ -39,7 +39,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual void handleDefaultEvent(Event* event);
+    virtual bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
 

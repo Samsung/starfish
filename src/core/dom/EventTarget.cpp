@@ -294,7 +294,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // dispatch default event
     if (!event->defaultPrevented()) {
         for (size_t i = 0; i < eventPath.size(); i++) {
-            eventPath[i]->handleDefaultEvent(event);
+            if (eventPath[i]->handleDefaultEvent(event)) {
+                break;
+            }
         }
     }
 

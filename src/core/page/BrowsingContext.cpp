@@ -705,7 +705,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
 
     if (m_globalPointingEventListener.size()) {
         float x, y;
-        if (kind == PlatformWindow::TouchEventKind::TouchEventStart &&
+        if (kind == PlatformWindow::TouchEventKind::TouchEventStart ||
             kind == PlatformWindow::TouchEventKind::TouchEventMove) {
             x = touches[0].screenX();
             y = touches[0].screenY();
@@ -723,10 +723,14 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         } else {
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
-        auto iter = m_globalPointingEventListener.begin();
-        while (iter != m_globalPointingEventListener.end()) {
-            (*iter)->onGlobalPointingEvent(x, y, newKind);
-            iter++;
+        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            Node* nd = m_globalPointingEventListener[i];
+            nd->onGlobalPointingEvent(x, y, newKind);
+            if (std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(),
+                          nd) != m_globalPointingEventListener.end()) {
+                i++;
+            }
         }
         return;
     }
@@ -843,7 +847,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
 
     if (m_globalPointingEventListener.size()) {
         float x, y;
-        if (kind == PlatformWindow::MouseEventDown &&
+        if (kind == PlatformWindow::MouseEventDown ||
             kind == PlatformWindow::MouseEventMove) {
             x = data.screenX();
             y = data.screenY();
@@ -861,10 +865,14 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         } else {
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
-        auto iter = m_globalPointingEventListener.begin();
-        while (iter != m_globalPointingEventListener.end()) {
-            (*iter)->onGlobalPointingEvent(x, y, newKind);
-            iter++;
+        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            Node* nd = m_globalPointingEventListener[i];
+            nd->onGlobalPointingEvent(x, y, newKind);
+            if (std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(),
+                          nd) != m_globalPointingEventListener.end()) {
+                i++;
+            }
         }
         return;
     }
@@ -1045,12 +1053,14 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
 
 void BrowsingContext::addGlobalPointingEventInterceptListener(Node* node)
 {
-    m_globalPointingEventListener.insert(node);
+    m_globalPointingEventListener.insert(m_globalPointingEventListener.end(),
+                                         node);
 }
 
 void BrowsingContext::removeGlobalPointingEventInterceptListener(Node* node)
 {
-    auto iter = m_globalPointingEventListener.find(node);
+    auto iter = std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(), node);
     if (iter != m_globalPointingEventListener.end()) {
         m_globalPointingEventListener.erase(iter);
     }

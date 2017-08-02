@@ -693,6 +693,11 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
         }
     }
 
+    if (m_owner->isFrameBlockBox()) {
+        x += m_owner->asFrameBlockBox()->scrollLeft();
+        y += m_owner->asFrameBlockBox()->scrollTop();
+    }
+
     // the background and borders of the element forming the stacking context.
     result = m_owner->FrameBox::hitTest(x, y, HitTestNormalFlowBlock);
     if (result) {

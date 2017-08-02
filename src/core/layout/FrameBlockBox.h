@@ -650,6 +650,16 @@ public:
         }
     }
 
+    bool hasBiggerContentThanFrameWidth()
+    {
+        return m_flags.m_hasBiggerContentThanFrameWidth;
+    }
+
+    bool hasBiggerContentThanFrameHeight()
+    {
+        return m_flags.m_hasBiggerContentThanFrameHeight;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

@@ -38,6 +38,11 @@ public:
         , m_namedNodeMap(nullptr)
         , m_attrList(nullptr)
         , m_pseudoElementData(nullptr)
+        , m_isScrollTarget(false)
+        , m_inVerticalScrolling(false)
+        , m_inHorizontalScrolling(false)
+        , m_pointingEventX(0)
+        , m_pointingEventY(0)
     {
     }
 
@@ -51,6 +56,11 @@ public:
     PseudoElementData* m_pseudoElementData;
     LayoutUnit m_scrollTop;
     LayoutUnit m_scrollLeft;
+    bool m_isScrollTarget;
+    bool m_inVerticalScrolling;
+    bool m_inHorizontalScrolling;
+    float m_pointingEventX;
+    float m_pointingEventY;
 };
 
 class Element : public Node {
@@ -93,7 +103,7 @@ public:
     Nullable<String*> namespaceURI();
     virtual Nullable<String*> prefix() override;
     virtual String* localName() override;
-    virtual void handleDefaultEvent(Event* event) override;
+    virtual bool handleDefaultEvent(Event* event) override;
     String* tagName();
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
@@ -308,6 +318,9 @@ public:
     {
         return m_attributes;
     }
+
+    virtual void onGlobalPointingEvent(float x, float y,
+                                       GlobalPointingEventKind kind) override;
 
 protected:
     void setFocused(bool flag)

@@ -45,7 +45,7 @@ public:
     HTMLFormElement* form();
 
     // Other methods
-    void handleDefaultEvent(Event* event);
+    bool handleDefaultEvent(Event* event) override;
 };
 }
 

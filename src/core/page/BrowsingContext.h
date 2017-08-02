@@ -231,7 +231,7 @@ private:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
 
-    GCUnorderedSet<Node*> m_globalPointingEventListener;
+    GCVector<Node*> m_globalPointingEventListener;
 };
 }
 
