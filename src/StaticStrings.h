@@ -238,6 +238,7 @@ public:
     QualifiedName m_value;
     QualifiedName m_title;
     QualifiedName m_align;
+    QualifiedName m_tabindex;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

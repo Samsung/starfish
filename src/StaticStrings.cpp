@@ -142,6 +142,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "media"));
     m_value = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "value"));
+    m_tabindex =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "tabindex"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

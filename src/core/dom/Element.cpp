@@ -32,6 +32,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/PseudoElementData.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/dom/parser/HTMLParserIdioms.h"
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
@@ -373,6 +374,11 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
         // only few html elements are affected by name attribute changing
         document()->invalidNamedAccessCacheIfNeeded();
+    } else if (name == ss->m_tabindex) {
+        int tabIndex = 0;
+        if (!value->isEmpty() && parseHTMLInteger(value, tabIndex)) {
+            setTabIndex(tabIndex, true);
+        }
     }
 
     // The 'content' property is used with ::before and ::after pseudo-elements
@@ -914,7 +920,7 @@ void Element::setFocus(bool flag)
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
-bool Element::supportsFocus()
+bool Element::supportsFocus() const
 {
     if (!tabIndexSetExplicitly()) {
         return false;
@@ -930,6 +936,22 @@ bool Element::isFocusable()
     }
     return true;
 }
+
+int Element::tabIndex() const
+{
+    return m_tabIndex;
+}
+
+void Element::setTabIndex(int index, bool setExplicitly)
+{
+    m_tabIndex = index;
+    m_tabIndexWasSetExplicitly = setExplicitly;
+}
+
+bool Element::tabIndexSetExplicitly() const
+{
+    return m_tabIndexWasSetExplicitly;
+};
 
 void Element::focus()
 {

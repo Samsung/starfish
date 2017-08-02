@@ -26,7 +26,7 @@ public:
     HTMLAnchorElement(Document* document)
         : HTMLElement(document)
     {
-        setTabIndex(0);
+        setTabIndex(0, false);
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -41,10 +41,11 @@ public:
 
     virtual void handleDefaultEvent(Event* event);
 
-    bool supportsFocus();
+    bool supportsFocus() const override;
 
-    int tabIndex()
+    int tabIndex() const override
     {
+        // Don't need to check supportsFocus in HTMLElement::tabIndex.
         return Element::tabIndex();
     }
 

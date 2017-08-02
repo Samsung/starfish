@@ -268,26 +268,12 @@ public:
     }
     virtual void setFocus(bool flag);
 
-    virtual bool supportsFocus();
+    virtual bool supportsFocus() const;
     virtual bool isFocusable();
 
-    virtual int tabIndex()
-    {
-        return m_tabIndex;
-    }
-    void setTabIndex(int index)
-    {
-        m_tabIndex = index;
-    }
-    bool tabIndexSetExplicitly() const
-    {
-        return m_tabIndexWasSetExplicitly;
-    };
-    void setTabIndexExplicitly(int index)
-    {
-        m_tabIndex = index;
-        m_tabIndexWasSetExplicitly = true;
-    }
+    virtual int tabIndex() const;
+    virtual void setTabIndex(int index, bool setExplicitly = false);
+    bool tabIndexSetExplicitly() const;
 
     /* Element-level focus APIs */
     virtual void focus();
