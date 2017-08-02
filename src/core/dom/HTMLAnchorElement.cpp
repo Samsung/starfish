@@ -34,6 +34,8 @@ QualifiedName HTMLAnchorElement::name()
 
 void HTMLAnchorElement::handleDefaultEvent(Event* event)
 {
+    HTMLElement::handleDefaultEvent(event);
+
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equals("click")) {
         auto href = starFish()->staticStrings()->m_href;

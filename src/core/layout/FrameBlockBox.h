@@ -223,7 +223,8 @@ public:
         return ret;
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                    LayoutRect& result);
 
     FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
@@ -373,13 +374,14 @@ public:
         return InlineBoxLayoutParentBox::firstInlineNonReplacedBox(f);
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                    LayoutRect& result)
     {
-        if (!tryUniteVisibleRect(sCtx, loc)) {
+        if (!tryUniteVisibleRect(sCtx, loc, result)) {
             return;
         }
 
-        InlineBoxLayoutParentBox::computeVisibleRect(sCtx, loc);
+        InlineBoxLayoutParentBox::computeVisibleRect(sCtx, loc, result);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -502,6 +504,15 @@ public:
     void* operator new[](size_t size) = delete;
 };
 
+struct FrameBlockBoxRareData : public FrameBoxRareData {
+    FrameBlockBoxRareData(Frame* layoutParent)
+        : FrameBoxRareData(layoutParent)
+    {
+    }
+    LayoutUnit m_scrollWidth;
+    LayoutUnit m_scrollHeight;
+};
+
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
@@ -514,6 +525,29 @@ public:
         STARFISH_ASSERT((node == nullptr && style != nullptr) ||
                         (node != nullptr && style == nullptr));
     }
+
+    // Do not access this property before finish layout!
+    LayoutUnit scrollWidth()
+    {
+        if (m_flags.m_hasBiggerContentThanFrameWidth) {
+            return frameBlockBoxRareData()->m_scrollWidth;
+        } else {
+            return width();
+        }
+    }
+
+    // Do not access this property before finish layout!
+    LayoutUnit scrollHeight()
+    {
+        if (m_flags.m_hasBiggerContentThanFrameHeight) {
+            return frameBlockBoxRareData()->m_scrollHeight;
+        } else {
+            return height();
+        }
+    }
+
+    LayoutUnit scrollLeft();
+    LayoutUnit scrollTop();
 
     virtual bool isFrameBlockBox()
     {
@@ -582,7 +616,8 @@ public:
     virtual LineBox* firstLineBox();
 
     virtual void establishesStackingContextIfNeeds();
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                    LayoutRect& result);
 
     virtual bool hasBlockFlow()
     {
@@ -633,6 +668,17 @@ protected:
     virtual FrameTreeItemModel* frameTreeItemModel()
     {
         return &m_treeItemModel;
+    }
+
+    virtual FrameBlockBoxRareData* createRareData()
+    {
+        return new FrameBlockBoxRareData(m_layoutParent);
+    }
+
+    FrameBlockBoxRareData* frameBlockBoxRareData() const
+    {
+        STARFISH_ASSERT(hasRareData());
+        return (FrameBlockBoxRareData*)m_layoutParent;
     }
 
     FrameTreeItemModel m_treeItemModel;

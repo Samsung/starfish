@@ -567,6 +567,16 @@ public:
         return true;
     }
 
+    enum GlobalPointingEventKind {
+        GlobalPointingEventKindDown,
+        GlobalPointingEventKindUp,
+        GlobalPointingEventKindMove
+    };
+    virtual void onGlobalPointingEvent(float x, float y,
+                                       GlobalPointingEventKind kind)
+    {
+    }
+
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);

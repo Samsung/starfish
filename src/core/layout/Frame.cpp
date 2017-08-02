@@ -642,6 +642,8 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_isAbsolutePositioned = false;
     m_flags.m_isFloating = false;
     m_flags.m_heightComputed = false;
+    m_flags.m_hasBiggerContentThanFrameWidth = false;
+    m_flags.m_hasBiggerContentThanFrameHeight = false;
     m_flags.m_isFirstLine = false;
 
     computeStyleFlags();

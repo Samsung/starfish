@@ -1091,12 +1091,13 @@ void* InlineBoxLayoutParentBox::operator new(size_t size)
 }
 
 void InlineBoxLayoutParentBox::computeVisibleRect(StackingContext* sCtx,
-                                                  LayoutLocation& loc)
+                                                  LayoutLocation& loc,
+                                                  LayoutRect& result)
 {
     VisibleRectContext ctx(this, &loc);
 
     for (size_t i = 0; i < m_boxes.size(); i++) {
-        m_boxes[i]->computeVisibleRect(sCtx, loc);
+        m_boxes[i]->computeVisibleRect(sCtx, loc, result);
     }
 }
 

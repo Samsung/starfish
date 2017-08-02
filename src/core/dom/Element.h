@@ -49,6 +49,8 @@ public:
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
     PseudoElementData* m_pseudoElementData;
+    LayoutUnit m_scrollTop;
+    LayoutUnit m_scrollLeft;
 };
 
 class Element : public Node {
@@ -91,6 +93,7 @@ public:
     Nullable<String*> namespaceURI();
     virtual Nullable<String*> prefix() override;
     virtual String* localName() override;
+    virtual void handleDefaultEvent(Event* event) override;
     String* tagName();
 
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
@@ -189,12 +192,23 @@ public:
     uint32_t clientWidth();
     uint32_t clientHeight();
 
+    double scrollLeft(bool layoutIfNeeds = true);
+    void setScrollLeft(double s);
+    double scrollTop(bool layoutIfNeeds = true);
+    void setScrollTop(double s);
+    uint32_t scrollWidth();
+    uint32_t scrollHeight();
+
     // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
     DOMRectList* getClientRects();
     DOMRect* getBoundingClientRect();
 
-    RareNodeMembers* ensureRareMembers();
+    virtual RareNodeMembers* ensureRareMembers() override;
     RareElementMembers* ensureRareElementMembers();
+    RareElementMembers* rareMembers()
+    {
+        return (RareElementMembers*)m_rareNodeMembers;
+    }
 
     size_t hasAttributeNode(const AttributeName& name);
 

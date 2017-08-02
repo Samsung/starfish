@@ -23,6 +23,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/page/BrowsingContext.h"
 #include "core/modules/canvas/Canvas.h"
@@ -171,7 +172,8 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
         LayoutLocation l(-m_owner->frameRect().location().x(),
                          -m_owner->frameRect().location().y());
 
-        m_owner->computeVisibleRect(this, l);
+        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
+        m_owner->computeVisibleRect(this, l, m_rareData->m_visibleRect);
 
         if (m_rareData->m_visibleRect.isEmpty()) {
             m_rareData->m_needsOwnBuffer = false;
@@ -216,6 +218,9 @@ void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
                 canvas->clip(Unit::Rect(box->borderLeft(), box->borderTop(),
                                         box->width() - box->borderWidth(),
                                         box->height() - box->borderHeight()));
+                if (box->isFrameBlockBox())
+                    canvas->translate(-parent->asFrameBlockBox()->scrollLeft(),
+                                      -parent->asFrameBlockBox()->scrollTop());
                 canvas->translate(offsetX, offsetY);
             }
         }
@@ -337,6 +342,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         canvas->clip(Unit::Rect(owner()->borderLeft(), owner()->borderTop(),
                                 owner()->width() - owner()->borderWidth(),
                                 owner()->height() - owner()->borderHeight()));
+        if (m_owner->isFrameBlockBox())
+            canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                              -m_owner->asFrameBlockBox()->scrollTop());
     }
 
     // the child stacking contexts with negative stack levels (most negative
@@ -455,6 +463,9 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
+            if (m_owner->isFrameBlockBox())
+                canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                  -m_owner->asFrameBlockBox()->scrollTop());
         }
 
         owner()->willCompsiteStackingContext(canvas);
@@ -468,6 +479,9 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     } else {
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
+            if (m_owner->isFrameBlockBox())
+                canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                  -m_owner->asFrameBlockBox()->scrollTop());
         }
         owner()->compsitingStackingContext(canvas);
     }
@@ -583,6 +597,11 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
         if (owner()->FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
             return nullptr;
         }
+    }
+
+    if (m_owner->isFrameBlockBox()) {
+        x -= m_owner->asFrameBlockBox()->scrollLeft();
+        y -= m_owner->asFrameBlockBox()->scrollTop();
     }
 
     Frame* result = nullptr;

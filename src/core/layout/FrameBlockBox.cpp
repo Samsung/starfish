@@ -28,6 +28,22 @@
 
 namespace StarFish {
 
+LayoutUnit FrameBlockBox::scrollLeft()
+{
+    if (node()) {
+        return node()->asElement()->scrollLeft(false);
+    }
+    return 0;
+}
+
+LayoutUnit FrameBlockBox::scrollTop()
+{
+    if (node()) {
+        return node()->asElement()->scrollTop(false);
+    }
+    return 0;
+}
+
 class BlockFormattingContextBlock {
 public:
     BlockFormattingContextBlock(Frame* frm, LayoutContext& ctx)
@@ -469,6 +485,88 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             ctx.registerRelativePositionedBox(this, false);
         }
     }
+
+    // compute scroll width & height
+    LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            if (child->isFrameBlockBox()) {
+                LayoutRect rect(child->asFrameBox()->x(),
+                                child->asFrameBox()->y(),
+                                child->asFrameBlockBox()->scrollWidth(),
+                                child->asFrameBlockBox()->scrollHeight());
+                visibleRect.unite(rect);
+            } else {
+                LayoutLocation loc;
+                child->computeVisibleRect(nullptr, loc, visibleRect);
+            }
+            child = child->next();
+        }
+    } else {
+        LayoutLocation loc;
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            m_lineBoxes[i]->computeVisibleRect(nullptr, loc, visibleRect);
+        }
+    }
+
+    LayoutUnit scrollWidth = visibleRect.width();
+    if (visibleRect.x() < 0) {
+        scrollWidth -= visibleRect.x();
+    }
+
+    auto overflowX = style()->overflowX();
+    if (scrollWidth > width() && overflowX != OverflowValue::HiddenOverflow) {
+        m_flags.m_hasBiggerContentThanFrameWidth = true;
+        ensureFrameBoxRareData();
+        frameBlockBoxRareData()->m_scrollWidth = scrollWidth;
+    }
+
+    if (overflowX >= AutoOverflow) {
+        if (node()->isElement()) {
+            LayoutUnit& u =
+                node()->asElement()->ensureRareElementMembers()->m_scrollLeft;
+            if (u > scrollWidth - width()) {
+                u = scrollWidth - width();
+                if (u < 0) {
+                    u = 0;
+                }
+            }
+        }
+    } else {
+        if (node() && node()->isElement() && node()->hasRareMembers()) {
+            node()->asElement()->ensureRareElementMembers()->m_scrollLeft = 0;
+        }
+    }
+
+    LayoutUnit scrollHeight = visibleRect.height();
+    if (visibleRect.y() < 0) {
+        scrollHeight -= visibleRect.y();
+    }
+
+    auto overflowY = style()->overflowY();
+    if (scrollHeight > height() && overflowY != OverflowValue::HiddenOverflow) {
+        m_flags.m_hasBiggerContentThanFrameHeight = true;
+        ensureFrameBoxRareData();
+        frameBlockBoxRareData()->m_scrollHeight = scrollHeight;
+    }
+
+    if (overflowY >= AutoOverflow) {
+        if (node()->isElement()) {
+            LayoutUnit& u =
+                node()->asElement()->ensureRareElementMembers()->m_scrollTop;
+            if (u > scrollHeight - height()) {
+                u = scrollHeight - height();
+                if (u < 0) {
+                    u = 0;
+                }
+            }
+        }
+    } else {
+        if (node() && node()->isElement() && node()->hasRareMembers()) {
+            node()->asElement()->ensureRareElementMembers()->m_scrollTop = 0;
+        }
+    }
 }
 
 InlineNonReplacedBox* FrameBlockBox::firstInlineNonReplacedBox(FrameInline* f)
@@ -532,9 +630,9 @@ void FrameBlockBox::establishesStackingContextIfNeeds()
 }
 
 void FrameBlockBox::computeVisibleRect(StackingContext* sCtx,
-                                       LayoutLocation& loc)
+                                       LayoutLocation& loc, LayoutRect& result)
 {
-    if (!tryUniteVisibleRect(sCtx, loc)) {
+    if (!tryUniteVisibleRect(sCtx, loc, result)) {
         return;
     }
 
@@ -543,12 +641,12 @@ void FrameBlockBox::computeVisibleRect(StackingContext* sCtx,
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            child->computeVisibleRect(sCtx, loc);
+            child->computeVisibleRect(sCtx, loc, result);
             child = child->next();
         }
     } else {
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->computeVisibleRect(sCtx, loc);
+            m_lineBoxes[i]->computeVisibleRect(sCtx, loc, result);
         }
     }
 }
@@ -649,6 +747,9 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         return nullptr;
     }
 
+    x -= scrollLeft();
+    y -= scrollTop();
+
     Frame* result = nullptr;
     if (isPositioned()) {
         if (stage == HitTestPositionedElements) {
@@ -746,6 +847,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
                 ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
                                               width() - borderWidth(),
                                               height() - borderHeight()));
+                ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -764,6 +866,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
                 ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
                                               width() - borderWidth(),
                                               height() - borderHeight()));
+                ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -781,6 +884,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
                 ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
                                               width() - borderWidth(),
                                               height() - borderHeight()));
+                ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
@@ -798,6 +902,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
                                           width() - borderWidth(),
                                           height() - borderHeight()));
+            ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
         }
         paintChildrenWith(ctx);
     }

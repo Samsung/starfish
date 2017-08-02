@@ -1187,7 +1187,8 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                    LayoutRect& result)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1395,6 +1396,8 @@ protected:
 
         // special flag for FrameBlockBox
         bool m_heightComputed : 1;
+        bool m_hasBiggerContentThanFrameWidth : 1;
+        bool m_hasBiggerContentThanFrameHeight : 1;
         // special flag for InlineBox
         bool m_isFirstLine : 1;
         // special flag for InlineTextBox
