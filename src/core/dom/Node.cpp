@@ -2247,6 +2247,8 @@ void Node::dumpStyle()
         printf("overflow-x: visible, ");
     } else if (m_style->overflowX() == OverflowValue::HiddenOverflow) {
         printf("overflow-x: hidden, ");
+    } else if (m_style->overflowX() == OverflowValue::ScrollOverflow) {
+        printf("overflow-x: scroll, ");
     } else {
         printf("overflow-x: auto, ");
     }
@@ -2256,6 +2258,8 @@ void Node::dumpStyle()
         printf("overflow-y: visible, ");
     } else if (m_style->overflowY() == OverflowValue::HiddenOverflow) {
         printf("overflow-y: hidden, ");
+    } else if (m_style->overflowY() == OverflowValue::ScrollOverflow) {
+        printf("overflow-y: scroll, ");
     } else {
         printf("overflow-y: auto, ");
     }

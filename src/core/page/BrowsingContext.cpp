@@ -379,6 +379,8 @@ void BrowsingContext::close()
     m_hoveredNodeTarget = nullptr;
     m_documentVersionWhenComputingHoveredNodeSet = 0;
 
+    m_globalPointingEventListener.clear();
+
     if (m_window) {
         StarFishEnterer enter(m_starFish);
         document()->window()->close();
@@ -700,6 +702,35 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
     if (!m_isRunning) {
         return;
     }
+
+    if (m_globalPointingEventListener.size()) {
+        float x, y;
+        if (kind == PlatformWindow::TouchEventKind::TouchEventStart &&
+            kind == PlatformWindow::TouchEventKind::TouchEventMove) {
+            x = touches[0].screenX();
+            y = touches[0].screenY();
+        } else {
+            x = std::numeric_limits<float>::quiet_NaN();
+            y = std::numeric_limits<float>::quiet_NaN();
+        }
+        Node::GlobalPointingEventKind newKind;
+        if (kind == PlatformWindow::TouchEventKind::TouchEventStart) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
+        } else if (kind == PlatformWindow::TouchEventKind::TouchEventMove) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
+        } else {
+            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
+        }
+        auto iter = m_globalPointingEventListener.begin();
+        while (iter != m_globalPointingEventListener.end()) {
+            (*iter)->onGlobalPointingEvent(x, y, newKind);
+            iter++;
+        }
+        return;
+    }
+
     if (kind == PlatformWindow::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
@@ -749,6 +780,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                              targetX, targetY);
         return;
     }
+
     // Dispatch events
     String* name = String::emptyString;
     switch (kind) {
@@ -806,6 +838,34 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     // MouseEventEnter/MouseEventOut are not supported yet
     if (kind >= PlatformWindow::MouseEventEnter) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return;
+    }
+
+    if (m_globalPointingEventListener.size()) {
+        float x, y;
+        if (kind == PlatformWindow::MouseEventDown &&
+            kind == PlatformWindow::MouseEventMove) {
+            x = data.screenX();
+            y = data.screenY();
+        } else {
+            x = std::numeric_limits<float>::quiet_NaN();
+            y = std::numeric_limits<float>::quiet_NaN();
+        }
+        Node::GlobalPointingEventKind newKind;
+        if (kind == PlatformWindow::MouseEventDown) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
+        } else if (kind == PlatformWindow::MouseEventMove) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
+        } else {
+            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
+        }
+        auto iter = m_globalPointingEventListener.begin();
+        while (iter != m_globalPointingEventListener.end()) {
+            (*iter)->onGlobalPointingEvent(x, y, newKind);
+            iter++;
+        }
         return;
     }
 
@@ -980,6 +1040,19 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
     auto iter = std::find(v.begin(), v.end(), this);
     if (iter != v.end()) {
         v.erase(iter);
+    }
+}
+
+void BrowsingContext::addGlobalPointingEventInterceptListener(Node* node)
+{
+    m_globalPointingEventListener.insert(node);
+}
+
+void BrowsingContext::removeGlobalPointingEventInterceptListener(Node* node)
+{
+    auto iter = m_globalPointingEventListener.find(node);
+    if (iter != m_globalPointingEventListener.end()) {
+        m_globalPointingEventListener.erase(iter);
     }
 }
 }

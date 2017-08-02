@@ -592,24 +592,26 @@ void FrameBox::establishesStackingContextIfNeeds()
     }
 }
 
-bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                   LayoutRect& result)
 {
-    if (this != sCtx->owner() && stackingContext() &&
-        stackingContext()->needsOwnBuffer()) {
+    if (sCtx && (this != sCtx->owner() && stackingContext() &&
+                 stackingContext()->needsOwnBuffer())) {
         return false;
     }
 
     LayoutRect r = frameRect();
     r.setX(r.x() + loc.x());
     r.setY(r.y() + loc.y());
-    sCtx->unite(r);
+    result.unite(r);
 
     return !shouldApplyOverflow();
 }
 
-void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc)
+void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                  LayoutRect& result)
 {
-    tryUniteVisibleRect(sCtx, loc);
+    tryUniteVisibleRect(sCtx, loc, result);
 }
 
 void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)

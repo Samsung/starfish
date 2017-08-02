@@ -182,6 +182,9 @@ public:
         return m_parentBrowsingContext;
     }
 
+    void addGlobalPointingEventInterceptListener(Node* node);
+    void removeGlobalPointingEventInterceptListener(Node* node);
+
 private:
     // return did layout
     bool layoutIfNeeds();
@@ -227,6 +230,8 @@ private:
 
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
+
+    GCUnorderedSet<Node*> m_globalPointingEventListener;
 };
 }
 

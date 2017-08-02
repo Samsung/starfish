@@ -586,9 +586,11 @@ public:
     }
 
     virtual void establishesStackingContextIfNeeds();
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                                    LayoutRect& result);
 
-    bool tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc);
+    bool tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
+                             LayoutRect& result);
 
     void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true);
 
@@ -657,12 +659,17 @@ protected:
         return false;
     }
 
+    virtual FrameBoxRareData* createRareData()
+    {
+        return new FrameBoxRareData(m_layoutParent);
+    }
+
     FrameBoxRareData* ensureFrameBoxRareData()
     {
         if (hasRareData()) {
             return (FrameBoxRareData*)m_layoutParent;
         }
-        m_layoutParent = (Frame*)(new FrameBoxRareData(m_layoutParent));
+        m_layoutParent = (Frame*)createRareData();
         return (FrameBoxRareData*)m_layoutParent;
     }
 

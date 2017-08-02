@@ -545,11 +545,11 @@ enum WhiteSpaceValue {
     PreWrapWhiteSpaceValue = PreLineWhiteSpaceValue | PreWhiteSpaceValue,
 };
 
-// Widget Engine will support only visible and hidden values.
 enum OverflowValue {
     VisibleOverflow,
     HiddenOverflow,
     AutoOverflow,
+    ScrollOverflow,
 };
 
 enum BorderImageRepeatValue {

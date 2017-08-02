@@ -1550,6 +1550,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("hidden");
         case OverflowValue::AutoOverflow:
             return String::fromUTF8("auto");
+        case OverflowValue::ScrollOverflow:
+            return String::fromUTF8("scroll");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -6178,6 +6180,8 @@ bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
         m_value.m_overflowX = OverflowValue::HiddenOverflow;
     } else if (STRING_VALUE_IS_STRING("auto")) {
         m_value.m_overflowX = OverflowValue::AutoOverflow;
+    } else if (STRING_VALUE_IS_STRING("scroll")) {
+        m_value.m_overflowX = OverflowValue::ScrollOverflow;
     } else {
         return false;
     }
@@ -6203,6 +6207,8 @@ bool CSSStyleValuePair::updateValueUnitOverflowY(const CSSTokenValue& value)
         m_value.m_overflowY = OverflowValue::HiddenOverflow;
     } else if (STRING_VALUE_IS_STRING("auto")) {
         m_value.m_overflowY = OverflowValue::AutoOverflow;
+    } else if (STRING_VALUE_IS_STRING("scroll")) {
+        m_value.m_overflowY = OverflowValue::ScrollOverflow;
     } else {
         return false;
     }

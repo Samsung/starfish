@@ -84,6 +84,8 @@ HTMLFormElement* HTMLInputElement::form()
 
 void HTMLInputElement::handleDefaultEvent(Event* event)
 {
+    HTMLElement::handleDefaultEvent(event);
+
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equalsWithoutCase("click")) {
         if (type()->equalsWithoutCase("submit")) {

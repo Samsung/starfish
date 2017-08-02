@@ -429,6 +429,129 @@ uint32_t Element::clientHeight()
     return (float)clientRect().height() + .5f;
 }
 
+void Element::handleDefaultEvent(Event* event)
+{
+    Node::handleDefaultEvent(event);
+
+    if (frame() && frame()->isBlockLevel() && frame()->shouldApplyOverflow()) {
+        auto ox = frame()->style()->overflowX();
+        auto oy = frame()->style()->overflowY();
+    }
+}
+
+double Element::scrollLeft(bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return 0;
+    }
+
+    if (style()->overflowX() < OverflowValue::AutoOverflow) {
+        return 0;
+    }
+
+    if (hasRareMembers()) {
+        return rareMembers()->m_scrollLeft;
+    }
+    return 0;
+}
+
+void Element::setScrollLeft(double s)
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return;
+    }
+
+    if (style()->overflowX() < OverflowValue::AutoOverflow) {
+        return;
+    }
+
+    if (s > scrollWidth() - frame()->asFrameBlockBox()->width().toUnsigned()) {
+        s = scrollWidth() - frame()->asFrameBlockBox()->width().toUnsigned();
+    }
+
+    if (s < 0) {
+        s = 0;
+    }
+
+    ensureRareElementMembers()->m_scrollLeft = s;
+    setNeedsPainting();
+}
+
+double Element::scrollTop(bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return 0;
+    }
+
+    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+        return 0;
+    }
+
+    if (hasRareMembers()) {
+        return rareMembers()->m_scrollTop;
+    }
+    return 0;
+}
+
+void Element::setScrollTop(double s)
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return;
+    }
+
+    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+        return;
+    }
+
+    if (s >
+        scrollHeight() - frame()->asFrameBlockBox()->height().toUnsigned()) {
+        s = scrollHeight() - frame()->asFrameBlockBox()->height().toUnsigned();
+    }
+
+    if (s < 0) {
+        s = 0;
+    }
+
+    ensureRareElementMembers()->m_scrollTop = s;
+    setNeedsPainting();
+}
+
+uint32_t Element::scrollWidth()
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+    if (!frame()) {
+        return 0;
+    }
+    if (!frame()->isFrameBlockBox()) {
+        return 0;
+    }
+    return frame()->asFrameBlockBox()->scrollWidth();
+}
+
+uint32_t Element::scrollHeight()
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+    if (!frame()) {
+        return 0;
+    }
+    if (!frame()->isFrameBlockBox()) {
+        return 0;
+    }
+    return frame()->asFrameBlockBox()->scrollHeight();
+}
+
 void Element::getClientQuads(GCVector<DOMQuad*>& quads)
 {
     Frame* frameObject = this->frame();
