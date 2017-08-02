@@ -144,7 +144,7 @@ void HTMLElement::styleForPresentationAttribute(
     }
 }
 
-int HTMLElement::tabIndex()
+int HTMLElement::tabIndex() const
 {
     if (supportsFocus()) {
         return Element::tabIndex();
@@ -152,9 +152,9 @@ int HTMLElement::tabIndex()
     return -1;
 }
 
-bool HTMLElement::supportsFocus()
+void HTMLElement::setTabIndex(int index, bool setExplicitly)
 {
-    return Element::supportsFocus();
+    Element::setTabIndex(index, true);
 }
 
 LayoutRect HTMLElement::offsetRect()

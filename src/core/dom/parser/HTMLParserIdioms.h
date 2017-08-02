@@ -276,7 +276,7 @@ double parseToDoubleForNumberType(
     String*, double fallbackValue = std::numeric_limits<double>::quiet_NaN());
 
 // http://www.whatwg.org/specs/web-apps/current-work/#rules-for-parsing-integers
-bool parseHTMLInteger(String*, int&);
+bool parseHTMLInteger(const String*, int&);
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 //        #rules-for-parsing-non-negative-integers

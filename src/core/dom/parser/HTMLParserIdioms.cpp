@@ -184,17 +184,18 @@ double parseToDoubleForNumberType(const String& string, double fallbackValue)
     // The following expression converts -0 to +0.
     return value ? value : 0;
 }
+*/
 
-template <typename CharacterType>
-static bool parseHTMLIntegerInternal(const CharacterType* position, const
-CharacterType* end, int& value)
+template <typename CharType>
+static bool parseHTMLIntegerInternal(const CharType* position,
+                                     const CharType* end, int& value)
 {
     // Step 3
-    int sign = 1;
+    bool isNegative = false;
 
     // Step 4
     while (position < end) {
-        if (!isHTMLSpace<CharacterType>(*position)) {
+        if (!isHTMLSpace<CharType>(*position)) {
             break;
         }
         ++position;
@@ -204,11 +205,11 @@ CharacterType* end, int& value)
     if (position == end) {
         return false;
     }
-    ASSERT(position < end);
+    STARFISH_ASSERT(position < end);
 
     // Step 6
     if (*position == '-') {
-        sign = -1;
+        isNegative = true;
         ++position;
     } else if (*position == '+') {
         ++position;
@@ -216,49 +217,51 @@ CharacterType* end, int& value)
     if (position == end) {
         return false;
     }
-    ASSERT(position < end);
+    STARFISH_ASSERT(position < end);
 
     // Step 7
-    if (!isASCIIDigit(*position)) {
+    if (!String::isASCIIDigit(*position)) {
         return false;
     }
 
     // Step 8
-    StringBuilder digits;
-    while (position < end) {
-        if (!isASCIIDigit(*position)) {
-            break;
+    static const int intMax = std::numeric_limits<int>::max();
+    const int base = 10;
+    const int maxMultiplier = intMax / base;
+    unsigned temp = 0;
+    do {
+        int digitValue = *position - '0';
+        if (temp > maxMultiplier ||
+            (temp == maxMultiplier &&
+             digitValue > (intMax % base) + isNegative)) {
+            return false;
         }
-        digits.append(*position++);
-    }
+        temp = temp * base + digitValue;
+        ++position;
+    } while (position < end && String::isASCIIDigit(*position));
 
     // Step 9
-    bool ok;
-    if (digits.is8Bit()) {
-        value = sign * charactersToIntStrict(digits.characters8(),
-                digits.length(), &ok);
-    } else {
-        value = sign * charactersToIntStrict(digits.characters16(),
-                digits.length(), &ok);
-    }
-    return ok;
+    value = isNegative ? (0 - temp) : temp;
+    return true;
 }
 
 // http://www.whatwg.org/specs/web-apps/current-work/#rules-for-parsing-integers
-bool parseHTMLInteger(const String& input, int& value)
+bool parseHTMLInteger(const String* string, int& value)
 {
     // Step 1
     // Step 2
-    unsigned length = input.length();
-    if (!length || input.is8Bit()) {
-        const LChar* start = input.characters8();
-        return parseHTMLIntegerInternal(start, start + length, value);
+    auto input = string->bufferAccessData();
+    unsigned length = input.length;
+    if (!length || input.hasASCIIContent) {
+        return parseHTMLIntegerInternal<char>(
+            input.asciiData(), input.asciiData() + length, value);
     }
 
-    const UChar* start = input.characters16();
-    return parseHTMLIntegerInternal(start, start + length, value);
+    return parseHTMLIntegerInternal<char32_t>(
+        input.utf32Data(), input.utf32Data() + length, value);
 }
 
+/*
 template <typename CharacterType>
 static bool parseHTMLNonNegativeIntegerInternal(const CharacterType* position,
 const CharacterType* end, unsigned& value)

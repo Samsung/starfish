@@ -1,4 +1,3 @@
-
 [HTMLConstructor]
 interface HTMLElement : Element {
   // https://html.spec.whatwg.org/multipage/dom.html#htmlelement
@@ -12,7 +11,7 @@ interface HTMLElement : Element {
   // user interaction
   [Unimplemented, CEReactions] attribute boolean hidden;
   void click();
-  [Unimplemented, CEReactions] attribute long tabIndex;
+  [CEReactions] attribute long tabIndex;
   void focus();
   [Unimplemented] void blur();
   [Unimplemented, CEReactions] attribute DOMString accessKey;

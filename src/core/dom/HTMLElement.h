@@ -44,10 +44,10 @@ public:
     virtual void styleForPresentationAttribute(
         GCVector<CSSStyleValuePair>& cssValues);
 
-    int tabIndex();
-    bool supportsFocus();
-    LayoutRect offsetRect();
+    int tabIndex() const override;
+    void setTabIndex(int index, bool setExplicitly = false) override;
 
+    LayoutRect offsetRect();
     long offsetWidth()
     {
         return (float)offsetRect().width() + .5f;

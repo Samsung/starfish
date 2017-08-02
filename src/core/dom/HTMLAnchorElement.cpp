@@ -56,10 +56,12 @@ void HTMLAnchorElement::handleDefaultEvent(Event* event)
     }
 }
 
-bool HTMLAnchorElement::supportsFocus()
+bool HTMLAnchorElement::supportsFocus() const
 {
     auto href = starFish()->staticStrings()->m_href;
-    return hasAttribute(href) != SIZE_MAX ? true : false;
+    return const_cast<HTMLAnchorElement*>(this)->hasAttribute(href) != SIZE_MAX
+               ? true
+               : false;
 }
 
 String* HTMLAnchorElement::href()
