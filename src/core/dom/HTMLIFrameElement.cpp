@@ -124,10 +124,10 @@ void HTMLIFrameElement::loadSrc()
     String* s = src();
     if (s->length()) {
         navigate(new ResourceURL(s, document()->documentURI()->baseURI()),
-                 HistoryManager::Action::Add);
+                 HistoryManager::Action::Intact);
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
-                 HistoryManager::Action::Add);
+                 HistoryManager::Action::Intact);
     }
 }
 
