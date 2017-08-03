@@ -1375,10 +1375,11 @@ public:
                     const char* path;
                     evas_object_image_file_get(imgData, &path, NULL);
                     evas_object_image_file_set(eo, path, NULL);
+                    evas_object_image_size_set(eo, data->width(),
+                                               data->height());
+                    evas_object_image_colorspace_set(
+                        eo, evas_object_image_colorspace_get(imgData));
                 }
-                evas_object_image_size_set(eo, data->width(), data->height());
-                evas_object_image_colorspace_set(
-                    eo, evas_object_image_colorspace_get(imgData));
             }
 
             evas_object_image_alpha_set(eo, EINA_TRUE);
@@ -1410,7 +1411,7 @@ public:
             evas_object_move(eo, xx, yy);
             evas_object_resize(eo, ww, hh);
 
-            applyClippers(eo);
+            applyClippers(eo, true);
             applyEvasMapIfNeeded(eo, dst, true);
             evas_object_show(eo);
             m_imageCount++;
@@ -1428,24 +1429,19 @@ public:
                         m_objList->push_back(eo);
                     }
 
-                    if (evas_object_evas_get(imgData) ==
-                        evas_object_evas_get(eo)) {
-                        evas_object_image_source_set(eo, imgData);
+                    if (((char*)evas_object_data_get(imgData, "local"))[0] ==
+                        '0') {
+                        void* imgBuf =
+                            evas_object_image_data_get(imgData, EINA_FALSE);
+                        evas_object_image_size_set(eo, data->width(),
+                                                   data->height());
+                        evas_object_image_colorspace_set(
+                            eo, evas_object_image_colorspace_get(imgData));
+                        evas_object_image_data_set(eo, imgBuf);
                     } else {
-                        if (((char*)evas_object_data_get(imgData,
-                                                         "local"))[0] == '0') {
-                            void* imgBuf =
-                                evas_object_image_data_get(imgData, EINA_FALSE);
-                            evas_object_image_size_set(eo, data->width(),
-                                                       data->height());
-                            evas_object_image_colorspace_set(
-                                eo, evas_object_image_colorspace_get(imgData));
-                            evas_object_image_data_set(eo, imgBuf);
-                        } else {
-                            const char* path;
-                            evas_object_image_file_get(imgData, &path, NULL);
-                            evas_object_image_file_set(eo, path, NULL);
-                        }
+                        const char* path;
+                        evas_object_image_file_get(imgData, &path, NULL);
+                        evas_object_image_file_set(eo, path, NULL);
                         evas_object_image_size_set(eo, data->width(),
                                                    data->height());
                         evas_object_image_colorspace_set(
@@ -1453,23 +1449,23 @@ public:
                     }
 
                     evas_object_image_alpha_set(eo, EINA_TRUE);
-                    evas_object_resize(eo, imageWidth, imageHeight);
                     evas_object_move(eo, curx, cury);
+                    evas_object_resize(eo, imageWidth, imageHeight);
 
                     float clipw = (i == cntw - 1) ? ww - curx : imageWidth;
                     float cliph = (j == cnth - 1) ? hh - cury : imageHeight;
                     if (clipw != imageWidth || cliph != imageHeight) {
-                        Evas_Object* clp = evas_object_rectangle_add(m_canvas);
-                        evas_object_move(clp, curx, cury);
-                        evas_object_resize(clp, clipw, cliph);
-                        evas_object_show(clp);
-                        evas_object_clip_set(eo, clp);
+                        save();
+                        clip(Unit::Rect(curx, cury, clipw, cliph));
                     }
-                    applyClippers(eo);
+                    applyClippers(eo, true);
                     applyEvasMapIfNeeded(
                         eo, Unit::Rect(dst.x() + curx, dst.y() + cury,
                                        imageWidth, imageHeight),
                         true);
+                    if (clipw != imageWidth || cliph != imageHeight) {
+                        restore();
+                    }
 
                     evas_object_show(eo);
                     cury += imageHeight;
