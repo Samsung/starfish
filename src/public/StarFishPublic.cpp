@@ -40,6 +40,9 @@
 #include "core/dom/KeyboardEvent.h"
 
 #include <uv.h>
+#if defined(STARFISH_TIZEN)
+#include <tbm_surface.h>
+#endif
 
 uv_signal_t g_sigterm;
 uv_signal_t g_sigint;
@@ -95,13 +98,43 @@ public:
     {
         m_instance = instance;
     }
+    ~StarFishController()
+    {
+#if defined(STARFISH_TIZEN)
+        if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_unmap(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to destroy tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to destroy tbm_surface\n");
+        }
+#endif
+    }
+
     bool updateBuffer()
     {
+#if defined(STARFISH_TIZEN)
         if (TO_STARFISH(m_instance) != nullptr && m_isInit) {
-            if (((StarFish::StarFish*)m_instance->m_starfish)->needsUpdate()) {
-                m_daliBuffer.Update();
+            if (((StarFish::StarFish*)m_instance->m_starfish)) {
+                int bufferIdx = ((StarFish::StarFish*)m_instance->m_starfish)
+                                    ->frameBufferUpdate();
+                if (bufferIdx == 1) {
+                    Dali::Any source(m_surface1);
+                    m_daliImg_src->SetSource(source);
+                    Dali::Stage::GetCurrent().KeepRendering(0.0f);
+                } else if (bufferIdx == 2) {
+                    Dali::Any source(m_surface2);
+                    m_daliImg_src->SetSource(source);
+                    Dali::Stage::GetCurrent().KeepRendering(0.0f);
+                }
             }
         }
+#endif
         return true;
     }
 
@@ -236,11 +269,19 @@ public:
     int m_width;
     int m_height;
     StarFishInstance* m_instance;
-    Dali::BufferImage m_daliBuffer;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
     StarFish::Mutex* m_InitMutex;
     uv_async_t m_uv_handle;
+#if defined(STARFISH_TIZEN)
+    tbm_surface_h m_surface1;
+    tbm_surface_h m_surface2;
+    tbm_surface_info_s m_surface_info1;
+    tbm_surface_info_s m_surface_info2;
+
+    Dali::NativeImageSourcePtr m_daliImg_src;
+    Dali::NativeImage m_daliImg;
+#endif
 };
 #define TO_CONTROLLER(instance) ((StarFishController*)instance->m_data)
 
@@ -263,7 +304,11 @@ void starfishCreate_internal(uv_async_t* handle)
     StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         app->m_width, app->m_height, 1, info, "", "");
-    starFish->registerFrameBuffer((void*)app->m_daliBuffer.GetBuffer());
+
+#if defined(STARFISH_TIZEN)
+    starFish->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
+                                  app->m_surface_info2.planes[0].ptr);
+#endif
     app->m_instance->m_starfish = starFish;
     app->m_isInit = true;
     app->m_InitMutex->unlock();
@@ -309,10 +354,33 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     StarFishController* starFishControl = new StarFishController(instance);
     instance->m_data = (void*)starFishControl;
 
-    starFishControl->m_daliBuffer =
-        Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+#if defined(STARFISH_TIZEN)
+    starFishControl->m_surface1 =
+        tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
+    starFishControl->m_surface2 =
+        tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
+
+    if (tbm_surface_map(starFishControl->m_surface1,
+                        TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                        &starFishControl->m_surface_info1) !=
+        TBM_SURFACE_ERROR_NONE) {
+        STARFISH_LOG_INFO("Fail to map tbm_surface\n");
+    }
+    if (tbm_surface_map(starFishControl->m_surface2,
+                        TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                        &starFishControl->m_surface_info2) !=
+        TBM_SURFACE_ERROR_NONE) {
+        STARFISH_LOG_INFO("Fail to map tbm_surface\n");
+    }
+
+    Dali::Any source(starFishControl->m_surface1);
+    starFishControl->m_daliImg_src = Dali::NativeImageSource::New(source);
+    starFishControl->m_daliImg =
+        Dali::NativeImage::New(*starFishControl->m_daliImg_src);
+
     starFishControl->m_mainView =
-        Dali::Toolkit::ImageView::New(starFishControl->m_daliBuffer);
+        Dali::Toolkit::ImageView::New(starFishControl->m_daliImg);
+#endif
     starFishControl->m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
     starFishControl->m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
     starFishControl->m_mainView.SetPosition(0, 0);

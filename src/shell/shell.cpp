@@ -26,6 +26,11 @@
 #include <pthread.h>
 
 #if defined(STARFISH_DALI)
+
+#if defined(STARFISH_TIZEN)
+#include <tbm_surface.h>
+#endif
+
 #include <dali-toolkit/dali-toolkit.h>
 #include "platform/window/PlatformWindow.h"
 
@@ -132,15 +137,49 @@ public:
     }
     ~DaliShellController()
     {
+#if defined(STARFISH_TIZEN)
+        if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            printf("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_unmap(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            printf("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            printf("Failed to destroy tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            printf("Failed to destroy tbm_surface\n");
+        }
+#endif
     }
 
+#if defined(STARFISH_TIZEN)
     bool updateTick()
     {
-        if (m_sf && m_sf->needsUpdate()) {
-            m_daliBuffer.Update();
+        if (m_sf) {
+            int bufferIdx = m_sf->frameBufferUpdate();
+            if (bufferIdx == 1) {
+                Any source(m_surface1);
+                m_daliImg_src->SetSource(source);
+                Dali::Stage::GetCurrent().KeepRendering(0.0f);
+            } else if (bufferIdx == 2) {
+                Any source(m_surface2);
+                m_daliImg_src->SetSource(source);
+                Dali::Stage::GetCurrent().KeepRendering(0.0f);
+            }
+        }
+
+        return true;
+    }
+#else
+    bool updateTick()
+    {
+        if (m_sf && m_sf->frameBufferUpdate()) {
+            m_daliImg.Update();
         }
         return true;
     }
+#endif
     void Create(Application& application)
     {
         if (needToInitMainThread()) {
@@ -149,9 +188,29 @@ public:
 
         int width = m_width, height = m_height;
 
-        m_daliBuffer =
+#if defined(STARFISH_TIZEN)
+        m_surface1 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
+        m_surface2 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
+
+        if (tbm_surface_map(m_surface1,
+                            TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                            &m_surface_info1) != TBM_SURFACE_ERROR_NONE) {
+            printf("Fail to map tbm_surface\n");
+        }
+        if (tbm_surface_map(m_surface2,
+                            TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                            &m_surface_info2) != TBM_SURFACE_ERROR_NONE) {
+            printf("Fail to map tbm_surface\n");
+        }
+
+        Any source(m_surface1);
+        m_daliImg_src = Dali::NativeImageSource::New(source);
+        m_daliImg = Dali::NativeImage::New(*m_daliImg_src);
+#else
+        m_daliImg =
             Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
-        m_mainView = Dali::Toolkit::ImageView::New(m_daliBuffer);
+#endif
+        m_mainView = Dali::Toolkit::ImageView::New(m_daliImg);
         m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
         m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
         m_mainView.SetPosition(0, 0);
@@ -180,11 +239,18 @@ public:
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
                 app->m_width, app->m_height, 1, info, "", "");
 
+#if defined(STARFISH_TIZEN)
+            app->m_sf->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
+                                           app->m_surface_info2.planes[0].ptr);
+#else
             app->m_sf->registerFrameBuffer(
-                (void*)app->m_daliBuffer.GetBuffer());
-
+                (void*)app->m_daliImg.GetBuffer(),nullptr);
+#endif
             app->m_isInit = true;
             app->m_InitMutex->unlock();
+
+            // app->m_sf->loadHTMLDocument(
+            //     StarFish::String::fromUTF8("about:blank"));
 
             uv_close((uv_handle_t*)handle, nullptr);
         });
@@ -343,7 +409,17 @@ public:
     int m_height;
     StarFish::StarFish* m_sf;
     Application& mApplication;
-    Dali::BufferImage m_daliBuffer;
+#if defined(STARFISH_TIZEN)
+    tbm_surface_h m_surface1;
+    tbm_surface_h m_surface2;
+    tbm_surface_info_s m_surface_info1;
+    tbm_surface_info_s m_surface_info2;
+
+    Dali::NativeImageSourcePtr m_daliImg_src;
+    Dali::NativeImage m_daliImg;
+#else
+    Dali::BufferImage m_daliImg;
+#endif
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
     StarFish::Mutex* m_InitMutex;

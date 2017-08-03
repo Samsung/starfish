@@ -26,6 +26,7 @@
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/modules/threading/Locker.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
@@ -186,6 +187,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_width = w;
     m_height = h;
     m_needsUpdate = false;
+    m_completBufferIdx = 0;
+    bufferIdx = 1;
+    m_frameBufferSwitchMutex = new Mutex();
 #endif
     registerMainThread();
     if (!g_starFishGlobalInit) {
@@ -467,4 +471,54 @@ void StarFish::initCookieSession()
     }
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
+
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+
+#if defined(STARFISH_TIZEN)
+void* StarFish::frameBuffer()
+{
+    {
+        Locker<Mutex> l(*m_frameBufferSwitchMutex);
+        if (m_completBufferIdx == 0) {
+            bufferIdx == 2 ? bufferIdx = 1 : bufferIdx = 2;
+        }
+    }
+    if (bufferIdx == 2)
+        return m_frameBufffer2;
+    return m_frameBufffer1;
+}
+void StarFish::setNeedsUpdate()
+{
+    Locker<Mutex> l(*m_frameBufferSwitchMutex);
+    m_completBufferIdx = bufferIdx;
+}
+int StarFish::frameBufferUpdate()
+{
+    Locker<Mutex> l(*m_frameBufferSwitchMutex);
+    int result = 0;
+    if (m_completBufferIdx != 0) {
+        result = m_completBufferIdx;
+        m_completBufferIdx = 0;
+    }
+    return result;
+}
+#else
+void* StarFish::frameBuffer()
+{
+    return m_frameBufffer1;
+}
+void StarFish::setNeedsUpdate()
+{
+    m_needsUpdate = true;
+}
+int StarFish::frameBufferUpdate()
+{
+    if (m_needsUpdate) {
+        m_needsUpdate = false;
+        return 1;
+    }
+    return 0;
+}
+#endif
+#endif
 }
