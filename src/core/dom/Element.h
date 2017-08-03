@@ -19,6 +19,7 @@
 
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
+#include "core/dom/Scrolling.h"
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
 
@@ -38,11 +39,7 @@ public:
         , m_namedNodeMap(nullptr)
         , m_attrList(nullptr)
         , m_pseudoElementData(nullptr)
-        , m_isScrollTarget(false)
-        , m_inVerticalScrolling(false)
-        , m_inHorizontalScrolling(false)
-        , m_pointingEventX(0)
-        , m_pointingEventY(0)
+        , m_scrolling(nullptr)
     {
     }
 
@@ -56,11 +53,7 @@ public:
     PseudoElementData* m_pseudoElementData;
     LayoutUnit m_scrollTop;
     LayoutUnit m_scrollLeft;
-    bool m_isScrollTarget;
-    bool m_inVerticalScrolling;
-    bool m_inHorizontalScrolling;
-    float m_pointingEventX;
-    float m_pointingEventY;
+    Scrolling* m_scrolling;
 };
 
 class Element : public Node {

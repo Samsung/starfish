@@ -32,6 +32,7 @@
 #include "core/page/Location.h"
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
+#include "core/layout/FrameDocument.h"
 
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/Storage.h"
@@ -70,6 +71,7 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_screen(nullptr)
+    , m_scrolling(new Scrolling(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_webapis(nullptr)
 #endif
@@ -202,6 +204,70 @@ void Window::blur()
 float Window::devicePixelRatio()
 {
     return screen()->devicePixelRatio();
+}
+
+double Window::scrollX()
+{
+    browsingContext()->webView()->layoutIfNeeds();
+    if (document()->frame()) {
+        return document()->frame()->asFrameBlockBox()->scrollLeft();
+    }
+    return 0;
+}
+
+double Window::scrollY()
+{
+    browsingContext()->webView()->layoutIfNeeds();
+    if (document()->frame()) {
+        return document()->frame()->asFrameBlockBox()->scrollTop();
+    }
+    return 0;
+}
+
+double Window::pageXOffset()
+{
+    return scrollX();
+}
+
+double Window::pageYOffset()
+{
+    return scrollY();
+}
+
+void Window::scrollTo(double x, double y)
+{
+    browsingContext()->webView()->layoutIfNeeds();
+    if (document()->frame()) {
+        document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(x,
+                                                                            y);
+        if (webView()->didCompositeBefore()) {
+            browsingContext()->setNeedsComposite();
+        } else {
+            browsingContext()->setNeedsPainting();
+        }
+    }
+}
+
+bool Window::handleDefaultEvent(Event* event)
+{
+    if (EventTarget::handleDefaultEvent(event)) {
+        return true;
+    }
+
+    if (document() && document()->frame()) {
+        if (m_scrolling->handleDefaultEvent(
+                event, this, document()->frame()->asFrameBlockBox(),
+                OverflowValue::AutoOverflow, OverflowValue::AutoOverflow)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Window::onGlobalPointingEvent(float x, float y,
+                                   GlobalPointingEventKind kind)
+{
+    m_scrolling->onGlobalPointingEvent(x, y, kind);
 }
 
 #ifdef STARFISH_ENABLE_TEST

@@ -542,7 +542,13 @@ void WebView::rendering()
         {
             PaintingContext ctx(canvas);
             ctx.m_paintingStage = PaintingStageEnd;
-            mainBrowsingContext()->document()->frame()->paint(ctx);
+            FrameBlockBox* mainFrame =
+                mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+            if (!m_needsComposite) {
+                canvas->translate(-mainFrame->scrollLeft(),
+                                  -mainFrame->scrollTop());
+            }
+            mainFrame->paint(ctx);
         }
         m_needsPainting = false;
 
@@ -644,6 +650,10 @@ void WebView::rendering()
             Canvas* canvas =
                 starFish()->platformWindow()->preparePainting(false);
             starFish()->platformWindow()->paintWindowBackground(canvas);
+            FrameBlockBox* mainFrame =
+                mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+            canvas->translate(-mainFrame->scrollLeft(),
+                              -mainFrame->scrollTop());
             mainBrowsingContext()
                 ->document()
                 ->frame()

@@ -724,7 +724,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
-            Node* nd = m_globalPointingEventListener[i];
+            EventTarget* nd = m_globalPointingEventListener[i];
             nd->onGlobalPointingEvent(x, y, newKind);
             if (std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(),
@@ -834,7 +834,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
 }
 
 void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                                         MouseData& data)
+                                         MouseData data)
 {
     if (!m_isRunning) {
         return;
@@ -866,7 +866,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
-            Node* nd = m_globalPointingEventListener[i];
+            EventTarget* nd = m_globalPointingEventListener[i];
             nd->onGlobalPointingEvent(x, y, newKind);
             if (std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(),
@@ -879,6 +879,9 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
 
     // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f\n",
     // (int)kind, data.clientX(), data.clientY());
+
+    data.setClientX(data.clientX() + window()->scrollX());
+    data.setClientY(data.clientY() + window()->scrollY());
 
     // Hit test to validate event position
     Node* targetNode = hitTest((float)data.clientX(), (float)data.clientY());
@@ -1051,13 +1054,14 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
     }
 }
 
-void BrowsingContext::addGlobalPointingEventInterceptListener(Node* node)
+void BrowsingContext::addGlobalPointingEventInterceptListener(EventTarget* node)
 {
     m_globalPointingEventListener.insert(m_globalPointingEventListener.end(),
                                          node);
 }
 
-void BrowsingContext::removeGlobalPointingEventInterceptListener(Node* node)
+void BrowsingContext::removeGlobalPointingEventInterceptListener(
+    EventTarget* node)
 {
     auto iter = std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(), node);

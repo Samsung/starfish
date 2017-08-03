@@ -17,6 +17,7 @@
 #define __StarFishWindow__
 
 #include "core/dom/EventTarget.h"
+#include "core/dom/Scrolling.h"
 
 namespace StarFish {
 
@@ -55,6 +56,9 @@ public:
                       void* domObjectPointer) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
     virtual bool isWindow() const;
+    virtual void onGlobalPointingEvent(float x, float y,
+                                       GlobalPointingEventKind kind) override;
+    virtual bool handleDefaultEvent(Event* event);
     void deleteScriptBindingInstance();
     void close();
 
@@ -147,16 +151,14 @@ public:
 
     float devicePixelRatio();
 
-    // These attributes should return the real coordinate when we support
-    // scroll.
-    double scrollX()
+    double scrollX();
+    double scrollY();
+    double pageXOffset();
+    double pageYOffset();
+    void scrollTo(double x, double y);
+    void scroll(double x, double y)
     {
-        return 0;
-    }
-
-    double scrollY()
-    {
-        return 0;
+        scrollTo(x, y);
     }
 
     void resize(uint32_t w, uint32_t h);
@@ -275,6 +277,7 @@ private:
     Navigator* m_navigator;
     Location* m_location;
     Screen* m_screen;
+    Scrolling* m_scrolling;
 
     uint32_t m_width;
     uint32_t m_height;

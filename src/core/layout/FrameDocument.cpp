@@ -24,6 +24,31 @@
 
 namespace StarFish {
 
+void* FrameDocument::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameDocument)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameDocument, m_node));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameDocument, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameDocument, m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameDocument, m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameDocument, m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameDocument, m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameDocument, m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameDocument, m_lineBoxes));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameDocument));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void FrameDocument::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
@@ -40,6 +65,29 @@ void FrameDocument::layout(LayoutContext& ctx,
         style()->setDirection(firstChild()->style()->direction());
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
+}
+
+void FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
+{
+    if (left > (scrollWidth() - width())) {
+        left = scrollWidth() - width();
+    }
+
+    if (left < 0) {
+        left = 0;
+    }
+
+    m_scrollLeft = left;
+
+    if (top > (scrollHeight() - height())) {
+        top = scrollHeight() - height();
+    }
+
+    if (top < 0) {
+        top = 0;
+    }
+
+    m_scrollTop = top;
 }
 
 void FrameDocument::paint(PaintingContext& ctx)
