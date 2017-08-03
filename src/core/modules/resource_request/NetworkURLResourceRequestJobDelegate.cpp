@@ -28,7 +28,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 
-#define CURL_HANDLE_DATA_CLEAR_TIME_S 3
+#define CURL_HANDLE_DATA_CLEAR_TIME_S 1
 
 namespace StarFish {
 
