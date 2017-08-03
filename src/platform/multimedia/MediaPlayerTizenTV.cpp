@@ -17,13 +17,19 @@
 #ifdef STARFISH_TIZEN_TV
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/util/URL.h"
+#include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "MediaPlayerTizenTV.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/extra/MediaSource.h"
-#include "core/extra/SourceBuffer.h"
+#include "core/modules/mediasource/MediaSource.h"
+#include "core/modules/mediasource/SourceBuffer.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/threading/Locker.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
 
 #include <Elementary.h>
 
@@ -76,52 +82,41 @@ void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
 
 void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
 {
-    if (url->isNetworkURL()) {
-        player_set_streaming_type(m_nativePlayer,
-                                  const_cast<char*>("FFMPEG_HTTP"));
-    }
-
     if (m_container->isHTMLVideoElement() && m_container->frame()) {
         player_display_h displayHandle = GET_DISPLAY(
-            elm_win_xwindow_get((Evas_Object*)m_container->window()->unwrap()));
-        player_display_type_e displayType = PLAYER_DISPLAY_TYPE_X11;
-        player_display_mode_e displayMode = PLAYER_DISPLAY_MODE_DST_ROI;
-        player_display_roi_mode_e roiMode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
-
-        player_set_display(m_nativePlayer, displayType, displayHandle);
-        player_set_display_mode(m_nativePlayer, displayMode);
-        player_set_x11_display_roi_mode(m_nativePlayer, roiMode);
-        player_display_video_at_paused_state(m_nativePlayer, TRUE);
+            (Evas_Object*)m_container->starFish()->platformWindow()->unwrap());
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
+                           displayHandle);
+        player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
+        // NOTE: Do not edit `player_set_display_roi_area` parameter
+        player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
     }
-
+#ifdef STARFISH_TIZEN_TV_MSE
     player_set_buffer_size(m_nativePlayer, PLAYER_BUFFER_FOR_PLAY,
                            PLAYER_BUFFER_SIZE_IN_SECOND, 1);
     player_set_buffer_size(m_nativePlayer, PLAYER_BUFFER_FOR_RESUME,
                            PLAYER_BUFFER_SIZE_IN_SECOND, 1);
+#endif
 }
 
 void MediaPlayerTizenTV::drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                                    const LayoutRect& absVideoRect)
 {
-    canvas->punchHole(Rect(videoRect.x(), videoRect.y(), videoRect.width(),
-                           videoRect.height()));
-    player_set_x11_display_dst_roi(m_nativePlayer, absVideoRect.x(),
-                                   absVideoRect.y(), absVideoRect.width(),
-                                   absVideoRect.height());
+    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
+                                 videoRect.width(), videoRect.height()));
+    player_set_display_roi_area(
+        m_nativePlayer, absVideoRect.x().toInt(), absVideoRect.y().toInt(),
+        absVideoRect.width().toInt(), absVideoRect.height().toInt());
 }
 
-double MediaPlayerTizenTV::currentTime()
+void MediaPlayerTizenTV::mediaEndOperation()
 {
-    if (m_playbackState == MediaPlayer::PLAYBACK_STATE_END) {
-        return duration();
+    player_stop(m_nativePlayer);
+    if (m_activeMediaSource) {
+        Locker<Mutex> videoLock(*m_videoBufferMutex);
+        Locker<Mutex> audioLock(*m_audioBufferMutex);
+        m_lastAudioPts = m_lastVideoPts = 0;
     }
-
-    int s;
-    int ret = player_get_position(m_nativePlayer, &s);
-    if (ret) {
-        return 0;
-    }
-    return s / 1000.0;
 }
 
 void MediaPlayerTizenTV::seekOperation(int timeInMS)
@@ -202,18 +197,20 @@ void MediaPlayerTizenTV::handleSeeked()
 
         // Remove timeout timer
         if (m_seekingTimer != SIZE_MAX) {
-            m_starFish->window()->clearTimeout(m_seekingTimer);
+            m_container->window()->clearTimeout(m_seekingTimer);
             m_seekingTimer = SIZE_MAX;
         }
         // Remove rooted pointer
-        m_starFish->removePointerFromRootSet(this);
+        m_container->starFish()->removePointerFromRootSet(this);
 
         if (!m_alive) {
             close();
             return;
         }
     } else {
-        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        msgLoop->addIdlerWithNoGCRootingInOtherThread(
+            m_container->document()->browsingContext(),
             [](size_t, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleSeeked();
@@ -229,7 +226,9 @@ void MediaPlayerTizenTV::handleSeekFail()
         m_seekState = SEEKSTATE_WAITING;
         handleSeeked();
     } else {
-        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        msgLoop->addIdlerWithNoGCRootingInOtherThread(
+            m_container->document()->browsingContext(),
             [](size_t, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleSeekFail();
@@ -238,6 +237,7 @@ void MediaPlayerTizenTV::handleSeekFail()
     }
 }
 
+#ifdef STARFISH_TIZEN_TV_MSE
 void MediaPlayerTizenTV::prepareMediaSource()
 {
     STARFISH_LOG_INFO("MediaPlayerTizenTV::prepareMediaSource\n");
@@ -473,6 +473,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
         m_audioBufferMutex->unlock();
     }
 }
+#endif
 
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {

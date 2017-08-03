@@ -31,6 +31,7 @@ namespace StarFish {
 class CanvasSurface;
 class MediaSource;
 class MediaPlayerTizenMediaSourceClient;
+class Mutex;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
@@ -55,7 +56,7 @@ public:
 
     virtual void prepare(ResourceURL* url);
     virtual void initDisplay();
-    virtual void setNativePlayerDefaultOptions(URL* url);
+    virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
