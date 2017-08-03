@@ -593,6 +593,11 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
         }
     }
 
+    if (owner()->style()->visibility() ==
+        VisibilityValue::HiddenVisibilityValue) {
+        return nullptr;
+    }
+
     if (owner()->style()->overflowX() != OverflowValue::VisibleOverflow ||
         owner()->style()->overflowY() != OverflowValue::VisibleOverflow) {
         if (owner()->FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {

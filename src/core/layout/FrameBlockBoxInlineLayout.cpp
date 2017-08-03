@@ -3827,10 +3827,25 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
     }
 }
 
+Frame* InlineTextBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+{
+    if (stage == HitTestStage::HitTestNormalFlowInline) {
+        if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+            return nullptr;
+        }
+        return FrameBox::hitTest(x, y, stage);
+    }
+    return nullptr;
+}
+
 Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,
                                      HitTestStage stage)
 {
     if (isEstablishesStackingContext()) {
+        return nullptr;
+    }
+
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
         return nullptr;
     }
 

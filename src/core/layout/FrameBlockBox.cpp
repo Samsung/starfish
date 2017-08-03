@@ -763,6 +763,10 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         return nullptr;
     }
 
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        return nullptr;
+    }
+
     LayoutUnit childX = x + scrollLeft();
     LayoutUnit childY = y + scrollTop();
 

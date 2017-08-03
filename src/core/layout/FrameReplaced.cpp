@@ -433,4 +433,17 @@ void FrameReplaced::paint(PaintingContext& ctx)
         }
     }
 }
+
+Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+{
+    if (isEstablishesStackingContext()) {
+        return nullptr;
+    }
+
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        return nullptr;
+    }
+
+    return FrameBox::hitTest(x, y, stage);
+}
 }
