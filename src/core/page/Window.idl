@@ -82,13 +82,13 @@ interface Window : EventTarget {
 
   // viewport scrolling
   [Replaceable] readonly attribute double scrollX;
-  [Unimplemented, Replaceable] readonly attribute double pageXOffset;
+  [Replaceable] readonly attribute double pageXOffset;
   [Replaceable] readonly attribute double scrollY;
-  [Unimplemented, Replaceable] readonly attribute double pageYOffset;
+  [Replaceable] readonly attribute double pageYOffset;
   [Unimplemented] void scroll(optional ScrollToOptions options);
-  [Unimplemented] void scroll(unrestricted double x, unrestricted double y);
+  void scroll(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollTo(optional ScrollToOptions options);
-  [Unimplemented] void scrollTo(unrestricted double x, unrestricted double y);
+  void scrollTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollBy(optional ScrollToOptions options);
   [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
 

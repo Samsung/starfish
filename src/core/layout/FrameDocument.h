@@ -22,6 +22,8 @@
 namespace StarFish {
 
 class FrameDocument : public FrameBlockBox {
+    friend class FrameBlockBox;
+
 public:
     FrameDocument(Node* node)
         : FrameBlockBox(node, nullptr)
@@ -42,6 +44,25 @@ public:
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void paint(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+
+    virtual LayoutUnit scrollLeft() override
+    {
+        return m_scrollLeft;
+    }
+
+    virtual LayoutUnit scrollTop() override
+    {
+        return m_scrollTop;
+    }
+
+    void scrollTo(LayoutUnit left, LayoutUnit top);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    LayoutUnit m_scrollLeft;
+    LayoutUnit m_scrollTop;
 };
 }
 

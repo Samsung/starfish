@@ -157,7 +157,7 @@ public:
     void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                             TouchData* touches, size_t touchCount);
     void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                            MouseData& data);
+                            MouseData data);
     void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
                           KeyboardData& data);
 
@@ -182,8 +182,8 @@ public:
         return m_parentBrowsingContext;
     }
 
-    void addGlobalPointingEventInterceptListener(Node* node);
-    void removeGlobalPointingEventInterceptListener(Node* node);
+    void addGlobalPointingEventInterceptListener(EventTarget* node);
+    void removeGlobalPointingEventInterceptListener(EventTarget* node);
 
 private:
     // return did layout
@@ -231,7 +231,7 @@ private:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
 
-    GCVector<Node*> m_globalPointingEventListener;
+    GCVector<EventTarget*> m_globalPointingEventListener;
 };
 }
 

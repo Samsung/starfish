@@ -546,8 +546,8 @@ public:
         }
     }
 
-    LayoutUnit scrollLeft();
-    LayoutUnit scrollTop();
+    virtual LayoutUnit scrollLeft();
+    virtual LayoutUnit scrollTop();
 
     virtual bool isFrameBlockBox()
     {

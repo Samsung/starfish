@@ -184,6 +184,16 @@ public:
         m_eventListeners.clear();
     }
 
+    enum GlobalPointingEventKind {
+        GlobalPointingEventKindDown,
+        GlobalPointingEventKindUp,
+        GlobalPointingEventKindMove
+    };
+    virtual void onGlobalPointingEvent(float x, float y,
+                                       GlobalPointingEventKind kind)
+    {
+    }
+
 protected:
     GCVector<std::pair<String*, GCVector<EventListener*>*>> m_eventListeners;
 };

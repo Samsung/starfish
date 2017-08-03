@@ -30,9 +30,6 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/Text.h"
-#include "core/dom/MouseEvent.h"
-#include "core/dom/TouchEvent.h"
-#include "core/dom/TouchList.h"
 #include "core/dom/PseudoElementData.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
@@ -435,24 +432,7 @@ uint32_t Element::clientHeight()
 void Element::onGlobalPointingEvent(float x, float y,
                                     GlobalPointingEventKind kind)
 {
-    if (kind == GlobalPointingEventKindUp) {
-        document()
-            ->browsingContext()
-            ->removeGlobalPointingEventInterceptListener(this);
-        rareMembers()->m_isScrollTarget = false;
-        rareMembers()->m_inHorizontalScrolling = false;
-        rareMembers()->m_inVerticalScrolling = false;
-    } else if (kind == GlobalPointingEventKindMove) {
-        float dx = rareMembers()->m_pointingEventX - x;
-        float dy = rareMembers()->m_pointingEventY - y;
-        rareMembers()->m_pointingEventX = x;
-        rareMembers()->m_pointingEventY = y;
-        if (rareMembers()->m_inVerticalScrolling) {
-            setScrollTop(scrollTop() + dy);
-        } else if (rareMembers()->m_inHorizontalScrolling) {
-            setScrollLeft(scrollLeft() + dx);
-        }
-    }
+    rareMembers()->m_scrolling->onGlobalPointingEvent(x, y, kind);
 }
 
 bool Element::handleDefaultEvent(Event* event)
@@ -463,72 +443,15 @@ bool Element::handleDefaultEvent(Event* event)
 
     if (frame() && frame()->isFrameBlockBox() &&
         frame()->shouldApplyOverflow()) {
+        if (!ensureRareElementMembers()->m_scrolling) {
+            ensureRareElementMembers()->m_scrolling = new Scrolling(this);
+        }
         auto ox = frame()->style()->overflowX();
         auto oy = frame()->style()->overflowY();
 
-        bool horizontalScrollEnabled =
-            ox >= OverflowValue::AutoOverflow &&
-            frame()->asFrameBlockBox()->hasBiggerContentThanFrameWidth();
-        bool verticalScrollEnabled =
-            oy >= OverflowValue::AutoOverflow &&
-            frame()->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
-
-        if (horizontalScrollEnabled || verticalScrollEnabled) {
-            bool isPointingDownEvent = false;
-            bool shouldProcess = false;
-            float x, y;
-            if (event->isMouseEvent()) {
-                if (event->type()->equals("mousedown")) {
-                    isPointingDownEvent = true;
-                    shouldProcess = true;
-                    x = event->asMouseEvent()->screenX();
-                    y = event->asMouseEvent()->screenY();
-                } else if (event->type()->equals("mousemove")) {
-                    shouldProcess = true;
-                    x = event->asMouseEvent()->screenX();
-                    y = event->asMouseEvent()->screenY();
-                }
-            } else if (event->isTouchEvent()) {
-                if (event->type()->equals("touchstart")) {
-                    isPointingDownEvent = true;
-                    shouldProcess = true;
-                    x = event->asTouchEvent()->touches()->at(0)->screenX();
-                    y = event->asTouchEvent()->touches()->at(0)->screenY();
-                } else if (event->type()->equals("touchmove")) {
-                    shouldProcess = true;
-                    x = event->asTouchEvent()->touches()->at(0)->screenX();
-                    y = event->asTouchEvent()->touches()->at(0)->screenY();
-                }
-            }
-            if (shouldProcess) {
-                ensureRareElementMembers();
-                if (isPointingDownEvent) {
-                    rareMembers()->m_isScrollTarget = true;
-                    rareMembers()->m_pointingEventX = x;
-                    rareMembers()->m_pointingEventY = y;
-                } else if (rareMembers()->m_isScrollTarget) {
-#define STARFISH_SCROLL_THRESHOLD 10
-                    unsigned t = STARFISH_SCROLL_THRESHOLD;
-                    t /= window()->devicePixelRatio();
-
-                    if (std::abs(rareMembers()->m_pointingEventY - y) > t &&
-                        verticalScrollEnabled) {
-                        rareMembers()->m_inVerticalScrolling = true;
-                    } else if (std::abs(rareMembers()->m_pointingEventX - x) >
-                                   t &&
-                               horizontalScrollEnabled) {
-                        rareMembers()->m_inHorizontalScrolling = true;
-                    }
-
-                    if (rareMembers()->m_inVerticalScrolling ||
-                        rareMembers()->m_inHorizontalScrolling) {
-                        document()
-                            ->browsingContext()
-                            ->addGlobalPointingEventInterceptListener(this);
-                        return true;
-                    }
-                }
-            }
+        if (rareMembers()->m_scrolling->handleDefaultEvent(
+                event, window(), frame()->asFrameBlockBox(), ox, oy)) {
+            return true;
         }
     }
     return false;

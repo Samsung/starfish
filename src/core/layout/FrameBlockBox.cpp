@@ -496,6 +496,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                                 child->asFrameBox()->y(),
                                 child->asFrameBlockBox()->scrollWidth(),
                                 child->asFrameBlockBox()->scrollHeight());
+                if (child->shouldApplyOverflow()) {
+                    rect.setWidth(child->asFrameBox()->width());
+                    rect.setHeight(child->asFrameBox()->height());
+                }
                 visibleRect.unite(rect);
             } else {
                 LayoutLocation loc;
@@ -516,6 +520,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     auto overflowX = style()->overflowX();
+    if (isFrameDocument()) {
+        overflowX = OverflowValue::AutoOverflow;
+    }
     if (scrollWidth > width() && overflowX != OverflowValue::HiddenOverflow) {
         m_flags.m_hasBiggerContentThanFrameWidth = true;
         ensureFrameBoxRareData();
@@ -523,14 +530,17 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     if (overflowX >= AutoOverflow) {
+        LayoutUnit* u;
         if (node()->isElement()) {
-            LayoutUnit& u =
-                node()->asElement()->ensureRareElementMembers()->m_scrollLeft;
-            if (u > scrollWidth - width()) {
-                u = scrollWidth - width();
-                if (u < 0) {
-                    u = 0;
-                }
+            u = &node()->asElement()->ensureRareElementMembers()->m_scrollLeft;
+        } else {
+            STARFISH_ASSERT(node()->isDocument());
+            u = &asFrameDocument()->m_scrollLeft;
+        }
+        if (*u > scrollWidth - width()) {
+            *u = scrollWidth - width();
+            if (*u < 0) {
+                *u = 0;
             }
         }
     } else {
@@ -545,6 +555,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     auto overflowY = style()->overflowY();
+    if (isFrameDocument()) {
+        overflowY = OverflowValue::AutoOverflow;
+    }
     if (scrollHeight > height() && overflowY != OverflowValue::HiddenOverflow) {
         m_flags.m_hasBiggerContentThanFrameHeight = true;
         ensureFrameBoxRareData();
@@ -552,14 +565,17 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     if (overflowY >= AutoOverflow) {
+        LayoutUnit* u;
         if (node()->isElement()) {
-            LayoutUnit& u =
-                node()->asElement()->ensureRareElementMembers()->m_scrollTop;
-            if (u > scrollHeight - height()) {
-                u = scrollHeight - height();
-                if (u < 0) {
-                    u = 0;
-                }
+            u = &node()->asElement()->ensureRareElementMembers()->m_scrollTop;
+        } else {
+            STARFISH_ASSERT(node()->isDocument());
+            u = &asFrameDocument()->m_scrollTop;
+        }
+        if (*u > scrollHeight - height()) {
+            *u = scrollHeight - height();
+            if (*u < 0) {
+                *u = 0;
             }
         }
     } else {
