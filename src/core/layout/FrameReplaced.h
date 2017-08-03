@@ -238,6 +238,7 @@ public:
     }
 
     virtual void paint(PaintingContext& ctx);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
     virtual void paintStackingContextContent(Canvas* canvas)
     {

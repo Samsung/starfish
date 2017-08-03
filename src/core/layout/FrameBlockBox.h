@@ -77,13 +77,7 @@ public:
     }
 
     virtual void paint(PaintingContext& ctx);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
-    {
-        if (stage == HitTestStage::HitTestNormalFlowInline) {
-            return FrameBox::hitTest(x, y, stage);
-        }
-        return nullptr;
-    }
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
