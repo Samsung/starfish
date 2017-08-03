@@ -210,7 +210,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+        if (td->m_window == nullptr || td->m_window->browsingContext() == ctx ||
+            ctx == nullptr) {
             uv_timer_stop(&td->m_timerID);
             GC_FREE(td);
             m_timeoutHandler.erase(timerIter++);
@@ -222,7 +223,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        if (td->m_window->browsingContext() == ctx || ctx == nullptr) {
+        if (td->m_window == nullptr || td->m_window->browsingContext() == ctx ||
+            ctx == nullptr) {
             uv_timer_stop(&td->m_timerID);
             GC_FREE(td);
             m_requestAnimationFrameHandler.erase(aniIter++);
@@ -234,7 +236,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        if (ad->m_window->browsingContext() == ctx || ctx == nullptr) {
+        if (ad->m_window == nullptr || ad->m_window->browsingContext() == ctx ||
+            ctx == nullptr) {
             uv_timer_stop(&ad->m_timerID);
             GC_FREE(ad);
             m_animationHandler.erase(aniIter2++);
