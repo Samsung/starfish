@@ -361,6 +361,11 @@ public:
         return isSpaceOrNewline(c) && !u_isblank(c);
     }
 
+    static inline bool isFixedWidthChar(char32_t c)
+    {
+        return (c == 0x3000 || c == 0x205F || (c >= 0x2000 && c <= 0x200A));
+    }
+
     static inline bool isZeroWidthChar(char32_t CHAR)
     {
         if (CHAR < 32) {

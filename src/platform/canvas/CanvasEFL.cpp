@@ -942,8 +942,8 @@ public:
                 for (size_t i = sv.start(); i < sv.end(); i++) {
                     char32_t ch = sv.originalString()->charAt(i);
                     if (ch == 160) { // nbsp
-
-                    } else if (String::isSpaceOrNewline(ch)) {
+                    } else if (String::isFixedWidthChar(ch) ||
+                               String::isZeroWidthChar(ch)) {
                         // Fixed-width spaces
                         size_t num = Font::spaceSizeNumerator(ch);
                         xx += h * ((float)num / SPACE_SIZE_DENOMINATOR);
