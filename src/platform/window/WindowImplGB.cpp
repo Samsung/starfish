@@ -46,27 +46,29 @@ struct IdlerData {
     void* m_data;
 };
 
-class WindowImplDALI : public PlatformWindow {
+class WindowImplGB : public PlatformWindow {
 public:
-    WindowImplDALI(StarFish* sf, int32_t width, int32_t height)
+    WindowImplGB(StarFish* sf, int32_t width, int32_t height)
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
         , m_internalBuffer(nullptr)
-        , m_frameBufferSwitchMutex(new Mutex())
+        , m_rendingLockMutex(new Mutex())
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
         initBuffer();
 
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                STARFISH_LOG_INFO("WindowImplDALI::~WindowImplDALI\n");
-                WindowImplDALI* s = (WindowImplDALI*)obj;
-                free(s->m_internalBuffer);
-            },
-            NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           STARFISH_LOG_INFO(
+                                               "WindowImplGB::~WindowImplGB\n");
+                                           WindowImplGB* s = (WindowImplGB*)obj;
+#if !defined(STARFISH_TIZEN)
+                                           free(s->m_internalBuffer);
+#endif
+                                       },
+                                       NULL, NULL, NULL);
     }
 
     virtual int32_t width() override
@@ -104,15 +106,23 @@ public:
 
     void initBuffer()
     {
-        m_internalBuffer = (void*)malloc(m_width * m_height * sizeof(uint32_t));
+#if defined(STARFISH_TIZEN)
+        m_internalBuffer = m_starFish->frameBuffer();
+#else
+        if (m_internalBuffer == nullptr)
+            m_internalBuffer =
+                (void*)malloc(m_width * m_height * sizeof(uint32_t));
+#endif
         m_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, m_width);
     }
 
     void flushBuffer()
     {
-        Locker<Mutex> l(*m_frameBufferSwitchMutex);
+#if !defined(STARFISH_TIZEN)
         memcpy(m_starFish->frameBuffer(), m_internalBuffer,
                m_width * m_height * sizeof(uint32_t));
+
+#endif
         m_starFish->setNeedsUpdate();
     }
 
@@ -127,7 +137,7 @@ public:
 
     void* m_internalBuffer;
     size_t m_stride;
-    Mutex* m_frameBufferSwitchMutex;
+    Mutex* m_rendingLockMutex;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -136,7 +146,7 @@ public:
     {
         m_width = w;
         m_height = h;
-        m_window = (WindowImplDALI*)wnd;
+        m_window = (WindowImplGB*)wnd;
 
         buffer = (unsigned char*)malloc(w * h * sizeof(uint32_t));
         size_t end = m_width * m_height * sizeof(uint32_t);
@@ -184,7 +194,7 @@ public:
     }
 
 protected:
-    WindowImplDALI* m_window;
+    WindowImplGB* m_window;
     unsigned char* buffer;
     size_t m_width;
     size_t m_height;
@@ -200,7 +210,7 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 // {
 //     ecore_animator_add(
 //         [](void* user_data) -> Eina_Bool {
-//             WindowImplDALI* wnd = (WindowImplDALI*)user_data;
+//             WindowImplGB* wnd = (WindowImplGB*)user_data;
 //             wnd->setNeedsLayout();
 //             wnd->webView()->mainBrowsingContext()->setNeedsLayout();
 //             return ECORE_CALLBACK_CANCEL;
@@ -211,7 +221,7 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
-    auto wnd = new WindowImplDALI(sf, width, height);
+    auto wnd = new WindowImplGB(sf, width, height);
     wnd->m_starFish = sf;
 
 #ifdef STARFISH_ENABLE_TEST
@@ -248,7 +258,7 @@ PlatformWindow::~PlatformWindow()
 
 void WebView::setNeedsRendering()
 {
-    WindowImplDALI* wnd = (WindowImplDALI*)starFish()->platformWindow();
+    WindowImplGB* wnd = (WindowImplGB*)starFish()->platformWindow();
 
     // TODO: refresh rendering animator here.
 
@@ -268,16 +278,20 @@ void WebView::setNeedsRendering()
             IdlerData* id = (IdlerData*)data;
             PlatformWindow* wnd = (PlatformWindow*)id->m_data;
             StarFishEnterer enter(wnd->starFish());
-            id->m_fn(id->m_data);
-            ((WindowImplDALI*)wnd)->m_renderingAnimator = 0;
-            ((WindowImplDALI*)wnd)->m_renderingIdlerData = nullptr;
-            ((WindowImplDALI*)wnd)->flushBuffer();
+            {
+                Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
+                ((WindowImplGB*)wnd)->initBuffer();
+                id->m_fn(id->m_data);
+                ((WindowImplGB*)wnd)->m_renderingAnimator = 0;
+                ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
+                ((WindowImplGB*)wnd)->flushBuffer();
+            }
             GC_FREE(id);
         },
         id);
 }
 
-Canvas* WindowImplDALI::preparePainting(bool forPainting)
+Canvas* WindowImplGB::preparePainting(bool forPainting)
 {
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -310,7 +324,7 @@ Canvas* WindowImplDALI::preparePainting(bool forPainting)
     return canvas;
 }
 
-void WindowImplDALI::clearResources()
+void WindowImplGB::clearResources()
 {
     if (m_renderingAnimator) {
         starFish()->messageLoop()->removeIdler(m_renderingAnimator);

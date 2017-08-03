@@ -31,6 +31,7 @@ class LineBreakIteratorPool;
 class ThreadPool;
 class Console;
 class Inspector;
+class Mutex;
 
 enum StarFishStartUpFlag {
     enableComputedStyleDump = 1 << 1,
@@ -172,26 +173,14 @@ public:
 #endif
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    void registerFrameBuffer(void* framBuffer)
+    void registerFrameBuffer(void* framBuffer1, void* framBuffer2)
     {
-        m_frameBufffer = framBuffer;
+        m_frameBufffer1 = framBuffer1;
+        m_frameBufffer2 = framBuffer2;
     }
-    void* frameBuffer()
-    {
-        return m_frameBufffer;
-    }
-    void setNeedsUpdate()
-    {
-        m_needsUpdate = true;
-    }
-    bool needsUpdate()
-    {
-        if (m_needsUpdate) {
-            m_needsUpdate = false;
-            return true;
-        }
-        return false;
-    }
+    void* frameBuffer();
+    void setNeedsUpdate();
+    int frameBufferUpdate();
 #endif
 protected:
     void enter();
@@ -226,8 +215,12 @@ protected:
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
     int m_height;
-    void* m_frameBufffer;
+    int bufferIdx;
+    int m_completBufferIdx;
+    void* m_frameBufffer1;
+    void* m_frameBufffer2;
     bool m_needsUpdate;
+    Mutex* m_frameBufferSwitchMutex;
 #endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;
