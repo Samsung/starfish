@@ -40,6 +40,7 @@
 #include "core/dom/HTMLParagraphElement.h"
 #include "core/dom/HTMLPreElement.h"
 #include "core/dom/HTMLScriptElement.h"
+#include "core/dom/HTMLSelectElement.h"
 #include "core/dom/HTMLSpanElement.h"
 #include "core/dom/HTMLStrongElement.h"
 #include "core/dom/HTMLStyleElement.h"
@@ -51,6 +52,7 @@
 #include "core/dom/HTMLTableRowElement.h"
 #include "core/dom/HTMLTBodyElement.h"
 #include "core/dom/HTMLTDElement.h"
+#include "core/dom/HTMLTextAreaElement.h"
 #include "core/dom/HTMLTFootElement.h"
 #include "core/dom/HTMLTHeadElement.h"
 #include "core/dom/HTMLTHElement.h"
@@ -163,6 +165,12 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLFieldSetElement(document);
     } else if (name == str->m_legendTagName.localNameAtomic()) {
         return new HTMLLegendElement(document);
+    } else if (name == str->m_buttonTagName.localNameAtomic()) {
+        return new HTMLButtonElement(document);
+    } else if (name == str->m_selectTagName.localNameAtomic()) {
+        return new HTMLSelectElement(document);
+    } else if (name == str->m_textareaTagName.localNameAtomic()) {
+        return new HTMLTextAreaElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
@@ -173,8 +181,6 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTrackElement(document);
     } else if (name == str->m_sourceTagName.localNameAtomic()) {
         return new HTMLSourceElement(document);
-    } else if (name == str->m_buttonTagName.localNameAtomic()) {
-        return new HTMLButtonElement(document);
     }
 #endif
 

@@ -28,6 +28,7 @@ HTMLButtonElement::HTMLButtonElement(Document* document)
     : HTMLElement(document)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
+    setTabIndex(0, false);
 }
 
 String* HTMLButtonElement::localName()
@@ -68,5 +69,10 @@ String* HTMLButtonElement::value()
 void HTMLButtonElement::setValue(String* value)
 {
     setAttribute(starFish()->staticStrings()->m_value, value);
+}
+
+bool HTMLButtonElement::supportsFocus() const
+{
+    return true;
 }
 }

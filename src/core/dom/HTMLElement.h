@@ -45,7 +45,7 @@ public:
         GCVector<CSSStyleValuePair>& cssValues);
 
     int tabIndex() const override;
-    void setTabIndex(int index, bool setExplicitly = false) override;
+    void setTabIndex(int index, bool setExplicitly = true) override;
 
     LayoutRect offsetRect();
     long offsetWidth()

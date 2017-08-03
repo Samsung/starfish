@@ -1,0 +1,44 @@
+// https://html.spec.whatwg.org/#the-textarea-element
+
+[HTMLConstructor]
+interface HTMLTextAreaElement : HTMLElement {
+    /*
+    [Unimplemeneted, CEReactions] attribute DOMString autocomplete;
+    [Unimplemeneted, CEReactions] attribute boolean autofocus;
+    [Unimplemeneted, CEReactions] attribute unsigned long cols;
+    [Unimplemeneted, CEReactions] attribute DOMString dirName;
+    [Unimplemeneted, CEReactions] attribute boolean disabled;
+    [Unimplemeneted] readonly attribute HTMLFormElement? form;
+    [Unimplemeneted, CEReactions] attribute DOMString inputMode;
+    [Unimplemeneted, CEReactions] attribute long maxLength;
+    [Unimplemeneted, CEReactions] attribute long minLength;
+    [Unimplemeneted, CEReactions] attribute DOMString name;
+    [Unimplemeneted, CEReactions] attribute DOMString placeholder;
+    [Unimplemeneted, CEReactions] attribute boolean readOnly;
+    [Unimplemeneted, CEReactions] attribute boolean required;
+    [Unimplemeneted, CEReactions] attribute unsigned long rows;
+    [Unimplemeneted, CEReactions] attribute DOMString wrap;
+
+    [Unimplemeneted] readonly attribute DOMString type;
+    [Unimplemeneted, CEReactions] attribute DOMString defaultValue;
+    [Unimplemeneted, CEReactions] attribute [TreatNullAs=EmptyString] DOMString value;
+    [Unimplemeneted] readonly attribute unsigned long textLength;
+
+    [Unimplemeneted] readonly attribute boolean willValidate;
+    [Unimplemeneted] readonly attribute ValidityState validity;
+    [Unimplemeneted] readonly attribute DOMString validationMessage;
+    [Unimplemeneted] boolean checkValidity();
+    [Unimplemeneted] boolean reportValidity();
+    [Unimplemeneted] void setCustomValidity(DOMString error);
+
+    [Unimplemeneted] readonly attribute NodeList labels;
+
+    [Unimplemeneted] void select();
+    [Unimplemeneted] attribute unsigned long selectionStart;
+    [Unimplemeneted] attribute unsigned long selectionEnd;
+    [Unimplemeneted] attribute DOMString selectionDirection;
+    [Unimplemeneted] void setRangeText(DOMString replacement);
+    [Unimplemeneted] void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    [Unimplemeneted] void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+    */
+};

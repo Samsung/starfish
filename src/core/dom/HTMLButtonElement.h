@@ -43,6 +43,8 @@ public:
 
     String* value();
     void setValue(String* value);
+
+    bool supportsFocus() const override;
 };
 }
 

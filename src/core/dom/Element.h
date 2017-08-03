@@ -289,7 +289,7 @@ public:
     virtual bool isFocusable();
 
     virtual int tabIndex() const;
-    virtual void setTabIndex(int index, bool setExplicitly = false);
+    virtual void setTabIndex(int index, bool setExplicitly = true);
     bool tabIndexSetExplicitly() const;
 
     /* Element-level focus APIs */
