@@ -150,7 +150,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
 
         if (isAbsolutePositioned()) {
-            parentHeight = cb->contentHeight() + cb->paddingWidth();
+            parentHeight = cb->contentHeight() + cb->paddingHeight();
             if (height.isAuto()) {
                 Length top = style()->top();
                 Length bottom = style()->bottom();
