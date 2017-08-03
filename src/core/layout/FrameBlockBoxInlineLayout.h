@@ -107,7 +107,7 @@ inline bool isSeparator(char32_t c)
     // Fixed-width spaces (such as U+3000 and U+2000 through U+200A)
     // are whitespace but are not considered word-separator characters
     // (https://drafts.csswg.org/css-text-3)
-    if (c == 0x3000 || (c >= 0x2000 && c <= 0x200A)) {
+    if (String::isFixedWidthChar(c)) {
         return false;
     }
     return String::isSpaceOrNewline(c);

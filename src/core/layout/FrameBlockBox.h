@@ -237,7 +237,7 @@ public:
         m_boxes.push_back(box);
         box->setLayoutParent(this);
     }
-    LayoutUnit layoutInlineBoxes(LayoutUnit start);
+    LayoutUnit layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
     virtual void coordinateVerticalProperties(LineFormattingContext* ctx,
                                               LayoutUnit yOffset);
     void registerRelativePositionedBoxes(LayoutContext& ctx);
@@ -772,6 +772,69 @@ private:
     }
 };
 
+struct LanguageDirection {
+    LanguageDirection()
+        : m_direction(None)
+        , m_parentDirectionValue(DirectionValue::LtrDirectionValue)
+    {
+    }
+
+    void markDirection(DirectionValue dir)
+    {
+        m_parentDirectionValue = dir;
+    }
+
+    void markDirection(CharDirection dir)
+    {
+        switch (dir) {
+        case CharDirection::Ltr:
+            markLtrDirection();
+            break;
+        case CharDirection::Rtl:
+            markRtlDirection();
+            break;
+        case CharDirection::Mixed:
+            markLtrDirection();
+            markRtlDirection();
+            break;
+        default:
+            break;
+        }
+    }
+
+    void markLtrDirection()
+    {
+        m_direction |= LtrDirection;
+    }
+
+    void markRtlDirection()
+    {
+        m_direction |= RtlDirection;
+    }
+
+    bool isLtrOnly()
+    {
+        return m_direction == LtrDirection;
+    }
+
+    bool isRtlOnly()
+    {
+        return m_direction == RtlDirection;
+    }
+
+    bool isMixed()
+    {
+        return (m_parentDirectionValue == DirectionValue::RtlDirectionValue) ||
+               ((m_direction & RtlDirection) != 0);
+    }
+
+private:
+    enum Direction { None, LtrDirection, RtlDirection };
+
+    size_t m_direction;
+    DirectionValue m_parentDirectionValue;
+};
+
 class LineFormattingContext {
 private:
     void resetLineBox();
@@ -827,6 +890,7 @@ private:
 public:
     LineFormattingContext(FrameBlockBox* block, LayoutContext& ctx);
 
+    void updateCurrentLayoutParent(Frame* parent);
     void computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
 
     void layoutInline(Frame* origin);
@@ -1048,6 +1112,9 @@ public:
     std::unordered_map<InlineBoxLayoutParentBox*,
                        std::pair<LayoutUnit, LayoutUnit>>
         m_ascenderDescenderOfInlineBoxLayoutParentBox;
+
+    LanguageDirection m_currentLanguageDirection;
+    std::unordered_map<Frame*, LanguageDirection> m_languageDirections;
 };
 }
 

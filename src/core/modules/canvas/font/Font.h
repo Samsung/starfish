@@ -104,6 +104,8 @@ public:
             count = 20;
         } else if (c == 0x2005) {
             count = 15;
+        } else if (c == 0x205F) {
+            count = 13;
         } else if (c == 0x2009) {
             count = 12;
         } else if (c == 0x2006) {
