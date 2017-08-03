@@ -263,6 +263,40 @@ private:
         free(rowPointers);
     }
 
+    void decodeJPG(tjhandle dHandle, unsigned char* buf, const int size)
+    {
+        int hdrw = 0;
+        int hdrh = 0;
+        int hdrsubsamp = -1;
+        int scaledWidth = 0;
+        int scaledHeight = 0;
+        unsigned long dstSize = 0;
+        int n = 0;
+
+        tjscalingfactor sf1 = { 1, 1 };
+        tjscalingfactor* sf = tjGetScalingFactors(&n);
+
+        tjDecompressHeader2(dHandle, buf, size, &hdrw, &hdrh, &hdrsubsamp);
+
+        if (!sf || !n) {
+            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        scaledWidth = TJSCALED(hdrw, sf1);
+        scaledHeight = TJSCALED(hdrh, sf1);
+        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
+
+        m_image = (unsigned char*)malloc(dstSize);
+
+        tjDecompress2(dHandle, buf, size, (unsigned char*)m_image, scaledWidth,
+                      0, scaledHeight, TJPF_BGRA, 0);
+
+        m_width = scaledWidth;
+        m_height = scaledHeight;
+    }
+
     void readJPGFile(FILE* fp)
     {
         tjhandle dHandle = nullptr;
@@ -298,46 +332,9 @@ private:
             return;
         }
 
-        int hdrw = 0;
-        int hdrh = 0;
-        int hdrsubsamp = -1;
-        int scaledWidth = 0;
-        int scaledHeight = 0;
-        unsigned long dstSize = 0;
-        int n = 0;
-
-        tjscalingfactor sf1 = { 1, 1 };
-        tjscalingfactor* sf = tjGetScalingFactors(&n);
-
-        tjDecompressHeader2(dHandle, srcBuf, jpegSize, &hdrw, &hdrh,
-                            &hdrsubsamp);
-
-        if (!sf || !n) {
-            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
-                               __LINE__);
-            tjDestroy(dHandle);
-            tjFree(srcBuf);
-            return;
-        }
-
-        scaledWidth = TJSCALED(hdrw, sf1);
-        scaledHeight = TJSCALED(hdrh, sf1);
-        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
-
-        m_image = (unsigned char*)malloc(dstSize);
-
-        tjDecompress2(dHandle, srcBuf, jpegSize, (unsigned char*)m_image,
-                      scaledWidth, 0, scaledHeight, TJPF_BGRA, TD_BU);
-
-        m_width = scaledWidth;
-        m_height = scaledHeight;
-
-        if (dHandle) {
-            tjDestroy(dHandle);
-        }
-        if (srcBuf) {
-            tjFree(srcBuf);
-        }
+        decodeJPG(dHandle, srcBuf, jpegSize);
+        tjDestroy(dHandle);
+        tjFree(srcBuf);
     }
 
     void readJPGBufferedInput(const char* buf, size_t len)
@@ -351,43 +348,8 @@ private:
             return;
         }
 
-        int hdrw = 0;
-        int hdrh = 0;
-        int hdrsubsamp = -1;
-        int scaledWidth = 0;
-        int scaledHeight = 0;
-        unsigned long dstSize = 0;
-        int n = 0;
-
-        tjscalingfactor sf1 = { 1, 1 };
-        tjscalingfactor* sf = tjGetScalingFactors(&n);
-
-        tjDecompressHeader2(dHandle, (unsigned char*)buf, len, &hdrw, &hdrh,
-                            &hdrsubsamp);
-
-        if (!sf || !n) {
-            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
-                               __LINE__);
-            tjDestroy(dHandle);
-            return;
-        }
-
-        scaledWidth = TJSCALED(hdrw, sf1);
-        scaledHeight = TJSCALED(hdrh, sf1);
-        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
-
-        m_image = (unsigned char*)malloc(dstSize);
-
-        tjDecompress2(dHandle, (unsigned char*)buf, len,
-                      (unsigned char*)m_image, scaledWidth, 0, scaledHeight,
-                      TJPF_BGRA, TD_BU);
-
-        m_width = scaledWidth;
-        m_height = scaledHeight;
-
-        if (dHandle) {
-            tjDestroy(dHandle);
-        }
+        decodeJPG(dHandle, (unsigned char*)buf, len);
+        tjDestroy(dHandle);
     }
 
     typedef struct {
