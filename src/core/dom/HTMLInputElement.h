@@ -46,6 +46,8 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
+
+    bool supportsFocus() const override;
 };
 }
 

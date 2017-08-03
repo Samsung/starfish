@@ -14,35 +14,27 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLButtonElement__
-#define __StarFishHTMLButtonElement__
+#ifndef __StarFishHTMLSelectElement__
+#define __StarFishHTMLSelectElement__
 
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLButtonElement : public HTMLElement {
+class HTMLSelectElement : public HTMLElement {
 public:
-    HTMLButtonElement(Document* document);
+    HTMLSelectElement(Document* document)
+        : HTMLElement(document)
+    {
+        setTabIndex(0, false);
+    }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLButtonElement() const override;
+    virtual bool isHTMLSelectElement() const override;
 
-    // 4.4 Interface Node
-
-    virtual String* localName();
+    /* 4.4 Interface Node */
     virtual QualifiedName name();
-
-    // 4.10.6 Interface Button
-    String* domName();
-    void setDomName(String* name);
-
-    String* type();
-    void setType(String* type);
-
-    String* value();
-    void setValue(String* value);
 
     bool supportsFocus() const override;
 };

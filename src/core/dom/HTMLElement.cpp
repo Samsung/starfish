@@ -154,7 +154,7 @@ int HTMLElement::tabIndex() const
 
 void HTMLElement::setTabIndex(int index, bool setExplicitly)
 {
-    Element::setTabIndex(index, true);
+    Element::setTabIndex(index, setExplicitly);
 }
 
 LayoutRect HTMLElement::offsetRect()

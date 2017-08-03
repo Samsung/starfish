@@ -31,6 +31,7 @@ HTMLInputElement::HTMLInputElement(Document* document)
     : HTMLElement(document)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
+    setTabIndex(0, false);
 }
 
 QualifiedName HTMLInputElement::name()
@@ -113,5 +114,13 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         }
     }
     return false;
+}
+
+bool HTMLInputElement::supportsFocus() const
+{
+    auto type = starFish()->staticStrings()->m_type;
+    return !const_cast<HTMLInputElement*>(this)
+                ->getAttributeOrEmpty(type)
+                ->equalsWithoutCase("hidden");
 }
 }
