@@ -282,12 +282,6 @@ void HTMLElement::click()
     dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
 }
 
-void HTMLElement::focus()
-{
-    String* eventType = starFish()->staticStrings()->m_focus.localName();
-    dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
-}
-
 DEFINE_EVENT_LISTENER(HTMLElement, abort);
 DEFINE_EVENT_LISTENER(HTMLElement, canplay);
 DEFINE_EVENT_LISTENER(HTMLElement, canplaythrough);

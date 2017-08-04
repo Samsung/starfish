@@ -13,7 +13,7 @@ interface HTMLElement : Element {
   void click();
   [CEReactions] attribute long tabIndex;
   void focus();
-  [Unimplemented] void blur();
+  void blur();
   [Unimplemented, CEReactions] attribute DOMString accessKey;
   [Unimplemented] readonly attribute DOMString accessKeyLabel;
   [Unimplemented, CEReactions] attribute boolean draggable;

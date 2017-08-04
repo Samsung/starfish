@@ -30,6 +30,13 @@ public:
     {
     }
 
+    FocusEventInit(bool bubbles, bool cancelable,
+                   EventTarget* relatedTarget = nullptr)
+        : UIEventInit(bubbles, cancelable)
+        , m_relatedTarget(relatedTarget)
+    {
+    }
+
     EventTarget* relatedTarget() const
     {
         return m_relatedTarget;

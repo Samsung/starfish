@@ -82,6 +82,7 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_documentVersionWhenComputingActiveNodeSet(0)
     , m_hoveredNodeTarget(nullptr)
     , m_documentVersionWhenComputingHoveredNodeSet(0)
+    , m_focusedNode(nullptr)
 {
     initFlags();
 }
@@ -369,7 +370,6 @@ void BrowsingContext::iterateChildContext(
 void BrowsingContext::close()
 {
     m_focusedNode = nullptr;
-    m_relatedTarget = nullptr;
 
     m_activeNodeSet.clear();
     m_activeNodeTarget = nullptr;
@@ -449,72 +449,68 @@ Node* BrowsingContext::hitTest(float x, float y)
     return nullptr;
 }
 
+// https://www.w3.org/TR/html5/editing.html#focusing-steps
 void BrowsingContext::setFocusedNode(Node* n)
 {
-    Node* m = n;
-    while (!(m->isElement() && m->asElement()->isFocusable()) &&
-           !m->isDocument()) {
-        m = m->parentNode();
-    }
-
-    if (!m || m->isDocument()) {
-        if (!document()->body()) {
-            return;
-        }
-        m = document()->body()->asNode();
-    }
-
-    if (m_focusedNode == m) {
+    if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
         return;
     }
 
-    m->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus,
+    bool focusOnDocument = n->isDocument();
+    Element* e = n->isElement() ? n->asElement() : n->parentElement();
+    if (!focusOnDocument && (!e || !e->isFocusable() || m_focusedNode == e)) {
+        return;
+    }
+
+    Node* relatedTarget = m_focusedNode;
+
+    // Run the unfocusing steps for this element.
+    releaseFocusedNode(e);
+
+    if (focusOnDocument) {
+        return;
+    }
+
+    e->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus,
                 true);
 
-    Node* t = m_focusedNode;
-    String* eventType;
-    Event* e;
-    if (t) {
-        if (t->isHTMLElement()) {
-            eventType = starFish()->staticStrings()->m_blur.localName();
-            e = new FocusEvent(document(), eventType);
-            document()->dispatchEvent(t->asNode(), e);
-        }
-        if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
-            eventType = starFish()->staticStrings()->m_focusout.localName();
-            FocusEventInit init;
-            init.setBubbles(true);
-            e = new FocusEvent(document(), eventType, init);
-            document()->dispatchEvent(t->asNode(), e);
-        }
-    }
-    m_relatedTarget = t;
-    releaseFocusedNode();
+    // focus event
+    String* eventType = starFish()->staticStrings()->m_focus.localName();
+    Event* event = new FocusEvent(document(), eventType,
+                                  FocusEventInit(false, false, relatedTarget));
+    document()->dispatchEvent(e->asNode(), event);
 
-    t = m;
-    if (t) {
-        if (t->isHTMLElement()) {
-            eventType = starFish()->staticStrings()->m_focus.localName();
-            e = new FocusEvent(document(), eventType);
-            document()->dispatchEvent(t->asNode(), e);
-        }
-        if (t->isHTMLElement() && !t->isHTMLBodyElement()) {
-            eventType = starFish()->staticStrings()->m_focusin.localName();
-            FocusEventInit init;
-            init.setBubbles(true);
-            e = new FocusEvent(document(), eventType, init);
-            document()->dispatchEvent(t->asNode(), e);
-        }
-    }
-    m_focusedNode = t;
+    // focusin event
+    eventType = starFish()->staticStrings()->m_focusin.localName();
+    event = new FocusEvent(document(), eventType,
+                           FocusEventInit(true, false, relatedTarget));
+    document()->dispatchEvent(e->asNode(), event);
+
+    m_focusedNode = e->asNode();
 }
 
-void BrowsingContext::releaseFocusedNode()
+// https://www.w3.org/TR/html5/editing.html#unfocusing-steps
+void BrowsingContext::releaseFocusedNode(Node* n)
 {
-    if (m_relatedTarget) {
-        m_relatedTarget->setState(Node::NodeStateFocused,
-                                  Node::ChildrenOrSiblingsAffectedByFocus,
-                                  false);
+    if (m_focusedNode) {
+        m_focusedNode->setState(Node::NodeStateFocused,
+                                Node::ChildrenOrSiblingsAffectedByFocus, false);
+
+        Node* relatedTarget = n == m_focusedNode ? nullptr : n;
+
+        // blur event
+        String* eventType = starFish()->staticStrings()->m_blur.localName();
+        Event* event = new FocusEvent(
+            document(), eventType, FocusEventInit(false, false, relatedTarget));
+        document()->dispatchEvent(m_focusedNode, event);
+
+        // focusout event
+        eventType = starFish()->staticStrings()->m_focusout.localName();
+        event = new FocusEvent(document(), eventType,
+                               FocusEventInit(true, false, relatedTarget));
+        document()->dispatchEvent(m_focusedNode, event);
+
+        m_focusedNode = nullptr;
     }
 }
 

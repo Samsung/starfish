@@ -1096,11 +1096,11 @@ bool Element::tabIndexSetExplicitly() const
 
 void Element::focus()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    window()->browsingContext()->setFocusedNode(this);
 }
 
 void Element::blur()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    window()->browsingContext()->releaseFocusedNode(this);
 }
 }

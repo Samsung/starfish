@@ -71,7 +71,6 @@ public:
     void setDir(String* dir);
 
     void click();
-    void focus();
 
 #define VIRTUAL
 #define OVERRIDE

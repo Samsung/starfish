@@ -33,6 +33,13 @@ public:
     {
     }
 
+    UIEventInit(bool bubbles, bool cancelable)
+        : EventInit(bubbles, cancelable)
+        , m_view(nullptr)
+        , m_detail(false)
+    {
+    }
+
     Window* view() const
     {
         return m_view;

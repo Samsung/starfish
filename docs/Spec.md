@@ -303,7 +303,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
-|  | method | void focus() | When an element is focused, key events received by the document must be targeted at that element. |
+|  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
+|  | method | void blur() | This method removes focus from the current element. |
 | [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |
 | | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element |
 | [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
