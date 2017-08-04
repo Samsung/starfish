@@ -446,15 +446,17 @@ LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 {
-    FrameBlockBox* container = blockContainer(currentFrame);
     if (currentFrame->isAbsolutePositioned()) {
         return true;
     }
+    FrameBlockBox* container = blockContainer(currentFrame);
     while (container) {
         if (container->style()->height().isFixed()) {
             return true;
         } else if (container->isAbsolutePositioned() &&
-                   container->style()->height().isPercent()) {
+                   (container->style()->height().isPercent() ||
+                    (container->style()->bottom().isSpecified() &&
+                     container->style()->top().isSpecified()))) {
             return true;
         } else if (container->style()->height().isAuto()) {
             return false;
@@ -474,19 +476,41 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         if (container->style()->height().isFixed()) {
             reverse.emplace_back(container, container->style()->height());
             break;
-        } else if (container->isAbsolutePositioned() &&
-                   container->style()->height().isPercent()) {
-            LayoutUnit parentHeight =
-                containingBlock(container)->contentHeight();
-            LayoutUnit height =
-                container->style()->height().specifiedValue(parentHeight);
-            reverse.emplace_back(container, Length(Length::Fixed, height));
-            break;
-        } else {
-            STARFISH_ASSERT(container->style()->height().isPercent());
-            reverse.emplace_back(container, container->style()->height());
-            container = blockContainer(container);
         }
+
+        if (container->isAbsolutePositioned()) {
+            if (container->style()->height().isPercent()) {
+                LayoutUnit parentHeight =
+                    containingBlock(container)->contentHeight();
+                LayoutUnit height =
+                    container->style()->height().specifiedValue(parentHeight);
+                reverse.emplace_back(container, Length(Length::Fixed, height));
+                break;
+            } else if (container->style()->top().isSpecified() &&
+                       container->style()->bottom().isSpecified()) {
+                LayoutUnit parentHeight =
+                    containingBlock(container)->contentHeight();
+                LayoutUnit t =
+                    container->style()->top().specifiedValue(parentHeight);
+                LayoutUnit b =
+                    container->style()->bottom().specifiedValue(parentHeight);
+                LayoutUnit height;
+                if (container->style()->boxSizing() ==
+                    BorderBoxBoxSizingValue) {
+                    height = parentHeight - t - b;
+                } else {
+                    height = parentHeight - t - b - container->paddingHeight() -
+                             container->borderHeight();
+                }
+
+                reverse.emplace_back(container, Length(Length::Fixed, height));
+                break;
+            }
+        }
+
+        STARFISH_ASSERT(container->style()->height().isPercent());
+        reverse.emplace_back(container, container->style()->height());
+        container = blockContainer(container);
     }
     LayoutUnit result = reverse.back().second.fixed();
     result = reverse.back().first->contentHeightApplyingBoxSizing(result);
