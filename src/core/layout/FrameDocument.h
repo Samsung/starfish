@@ -55,7 +55,7 @@ public:
         return m_scrollTop;
     }
 
-    void scrollTo(LayoutUnit left, LayoutUnit top);
+    bool scrollTo(LayoutUnit left, LayoutUnit top);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

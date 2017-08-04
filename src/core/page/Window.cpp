@@ -238,12 +238,13 @@ void Window::scrollTo(double x, double y)
 {
     browsingContext()->webView()->layoutIfNeeds();
     if (document()->frame()) {
-        document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(x,
-                                                                            y);
-        if (webView()->didCompositeBefore()) {
-            browsingContext()->setNeedsComposite();
-        } else {
-            browsingContext()->setNeedsPainting();
+        if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
+                x, y)) {
+            if (webView()->didCompositeBefore()) {
+                browsingContext()->setNeedsComposite();
+            } else {
+                browsingContext()->setNeedsPainting();
+            }
         }
     }
 }

@@ -97,6 +97,14 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
 }
 
+void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
+                                             int z, bool isVerticalWheelEvent)
+{
+    registerOrUpdateIdleTimeCleaner();
+    webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
+        screenX, screenY, z, isVerticalWheelEvent);
+}
+
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 {
     registerOrUpdateIdleTimeCleaner();

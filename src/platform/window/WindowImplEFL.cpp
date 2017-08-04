@@ -137,6 +137,7 @@ public:
     Ecore_Event_Handler* m_desktopMouseDownEventHandler;
     Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
     Ecore_Event_Handler* m_desktopMouseUpEventHandler;
+    Ecore_Event_Handler* m_desktopMouseWheelEventHandler;
     Ecore_Event_Handler* m_desktopKeyDownEventHandler;
     Ecore_Event_Handler* m_desktopKeyUpEventHandler;
 
@@ -535,6 +536,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         },
         wnd);
 
+    wnd->m_desktopMouseWheelEventHandler = ecore_event_handler_add(
+        ECORE_EVENT_MOUSE_WHEEL,
+        [](void* data, int type, void* event) -> Eina_Bool {
+            WindowImplEFL* sf = (WindowImplEFL*)data;
+            Ecore_Event_Mouse_Wheel* d = (Ecore_Event_Mouse_Wheel*)event;
+            // We only care vertical wheel
+            sf->dispatchMouseWheelEvent(d->x, d->y, d->z, true);
+            return EINA_TRUE;
+        },
+        wnd);
+
     wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_MOVE,
         [](void* data, int type, void* event) -> Eina_Bool {
@@ -691,6 +703,7 @@ PlatformWindow::~PlatformWindow()
     ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopMouseWheelEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
 #endif

@@ -67,8 +67,9 @@ void FrameDocument::layout(LayoutContext& ctx,
     }
 }
 
-void FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
+bool FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
 {
+    bool isEffective = false;
     if (left > (scrollWidth() - width())) {
         left = scrollWidth() - width();
     }
@@ -77,6 +78,9 @@ void FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
         left = 0;
     }
 
+    if (m_scrollLeft != left) {
+        isEffective = true;
+    }
     m_scrollLeft = left;
 
     if (top > (scrollHeight() - height())) {
@@ -87,7 +91,12 @@ void FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
         top = 0;
     }
 
+    if (m_scrollTop != top) {
+        isEffective = true;
+    }
     m_scrollTop = top;
+
+    return isEffective;
 }
 
 void FrameDocument::paint(PaintingContext& ctx)
