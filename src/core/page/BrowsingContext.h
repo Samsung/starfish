@@ -171,7 +171,7 @@ public:
     void releaseHoveredNode();
 
     void setFocusedNode(Node* n);
-    void releaseFocusedNode();
+    void releaseFocusedNode(Node* n);
 
     void paintWindowBackground(Canvas* canvas);
 
@@ -229,7 +229,6 @@ private:
     size_t m_documentVersionWhenComputingHoveredNodeSet;
 
     Node* m_focusedNode;
-    Node* m_relatedTarget;
 
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
