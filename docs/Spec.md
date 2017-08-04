@@ -278,6 +278,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | clientLeft | Return the width of the left border of an element in pixels. |
 |  | attribute | clientWidth | Return zero for elements with no CSS or inline layout boxes, otherwise the inner width of an element in pixels. |
 |  | attribute | clientHeight | Return zero for elements with no CSS or inline layout boxes, otherwise the inner height of an element in pixels. |
+|  | attribute | scrollLeft | gets or sets the number of pixels that an element's content is scrolled to the left |
+|  | attribute | scrollTop | gets or sets the number of pixels that an element's content is scrolled to the top |
+|  | attribute | scrollWidth | returns either the width in pixels of the content of an element or the width of the element itself, whichever is greater |
+|  | attribute | scrollHeight | returns either the height in pixels of the content of an element or the height of the element itself, whichever is greater |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
 | | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
 | | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
@@ -297,7 +301,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
 | [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
-| [HTMLElement 1](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
+| [HTMLElement](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |
 |  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
 |  | attribute | title | Reflects the "title" content attribute of HTMLElement. |
 |  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
@@ -609,7 +613,13 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 | [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
-|  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
+|  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport. |
+|  | attribute | scrollX | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
+|  | attribute | scrollY | property of the Window interface returns the number of pixels that the document is currently scrolled vertically |
+|  | attribute | pageXOffset | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
+|  | attribute | pageYOffset | property of the Window interface returns the number of pixels that the document is currently scrolled vertically |
+|  | method | scroll(x, y) | Scrolls the window to a particular place in the document. |
+|  | method | scrollTo(x, y) | Scrolls the window to a particular place in the document. |
 | [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | unsigned long requestAnimationFrame(FrameRequestCallback callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
 | | method | void cancelAnimationFrame(unsigned long handle) | Used to cancel a previously made request to schedule an animation frame update. |
 | | callback | FrameRequestCallback = void (DOMHighResTimeStamp time) | |
