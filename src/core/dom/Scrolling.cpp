@@ -39,6 +39,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
 
     if (horizontalScrollEnabled || verticalScrollEnabled) {
         bool isPointingDownEvent = false;
+        bool isPointingUpEvent = false;
         bool shouldProcess = false;
         float x, y;
         if (event->isMouseEvent()) {
@@ -51,6 +52,9 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                 shouldProcess = true;
                 x = event->asMouseEvent()->screenX();
                 y = event->asMouseEvent()->screenY();
+            } else if (event->type()->equals("mouseup")) {
+                shouldProcess = true;
+                isPointingUpEvent = true;
             }
         } else if (event->isTouchEvent()) {
             if (event->type()->equals("touchstart")) {
@@ -62,6 +66,9 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                 shouldProcess = true;
                 x = event->asTouchEvent()->touches()->at(0)->screenX();
                 y = event->asTouchEvent()->touches()->at(0)->screenY();
+            } else if (event->type()->equals("touchend")) {
+                shouldProcess = true;
+                isPointingUpEvent = true;
             }
         }
         if (shouldProcess) {
@@ -69,6 +76,8 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                 m_isScrollTarget = true;
                 m_pointingEventX = x;
                 m_pointingEventY = y;
+            } else if (isPointingUpEvent) {
+                m_isScrollTarget = false;
             } else if (m_isScrollTarget) {
 #define STARFISH_SCROLL_THRESHOLD 10
                 unsigned t = STARFISH_SCROLL_THRESHOLD;

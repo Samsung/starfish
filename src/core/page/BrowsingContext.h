@@ -158,6 +158,9 @@ public:
                             TouchData* touches, size_t touchCount);
     void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                             MouseData data);
+    void dispatchMouseWheelEvent(
+        float screenX, float screenY, int z,
+        bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
                           KeyboardData& data);
 

@@ -951,6 +951,40 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                 targetY);
 }
 
+void BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
+                                              int z, bool isVerticalWheelEvent)
+{
+    if (!m_isRunning) {
+        return;
+    }
+
+    double wx = window()->scrollX() + screenX;
+    double wy = window()->scrollY() + screenY;
+    // Hit test to validate event position
+    Node* targetNode = hitTest(wx, wy);
+    if (!targetNode) {
+        return;
+    }
+
+    // Handle event inside iframe
+    if (isInnerIFrameEvent(targetNode, wx, wy)) {
+        targetNode->asHTMLIFrameElement()
+            ->browsingContext()
+            ->dispatchMouseWheelEvent(wx, wy, z, isVerticalWheelEvent);
+        return;
+    }
+
+    double sx = window()->scrollX();
+    double sy = window()->scrollY();
+    if (isVerticalWheelEvent) {
+        sy += z * 15;
+    } else {
+        sx += z * 15;
+    }
+
+    window()->scrollTo(sx, sy);
+}
+
 void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
                                        KeyboardData& data)
 {
