@@ -34,7 +34,6 @@ public:
 
     virtual Storage* storage(Window* window,
                              SecurityOriginData* origin) override;
-    virtual void clearWindow(Window* window) override;
 
 private:
     StorageType m_storageType;

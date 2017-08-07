@@ -22,20 +22,14 @@
 
 namespace StarFish {
 
-StorageImpl::StorageImpl(Window* window)
-    : Storage(window)
-{
-}
-
 StorageImpl::~StorageImpl()
 {
 }
 
-StorageImpl::StorageImpl(Window* window, StorageType storageType,
+StorageImpl::StorageImpl(StorageType storageType,
                          SecurityOriginData* securityOriginData,
                          StorageManager* storageManager)
-    : Storage(window)
-    , m_storageType(storageType)
+    : m_storageType(storageType)
     , m_securityOriginData(securityOriginData)
     , m_storageManager(storageManager)
     , m_map(new (GC) GCUnorderedMap<String*, String*>())
@@ -47,11 +41,6 @@ StorageImpl::StorageImpl(Window* window, StorageType storageType,
             m_map = m_storageManager->getItems(m_securityOriginData);
         }
     }
-}
-
-void StorageImpl::copyDataFrom(StorageImpl* storage)
-{
-    m_map = storage->m_map;
 }
 
 unsigned long StorageImpl::length()

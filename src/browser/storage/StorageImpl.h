@@ -17,7 +17,6 @@
 #ifndef __StarFishStorageImpl__
 #define __StarFishStorageImpl__
 
-#include "core/storage/Storage.h"
 #include "core/storage/StorageType.h"
 
 namespace StarFish {
@@ -25,28 +24,21 @@ namespace StarFish {
 class SecurityOriginData;
 class StorageManager;
 
-class StorageImpl : public Storage {
+class StorageImpl : public gc {
 public:
-    StorageImpl(Window* window, StorageType storageType,
-                SecurityOriginData* securityOriginData,
+    StorageImpl(StorageType storageType, SecurityOriginData* securityOriginData,
                 StorageManager* storageManager);
     virtual ~StorageImpl();
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isStorageImpl() const override;
-
-    unsigned long length() override;
-    Nullable<String*> key(unsigned long index) override;
-    Nullable<String*> getItem(String* key) override;
-    void setItem(String* key, String* value) override;
-    void removeItem(String* key) override;
-    void clear() override;
-
-    void copyDataFrom(StorageImpl* storage);
+    unsigned long length();
+    Nullable<String*> key(unsigned long index);
+    Nullable<String*> getItem(String* key);
+    void setItem(String* key, String* value);
+    void removeItem(String* key);
+    void clear();
 
 private:
-    StorageImpl(Window* window);
+    StorageImpl();
 
     StorageType m_storageType;
     SecurityOriginData* m_securityOriginData;

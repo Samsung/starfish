@@ -19,8 +19,13 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
+#include "core/storage/StorageType.h"
 
 namespace StarFish {
+
+class SecurityOriginData;
+class StorageManager;
+class StorageImpl;
 
 class Storage : public ScriptWrappable, public WindowHoldable {
 public:
@@ -32,20 +37,20 @@ public:
         return WindowHoldable::scriptBindingInstance();
     }
 
-    // 4.1 Storage interface in IDL
-    virtual unsigned long length() = 0;
-    virtual Nullable<String*> key(unsigned long index) = 0;
-    virtual Nullable<String*> getItem(String* key) = 0;
-    virtual void setItem(String* key, String* value) = 0;
-    virtual void removeItem(String* key) = 0;
-    virtual void clear() = 0;
+    Storage(Window* window, StorageImpl* storageImpl);
 
-protected:
-    Storage(Window* window)
-        : ScriptWrappable(this)
-        , WindowHoldable(window)
-    {
-    }
+    // 4.1 Storage interface in IDL
+    unsigned long length();
+    Nullable<String*> key(unsigned long index);
+    Nullable<String*> getItem(String* key);
+    void setItem(String* key, String* value);
+    void removeItem(String* key);
+    void clear();
+
+private:
+    Storage();
+
+    StorageImpl* m_storageImpl;
 };
 }
 
