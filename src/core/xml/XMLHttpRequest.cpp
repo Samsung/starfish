@@ -445,4 +445,27 @@ String* XMLHttpRequest::getAllResponseHeaders()
 
     return sb.finalize();
 }
+
+Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
+{
+    if (readyState() < ResourceRequest::HEADERS_RECEIVED ||
+        m_resourceRequest->isError()) {
+        return nullptr;
+    }
+    if (name->length() == 0 || !name->containsOnlyASCIIChars() ||
+        name->equalsWithoutCase("set-cookie") ||
+        name->equalsWithoutCase("set-cookie2")) {
+        return nullptr;
+    }
+
+    const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
+
+    for (const auto& pair : map) {
+        if (name->equalsWithoutCase(pair.first.data())) {
+            return String::createASCIIString(pair.second.data());
+        }
+    }
+
+    return nullptr;
+}
 }
