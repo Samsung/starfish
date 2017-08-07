@@ -57,16 +57,10 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
-    if (style()->width().isAuto() || style()->width().isFixed() ||
-        style()->width().isPercent()) {
-        PreferredWidthContext p(ctx, LayoutUnit::max());
-        computePreferredWidth(p);
-        m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
-        m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
-    } else {
-        // Should not be here
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+    PreferredWidthContext p(ctx, LayoutUnit::max());
+    computePreferredWidth(p);
+    m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
+    m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
 }
 
 void FrameTableCellBox::layoutWidth(LayoutContext& ctx)

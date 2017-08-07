@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCaptionBox.h"
 #include "core/layout/FrameTableCellBox.h"
@@ -186,9 +187,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             tableWidth =
                 parentContentWidth.toInt() * style()->width().percent();
             tableWidth -= borderWidth() + paddingWidth();
-        } else {
-            // should not be here
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
@@ -731,7 +729,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
                          c->asFrameTableCaptionBox()->minCaptionWidth());
             c->asFrameTableCaptionBox()->setX(
                 c->asFrameTableCaptionBox()->marginLeft());
-            if (c->asFrameBox()->style()->width().isFixed()) {
+            if (c->style()->width().isFixed()) {
                 maxWidthSoFar =
                     std::max(maxWidthSoFar, c->asFrameBox()->width());
             }

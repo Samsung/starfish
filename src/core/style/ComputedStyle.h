@@ -351,6 +351,8 @@ public:
 
     SkMatrix transformsToMatrix(LayoutUnit containerWidth,
                                 LayoutUnit containerHeight,
+                                LayoutUnit viewportWidth,
+                                LayoutUnit viewportHeight,
                                 bool isTransformable);
 
     void setTransformIfNeeded()

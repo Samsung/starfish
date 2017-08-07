@@ -189,7 +189,7 @@ enum UnitType {
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:
-    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC };
+    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX };
 
     CSSLength(float f)
     {
@@ -221,6 +221,14 @@ public:
             m_kind = PT;
         } else if (unit->equals("pc")) {
             m_kind = PC;
+        } else if (unit->equals("vw")) {
+            m_kind = VW;
+        } else if (unit->equals("vh")) {
+            m_kind = VH;
+        } else if (unit->equals("vmin")) {
+            m_kind = VMIN;
+        } else if (unit->equals("vmax")) {
+            m_kind = VMAX;
         }
 
         m_value = f;
@@ -254,6 +262,14 @@ public:
             return Length(Length::EmToBeFixed, m_value);
         } else if (m_kind == EX) {
             return Length(Length::ExToBeFixed, m_value);
+        } else if (m_kind == VW) {
+            return Length(Length::Vw, m_value);
+        } else if (m_kind == VH) {
+            return Length(Length::Vh, m_value);
+        } else if (m_kind == VMIN) {
+            return Length(Length::Vmin, m_value);
+        } else if (m_kind == VMAX) {
+            return Length(Length::Vmax, m_value);
         }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -262,22 +278,31 @@ public:
     String* toString() const
     {
         std::string stdStr = String::fromFloat(m_value)->utf8Data();
-        if (m_kind == PX)
+        if (m_kind == PX) {
             return String::fromUTF8(stdStr.append("px").c_str());
-        else if (m_kind == CM)
+        } else if (m_kind == CM) {
             return String::fromUTF8(stdStr.append("cm").c_str());
-        else if (m_kind == MM)
+        } else if (m_kind == MM) {
             return String::fromUTF8(stdStr.append("mm").c_str());
-        else if (m_kind == IN)
+        } else if (m_kind == IN) {
             return String::fromUTF8(stdStr.append("in").c_str());
-        else if (m_kind == PC)
+        } else if (m_kind == PC) {
             return String::fromUTF8(stdStr.append("pc").c_str());
-        else if (m_kind == PT)
+        } else if (m_kind == PT) {
             return String::fromUTF8(stdStr.append("pt").c_str());
-        else if (m_kind == EM)
+        } else if (m_kind == EM) {
             return String::fromUTF8(stdStr.append("em").c_str());
-        else if (m_kind == EX)
+        } else if (m_kind == EX) {
             return String::fromUTF8(stdStr.append("ex").c_str());
+        } else if (m_kind == VW) {
+            return String::fromUTF8(stdStr.append("vw").c_str());
+        } else if (m_kind == VH) {
+            return String::fromUTF8(stdStr.append("vh").c_str());
+        } else if (m_kind == VMIN) {
+            return String::fromUTF8(stdStr.append("vmin").c_str());
+        } else if (m_kind == VMAX) {
+            return String::fromUTF8(stdStr.append("vmax").c_str());
+        }
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 

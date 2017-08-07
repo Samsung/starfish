@@ -81,11 +81,11 @@ public:
         return m_number;
     }
 
-    float specifiedValue(LayoutUnit parentLength)
+    float specifiedValue(LayoutUnit parentLength, LayoutUnit viewportLength)
     {
         STARFISH_ASSERT(isSpecified());
         if (isLength())
-            return length().specifiedValue(parentLength);
+            return length().specifiedValue(parentLength, viewportLength);
         else
             return parentLength * number();
     }

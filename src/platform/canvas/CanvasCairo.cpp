@@ -71,8 +71,8 @@ public:
             int stride;
         };
         dummy* d = (dummy*)data;
-        m_width = d->w;
-        m_height = d->h;
+        m_viewportWidth = m_width = d->w;
+        m_viewportHeight = m_height = d->h;
         {
             m_buffer = d->image;
             initFromBuffer(m_buffer, m_width, m_height, d->stride);

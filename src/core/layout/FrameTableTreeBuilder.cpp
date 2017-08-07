@@ -18,6 +18,7 @@
 #include "core/layout/FrameTableTreeBuilder.h"
 
 #include "core/dom/Node.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTableBox.h"
