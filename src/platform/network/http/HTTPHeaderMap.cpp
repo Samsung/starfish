@@ -102,12 +102,9 @@ void HTTPHeaderMap::setHeader(const std::string& key, const std::string& value)
 {
     auto it = findHeader(key);
     if (it == m_headerMap.end()) {
-        m_headerMap.insert(std::pair<std::string, std::string>(key, value));
+        m_headerMap[key] = value;
     } else {
-        // Update only if the existing value is different
-        if (it->second.compare(value) != 0) {
-            m_headerMap.insert(std::pair<std::string, std::string>(key, value));
-        }
+        m_headerMap[key] += ", " + value;
     }
 }
 

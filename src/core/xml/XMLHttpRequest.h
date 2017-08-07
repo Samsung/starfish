@@ -91,6 +91,7 @@ public:
     void setRequestHeader(String* h, String* c);
 
     String* getAllResponseHeaders();
+    Nullable<String*> getResponseHeader(String* name);
 
 #define VIRTUAL
 #define OVERRIDE

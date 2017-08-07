@@ -906,6 +906,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | method    | void send(optional DOMString? body = null)    | Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
 | | method    | void abort()    | Cancels any network activity. |
 | | method    | ByteString getAllResponseHeaders()    | Returns a string that contains all response headers. |
+| | method    | ByteString? getResponseHeader(ByteString name)    | Return the combined value given name and response’s header list. |
 
 
 \* The readyState code are as follows.
