@@ -52,7 +52,7 @@ interface GlobalEventHandlers {
   attribute EventHandler onprogress;
   attribute EventHandler onratechange;
   [Unimplemented] attribute EventHandler onreset;
-  [Unimplemented] attribute EventHandler onresize;
+  attribute EventHandler onresize;
   [Unimplemented] attribute EventHandler onscroll;
   attribute EventHandler onseeked;
   attribute EventHandler onseeking;

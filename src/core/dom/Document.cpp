@@ -974,6 +974,7 @@ DEFINE_EVENT_LISTENER(Document, play);
 DEFINE_EVENT_LISTENER(Document, playing);
 DEFINE_EVENT_LISTENER(Document, progress);
 DEFINE_EVENT_LISTENER(Document, ratechange);
+DEFINE_EVENT_LISTENER(Document, resize);
 DEFINE_EVENT_LISTENER(Document, seeked);
 DEFINE_EVENT_LISTENER(Document, seeking);
 DEFINE_EVENT_LISTENER(Document, stalled);

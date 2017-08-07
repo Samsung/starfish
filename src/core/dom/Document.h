@@ -394,7 +394,7 @@ public:
     DECLARE_EVENT_LISTENER(progress);
     DECLARE_EVENT_LISTENER(ratechange);
     // DECLARE_EVENT_LISTENER(reset);
-    // DECLARE_EVENT_LISTENER(resize);
+    DECLARE_EVENT_LISTENER(resize);
     // DECLARE_EVENT_LISTENER(scroll);
     DECLARE_EVENT_LISTENER(seeked);
     DECLARE_EVENT_LISTENER(seeking);

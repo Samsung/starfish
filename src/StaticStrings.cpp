@@ -274,6 +274,11 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onfocusout =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onfocusout"));
+    m_resize = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "resize"));
+    m_onresize =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onresize"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::emptyAtomicString(),

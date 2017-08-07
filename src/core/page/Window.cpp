@@ -178,12 +178,13 @@ int32_t Window::height()
 
 void Window::resize(uint32_t w, uint32_t h)
 {
-    if (m_width != w) {
+    if (m_width != w || m_height != h) {
         m_width = w;
-        browsingContext()->setNeedsLayout();
-    }
-    if (m_height != h) {
         m_height = h;
+        String* eventType = starFish()->staticStrings()->m_resize.localName();
+        UIEvent* e = new UIEvent(document(), eventType);
+        e->setView(this);
+        dispatchEvent(this, e);
         browsingContext()->setNeedsLayout();
     }
     if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
@@ -414,6 +415,7 @@ DEFINE_EVENT_LISTENER(Window, play);
 DEFINE_EVENT_LISTENER(Window, playing);
 DEFINE_EVENT_LISTENER(Window, progress);
 DEFINE_EVENT_LISTENER(Window, ratechange);
+DEFINE_EVENT_LISTENER(Window, resize);
 DEFINE_EVENT_LISTENER(Window, seeked);
 DEFINE_EVENT_LISTENER(Window, seeking);
 DEFINE_EVENT_LISTENER(Window, stalled);
