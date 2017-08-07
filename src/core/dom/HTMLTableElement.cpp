@@ -66,7 +66,7 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
 }
 
 void HTMLTableElement::styleForPresentationAttribute(
-    GCVector<CSSStyleValuePair>& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 

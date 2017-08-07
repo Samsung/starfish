@@ -21,6 +21,20 @@
 
 namespace StarFish {
 
+void* CharacterData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(CharacterData)] = { 0 };
+        Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(CharacterData, m_data));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(CharacterData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 String* CharacterData::substringData(unsigned long offset, unsigned long count)
 {
     // https://dom.spec.whatwg.org/#concept-cd-substring

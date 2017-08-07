@@ -150,7 +150,7 @@ public:
                                      bool attributeRemoved);
 
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues)
+        CSSStyleValuePairVectorHolder& cssValues)
     {
     }
 

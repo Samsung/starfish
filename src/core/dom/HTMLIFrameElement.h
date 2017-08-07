@@ -28,6 +28,8 @@ namespace StarFish {
 class BrowsingContext;
 
 class HTMLIFrameElement : public HTMLElement {
+    friend BrowsingContext;
+
 public:
     HTMLIFrameElement(Document* document)
         : HTMLElement(document)
@@ -62,7 +64,8 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
-    virtual void didNodeAdopted();
+    virtual void didNodeInsertedToDocumentTree();
+    virtual void didNodeRemovedFromDocumentTree();
 
     BrowsingContext* browsingContext()
     {

@@ -28,6 +28,23 @@
 
 namespace StarFish {
 
+void* FrameBlockBoxRareData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBlockBoxRareData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBoxRareData, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBoxRareData, m_stackingContext));
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBlockBoxRareData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 LayoutUnit FrameBlockBox::scrollLeft()
 {
     if (node()) {

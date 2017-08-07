@@ -108,7 +108,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
 }
 
 void HTMLElement::styleForPresentationAttribute(
-    GCVector<CSSStyleValuePair>& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues)
 {
     if (m_hasDirAttribute) {
         CSSStyleValuePair pair;

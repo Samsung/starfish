@@ -28,6 +28,7 @@ class Window;
 class StorageNamespace : public gc {
 public:
     virtual Storage* storage(Window* window, SecurityOriginData* origin) = 0;
+    virtual void clearWindow(Window* window) = 0;
     virtual ~StorageNamespace()
     {
     }

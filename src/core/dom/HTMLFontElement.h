@@ -43,7 +43,7 @@ public:
                                      bool attributeRemoved);
 
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues);
 
     /* DOM APIs */
     String* color();

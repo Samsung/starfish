@@ -69,6 +69,9 @@ struct FrameBoxRareData : public gc {
         , m_stackingContext(nullptr)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 };
 
 class FrameBox : public Frame {

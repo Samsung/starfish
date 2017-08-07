@@ -62,4 +62,16 @@ Storage* StorageNamespaceImpl::storage(Window* window,
         }
     }
 }
+
+void StorageNamespaceImpl::clearWindow(Window* window)
+{
+    auto iter = m_originToStorage.begin();
+    while (iter != m_originToStorage.end()) {
+        if (iter->second->window() == window) {
+            m_originToStorage.erase(iter++);
+        } else {
+            iter++;
+        }
+    }
+}
 }

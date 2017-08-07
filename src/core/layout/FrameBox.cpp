@@ -30,6 +30,22 @@
 
 namespace StarFish {
 
+void* FrameBoxRareData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBoxRareData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBoxRareData, m_layoutParent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBoxRareData, m_stackingContext));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBoxRareData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void FrameBox::paintChildrenWith(PaintingContext& ctx)
 {
     Frame* child = firstChild();

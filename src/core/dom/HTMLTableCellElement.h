@@ -35,7 +35,7 @@ public:
     virtual bool isHTMLTableCellElement() const override;
 
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues);
 
     HTMLTableElement* tableElement();
 

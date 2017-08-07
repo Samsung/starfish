@@ -369,6 +369,18 @@ void BrowsingContext::iterateChildContext(
 
 void BrowsingContext::close()
 {
+    if (m_window) {
+        GCVector<Element*> iframeCollection;
+        Traverse::collectDescendants(
+            iframeCollection, document(),
+            [&](Element* element) { return element->isHTMLIFrameElement(); },
+            false);
+
+        for (size_t i = 0; i < iframeCollection.size(); i++) {
+            iframeCollection[i]->asHTMLIFrameElement()->unloadSrc();
+        }
+    }
+
     m_focusedNode = nullptr;
 
     m_activeNodeSet.clear();

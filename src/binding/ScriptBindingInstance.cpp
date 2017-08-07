@@ -26,6 +26,7 @@
 #include "core/page/History.h"
 #include "core/page/Location.h"
 #include "core/page/Navigator.h"
+#include "core/page/BrowsingContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
 
@@ -67,6 +68,9 @@ ScriptBindingInstance::ScriptBindingInstance(
 }
 void ScriptBindingInstance::close()
 {
+    if (m_ownerWindow->browsingContext()->isMainBrowsingContext()) {
+        m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
+    }
 #ifdef TIZEN_DEVICE_API
     // TODO (escargot2)
     DeviceAPI::close(fetchData(this)->m_instance);

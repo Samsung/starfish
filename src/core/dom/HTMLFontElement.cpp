@@ -141,7 +141,7 @@ static bool parseLegacyFontSize(String* size, int& fontSize)
 }
 
 void HTMLFontElement::styleForPresentationAttribute(
-    GCVector<CSSStyleValuePair>& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 

@@ -112,6 +112,7 @@ String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
     auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
         return ValueRef::create(v->toString(state));
     });
+    sb->destroy();
     if (!sbresult.error->isEmpty()) {
         if (result) {
             *result = false;
@@ -254,7 +255,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
         return state->context()->globalObject()->function()->call(
             state, ValueRef::createUndefined(), argc + 1, argv);
     });
-
+    sb->destroy();
     if (!result.error->isEmpty()) {
         error = true;
         STARFISH_LOG_ERROR(
@@ -305,6 +306,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
         auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
             return fn->asFunction()->call(state, thisValue, argc, argv);
         });
+        sb->destroy();
         if (!sbresult.error->isEmpty()) {
             STARFISH_LOG_ERROR(
                 "Uncaught %s\n",
@@ -347,6 +349,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
         return scriptRef.m_script->execute(state);
     });
+    sb->destroy();
     if (!sbresult.error->isEmpty()) {
         STARFISH_LOG_ERROR(
             "Uncaught %s\n",
