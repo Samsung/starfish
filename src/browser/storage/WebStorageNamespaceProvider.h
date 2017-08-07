@@ -29,8 +29,8 @@ public:
 
     virtual ~WebStorageNamespaceProvider();
 
-    StorageNamespace* createLocalStorageNamespace();
-    StorageNamespace* createSessionStorageNamespace();
+    virtual StorageNamespace* createLocalStorageNamespace() override;
+    virtual StorageNamespace* createSessionStorageNamespace() override;
 
 private:
     WebStorageNamespaceProvider(String* localStoragePath);

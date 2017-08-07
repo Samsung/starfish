@@ -29,21 +29,31 @@
 
 namespace StarFish {
 
+void CSSStyleDeclaration::rootPointerValueIfExists(CSSStyleValuePair v)
+{
+    auto p = v.pointerValue();
+    m_pointerRooter.insert(p);
+}
+
 void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
 {
     for (size_t i = 0; i < m_cssValues.size(); i++) {
         CSSStyleValuePair v = m_cssValues[i];
         if (v.keyKind() == p.keyKind()) {
             m_cssValues[i] = p;
+            rootPointerValueIfExists(p);
             return;
         }
     }
+
     m_cssValues.push_back(p);
+    rootPointerValueIfExists(p);
 }
 
 void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
+    m_pointerRooter.clear();
 }
 
 ScriptBindingInstance* CSSStyleDeclaration::scriptBindingInstance()
@@ -341,6 +351,7 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     CSSParser parser(scriptBindingInstance()->ownerDocument());
     parser.parseStyleDeclaration(text, decl);
     m_cssValues = decl->cssValues();
+    m_pointerRooter = decl->m_pointerRooter;
 
     scriptBindingInstance()
         ->ownerWindow()

@@ -45,7 +45,7 @@ public:
                                      bool attributeRemoved);
 
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
     bool hasCellPaddingAttribute()
     {

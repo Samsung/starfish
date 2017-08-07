@@ -149,7 +149,7 @@ static Length convertValueToLength(CSSStyleValuePair::ValueKind kind,
 }
 
 static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
-                                                CSSStyleValuePair& value,
+                                                const CSSStyleValuePair& value,
                                                 unsigned int layer = 0)
 {
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
@@ -179,7 +179,7 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
 }
 
 static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
-                                                CSSStyleValuePair& value,
+                                                const CSSStyleValuePair& value,
                                                 unsigned int layer = 0)
 {
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
@@ -215,7 +215,7 @@ String* CSSTransformFunctions::toString()
         String* itemStr = item.functionName()->concat(String::fromUTF8("("));
         ValueList* values = item.values();
         for (unsigned int j = 0; j < values->size(); j++) {
-            CSSStyleValuePair& subitem = (*values)[j];
+            const CSSStyleValuePair& subitem = (*values)[j];
             String* newstr = subitem.toString();
             itemStr = itemStr->concat(newstr);
             if (j != values->size() - 1) {
@@ -260,7 +260,7 @@ bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
     return true;
 }
 
-String* CSSStyleValuePair::urlValue(ResourceURL* urlOfStyleSheet)
+String* CSSStyleValuePair::urlValue(ResourceURL* urlOfStyleSheet) const
 {
     STARFISH_ASSERT(m_valueKind == UrlValueKind);
     return ResourceURL::mergeDocumentURIWithURIString(
@@ -2810,6 +2810,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
                 m_cssValues[i].setValueKind(ret.valueKind());
                 m_cssValues[i].setValue(ret.value());
                 m_cssValues[i].setFlagImportant(ret.flagImportant());
+                rootPointerValueIfExists(ret);
                 notifyNeedsStyleRecalc();
             }
 
@@ -2818,6 +2819,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
     }
     ret.setKeyKind(name);
     m_cssValues.push_back(ret);
+    rootPointerValueIfExists(ret);
     notifyNeedsStyleRecalc();
 }
 
@@ -2882,7 +2884,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 }
 
 void StyleResolver::apply(Element* element,
-                          GCVector<CSSStyleValuePair>& cssValues,
+                          const GCAtomicVector<CSSStyleValuePair>& cssValues,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
 {
@@ -3406,7 +3408,7 @@ void StyleResolver::apply(Element* element,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = (*list)[i];
+                    const CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::None) {
                         style->setBackgroundImage(String::emptyString, i);
@@ -3457,7 +3459,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* layers = cssValues[k].multiValue();
                 for (unsigned int l = 0; l < layers->size(); l++) {
-                    CSSStyleValuePair& layer = (*layers)[l];
+                    const CSSStyleValuePair& layer = (*layers)[l];
                     if (layer.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundSizeValue(LengthSize(), l);
@@ -3511,7 +3513,7 @@ void StyleResolver::apply(Element* element,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = (*list)[i];
+                    const CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundRepeatX(
@@ -3543,7 +3545,7 @@ void StyleResolver::apply(Element* element,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = (*list)[i];
+                    const CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundRepeatY(
@@ -4097,7 +4099,7 @@ void StyleResolver::apply(Element* element,
                     int valueSize = f.values()->size();
                     float dValues[valueSize];
                     for (int i = 0; i < valueSize; i++) {
-                        CSSStyleValuePair& item = (*f.values())[i];
+                        const CSSStyleValuePair& item = (*f.values())[i];
                         if (item.valueKind() ==
                             CSSStyleValuePair::ValueKind::Number) {
                             dValues[i] = item.numberValue();
@@ -4210,7 +4212,7 @@ void StyleResolver::apply(Element* element,
 
                 for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
                      i++) {
-                    CSSStyleValuePair& item = (*list)[i];
+                    const CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                         CSSStyleValuePair::ValueKind::SideValueKind) {
                         if (item.sideValue() == SideValue::LeftSideValue) {
@@ -4291,7 +4293,7 @@ void StyleResolver::apply(Element* element,
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    CSSStyleValuePair& item = (*list)[i];
+                    const CSSStyleValuePair& item = (*list)[i];
                     if (item.valueKind() ==
                             CSSStyleValuePair::ValueKind::None ||
                         item.valueKind() ==
@@ -4430,9 +4432,9 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 
     // Apply presentation attribute's style
-    GCVector<CSSStyleValuePair> cssValues;
+    CSSStyleValuePairVectorHolder cssValues;
     element->styleForPresentationAttribute(cssValues);
-    apply(element, cssValues, nullptr, ret, parent, false);
+    apply(element, cssValues.data(), nullptr, ret, parent, false);
 
     for (unsigned int i = 0; i < authorRules.size(); i++) {
         apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,

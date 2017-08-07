@@ -32,7 +32,9 @@ public:
     StorageNamespaceImpl(StorageType storageType, String* localStoragePath);
     virtual ~StorageNamespaceImpl();
 
-    Storage* storage(Window* window, SecurityOriginData* origin);
+    virtual Storage* storage(Window* window,
+                             SecurityOriginData* origin) override;
+    virtual void clearWindow(Window* window) override;
 
 private:
     StorageType m_storageType;

@@ -44,7 +44,7 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues);
 
 protected:
     QualifiedName m_name;

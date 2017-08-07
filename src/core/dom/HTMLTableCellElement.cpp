@@ -23,7 +23,7 @@
 namespace StarFish {
 
 void HTMLTableCellElement::styleForPresentationAttribute(
-    GCVector<CSSStyleValuePair>& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 

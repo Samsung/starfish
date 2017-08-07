@@ -109,14 +109,20 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLIFrameElement::didNodeAdopted()
+void HTMLIFrameElement::didNodeInsertedToDocumentTree()
 {
-    HTMLElement::didNodeAdopted();
+    HTMLElement::didNodeInsertedToDocumentTree();
     if (document()->doesParticipateInRendering()) {
         loadSrc();
     } else {
         unloadSrc();
     }
+}
+
+void HTMLIFrameElement::didNodeRemovedFromDocumentTree()
+{
+    HTMLElement::didNodeInsertedToDocumentTree();
+    unloadSrc();
 }
 
 void HTMLIFrameElement::loadSrc()

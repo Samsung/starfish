@@ -42,7 +42,7 @@ public:
                                      bool attributeRemoved);
 
     virtual void styleForPresentationAttribute(
-        GCVector<CSSStyleValuePair>& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues);
 
     int tabIndex() const override;
     void setTabIndex(int index, bool setExplicitly = true) override;

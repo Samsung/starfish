@@ -58,8 +58,7 @@ CSSStyleDeclaration* CSSStyleRule::style()
 {
     if (!m_propertiesWrapper) {
         m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
-            m_styleRule->styleDeclaration()->cssValues(),
-            this->asCSSStyleRule());
+            m_styleRule->styleDeclaration(), this->asCSSStyleRule());
     }
 
     return m_propertiesWrapper;

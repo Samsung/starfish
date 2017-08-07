@@ -65,7 +65,7 @@ void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
 }
 
 void HTMLHeadingElement::styleForPresentationAttribute(
-    GCVector<CSSStyleValuePair>& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 

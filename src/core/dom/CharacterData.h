@@ -105,6 +105,17 @@ public:
         printf("data:%s ", str.data());
     }
 #endif
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(CharacterData, m_data));
+    }
+
 private:
     String* m_data;
 };

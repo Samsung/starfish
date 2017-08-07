@@ -25,6 +25,7 @@ namespace StarFish {
 class CSSRule;
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
+    friend class StyleRuleCSSStyleDeclaration;
 
 public:
     enum StyleType {
@@ -141,7 +142,7 @@ public:
     void defaultSetter(String* name, Nullable<String*> value);
     void defaultNamedEnumerator(std::vector<const char*>& enums);
 
-    GCVector<CSSStyleValuePair>& cssValues()
+    const GCAtomicVector<CSSStyleValuePair>& cssValues()
     {
         return m_cssValues;
     }
@@ -163,18 +164,21 @@ public:
     }
 
 protected:
-    GCVector<CSSStyleValuePair> m_cssValues;
+    void rootPointerValueIfExists(CSSStyleValuePair v);
+
+    GCAtomicVector<CSSStyleValuePair> m_cssValues;
+    GCUnorderedSet<void*> m_pointerRooter;
     Element* m_element;
     StyleType m_styleType;
 };
 
 class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    StyleRuleCSSStyleDeclaration(GCVector<CSSStyleValuePair>& cssValues,
-                                 CSSRule* parentRule)
+    StyleRuleCSSStyleDeclaration(CSSStyleDeclaration* src, CSSRule* parentRule)
         : CSSStyleDeclaration()
     {
-        m_cssValues = cssValues;
+        m_cssValues = src->m_cssValues;
+        m_pointerRooter = src->m_pointerRooter;
         m_parentRule = parentRule;
     }
     virtual ScriptBindingInstance* scriptBindingInstance() override;

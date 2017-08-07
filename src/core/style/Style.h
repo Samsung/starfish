@@ -1179,7 +1179,7 @@ public:
         return m_value.m_stringValue;
     }
 
-    String* urlValue(ResourceURL* urlOfStyleSheet);
+    String* urlValue(ResourceURL* urlOfStyleSheet) const;
 
     String* urlStringValue() const
     {
@@ -1481,12 +1481,26 @@ public:
     {
     }
 
+    void* pointerValue()
+    {
+        switch (m_valueKind) {
+        case StringValueKind:
+            return m_value.m_stringValue;
+        case ValueListKind:
+            return m_value.m_multiValue;
+        case TransformFunctions:
+            return m_value.m_transforms;
+        default:
+            return nullptr;
+        }
+    }
+
     void setValue(const ValueData& value)
     {
         m_value = value;
     }
 
-    const ValueData& value()
+    const ValueData& value() const
     {
         return m_value;
     }
@@ -1584,6 +1598,39 @@ protected:
     ValueKind m_valueKind : 8;
     bool m_flagImportant : 1;
     ValueData m_value;
+};
+
+class CSSStyleValuePairVectorHolder : public gc {
+public:
+    void push_back(CSSStyleValuePair p)
+    {
+        for (size_t i = 0; i < m_data.size(); i++) {
+            CSSStyleValuePair v = m_data[i];
+            if (v.keyKind() == p.keyKind()) {
+                m_data[i] = p;
+                rootPointer(p);
+                return;
+            }
+        }
+        m_data.push_back(p);
+        rootPointer(p);
+    }
+
+    const GCAtomicVector<CSSStyleValuePair>& data()
+    {
+        return m_data;
+    }
+
+protected:
+    void rootPointer(CSSStyleValuePair v)
+    {
+        auto p = v.pointerValue();
+        if (p) {
+            m_pointerRooter.insert(p);
+        }
+    }
+    GCAtomicVector<CSSStyleValuePair> m_data;
+    GCUnorderedSet<void*> m_pointerRooter;
 };
 
 class ValueList : public GCVector<CSSStyleValuePair>, public gc {
@@ -2005,7 +2052,8 @@ public:
     bool mediaQueryAffectedByDeviceChange();
 
 protected:
-    void apply(Element* element, GCVector<CSSStyleValuePair>& cssValues,
+    void apply(Element* element,
+               const GCAtomicVector<CSSStyleValuePair>& cssValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
 

@@ -503,6 +503,10 @@ struct FrameBlockBoxRareData : public FrameBoxRareData {
         : FrameBoxRareData(layoutParent)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     LayoutUnit m_scrollWidth;
     LayoutUnit m_scrollHeight;
 };
