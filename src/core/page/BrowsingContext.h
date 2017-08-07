@@ -78,7 +78,6 @@ public:
     }
 
     void navigate(ResourceURL* url, HistoryManager::Action type);
-    void navigateAsync(ResourceURL* url, HistoryManager::Action type);
 
     void pause();
     void resume();
@@ -188,6 +187,11 @@ public:
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);
 
+    void addPointerInRootSet(void* ptr);
+    void removePointerFromRootSet(void* ptr);
+#ifndef NDEBUG
+    size_t countPointersInRootSet(void* ptr);
+#endif
 private:
     // return did layout
     bool layoutIfNeeds();
@@ -234,6 +238,7 @@ private:
     bool m_hasBodyElementBackground;
 
     GCVector<EventTarget*> m_globalPointingEventListener;
+    GCUnorderedMap<void*, size_t> m_rootMap;
 };
 }
 

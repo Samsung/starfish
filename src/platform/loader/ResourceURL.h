@@ -24,6 +24,8 @@ class WebOrigin;
 
 class ResourceURL : public gc {
     friend WebOrigin;
+
+public:
     enum Protocol {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
@@ -36,7 +38,6 @@ class ResourceURL : public gc {
         UNKNOWN,
     };
 
-public:
     ResourceURL(const char* url)
         : ResourceURL(String::createASCIIString(url))
     {
@@ -108,6 +109,11 @@ public:
     String* urlString() const
     {
         return m_urlString;
+    }
+
+    Protocol protocolKind()
+    {
+        return m_protocol;
     }
 
     // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf

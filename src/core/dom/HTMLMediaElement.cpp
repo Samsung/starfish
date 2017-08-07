@@ -507,8 +507,7 @@ TimeRanges* HTMLMediaElement::buffered()
 
 String* HTMLMediaElement::canPlayType(String* type)
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return String::emptyString;
 }
 

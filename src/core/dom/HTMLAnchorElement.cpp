@@ -22,8 +22,11 @@
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
-#include "browser/history/HistoryManager.h"
+#include "core/page/Location.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
+
+#include "browser/history/HistoryManager.h"
 
 namespace StarFish {
 
@@ -48,14 +51,11 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
                 if (hrefStr->startsWith("#")) {
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 } else {
-                    window()->browsingContext()->navigateAsync(
-                        new ResourceURL(hrefStr, document()->urlString()),
-                        HistoryManager::Action::Add);
+                    window()->location()->setHref(hrefStr);
                 }
-
             } else {
-                window()->browsingContext()->navigateAsync(
-                    document()->documentURI(), HistoryManager::Action::Add);
+                window()->location()->setHref(
+                    document()->documentURI()->urlString());
             }
             return true;
         }

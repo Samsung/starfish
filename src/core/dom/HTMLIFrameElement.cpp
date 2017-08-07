@@ -149,6 +149,6 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type)
 {
     unloadSrc();
     m_browsingContext = BrowsingContext::create(this);
-    m_browsingContext->navigateAsync(url, type);
+    m_browsingContext->navigate(url, type);
 }
 }
