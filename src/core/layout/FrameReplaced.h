@@ -88,14 +88,15 @@ public:
         return (FrameReplacedIFrame*)this;
     }
 
-    void applyMinMaxWidthAndHeightIfNeeds(LayoutUnit width, LayoutUnit height,
+    void applyMinMaxWidthAndHeightIfNeeds(LayoutContext& ctx, LayoutUnit width,
+                                          LayoutUnit height,
                                           LayoutUnit parentWidth,
                                           LayoutUnit parentHeight,
                                           bool hasAspectRatio,
                                           bool parentHeightHasFixedValue)
     {
         auto widthAndHeight = minMaxWidthAndHeightAppliedIfNeeds(
-            width, height, parentWidth, parentHeight, hasAspectRatio,
+            ctx, width, height, parentWidth, parentHeight, hasAspectRatio,
             parentHeightHasFixedValue);
 
         setContentWidth(widthAndHeight.first);
@@ -103,115 +104,9 @@ public:
     }
 
     std::pair<LayoutUnit, LayoutUnit> minMaxWidthAndHeightAppliedIfNeeds(
-        LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
+        LayoutContext& ctx, LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
         LayoutUnit parentHeight, bool hasAspectRatio,
-        bool parentHeightHasFixedValue)
-    {
-        LayoutUnit newWidth = w;
-        LayoutUnit newHeight = h;
-        Length width = style()->width();
-        Length height = style()->height();
-        Length minWidth = style()->minWidth();
-        Length maxWidth = style()->maxWidth();
-        Length minHeight = style()->minHeight();
-        Length maxHeight = style()->maxHeight();
-        bool canApplyMinHeight =
-            minHeight.isFixed() ||
-            (minHeight.isPercent() && parentHeightHasFixedValue);
-        bool canApplyMaxHeight =
-            maxHeight.isFixed() ||
-            (maxHeight.isPercent() && parentHeightHasFixedValue);
-
-        if (minWidth.isSpecified()) {
-            newWidth = std::max(w, contentWidthApplyingBoxSizing(
-                                       minWidth.specifiedValue(parentWidth)));
-            if (canApplyMinHeight) {
-                newHeight =
-                    std::max(h, contentHeightApplyingBoxSizing(
-                                    minHeight.specifiedValue(parentHeight)));
-                if (width.isAuto() && height.isAuto()) {
-                    if (hasAspectRatio) {
-                        if (newWidth > newHeight) {
-                            newHeight = newWidth * (h / w);
-                        } else if (newWidth < newHeight) {
-                            newWidth = newHeight * (w / h);
-                        }
-                    }
-                } else if (width.isAuto()) {
-                    if (hasAspectRatio && newWidth < newHeight) {
-                        newWidth = newHeight * (w / h);
-                    }
-                } else if (height.isAuto()) {
-                    if (hasAspectRatio && newWidth > newHeight) {
-                        newHeight = newWidth * (h / w);
-                    }
-                }
-            } else if (canApplyMaxHeight) {
-                // in the case minWidth and maxHeight, then apply values
-                // respectively.
-                newHeight =
-                    std::min(h, contentHeightApplyingBoxSizing(
-                                    maxHeight.specifiedValue(parentHeight)));
-            } else {
-                if (hasAspectRatio && height.isAuto()) {
-                    newHeight = newWidth * (h / w);
-                }
-            }
-        } else if (maxWidth.isSpecified()) {
-            newWidth = std::min(w, contentWidthApplyingBoxSizing(
-                                       maxWidth.specifiedValue(parentWidth)));
-            if (canApplyMinHeight) {
-                // in the case maxWidth and minHeight, then apply values
-                // respectively.
-                newHeight =
-                    std::max(h, contentHeightApplyingBoxSizing(
-                                    minHeight.specifiedValue(parentHeight)));
-            } else if (canApplyMaxHeight) {
-                newHeight =
-                    std::min(h, contentHeightApplyingBoxSizing(
-                                    maxHeight.specifiedValue(parentHeight)));
-                if (width.isAuto() && height.isAuto()) {
-                    if (hasAspectRatio) {
-                        if (newWidth > newHeight) {
-                            newWidth = newHeight * (w / h);
-                        } else if (newWidth < newHeight) {
-                            newHeight = newWidth * (h / w);
-                        }
-                    }
-                } else if (width.isAuto()) {
-                    if (hasAspectRatio && newWidth > newHeight) {
-                        newWidth = newHeight * (w / h);
-                    }
-                } else if (height.isAuto()) {
-                    if (hasAspectRatio && newWidth < newHeight) {
-                        newHeight = newWidth * (h / w);
-                    }
-                }
-            } else {
-                if (hasAspectRatio && height.isAuto()) {
-                    newHeight = newWidth * (h / w);
-                }
-            }
-        } else {
-            if (canApplyMinHeight) {
-                newHeight =
-                    std::max(h, contentHeightApplyingBoxSizing(
-                                    minHeight.specifiedValue(parentHeight)));
-                if (hasAspectRatio && width.isAuto()) {
-                    newWidth = newHeight * (w / h);
-                }
-            } else if (canApplyMaxHeight) {
-                newHeight =
-                    std::min(h, contentHeightApplyingBoxSizing(
-                                    maxHeight.specifiedValue(parentHeight)));
-                if (hasAspectRatio && width.isAuto()) {
-                    newWidth = newHeight * (w / h);
-                }
-            }
-        }
-
-        return std::make_pair(newWidth, newHeight);
-    }
+        bool parentHeightHasFixedValue);
 
     virtual const char* name()
     {
@@ -222,7 +117,7 @@ public:
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
-    void computeIntrinsicSize(LayoutUnit& intrinsicWidth,
+    void computeIntrinsicSize(LayoutContext& ctx, LayoutUnit& intrinsicWidth,
                               LayoutUnit& intrinsicHeight, bool& hasAspectRatio,
                               LayoutUnit parentContentWidth,
                               Length parentContentHeight);

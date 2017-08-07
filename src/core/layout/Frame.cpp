@@ -451,17 +451,18 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
     }
     FrameBlockBox* container = blockContainer(currentFrame);
     while (container) {
-        if (container->style()->height().isFixed()) {
+        Length height = container->style()->height();
+        if (height.isFixed() || height.isViewportPercent()) {
             return true;
         } else if (container->isAbsolutePositioned() &&
-                   (container->style()->height().isPercent() ||
+                   (height.isPercent() ||
                     (container->style()->bottom().isSpecified() &&
                      container->style()->top().isSpecified()))) {
             return true;
-        } else if (container->style()->height().isAuto()) {
+        } else if (height.isAuto()) {
             return false;
         } else {
-            STARFISH_ASSERT(container->style()->height().isPercent());
+            STARFISH_ASSERT(height.isPercent());
             container = blockContainer(container);
         }
     }
@@ -473,27 +474,29 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     FrameBlockBox* container = blockContainer(currentFrame);
     std::vector<std::pair<FrameBox*, Length>> reverse;
     while (container) {
-        if (container->style()->height().isFixed()) {
-            reverse.emplace_back(container, container->style()->height());
+        Length height = container->style()->height();
+        if (height.isFixed() || height.isViewportPercent()) {
+            reverse.emplace_back(container, height);
             break;
         }
 
         if (container->isAbsolutePositioned()) {
-            if (container->style()->height().isPercent()) {
+            if (height.isPercent()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
-                LayoutUnit height =
-                    container->style()->height().specifiedValue(parentHeight);
-                reverse.emplace_back(container, Length(Length::Fixed, height));
+                reverse.emplace_back(
+                    container,
+                    Length(Length::Fixed, height.percentValue(parentHeight)));
                 break;
             } else if (container->style()->top().isSpecified() &&
                        container->style()->bottom().isSpecified()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
-                LayoutUnit t =
-                    container->style()->top().specifiedValue(parentHeight);
-                LayoutUnit b =
-                    container->style()->bottom().specifiedValue(parentHeight);
+                LayoutUnit viewportHeight = frameDocument()->height();
+                LayoutUnit t = container->style()->top().specifiedValue(
+                    parentHeight, viewportHeight);
+                LayoutUnit b = container->style()->bottom().specifiedValue(
+                    parentHeight, viewportHeight);
                 LayoutUnit height;
                 if (container->style()->boxSizing() ==
                     BorderBoxBoxSizingValue) {
@@ -508,15 +511,23 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
             }
         }
 
-        STARFISH_ASSERT(container->style()->height().isPercent());
-        reverse.emplace_back(container, container->style()->height());
+        STARFISH_ASSERT(height.isPercent());
+        reverse.emplace_back(container, height);
         container = blockContainer(container);
     }
-    LayoutUnit result = reverse.back().second.fixed();
+    Length height = reverse.back().second;
+    LayoutUnit result;
+    if (height.isFixed()) {
+        result = height.fixed();
+    } else {
+        STARFISH_ASSERT(height.isViewportPercent());
+        result = height.viewportPercentValue(frameDocument()->height());
+    }
+
     result = reverse.back().first->contentHeightApplyingBoxSizing(result);
     reverse.pop_back();
     while (reverse.size()) {
-        result = result * reverse.back().second.percent();
+        result = reverse.back().second.percentValue(result);
         result = reverse.back().first->contentHeightApplyingBoxSizing(result);
         reverse.pop_back();
     }

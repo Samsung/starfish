@@ -264,6 +264,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         m_rareData->m_buffer->clear();
         oldCanvas = canvas;
         canvas = Canvas::create(m_rareData->m_buffer);
+        canvas->setViewportWidthAndHeight(oldCanvas);
         canvas->translate(-minX, -minY);
     } else {
         if (m_rareData && m_rareData->m_buffer) {
@@ -288,8 +289,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (!hasStackingBuffer) {
         SkMatrix m = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(),
-            m_owner->style()->hasTransforms(m_owner));
+            m_owner->width(), m_owner->height(), canvas->viewportWidth(),
+            canvas->viewportHeight(), m_owner->style()->hasTransforms(m_owner));
 
         if (!m.isIdentity()) {
             ensureRareData()->m_matrix = m;
@@ -306,12 +307,14 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                          ->transformOrigin()
                          ->originValue()
                          ->getXAxis()
-                         .specifiedValue(m_owner->width());
+                         .specifiedValue(m_owner->width(),
+                                         canvas->viewportWidth());
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
-                         .specifiedValue(m_owner->height());
+                         .specifiedValue(m_owner->height(),
+                                         canvas->viewportHeight());
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_rareData->m_matrix);
@@ -435,8 +438,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
 
         m_rareData->m_matrix = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(),
-            ownerStyle->hasTransforms(m_owner));
+            m_owner->width(), m_owner->height(), canvas->viewportWidth(),
+            canvas->viewportHeight(), ownerStyle->hasTransforms(m_owner));
 
         if (!m_rareData->m_matrix.isIdentity()) {
             /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
@@ -450,12 +453,14 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                          ->transformOrigin()
                          ->originValue()
                          ->getXAxis()
-                         .specifiedValue(m_owner->width());
+                         .specifiedValue(m_owner->width(),
+                                         canvas->viewportWidth());
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
-                         .specifiedValue(m_owner->height());
+                         .specifiedValue(m_owner->height(),
+                                         canvas->viewportHeight());
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_rareData->m_matrix);
@@ -565,12 +570,13 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                      ->transformOrigin()
                      ->originValue()
                      ->getXAxis()
-                     .specifiedValue(m_owner->width());
+                     .specifiedValue(m_owner->width(), from->window()->width());
             oy = m_owner->style()
                      ->transformOrigin()
                      ->originValue()
                      ->getYAxis()
-                     .specifiedValue(m_owner->height());
+                     .specifiedValue(m_owner->height(),
+                                     from->window()->height());
         }
         x -= ox;
         y -= oy;

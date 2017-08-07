@@ -586,7 +586,11 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
-    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style);
+    LayoutUnit mbpWidth(ComputedStyle* style);
+    LayoutUnit leftMBPWidth(ComputedStyle* style);
+    LayoutUnit rightMBPWidth(ComputedStyle* style);
+    LayoutUnit startingMBPWidth(ComputedStyle* style);
+    LayoutUnit endingMBPWidth(ComputedStyle* style);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
@@ -982,58 +986,6 @@ public:
         } else {
             return m_node;
         }
-    }
-
-    virtual LayoutUnit leftMBPWidth()
-    {
-        LayoutUnit w;
-        if (style()->marginLeft().isFixed()) {
-            w += style()->marginLeft().fixed();
-        }
-        if (style()->borderLeftWidth().isFixed()) {
-            w += style()->borderLeftWidth().fixed();
-        }
-        if (style()->paddingLeft().isFixed()) {
-            w += style()->paddingLeft().fixed();
-        }
-        return w;
-    }
-
-    virtual LayoutUnit rightMBPWidth()
-    {
-        LayoutUnit w;
-        if (style()->marginRight().isFixed()) {
-            w += style()->marginRight().fixed();
-        }
-        if (style()->borderRightWidth().isFixed()) {
-            w += style()->borderRightWidth().fixed();
-        }
-        if (style()->paddingRight().isFixed()) {
-            w += style()->paddingRight().fixed();
-        }
-        return w;
-    }
-
-    LayoutUnit startingMBPWidth()
-    {
-        LayoutUnit w;
-        if (style()->direction() == LtrDirectionValue) {
-            w = leftMBPWidth();
-        } else {
-            w = rightMBPWidth();
-        }
-        return w;
-    }
-
-    LayoutUnit endingMBPWidth()
-    {
-        LayoutUnit w;
-        if (style()->direction() == LtrDirectionValue) {
-            w = rightMBPWidth();
-        } else {
-            w = leftMBPWidth();
-        }
-        return w;
     }
 
     virtual void setParent(Frame* f)

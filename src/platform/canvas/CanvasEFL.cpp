@@ -170,8 +170,8 @@ public:
         };
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
-        m_width = d->w;
-        m_height = d->h;
+        m_viewportWidth = m_width = d->w;
+        m_viewportHeight = m_height = d->h;
         m_objList = d->objList;
         m_surfaceList = d->surfaceList;
 

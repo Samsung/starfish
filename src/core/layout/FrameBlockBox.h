@@ -665,7 +665,8 @@ protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
     void computeContentWidth(LayoutContext& ctx,
-                             LayoutUnit containgBlockContentWidth);
+                             LayoutUnit containgBlockContentWidth,
+                             LayoutUnit viewportWidth);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual bool hasFrameTreeItemModel()

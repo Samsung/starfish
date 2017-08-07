@@ -341,7 +341,8 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     // Convert all non-computed Lengths to computed Length
-    STARFISH_ASSERT(m_inheritedStyles.m_fontSize.isFixed());
+    STARFISH_ASSERT(m_inheritedStyles.m_fontSize.isFixed() ||
+                    m_inheritedStyles.m_fontSize.isViewportPercent());
     Length baseFontSize = fontSize();
     m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize,
                                                             font());
@@ -763,6 +764,8 @@ inline double deg2rad(float degree)
 
 SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
                                            LayoutUnit containerHeight,
+                                           LayoutUnit viewportWidth,
+                                           LayoutUnit viewportHeight,
                                            bool isTransformable)
 {
     SkMatrix matrix;
@@ -795,8 +798,9 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
                            tan(deg2rad(m->angleY())));
         } else if (t.type() == StyleTransformData::Translate) {
             TranslateTransform* m = t.translate();
-            matrix.preTranslate(m->tx().specifiedValue(containerWidth),
-                                m->ty().specifiedValue(containerHeight));
+            matrix.preTranslate(
+                m->tx().specifiedValue(containerWidth, viewportWidth),
+                m->ty().specifiedValue(containerHeight, viewportHeight));
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

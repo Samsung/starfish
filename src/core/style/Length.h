@@ -34,6 +34,10 @@ public:
         // After finishing resolveStyle, ex/em values should be changed to Fixed
         ExToBeFixed,
         EmToBeFixed,
+        Vw,
+        Vh,
+        Vmin,
+        Vmax,
 
         // This is for line-height
         // (font-related value but does not change to Fixed since inheritance
@@ -72,31 +76,48 @@ public:
 
     bool isSpecified() const
     {
-        return isFixed() || isPercent();
+        return isFixed() || isPercent() || isViewportPercent();
     }
+
     bool isAuto() const
     {
         return m_type == Auto;
     }
+
     bool isFixed() const
     {
         return m_type == Fixed;
     }
+
     bool isPercent() const
     {
         return m_type == Percent;
     }
+
+    bool isViewportPercent() const
+    {
+        return Vw <= m_type && m_type <= Vmax;
+    }
+
     bool isInheritableNumber() const
     {
         return m_type == InheritableNumber;
     }
+
     bool isComputed() const
     {
-        return isFixed() || isPercent() || isAuto();
+        return isFixed() || isPercent() || isViewportPercent() || isAuto();
     }
+
     Type type() const
     {
         return m_type;
+    }
+
+    float viewportPercent() const
+    {
+        STARFISH_ASSERT(isViewportPercent());
+        return m_data;
     }
 
     float percent() const
@@ -125,13 +146,29 @@ public:
         m_type = Fixed;
     }
 
-    float specifiedValue(LayoutUnit parentLength) const
+    float specifiedValue(LayoutUnit parentLength,
+                         LayoutUnit viewportLength) const
     {
         STARFISH_ASSERT(isSpecified());
-        if (isFixed())
+        if (isFixed()) {
             return fixed();
-        else
-            return parentLength * percent();
+        } else if (isViewportPercent()) {
+            return viewportPercentValue(viewportLength);
+        } else {
+            return percentValue(parentLength);
+        }
+    }
+
+    float percentValue(LayoutUnit parentLength) const
+    {
+        STARFISH_ASSERT(isPercent());
+        return parentLength * percent();
+    }
+
+    float viewportPercentValue(LayoutUnit viewportLength) const
+    {
+        STARFISH_ASSERT(isViewportPercent());
+        return viewportLength * viewportPercent() / 100;
     }
 
     bool isZero()

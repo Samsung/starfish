@@ -85,13 +85,14 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
         //
 
         double bWidth =
-            style()->surround()->border.top().width().specifiedValue(height());
+            style()->surround()->border.top().width().specifiedValue(
+                height(), canvas->viewportHeight());
         double bImgWidth =
             style()->surround()->border.image().widths().top().specifiedValue(
-                bWidth);
+                bWidth, canvas->viewportHeight());
         double bImgSlice =
             style()->surround()->border.image().slices().top().specifiedValue(
-                height());
+                height(), canvas->viewportHeight());
 
         size_t imgWidth =
             style()->surround()->border.image().imageData()->width();
@@ -100,19 +101,19 @@ void FrameTableObjectBox::paintBorders(Canvas* canvas, LayoutRect& rect)
 
         size_t lSlice =
             style()->surround()->border.image().slices().left().specifiedValue(
-                width());
+                width(), canvas->viewportWidth());
         size_t tSlice =
             style()->surround()->border.image().slices().top().specifiedValue(
-                height());
+                height(), canvas->viewportHeight());
         size_t rSlice =
             style()->surround()->border.image().slices().right().specifiedValue(
-                width());
+                width(), canvas->viewportWidth());
         size_t bSlice = style()
                             ->surround()
                             ->border.image()
                             .slices()
                             .bottom()
-                            .specifiedValue(height());
+                            .specifiedValue(height(), canvas->viewportHeight());
 
         ImageData* imgData = style()->surround()->border.image().imageData();
 

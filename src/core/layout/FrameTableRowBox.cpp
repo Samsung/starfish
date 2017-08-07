@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Node.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableRowBox.h"

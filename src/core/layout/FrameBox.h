@@ -168,16 +168,19 @@ public:
         m_frameRect.setHeight(height);
     }
 
-    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth)
+    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth,
+                                 LayoutUnit viewportWidth)
     {
-        setContentWidth(minMaxWidthAppliedIfNeeds(width, parentWidth));
+        setContentWidth(
+            minMaxWidthAppliedIfNeeds(width, parentWidth, viewportWidth));
     }
 
     void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight,
+                                  LayoutUnit viewportHeight,
                                   bool parentHasFixedValue = true)
     {
-        setContentHeight(minMaxHeightAppliedIfNeeds(height, parentHeight,
-                                                    parentHasFixedValue));
+        setContentHeight(minMaxHeightAppliedIfNeeds(
+            height, parentHeight, viewportHeight, parentHasFixedValue));
     }
 
     LayoutUnit contentWidthApplyingBoxSizing(LayoutUnit width)
@@ -478,6 +481,28 @@ public:
         }
     }
 
+    LayoutUnit startingMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->direction() == LtrDirectionValue) {
+            w = leftMBPWidth();
+        } else {
+            w = rightMBPWidth();
+        }
+        return w;
+    }
+
+    LayoutUnit endingMBPWidth()
+    {
+        LayoutUnit w;
+        if (style()->direction() == LtrDirectionValue) {
+            w = rightMBPWidth();
+        } else {
+            w = leftMBPWidth();
+        }
+        return w;
+    }
+
     LayoutUnit mbpWidth()
     {
         return marginWidth() + borderWidth() + paddingWidth();
@@ -516,7 +541,7 @@ public:
         return boxHeight;
     }
 
-    LayoutUnit lineHeight();
+    LayoutUnit lineHeight(LayoutUnit viewportHeight);
 
     virtual void paintChildrenWith(PaintingContext& ctx);
 
@@ -577,7 +602,8 @@ public:
         return LayoutRect(absolutePoint(top), frameRect().size());
     }
 
-    void computeBorderMarginPadding(LayoutUnit parentContentWidth);
+    void computeBorderMarginPadding(LayoutContext& ctx,
+                                    LayoutUnit parentContentWidth);
 
     void computeHorizontalMargin(LayoutUnit parentContentWidth);
 
@@ -647,10 +673,12 @@ public:
 
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width,
-                                         LayoutUnit parentWidth);
+                                         LayoutUnit parentWidth,
+                                         LayoutUnit viewportWidth);
 
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,
+                                          LayoutUnit viewportHeight,
                                           bool parentHasFixedValue);
 
     bool hasRareData() const
