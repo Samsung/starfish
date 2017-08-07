@@ -219,10 +219,12 @@ void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
                 canvas->clip(Unit::Rect(box->borderLeft(), box->borderTop(),
                                         box->width() - box->borderWidth(),
                                         box->height() - box->borderHeight()));
-                if (box->isFrameBlockBox())
-                    canvas->translate(-parent->asFrameBlockBox()->scrollLeft(),
-                                      -parent->asFrameBlockBox()->scrollTop());
                 canvas->translate(offsetX, offsetY);
+            }
+
+            if (isFixed && parent->isFrameBlockBox()) {
+                canvas->translate(parent->asFrameBlockBox()->scrollLeft(),
+                                  parent->asFrameBlockBox()->scrollTop());
             }
         }
 #endif
@@ -554,6 +556,28 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     canvas->restore();
 }
 
+LayoutLocation StackingContext::relativeLocation(StackingContext* sCtx)
+{
+    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+    bool isFixed = sCtx->owner()->style()->position() == FixedPositionValue;
+
+    if (isFixed) {
+        Frame* parent = sCtx->owner()->layoutParent();
+        while ((!parent->style() || !parent->style()->hasTransforms(parent)) &&
+               !parent->isFrameDocument() &&
+               (isFixed || !parent->isPositioned())) {
+            parent = parent->layoutParent();
+        }
+
+        if (isFixed && parent->isFrameBlockBox()) {
+            l.setX(l.x() + parent->asFrameBlockBox()->scrollLeft());
+            l.setY(l.y() + parent->asFrameBlockBox()->scrollTop());
+        }
+    }
+
+    return l;
+}
+
 Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                                BrowsingContext* from)
 {
@@ -612,8 +636,8 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     }
 
     if (m_owner->isFrameBlockBox()) {
-        x -= m_owner->asFrameBlockBox()->scrollLeft();
-        y -= m_owner->asFrameBlockBox()->scrollTop();
+        x += m_owner->asFrameBlockBox()->scrollLeft();
+        y += m_owner->asFrameBlockBox()->scrollTop();
     }
 
     Frame* result = nullptr;
@@ -630,7 +654,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                 LayoutUnit oldY = y;
                 while (iter2 != child->rend()) {
                     StackingContext* sCtx = *iter2;
-                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+                    LayoutLocation l = relativeLocation(sCtx);
                     x -= l.x();
                     y -= l.y();
                     result = sCtx->hitTestStackingContext(x, y, from);
@@ -688,8 +712,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
             LayoutUnit oldY = y;
             while (iter2 != child->rend()) {
                 StackingContext* sCtx = *iter2;
-
-                LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+                LayoutLocation l = relativeLocation(sCtx);
                 x -= l.x();
                 y -= l.y();
                 result = sCtx->hitTestStackingContext(x, y, from);
@@ -706,8 +729,8 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     }
 
     if (m_owner->isFrameBlockBox()) {
-        x += m_owner->asFrameBlockBox()->scrollLeft();
-        y += m_owner->asFrameBlockBox()->scrollTop();
+        x -= m_owner->asFrameBlockBox()->scrollLeft();
+        y -= m_owner->asFrameBlockBox()->scrollTop();
     }
 
     // the background and borders of the element forming the stacking context.
