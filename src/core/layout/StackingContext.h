@@ -100,6 +100,7 @@ public:
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
+    LayoutLocation relativeLocation(StackingContext* child);
 
     int32_t zIndex();
 
