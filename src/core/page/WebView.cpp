@@ -110,6 +110,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type)
     clearBlobURLStore();
     initRenderingFlags();
 
+    clearStack<1024 * 20>();
     if (m_mainBrowsingContext) {
         m_mainBrowsingContext->close();
     }

@@ -105,7 +105,7 @@ void MockMediaPlayer::play()
 {
     if (!m_inPlaying) {
         m_inPlaying = true;
-        m_container->starFish()->addPointerInRootSet(this);
+        m_container->document()->browsingContext()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = window()->setInterval(
             [](Window* window, void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
@@ -168,7 +168,8 @@ void MockMediaPlayer::pause()
 {
     if (m_inPlaying) {
         m_inPlaying = false;
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
         window()->clearInterval(m_currentTimeUpdateTimer);
         m_currentTimeUpdateTimer = SIZE_MAX;
     }

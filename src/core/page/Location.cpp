@@ -21,9 +21,10 @@
 #include "core/util/URL.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
-#include "platform/window/PlatformWindow.h"
-#include "WebView.h"
+#include "core/page/WebView.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -121,45 +122,45 @@ void Location::setHash(String* search)
     assign(newUrl);
 }
 
-bool Location::isValidURL(String* url)
-{
-    // Supports three protocols
-    if (url->startsWith("http://") || url->startsWith("https://") ||
-        url->startsWith("file://")) {
-        return ResourceURL::isValidURL(url);
-    } else {
-        return false;
-    }
-}
-
 void Location::setLocation(String* url)
 {
-    if (isValidURL(url)) {
-        assign(new ResourceURL(url));
-    }
+    assign(url);
 }
 
 void Location::assign(String* url)
 {
-    if (isValidURL(url)) {
-        assign(new ResourceURL(url));
+    ResourceURL* r =
+        new ResourceURL(url, document()->documentURI()->urlString());
+    if (r->protocolKind() != ResourceURL::UNKNOWN) {
+        assign(r);
+    }
+}
+
+static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
+{
+    if (ctx->isMainBrowsingContext()) {
+        ctx->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
+            ctx,
+            [](size_t id, void* data, void* data2) {
+                BrowsingContext* ctx = (BrowsingContext*)data;
+                ResourceURL* url = (ResourceURL*)data2;
+                ctx->webView()->navigate(url, HistoryManager::Action::Add);
+            },
+            ctx, url);
+    } else {
+        ctx->window()->browsingContext()->navigate(url,
+                                                   HistoryManager::Action::Add);
     }
 }
 
 void Location::assign(ResourceURL* url)
 {
-    if (document()->browsingContext()->isMainBrowsingContext()) {
-        document()->browsingContext()->webView()->navigate(
-            url, HistoryManager::Action::Add);
-    } else {
-        document()->browsingContext()->sourceElement()->navigate(
-            url, HistoryManager::Action::Add);
-    }
+    navigateImpl(document()->browsingContext(), url);
 }
 
 void Location::replace(String* url)
 {
-    if (isValidURL(url)) {
+    if (ResourceURL::isValidURL(url)) {
         if (document()->browsingContext()->isMainBrowsingContext()) {
             document()->browsingContext()->webView()->navigate(
                 new ResourceURL(url), HistoryManager::Action::Replace);

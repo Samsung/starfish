@@ -145,27 +145,6 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type)
     m_window->document()->open();
 }
 
-struct NavigateData : public gc {
-    ResourceURL* url;
-    HistoryManager::Action type;
-};
-
-void BrowsingContext::navigateAsync(ResourceURL* url,
-                                    HistoryManager::Action type)
-{
-    NavigateData* data = new NavigateData();
-    data->url = url;
-    data->type = type;
-    starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
-        this,
-        [](size_t a, void* data, void* data2) {
-            ((BrowsingContext*)data)
-                ->navigate(((NavigateData*)data2)->url,
-                           ((NavigateData*)data2)->type);
-        },
-        this, data);
-}
-
 Document* BrowsingContext::document()
 {
     return window()->document();
@@ -1111,4 +1090,38 @@ void BrowsingContext::removeGlobalPointingEventInterceptListener(
         m_globalPointingEventListener.erase(iter);
     }
 }
+
+void BrowsingContext::addPointerInRootSet(void* ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter == m_rootMap.end()) {
+        m_rootMap.insert(std::make_pair(ptr, 1));
+    } else {
+        iter->second++;
+    }
+}
+
+void BrowsingContext::removePointerFromRootSet(void* ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter != m_rootMap.end()) {
+        if (iter->second == 1) {
+            m_rootMap.erase(iter);
+        } else {
+            iter->second--;
+        }
+    }
+}
+
+#ifndef NDEBUG
+size_t BrowsingContext::countPointersInRootSet(void* ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter != m_rootMap.end()) {
+        return iter->second;
+    } else {
+        return 0;
+    }
+}
+#endif
 }

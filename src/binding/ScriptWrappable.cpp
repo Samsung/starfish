@@ -333,10 +333,9 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
     ContextRef* ctx = instance->scriptContext();
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-
     ScriptParserRef::ScriptParserResult scriptRef =
         ctx->scriptParser()->parse(toJSString(string), toJSString(fileName));
+
     if (scriptRef.m_error->length()) {
         STARFISH_LOG_ERROR(
             "Script parse error %s\n",
@@ -346,6 +345,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             *result = false;
         return scriptUndefined();
     }
+
+    SandBoxRef* sb = SandBoxRef::create(ctx);
     auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
         return scriptRef.m_script->execute(state);
     });

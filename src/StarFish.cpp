@@ -418,40 +418,6 @@ String* StarFish::evaluate(String* s)
                                           s));
 }
 
-void StarFish::addPointerInRootSet(void* ptr)
-{
-    auto iter = m_rootMap.find(ptr);
-    if (iter == m_rootMap.end()) {
-        m_rootMap.insert(std::make_pair(ptr, 1));
-    } else {
-        iter->second++;
-    }
-}
-
-void StarFish::removePointerFromRootSet(void* ptr)
-{
-    auto iter = m_rootMap.find(ptr);
-    if (iter != m_rootMap.end()) {
-        if (iter->second == 1) {
-            m_rootMap.erase(iter);
-        } else {
-            iter->second--;
-        }
-    }
-}
-
-#ifndef NDEBUG
-size_t StarFish::countPointersInRootSet(void* ptr)
-{
-    auto iter = m_rootMap.find(ptr);
-    if (iter != m_rootMap.end()) {
-        return iter->second;
-    } else {
-        return 0;
-    }
-}
-#endif
-
 #if defined(STARFISH_ENABLE_INSPECTOR)
 void StarFish::setupInspector(uint32_t portNumber)
 {

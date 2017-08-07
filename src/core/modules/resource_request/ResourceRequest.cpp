@@ -22,6 +22,7 @@
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -196,9 +197,9 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             document()->browsingContext(),
             [](size_t, void* data, void* data2) {
                 ResourceRequest* self = (ResourceRequest*)data2;
-                ((StarFish*)data)->removePointerFromRootSet(data2);
+                ((BrowsingContext*)data)->removePointerFromRootSet(data2);
             },
-            starFish(), this);
+            document()->browsingContext(), this);
         if (m_networkRequestJobDelegate) {
             m_networkRequestJobDelegate = nullptr;
         }
@@ -278,7 +279,7 @@ void ResourceRequest::abort(bool isExplicitAction)
 
 void ResourceRequest::send(String* body)
 {
-    starFish()->addPointerInRootSet(this);
+    document()->browsingContext()->addPointerInRootSet(this);
     m_didSend = true;
 
     STARFISH_ASSERT(m_networkRequestJobDelegate);

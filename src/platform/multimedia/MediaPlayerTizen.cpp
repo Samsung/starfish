@@ -230,7 +230,7 @@ void MediaPlayerTizen::seek(double time)
     }
 
     m_seekState = SEEKSTATE_SEEKING;
-    m_container->starFish()->addPointerInRootSet(this);
+    m_container->document()->browsingContext()->addPointerInRootSet(this);
 
     // Set timer
     // Note : Sometimes player_set_position_async() does not invoke its
@@ -273,7 +273,8 @@ void MediaPlayerTizen::handleSeeked()
             m_seekingTimer = SIZE_MAX;
         }
         // Remove rooted pointer
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
 
         if (!m_alive) {
             close();
@@ -308,7 +309,8 @@ void MediaPlayerTizen::handleSeekTimeout()
             m_seekingTimer = SIZE_MAX;
         }
         m_seekState = SEEKSTATE_NO_SEEK;
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
         if (m_container) {
             m_container->mediaPlayerNotifySeekFailureItsContainer();
         }
@@ -351,7 +353,7 @@ void MediaPlayerTizen::startPlaying()
         m_inPlaying = true;
         m_isEnded = false;
         player_start(m_nativePlayer);
-        m_container->starFish()->addPointerInRootSet(this);
+        m_container->document()->browsingContext()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = m_container->window()->setInterval(
             [](Window* window, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
@@ -374,7 +376,8 @@ void MediaPlayerTizen::stopPlaying()
 {
     if (m_inPlaying) {
         m_inPlaying = false;
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
         m_currentTimeUpdateTimer = SIZE_MAX;
     }
@@ -481,7 +484,7 @@ void MediaPlayerTizen::openPreparingMode()
 {
     STARFISH_ASSERT(!m_inPrepare);
     m_inPrepare = true;
-    m_container->starFish()->addPointerInRootSet(this);
+    m_container->document()->browsingContext()->addPointerInRootSet(this);
 }
 
 void MediaPlayerTizen::closePreparingMode()

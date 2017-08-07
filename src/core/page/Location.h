@@ -70,7 +70,6 @@ public:
 
 private:
     void assign(ResourceURL* url);
-    bool isValidURL(String* url);
 };
 }
 

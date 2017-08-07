@@ -152,12 +152,6 @@ public:
         return m_localStorageFilePath;
     }
 
-    void addPointerInRootSet(void* ptr);
-    void removePointerFromRootSet(void* ptr);
-#ifndef NDEBUG
-    size_t countPointersInRootSet(void* ptr);
-#endif
-
     Console* console()
     {
         return m_console;
