@@ -266,9 +266,9 @@ static bool orientationMediaFeatureEval(MediaQueryExpValue& value,
     // ‘width’ media feature. Otherwise ‘orientation’ is ‘landscape’.
     if (value.isID) {
         if (width > height) {
-            return value.id->equals("landscape");
+            return value.id->equalsWithoutCase("landscape");
         } else {
-            return value.id->equals("portrait");
+            return value.id->equalsWithoutCase("portrait");
         }
     }
 
@@ -429,6 +429,20 @@ static bool gridMediaFeatureEval(MediaQueryExpValue& value,
     return false;
 }
 
+static bool hoverMediaFeatureEval(MediaQueryExpValue& value,
+                                  MediaValues* mediaValues,
+                                  MediaFeaturePrefix op)
+{
+    if (!value.isID) {
+        return false;
+    }
+
+    // https://drafts.csswg.org/mediaqueries-4/#hover
+    // TODO: Suppose that the primary pointing device we support can hover.
+    // However, there may be no pointing device and it can't hover if it exists.
+    return value.id->equalsWithoutCase("hover");
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.
@@ -508,6 +522,8 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return scanMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else if (feature->equals("grid")) {
         return gridMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("hover")) {
+        return hoverMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
         STARFISH_LOG_INFO("unsupported media feature: %s\n",
                           exp->mediaFeature()->toUTF8NonGCString().data());
