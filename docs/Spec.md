@@ -835,6 +835,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | resolution | &lt;resolution&gt; | Describes the resolution of the output device, i.e. the density of the pixels.  | |
 | | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | The Web widget engine doesn't support this feature. |
 | | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The Web widget engine supports only bitmap device. |
+| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-4/) | hover | none &#124; hover | The hover media feature is used to query the user’s ability to hover over elements on the page with the primary pointing device. | |
 
 
 ## Selectors

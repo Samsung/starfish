@@ -2595,6 +2595,7 @@ const String* resolutionMediaFeature =
     String::createASCIIStringWithNoGC("resolution");
 const String* scanMediaFeature = String::createASCIIStringWithNoGC("scan");
 const String* widthMediaFeature = String::createASCIIStringWithNoGC("width");
+const String* hoverMediaFeature = String::createASCIIStringWithNoGC("hover");
 
 static inline bool featureWithoutValue(String* mediaFeature)
 {
@@ -2615,7 +2616,8 @@ static inline bool featureWithoutValue(String* mediaFeature)
            mediaFeature->equals(devicePixelRatioMediaFeature) ||
            mediaFeature->equals(resolutionMediaFeature) ||
            mediaFeature->equals(displayModeMediaFeature) ||
-           mediaFeature->equals(scanMediaFeature);
+           mediaFeature->equals(scanMediaFeature) ||
+           mediaFeature->equals(hoverMediaFeature);
 }
 
 static inline bool featureWithValidIdent(const String* mediaFeature,
@@ -2636,6 +2638,11 @@ static inline bool featureWithValidIdent(const String* mediaFeature,
     if (mediaFeature->equals(scanMediaFeature)) {
         return ident->equalsWithoutCase("interlace") ||
                ident->equalsWithoutCase("progressive");
+    }
+
+    if (mediaFeature->equals(hoverMediaFeature)) {
+        return ident->equalsWithoutCase("none") ||
+               ident->equalsWithoutCase("hover");
     }
 
     return false;
