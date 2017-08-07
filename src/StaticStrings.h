@@ -293,6 +293,8 @@ public:
     QualifiedName m_onfocusin;
     QualifiedName m_focusout;
     QualifiedName m_onfocusout;
+    QualifiedName m_resize;
+    QualifiedName m_onresize;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

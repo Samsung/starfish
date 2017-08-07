@@ -102,6 +102,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_focusout, value, this);
     } else if (name == ss->m_onkeydown) {
         setAttributeEventListener(ss->m_keydown, value, this);
+    } else if (name == ss->m_onresize) {
+        setAttributeEventListener(ss->m_resize, value, this);
     }
 }
 
@@ -307,6 +309,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, play);
 DEFINE_EVENT_LISTENER(HTMLElement, playing);
 DEFINE_EVENT_LISTENER(HTMLElement, progress);
 DEFINE_EVENT_LISTENER(HTMLElement, ratechange);
+DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, seeked);
 DEFINE_EVENT_LISTENER(HTMLElement, seeking);
 DEFINE_EVENT_LISTENER(HTMLElement, stalled);

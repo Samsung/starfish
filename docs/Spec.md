@@ -696,6 +696,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onplaying | Fired when playback is ready to start after having been paused or delayed due to lack of media data. |
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
+| | attribute | onresize | Fired at the Window when the viewport is resized. |
 | [MouseEvent](https://w3c.github.io/uievents/#idl-mouseevent) | interface | MouseEvent |  |
 | | attribute | screenX | The horizontal coordinate at which the event occurred relative to the origin of the screen |
 | | attribute | screenY | The vertical coordinate at which the event occurred relative to the origin of the screen |
