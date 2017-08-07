@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StorageNamespaceImpl.h"
 
+#include "core/storage/Storage.h"
 #include "core/storage/StorageType.h"
 #include "StorageImpl.h"
 #include "StorageManager.h"
@@ -41,37 +42,18 @@ StorageNamespaceImpl::~StorageNamespaceImpl()
 Storage* StorageNamespaceImpl::storage(Window* window,
                                        SecurityOriginData* securityOriginData)
 {
+    StorageImpl* storageImpl = nullptr;
     auto itr = m_originToStorage.find(securityOriginData);
     if (itr == m_originToStorage.end()) {
-        StorageImpl* storage = new StorageImpl(
-            window, m_storageType, securityOriginData, m_storageManager);
-        m_originToStorage.insert(std::make_pair(securityOriginData, storage));
-        return storage;
+        storageImpl = new StorageImpl(m_storageType, securityOriginData,
+                                      m_storageManager);
+        m_originToStorage.insert(
+            std::make_pair(securityOriginData, storageImpl));
     } else {
-        StorageImpl* storage = itr->second;
-        if (storage->window() == window) {
-            return storage;
-        } else {
-            StorageImpl* newStorage = new StorageImpl(
-                window, m_storageType, securityOriginData, m_storageManager);
-            newStorage->copyDataFrom(storage);
-            m_originToStorage.erase(itr);
-            m_originToStorage.insert(
-                std::make_pair(securityOriginData, newStorage));
-            return newStorage;
-        }
+        storageImpl = itr->second;
     }
-}
 
-void StorageNamespaceImpl::clearWindow(Window* window)
-{
-    auto iter = m_originToStorage.begin();
-    while (iter != m_originToStorage.end()) {
-        if (iter->second->window() == window) {
-            m_originToStorage.erase(iter++);
-        } else {
-            iter++;
-        }
-    }
+    Storage* storage = new Storage(window, storageImpl);
+    return storage;
 }
 }

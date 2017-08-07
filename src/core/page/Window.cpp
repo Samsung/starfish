@@ -112,10 +112,6 @@ void Window::close()
     clearEventListeners();
 
     ResourceURL* url = m_document->documentURI();
-
-    browsingContext()->webView()->localStorageNamespace()->clearWindow(this);
-    browsingContext()->webView()->sessionStorageNamespace()->clearWindow(this);
-
     m_location->close();
     m_navigator->close();
 }
