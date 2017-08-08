@@ -139,6 +139,8 @@ public:
     void removeAttributeNS(Nullable<String*> ns, String* localName);
     Attr* removeAttributeNode(Attr* attr);
 
+    bool matches(String* selectors);
+
     // DO NOT MODIFY ATTRIBUTE
     const Attribute& attributeData(QualifiedName name)
     {

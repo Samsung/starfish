@@ -41,6 +41,7 @@ test/reftest/vendor/blink/fast/dom/Element/id-in-node-list-index01.html
 test/reftest/vendor/blink/fast/dom/Element/node-list-identity.html
 test/reftest/vendor/blink/fast/dom/Element/onclick-case.html
 test/reftest/vendor/blink/fast/dom/Element/setAttribute-case-insensitivity.html
+test/reftest/vendor/blink/fast/dom/Element/matches.html
 test/reftest/vendor/blink/fast/dom/event-target-arguments.html
 test/reftest/vendor/blink/fast/dom/everything-to-string.html
 test/reftest/vendor/blink/fast/dom/getElementsByClassName/001.html

@@ -114,6 +114,11 @@ NodeList* SelectorQuery::queryAll(Node& rootNode)
     return list;
 }
 
+bool SelectorQuery::matches(Element& element)
+{
+    return selectorListMatches(element, &element);
+}
+
 inline bool ancestorHasClassName(Node& rootNode, const String* className)
 {
     if (!rootNode.isElement()) {

@@ -37,6 +37,7 @@ public:
     }
     Element* queryFirst(Node& rootNode);
     NodeList* queryAll(Node& rootNode);
+    bool matches(Element& element);
 
 private:
     bool canUseFastQuery(const Node& rootNode);

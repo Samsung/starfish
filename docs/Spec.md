@@ -265,6 +265,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | Attr? setAttributeNode(Attr attr) | Adds a new Attr node to the specified element. If the attribute named already exists on the element, that attribute is replaced with the new one and the replaced one is returned. |
 |  | method | Attr? setAttributeNodeNS(Attr attr) | Adds a new Attr node. If an attribute with that local name and that namespace URI is already present in the element, it is replaced by the new one. |
 |  | method | Attr removeAttributeNode(Attr attr) | Removes the specified attribute from the current element. |
+|  | method | boolean matches(DOMString selectors) | Returns true if matching selectors against element’s root yields element, and false otherwise. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
 || method | insertAdjacentElement |t inserts the node into the tree in the position given by the position argument |
